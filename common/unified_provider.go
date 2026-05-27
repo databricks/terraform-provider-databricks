@@ -3,7 +3,6 @@ package common
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -28,12 +27,11 @@ type ProviderConfig struct {
 	WorkspaceID string `json:"workspace_id,omitempty"`
 }
 
-// workspaceIDValidateFunc is used to validate the workspace ID for the provider configuration
+// workspaceIDValidateFunc is used to validate the workspace ID for the provider configuration.
+// Accepts either a classic numeric workspace ID or an opaque workspace identifier that the
+// platform gateway can disambiguate via the X-Databricks-Workspace-Id header.
 func workspaceIDValidateFunc() func(interface{}, string) ([]string, []error) {
-	return validation.All(
-		validation.StringIsNotEmpty,
-		validation.StringMatch(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"),
-	)
+	return validation.StringIsNotEmpty
 }
 
 // AddNamespaceInSchema adds the provider_config schema to the given schema map.
@@ -383,7 +381,7 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 // This is used by resources and data sources that are developed
 // over SDKv2 and are not using Go SDK.
 func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Context, workspaceID string) (*DatabricksClient, error) {
-	workspaceIDInt, err := parseWorkspaceID(workspaceID)
+	parsedID, err := parseWorkspaceID(workspaceID)
 	if err != nil {
 		return nil, err
 	}
@@ -402,7 +400,7 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 			DatabricksClient: dc,
 			commandFactory:   c.commandFactory,
 		}
-		if wc, ok := c.cachedWorkspaceClients[workspaceIDInt]; ok {
+		if wc, ok := c.cachedWorkspaceClients[parsedID]; ok {
 			result.cachedWorkspaceClient = wc
 		}
 		return result
@@ -410,7 +408,7 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 
 	// If the Databricks Client is cached, we use it
 	if c.cachedDatabricksClients != nil {
-		if client, ok := c.cachedDatabricksClients[workspaceIDInt]; ok && client != nil {
+		if client, ok := c.cachedDatabricksClients[parsedID]; ok && client != nil {
 			return newDatabricksClient(client), nil
 		}
 	}
@@ -423,7 +421,7 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 	}
 
 	// Return the Databricks Client.
-	return newDatabricksClient(c.cachedDatabricksClients[workspaceIDInt]), nil
+	return newDatabricksClient(c.cachedDatabricksClients[parsedID]), nil
 }
 
 // setCachedDatabricksClient sets the cached Databricks Client.
@@ -434,16 +432,16 @@ func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, worksp
 
 	// Initialize the map if it's nil
 	if c.cachedDatabricksClients == nil {
-		c.cachedDatabricksClients = make(map[int64]*client.DatabricksClient)
+		c.cachedDatabricksClients = make(map[string]*client.DatabricksClient)
 	}
 
-	workspaceIDInt, err := parseWorkspaceID(workspaceID)
+	parsedID, err := parseWorkspaceID(workspaceID)
 	if err != nil {
 		return err
 	}
 
 	// Double checked locking
-	if existingClient, ok := c.cachedDatabricksClients[workspaceIDInt]; ok && existingClient != nil {
+	if existingClient, ok := c.cachedDatabricksClients[parsedID]; ok && existingClient != nil {
 		return nil
 	}
 
@@ -459,6 +457,6 @@ func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, worksp
 	if err != nil {
 		return err
 	}
-	c.cachedDatabricksClients[workspaceIDInt] = newClient
+	c.cachedDatabricksClients[parsedID] = newClient
 	return nil
 }

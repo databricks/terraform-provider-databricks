@@ -132,6 +132,8 @@ type Branch struct {
 	// hierarchy. For point-in-time branching from another branch, see
 	// `status.source_branch`.
 	Parent types.String `tfsdk:"parent"`
+	// If true, permanently delete the branch; if false, soft delete.
+	PurgeOnDelete types.Bool `tfsdk:"purge_on_delete"`
 	// If true, update the branch if it already exists instead of returning an
 	// error.
 	ReplaceExisting types.Bool `tfsdk:"replace_existing"`
@@ -174,6 +176,7 @@ func (m Branch) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"create_time":      m.CreateTime,
 			"name":             m.Name,
 			"parent":           m.Parent,
+			"purge_on_delete":  m.PurgeOnDelete,
 			"replace_existing": m.ReplaceExisting,
 			"spec":             m.Spec,
 			"status":           m.Status,
@@ -193,6 +196,7 @@ func (m Branch) Type(ctx context.Context) attr.Type {
 			"create_time":      timetypes.RFC3339{}.Type(ctx),
 			"name":             types.StringType,
 			"parent":           types.StringType,
+			"purge_on_delete":  types.BoolType,
 			"replace_existing": types.BoolType,
 			"spec":             postgres_tf.BranchSpec{}.Type(ctx),
 			"status":           postgres_tf.BranchStatus{}.Type(ctx),
@@ -210,6 +214,9 @@ func (m Branch) Type(ctx context.Context) attr.Type {
 func (to *Branch) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Branch) {
 	if !from.BranchId.IsUnknown() {
 		to.BranchId = from.BranchId
+	}
+	if !from.PurgeOnDelete.IsUnknown() {
+		to.PurgeOnDelete = from.PurgeOnDelete
 	}
 	if !from.ReplaceExisting.IsUnknown() {
 		to.ReplaceExisting = from.ReplaceExisting
@@ -246,6 +253,9 @@ func (to *Branch) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Branc
 func (to *Branch) SyncFieldsDuringRead(ctx context.Context, from Branch) {
 	if !from.BranchId.IsUnknown() {
 		to.BranchId = from.BranchId
+	}
+	if !from.PurgeOnDelete.IsUnknown() {
+		to.PurgeOnDelete = from.PurgeOnDelete
 	}
 	if !from.ReplaceExisting.IsUnknown() {
 		to.ReplaceExisting = from.ReplaceExisting
@@ -288,6 +298,7 @@ func (m Branch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBui
 	attrs["branch_id"] = attrs["branch_id"].SetRequired()
 	attrs["branch_id"] = attrs["branch_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["branch_id"] = attrs["branch_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
+	attrs["purge_on_delete"] = attrs["purge_on_delete"].SetOptional()
 	attrs["replace_existing"] = attrs["replace_existing"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -579,6 +590,9 @@ func (r *BranchResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+	if !state.PurgeOnDelete.IsNull() && !state.PurgeOnDelete.IsUnknown() {
+		deleteRequest.Purge = state.PurgeOnDelete.ValueBool()
 	}
 
 	var namespace ProviderConfig

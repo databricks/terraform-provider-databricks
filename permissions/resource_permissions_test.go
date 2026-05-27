@@ -1922,7 +1922,7 @@ func TestAccessControlHashFunction(t *testing.T) {
 func TestResourcePermissionsCreate_KnowledgeAssistant(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "ka-abc",
@@ -1994,7 +1994,7 @@ func TestResourcePermissionsCreate_KnowledgeAssistant_InvalidLevel(t *testing.T)
 func TestResourcePermissionsCreate_SupervisorAgent(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
-			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
 			e := mwc.GetMockPermissionsAPI().EXPECT()
 			e.Set(mock.Anything, iam.SetObjectPermissions{
 				RequestObjectId:   "sa-abc",

@@ -74,7 +74,7 @@ func TestQualityMonitorV2ExportWithMultipleMonitors(t *testing.T) {
 		{
 			Method:       "GET",
 			ReuseRequest: true,
-			Resource:     "/api/2.0/preview/scim/v2/Me?",
+			Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 			Response: scim.User{
 				Groups: []scim.ComplexValue{
 					{

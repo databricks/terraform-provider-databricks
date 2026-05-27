@@ -32,7 +32,7 @@ func TestAccSecretAclResource(t *testing.T) {
 			w := databricks.Must(databricks.NewWorkspaceClient())
 
 			ctx := context.Background()
-			me, err := w.CurrentUser.Me(ctx, iam.MeRequest{})
+			me, err := w.CurrentUser.Me(ctx, iam.MeRequest{ExcludedAttributes: "entitlements"})
 			require.NoError(t, err)
 
 			scope := s.RootModule().Resources["databricks_secret_scope.app"].Primary.ID

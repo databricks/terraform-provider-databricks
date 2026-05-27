@@ -228,7 +228,7 @@ func TestResourceSecretACLDelete_SkipsCurrentUserWithManagePermission(t *testing
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Me?",
+				Resource: "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				Response: map[string]any{
 					"id":       "123",
 					"userName": "current_user@example.com",
@@ -278,7 +278,7 @@ func TestResourceSecretACLDelete_DeletesOtherUserWithManagePermission(t *testing
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Me?",
+				Resource: "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				Response: map[string]any{
 					"id":       "123",
 					"userName": "current_user@example.com",

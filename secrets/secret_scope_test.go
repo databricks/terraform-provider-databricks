@@ -36,7 +36,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 					acls_resp, err := w.Secrets.ListAclsByScope(ctx, id)
 					require.NoError(t, err)
 					acls := acls_resp.Items
-					me, err := w.CurrentUser.Me(ctx, iam.MeRequest{})
+					me, err := w.CurrentUser.Me(ctx, iam.MeRequest{ExcludedAttributes: "entitlements"})
 					require.NoError(t, err)
 					assert.Equal(t, 1, len(acls))
 					assert.Equal(t, me.UserName, acls[0].Principal)

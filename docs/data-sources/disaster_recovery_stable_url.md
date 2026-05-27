@@ -16,6 +16,12 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
+* `failover_group_name` (string) - Fully qualified resource name of the FailoverGroup this stable URL is
+  currently linked to, in the format
+  `accounts/{account_id}/failover-groups/{failover_group_id}`. Empty when
+  the stable URL is not attached to any failover group. Server-controlled:
+  written by CreateFailoverGroup / UpdateFailoverGroup on link, cleared by
+  DeleteFailoverGroup / UpdateFailoverGroup on unlink
 * `initial_workspace_id` (string) - The workspace this stable URL is initially bound to. Used only in Create
   requests to associate the stable URL with a workspace. Not returned in
   responses. Mirrors FailoverGroup.initial_primary_region semantics

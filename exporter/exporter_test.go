@@ -22,6 +22,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/database"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
+	"github.com/databricks/databricks-sdk-go/service/knowledgeassistants"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/databricks-sdk-go/service/qualitymonitorv2"
@@ -30,6 +31,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settingsv2"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	sdk_sql "github.com/databricks/databricks-sdk-go/service/sql"
+	"github.com/databricks/databricks-sdk-go/service/supervisoragents"
 	"github.com/databricks/databricks-sdk-go/service/tags"
 	sdk_vs "github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
@@ -91,7 +93,7 @@ func TestImportingMounts(t *testing.T) {
 		[]qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Me",
+				Resource: "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				Response: scim.User{},
 			},
 			{
@@ -236,7 +238,7 @@ func TestImportingMounts(t *testing.T) {
 var meAdminFixture = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.0/preview/scim/v2/Me",
+	Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 	Response: scim.User{
 		Groups: []scim.ComplexValue{
 			{
@@ -336,6 +338,20 @@ var emptyVectorSearch = qa.HTTPFixture{
 	ReuseRequest: true,
 	Resource:     "/api/2.0/vector-search/endpoints?",
 	Response:     sdk_vs.ListEndpointResponse{},
+}
+
+var emptyKnowledgeAssistants = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.1/knowledge-assistants?",
+	Response:     knowledgeassistants.ListKnowledgeAssistantsResponse{},
+}
+
+var emptySupervisorAgents = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.1/supervisor-agents?",
+	Response:     supervisoragents.ListSupervisorAgentsResponse{},
 }
 
 var emptyShares = qa.HTTPFixture{
@@ -633,6 +649,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySqlAlerts,
 			emptyAlertsV2,
 			emptyVectorSearch,
+			emptyKnowledgeAssistants,
+			emptySupervisorAgents,
 			emptyPipelines,
 			emptyClusterPolicies,
 			emptyPolicyFamilies,
@@ -876,7 +894,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				Response: scim.User{
 					Groups: []scim.ComplexValue{},
 				},
@@ -915,6 +933,8 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyWorkspace,
 			emptySqlEndpoints,
 			emptyVectorSearch,
+			emptyKnowledgeAssistants,
+			emptySupervisorAgents,
 			emptySqlQueries,
 			emptySqlDashboards,
 			emptySqlAlerts,
@@ -1081,7 +1101,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				ReuseRequest: true,
 				Response:     scim.User{ID: "a", DisplayName: "test@test.com"},
 			},
@@ -1436,7 +1456,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=14",
+				Resource: "/api/2.2/jobs/get?job_id=14",
 				Response: sdk_jobs.Job{
 					JobId: 14,
 					Settings: &sdk_jobs.JobSettings{
@@ -3035,7 +3055,7 @@ func TestImportingRunJobTask(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				Response: scim.User{
 					Groups: []scim.ComplexValue{
 						{
@@ -3060,12 +3080,12 @@ func TestImportingRunJobTask(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=1047501313827425",
+				Resource: "/api/2.2/jobs/get?job_id=1047501313827425",
 				Response: getJSONObject("test-data/run-job-main.json"),
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=932035899730845",
+				Resource: "/api/2.2/jobs/get?job_id=932035899730845",
 				Response: getJSONObject("test-data/run-job-child.json"),
 			},
 		},
@@ -3103,7 +3123,7 @@ func TestImportingLakeviewDashboards(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				Response: scim.User{
 					Groups: []scim.ComplexValue{
 						{

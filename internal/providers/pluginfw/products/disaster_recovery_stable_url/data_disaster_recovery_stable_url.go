@@ -32,6 +32,13 @@ type StableUrlDataSource struct {
 
 // StableUrlData extends the main model with additional fields.
 type StableUrlData struct {
+	// Fully qualified resource name of the FailoverGroup this stable URL is
+	// currently linked to, in the format
+	// `accounts/{account_id}/failover-groups/{failover_group_id}`. Empty when
+	// the stable URL is not attached to any failover group. Server-controlled:
+	// written by CreateFailoverGroup / UpdateFailoverGroup on link, cleared by
+	// DeleteFailoverGroup / UpdateFailoverGroup on unlink.
+	FailoverGroupName types.String `tfsdk:"failover_group_name"`
 	// The workspace this stable URL is initially bound to. Used only in Create
 	// requests to associate the stable URL with a workspace. Not returned in
 	// responses. Mirrors FailoverGroup.initial_primary_region semantics.
@@ -67,6 +74,7 @@ func (m StableUrlData) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"failover_group_name":  m.FailoverGroupName,
 			"initial_workspace_id": m.InitialWorkspaceId,
 			"name":                 m.Name,
 			"url":                  m.Url,
@@ -79,6 +87,7 @@ func (m StableUrlData) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m StableUrlData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"failover_group_name":  types.StringType,
 			"initial_workspace_id": types.StringType,
 			"name":                 types.StringType,
 			"url":                  types.StringType,
@@ -87,6 +96,7 @@ func (m StableUrlData) Type(ctx context.Context) attr.Type {
 }
 
 func (m StableUrlData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["failover_group_name"] = attrs["failover_group_name"].SetComputed()
 	attrs["initial_workspace_id"] = attrs["initial_workspace_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["url"] = attrs["url"].SetComputed()

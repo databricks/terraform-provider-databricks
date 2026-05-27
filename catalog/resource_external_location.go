@@ -202,6 +202,11 @@ func ResourceExternalLocation() common.Resource {
 			if err != nil {
 				return err
 			}
+			// If the external location is isolated, re-bind the current workspace so it's accessible for deletion.
+			err = bindings.AddCurrentWorkspaceBindings(ctx, d, w, d.Id(), bindings.BindingsSecurableTypeExternalLocation)
+			if err != nil {
+				return err
+			}
 			return w.ExternalLocations.Delete(ctx, catalog.DeleteExternalLocationRequest{
 				Name:  d.Id(),
 				Force: force,

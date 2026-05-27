@@ -14,7 +14,7 @@ The following arguments are supported:
 * `parent` (string, required) - Parent resource where this tool will be created.
   Format: supervisor-agents/{supervisor_agent_id}
 * `tool_id` (string, required) - User specified id of the Tool
-* `tool_type` (string, required) - Tool type. Must be one of: "genie_space", "knowledge_assistant", "uc_function", "uc_connection", "app", "volume", "lakeview_dashboard", "serving_endpoint", "uc_table", "vector_search_index", "catalog", "schema", "supervisor_agent", "web_search"
+* `tool_type` (string, required) - Tool type. Must be one of: "genie_space", "knowledge_assistant", "uc_function", "uc_connection", "app", "volume", "dashboard", "serving_endpoint", "table", "vector_search_index", "catalog", "schema", "supervisor_agent", "web_search". The legacy values "lakeview_dashboard" and "uc_table" are also accepted and remain equivalent to "dashboard" and "table" respectively
 * `app` (App, optional)
 * `description` (string, optional) - Description of what this tool does (user-facing)
 * `genie_space` (GenieSpace, optional)
@@ -31,7 +31,8 @@ The following arguments are supported:
 * `name` (string, required) - App name
 
 ### GenieSpace
-* `id` (string, required) - The ID of the genie space
+* `id` (string, required, deprecated) - Deprecated: use space_id instead. Still REQUIRED for backward compatibility
+  until a future API version removes it
 
 ### KnowledgeAssistant
 * `knowledge_assistant_id` (string, required) - The ID of the knowledge assistant

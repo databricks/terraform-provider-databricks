@@ -318,7 +318,7 @@ func (ic *importContext) unifiedDataToHcl(imp importable, path []string,
 
 		var genErr error
 		if wrapper.IsPluginFramework() {
-			genErr = ic.generatePluginFrameworkField(imp, path, field, res, body)
+			genErr = ic.generatePluginFrameworkField(imp, path, field, res, body, wrapper)
 		} else {
 			genErr = ic.generateSdkv2Field(imp, path, field, res, body, varCnt)
 		}
@@ -566,9 +566,9 @@ func (ic *importContext) generateSdkv2Field(imp importable, path []string,
 
 // generatePluginFrameworkField generates HCL for a single Plugin Framework field
 func (ic *importContext) generatePluginFrameworkField(imp importable, path []string,
-	field fieldGenerationInfo, res *resource, body *hclwrite.Body) error {
+	field fieldGenerationInfo, res *resource, body *hclwrite.Body, wrapper ResourceDataWrapper) error {
 
-	return ic.pluginFrameworkFieldToHcl(imp, path, field.Name, field.FieldSchema, field.RawValue, res, body)
+	return ic.pluginFrameworkFieldToHcl(imp, path, field.Name, field.FieldSchema, field.RawValue, res, body, wrapper)
 }
 
 func (ic *importContext) dataToHcl(imp importable, path []string,
@@ -737,7 +737,7 @@ func (ic *importContext) dataToHcl(imp importable, path []string,
 
 // pluginFrameworkFieldToHcl generates HCL for a single Plugin Framework field
 func (ic *importContext) pluginFrameworkFieldToHcl(imp importable, path []string, fieldName string,
-	fieldSchema FieldSchema, raw interface{}, res *resource, body *hclwrite.Body) error {
+	fieldSchema FieldSchema, raw interface{}, res *resource, body *hclwrite.Body, wrapper ResourceDataWrapper) error {
 
 	// Check for nested types first (before checking primitive types)
 	// This handles ListNestedAttribute, SetNestedAttribute, SingleNestedAttribute, etc.
@@ -772,7 +772,7 @@ func (ic *importContext) pluginFrameworkFieldToHcl(imp importable, path []string
 					if nestedData, ok := item.(map[string]interface{}); ok {
 						// Include the index in the path for proper reference resolution
 						nestedPath := append(path, fieldName, strconv.Itoa(i))
-						objTokens := ic.pluginFrameworkNestedObjectToTokens(imp, nestedPath, nestedSchema, nestedData, res)
+						objTokens := ic.pluginFrameworkNestedObjectToTokens(imp, nestedPath, nestedSchema, nestedData, res, wrapper)
 						listTokens = append(listTokens, objTokens...)
 					}
 				}
@@ -791,7 +791,7 @@ func (ic *importContext) pluginFrameworkFieldToHcl(imp importable, path []string
 			nestedSchema := fieldSchema.GetNestedSchema()
 			if nestedSchema != nil {
 				// Generate single nested object as attribute: field = { ... }
-				objTokens := ic.pluginFrameworkNestedObjectToTokens(imp, append(path, fieldName), nestedSchema, nestedData, res)
+				objTokens := ic.pluginFrameworkNestedObjectToTokens(imp, append(path, fieldName), nestedSchema, nestedData, res, wrapper)
 				body.SetAttributeRaw(fieldName, objTokens)
 				return nil
 			}
@@ -921,7 +921,7 @@ func (ic *importContext) pluginFrameworkFieldToHcl(imp importable, path []string
 
 // pluginFrameworkNestedObjectToTokens generates HCL tokens for a nested object
 func (ic *importContext) pluginFrameworkNestedObjectToTokens(imp importable, path []string,
-	nestedSchema SchemaWrapper, nestedData map[string]interface{}, res *resource) hclwrite.Tokens {
+	nestedSchema SchemaWrapper, nestedData map[string]interface{}, res *resource, wrapper ResourceDataWrapper) hclwrite.Tokens {
 
 	if nestedSchema == nil || nestedData == nil {
 		return hclwrite.Tokens{}
@@ -945,6 +945,14 @@ func (ic *importContext) pluginFrameworkNestedObjectToTokens(imp importable, pat
 		if fieldSchema == nil {
 			log.Printf("[DEBUG] No schema found for field %s in path %v", fieldName, path)
 			continue
+		}
+
+		pathString := strings.Join(append(path, fieldName), ".")
+		if imp.ShouldOmitFieldUnified != nil && wrapper != nil {
+			if imp.ShouldOmitFieldUnified(ic, pathString, fieldSchema, wrapper, res) {
+				log.Printf("[DEBUG] ShouldOmitFieldUnified omitting nested field %s", pathString)
+				continue
+			}
 		}
 
 		// Apply field omission logic - check computed-only fields
@@ -1006,7 +1014,6 @@ func (ic *importContext) pluginFrameworkNestedObjectToTokens(imp importable, pat
 		}
 
 		// Check if ShouldGenerateField forces generation
-		pathString := strings.Join(append(path, fieldName), ".")
 		if shouldSkip && (imp.ShouldGenerateField == nil || !imp.ShouldGenerateField(ic, pathString, nil, nil, res)) {
 			log.Printf("[DEBUG] Skipping field %s with zero value in path %v", fieldName, path)
 			continue
@@ -1015,7 +1022,7 @@ func (ic *importContext) pluginFrameworkNestedObjectToTokens(imp importable, pat
 		log.Printf("[DEBUG] Processing field %s in path %v, value type: %T", fieldName, path, raw)
 
 		// Generate HCL for this nested field
-		if err := ic.pluginFrameworkFieldToHcl(imp, path, fieldName, fieldSchema, raw, res, tempBody); err != nil {
+		if err := ic.pluginFrameworkFieldToHcl(imp, path, fieldName, fieldSchema, raw, res, tempBody, wrapper); err != nil {
 			log.Printf("[WARN] Error generating HCL for nested field %s: %v", fieldName, err)
 		}
 	}

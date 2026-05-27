@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 
+	"github.com/databricks/terraform-provider-databricks/catalog/bindings"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -122,6 +123,51 @@ func TestCreateIsolatedExternalLocation(t *testing.T) {
 		},
 		Resource: ResourceExternalLocation(),
 		Create:   true,
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		comment = "def"
+		isolation_mode = "ISOLATION_MODE_ISOLATED"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestDeleteIsolatedExternalLocation(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockMetastoresAPI().EXPECT().Current(mock.Anything).Return(&catalog.MetastoreAssignment{
+				MetastoreId: "e",
+				WorkspaceId: 123456789101112,
+			}, nil)
+			w.GetMockWorkspaceBindingsAPI().EXPECT().UpdateBindings(mock.Anything, catalog.UpdateWorkspaceBindingsParameters{
+				SecurableName: "abc",
+				SecurableType: string(bindings.BindingsSecurableTypeExternalLocation),
+				Add: []catalog.WorkspaceBinding{
+					{
+						WorkspaceId: int64(123456789101112),
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+					},
+				},
+			}).Return(&catalog.UpdateWorkspaceBindingsResponse{
+				Bindings: []catalog.WorkspaceBinding{
+					{
+						WorkspaceId: int64(123456789101112),
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+					},
+				},
+			}, nil)
+			w.GetMockExternalLocationsAPI().EXPECT().Delete(mock.Anything, catalog.DeleteExternalLocationRequest{
+				Name: "abc",
+			}).Return(nil)
+		},
+		Resource: ResourceExternalLocation(),
+		Delete:   true,
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"name":           "abc",
+			"isolation_mode": "ISOLATION_MODE_ISOLATED",
+		},
 		HCL: `
 		name = "abc"
 		url = "s3://foo/bar"

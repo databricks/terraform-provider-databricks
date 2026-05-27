@@ -353,6 +353,11 @@ func ResourceStorageCredential() common.Resource {
 				if err != nil {
 					return err
 				}
+				// If the storage credential is isolated, re-bind the current workspace so it's accessible for deletion.
+				err = bindings.AddCurrentWorkspaceBindings(ctx, d, w, storageCredentialName, bindings.BindingsSecurableTypeStorageCredential)
+				if err != nil {
+					return err
+				}
 				return w.StorageCredentials.Delete(ctx, catalog.DeleteStorageCredentialRequest{
 					Force: force,
 					Name:  storageCredentialName,

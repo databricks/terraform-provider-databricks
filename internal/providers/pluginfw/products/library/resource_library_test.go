@@ -4,6 +4,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/stretchr/testify/assert"
@@ -73,4 +76,109 @@ func TestResourceLibrary_ModifyPlan_SkipsDestroyAndNilClient(t *testing.T) {
 	resp := &resource.ModifyPlanResponse{}
 	r.ModifyPlan(context.Background(), req, resp)
 	assert.False(t, resp.Diagnostics.HasError(), "should not error on null plan with nil client")
+}
+
+func TestReadLibrary_NotFoundDuringRefresh(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=test-cluster",
+			ReuseRequest: true,
+			Response: compute.ClusterLibraryStatuses{
+				ClusterId: "test-cluster",
+				LibraryStatuses: []compute.LibraryFullStatus{
+					{
+						Status: "INSTALLED",
+						Library: &compute.Library{
+							Jar: "other.jar",
+						},
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		w, err := client.WorkspaceClient()
+		require.NoError(t, err)
+
+		// During refresh (Read), a missing library should return nil with a warning, not an error.
+		// This allows Terraform to detect drift and plan re-creation.
+		result, diags := readLibrary(ctx, w, compute.Wait{
+			ClusterID: "test-cluster",
+			IsRefresh: true,
+		}, "mvn:net.snowflake:spark-snowflake_2.12:3.1.0")
+
+		assert.Nil(t, result)
+		assert.False(t, diags.HasError(), "should not return error during refresh when library is not found")
+		assert.True(t, len(diags.Warnings()) > 0, "should return a warning when library is not found")
+		assert.Contains(t, diags.Warnings()[0].Detail(), "not found on cluster")
+	})
+}
+
+func TestReadLibrary_NotFoundDuringCreate(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=test-cluster",
+			ReuseRequest: true,
+			Response: compute.ClusterLibraryStatuses{
+				ClusterId: "test-cluster",
+				LibraryStatuses: []compute.LibraryFullStatus{
+					{
+						Status: "INSTALLED",
+						Library: &compute.Library{
+							Jar: "other.jar",
+						},
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		w, err := client.WorkspaceClient()
+		require.NoError(t, err)
+
+		// During create (IsRunning=true), a missing library should return an error.
+		result, diags := readLibrary(ctx, w, compute.Wait{
+			ClusterID: "test-cluster",
+			IsRunning: true,
+		}, "mvn:net.snowflake:spark-snowflake_2.12:3.1.0")
+
+		assert.Nil(t, result)
+		assert.True(t, diags.HasError(), "should return error during create when library is not found")
+		assert.Contains(t, diags.Errors()[0].Detail(), "failed to find")
+	})
+}
+
+func TestReadLibrary_FoundDuringRefresh(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=test-cluster",
+			ReuseRequest: true,
+			Response: compute.ClusterLibraryStatuses{
+				ClusterId: "test-cluster",
+				LibraryStatuses: []compute.LibraryFullStatus{
+					{
+						Status: "INSTALLED",
+						Library: &compute.Library{
+							Maven: &compute.MavenLibrary{
+								Coordinates: "net.snowflake:spark-snowflake_2.12:3.1.0",
+							},
+						},
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		w, err := client.WorkspaceClient()
+		require.NoError(t, err)
+
+		result, diags := readLibrary(ctx, w, compute.Wait{
+			ClusterID: "test-cluster",
+			IsRefresh: true,
+		}, "mvn:net.snowflake:spark-snowflake_2.12:3.1.0")
+
+		assert.False(t, diags.HasError())
+		assert.NotNil(t, result)
+		assert.Equal(t, "test-cluster", result.ClusterId.ValueString())
+	})
 }

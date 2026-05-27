@@ -17,16 +17,22 @@ import (
 const maxDeltaSharingRecipientTokenLifetimeInSeconds = int64(365 * 24 * time.Hour / time.Second) // 1 year
 
 // This and the next function should be updated together to keep them in sync.
-func updateForceSendFieldsWorkspaceLevel(req *catalog.UpdateMetastore) {
+func updateForceSendFieldsWorkspaceLevel(req *catalog.UpdateMetastore, d *schema.ResourceData) {
 	if req.DeltaSharingScope != "" && !slices.Contains(req.ForceSendFields, "DeltaSharingRecipientTokenLifetimeInSeconds") {
 		req.ForceSendFields = append(req.ForceSendFields, "DeltaSharingRecipientTokenLifetimeInSeconds")
+	}
+	if d.HasChange("external_access_enabled") && !slices.Contains(req.ForceSendFields, "ExternalAccessEnabled") {
+		req.ForceSendFields = append(req.ForceSendFields, "ExternalAccessEnabled")
 	}
 }
 
 // This and the previous function should be updated together to keep them in sync.
-func updateForceSendFieldsAccountLevel(req *catalog.UpdateAccountsMetastore) {
+func updateForceSendFieldsAccountLevel(req *catalog.UpdateAccountsMetastore, d *schema.ResourceData) {
 	if req.DeltaSharingScope != "" && !slices.Contains(req.ForceSendFields, "DeltaSharingRecipientTokenLifetimeInSeconds") {
 		req.ForceSendFields = append(req.ForceSendFields, "DeltaSharingRecipientTokenLifetimeInSeconds")
+	}
+	if d.HasChange("external_access_enabled") && !slices.Contains(req.ForceSendFields, "ExternalAccessEnabled") {
+		req.ForceSendFields = append(req.ForceSendFields, "ExternalAccessEnabled")
 	}
 }
 
@@ -102,7 +108,7 @@ func ResourceMetastore() common.Resource {
 				var update catalog.UpdateAccountsMetastore
 				common.DataToStructPointer(d, s, &create)
 				common.DataToStructPointer(d, s, &update)
-				updateForceSendFieldsAccountLevel(&update)
+				updateForceSendFieldsAccountLevel(&update, d)
 				emptyRequest, err := common.IsRequestEmpty(update)
 				if err != nil {
 					return err
@@ -131,7 +137,7 @@ func ResourceMetastore() common.Resource {
 				var update catalog.UpdateMetastore
 				common.DataToStructPointer(d, s, &create)
 				common.DataToStructPointer(d, s, &update)
-				updateForceSendFieldsWorkspaceLevel(&update)
+				updateForceSendFieldsWorkspaceLevel(&update, d)
 				emptyRequest, err := common.IsRequestEmpty(update)
 				if err != nil {
 					return err
@@ -179,7 +185,7 @@ func ResourceMetastore() common.Resource {
 			return c.AccountOrWorkspaceRequest(d, func(acc *databricks.AccountClient) error {
 				var update catalog.UpdateAccountsMetastore
 				common.DataToStructPointer(d, s, &update)
-				updateForceSendFieldsAccountLevel(&update)
+				updateForceSendFieldsAccountLevel(&update, d)
 				if d.HasChange("owner") {
 					ownerUpdate := catalog.UpdateAccountsMetastore{
 						Owner: update.Owner,
@@ -224,7 +230,7 @@ func ResourceMetastore() common.Resource {
 				var update catalog.UpdateMetastore
 				common.DataToStructPointer(d, s, &update)
 				update.Id = d.Id()
-				updateForceSendFieldsWorkspaceLevel(&update)
+				updateForceSendFieldsWorkspaceLevel(&update, d)
 				if d.HasChange("owner") {
 					_, err := w.Metastores.Update(ctx, catalog.UpdateMetastore{
 						Id:    update.Id,

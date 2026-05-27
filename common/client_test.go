@@ -452,11 +452,11 @@ func TestWorkspaceClientForWorkspace_WorkspaceExistsInCache(t *testing.T) {
 	assert.Equal(t, mockWorkspaceClient, workspaceClient)
 }
 
-// TestWorkspaceClientForWorkspace_OpaqueIDSkipsAccountAPI verifies that an
-// opaque (non-numeric) workspace_id bypasses the account-API workspace
-// deployment lookup and routes directly via the configured unified host,
-// so the SDK can carry the value in the X-Databricks-Workspace-Id header.
-func TestWorkspaceClientForWorkspace_OpaqueIDSkipsAccountAPI(t *testing.T) {
+// TestWorkspaceClientForWorkspace_ConnectionIDSkipsAccountAPI verifies that a
+// connection-ID workspace_id bypasses the account-API workspace deployment
+// lookup and routes directly via the configured unified host, so the SDK can
+// carry the value in the X-Databricks-Workspace-Id header.
+func TestWorkspaceClientForWorkspace_ConnectionIDSkipsAccountAPI(t *testing.T) {
 	// Account client whose Workspaces.Get would error if called. We don't set
 	// any expectations, so any call to it would fail testify-mock strict mode.
 	mockAcc := mocks.NewMockAccountClient(t)
@@ -476,27 +476,27 @@ func TestWorkspaceClientForWorkspace_OpaqueIDSkipsAccountAPI(t *testing.T) {
 	}
 	dc.SetAccountClient(mockAcc.AccountClient)
 
-	// Opaque workspace_id: account API lookup must be skipped (any call would
-	// fail because no expectations are set) and direct routing must succeed.
-	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), "cpdr-opaque-test-id")
+	// Connection-ID workspace_id: account API lookup must be skipped (any call
+	// would fail because no expectations are set) and direct routing must succeed.
+	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), "cpdr-connection-test-id")
 	assert.NoError(t, err)
 	assert.NotNil(t, workspaceClient)
-	// The resulting workspace client carries the opaque ID in Config.WorkspaceID
+	// The resulting workspace client carries the connection ID in Config.WorkspaceID
 	// so the SDK middleware emits it as the X-Databricks-Workspace-Id header.
-	assert.Equal(t, "cpdr-opaque-test-id", workspaceClient.Config.WorkspaceID)
+	assert.Equal(t, "cpdr-connection-test-id", workspaceClient.Config.WorkspaceID)
 
-	// Cached under the opaque-string key.
+	// Cached under the connection-ID string key.
 	dc.mu.Lock()
-	_, exists := dc.cachedWorkspaceClients["cpdr-opaque-test-id"]
+	_, exists := dc.cachedWorkspaceClients["cpdr-connection-test-id"]
 	dc.mu.Unlock()
 	assert.True(t, exists)
 }
 
-// TestValidateWorkspaceIDFromProvider_OpaqueIDOnWorkspaceLevelHardFails
-// verifies that opaque workspace identifiers cannot be reconciled against a
-// workspace-level (host+token) provider, and that we surface a clear error
-// directing the user to switch to account-level credentials.
-func TestValidateWorkspaceIDFromProvider_OpaqueIDOnWorkspaceLevelHardFails(t *testing.T) {
+// TestValidateWorkspaceIDFromProvider_ConnectionIDOnWorkspaceLevelHardFails
+// verifies that a connection ID cannot be reconciled against a workspace-level
+// (host+token) provider, and that we surface a clear error directing the user
+// to switch to account-level credentials.
+func TestValidateWorkspaceIDFromProvider_ConnectionIDOnWorkspaceLevelHardFails(t *testing.T) {
 	dc := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
@@ -506,10 +506,10 @@ func TestValidateWorkspaceIDFromProvider_OpaqueIDOnWorkspaceLevelHardFails(t *te
 		},
 	}
 
-	err := dc.validateWorkspaceIDFromProvider(context.Background(), "cpdr-opaque-id", nil)
+	err := dc.validateWorkspaceIDFromProvider(context.Background(), "cpdr-connection-id", nil)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(),
-		"Opaque workspace identifiers are only supported when the provider is configured against an account-level")
+		"Connection IDs are only supported when the provider is configured against an account-level")
 }
 
 func TestAddApiField_ValidValues(t *testing.T) {

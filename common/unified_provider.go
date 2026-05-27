@@ -28,8 +28,8 @@ type ProviderConfig struct {
 }
 
 // workspaceIDValidateFunc is used to validate the workspace ID for the provider configuration.
-// Accepts either a classic numeric workspace ID or an opaque workspace identifier that the
-// platform gateway can disambiguate via the X-Databricks-Workspace-Id header.
+// Accepts either a classic numeric workspace ID or a connection ID that the platform gateway
+// can disambiguate via the X-Databricks-Workspace-Id header.
 func workspaceIDValidateFunc() func(interface{}, string) ([]string, []error) {
 	return validation.StringIsNotEmpty
 }

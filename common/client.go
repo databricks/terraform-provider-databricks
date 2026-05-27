@@ -69,13 +69,14 @@ type DatabricksClient struct {
 
 	// cachedDatabricksClients is a map of Databricks Clients authenticated to the workspaces
 	// configured for the provider. Keyed by the workspace_id string the caller used
-	// (numeric or opaque). Used by legacy SDKv2 resources and data sources not using Go SDK.
+	// (numeric workspace ID or connection ID). Used by legacy SDKv2 resources and
+	// data sources not using Go SDK.
 	cachedDatabricksClients map[string]*client.DatabricksClient
 
-	// cachedWorkspaceClients is a map of workspace clients keyed by the
-	// workspace_id string (numeric or opaque) used to address the workspace,
-	// populated when fetching a WorkspaceClient for a specific workspace ID
-	// via an account-level / unified-host provider.
+	// cachedWorkspaceClients is a map of workspace clients keyed by the workspace_id
+	// string (numeric workspace ID or connection ID) used to address the workspace,
+	// populated when fetching a WorkspaceClient for a specific workspace ID via an
+	// account-level / unified-host provider.
 	cachedWorkspaceClients map[string]*databricks.WorkspaceClient
 
 	// cachedAccountClient is a cached account client authenticated to the account
@@ -138,8 +139,8 @@ func (c *DatabricksClient) getWorkspaceClientForAccountUnifiedHost(
 	}
 
 	// Validate the workspace ID is non-empty (parseWorkspaceID accepts both
-	// numeric and opaque identifiers — the routing decision is made downstream
-	// in WorkspaceClientForWorkspace).
+	// numeric workspace IDs and connection IDs — the routing decision is made
+	// downstream in WorkspaceClientForWorkspace).
 	parsedID, err := parseWorkspaceID(workspaceID)
 	if err != nil {
 		return nil, err
@@ -186,7 +187,8 @@ func (c *DatabricksClient) getWorkspaceClientForWorkspaceConfiguredProvider(
 }
 
 // parseWorkspaceID validates the workspace ID is non-empty and returns it verbatim.
-// Numeric vs. opaque distinction is delegated to callers via isNumericWorkspaceID.
+// The numeric-workspace-ID vs. connection-ID distinction is delegated to callers
+// via isNumericWorkspaceID.
 func parseWorkspaceID(workspaceID string) (string, error) {
 	if workspaceID == "" {
 		return "", fmt.Errorf("workspace_id must not be empty")
@@ -196,7 +198,8 @@ func parseWorkspaceID(workspaceID string) (string, error) {
 
 // isNumericWorkspaceID reports whether the workspace ID is in classic numeric
 // form (parseable as int64). Used to choose between account-API workspace
-// lookup (numeric only) and direct unified-host routing (any format).
+// lookup (numeric only) and direct unified-host routing (which also accepts
+// connection IDs).
 func isNumericWorkspaceID(id string) bool {
 	if id == "" {
 		return false
@@ -225,18 +228,18 @@ func (c *DatabricksClient) CurrentWorkspaceID(ctx context.Context) (int64, error
 // validateWorkspaceIDFromProvider validates the workspace ID specified in the
 // resource or data source matches the workspace ID of the provider configured workspace client.
 // Workspace-level providers (host+token scoped to one workspace) can only operate on that workspace;
-// opaque workspace identifiers cannot be reconciled here because the server returns a canonical
-// numeric ID via /Me that has no meaningful comparison with an opaque user input.
+// connection IDs cannot be reconciled here because the server returns a canonical
+// numeric workspace ID via /Me that has no meaningful comparison with a connection ID.
 func (c *DatabricksClient) validateWorkspaceIDFromProvider(ctx context.Context, workspaceID string,
 	w *databricks.WorkspaceClient) error {
-	// Reject opaque identifiers up-front. A workspace-level provider (host+token)
+	// Reject connection IDs up-front. A workspace-level provider (host+token)
 	// is scoped to a single workspace; the server returns that workspace's
-	// canonical numeric ID via /Me, which can never be compared meaningfully
-	// against an opaque user input. Skipping the call to /Me here also avoids
-	// a confusing network error before the user sees the actionable message.
+	// canonical numeric workspace ID via /Me, which can never be compared
+	// meaningfully against a connection ID. Skipping the call to /Me here also
+	// avoids a confusing network error before the user sees the actionable message.
 	if !isNumericWorkspaceID(workspaceID) {
 		return fmt.Errorf(
-			"workspace_id %q is not a numeric workspace ID. Opaque workspace identifiers "+
+			"workspace_id %q is not a numeric workspace ID. Connection IDs "+
 				"are only supported when the provider is configured against an account-level or "+
 				"unified host that the platform gateway can disambiguate. To use this workspace_id, "+
 				"reconfigure the provider with account-level credentials (account_id + host) instead "+
@@ -335,7 +338,7 @@ func (c *DatabricksClient) WorkspaceClientForWorkspace(ctx context.Context, work
 			w, err = c.tryWorkspaceClientDirect(workspaceId)
 		}
 	} else {
-		// Opaque: the account API cannot look this up by string identifier.
+		// Connection ID: the account API cannot look this up by string identifier.
 		// Route directly via the unified host; the gateway disambiguates the
 		// X-Databricks-Workspace-Id header server-side.
 		w, err = c.tryWorkspaceClientDirect(workspaceId)

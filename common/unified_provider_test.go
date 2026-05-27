@@ -19,8 +19,8 @@ func TestWorkspaceIDValidateFunc(t *testing.T) {
 	validateFunc := workspaceIDValidateFunc()
 
 	// The validator now accepts any non-empty string so the provider can route
-	// either a classic numeric workspace ID or an opaque workspace identifier
-	// that the platform gateway disambiguates server-side.
+	// either a classic numeric workspace ID or a connection ID that the platform
+	// gateway disambiguates server-side.
 	testCases := []struct {
 		name        string
 		input       interface{}
@@ -42,12 +42,12 @@ func TestWorkspaceIDValidateFunc(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:        "valid opaque workspace identifier",
+			name:        "valid connection ID",
 			input:       "cpdr-abc-def-123",
 			expectError: false,
 		},
 		{
-			name:        "valid opaque identifier with leading zero",
+			name:        "value with leading zero now accepted",
 			input:       "0123",
 			expectError: false,
 		},
@@ -518,12 +518,12 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 			description:      "When workspace_id is set and client is not cached, should create new client",
 		},
 		{
-			name: "opaque workspace_id on workspace-level provider - hard fail",
+			name: "connection ID workspace_id on workspace-level provider - hard fail",
 			resourceData: map[string]interface{}{
 				"name": "test",
 				"provider_config": []interface{}{
 					map[string]interface{}{
-						"workspace_id": "cpdr-opaque-id",
+						"workspace_id": "cpdr-connection-id",
 					},
 				},
 			},
@@ -536,8 +536,8 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 				},
 			},
 			expectError:   true,
-			errorContains: "Opaque workspace identifiers are only supported when the provider is configured against an account-level",
-			description:   "Opaque IDs cannot be reconciled against a workspace-level provider; surface a clear error directing the user to account-level credentials",
+			errorContains: "Connection IDs are only supported when the provider is configured against an account-level",
+			description:   "Connection IDs cannot be reconciled against a workspace-level provider; surface a clear error directing the user to account-level credentials",
 		},
 		{
 			name: "account level provider without workspace_id - returns current client",

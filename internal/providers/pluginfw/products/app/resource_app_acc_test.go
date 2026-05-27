@@ -280,20 +280,6 @@ func appTemplate(provider_config string) string {
 	`, provider_config)
 }
 
-func TestAccApp_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: appTemplate(`
-			provider_config = {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(
-			`Attribute provider_config\.workspace_id\s+workspace_id must be a valid integer`,
-		),
-		PlanOnly: true,
-	})
-}
-
 func TestAccApp_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: appTemplate(`

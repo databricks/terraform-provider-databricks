@@ -36,39 +36,26 @@ func TestApiField_RegistrationConsistency(t *testing.T) {
 	}
 }
 
-func TestNoOverlap(t *testing.T) {
-	type group struct {
-		name    string
-		entries map[string]*schema.Resource
+func TestNoDuplicateKeys(t *testing.T) {
+	testNoDuplicateKeys(t, WorkspaceDataSources, AccountDataSources, DualDataSources)
+	testNoDuplicateKeys(t, WorkspaceResources, AccountResources, DualResources)
+}
+
+func testNoDuplicateKeys(t *testing.T, ms ...map[string]*schema.Resource) {
+	count := count(ms...)
+	for _, key := range slices.Sorted(maps.Keys(count)) {
+		if c := count[key]; c > 1 {
+			t.Errorf("%q is registered in multiple maps: %v", key, c)
+		}
 	}
-	cases := []struct {
-		kind   string
-		groups []group
-	}{
-		{"resources", []group{
-			{"WorkspaceResources", WorkspaceResources},
-			{"AccountResources", AccountResources},
-			{"DualResources", DualResources},
-		}},
-		{"dataSources", []group{
-			{"WorkspaceDataSources", WorkspaceDataSources},
-			{"AccountDataSources", AccountDataSources},
-			{"DualDataSources", DualDataSources},
-		}},
+}
+
+func count(ms ...map[string]*schema.Resource) map[string]int {
+	count := map[string]int{}
+	for _, m := range ms {
+		for key := range m {
+			count[key]++
+		}
 	}
-	for _, tc := range cases {
-		t.Run(tc.kind, func(t *testing.T) {
-			owners := map[string][]string{}
-			for _, g := range tc.groups {
-				for _, key := range slices.Sorted(maps.Keys(g.entries)) {
-					owners[key] = append(owners[key], g.name)
-				}
-			}
-			for _, key := range slices.Sorted(maps.Keys(owners)) {
-				if len(owners[key]) > 1 {
-					t.Errorf("%q is registered in multiple maps: %v", key, owners[key])
-				}
-			}
-		})
-	}
+	return count
 }

@@ -4,12 +4,19 @@ name: tagging
 on:
   # Manual dispatch.
   workflow_dispatch:
-    # No inputs are required for the manual dispatch.
+    inputs:
+      packages:
+        description: 'Comma-separated list of packages to tag (e.g. "pkg1,pkg2"). Leave empty to tag all packages with pending releases.'
+        required: false
+        type: string
+        default: ''
 
+  # NOTE: Temporarily disable automated releases.
+  #
   # Runs at 8:00 UTC on Monday, Tuesday, Wednesday, and Thursday. To enable automated
   # tagging for a repository, simply add it to the if block of the tag job.
-  schedule:
-    - cron: '0 8 * * MON,TUE,WED,THU'
+  # schedule:
+  #   - cron: '0 8 * * MON,TUE,WED,THU'
 
 # Ensure that only a single instance of the workflow is running at a time.
 concurrency:
@@ -30,8 +37,8 @@ jobs:
       github.repository == 'databricks/databricks-sdk-java'
     environment: "release-is"
     runs-on:
-      group: databricks-deco-testing-runner-group
-      labels: ubuntu-latest-deco
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
     steps:
       - name: Generate GitHub App Token
         id: generate-token
@@ -41,8 +48,14 @@ jobs:
           private-key: ${{ secrets.DECO_SDK_TAGGING_PRIVATE_KEY }}
 
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          # Force re-resolution of ``main`` at step time. Without
+          # ``ref:``, checkout pins to ``github.sha`` — the SHA frozen
+          # at workflow_dispatch time — which means re-running a stale
+          # dispatch checks out an older main even when newer commits
+          # exist.
+          ref: main
           fetch-depth: 0
           token: ${{ steps.generate-token.outputs.token }}
 
@@ -59,4 +72,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: uv run --locked tagging.py
+          PACKAGES: ${{ inputs.packages }}
+        run: |
+          if [ -n "$PACKAGES" ]; then
+            uv run --locked tagging.py --package "$PACKAGES"
+          else
+            uv run --locked tagging.py
+          fi
+
+      - name: Upload created tags artifact
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: created-tags
+          path: created_tags.json
+          if-no-files-found: ignore

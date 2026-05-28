@@ -45,6 +45,7 @@ func TestQualityMonitorV2Export(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
+		client.Config.WorkspaceID = testProviderWorkspaceID
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 
@@ -73,7 +74,7 @@ func TestQualityMonitorV2ExportWithMultipleMonitors(t *testing.T) {
 		{
 			Method:       "GET",
 			ReuseRequest: true,
-			Resource:     "/api/2.0/preview/scim/v2/Me",
+			Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 			Response: scim.User{
 				Groups: []scim.ComplexValue{
 					{
@@ -126,6 +127,7 @@ func TestQualityMonitorV2ExportWithMultipleMonitors(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
+		client.Config.WorkspaceID = testProviderWorkspaceID
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 
@@ -177,6 +179,7 @@ func TestDataQualityMonitorsExport(t *testing.T) {
 			ReuseRequest: true,
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
+		client.Config.WorkspaceID = testProviderWorkspaceID
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 

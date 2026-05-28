@@ -19,6 +19,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -456,7 +457,7 @@ func (ic *importContext) Run() error {
 		return fmt.Errorf("the path %s is not a directory", ic.Directory)
 	}
 
-	ic.accountLevel = ic.Client.Config.HostType() == config.AccountHost
+	ic.accountLevel = ic.Client.HostTypeForTerraform() == config.AccountHost
 	if ic.accountLevel {
 		ic.meAdmin = true
 		// TODO: check if we can get the current user from the account client
@@ -469,7 +470,7 @@ func (ic *importContext) Run() error {
 		if err != nil {
 			return err
 		}
-		me, err := ic.workspaceClient.CurrentUser.Me(ic.Context)
+		me, err := ic.workspaceClient.CurrentUser.Me(ic.Context, iam.MeRequest{ExcludedAttributes: "entitlements"})
 		if err != nil {
 			return err
 		}

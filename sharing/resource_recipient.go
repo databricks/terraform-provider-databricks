@@ -55,7 +55,7 @@ func ResourceRecipient() common.Resource {
 	return common.Resource{
 		Schema: recipientSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-			return common.NamespaceCustomizeDiff(ctx, d, c)
+			return common.NamespaceCustomizeDiffNoForceNew(ctx, d, c)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)

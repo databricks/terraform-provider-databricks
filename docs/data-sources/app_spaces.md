@@ -15,7 +15,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes
@@ -53,6 +53,8 @@ This data source exports a single attribute, `spaces`. It is a list of resources
 * `uc_securable` (AppResourceUcSecurable)
 
 ### AppResourceApp
+* `name` (string)
+* `permission` (string) - Possible values are: `CAN_USE`
 
 ### AppResourceDatabase
 * `database_name` (string)

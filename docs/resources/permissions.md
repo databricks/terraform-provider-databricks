@@ -950,7 +950,7 @@ resource "databricks_group" "eng" {
   display_name = "Engineering"
 }
 
-resource "databricks_permissions" "app_usage" {
+resource "databricks_permissions" "db_instance_usage" {
   database_instance_name = "my_database"
 
   access_control {
@@ -980,6 +980,54 @@ resource "databricks_permissions" "db_project_usage" {
   access_control {
     group_name       = "users"
     permission_level = "CAN_USE"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
+}
+```
+
+## Knowledge Assistant usage
+
+[Knowledge Assistants](knowledge_assistant.md) have two possible permissions: `CAN_QUERY` and `CAN_MANAGE`:
+
+```hcl
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_permissions" "knowledge_assistant_usage" {
+  knowledge_assistant_id = databricks_knowledge_assistant.this.id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_QUERY"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
+}
+```
+
+## Supervisor Agent usage
+
+[Supervisor Agents](supervisor_agent.md) have two possible permissions: `CAN_QUERY` and `CAN_MANAGE`:
+
+```hcl
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_permissions" "supervisor_agent_usage" {
+  supervisor_agent_id = databricks_supervisor_agent.this.supervisor_agent_id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_QUERY"
   }
 
   access_control {
@@ -1031,6 +1079,8 @@ Exactly one of the following arguments is required:
 - `vector_search_endpoint_id` - [Vector Search](vector_search_endpoint.md) endpoint id.
 - `database_instance_name` - [Lakebase database instance](https://docs.databricks.com/aws/en/oltp/) name
 - `database_project_name` - [Lakebase database project](https://docs.databricks.com/aws/en/oltp/) name
+- `knowledge_assistant_id` - [Knowledge Assistant](knowledge_assistant.md) id
+- `supervisor_agent_id` - [Supervisor Agent](supervisor_agent.md) id
 - `authorization` - either [`tokens`](https://docs.databricks.com/administration-guide/access-control/tokens.html) or [`passwords`](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#configure-password-permission).
 - `sql_endpoint_id` - [SQL warehouse](sql_endpoint.md) id
 - `sql_dashboard_id` - [SQL dashboard](sql_dashboard.md) id

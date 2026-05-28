@@ -75,7 +75,7 @@ The following arguments are supported:
 * `custom_description` (string, optional) - Custom description for the alert. support mustache template
 * `custom_summary` (string, optional) - Custom summary for the alert. support mustache template
 * `parent_path` (string, optional) - The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated
-* `purge_on_delete` (boolean, optional) - Purge the resource on delete
+* `purge_on_delete` (boolean, optional) - Whether to permanently delete the alert. If not set, the alert will only be soft deleted
 * `run_as` (AlertV2RunAs, optional) - Specifies the identity that will be used to run the alert.
   This field allows you to configure alerts to run as a specific user or service principal.
   - For user identity: Set `user_name` to the email of an active workspace user. Users can only set this to their own email.
@@ -87,7 +87,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### AlertV2Evaluation
 * `comparison_operator` (string, required) - Operator used for comparison in alert evaluation. Possible values are: `EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `IS_NOT_NULL`, `IS_NULL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`

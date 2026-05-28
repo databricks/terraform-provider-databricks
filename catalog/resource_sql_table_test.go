@@ -1883,6 +1883,8 @@ func TestResourceSqlTable_Diff_ExistingResource(t *testing.T) {
 			if expectedDiff == nil {
 				expectedDiff = make(map[string]*terraform.ResourceAttrDiff)
 			}
+			// provider_config is Optional+Computed, so it always appears as computed in the diff
+			expectedDiff["provider_config.#"] = &terraform.ResourceAttrDiff{Old: "", New: "", NewComputed: true}
 			qa.ResourceFixture{
 				HCL: `
 					catalog_name = "main"

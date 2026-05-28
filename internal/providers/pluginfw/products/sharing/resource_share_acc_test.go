@@ -673,17 +673,6 @@ func TestAccShare_ProviderConfig_Multiple(t *testing.T) {
 	})
 }
 
-func TestAccShare_ProviderConfig_Required(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config {
-			}
-		`),
-		ExpectError: regexp.MustCompile(`(?s).*workspace_id.*is required`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccShare_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`

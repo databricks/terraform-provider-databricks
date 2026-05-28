@@ -10388,18 +10388,20 @@ func (m *EnforceClusterComplianceResponse_SdkV2) SetChanges(ctx context.Context,
 }
 
 // The environment entity used to preserve serverless environment side panel,
-// jobs' environment for non-notebook task, and DLT's environment for classic
+// jobs' environment for non-notebook task, and SDP's environment for classic
 // and serverless pipelines. In this minimal environment spec, only pip and java
 // dependencies are supported.
 type Environment_SdkV2 struct {
-	// The `base_environment` key refers to an `env.yaml` file that specifies an
-	// environment version and a collection of dependencies required for the
-	// environment setup. This `env.yaml` file may itself include a
-	// `base_environment` reference pointing to another `env_1.yaml` file.
-	// However, when used as a base environment, `env_1.yaml` (or further nested
-	// references) will not be processed or included in the final environment,
-	// meaning that the resolution of `base_environment` references is not
-	// recursive.
+	// The base environment this environment is built on top of. A base
+	// environment defines the environment version and a list of dependencies
+	// for serverless compute. The value can be a file path to a custom
+	// `env.yaml` file (e.g., `/Workspace/path/to/env.yaml`). Support for a
+	// Databricks-provided base environment ID (e.g.,
+	// `workspace-base-environments/databricks_ai_v4`) and workspace base
+	// environment ID (e.g.,
+	// `workspace-base-environments/dbe_b849b66e-b31a-4cb5-b161-1f2b10877fb7`)
+	// is in Beta. Either `environment_version` or `base_environment` can be
+	// provided. For more information, see
 	BaseEnvironment types.String `tfsdk:"base_environment"`
 	// Use `environment_version` instead.
 	Client types.String `tfsdk:"client"`
@@ -11000,6 +11002,10 @@ type GcpAttributes_SdkV2 struct {
 	Availability types.String `tfsdk:"availability"`
 	// Boot disk size in GB
 	BootDiskSize types.Int64 `tfsdk:"boot_disk_size"`
+	// The confidential computing technology for this cluster's instances.
+	// Currently only SEV_SNP is supported, and only on N2D instance types. When
+	// not set, no confidential computing is applied.
+	ConfidentialComputeType types.String `tfsdk:"confidential_compute_type"`
 	// The first `first_on_demand` nodes of the cluster will be placed on
 	// on-demand instances. This value should be greater than 0, to make sure
 	// the cluster driver node is placed on an on-demand instance. If this value
@@ -11046,6 +11052,7 @@ func (to *GcpAttributes_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Gc
 func (m GcpAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["availability"] = attrs["availability"].SetOptional()
 	attrs["boot_disk_size"] = attrs["boot_disk_size"].SetOptional()
+	attrs["confidential_compute_type"] = attrs["confidential_compute_type"].SetOptional()
 	attrs["first_on_demand"] = attrs["first_on_demand"].SetOptional()
 	attrs["google_service_account"] = attrs["google_service_account"].SetOptional()
 	attrs["local_ssd_count"] = attrs["local_ssd_count"].SetOptional()
@@ -11075,6 +11082,7 @@ func (m GcpAttributes_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 		map[string]attr.Value{
 			"availability":              m.Availability,
 			"boot_disk_size":            m.BootDiskSize,
+			"confidential_compute_type": m.ConfidentialComputeType,
 			"first_on_demand":           m.FirstOnDemand,
 			"google_service_account":    m.GoogleServiceAccount,
 			"local_ssd_count":           m.LocalSsdCount,
@@ -11089,6 +11097,7 @@ func (m GcpAttributes_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"availability":              types.StringType,
 			"boot_disk_size":            types.Int64Type,
+			"confidential_compute_type": types.StringType,
 			"first_on_demand":           types.Int64Type,
 			"google_service_account":    types.StringType,
 			"local_ssd_count":           types.Int64Type,

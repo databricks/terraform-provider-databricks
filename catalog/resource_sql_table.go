@@ -15,6 +15,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -617,6 +618,9 @@ func ResourceSqlTable() common.Resource {
 	return common.Resource{
 		Schema: tableSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			if err := common.NamespaceCustomizeDiffNoForceNew(ctx, d, c); err != nil {
+				return err
+			}
 			if d.HasChange("column") {
 				var newTableStruct SqlTableInfo
 				common.DiffToStructPointer(d, tableSchema, &newTableStruct)
@@ -754,7 +758,7 @@ func ResourceSqlTable() common.Resource {
 			if d.HasChange("owner") {
 				// if new owner is not specified, set it to the current user
 				if newti.Owner == "" {
-					currentUser, err := w.CurrentUser.Me(ctx)
+					currentUser, err := w.CurrentUser.Me(ctx, iam.MeRequest{ExcludedAttributes: "entitlements"})
 					if err != nil {
 						return err
 					}

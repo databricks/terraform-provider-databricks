@@ -15,6 +15,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -33,6 +34,7 @@ import (
 const resourceName = "policy_info"
 
 var _ resource.ResourceWithConfigure = &PolicyInfoResource{}
+var _ resource.ResourceWithModifyPlan = &PolicyInfoResource{}
 
 func ResourcePolicyInfo() resource.Resource {
 	return &PolicyInfoResource{}
@@ -49,10 +51,10 @@ type ProviderConfig struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
-
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
 		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
@@ -342,6 +344,8 @@ func (m PolicyInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["on_securable_fullname"] = attrs["on_securable_fullname"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+	attrs["provider_config"] = attrs["provider_config"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
 
 	return attrs
 }
@@ -491,6 +495,21 @@ func (r *PolicyInfoResource) Configure(ctx context.Context, req resource.Configu
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
+func (r *PolicyInfoResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip entirely on destroy (no plan state).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
+}
+
 func (r *PolicyInfoResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -545,6 +564,7 @@ func (r *PolicyInfoResource) Create(ctx context.Context, req resource.CreateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
 }
 
 func (r *PolicyInfoResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -582,7 +602,6 @@ func (r *PolicyInfoResource) Read(ctx context.Context, req resource.ReadRequest,
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get policy_info", err.Error())
 		return
 	}
@@ -596,6 +615,10 @@ func (r *PolicyInfoResource) Read(ctx context.Context, req resource.ReadRequest,
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, existingState.ProviderConfig, &resp.State)...)
 }
 
 func (r *PolicyInfoResource) update(ctx context.Context, plan PolicyInfo, diags *diag.Diagnostics, state *tfsdk.State) {
@@ -689,6 +712,9 @@ func (r *PolicyInfoResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	_, err := client.Policies.DeletePolicy(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete policy_info", err.Error())
 		return

@@ -38,6 +38,7 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleCreate(t *testing.T) {
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		HCL: `
 		network_connectivity_config_id = "ncc_id"
 		resource_id = "resource_id"
@@ -61,6 +62,7 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleCreate_Error(t *testin
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		HCL: `
 		network_connectivity_config_id = "ncc_id"
 		resource_id = "resource_id"
@@ -81,6 +83,7 @@ func TestResourceNccPrivateEndpointRuleRead(t *testing.T) {
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		Read:      true,
 		New:       true,
 		ID:        "ncc_id/rule_id",
@@ -103,6 +106,7 @@ func TestResourceNccPrivateEndpointRuleRead_Error(t *testing.T) {
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		Read:      true,
 		ID:        "ncc_id/rule_id",
 	}.Apply(t)
@@ -135,6 +139,7 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleUpdateDomainName(t *te
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "ncc_id/rule_id",
 		InstanceState: map[string]string{
 			"network_connectivity_config_id": "ncc_id",
@@ -182,6 +187,7 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleUpdateResourceName(t *
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "ncc_id/rule_id",
 		InstanceState: map[string]string{
 			"network_connectivity_config_id": "ncc_id",
@@ -227,6 +233,7 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleUpdateEnabled(t *testi
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "ncc_id/rule_id",
 		InstanceState: map[string]string{
 			"network_connectivity_config_id": "ncc_id",
@@ -260,6 +267,7 @@ func TestResourceNccPrivateEndpointRuleDelete(t *testing.T) {
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		Delete:    true,
 		ID:        "ncc_id/rule_id",
 	}.ApplyAndExpectData(t, map[string]any{"id": "ncc_id/rule_id"})
@@ -274,6 +282,7 @@ func TestResourceNccPrivateEndpointRuleDelete_Error(t *testing.T) {
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "ncc_id/rule_id",
 		HCL: `
 		network_connectivity_config_id = "ncc_id"

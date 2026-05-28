@@ -43,7 +43,7 @@ const tfSdkToGoSdkFieldConversionFailureMessage = "tfsdk to gosdk field conversi
 // types.list and types.map are not supported
 // map keys should always be a string
 // tfsdk structs use types.String for all enum values
-func TfSdkToGoSdkStruct(ctx context.Context, tfsdk interface{}, gosdk interface{}) (d diag.Diagnostics) {
+func TfSdkToGoSdkStruct(ctx context.Context, tfsdk any, gosdk any) (d diag.Diagnostics) {
 	srcVal := reflect.ValueOf(tfsdk)
 	destVal := reflect.ValueOf(gosdk)
 
@@ -178,7 +178,7 @@ func tfsdkToGoSdkStructField(
 		rawMsg := json.RawMessage(jsonStr)
 		destField.Set(reflect.ValueOf(&rawMsg))
 	case types.String:
-		if destField.Type() == reflect.TypeOf(fieldmask.FieldMask{}) {
+		if destField.Type() == reflect.TypeFor[fieldmask.FieldMask]() {
 			// fieldmask.FieldMask is represented as a types.String in the TF SDK.
 			if v.IsNull() || v.IsUnknown() {
 				// Leave the destination field as zero value (empty fieldmask)
@@ -278,7 +278,7 @@ func tfsdkToGoSdkStructField(
 
 		// Read the nested elements into the TFSDK struct map
 		// This is a map from string to either TFSDK structs or bools, ints, strings, and floats from the TF plugin framework types.
-		innerValue := reflect.New(reflect.MapOf(reflect.TypeOf(""), innerType))
+		innerValue := reflect.New(reflect.MapOf(reflect.TypeFor[string](), innerType))
 		d.Append(v.ElementsAs(ctx, innerValue.Interface(), true)...)
 		if d.HasError() {
 			return
@@ -286,7 +286,7 @@ func tfsdkToGoSdkStructField(
 
 		// Recursively call TFSDK to GOSDK conversion for each element in the map
 		destType := destField.Type().Elem()
-		converted := reflect.MakeMap(reflect.MapOf(reflect.TypeOf(""), destType))
+		converted := reflect.MakeMap(reflect.MapOf(reflect.TypeFor[string](), destType))
 		for _, key := range innerValue.Elem().MapKeys() {
 			vv := innerValue.Elem().MapIndex(key).Interface()
 			nextDest := reflect.New(destType)

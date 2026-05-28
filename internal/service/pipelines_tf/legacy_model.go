@@ -24,6 +24,94 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+type ApplyEnvironmentRequest_SdkV2 struct {
+	PipelineId types.String `tfsdk:"-"`
+}
+
+func (to *ApplyEnvironmentRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ApplyEnvironmentRequest_SdkV2) {
+}
+
+func (to *ApplyEnvironmentRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ApplyEnvironmentRequest_SdkV2) {
+}
+
+func (m ApplyEnvironmentRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ApplyEnvironmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ApplyEnvironmentRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ApplyEnvironmentRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ApplyEnvironmentRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"pipeline_id": m.PipelineId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ApplyEnvironmentRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"pipeline_id": types.StringType,
+		},
+	}
+}
+
+type ApplyEnvironmentRequestResponse_SdkV2 struct {
+}
+
+func (to *ApplyEnvironmentRequestResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ApplyEnvironmentRequestResponse_SdkV2) {
+}
+
+func (to *ApplyEnvironmentRequestResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ApplyEnvironmentRequestResponse_SdkV2) {
+}
+
+func (m ApplyEnvironmentRequestResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ApplyEnvironmentRequestResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ApplyEnvironmentRequestResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ApplyEnvironmentRequestResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ApplyEnvironmentRequestResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ApplyEnvironmentRequestResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 // Policy for auto full refresh.
 type AutoFullRefreshPolicy_SdkV2 struct {
 	// (Required, Mutable) Whether to enable auto full refresh or not.
@@ -93,7 +181,7 @@ type ClonePipelineRequest_SdkV2 struct {
 	// `catalog`.`target`.`table`). If `target` is not specified, no data is
 	// published to Unity Catalog.
 	Catalog types.String `tfsdk:"catalog"`
-	// DLT Release Channel that specifies which version to use.
+	// SDP Release Channel that specifies which version to use.
 	Channel types.String `tfsdk:"channel"`
 	// The type of clone to perform. Currently, only deep copies are supported
 	CloneMode types.String `tfsdk:"clone_mode"`
@@ -956,6 +1044,415 @@ func (m ConnectionParameters_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Wrapper message for source-specific options to support multiple connector
+// types
+type ConnectorOptions_SdkV2 struct {
+	GdriveOptions types.List `tfsdk:"gdrive_options"`
+
+	GoogleAdsOptions types.List `tfsdk:"google_ads_options"`
+
+	JiraOptions types.List `tfsdk:"jira_options"`
+
+	OutlookOptions types.List `tfsdk:"outlook_options"`
+
+	SharepointOptions types.List `tfsdk:"sharepoint_options"`
+
+	SmartsheetOptions types.List `tfsdk:"smartsheet_options"`
+
+	TiktokAdsOptions types.List `tfsdk:"tiktok_ads_options"`
+}
+
+func (to *ConnectorOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ConnectorOptions_SdkV2) {
+	if !from.GdriveOptions.IsNull() && !from.GdriveOptions.IsUnknown() {
+		if toGdriveOptions, ok := to.GetGdriveOptions(ctx); ok {
+			if fromGdriveOptions, ok := from.GetGdriveOptions(ctx); ok {
+				// Recursively sync the fields of GdriveOptions
+				toGdriveOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromGdriveOptions)
+				to.SetGdriveOptions(ctx, toGdriveOptions)
+			}
+		}
+	}
+	if !from.GoogleAdsOptions.IsNull() && !from.GoogleAdsOptions.IsUnknown() {
+		if toGoogleAdsOptions, ok := to.GetGoogleAdsOptions(ctx); ok {
+			if fromGoogleAdsOptions, ok := from.GetGoogleAdsOptions(ctx); ok {
+				// Recursively sync the fields of GoogleAdsOptions
+				toGoogleAdsOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromGoogleAdsOptions)
+				to.SetGoogleAdsOptions(ctx, toGoogleAdsOptions)
+			}
+		}
+	}
+	if !from.JiraOptions.IsNull() && !from.JiraOptions.IsUnknown() {
+		if toJiraOptions, ok := to.GetJiraOptions(ctx); ok {
+			if fromJiraOptions, ok := from.GetJiraOptions(ctx); ok {
+				// Recursively sync the fields of JiraOptions
+				toJiraOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromJiraOptions)
+				to.SetJiraOptions(ctx, toJiraOptions)
+			}
+		}
+	}
+	if !from.OutlookOptions.IsNull() && !from.OutlookOptions.IsUnknown() {
+		if toOutlookOptions, ok := to.GetOutlookOptions(ctx); ok {
+			if fromOutlookOptions, ok := from.GetOutlookOptions(ctx); ok {
+				// Recursively sync the fields of OutlookOptions
+				toOutlookOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromOutlookOptions)
+				to.SetOutlookOptions(ctx, toOutlookOptions)
+			}
+		}
+	}
+	if !from.SharepointOptions.IsNull() && !from.SharepointOptions.IsUnknown() {
+		if toSharepointOptions, ok := to.GetSharepointOptions(ctx); ok {
+			if fromSharepointOptions, ok := from.GetSharepointOptions(ctx); ok {
+				// Recursively sync the fields of SharepointOptions
+				toSharepointOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromSharepointOptions)
+				to.SetSharepointOptions(ctx, toSharepointOptions)
+			}
+		}
+	}
+	if !from.SmartsheetOptions.IsNull() && !from.SmartsheetOptions.IsUnknown() {
+		if toSmartsheetOptions, ok := to.GetSmartsheetOptions(ctx); ok {
+			if fromSmartsheetOptions, ok := from.GetSmartsheetOptions(ctx); ok {
+				// Recursively sync the fields of SmartsheetOptions
+				toSmartsheetOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromSmartsheetOptions)
+				to.SetSmartsheetOptions(ctx, toSmartsheetOptions)
+			}
+		}
+	}
+	if !from.TiktokAdsOptions.IsNull() && !from.TiktokAdsOptions.IsUnknown() {
+		if toTiktokAdsOptions, ok := to.GetTiktokAdsOptions(ctx); ok {
+			if fromTiktokAdsOptions, ok := from.GetTiktokAdsOptions(ctx); ok {
+				// Recursively sync the fields of TiktokAdsOptions
+				toTiktokAdsOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromTiktokAdsOptions)
+				to.SetTiktokAdsOptions(ctx, toTiktokAdsOptions)
+			}
+		}
+	}
+}
+
+func (to *ConnectorOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ConnectorOptions_SdkV2) {
+	if !from.GdriveOptions.IsNull() && !from.GdriveOptions.IsUnknown() {
+		if toGdriveOptions, ok := to.GetGdriveOptions(ctx); ok {
+			if fromGdriveOptions, ok := from.GetGdriveOptions(ctx); ok {
+				toGdriveOptions.SyncFieldsDuringRead(ctx, fromGdriveOptions)
+				to.SetGdriveOptions(ctx, toGdriveOptions)
+			}
+		}
+	}
+	if !from.GoogleAdsOptions.IsNull() && !from.GoogleAdsOptions.IsUnknown() {
+		if toGoogleAdsOptions, ok := to.GetGoogleAdsOptions(ctx); ok {
+			if fromGoogleAdsOptions, ok := from.GetGoogleAdsOptions(ctx); ok {
+				toGoogleAdsOptions.SyncFieldsDuringRead(ctx, fromGoogleAdsOptions)
+				to.SetGoogleAdsOptions(ctx, toGoogleAdsOptions)
+			}
+		}
+	}
+	if !from.JiraOptions.IsNull() && !from.JiraOptions.IsUnknown() {
+		if toJiraOptions, ok := to.GetJiraOptions(ctx); ok {
+			if fromJiraOptions, ok := from.GetJiraOptions(ctx); ok {
+				toJiraOptions.SyncFieldsDuringRead(ctx, fromJiraOptions)
+				to.SetJiraOptions(ctx, toJiraOptions)
+			}
+		}
+	}
+	if !from.OutlookOptions.IsNull() && !from.OutlookOptions.IsUnknown() {
+		if toOutlookOptions, ok := to.GetOutlookOptions(ctx); ok {
+			if fromOutlookOptions, ok := from.GetOutlookOptions(ctx); ok {
+				toOutlookOptions.SyncFieldsDuringRead(ctx, fromOutlookOptions)
+				to.SetOutlookOptions(ctx, toOutlookOptions)
+			}
+		}
+	}
+	if !from.SharepointOptions.IsNull() && !from.SharepointOptions.IsUnknown() {
+		if toSharepointOptions, ok := to.GetSharepointOptions(ctx); ok {
+			if fromSharepointOptions, ok := from.GetSharepointOptions(ctx); ok {
+				toSharepointOptions.SyncFieldsDuringRead(ctx, fromSharepointOptions)
+				to.SetSharepointOptions(ctx, toSharepointOptions)
+			}
+		}
+	}
+	if !from.SmartsheetOptions.IsNull() && !from.SmartsheetOptions.IsUnknown() {
+		if toSmartsheetOptions, ok := to.GetSmartsheetOptions(ctx); ok {
+			if fromSmartsheetOptions, ok := from.GetSmartsheetOptions(ctx); ok {
+				toSmartsheetOptions.SyncFieldsDuringRead(ctx, fromSmartsheetOptions)
+				to.SetSmartsheetOptions(ctx, toSmartsheetOptions)
+			}
+		}
+	}
+	if !from.TiktokAdsOptions.IsNull() && !from.TiktokAdsOptions.IsUnknown() {
+		if toTiktokAdsOptions, ok := to.GetTiktokAdsOptions(ctx); ok {
+			if fromTiktokAdsOptions, ok := from.GetTiktokAdsOptions(ctx); ok {
+				toTiktokAdsOptions.SyncFieldsDuringRead(ctx, fromTiktokAdsOptions)
+				to.SetTiktokAdsOptions(ctx, toTiktokAdsOptions)
+			}
+		}
+	}
+}
+
+func (m ConnectorOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["gdrive_options"] = attrs["gdrive_options"].SetOptional()
+	attrs["gdrive_options"] = attrs["gdrive_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["google_ads_options"] = attrs["google_ads_options"].SetOptional()
+	attrs["google_ads_options"] = attrs["google_ads_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["jira_options"] = attrs["jira_options"].SetOptional()
+	attrs["jira_options"] = attrs["jira_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["outlook_options"] = attrs["outlook_options"].SetOptional()
+	attrs["outlook_options"] = attrs["outlook_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["sharepoint_options"] = attrs["sharepoint_options"].SetOptional()
+	attrs["sharepoint_options"] = attrs["sharepoint_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["smartsheet_options"] = attrs["smartsheet_options"].SetOptional()
+	attrs["smartsheet_options"] = attrs["smartsheet_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["tiktok_ads_options"] = attrs["tiktok_ads_options"].SetOptional()
+	attrs["tiktok_ads_options"] = attrs["tiktok_ads_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ConnectorOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ConnectorOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"gdrive_options":     reflect.TypeOf(GoogleDriveOptions_SdkV2{}),
+		"google_ads_options": reflect.TypeOf(GoogleAdsOptions_SdkV2{}),
+		"jira_options":       reflect.TypeOf(JiraConnectorOptions_SdkV2{}),
+		"outlook_options":    reflect.TypeOf(OutlookOptions_SdkV2{}),
+		"sharepoint_options": reflect.TypeOf(SharepointOptions_SdkV2{}),
+		"smartsheet_options": reflect.TypeOf(SmartsheetOptions_SdkV2{}),
+		"tiktok_ads_options": reflect.TypeOf(TikTokAdsOptions_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ConnectorOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ConnectorOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"gdrive_options":     m.GdriveOptions,
+			"google_ads_options": m.GoogleAdsOptions,
+			"jira_options":       m.JiraOptions,
+			"outlook_options":    m.OutlookOptions,
+			"sharepoint_options": m.SharepointOptions,
+			"smartsheet_options": m.SmartsheetOptions,
+			"tiktok_ads_options": m.TiktokAdsOptions,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ConnectorOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"gdrive_options": basetypes.ListType{
+				ElemType: GoogleDriveOptions_SdkV2{}.Type(ctx),
+			},
+			"google_ads_options": basetypes.ListType{
+				ElemType: GoogleAdsOptions_SdkV2{}.Type(ctx),
+			},
+			"jira_options": basetypes.ListType{
+				ElemType: JiraConnectorOptions_SdkV2{}.Type(ctx),
+			},
+			"outlook_options": basetypes.ListType{
+				ElemType: OutlookOptions_SdkV2{}.Type(ctx),
+			},
+			"sharepoint_options": basetypes.ListType{
+				ElemType: SharepointOptions_SdkV2{}.Type(ctx),
+			},
+			"smartsheet_options": basetypes.ListType{
+				ElemType: SmartsheetOptions_SdkV2{}.Type(ctx),
+			},
+			"tiktok_ads_options": basetypes.ListType{
+				ElemType: TikTokAdsOptions_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetGdriveOptions returns the value of the GdriveOptions field in ConnectorOptions_SdkV2 as
+// a GoogleDriveOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions_SdkV2) GetGdriveOptions(ctx context.Context) (GoogleDriveOptions_SdkV2, bool) {
+	var e GoogleDriveOptions_SdkV2
+	if m.GdriveOptions.IsNull() || m.GdriveOptions.IsUnknown() {
+		return e, false
+	}
+	var v []GoogleDriveOptions_SdkV2
+	d := m.GdriveOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGdriveOptions sets the value of the GdriveOptions field in ConnectorOptions_SdkV2.
+func (m *ConnectorOptions_SdkV2) SetGdriveOptions(ctx context.Context, v GoogleDriveOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["gdrive_options"]
+	m.GdriveOptions = types.ListValueMust(t, vs)
+}
+
+// GetGoogleAdsOptions returns the value of the GoogleAdsOptions field in ConnectorOptions_SdkV2 as
+// a GoogleAdsOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions_SdkV2) GetGoogleAdsOptions(ctx context.Context) (GoogleAdsOptions_SdkV2, bool) {
+	var e GoogleAdsOptions_SdkV2
+	if m.GoogleAdsOptions.IsNull() || m.GoogleAdsOptions.IsUnknown() {
+		return e, false
+	}
+	var v []GoogleAdsOptions_SdkV2
+	d := m.GoogleAdsOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGoogleAdsOptions sets the value of the GoogleAdsOptions field in ConnectorOptions_SdkV2.
+func (m *ConnectorOptions_SdkV2) SetGoogleAdsOptions(ctx context.Context, v GoogleAdsOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["google_ads_options"]
+	m.GoogleAdsOptions = types.ListValueMust(t, vs)
+}
+
+// GetJiraOptions returns the value of the JiraOptions field in ConnectorOptions_SdkV2 as
+// a JiraConnectorOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions_SdkV2) GetJiraOptions(ctx context.Context) (JiraConnectorOptions_SdkV2, bool) {
+	var e JiraConnectorOptions_SdkV2
+	if m.JiraOptions.IsNull() || m.JiraOptions.IsUnknown() {
+		return e, false
+	}
+	var v []JiraConnectorOptions_SdkV2
+	d := m.JiraOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetJiraOptions sets the value of the JiraOptions field in ConnectorOptions_SdkV2.
+func (m *ConnectorOptions_SdkV2) SetJiraOptions(ctx context.Context, v JiraConnectorOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["jira_options"]
+	m.JiraOptions = types.ListValueMust(t, vs)
+}
+
+// GetOutlookOptions returns the value of the OutlookOptions field in ConnectorOptions_SdkV2 as
+// a OutlookOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions_SdkV2) GetOutlookOptions(ctx context.Context) (OutlookOptions_SdkV2, bool) {
+	var e OutlookOptions_SdkV2
+	if m.OutlookOptions.IsNull() || m.OutlookOptions.IsUnknown() {
+		return e, false
+	}
+	var v []OutlookOptions_SdkV2
+	d := m.OutlookOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOutlookOptions sets the value of the OutlookOptions field in ConnectorOptions_SdkV2.
+func (m *ConnectorOptions_SdkV2) SetOutlookOptions(ctx context.Context, v OutlookOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["outlook_options"]
+	m.OutlookOptions = types.ListValueMust(t, vs)
+}
+
+// GetSharepointOptions returns the value of the SharepointOptions field in ConnectorOptions_SdkV2 as
+// a SharepointOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions_SdkV2) GetSharepointOptions(ctx context.Context) (SharepointOptions_SdkV2, bool) {
+	var e SharepointOptions_SdkV2
+	if m.SharepointOptions.IsNull() || m.SharepointOptions.IsUnknown() {
+		return e, false
+	}
+	var v []SharepointOptions_SdkV2
+	d := m.SharepointOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSharepointOptions sets the value of the SharepointOptions field in ConnectorOptions_SdkV2.
+func (m *ConnectorOptions_SdkV2) SetSharepointOptions(ctx context.Context, v SharepointOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sharepoint_options"]
+	m.SharepointOptions = types.ListValueMust(t, vs)
+}
+
+// GetSmartsheetOptions returns the value of the SmartsheetOptions field in ConnectorOptions_SdkV2 as
+// a SmartsheetOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions_SdkV2) GetSmartsheetOptions(ctx context.Context) (SmartsheetOptions_SdkV2, bool) {
+	var e SmartsheetOptions_SdkV2
+	if m.SmartsheetOptions.IsNull() || m.SmartsheetOptions.IsUnknown() {
+		return e, false
+	}
+	var v []SmartsheetOptions_SdkV2
+	d := m.SmartsheetOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSmartsheetOptions sets the value of the SmartsheetOptions field in ConnectorOptions_SdkV2.
+func (m *ConnectorOptions_SdkV2) SetSmartsheetOptions(ctx context.Context, v SmartsheetOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["smartsheet_options"]
+	m.SmartsheetOptions = types.ListValueMust(t, vs)
+}
+
+// GetTiktokAdsOptions returns the value of the TiktokAdsOptions field in ConnectorOptions_SdkV2 as
+// a TikTokAdsOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions_SdkV2) GetTiktokAdsOptions(ctx context.Context) (TikTokAdsOptions_SdkV2, bool) {
+	var e TikTokAdsOptions_SdkV2
+	if m.TiktokAdsOptions.IsNull() || m.TiktokAdsOptions.IsUnknown() {
+		return e, false
+	}
+	var v []TikTokAdsOptions_SdkV2
+	d := m.TiktokAdsOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTiktokAdsOptions sets the value of the TiktokAdsOptions field in ConnectorOptions_SdkV2.
+func (m *ConnectorOptions_SdkV2) SetTiktokAdsOptions(ctx context.Context, v TikTokAdsOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tiktok_ads_options"]
+	m.TiktokAdsOptions = types.ListValueMust(t, vs)
+}
+
 type CreatePipeline_SdkV2 struct {
 	// If false, deployment will fail if name conflicts with that of another
 	// pipeline.
@@ -968,7 +1465,7 @@ type CreatePipeline_SdkV2 struct {
 	// `catalog`.`target`.`table`). If `target` is not specified, no data is
 	// published to Unity Catalog.
 	Catalog types.String `tfsdk:"catalog"`
-	// DLT Release Channel that specifies which version to use.
+	// SDP Release Channel that specifies which version to use.
 	Channel types.String `tfsdk:"channel"`
 	// Cluster settings for this pipeline deployment.
 	Clusters types.List `tfsdk:"clusters"`
@@ -2046,6 +2543,10 @@ func (m DataStagingOptions_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeletePipelineRequest_SdkV2 struct {
+	// If false, pipeline deletion will not cascade to its datasets (MVs, STs,
+	// Views). By default, this parameter will be true and all tables will be
+	// deleted with the pipeline.
+	Cascade types.Bool `tfsdk:"-"`
 	// If true, deletion will proceed even if resource cleanup fails. By
 	// default, deletion will fail if resources cleanup is required but fails.
 	Force types.Bool `tfsdk:"-"`
@@ -2062,6 +2563,7 @@ func (to *DeletePipelineRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 func (m DeletePipelineRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
 	attrs["force"] = attrs["force"].SetOptional()
+	attrs["cascade"] = attrs["cascade"].SetOptional()
 
 	return attrs
 }
@@ -2084,6 +2586,7 @@ func (m DeletePipelineRequest_SdkV2) ToObjectValue(ctx context.Context) basetype
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"cascade":     m.Cascade,
 			"force":       m.Force,
 			"pipeline_id": m.PipelineId,
 		})
@@ -2093,6 +2596,7 @@ func (m DeletePipelineRequest_SdkV2) ToObjectValue(ctx context.Context) basetype
 func (m DeletePipelineRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"cascade":     types.BoolType,
 			"force":       types.BoolType,
 			"pipeline_id": types.StringType,
 		},
@@ -2152,7 +2656,7 @@ type EditPipeline_SdkV2 struct {
 	// `catalog`.`target`.`table`). If `target` is not specified, no data is
 	// published to Unity Catalog.
 	Catalog types.String `tfsdk:"catalog"`
-	// DLT Release Channel that specifies which version to use.
+	// SDP Release Channel that specifies which version to use.
 	Channel types.String `tfsdk:"channel"`
 	// Cluster settings for this pipeline deployment.
 	Clusters types.List `tfsdk:"clusters"`
@@ -3158,6 +3662,241 @@ func (m EventLogSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type FileFilter_SdkV2 struct {
+	// Include files with modification times occurring after the specified time.
+	// Timestamp format: YYYY-MM-DDTHH:mm:ss (e.g. 2020-06-01T13:00:00) Based on
+	// https://spark.apache.org/docs/latest/sql-data-sources-generic-options.html#modification-time-path-filters
+	ModifiedAfter types.String `tfsdk:"modified_after"`
+	// Include files with modification times occurring before the specified
+	// time. Timestamp format: YYYY-MM-DDTHH:mm:ss (e.g. 2020-06-01T13:00:00)
+	// Based on
+	// https://spark.apache.org/docs/latest/sql-data-sources-generic-options.html#modification-time-path-filters
+	ModifiedBefore types.String `tfsdk:"modified_before"`
+	// Include files with file names matching the pattern Based on
+	// https://spark.apache.org/docs/latest/sql-data-sources-generic-options.html#path-glob-filter
+	PathFilter types.String `tfsdk:"path_filter"`
+}
+
+func (to *FileFilter_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FileFilter_SdkV2) {
+}
+
+func (to *FileFilter_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FileFilter_SdkV2) {
+}
+
+func (m FileFilter_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["modified_after"] = attrs["modified_after"].SetOptional()
+	attrs["modified_before"] = attrs["modified_before"].SetOptional()
+	attrs["path_filter"] = attrs["path_filter"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FileFilter.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m FileFilter_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FileFilter_SdkV2
+// only implements ToObjectValue() and Type().
+func (m FileFilter_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"modified_after":  m.ModifiedAfter,
+			"modified_before": m.ModifiedBefore,
+			"path_filter":     m.PathFilter,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m FileFilter_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"modified_after":  types.StringType,
+			"modified_before": types.StringType,
+			"path_filter":     types.StringType,
+		},
+	}
+}
+
+type FileIngestionOptions_SdkV2 struct {
+	CorruptRecordColumn types.String `tfsdk:"corrupt_record_column"`
+	// Generic options
+	FileFilters types.List `tfsdk:"file_filters"`
+	// required for TableSpec
+	Format types.String `tfsdk:"format"`
+	// Format-specific options Based on
+	// https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/options#file-format-options
+	FormatOptions types.Map `tfsdk:"format_options"`
+
+	IgnoreCorruptFiles types.Bool `tfsdk:"ignore_corrupt_files"`
+
+	InferColumnTypes types.Bool `tfsdk:"infer_column_types"`
+	// Column name case sensitivity
+	// https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema#change-case-sensitive-behavior
+	ReaderCaseSensitive types.Bool `tfsdk:"reader_case_sensitive"`
+
+	RescuedDataColumn types.String `tfsdk:"rescued_data_column"`
+
+	SchemaEvolutionMode types.String `tfsdk:"schema_evolution_mode"`
+	// Override inferred schema of specific columns Based on
+	// https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema#override-schema-inference-with-schema-hints
+	SchemaHints types.String `tfsdk:"schema_hints"`
+
+	SingleVariantColumn types.String `tfsdk:"single_variant_column"`
+}
+
+func (to *FileIngestionOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FileIngestionOptions_SdkV2) {
+	if !from.FileFilters.IsNull() && !from.FileFilters.IsUnknown() && to.FileFilters.IsNull() && len(from.FileFilters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FileFilters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FileFilters = from.FileFilters
+	}
+}
+
+func (to *FileIngestionOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FileIngestionOptions_SdkV2) {
+	if !from.FileFilters.IsNull() && !from.FileFilters.IsUnknown() && to.FileFilters.IsNull() && len(from.FileFilters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FileFilters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FileFilters = from.FileFilters
+	}
+}
+
+func (m FileIngestionOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["corrupt_record_column"] = attrs["corrupt_record_column"].SetOptional()
+	attrs["file_filters"] = attrs["file_filters"].SetOptional()
+	attrs["format"] = attrs["format"].SetOptional()
+	attrs["format_options"] = attrs["format_options"].SetOptional()
+	attrs["ignore_corrupt_files"] = attrs["ignore_corrupt_files"].SetOptional()
+	attrs["infer_column_types"] = attrs["infer_column_types"].SetOptional()
+	attrs["reader_case_sensitive"] = attrs["reader_case_sensitive"].SetOptional()
+	attrs["rescued_data_column"] = attrs["rescued_data_column"].SetOptional()
+	attrs["schema_evolution_mode"] = attrs["schema_evolution_mode"].SetOptional()
+	attrs["schema_hints"] = attrs["schema_hints"].SetOptional()
+	attrs["single_variant_column"] = attrs["single_variant_column"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FileIngestionOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m FileIngestionOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"file_filters":   reflect.TypeOf(FileFilter_SdkV2{}),
+		"format_options": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FileIngestionOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m FileIngestionOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"corrupt_record_column": m.CorruptRecordColumn,
+			"file_filters":          m.FileFilters,
+			"format":                m.Format,
+			"format_options":        m.FormatOptions,
+			"ignore_corrupt_files":  m.IgnoreCorruptFiles,
+			"infer_column_types":    m.InferColumnTypes,
+			"reader_case_sensitive": m.ReaderCaseSensitive,
+			"rescued_data_column":   m.RescuedDataColumn,
+			"schema_evolution_mode": m.SchemaEvolutionMode,
+			"schema_hints":          m.SchemaHints,
+			"single_variant_column": m.SingleVariantColumn,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m FileIngestionOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"corrupt_record_column": types.StringType,
+			"file_filters": basetypes.ListType{
+				ElemType: FileFilter_SdkV2{}.Type(ctx),
+			},
+			"format": types.StringType,
+			"format_options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"ignore_corrupt_files":  types.BoolType,
+			"infer_column_types":    types.BoolType,
+			"reader_case_sensitive": types.BoolType,
+			"rescued_data_column":   types.StringType,
+			"schema_evolution_mode": types.StringType,
+			"schema_hints":          types.StringType,
+			"single_variant_column": types.StringType,
+		},
+	}
+}
+
+// GetFileFilters returns the value of the FileFilters field in FileIngestionOptions_SdkV2 as
+// a slice of FileFilter_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *FileIngestionOptions_SdkV2) GetFileFilters(ctx context.Context) ([]FileFilter_SdkV2, bool) {
+	if m.FileFilters.IsNull() || m.FileFilters.IsUnknown() {
+		return nil, false
+	}
+	var v []FileFilter_SdkV2
+	d := m.FileFilters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFileFilters sets the value of the FileFilters field in FileIngestionOptions_SdkV2.
+func (m *FileIngestionOptions_SdkV2) SetFileFilters(ctx context.Context, v []FileFilter_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["file_filters"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.FileFilters = types.ListValueMust(t, vs)
+}
+
+// GetFormatOptions returns the value of the FormatOptions field in FileIngestionOptions_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *FileIngestionOptions_SdkV2) GetFormatOptions(ctx context.Context) (map[string]types.String, bool) {
+	if m.FormatOptions.IsNull() || m.FormatOptions.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.FormatOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFormatOptions sets the value of the FormatOptions field in FileIngestionOptions_SdkV2.
+func (m *FileIngestionOptions_SdkV2) SetFormatOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["format_options"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.FormatOptions = types.MapValueMust(t, vs)
+}
+
 type FileLibrary_SdkV2 struct {
 	// The absolute path of the source code.
 	Path types.String `tfsdk:"path"`
@@ -3976,6 +4715,231 @@ func (m *GetUpdateResponse_SdkV2) SetUpdate(ctx context.Context, v UpdateInfo_Sd
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["update"]
 	m.Update = types.ListValueMust(t, vs)
+}
+
+type GoogleAdsConfig_SdkV2 struct {
+	// (Required) Manager Account ID (also called MCC Account ID) used to list
+	// and access customer accounts under this manager account. This is required
+	// for fetching the list of customer accounts during source selection. If
+	// the same field is also set in the object-level GoogleAdsOptions
+	// (connector_options), the object-level value takes precedence over this
+	// top-level config.
+	ManagerAccountId types.String `tfsdk:"manager_account_id"`
+}
+
+func (to *GoogleAdsConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GoogleAdsConfig_SdkV2) {
+}
+
+func (to *GoogleAdsConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GoogleAdsConfig_SdkV2) {
+}
+
+func (m GoogleAdsConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["manager_account_id"] = attrs["manager_account_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GoogleAdsConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GoogleAdsConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GoogleAdsConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GoogleAdsConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"manager_account_id": m.ManagerAccountId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GoogleAdsConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"manager_account_id": types.StringType,
+		},
+	}
+}
+
+// Google Ads specific options for ingestion (object-level). When set, these
+// values override the corresponding fields in GoogleAdsConfig
+// (source_configurations).
+type GoogleAdsOptions_SdkV2 struct {
+	// (Optional) Number of days to look back for report tables to capture
+	// late-arriving data. If not specified, defaults to 30 days.
+	LookbackWindowDays types.Int64 `tfsdk:"lookback_window_days"`
+	// (Optional at this level) Manager Account ID (also called MCC Account ID)
+	// used to list and access customer accounts under this manager account.
+	// Overrides GoogleAdsConfig.manager_account_id from source_configurations
+	// when set.
+	ManagerAccountId types.String `tfsdk:"manager_account_id"`
+	// (Optional) Start date for the initial sync of report tables in YYYY-MM-DD
+	// format. This determines the earliest date from which to sync historical
+	// data. If not specified, defaults to 2 years of historical data.
+	SyncStartDate types.String `tfsdk:"sync_start_date"`
+}
+
+func (to *GoogleAdsOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GoogleAdsOptions_SdkV2) {
+}
+
+func (to *GoogleAdsOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GoogleAdsOptions_SdkV2) {
+}
+
+func (m GoogleAdsOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["lookback_window_days"] = attrs["lookback_window_days"].SetOptional()
+	attrs["manager_account_id"] = attrs["manager_account_id"].SetRequired()
+	attrs["sync_start_date"] = attrs["sync_start_date"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GoogleAdsOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GoogleAdsOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GoogleAdsOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GoogleAdsOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"lookback_window_days": m.LookbackWindowDays,
+			"manager_account_id":   m.ManagerAccountId,
+			"sync_start_date":      m.SyncStartDate,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GoogleAdsOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"lookback_window_days": types.Int64Type,
+			"manager_account_id":   types.StringType,
+			"sync_start_date":      types.StringType,
+		},
+	}
+}
+
+type GoogleDriveOptions_SdkV2 struct {
+	EntityType types.String `tfsdk:"entity_type"`
+
+	FileIngestionOptions types.List `tfsdk:"file_ingestion_options"`
+	// Google Drive URL.
+	Url types.String `tfsdk:"url"`
+}
+
+func (to *GoogleDriveOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GoogleDriveOptions_SdkV2) {
+	if !from.FileIngestionOptions.IsNull() && !from.FileIngestionOptions.IsUnknown() {
+		if toFileIngestionOptions, ok := to.GetFileIngestionOptions(ctx); ok {
+			if fromFileIngestionOptions, ok := from.GetFileIngestionOptions(ctx); ok {
+				// Recursively sync the fields of FileIngestionOptions
+				toFileIngestionOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromFileIngestionOptions)
+				to.SetFileIngestionOptions(ctx, toFileIngestionOptions)
+			}
+		}
+	}
+}
+
+func (to *GoogleDriveOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GoogleDriveOptions_SdkV2) {
+	if !from.FileIngestionOptions.IsNull() && !from.FileIngestionOptions.IsUnknown() {
+		if toFileIngestionOptions, ok := to.GetFileIngestionOptions(ctx); ok {
+			if fromFileIngestionOptions, ok := from.GetFileIngestionOptions(ctx); ok {
+				toFileIngestionOptions.SyncFieldsDuringRead(ctx, fromFileIngestionOptions)
+				to.SetFileIngestionOptions(ctx, toFileIngestionOptions)
+			}
+		}
+	}
+}
+
+func (m GoogleDriveOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_type"] = attrs["entity_type"].SetOptional()
+	attrs["file_ingestion_options"] = attrs["file_ingestion_options"].SetOptional()
+	attrs["file_ingestion_options"] = attrs["file_ingestion_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["url"] = attrs["url"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GoogleDriveOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GoogleDriveOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"file_ingestion_options": reflect.TypeOf(FileIngestionOptions_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GoogleDriveOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GoogleDriveOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entity_type":            m.EntityType,
+			"file_ingestion_options": m.FileIngestionOptions,
+			"url":                    m.Url,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GoogleDriveOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entity_type": types.StringType,
+			"file_ingestion_options": basetypes.ListType{
+				ElemType: FileIngestionOptions_SdkV2{}.Type(ctx),
+			},
+			"url": types.StringType,
+		},
+	}
+}
+
+// GetFileIngestionOptions returns the value of the FileIngestionOptions field in GoogleDriveOptions_SdkV2 as
+// a FileIngestionOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GoogleDriveOptions_SdkV2) GetFileIngestionOptions(ctx context.Context) (FileIngestionOptions_SdkV2, bool) {
+	var e FileIngestionOptions_SdkV2
+	if m.FileIngestionOptions.IsNull() || m.FileIngestionOptions.IsUnknown() {
+		return e, false
+	}
+	var v []FileIngestionOptions_SdkV2
+	d := m.FileIngestionOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFileIngestionOptions sets the value of the FileIngestionOptions field in GoogleDriveOptions_SdkV2.
+func (m *GoogleDriveOptions_SdkV2) SetFileIngestionOptions(ctx context.Context, v FileIngestionOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["file_ingestion_options"]
+	m.FileIngestionOptions = types.ListValueMust(t, vs)
 }
 
 type IngestionConfig_SdkV2 struct {
@@ -4970,6 +5934,97 @@ func (m IngestionPipelineDefinitionWorkdayReportParametersQueryKeyValue_SdkV2) T
 			"value": types.StringType,
 		},
 	}
+}
+
+// Jira specific options for ingestion
+type JiraConnectorOptions_SdkV2 struct {
+	// (Optional) Projects to filter Jira data on
+	IncludeJiraSpaces types.List `tfsdk:"include_jira_spaces"`
+}
+
+func (to *JiraConnectorOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JiraConnectorOptions_SdkV2) {
+	if !from.IncludeJiraSpaces.IsNull() && !from.IncludeJiraSpaces.IsUnknown() && to.IncludeJiraSpaces.IsNull() && len(from.IncludeJiraSpaces.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for IncludeJiraSpaces, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.IncludeJiraSpaces = from.IncludeJiraSpaces
+	}
+}
+
+func (to *JiraConnectorOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from JiraConnectorOptions_SdkV2) {
+	if !from.IncludeJiraSpaces.IsNull() && !from.IncludeJiraSpaces.IsUnknown() && to.IncludeJiraSpaces.IsNull() && len(from.IncludeJiraSpaces.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for IncludeJiraSpaces, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.IncludeJiraSpaces = from.IncludeJiraSpaces
+	}
+}
+
+func (m JiraConnectorOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["include_jira_spaces"] = attrs["include_jira_spaces"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JiraConnectorOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m JiraConnectorOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"include_jira_spaces": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JiraConnectorOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m JiraConnectorOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"include_jira_spaces": m.IncludeJiraSpaces,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m JiraConnectorOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"include_jira_spaces": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetIncludeJiraSpaces returns the value of the IncludeJiraSpaces field in JiraConnectorOptions_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *JiraConnectorOptions_SdkV2) GetIncludeJiraSpaces(ctx context.Context) ([]types.String, bool) {
+	if m.IncludeJiraSpaces.IsNull() || m.IncludeJiraSpaces.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.IncludeJiraSpaces.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIncludeJiraSpaces sets the value of the IncludeJiraSpaces field in JiraConnectorOptions_SdkV2.
+func (m *JiraConnectorOptions_SdkV2) SetIncludeJiraSpaces(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["include_jira_spaces"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.IncludeJiraSpaces = types.ListValueMust(t, vs)
 }
 
 type ListPipelineEventsRequest_SdkV2 struct {
@@ -6066,6 +7121,407 @@ func (m Origin_SdkV2) Type(ctx context.Context) attr.Type {
 			"update_id":                        types.StringType,
 		},
 	}
+}
+
+// Outlook specific options for ingestion
+type OutlookOptions_SdkV2 struct {
+	// (Optional) Controls which attachments to ingest. If not specified,
+	// defaults to ALL.
+	AttachmentMode types.String `tfsdk:"attachment_mode"`
+	// (Optional) Defines how the body_content column is populated. TEXT_HTML:
+	// Preserves full formatting, links, and styling. TEXT_PLAIN: Converts body
+	// to plain text. Recommended for AI/RAG pipelines to reduce token usage and
+	// noise.
+	BodyFormat types.String `tfsdk:"body_format"`
+	// Deprecated. Use include_folders instead.
+	FolderFilter types.List `tfsdk:"folder_filter"`
+	// (Optional) Filter mail folders to include in the sync. If not specified,
+	// all folders will be synced. Examples: Inbox, Sent Items, Custom_Folder
+	// Filter semantics: OR between different folders.
+	IncludeFolders types.List `tfsdk:"include_folders"`
+	// (Optional) List of mailboxes to sync (e.g. mailbox email addresses or
+	// identifiers). If not specified, all accessible mailboxes are ingested.
+	// Filter semantics: OR between different mailboxes.
+	IncludeMailboxes types.List `tfsdk:"include_mailboxes"`
+	// (Optional) Filter emails by sender address. Uses exact email match.
+	// Examples: user@vendor.com, alerts@system.io, noreply@company.com If not
+	// specified, emails from all senders will be synced. Filter semantics: OR
+	// between different senders.
+	IncludeSenders types.List `tfsdk:"include_senders"`
+	// (Optional) Filter emails by subject line. Values ending with "*" use
+	// prefix match (subject starts with the part before "*"); otherwise
+	// substring match (subject contains the value). Examples: "Invoice"
+	// (substring), "Re:*" (prefix), "Support Ticket", "URGENT*" If not
+	// specified, emails with all subjects will be synced. Filter semantics: OR
+	// between different subjects.
+	IncludeSubjects types.List `tfsdk:"include_subjects"`
+	// Deprecated. Use include_senders instead.
+	SenderFilter types.List `tfsdk:"sender_filter"`
+	// (Optional) Start date for the initial sync in YYYY-MM-DD format. Format:
+	// YYYY-MM-DD (e.g., 2024-01-01) This determines the earliest date from
+	// which to sync historical data. If not specified, complete history is
+	// ingested.
+	StartDate types.String `tfsdk:"start_date"`
+	// Deprecated. Use include_subjects instead.
+	SubjectFilter types.List `tfsdk:"subject_filter"`
+}
+
+func (to *OutlookOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from OutlookOptions_SdkV2) {
+	if !from.FolderFilter.IsNull() && !from.FolderFilter.IsUnknown() && to.FolderFilter.IsNull() && len(from.FolderFilter.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FolderFilter, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FolderFilter = from.FolderFilter
+	}
+	if !from.IncludeFolders.IsNull() && !from.IncludeFolders.IsUnknown() && to.IncludeFolders.IsNull() && len(from.IncludeFolders.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for IncludeFolders, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.IncludeFolders = from.IncludeFolders
+	}
+	if !from.IncludeMailboxes.IsNull() && !from.IncludeMailboxes.IsUnknown() && to.IncludeMailboxes.IsNull() && len(from.IncludeMailboxes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for IncludeMailboxes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.IncludeMailboxes = from.IncludeMailboxes
+	}
+	if !from.IncludeSenders.IsNull() && !from.IncludeSenders.IsUnknown() && to.IncludeSenders.IsNull() && len(from.IncludeSenders.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for IncludeSenders, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.IncludeSenders = from.IncludeSenders
+	}
+	if !from.IncludeSubjects.IsNull() && !from.IncludeSubjects.IsUnknown() && to.IncludeSubjects.IsNull() && len(from.IncludeSubjects.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for IncludeSubjects, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.IncludeSubjects = from.IncludeSubjects
+	}
+	if !from.SenderFilter.IsNull() && !from.SenderFilter.IsUnknown() && to.SenderFilter.IsNull() && len(from.SenderFilter.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SenderFilter, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SenderFilter = from.SenderFilter
+	}
+	if !from.SubjectFilter.IsNull() && !from.SubjectFilter.IsUnknown() && to.SubjectFilter.IsNull() && len(from.SubjectFilter.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SubjectFilter, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SubjectFilter = from.SubjectFilter
+	}
+}
+
+func (to *OutlookOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from OutlookOptions_SdkV2) {
+	if !from.FolderFilter.IsNull() && !from.FolderFilter.IsUnknown() && to.FolderFilter.IsNull() && len(from.FolderFilter.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FolderFilter, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FolderFilter = from.FolderFilter
+	}
+	if !from.IncludeFolders.IsNull() && !from.IncludeFolders.IsUnknown() && to.IncludeFolders.IsNull() && len(from.IncludeFolders.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for IncludeFolders, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.IncludeFolders = from.IncludeFolders
+	}
+	if !from.IncludeMailboxes.IsNull() && !from.IncludeMailboxes.IsUnknown() && to.IncludeMailboxes.IsNull() && len(from.IncludeMailboxes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for IncludeMailboxes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.IncludeMailboxes = from.IncludeMailboxes
+	}
+	if !from.IncludeSenders.IsNull() && !from.IncludeSenders.IsUnknown() && to.IncludeSenders.IsNull() && len(from.IncludeSenders.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for IncludeSenders, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.IncludeSenders = from.IncludeSenders
+	}
+	if !from.IncludeSubjects.IsNull() && !from.IncludeSubjects.IsUnknown() && to.IncludeSubjects.IsNull() && len(from.IncludeSubjects.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for IncludeSubjects, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.IncludeSubjects = from.IncludeSubjects
+	}
+	if !from.SenderFilter.IsNull() && !from.SenderFilter.IsUnknown() && to.SenderFilter.IsNull() && len(from.SenderFilter.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SenderFilter, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SenderFilter = from.SenderFilter
+	}
+	if !from.SubjectFilter.IsNull() && !from.SubjectFilter.IsUnknown() && to.SubjectFilter.IsNull() && len(from.SubjectFilter.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SubjectFilter, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SubjectFilter = from.SubjectFilter
+	}
+}
+
+func (m OutlookOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["attachment_mode"] = attrs["attachment_mode"].SetOptional()
+	attrs["body_format"] = attrs["body_format"].SetOptional()
+	attrs["folder_filter"] = attrs["folder_filter"].SetOptional()
+	attrs["include_folders"] = attrs["include_folders"].SetOptional()
+	attrs["include_mailboxes"] = attrs["include_mailboxes"].SetOptional()
+	attrs["include_senders"] = attrs["include_senders"].SetOptional()
+	attrs["include_subjects"] = attrs["include_subjects"].SetOptional()
+	attrs["sender_filter"] = attrs["sender_filter"].SetOptional()
+	attrs["start_date"] = attrs["start_date"].SetOptional()
+	attrs["subject_filter"] = attrs["subject_filter"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in OutlookOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m OutlookOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"folder_filter":     reflect.TypeOf(types.String{}),
+		"include_folders":   reflect.TypeOf(types.String{}),
+		"include_mailboxes": reflect.TypeOf(types.String{}),
+		"include_senders":   reflect.TypeOf(types.String{}),
+		"include_subjects":  reflect.TypeOf(types.String{}),
+		"sender_filter":     reflect.TypeOf(types.String{}),
+		"subject_filter":    reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, OutlookOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m OutlookOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"attachment_mode":   m.AttachmentMode,
+			"body_format":       m.BodyFormat,
+			"folder_filter":     m.FolderFilter,
+			"include_folders":   m.IncludeFolders,
+			"include_mailboxes": m.IncludeMailboxes,
+			"include_senders":   m.IncludeSenders,
+			"include_subjects":  m.IncludeSubjects,
+			"sender_filter":     m.SenderFilter,
+			"start_date":        m.StartDate,
+			"subject_filter":    m.SubjectFilter,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m OutlookOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"attachment_mode": types.StringType,
+			"body_format":     types.StringType,
+			"folder_filter": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"include_folders": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"include_mailboxes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"include_senders": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"include_subjects": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"sender_filter": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"start_date": types.StringType,
+			"subject_filter": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetFolderFilter returns the value of the FolderFilter field in OutlookOptions_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *OutlookOptions_SdkV2) GetFolderFilter(ctx context.Context) ([]types.String, bool) {
+	if m.FolderFilter.IsNull() || m.FolderFilter.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.FolderFilter.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFolderFilter sets the value of the FolderFilter field in OutlookOptions_SdkV2.
+func (m *OutlookOptions_SdkV2) SetFolderFilter(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["folder_filter"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.FolderFilter = types.ListValueMust(t, vs)
+}
+
+// GetIncludeFolders returns the value of the IncludeFolders field in OutlookOptions_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *OutlookOptions_SdkV2) GetIncludeFolders(ctx context.Context) ([]types.String, bool) {
+	if m.IncludeFolders.IsNull() || m.IncludeFolders.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.IncludeFolders.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIncludeFolders sets the value of the IncludeFolders field in OutlookOptions_SdkV2.
+func (m *OutlookOptions_SdkV2) SetIncludeFolders(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["include_folders"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.IncludeFolders = types.ListValueMust(t, vs)
+}
+
+// GetIncludeMailboxes returns the value of the IncludeMailboxes field in OutlookOptions_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *OutlookOptions_SdkV2) GetIncludeMailboxes(ctx context.Context) ([]types.String, bool) {
+	if m.IncludeMailboxes.IsNull() || m.IncludeMailboxes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.IncludeMailboxes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIncludeMailboxes sets the value of the IncludeMailboxes field in OutlookOptions_SdkV2.
+func (m *OutlookOptions_SdkV2) SetIncludeMailboxes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["include_mailboxes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.IncludeMailboxes = types.ListValueMust(t, vs)
+}
+
+// GetIncludeSenders returns the value of the IncludeSenders field in OutlookOptions_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *OutlookOptions_SdkV2) GetIncludeSenders(ctx context.Context) ([]types.String, bool) {
+	if m.IncludeSenders.IsNull() || m.IncludeSenders.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.IncludeSenders.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIncludeSenders sets the value of the IncludeSenders field in OutlookOptions_SdkV2.
+func (m *OutlookOptions_SdkV2) SetIncludeSenders(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["include_senders"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.IncludeSenders = types.ListValueMust(t, vs)
+}
+
+// GetIncludeSubjects returns the value of the IncludeSubjects field in OutlookOptions_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *OutlookOptions_SdkV2) GetIncludeSubjects(ctx context.Context) ([]types.String, bool) {
+	if m.IncludeSubjects.IsNull() || m.IncludeSubjects.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.IncludeSubjects.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIncludeSubjects sets the value of the IncludeSubjects field in OutlookOptions_SdkV2.
+func (m *OutlookOptions_SdkV2) SetIncludeSubjects(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["include_subjects"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.IncludeSubjects = types.ListValueMust(t, vs)
+}
+
+// GetSenderFilter returns the value of the SenderFilter field in OutlookOptions_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *OutlookOptions_SdkV2) GetSenderFilter(ctx context.Context) ([]types.String, bool) {
+	if m.SenderFilter.IsNull() || m.SenderFilter.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.SenderFilter.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSenderFilter sets the value of the SenderFilter field in OutlookOptions_SdkV2.
+func (m *OutlookOptions_SdkV2) SetSenderFilter(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sender_filter"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.SenderFilter = types.ListValueMust(t, vs)
+}
+
+// GetSubjectFilter returns the value of the SubjectFilter field in OutlookOptions_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *OutlookOptions_SdkV2) GetSubjectFilter(ctx context.Context) ([]types.String, bool) {
+	if m.SubjectFilter.IsNull() || m.SubjectFilter.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.SubjectFilter.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSubjectFilter sets the value of the SubjectFilter field in OutlookOptions_SdkV2.
+func (m *OutlookOptions_SdkV2) SetSubjectFilter(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["subject_filter"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.SubjectFilter = types.ListValueMust(t, vs)
 }
 
 type PathPattern_SdkV2 struct {
@@ -7910,7 +9366,7 @@ type PipelineSpec_SdkV2 struct {
 	// `catalog`.`target`.`table`). If `target` is not specified, no data is
 	// published to Unity Catalog.
 	Catalog types.String `tfsdk:"catalog"`
-	// DLT Release Channel that specifies which version to use.
+	// SDP Release Channel that specifies which version to use.
 	Channel types.String `tfsdk:"channel"`
 	// Cluster settings for this pipeline deployment.
 	Clusters types.List `tfsdk:"clusters"`
@@ -8929,7 +10385,7 @@ func (m *PipelineTrigger_SdkV2) SetManual(ctx context.Context, v ManualTrigger_S
 }
 
 // The environment entity used to preserve serverless environment side panel,
-// jobs' environment for non-notebook task, and DLT's environment for classic
+// jobs' environment for non-notebook task, and SDP's environment for classic
 // and serverless pipelines. In this minimal environment spec, only pip
 // dependencies are supported.
 type PipelinesEnvironment_SdkV2 struct {
@@ -9700,6 +11156,8 @@ func (m RunAs_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type SchemaSpec_SdkV2 struct {
+	// (Optional) Source Specific Connector Options
+	ConnectorOptions types.List `tfsdk:"connector_options"`
 	// Required. Destination catalog to store tables.
 	DestinationCatalog types.String `tfsdk:"destination_catalog"`
 	// Required. Destination schema to store tables in. Tables with the same
@@ -9718,6 +11176,15 @@ type SchemaSpec_SdkV2 struct {
 }
 
 func (to *SchemaSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SchemaSpec_SdkV2) {
+	if !from.ConnectorOptions.IsNull() && !from.ConnectorOptions.IsUnknown() {
+		if toConnectorOptions, ok := to.GetConnectorOptions(ctx); ok {
+			if fromConnectorOptions, ok := from.GetConnectorOptions(ctx); ok {
+				// Recursively sync the fields of ConnectorOptions
+				toConnectorOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromConnectorOptions)
+				to.SetConnectorOptions(ctx, toConnectorOptions)
+			}
+		}
+	}
 	if !from.TableConfiguration.IsNull() && !from.TableConfiguration.IsUnknown() {
 		if toTableConfiguration, ok := to.GetTableConfiguration(ctx); ok {
 			if fromTableConfiguration, ok := from.GetTableConfiguration(ctx); ok {
@@ -9730,6 +11197,14 @@ func (to *SchemaSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 }
 
 func (to *SchemaSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SchemaSpec_SdkV2) {
+	if !from.ConnectorOptions.IsNull() && !from.ConnectorOptions.IsUnknown() {
+		if toConnectorOptions, ok := to.GetConnectorOptions(ctx); ok {
+			if fromConnectorOptions, ok := from.GetConnectorOptions(ctx); ok {
+				toConnectorOptions.SyncFieldsDuringRead(ctx, fromConnectorOptions)
+				to.SetConnectorOptions(ctx, toConnectorOptions)
+			}
+		}
+	}
 	if !from.TableConfiguration.IsNull() && !from.TableConfiguration.IsUnknown() {
 		if toTableConfiguration, ok := to.GetTableConfiguration(ctx); ok {
 			if fromTableConfiguration, ok := from.GetTableConfiguration(ctx); ok {
@@ -9741,6 +11216,8 @@ func (to *SchemaSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Schem
 }
 
 func (m SchemaSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["connector_options"] = attrs["connector_options"].SetOptional()
+	attrs["connector_options"] = attrs["connector_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["destination_catalog"] = attrs["destination_catalog"].SetRequired()
 	attrs["destination_schema"] = attrs["destination_schema"].SetRequired()
 	attrs["source_catalog"] = attrs["source_catalog"].SetOptional()
@@ -9760,6 +11237,7 @@ func (m SchemaSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (m SchemaSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"connector_options":   reflect.TypeOf(ConnectorOptions_SdkV2{}),
 		"table_configuration": reflect.TypeOf(TableSpecificConfig_SdkV2{}),
 	}
 }
@@ -9771,6 +11249,7 @@ func (m SchemaSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"connector_options":   m.ConnectorOptions,
 			"destination_catalog": m.DestinationCatalog,
 			"destination_schema":  m.DestinationSchema,
 			"source_catalog":      m.SourceCatalog,
@@ -9783,6 +11262,9 @@ func (m SchemaSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m SchemaSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"connector_options": basetypes.ListType{
+				ElemType: ConnectorOptions_SdkV2{}.Type(ctx),
+			},
 			"destination_catalog": types.StringType,
 			"destination_schema":  types.StringType,
 			"source_catalog":      types.StringType,
@@ -9792,6 +11274,32 @@ func (m SchemaSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetConnectorOptions returns the value of the ConnectorOptions field in SchemaSpec_SdkV2 as
+// a ConnectorOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SchemaSpec_SdkV2) GetConnectorOptions(ctx context.Context) (ConnectorOptions_SdkV2, bool) {
+	var e ConnectorOptions_SdkV2
+	if m.ConnectorOptions.IsNull() || m.ConnectorOptions.IsUnknown() {
+		return e, false
+	}
+	var v []ConnectorOptions_SdkV2
+	d := m.ConnectorOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConnectorOptions sets the value of the ConnectorOptions field in SchemaSpec_SdkV2.
+func (m *SchemaSpec_SdkV2) SetConnectorOptions(ctx context.Context, v ConnectorOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["connector_options"]
+	m.ConnectorOptions = types.ListValueMust(t, vs)
 }
 
 // GetTableConfiguration returns the value of the TableConfiguration field in SchemaSpec_SdkV2 as
@@ -10021,6 +11529,166 @@ func (m *SerializedException_SdkV2) SetStack(ctx context.Context, v []StackFrame
 	m.Stack = types.ListValueMust(t, vs)
 }
 
+type SharepointOptions_SdkV2 struct {
+	// (Optional) The type of SharePoint entity to ingest. If not specified,
+	// defaults to FILE.
+	EntityType types.String `tfsdk:"entity_type"`
+	// (Optional) File ingestion options for processing files.
+	FileIngestionOptions types.List `tfsdk:"file_ingestion_options"`
+	// Required. The SharePoint URL.
+	Url types.String `tfsdk:"url"`
+}
+
+func (to *SharepointOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SharepointOptions_SdkV2) {
+	if !from.FileIngestionOptions.IsNull() && !from.FileIngestionOptions.IsUnknown() {
+		if toFileIngestionOptions, ok := to.GetFileIngestionOptions(ctx); ok {
+			if fromFileIngestionOptions, ok := from.GetFileIngestionOptions(ctx); ok {
+				// Recursively sync the fields of FileIngestionOptions
+				toFileIngestionOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromFileIngestionOptions)
+				to.SetFileIngestionOptions(ctx, toFileIngestionOptions)
+			}
+		}
+	}
+}
+
+func (to *SharepointOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SharepointOptions_SdkV2) {
+	if !from.FileIngestionOptions.IsNull() && !from.FileIngestionOptions.IsUnknown() {
+		if toFileIngestionOptions, ok := to.GetFileIngestionOptions(ctx); ok {
+			if fromFileIngestionOptions, ok := from.GetFileIngestionOptions(ctx); ok {
+				toFileIngestionOptions.SyncFieldsDuringRead(ctx, fromFileIngestionOptions)
+				to.SetFileIngestionOptions(ctx, toFileIngestionOptions)
+			}
+		}
+	}
+}
+
+func (m SharepointOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_type"] = attrs["entity_type"].SetOptional()
+	attrs["file_ingestion_options"] = attrs["file_ingestion_options"].SetOptional()
+	attrs["file_ingestion_options"] = attrs["file_ingestion_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["url"] = attrs["url"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SharepointOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SharepointOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"file_ingestion_options": reflect.TypeOf(FileIngestionOptions_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SharepointOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SharepointOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entity_type":            m.EntityType,
+			"file_ingestion_options": m.FileIngestionOptions,
+			"url":                    m.Url,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SharepointOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entity_type": types.StringType,
+			"file_ingestion_options": basetypes.ListType{
+				ElemType: FileIngestionOptions_SdkV2{}.Type(ctx),
+			},
+			"url": types.StringType,
+		},
+	}
+}
+
+// GetFileIngestionOptions returns the value of the FileIngestionOptions field in SharepointOptions_SdkV2 as
+// a FileIngestionOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SharepointOptions_SdkV2) GetFileIngestionOptions(ctx context.Context) (FileIngestionOptions_SdkV2, bool) {
+	var e FileIngestionOptions_SdkV2
+	if m.FileIngestionOptions.IsNull() || m.FileIngestionOptions.IsUnknown() {
+		return e, false
+	}
+	var v []FileIngestionOptions_SdkV2
+	d := m.FileIngestionOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFileIngestionOptions sets the value of the FileIngestionOptions field in SharepointOptions_SdkV2.
+func (m *SharepointOptions_SdkV2) SetFileIngestionOptions(ctx context.Context, v FileIngestionOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["file_ingestion_options"]
+	m.FileIngestionOptions = types.ListValueMust(t, vs)
+}
+
+// Smartsheet specific options for ingestion
+type SmartsheetOptions_SdkV2 struct {
+	// (Optional) When true, maps each column to its Smartsheet-declared type
+	// (Text/Number/Date/ Checkbox/etc.). Cells that do not conform to the
+	// declared type are set to NULL. When false, all columns land as STRING.
+	// Use false for sheets with irregular data or columns that frequently
+	// violate their own declared type. If not specified, defaults to true.
+	EnforceSchema types.Bool `tfsdk:"enforce_schema"`
+}
+
+func (to *SmartsheetOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SmartsheetOptions_SdkV2) {
+}
+
+func (to *SmartsheetOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SmartsheetOptions_SdkV2) {
+}
+
+func (m SmartsheetOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enforce_schema"] = attrs["enforce_schema"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SmartsheetOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SmartsheetOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SmartsheetOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SmartsheetOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"enforce_schema": m.EnforceSchema,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SmartsheetOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"enforce_schema": types.BoolType,
+		},
+	}
+}
+
 // SourceCatalogConfig contains catalog-level custom configuration parameters
 // for each source
 type SourceCatalogConfig_SdkV2 struct {
@@ -10127,6 +11795,8 @@ func (m *SourceCatalogConfig_SdkV2) SetPostgres(ctx context.Context, v PostgresC
 type SourceConfig_SdkV2 struct {
 	// Catalog-level source configuration parameters
 	Catalog types.List `tfsdk:"catalog"`
+
+	GoogleAdsConfig types.List `tfsdk:"google_ads_config"`
 }
 
 func (to *SourceConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SourceConfig_SdkV2) {
@@ -10136,6 +11806,15 @@ func (to *SourceConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 				// Recursively sync the fields of Catalog
 				toCatalog.SyncFieldsDuringCreateOrUpdate(ctx, fromCatalog)
 				to.SetCatalog(ctx, toCatalog)
+			}
+		}
+	}
+	if !from.GoogleAdsConfig.IsNull() && !from.GoogleAdsConfig.IsUnknown() {
+		if toGoogleAdsConfig, ok := to.GetGoogleAdsConfig(ctx); ok {
+			if fromGoogleAdsConfig, ok := from.GetGoogleAdsConfig(ctx); ok {
+				// Recursively sync the fields of GoogleAdsConfig
+				toGoogleAdsConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromGoogleAdsConfig)
+				to.SetGoogleAdsConfig(ctx, toGoogleAdsConfig)
 			}
 		}
 	}
@@ -10150,11 +11829,21 @@ func (to *SourceConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Sou
 			}
 		}
 	}
+	if !from.GoogleAdsConfig.IsNull() && !from.GoogleAdsConfig.IsUnknown() {
+		if toGoogleAdsConfig, ok := to.GetGoogleAdsConfig(ctx); ok {
+			if fromGoogleAdsConfig, ok := from.GetGoogleAdsConfig(ctx); ok {
+				toGoogleAdsConfig.SyncFieldsDuringRead(ctx, fromGoogleAdsConfig)
+				to.SetGoogleAdsConfig(ctx, toGoogleAdsConfig)
+			}
+		}
+	}
 }
 
 func (m SourceConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["catalog"] = attrs["catalog"].SetOptional()
 	attrs["catalog"] = attrs["catalog"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["google_ads_config"] = attrs["google_ads_config"].SetOptional()
+	attrs["google_ads_config"] = attrs["google_ads_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -10168,7 +11857,8 @@ func (m SourceConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // SDK values.
 func (m SourceConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"catalog": reflect.TypeOf(SourceCatalogConfig_SdkV2{}),
+		"catalog":           reflect.TypeOf(SourceCatalogConfig_SdkV2{}),
+		"google_ads_config": reflect.TypeOf(GoogleAdsConfig_SdkV2{}),
 	}
 }
 
@@ -10179,7 +11869,8 @@ func (m SourceConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"catalog": m.Catalog,
+			"catalog":           m.Catalog,
+			"google_ads_config": m.GoogleAdsConfig,
 		})
 }
 
@@ -10189,6 +11880,9 @@ func (m SourceConfig_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"catalog": basetypes.ListType{
 				ElemType: SourceCatalogConfig_SdkV2{}.Type(ctx),
+			},
+			"google_ads_config": basetypes.ListType{
+				ElemType: GoogleAdsConfig_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -10218,6 +11912,32 @@ func (m *SourceConfig_SdkV2) SetCatalog(ctx context.Context, v SourceCatalogConf
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["catalog"]
 	m.Catalog = types.ListValueMust(t, vs)
+}
+
+// GetGoogleAdsConfig returns the value of the GoogleAdsConfig field in SourceConfig_SdkV2 as
+// a GoogleAdsConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SourceConfig_SdkV2) GetGoogleAdsConfig(ctx context.Context) (GoogleAdsConfig_SdkV2, bool) {
+	var e GoogleAdsConfig_SdkV2
+	if m.GoogleAdsConfig.IsNull() || m.GoogleAdsConfig.IsUnknown() {
+		return e, false
+	}
+	var v []GoogleAdsConfig_SdkV2
+	d := m.GoogleAdsConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGoogleAdsConfig sets the value of the GoogleAdsConfig field in SourceConfig_SdkV2.
+func (m *SourceConfig_SdkV2) SetGoogleAdsConfig(ctx context.Context, v GoogleAdsConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["google_ads_config"]
+	m.GoogleAdsConfig = types.ListValueMust(t, vs)
 }
 
 type StackFrame_SdkV2 struct {
@@ -10765,6 +12485,8 @@ func (m StopRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type TableSpec_SdkV2 struct {
+	// (Optional) Source Specific Connector Options
+	ConnectorOptions types.List `tfsdk:"connector_options"`
 	// Required. Destination catalog to store table.
 	DestinationCatalog types.String `tfsdk:"destination_catalog"`
 	// Required. Destination schema to store table.
@@ -10786,6 +12508,15 @@ type TableSpec_SdkV2 struct {
 }
 
 func (to *TableSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TableSpec_SdkV2) {
+	if !from.ConnectorOptions.IsNull() && !from.ConnectorOptions.IsUnknown() {
+		if toConnectorOptions, ok := to.GetConnectorOptions(ctx); ok {
+			if fromConnectorOptions, ok := from.GetConnectorOptions(ctx); ok {
+				// Recursively sync the fields of ConnectorOptions
+				toConnectorOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromConnectorOptions)
+				to.SetConnectorOptions(ctx, toConnectorOptions)
+			}
+		}
+	}
 	if !from.TableConfiguration.IsNull() && !from.TableConfiguration.IsUnknown() {
 		if toTableConfiguration, ok := to.GetTableConfiguration(ctx); ok {
 			if fromTableConfiguration, ok := from.GetTableConfiguration(ctx); ok {
@@ -10798,6 +12529,14 @@ func (to *TableSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 }
 
 func (to *TableSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TableSpec_SdkV2) {
+	if !from.ConnectorOptions.IsNull() && !from.ConnectorOptions.IsUnknown() {
+		if toConnectorOptions, ok := to.GetConnectorOptions(ctx); ok {
+			if fromConnectorOptions, ok := from.GetConnectorOptions(ctx); ok {
+				toConnectorOptions.SyncFieldsDuringRead(ctx, fromConnectorOptions)
+				to.SetConnectorOptions(ctx, toConnectorOptions)
+			}
+		}
+	}
 	if !from.TableConfiguration.IsNull() && !from.TableConfiguration.IsUnknown() {
 		if toTableConfiguration, ok := to.GetTableConfiguration(ctx); ok {
 			if fromTableConfiguration, ok := from.GetTableConfiguration(ctx); ok {
@@ -10809,6 +12548,8 @@ func (to *TableSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TableS
 }
 
 func (m TableSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["connector_options"] = attrs["connector_options"].SetOptional()
+	attrs["connector_options"] = attrs["connector_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["destination_catalog"] = attrs["destination_catalog"].SetRequired()
 	attrs["destination_schema"] = attrs["destination_schema"].SetRequired()
 	attrs["destination_table"] = attrs["destination_table"].SetOptional()
@@ -10830,6 +12571,7 @@ func (m TableSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // SDK values.
 func (m TableSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"connector_options":   reflect.TypeOf(ConnectorOptions_SdkV2{}),
 		"table_configuration": reflect.TypeOf(TableSpecificConfig_SdkV2{}),
 	}
 }
@@ -10841,6 +12583,7 @@ func (m TableSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"connector_options":   m.ConnectorOptions,
 			"destination_catalog": m.DestinationCatalog,
 			"destination_schema":  m.DestinationSchema,
 			"destination_table":   m.DestinationTable,
@@ -10855,6 +12598,9 @@ func (m TableSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m TableSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"connector_options": basetypes.ListType{
+				ElemType: ConnectorOptions_SdkV2{}.Type(ctx),
+			},
 			"destination_catalog": types.StringType,
 			"destination_schema":  types.StringType,
 			"destination_table":   types.StringType,
@@ -10866,6 +12612,32 @@ func (m TableSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetConnectorOptions returns the value of the ConnectorOptions field in TableSpec_SdkV2 as
+// a ConnectorOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TableSpec_SdkV2) GetConnectorOptions(ctx context.Context) (ConnectorOptions_SdkV2, bool) {
+	var e ConnectorOptions_SdkV2
+	if m.ConnectorOptions.IsNull() || m.ConnectorOptions.IsUnknown() {
+		return e, false
+	}
+	var v []ConnectorOptions_SdkV2
+	d := m.ConnectorOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConnectorOptions sets the value of the ConnectorOptions field in TableSpec_SdkV2.
+func (m *TableSpec_SdkV2) SetConnectorOptions(ctx context.Context, v ConnectorOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["connector_options"]
+	m.ConnectorOptions = types.ListValueMust(t, vs)
 }
 
 // GetTableConfiguration returns the value of the TableConfiguration field in TableSpec_SdkV2 as
@@ -10925,7 +12697,7 @@ type TableSpecificConfig_SdkV2 struct {
 	// If true, formula fields defined in the table are included in the
 	// ingestion. This setting is only valid for the Salesforce connector
 	SalesforceIncludeFormulaFields types.Bool `tfsdk:"salesforce_include_formula_fields"`
-	// The SCD type to use to ingest the table.
+
 	ScdType types.String `tfsdk:"scd_type"`
 	// The column names specifying the logical order of events in the source
 	// data. Spark Declarative Pipelines uses this sequencing to handle change
@@ -11309,6 +13081,181 @@ func (m *TableSpecificConfig_SdkV2) SetWorkdayReportParameters(ctx context.Conte
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["workday_report_parameters"]
 	m.WorkdayReportParameters = types.ListValueMust(t, vs)
+}
+
+// TikTok Ads specific options for ingestion
+type TikTokAdsOptions_SdkV2 struct {
+	// (Optional) Data level for the report. If not specified, defaults to
+	// AUCTION_CAMPAIGN.
+	DataLevel types.String `tfsdk:"data_level"`
+	// (Optional) Dimensions to include in the report. Examples: "campaign_id",
+	// "adgroup_id", "ad_id", "stat_time_day", "stat_time_hour" If not
+	// specified, defaults to campaign_id.
+	Dimensions types.List `tfsdk:"dimensions"`
+	// (Optional) Number of days to look back for report tables during
+	// incremental sync to capture late-arriving conversions and attribution
+	// data. If not specified, defaults to 7 days.
+	LookbackWindowDays types.Int64 `tfsdk:"lookback_window_days"`
+	// (Optional) Metrics to include in the report. Examples: "spend",
+	// "impressions", "clicks", "conversion", "cpc" If not specified, defaults
+	// to basic metrics (spend, impressions, clicks, etc.)
+	Metrics types.List `tfsdk:"metrics"`
+	// (Optional) Whether to request lifetime metrics (all-time aggregated
+	// data). When true, the report returns all-time data. If not specified,
+	// defaults to false.
+	QueryLifetime types.Bool `tfsdk:"query_lifetime"`
+	// (Optional) Report type for the TikTok Ads API. If not specified, defaults
+	// to BASIC.
+	ReportType types.String `tfsdk:"report_type"`
+	// (Optional) Start date for the initial sync of report tables in YYYY-MM-DD
+	// format. This determines the earliest date from which to sync historical
+	// data. If not specified, defaults to 1 year of historical data for daily
+	// reports and 30 days for hourly reports.
+	SyncStartDate types.String `tfsdk:"sync_start_date"`
+}
+
+func (to *TikTokAdsOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TikTokAdsOptions_SdkV2) {
+	if !from.Dimensions.IsNull() && !from.Dimensions.IsUnknown() && to.Dimensions.IsNull() && len(from.Dimensions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Dimensions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Dimensions = from.Dimensions
+	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() && to.Metrics.IsNull() && len(from.Metrics.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Metrics, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Metrics = from.Metrics
+	}
+}
+
+func (to *TikTokAdsOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TikTokAdsOptions_SdkV2) {
+	if !from.Dimensions.IsNull() && !from.Dimensions.IsUnknown() && to.Dimensions.IsNull() && len(from.Dimensions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Dimensions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Dimensions = from.Dimensions
+	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() && to.Metrics.IsNull() && len(from.Metrics.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Metrics, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Metrics = from.Metrics
+	}
+}
+
+func (m TikTokAdsOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_level"] = attrs["data_level"].SetOptional()
+	attrs["dimensions"] = attrs["dimensions"].SetOptional()
+	attrs["lookback_window_days"] = attrs["lookback_window_days"].SetOptional()
+	attrs["metrics"] = attrs["metrics"].SetOptional()
+	attrs["query_lifetime"] = attrs["query_lifetime"].SetOptional()
+	attrs["report_type"] = attrs["report_type"].SetOptional()
+	attrs["sync_start_date"] = attrs["sync_start_date"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TikTokAdsOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TikTokAdsOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"dimensions": reflect.TypeOf(types.String{}),
+		"metrics":    reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TikTokAdsOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m TikTokAdsOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"data_level":           m.DataLevel,
+			"dimensions":           m.Dimensions,
+			"lookback_window_days": m.LookbackWindowDays,
+			"metrics":              m.Metrics,
+			"query_lifetime":       m.QueryLifetime,
+			"report_type":          m.ReportType,
+			"sync_start_date":      m.SyncStartDate,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TikTokAdsOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"data_level": types.StringType,
+			"dimensions": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"lookback_window_days": types.Int64Type,
+			"metrics": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"query_lifetime":  types.BoolType,
+			"report_type":     types.StringType,
+			"sync_start_date": types.StringType,
+		},
+	}
+}
+
+// GetDimensions returns the value of the Dimensions field in TikTokAdsOptions_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TikTokAdsOptions_SdkV2) GetDimensions(ctx context.Context) ([]types.String, bool) {
+	if m.Dimensions.IsNull() || m.Dimensions.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Dimensions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDimensions sets the value of the Dimensions field in TikTokAdsOptions_SdkV2.
+func (m *TikTokAdsOptions_SdkV2) SetDimensions(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dimensions"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Dimensions = types.ListValueMust(t, vs)
+}
+
+// GetMetrics returns the value of the Metrics field in TikTokAdsOptions_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TikTokAdsOptions_SdkV2) GetMetrics(ctx context.Context) ([]types.String, bool) {
+	if m.Metrics.IsNull() || m.Metrics.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Metrics.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMetrics sets the value of the Metrics field in TikTokAdsOptions_SdkV2.
+func (m *TikTokAdsOptions_SdkV2) SetMetrics(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["metrics"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Metrics = types.ListValueMust(t, vs)
 }
 
 // Information about truncations applied to this event.

@@ -27,18 +27,6 @@ func notebookDataTemplate(provider_config string) string {
 	`, provider_config)
 }
 
-func TestAccNotebookData_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: notebookDataTemplate(`
-			provider_config {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccNotebookData_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: notebookDataTemplate(`
@@ -47,17 +35,6 @@ func TestAccNotebookData_ProviderConfig_Mismatched(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
-	})
-}
-
-func TestAccNotebookData_ProviderConfig_Required(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: notebookDataTemplate(`
-			provider_config {
-			}
-		`),
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
-		PlanOnly:    true,
 	})
 }
 

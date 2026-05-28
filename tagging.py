@@ -6,8 +6,8 @@
 import os
 import re
 import argparse
-from typing import Optional, List, Callable
-from dataclasses import dataclass
+from typing import Optional, List, Callable, Dict
+from dataclasses import dataclass, replace
 import subprocess
 import time
 import json
@@ -18,6 +18,7 @@ NEXT_CHANGELOG_FILE_NAME = "NEXT_CHANGELOG.md"
 CHANGELOG_FILE_NAME = "CHANGELOG.md"
 PACKAGE_FILE_NAME = ".package.json"
 CODEGEN_FILE_NAME = ".codegen.json"
+CREATED_TAGS_FILE_NAME = "created_tags.json"
 """
 This script tags the release of the SDKs using a combination of the GitHub API and Git commands.
 It reads the local repository to determine necessary changes, updates changelogs, and creates tags.
@@ -28,6 +29,122 @@ It reads the local repository to determine necessary changes, updates changelogs
 """
 
 
+@dataclass(frozen=True)
+class Version:
+    """
+    A semver 2.0.0-compliant version (https://semver.org).
+
+    Mirrors the API of the `semver` PyPI package so this implementation can be
+    swapped for that library if it is ever added to the wheelhouse. Supports
+    parsing, stringification, and the two bumps we need: minor (for stable
+    releases) and prerelease (for release trains).
+    """
+
+    # Permissive pattern for locating a semver version string inside larger
+    # text (e.g. a changelog header). Callers use it in f-strings; strict
+    # validation happens via Version.parse.
+    PATTERN = r"\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?"
+
+    # Strict anchored regex per https://semver.org. Rejects leading zeros in
+    # numeric identifiers and invalid pre-release/build identifier charsets.
+    _PARSE_REGEX = re.compile(
+        r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
+        r"(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)"
+        r"(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
+        r"(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
+    )
+
+    major: int
+    minor: int
+    patch: int
+    prerelease: str = ""
+    build: str = ""
+
+    @classmethod
+    def parse(cls, text: str) -> "Version":
+        """Parse a semver string, raising ValueError on malformed input."""
+        match = cls._PARSE_REGEX.match(text)
+        if not match:
+            raise ValueError(f"Invalid semver version: {text!r}")
+        major, minor, patch, prerelease, build = match.groups()
+        return cls(
+            major=int(major),
+            minor=int(minor),
+            patch=int(patch),
+            prerelease=prerelease or "",
+            build=build or "",
+        )
+
+    def __str__(self) -> str:
+        result = f"{self.major}.{self.minor}.{self.patch}"
+        if self.prerelease:
+            result += f"-{self.prerelease}"
+        if self.build:
+            result += f"+{self.build}"
+        return result
+
+    def bump_minor(self) -> "Version":
+        """
+        Bump the minor version and reset patch.
+
+        Per semver item 9, a pre-release version has lower precedence than
+        the same MAJOR.MINOR.PATCH, so bumping to a new minor drops any
+        pre-release and build metadata.
+        """
+        return Version(major=self.major, minor=self.minor + 1, patch=0)
+
+    def bump_prerelease(self) -> "Version":
+        """
+        Increment the rightmost numeric identifier in the pre-release.
+
+        Matches the npm `prerelease` bump semantics:
+            0.0.0-alpha.1 -> 0.0.0-alpha.2
+            0.0.0-alpha   -> 0.0.0-alpha.1
+            0.0.0-rc.1.2  -> 0.0.0-rc.1.3
+
+        Raises ValueError if the version has no pre-release to bump.
+        Build metadata is dropped since it does not affect precedence.
+        """
+        if not self.prerelease:
+            raise ValueError(f"Cannot bump prerelease of {self}: no pre-release component")
+        parts = self.prerelease.split(".")
+        for i in range(len(parts) - 1, -1, -1):
+            if parts[i].isdigit():
+                parts[i] = str(int(parts[i]) + 1)
+                return replace(self, prerelease=".".join(parts), build="")
+        # No numeric identifier exists; append ".1" to start a counter.
+        return replace(self, prerelease=f"{self.prerelease}.1", build="")
+
+    def next_release_version(self) -> "Version":
+        """
+        Default next version for the changelog after this one is released.
+
+        If on a pre-release track, stay on it by bumping the pre-release
+        identifier (npm convention). Otherwise, bump the minor version,
+        the script's historical default for stable releases. Teams can
+        override the default in the release PR.
+        """
+        if self.prerelease:
+            return self.bump_prerelease()
+        return self.bump_minor()
+
+
+def _read_local_head_sha() -> str:
+    """
+    Returns the SHA of the local working tree's HEAD via ``git rev-parse``.
+    """
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+
+
+class MainAdvancedError(Exception):
+    """
+    Raised when ``origin/main`` has advanced since the workflow's
+    checkout — i.e., another commit landed during this run. The local
+    working tree is now stale, so any commit produced from it would
+    silently revert whatever the concurrent push added.
+    """
+
+
 # GitHub does not support signing commits for GitHub Apps directly.
 # This class replaces usages for git commands such as "git add", "git commit", and "git push".
 @dataclass
@@ -36,8 +153,12 @@ class GitHubRepo:
         self.repo = repo
         self.changed_files: list[InputGitTreeElement] = []
         self.ref = "heads/main"
-        head_ref = self.repo.get_git_ref(self.ref)
-        self.sha = head_ref.object.sha
+        # Anchor ``self.sha`` to the **local checkout** rather than a
+        # live API call. ``actions/checkout`` populates the working tree
+        # at this SHA, and every subsequent file read in this run is
+        # against that tree; the API HEAD is only relevant when we go
+        # to push.
+        self.sha = _read_local_head_sha()
 
     # Replaces "git add file"
     def add_file(self, loc: str, content: str):
@@ -50,12 +171,19 @@ class GitHubRepo:
     # Replaces "git commit && git push"
     def commit_and_push(self, message: str):
         head_ref = self.repo.get_git_ref(self.ref)
+        if head_ref.object.sha != self.sha:
+            raise MainAdvancedError(
+                f"origin/main advanced from {self.sha} to {head_ref.object.sha} "
+                f"during this run. Local working tree is stale; aborting before "
+                f"the commit would silently revert the new content. Re-run the "
+                f"workflow."
+            )
         base_tree = self.repo.get_git_tree(sha=head_ref.object.sha)
         new_tree = self.repo.create_git_tree(self.changed_files, base_tree)
         parent_commit = self.repo.get_git_commit(head_ref.object.sha)
 
         new_commit = self.repo.create_git_commit(message=message, tree=new_tree, parents=[parent_commit])
-        # Update branch reference
+        # Update branch reference.
         head_ref.edit(new_commit.sha)
         self.sha = new_commit.sha
 
@@ -64,8 +192,7 @@ class GitHubRepo:
         if sha:
             self.sha = sha
         else:
-            head_ref = self.repo.get_git_ref(self.ref)
-            self.sha = head_ref.object.sha
+            self.sha = _read_local_head_sha()
 
     def tag(self, tag_name: str, tag_message: str):
         # Create a tag pointing to the new commit
@@ -153,35 +280,103 @@ def get_package_name(package_path: str) -> str:
     return ""
 
 
-def update_version_references(tag_info: TagInfo) -> None:
+def stage_version_updates(tag_infos: List[TagInfo], packages: List[Package]) -> None:
     """
-    Updates the version of the package in code references.
-    Code references are defined in .package.json files.
+    Stages all version-related edits for the release in a single pass over
+    every package the workspace already opts in via ``.package.json``.
     """
 
-    # Load version patterns from '.codegen.json' file at the top level of the repository
+    # Load patterns from '.codegen.json' at the top level of the repository.
     package_file_path = os.path.join(os.getcwd(), CODEGEN_FILE_NAME)
     with open(package_file_path, "r") as file:
-        package_file = json.load(file)
+        codegen = json.load(file)
 
-    version = package_file.get("version")
-    if not version:
-        print("`version` not found in .codegen.json. Nothing to update.")
+    version_patterns = codegen.get("version", {})
+    dep_patterns = codegen.get("dependency_pattern", {})
+    name_template = codegen.get("dependency_name_template", "")
+
+    if not version_patterns and not dep_patterns:
+        print("Neither `version` nor `dependency_pattern` found in .codegen.json. Nothing to update.")
         return
 
-    # Update the versions
-    for filename, pattern in version.items():
-        loc = os.path.join(os.getcwd(), tag_info.package.path, filename)
-        previous_version = re.sub(r"\$VERSION", r"\\d+\\.\\d+\\.\\d+", pattern)
-        new_version = re.sub(r"\$VERSION", tag_info.version, pattern)
+    bumped_by_dir: Dict[str, TagInfo] = {info.package.path: info for info in tag_infos}
+    new_dep_versions = compute_dependency_rewrites(tag_infos, name_template)
 
-        with open(loc, "r") as file:
-            content = file.read()
+    files = sorted(set(version_patterns.keys()) | set(dep_patterns.keys()))
 
-        # Replace the version in the file content
-        updated_content = re.sub(previous_version, new_version, content)
+    for pkg in packages:
+        for filename in files:
+            loc = os.path.join(os.getcwd(), pkg.path, filename)
 
-        gh.add_file(loc, updated_content)
+            with open(loc, "r") as file:
+                content = file.read()
+            original = content
+
+            # Own version (only when this package is being released and the
+            # file has a version pattern declared).
+            info = bumped_by_dir.get(pkg.path)
+            if info is not None and filename in version_patterns:
+                pattern = version_patterns[filename]
+                previous_version = pattern.replace("$VERSION", Version.PATTERN)
+                new_version = pattern.replace("$VERSION", info.version)
+                content = re.sub(previous_version, new_version, content)
+
+            # Sibling dependency rewrites (only when the file has a
+            # dependency pattern and there is at least one bumped sibling).
+            if filename in dep_patterns and new_dep_versions:
+                content = rewrite_dependencies(content, dep_patterns[filename], new_dep_versions)
+
+            if content != original:
+                gh.add_file(loc, content)
+
+
+def compute_dependency_rewrites(
+    tag_infos: List[TagInfo],
+    name_template: str,
+) -> Dict[str, str]:
+    """
+    Returns a map of dependency-name to the new semver string for each
+    bumped package.
+    """
+    if not name_template:
+        return {}
+    rewrites: Dict[str, str] = {}
+    for info in tag_infos:
+        # Skip legacy releases that don't have a per-package name; their
+        # tag_info has an empty package.name and they can't be referenced
+        # as a sibling dep anyway.
+        if not info.package.name:
+            continue
+        dep_name = name_template.replace("$PACKAGE", info.package.name)
+        rewrites[dep_name] = info.version
+    return rewrites
+
+
+def rewrite_dependencies(content: str, pattern: str, new_versions: Dict[str, str]) -> str:
+    """
+    Apply ``pattern`` (with ``$DEPENDENCY`` and ``$VERSION`` placeholders) to
+    rewrite every entry in ``content`` whose dependency name appears in
+    ``new_versions``.
+    """
+    # Sentinel strings used to protect the placeholders through re.escape:
+    # we substitute them in, escape the whole template, then swap them out
+    # for the dep-name literal and Version.PATTERN. Control characters so
+    # they can't collide with anything in real .codegen.json patterns.
+    dep_sentinel = "\x01DEPENDENCY\x01"
+    ver_sentinel = "\x01VERSION\x01"
+
+    for dep_name, new_value in new_versions.items():
+        regex = pattern.replace("$DEPENDENCY", dep_sentinel).replace("$VERSION", ver_sentinel)
+        regex = re.escape(regex)
+        regex = regex.replace(re.escape(dep_sentinel), re.escape(dep_name))
+        regex = regex.replace(re.escape(ver_sentinel), Version.PATTERN)
+
+        # Build the literal replacement text by substituting the same
+        # placeholders directly. A lambda is used instead of a string to
+        # avoid re.sub interpreting \1, \g<...>, etc. inside the value.
+        replacement_text = pattern.replace("$DEPENDENCY", dep_name).replace("$VERSION", new_value)
+        content = re.sub(regex, lambda _m, text=replacement_text: text, content)
+    return content
 
 
 def clean_next_changelog(package_path: str) -> None:
@@ -196,23 +391,21 @@ def clean_next_changelog(package_path: str) -> None:
     with open(file_path, "r") as file:
         content = file.read()
 
-    # Remove content between ### sections
+    # Remove content between ### sections.
     cleaned_content = re.sub(r"(### [^\n]+\n)(?:.*?\n?)*?(?=###|$)", r"\1", content)
-    # Ensure there is exactly one empty line before each section
+    # Ensure there is exactly one empty line before each section.
     cleaned_content = re.sub(r"(\n*)(###[^\n]+)", r"\n\n\2", cleaned_content)
-    # Find the version number
-    version_match = re.search(r"Release v(\d+)\.(\d+)\.(\d+)", cleaned_content)
+    # Find the version number and compute the default next release version.
+    # Teams can adjust the version in the PR if the default is not desired.
+    # For stable versions, bump minor (historical default since minor releases
+    # are more common than patch or major). For pre-release versions, stay on
+    # the same track by bumping the pre-release identifier (npm convention).
+    version_match = re.search(rf"Release v({Version.PATTERN})", cleaned_content)
     if not version_match:
         raise Exception("Version not found in the changelog")
-    major, minor, patch = map(int, version_match.groups())
-    # Prepare next release version.
-    # When doing a PR, teams can adjust the version.
-    # By default, we increase a minor version, since minor versions releases
-    # are more common than patch or major version releases.
-    minor += 1
-    patch = 0
-    new_version = f"Release v{major}.{minor}.{patch}"
-    cleaned_content = cleaned_content.replace(version_match.group(0), new_version)
+    current = Version.parse(version_match.group(1))
+    new_header = f"Release v{current.next_release_version()}"
+    cleaned_content = cleaned_content.replace(version_match.group(0), new_header)
 
     # Update file with cleaned content
     gh.add_file(file_path, cleaned_content)
@@ -228,20 +421,38 @@ def get_previous_tag_info(package: Package) -> Optional[TagInfo]:
     with open(changelog_path, "r") as f:
         changelog = f.read()
 
-    # Extract the latest release section using regex
-    match = re.search(r"## (\[Release\] )?Release v[\d\.]+.*?(?=\n## (\[Release\] )?Release v|\Z)", changelog, re.S)
+    # Extract the latest release section using regex.
+    match = re.search(
+        rf"## (\[Release\] )?Release v{Version.PATTERN}.*?(?=\n## (\[Release\] )?Release v|\Z)",
+        changelog,
+        re.S,
+    )
 
     # E.g., for new packages.
     if not match:
         return None
 
     latest_release = match.group(0)
-    version_match = re.search(r"## (\[Release\] )?Release v(\d+\.\d+\.\d+)", latest_release)
+    version_match = re.search(rf"## (\[Release\] )?Release v({Version.PATTERN})", latest_release)
 
     if not version_match:
         raise Exception("Version not found in the changelog")
 
-    return TagInfo(package=package, version=version_match.group(2), content=latest_release)
+    # Validate the extracted string is spec-compliant; fail loudly otherwise.
+    version = str(Version.parse(version_match.group(2)))
+    return TagInfo(package=package, version=version, content=latest_release)
+
+
+def _load_codegen_config() -> Dict:
+    """
+    Loads ``.codegen.json`` from the repo root. Returns an empty dict when
+    the file is missing.
+    """
+    package_file_path = os.path.join(os.getcwd(), CODEGEN_FILE_NAME)
+    if not os.path.exists(package_file_path):
+        return {}
+    with open(package_file_path, "r") as file:
+        return json.load(file)
 
 
 def get_next_tag_info(package: Package) -> Optional[TagInfo]:
@@ -262,16 +473,22 @@ def get_next_tag_info(package: Package) -> Optional[TagInfo]:
     # Ensure there is exactly one empty line before each section
     next_changelog = re.sub(r"(\n*)(###[^\n]+)", r"\n\n\2", next_changelog)
 
-    if not re.search(r"###", next_changelog):
+    # By default, packages whose NEXT_CHANGELOG.md has no populated
+    # sections are skipped — there's nothing meaningful to release.
+    # Repos like sdk-js which are still in development can opt in
+    # by setting ``allow_empty_changelog: true`` in .codegen.json.
+    if not re.search(r"###", next_changelog) and not _load_codegen_config().get("allow_empty_changelog", False):
         print("All sections are empty. No changes will be made to the changelog.")
         return None
 
-    version_match = re.search(r"## Release v(\d+\.\d+\.\d+)", next_changelog)
+    version_match = re.search(rf"## Release v({Version.PATTERN})", next_changelog)
 
     if not version_match:
         raise Exception("Version not found in the changelog")
 
-    return TagInfo(package=package, version=version_match.group(1), content=next_changelog)
+    # Validate the extracted string is spec-compliant; fail loudly otherwise.
+    version = str(Version.parse(version_match.group(1)))
+    return TagInfo(package=package, version=version, content=next_changelog)
 
 
 def write_changelog(tag_info: TagInfo) -> None:
@@ -282,10 +499,12 @@ def write_changelog(tag_info: TagInfo) -> None:
     with open(changelog_path, "r") as f:
         changelog = f.read()
 
-    # Add current date to the release header
+    # Add current date to the release header.
     current_date = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")
     content_with_date = re.sub(
-        r"## Release v(\d+\.\d+\.\d+)", rf"## Release v\1 ({current_date})", tag_info.content.strip()
+        rf"## Release v({Version.PATTERN})",
+        rf"## Release v\1 ({current_date})",
+        tag_info.content.strip(),
     )
 
     updated_changelog = re.sub(r"(# Version changelog\n\n)", f"\\1{content_with_date}\n\n\n", changelog)
@@ -294,9 +513,8 @@ def write_changelog(tag_info: TagInfo) -> None:
 
 def process_package(package: Package) -> TagInfo:
     """
-    Processes a package
+    Processes a package's changelog scaffolding for the release.
     """
-    # Prepare tag_info from NEXT_CHANGELOG.md
     print(f"Processing package {package.name}")
     tag_info = get_next_tag_info(package)
 
@@ -306,7 +524,6 @@ def process_package(package: Package) -> TagInfo:
 
     write_changelog(tag_info)
     clean_next_changelog(package.path)
-    update_version_references(tag_info)
     return tag_info
 
 
@@ -350,6 +567,131 @@ def is_tag_applied(tag: TagInfo) -> bool:
         raise Exception(f"Git command failed: {e.stderr.strip() or e}") from e
 
 
+def find_last_release_tag(package: Package) -> Optional[str]:
+    """
+    Returns the most recent ``<package>/v*`` tag in the repository, or
+    ``None`` if no such tag exists. Tags are sorted by semver ordering
+    (``--sort=-v:refname``) so pre-releases sort below their stable
+    counterparts.
+
+    :raises Exception: If the git command fails.
+    """
+    pattern = f"{package.name}/v*" if package.name else "v*"
+    try:
+        output = subprocess.check_output(
+            ["git", "tag", "--list", pattern, "--sort=-v:refname"],
+            stderr=subprocess.PIPE,
+            text=True,
+        ).strip()
+    except subprocess.CalledProcessError as e:
+        raise Exception(f"Git command failed: {e.stderr.strip() or e}") from e
+    if not output:
+        return None
+    return output.split("\n")[0].strip()
+
+
+def has_commits_since_tag(tag: str, path: str) -> bool:
+    """
+    Returns True iff at least one commit reachable from HEAD but not from
+    ``tag`` touches ``path``. Used to detect that a sibling dependency has
+    unreleased changes that would ship stale if we tagged a dependent
+    without re-tagging the dependency.
+
+    :raises Exception: If the git command fails.
+    """
+    args = ["git", "log", "--oneline", f"{tag}..HEAD", "--", path or "."]
+    try:
+        output = subprocess.check_output(args, stderr=subprocess.PIPE, text=True).strip()
+    except subprocess.CalledProcessError as e:
+        raise Exception(f"Git command failed: {e.stderr.strip() or e}") from e
+    return bool(output)
+
+
+def check_dependency_freshness(tag_infos: List[TagInfo], all_packages: List[Package]) -> None:
+    """
+    Hard-fails when a package being released depends on a sibling package
+    that has unreleased commits since its last tag.
+
+    Why: dependency rewrites (``stage_version_updates``) only fire for
+    siblings that are *also* being released. Without this check, releasing
+    package_a alone — when package_b has commits since its last tag —
+    publishes ``package_a@new`` pinning the *old* package_b artifact, which
+    won't have the changes package_a's source depends on. The check is
+    commit-based (not changelog-based) so a missing ``NEXT_CHANGELOG.md``
+    entry on package_b is still caught.
+
+    No-op when ``.codegen.json`` declares no dependency pattern (legacy
+    SDKs without per-package wiring).
+    """
+    if not tag_infos:
+        return
+
+    package_file_path = os.path.join(os.getcwd(), CODEGEN_FILE_NAME)
+    with open(package_file_path, "r") as file:
+        codegen = json.load(file)
+
+    name_template = codegen.get("dependency_name_template", "")
+    dep_patterns = codegen.get("dependency_pattern", {})
+    if not name_template or not dep_patterns:
+        return
+
+    releasing_paths = {info.package.path for info in tag_infos}
+    by_dep_name: Dict[str, Package] = {}
+    for pkg in all_packages:
+        if not pkg.name:
+            continue
+        by_dep_name[name_template.replace("$PACKAGE", pkg.name)] = pkg
+
+    issues: List[str] = []
+    for info in tag_infos:
+        for filename, pattern in dep_patterns.items():
+            loc = os.path.join(os.getcwd(), info.package.path, filename)
+            if not os.path.exists(loc):
+                continue
+            with open(loc, "r") as f:
+                content = f.read()
+
+            for dep_name, dep_pkg in by_dep_name.items():
+                if dep_pkg.path == info.package.path:
+                    continue
+                if dep_pkg.path in releasing_paths:
+                    continue
+
+                # Same regex construction used by ``rewrite_dependencies``,
+                # so "is this dep referenced?" matches "would the rewrite
+                # touch it?". Keeps the two in lockstep.
+                regex = (
+                    re.escape(pattern)
+                    .replace(re.escape("$DEPENDENCY"), re.escape(dep_name))
+                    .replace(re.escape("$VERSION"), Version.PATTERN)
+                )
+                if not re.search(regex, content):
+                    continue
+
+                last_tag = find_last_release_tag(dep_pkg)
+                if last_tag is None:
+                    # No prior tag means the dep was never released; we
+                    # can't reason about staleness. Surface it anyway so
+                    # the human resolves it explicitly.
+                    issues.append(
+                        f"{info.package.name} depends on {dep_pkg.name}, "
+                        f"which has never been released. Release "
+                        f"{dep_pkg.name} first or include it in this run."
+                    )
+                    continue
+                if has_commits_since_tag(last_tag, dep_pkg.path):
+                    issues.append(
+                        f"{info.package.name} depends on {dep_pkg.name}, "
+                        f"which has commits since {last_tag} but is not "
+                        f"being released. Either release {dep_pkg.name} "
+                        f"as well, or hold this release until its changes "
+                        f"are reverted."
+                    )
+
+    if issues:
+        raise Exception("Dependency freshness check failed:\n  - " + "\n  - ".join(issues))
+
+
 def find_last_tags() -> List[TagInfo]:
     """
     Finds the last tags for each package.
@@ -383,11 +725,11 @@ def generate_commit_message(tag_infos: List[TagInfo]) -> str:
             raise Exception("Multiple packages found in legacy mode")
         return f"[Release] Release v{info.version}\n\n{info.content}"
 
-    # Sort tag_infos by package name for consistency
+    # Sort tag_infos by package name for consistency.
     tag_infos.sort(key=lambda info: info.package.name)
-    return "Release\n\n" + "\n\n".join(
-        f"## {info.package.name}/v{info.version}\n\n{info.content}" for info in tag_infos
-    )
+    titles = ", ".join(f"{info.package.name}/v{info.version}" for info in tag_infos)
+    body = "\n\n".join(f"## {info.package.name}/v{info.version}\n\n{info.content}" for info in tag_infos)
+    return f"[Release] {titles}\n\n{body}"
 
 
 def push_changes(tag_infos: List[TagInfo]) -> None:
@@ -410,20 +752,17 @@ def reset_repository(hash: Optional[str] = None) -> None:
 
     :param hash: The commit hash to reset to. If None, it resets to HEAD.
     """
-    # Fetch the latest changes from the remote repository
+    # Fetch the latest changes from the remote repository.
     subprocess.run(["git", "fetch"])
 
-    # Determine the commit hash (default to origin/main if none is provided)
+    # Determine the commit hash (default to origin/main if none is provided).
     commit_hash = hash or "origin/main"
 
-    # Reset in memory changed files and the commit hash
+    # ``git reset --hard`` must land before ``gh.reset(None)``, since
+    # ``gh.reset(None)`` reads ``git rev-parse HEAD`` to anchor
+    # ``self.sha`` to the local working tree.
+    subprocess.run(["git", "reset", "--hard", commit_hash], check=True)
     gh.reset(hash)
-
-    # Construct the Git reset command
-    command = ["git", "reset", "--hard", commit_hash]
-
-    # Execute the git reset command
-    subprocess.run(command, check=True)
 
 
 def retry_function(
@@ -442,6 +781,12 @@ def retry_function(
     while attempts <= max_attempts:
         try:
             return func()  # Call the function
+        except MainAdvancedError:
+            # Permanent failure: another commit landed on main during
+            # this run, so the local tree is stale. Retrying with the
+            # same stale tree would just hit the same mismatch — only
+            # a fresh workflow run against the new main can recover.
+            raise
         except Exception as e:
             attempts += 1
             print(f"Attempt {attempts} failed: {e}")
@@ -453,23 +798,139 @@ def retry_function(
                 raise e  # Re-raise the exception after max retries
 
 
-def update_changelogs(packages: List[Package]) -> List[TagInfo]:
+def update_changelogs(selected_packages: List[Package], all_packages: List[Package]) -> List[TagInfo]:
     """
     Updates changelogs and pushes the commits.
+
+    ``selected_packages`` are the packages whose ``NEXT_CHANGELOG.md`` is
+    consulted to decide what gets released this run. ``all_packages`` is
+    the full repo inventory used for cross-package dep rewrites.
+
+    The freshness check is deliberately *not* called here. ``process``
+    runs it before entering the retry loop so a freshness violation
+    fails fast — the check is deterministic against the same git state,
+    so wrapping it in retry would just delay the same failure five
+    times.
     """
-    tag_infos = [info for info in (process_package(package) for package in packages) if info is not None]
-    # If any package was changed, push the changes.
+    tag_infos = [info for info in (process_package(package) for package in selected_packages) if info is not None]
+    # If any package was changed, stage version updates and push.
     if tag_infos:
+        stage_version_updates(tag_infos, all_packages)
         push_changes(tag_infos)
     return tag_infos
+
+
+def preview_tag_infos(packages: List[Package]) -> List[TagInfo]:
+    """
+    Read-only sibling of ``process_package``: returns the TagInfos that
+    would be released for ``packages`` without writing any changelog
+    edits. ``process`` calls this before the retry loop so the freshness
+    check has a snapshot to validate against. ``process_package`` will
+    re-derive the same TagInfos when ``update_changelogs`` runs; the
+    duplication is just a couple of NEXT_CHANGELOG.md reads.
+    """
+    return [info for info in (get_next_tag_info(package) for package in packages) if info is not None]
+
+
+def order_tag_infos_by_dependency(tag_infos: List[TagInfo]) -> List[TagInfo]:
+    """
+    Returns ``tag_infos`` in topological order: every package appears
+    after every sibling it depends on.
+    """
+    if not tag_infos:
+        return list(tag_infos)
+
+    if any(not info.package.name for info in tag_infos) and len(tag_infos) > 1:
+        raise Exception("Multiple packages found in legacy mode")
+
+    package_file_path = os.path.join(os.getcwd(), CODEGEN_FILE_NAME)
+    with open(package_file_path, "r") as file:
+        codegen = json.load(file)
+
+    name_template = codegen.get("dependency_name_template", "")
+    dep_patterns = codegen.get("dependency_pattern", {})
+    if not name_template or not dep_patterns:
+        return list(tag_infos)
+
+    by_dep_name: Dict[str, TagInfo] = {
+        name_template.replace("$PACKAGE", info.package.name): info for info in tag_infos if info.package.name
+    }
+
+    # Adjacency: path -> set of paths it depends on (within tag_infos).
+    deps: Dict[str, set] = {info.package.path: set() for info in tag_infos}
+    for info in tag_infos:
+        for filename, pattern in dep_patterns.items():
+            loc = os.path.join(os.getcwd(), info.package.path, filename)
+            if not os.path.exists(loc):
+                continue
+            with open(loc, "r") as f:
+                content = f.read()
+            for dep_name, dep_info in by_dep_name.items():
+                if dep_info.package.path == info.package.path:
+                    continue
+                regex = (
+                    re.escape(pattern)
+                    .replace(re.escape("$DEPENDENCY"), re.escape(dep_name))
+                    .replace(re.escape("$VERSION"), Version.PATTERN)
+                )
+                if re.search(regex, content):
+                    deps[info.package.path].add(dep_info.package.path)
+
+    # Stable topological sort: at each step, emit every node whose deps
+    # are already emitted, alphabetically by package name. Ties broken
+    # alphabetically so the manifest is reproducible across runs.
+    emitted: set = set()
+    ordered: List[TagInfo] = []
+    while len(ordered) < len(tag_infos):
+        ready = sorted(
+            (
+                info
+                for info in tag_infos
+                if info.package.path not in emitted and deps[info.package.path].issubset(emitted)
+            ),
+            key=lambda info: info.package.name,
+        )
+        if not ready:
+            remaining = [info.package.name for info in tag_infos if info.package.path not in emitted]
+            raise Exception(f"Cyclic dependency detected among packages: {remaining}")
+        for info in ready:
+            ordered.append(info)
+            emitted.add(info.package.path)
+    return ordered
 
 
 def push_tags(tag_infos: List[TagInfo]) -> None:
     """
     Creates and pushes tags to the repository.
+
+    Tags are emitted in topological order — dependencies before
+    dependents — so downstream publishing pipelines reading
+    ``created_tags.json`` can walk it sequentially without re-deriving
+    the dependency graph. See ``order_tag_infos_by_dependency``.
+
+    As a side effect, writes the names of successfully created tags to
+    ``./created_tags.json`` so that workflows triggering this script can
+    discover what was produced (the GitHub Actions workflow uploads this
+    file as the ``created-tags`` artifact).
+
+    Schema:
+        {"tags": ["service-a/v1.2.3", "service-b/v0.4.0"]}
+
+    The manifest is written even if tag creation fails partway through:
+    tags that succeeded before the failure are flushed before the
+    exception is re-raised, so recovery-mode runs still surface their
+    output.
     """
-    for tag_info in tag_infos:
-        gh.tag(tag_info.tag_name(), tag_info.content)
+    tag_infos = order_tag_infos_by_dependency(tag_infos)
+    created: List[str] = []
+    try:
+        for tag_info in tag_infos:
+            gh.tag(tag_info.tag_name(), tag_info.content)
+            created.append(tag_info.tag_name())
+    finally:
+        manifest_path = os.path.join(os.getcwd(), CREATED_TAGS_FILE_NAME)
+        with open(manifest_path, "w") as f:
+            json.dump({"tags": created}, f)
 
 
 def run_command(command: List[str]) -> str:
@@ -498,15 +959,26 @@ def pull_last_release_commit() -> None:
     reset_repository(commit_hash)
 
 
-def get_package_from_args() -> Optional[str]:
+def get_packages_from_args() -> List[str]:
     """
-    Retrieves an optional package
-    python3 ./tagging.py --package <name>
+    Retrieves the list of packages to tag.
+
+        python3 ./tagging.py --package <name>              # single package
+        python3 ./tagging.py --package <name1>,<name2>     # multiple packages
+
+    Returns an empty list when --package is omitted, which means all packages
+    with pending releases will be tagged.
     """
     parser = argparse.ArgumentParser(description="Update changelogs and tag the release.")
-    parser.add_argument("--package", "-p", type=str, help="Tag a single package")
+    parser.add_argument(
+        "--package",
+        "-p",
+        type=str,
+        default="",
+        help="Comma-separated list of packages to tag. Leave empty to tag all packages with pending releases.",
+    )
     args = parser.parse_args()
-    return args.package
+    return [name.strip() for name in args.package.split(",") if name.strip()]
 
 
 def init_github():
@@ -532,15 +1004,15 @@ def process():
     If any tag are pending from an early process, it will skip updating the CHANGELOG.md files and only apply the tags.
     """
 
-    package_name = get_package_from_args()
+    package_names = get_packages_from_args()
     pending_tags = find_pending_tags()
 
     # pending_tags is non-empty only when the tagging process previously failed or interrupted.
     # We must complete the interrupted tagging process before starting a new one to avoid inconsistent states and missing changelog entries.
-    # Therefore, we don't support specifying the package until the previously started process has been successfully completed.
-    if pending_tags and package_name:
+    # Therefore, we don't support specifying packages until the previously started process has been successfully completed.
+    if pending_tags and package_names:
         pending_packages = [tag.package.name for tag in pending_tags]
-        raise Exception(f"Cannot release package {package_name}. Pending release for {pending_packages}")
+        raise Exception(f"Cannot release packages {package_names}. Pending release for {pending_packages}")
 
     if pending_tags:
         print("Found pending tags from previous executions, entering recovery mode.")
@@ -548,12 +1020,24 @@ def process():
         push_tags(pending_tags)
         return
 
-    packages = find_packages()
-    # If a package is specified as an argument, only process that package
-    if package_name:
-        packages = [package for package in packages if package.name == package_name]
+    all_packages = find_packages()
+    # If packages are specified as an argument, only release those — but
+    # dep rewrites and the freshness check still operate over the full
+    # set.
+    selected_packages = all_packages
+    if package_names:
+        selected_packages = [package for package in all_packages if package.name in package_names]
 
-    pending_tags = retry_function(func=lambda: update_changelogs(packages), cleanup=reset_repository)
+    # Run the freshness check against a read-only preview before the
+    # retry loop, since the check is deterministic. A freshness
+    # violation fails the run immediately, with no commits, no tags, no
+    # retry storm.
+    check_dependency_freshness(preview_tag_infos(selected_packages), all_packages)
+
+    pending_tags = retry_function(
+        func=lambda: update_changelogs(selected_packages, all_packages),
+        cleanup=reset_repository,
+    )
     push_tags(pending_tags)
 
 

@@ -8,6 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 
+	"github.com/databricks/terraform-provider-databricks/catalog/bindings"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/mock"
 )
@@ -154,6 +155,52 @@ func TestCreateIsolatedStorageCredential(t *testing.T) {
 	})
 }
 
+func TestDeleteIsolatedStorageCredential(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockMetastoresAPI().EXPECT().Current(mock.Anything).Return(&catalog.MetastoreAssignment{
+				MetastoreId: "e",
+				WorkspaceId: 123456789101112,
+			}, nil)
+			w.GetMockWorkspaceBindingsAPI().EXPECT().UpdateBindings(mock.Anything, catalog.UpdateWorkspaceBindingsParameters{
+				SecurableName: "a",
+				SecurableType: string(bindings.BindingsSecurableTypeStorageCredential),
+				Add: []catalog.WorkspaceBinding{
+					{
+						WorkspaceId: int64(123456789101112),
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+					},
+				},
+			}).Return(&catalog.UpdateWorkspaceBindingsResponse{
+				Bindings: []catalog.WorkspaceBinding{
+					{
+						WorkspaceId: int64(123456789101112),
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+					},
+				},
+			}, nil)
+			w.GetMockStorageCredentialsAPI().EXPECT().Delete(mock.Anything, catalog.DeleteStorageCredentialRequest{
+				Name: "a",
+			}).Return(nil)
+		},
+		Resource: ResourceStorageCredential(),
+		Delete:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":           "a",
+			"isolation_mode": "ISOLATION_MODE_ISOLATED",
+		},
+		HCL: `
+		name = "a"
+		aws_iam_role {
+			role_arn = "def"
+		}
+		comment = "c"
+		isolation_mode = "ISOLATION_MODE_ISOLATED"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestCreateStorageCredentialWithOwner(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -266,6 +313,7 @@ func TestCreateAccountStorageCredentialWithOwner(t *testing.T) {
 		HCL: `
 		name = "storage_credential_name"
 		metastore_id = "metastore_id"
+		api = "account"
 		aws_iam_role {
 			role_arn = "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF"
 		}
@@ -904,25 +952,29 @@ func TestUpdateAzStorageCredentialSpn(t *testing.T) {
 
 func TestStorageCredentialImportAccountLevel(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/account_id/metastores/metastore_id/storage-credentials/storage_credential_name?",
-				Response: &catalog.AccountsStorageCredentialInfo{
-					CredentialInfo: &catalog.StorageCredentialInfo{
-						Name: "storage_credential_name",
-						AwsIamRole: &catalog.AwsIamRoleResponse{
-							RoleArn: "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF",
-						},
-						Id:          "1234-5678",
-						MetastoreId: "metastore_id",
-					},
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			a.GetMockAccountStorageCredentialsAPI().EXPECT().Get(
+				mock.Anything,
+				catalog.GetAccountStorageCredentialRequest{
+					MetastoreId:           "metastore_id",
+					StorageCredentialName: "storage_credential_name",
 				},
-			},
+			).Return(&catalog.AccountsStorageCredentialInfo{
+				CredentialInfo: &catalog.StorageCredentialInfo{
+					Name: "storage_credential_name",
+					AwsIamRole: &catalog.AwsIamRoleResponse{
+						RoleArn: "arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF",
+					},
+					Id:          "1234-5678",
+					MetastoreId: "metastore_id",
+				},
+			}, nil)
 		},
 		Resource:  ResourceStorageCredential(),
 		AccountID: "account_id",
+		Host:      "https://accounts.cloud.databricks.com",
 		Read:      true,
+		New:       true,
 		ID:        "metastore_id|storage_credential_name",
 	}.ApplyAndExpectData(t, map[string]any{
 		"metastore_id":          "metastore_id",

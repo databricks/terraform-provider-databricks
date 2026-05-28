@@ -37,6 +37,7 @@ func TestMetastoresDataContainsName(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 		AccountID:   "testaccount",
+		Host:        "https://accounts.cloud.databricks.com",
 	}.ApplyAndExpectData(t, map[string]any{
 		"ids": map[string]interface{}{"a": "abc", "b": "ded"},
 	})
@@ -57,5 +58,6 @@ func TestMetastoresData_Error(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 		AccountID:   "_",
+		Host:        "https://accounts.cloud.databricks.com",
 	}.ExpectError(t, "Bad request: unable to list metastores")
 }

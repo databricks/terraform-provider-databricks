@@ -36,7 +36,6 @@ func PrepareDatabricksClient(ctx context.Context, cfg *config.Config, configCust
 			cfg.AuthType = newer
 		}
 	}
-	cfg.EnsureResolved()
 	// Unless set explicitly, the provider will retry indefinitely until context is cancelled
 	// by either a timeout or interrupt.
 	if cfg.RetryTimeoutSeconds == 0 {
@@ -52,6 +51,14 @@ func PrepareDatabricksClient(ctx context.Context, cfg *config.Config, configCust
 		if err != nil {
 			return nil, err
 		}
+	}
+	cfg.EnsureResolved()
+	// "none" is a sentinel the Databricks CLI writes to ~/.databrickscfg for
+	// account-level profiles with no workspace bound. The SDK passes it through
+	// verbatim; treat it as "no workspace_id" so downstream parseWorkspaceID and
+	// fallback logic don't choke on it.
+	if cfg.WorkspaceID == "none" {
+		cfg.WorkspaceID = ""
 	}
 	client, err := client.New(cfg)
 	if err != nil {

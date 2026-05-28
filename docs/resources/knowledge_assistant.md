@@ -26,7 +26,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -35,7 +35,7 @@ In addition to the above arguments, the following attributes are exported:
 * `endpoint_name` (string) - The name of the knowledge assistant agent endpoint
 * `error_info` (string) - Error details when the Knowledge Assistant is in FAILED state
 * `experiment_id` (string) - The MLflow experiment ID
-* `id` (string) - The universally unique identifier (UUID) of the Knowledge Assistant
+* `id` (string, deprecated) - Deprecated: use knowledge_assistant_id instead
 * `name` (string) - The resource name of the Knowledge Assistant.
   Format: knowledge-assistants/{knowledge_assistant_id}
 * `state` (string) - State of the Knowledge Assistant. Not returned in List responses. Possible values are: `ACTIVE`, `CREATING`, `FAILED`

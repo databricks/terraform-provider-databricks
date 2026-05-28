@@ -19,6 +19,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/logger"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers"
@@ -527,7 +528,7 @@ func LoadDebugEnvIfRunsFromIDE(t *testing.T, key string) {
 
 func isAuthedAsWorkspaceServicePrincipal(ctx context.Context) (bool, error) {
 	w := databricks.Must(databricks.NewWorkspaceClient())
-	user, err := w.CurrentUser.Me(ctx)
+	user, err := w.CurrentUser.Me(ctx, iam.MeRequest{ExcludedAttributes: "entitlements"})
 	if err != nil {
 		return false, err
 	}

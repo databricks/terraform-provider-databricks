@@ -15,6 +15,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -32,6 +33,7 @@ import (
 const resourceName = "warehouses_default_warehouse_override"
 
 var _ resource.ResourceWithConfigure = &DefaultWarehouseOverrideResource{}
+var _ resource.ResourceWithModifyPlan = &DefaultWarehouseOverrideResource{}
 
 func ResourceDefaultWarehouseOverride() resource.Resource {
 	return &DefaultWarehouseOverrideResource{}
@@ -48,10 +50,10 @@ type ProviderConfig struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
-
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
 		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
@@ -186,13 +188,15 @@ func (to *DefaultWarehouseOverride) SyncFieldsDuringRead(ctx context.Context, fr
 func (m DefaultWarehouseOverride) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].SetRequired()
 	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["type"] = attrs["type"].SetRequired()
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+	attrs["provider_config"] = attrs["provider_config"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
 
 	return attrs
 }
@@ -212,6 +216,21 @@ func (r *DefaultWarehouseOverrideResource) Schema(ctx context.Context, req resou
 
 func (r *DefaultWarehouseOverrideResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
+}
+
+func (r *DefaultWarehouseOverrideResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip entirely on destroy (no plan state).
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if r.Client == nil {
+		return
+	}
+	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *DefaultWarehouseOverrideResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -269,6 +288,7 @@ func (r *DefaultWarehouseOverrideResource) Create(ctx context.Context, req resou
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
 }
 
 func (r *DefaultWarehouseOverrideResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -306,7 +326,6 @@ func (r *DefaultWarehouseOverrideResource) Read(ctx context.Context, req resourc
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get warehouses_default_warehouse_override", err.Error())
 		return
 	}
@@ -320,6 +339,10 @@ func (r *DefaultWarehouseOverrideResource) Read(ctx context.Context, req resourc
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, existingState.ProviderConfig, &resp.State)...)
 }
 
 func (r *DefaultWarehouseOverrideResource) update(ctx context.Context, plan DefaultWarehouseOverride, diags *diag.Diagnostics, state *tfsdk.State) {
@@ -411,6 +434,9 @@ func (r *DefaultWarehouseOverrideResource) Delete(ctx context.Context, req resou
 	}
 
 	err := client.Warehouses.DeleteDefaultWarehouseOverride(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete warehouses_default_warehouse_override", err.Error())
 		return

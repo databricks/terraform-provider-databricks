@@ -222,6 +222,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 -> Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.
 
 * `access` -  **listing** [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).   *Please note that for `databricks_permissions` we list only `authorization = "tokens"`, the permissions for other objects (notebooks, ...) will be emitted when corresponding objects are processed!*
+* `agentbricks` - **listing** [databricks_knowledge_assistant](../resources/knowledge_assistant.md) and [databricks_supervisor_agent](../resources/supervisor_agent.md) together with their child resources [databricks_knowledge_assistant_knowledge_source](../resources/knowledge_assistant_knowledge_source.md) and [databricks_supervisor_agent_tool](../resources/supervisor_agent_tool.md).
 * `alerts` - **listing** [databricks_alert](../resources/alert.md) and [databricks_alert_v2](../resources/alert_v2.md).
 * `apps` - **listing** [databricks_app](../resources/app.md) and [databricks_apps_settings_custom_template](../resources/apps_settings_custom_template.md).
 * `billing` - **listing** [databricks_budget](../resources/budget.md) and [databricks_budget_policy](../resources/budget_policy.md).
@@ -326,6 +327,8 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_instance_profile](../resources/instance_profile.md) | Yes | No | Yes | No |
 | [databricks_ip_access_list](../resources/ip_access_list.md) | Yes | Yes | Yes\*\* | No |
 | [databricks_job](../resources/job.md) | Yes | No | Yes | No |
+| [databricks_knowledge_assistant](../resources/knowledge_assistant.md) | Yes | Yes | Yes | No |
+| [databricks_knowledge_assistant_knowledge_source](../resources/knowledge_assistant_knowledge_source.md) | Yes | No | Yes | No |
 | [databricks_library](../resources/library.md) | Yes\* | No | Yes | No |
 | [databricks_metastore](../resources/metastore.md) | Yes | Yes | No | Yes |
 | [databricks_metastore_assignment](../resources/metastore_assignment.md) | Yes | No | No | Yes |
@@ -376,6 +379,8 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_sql_visualization](../resources/sql_visualization.md) | Yes | Yes | Yes | No |
 | [databricks_sql_widget](../resources/sql_widget.md) | Yes | Yes | Yes | No |
 | [databricks_storage_credential](../resources/storage_credential.md) | Yes | Yes | Yes | No |
+| [databricks_supervisor_agent](../resources/supervisor_agent.md) | Yes | Yes | Yes | No |
+| [databricks_supervisor_agent_tool](../resources/supervisor_agent_tool.md) | Yes | No | Yes | No |
 | [databricks_system_schema](../resources/system_schema.md) | Yes | No | Yes | No |
 | [databricks_tag_policy](../resources/tag_policy.md) | Yes | No | Yes | No |
 | [databricks_token](../resources/token.md) | Not Applicable | No | Yes | No |

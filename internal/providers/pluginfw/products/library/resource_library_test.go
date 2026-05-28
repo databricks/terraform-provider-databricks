@@ -67,7 +67,7 @@ func TestResourceLibrary_SchemaPreserved(t *testing.T) {
 	require.True(t, ok, "workspace_id must be a string attribute")
 	assert.True(t, wsStr.Required, "workspace_id should be required")
 	assert.Len(t, wsStr.PlanModifiers, 1, "workspace_id should have RequiresReplaceIf plan modifier")
-	assert.Len(t, wsStr.Validators, 2, "workspace_id should have 2 validators")
+	assert.Len(t, wsStr.Validators, 1, "workspace_id should have LengthAtLeast(1) validator only")
 }
 
 func TestResourceLibrary_ModifyPlan_SkipsDestroyAndNilClient(t *testing.T) {

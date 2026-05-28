@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -52,8 +51,6 @@ func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]AttributeBuil
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(workspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^\d+$`), "workspace_id must be a valid integer"))
 	return attrs
 }
 
@@ -104,8 +101,6 @@ func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]Attribute
 	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
 	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^\d+$`), "workspace_id must be a valid integer"))
 	return attrs
 }
 

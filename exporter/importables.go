@@ -2226,6 +2226,57 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "direct_access_index_spec.embedding_source_columns.model_endpoint_name_for_query", Resource: "databricks_model_serving"},
 		},
 	},
+	"databricks_knowledge_assistant": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "agentbricks",
+		NameUnified:     makeNamePlusIdFuncUnified("display_name"),
+		List:            listKnowledgeAssistants,
+		Import:          importKnowledgeAssistant,
+		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_knowledge_assistant", "display_name"),
+	},
+	"databricks_knowledge_assistant_knowledge_source": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "agentbricks",
+		NameUnified:     makeNamePlusIdFuncUnified("display_name"),
+		Import:          importKnowledgeSource,
+		Depends: []reference{
+			{Path: "parent", Resource: "databricks_knowledge_assistant", Match: "name"},
+			{Path: "file_table.table_name", Resource: "databricks_sql_table"},
+			{Path: "index.index_name", Resource: "databricks_vector_search_index"},
+			{Path: "files.path", Resource: "databricks_volume", Match: "volume_path", MatchType: MatchLongestPrefix},
+		},
+	},
+	"databricks_supervisor_agent": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "agentbricks",
+		NameUnified:     makeNamePlusIdFuncUnified("display_name"),
+		List:            listSupervisorAgents,
+		Import:          importSupervisorAgent,
+		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_supervisor_agent", "display_name"),
+	},
+	"databricks_supervisor_agent_tool": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "agentbricks",
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			if toolId, ok := wrapper.GetOk("tool_id"); ok && toolId != "" {
+				return toolId.(string) + "_" + wrapper.Id()
+			}
+			return wrapper.Id()
+		},
+		Import:                 importSupervisorAgentTool,
+		ShouldOmitFieldUnified: shouldOmitSupervisorAgentToolField,
+		Depends: []reference{
+			{Path: "parent", Resource: "databricks_supervisor_agent", Match: "name"},
+			{Path: "app.name", Resource: "databricks_app", Match: "name"},
+			{Path: "uc_connection.name", Resource: "databricks_connection", Match: "name"},
+			{Path: "volume.name", Resource: "databricks_volume", Match: "name"},
+			{Path: "knowledge_assistant.knowledge_assistant_id", Resource: "databricks_knowledge_assistant"},
+		},
+	},
 	"databricks_mws_network_connectivity_config": {
 		AccountLevel: true,
 		Service:      "nccs",

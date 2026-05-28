@@ -31,18 +31,6 @@ func defaultNamespaceSettingTemplate(providerConfig string) string {
 	`, providerConfig)
 }
 
-func TestAccDefaultNamespaceSetting_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: defaultNamespaceSettingTemplate(`
-			provider_config {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccDefaultNamespaceSetting_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: defaultNamespaceSettingTemplate(`

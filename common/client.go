@@ -198,8 +198,8 @@ func parseWorkspaceID(workspaceID string) (string, error) {
 
 // isNumericWorkspaceID reports whether the workspace ID is in classic numeric
 // form (parseable as int64). Used to choose between account-API workspace
-// lookup (numeric only) and direct unified-host routing (which also accepts
-// connection IDs).
+// lookup (numeric workspace IDs only) and direct unified-host routing (which
+// also accepts connection IDs).
 func isNumericWorkspaceID(id string) bool {
 	if id == "" {
 		return false

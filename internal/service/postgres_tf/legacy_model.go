@@ -354,15 +354,7 @@ func (m BranchSpec_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type BranchStatus_SdkV2 struct {
-	// The short identifier of the branch, suitable for showing to the users.
-	// For a branch with name `projects/my-project/branches/my-branch`, the
-	// branch_id is `my-branch`.
-	//
-	// Use this field when building UI components that display branches to users
-	// (e.g., a drop-down selector). Prefer showing `branch_id` instead of the
-	// full resource name from `Branch.name`, which follows the
-	// `projects/{project_id}/branches/{branch_id}` format and is not
-	// user-friendly.
+	// Part of the resource name.
 	BranchId types.String `tfsdk:"branch_id"`
 	// The branch's state, indicating if it is initializing, ready for use, or
 	// archived.
@@ -757,15 +749,6 @@ type CatalogCatalogStatus_SdkV2 struct {
 	//
 	// Format: projects/{project_id}/branches/{branch_id}.
 	Branch types.String `tfsdk:"branch"`
-	// The short identifier of the catalog, suitable for showing to the users.
-	// For a catalog with name `catalogs/my-catalog`, the catalog_id is
-	// `my-catalog`.
-	//
-	// Use this field when building UI components that display catalogs to users
-	// (e.g., a drop-down selector). Prefer showing `catalog_id` instead of the
-	// full resource name from `Catalog.name`, which follows the
-	// `catalogs/{catalog_id}` format and is not user-friendly.
-	CatalogId types.String `tfsdk:"catalog_id"`
 	// The name of the Postgres database associated with the catalog.
 	PostgresDatabase types.String `tfsdk:"postgres_database"`
 	// The resource path of the project associated with the catalog.
@@ -782,7 +765,6 @@ func (to *CatalogCatalogStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 
 func (m CatalogCatalogStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["branch"] = attrs["branch"].SetComputed()
-	attrs["catalog_id"] = attrs["catalog_id"].SetComputed()
 	attrs["postgres_database"] = attrs["postgres_database"].SetComputed()
 	attrs["project"] = attrs["project"].SetComputed()
 
@@ -808,7 +790,6 @@ func (m CatalogCatalogStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"branch":            m.Branch,
-			"catalog_id":        m.CatalogId,
 			"postgres_database": m.PostgresDatabase,
 			"project":           m.Project,
 		})
@@ -819,7 +800,6 @@ func (m CatalogCatalogStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"branch":            types.StringType,
-			"catalog_id":        types.StringType,
 			"postgres_database": types.StringType,
 			"project":           types.StringType,
 		},
@@ -1967,16 +1947,7 @@ func (m DatabaseDatabaseSpec_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DatabaseDatabaseStatus_SdkV2 struct {
-	// The short identifier of the database, suitable for showing to the users.
-	// For a database with name
-	// `projects/my-project/branches/my-branch/databases/my-db`, the database_id
-	// is `my-db`.
-	//
-	// Use this field when building UI components that display databases to
-	// users (e.g., a drop-down selector). Prefer showing `database_id` instead
-	// of the full resource name from `Database.name`, which follows the
-	// `projects/{project_id}/branches/{branch_id}/databases/{database_id}`
-	// format and is not user-friendly.
+	// Part of the resource name.
 	DatabaseId types.String `tfsdk:"database_id"`
 	// The name of the Postgres database.
 	PostgresDatabase types.String `tfsdk:"postgres_database"`
@@ -3297,16 +3268,7 @@ type EndpointStatus_SdkV2 struct {
 	// option schedules a suspend compute operation. A disabled compute endpoint
 	// cannot be enabled by a connection or console action.
 	Disabled types.Bool `tfsdk:"disabled"`
-	// The short identifier of the endpoint, suitable for showing to the users.
-	// For an endpoint with name
-	// `projects/my-project/branches/my-branch/endpoints/my-endpoint`, the
-	// endpoint_id is `my-endpoint`.
-	//
-	// Use this field when building UI components that display endpoints to
-	// users (e.g., a drop-down selector). Prefer showing `endpoint_id` instead
-	// of the full resource name from `Endpoint.name`, which follows the
-	// `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
-	// format and is not user-friendly.
+	// Part of the resource name.
 	EndpointId types.String `tfsdk:"endpoint_id"`
 	// The endpoint type. A branch can only have one READ_WRITE endpoint.
 	EndpointType types.String `tfsdk:"endpoint_type"`
@@ -5579,7 +5541,7 @@ type ProjectSpec_SdkV2 struct {
 	// characters.
 	DisplayName types.String `tfsdk:"display_name"`
 	// Whether to enable PG native password login on all endpoints in this
-	// project. Defaults to true.
+	// project. Defaults to false.
 	EnablePgNativeLogin types.Bool `tfsdk:"enable_pg_native_login"`
 	// The number of seconds to retain the shared history for point in time
 	// recovery for all branches in this project. Value should be between
@@ -5767,14 +5729,7 @@ type ProjectStatus_SdkV2 struct {
 	Owner types.String `tfsdk:"owner"`
 	// The effective major Postgres version number.
 	PgVersion types.Int64 `tfsdk:"pg_version"`
-	// The short identifier of the project, suitable for showing to the users.
-	// For a project with name `projects/my-project`, the project_id is
-	// `my-project`.
-	//
-	// Use this field when building UI components that display projects to users
-	// (e.g., a drop-down selector). Prefer showing `project_id` instead of the
-	// full resource name from `Project.name`, which follows the
-	// `projects/{project_id}` format and is not user-friendly.
+	// Part of the resource name.
 	ProjectId types.String `tfsdk:"project_id"`
 	// The current space occupied by the project in storage.
 	SyntheticStorageSizeBytes types.Int64 `tfsdk:"synthetic_storage_size_bytes"`
@@ -6576,15 +6531,7 @@ type RoleRoleStatus_SdkV2 struct {
 	MembershipRoles types.List `tfsdk:"membership_roles"`
 	// The name of the Postgres role.
 	PostgresRole types.String `tfsdk:"postgres_role"`
-	// The short identifier of the role, suitable for showing to the users. For
-	// a role with name `projects/my-project/branches/my-branch/roles/my-role`,
-	// the role_id is `my-role`.
-	//
-	// Use this field when building UI components that display roles to users
-	// (e.g., a drop-down selector). Prefer showing `role_id` instead of the
-	// full resource name from `Role.name`, which follows the
-	// `projects/{project_id}/branches/{branch_id}/roles/{role_id}` format and
-	// is not user-friendly.
+	// Part of the resource name.
 	RoleId types.String `tfsdk:"role_id"`
 }
 

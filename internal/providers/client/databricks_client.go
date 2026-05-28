@@ -53,6 +53,13 @@ func PrepareDatabricksClient(ctx context.Context, cfg *config.Config, configCust
 		}
 	}
 	cfg.EnsureResolved()
+	// "none" is a sentinel the Databricks CLI writes to ~/.databrickscfg for
+	// account-level profiles with no workspace bound. The SDK passes it through
+	// verbatim; treat it as "no workspace_id" so downstream parseWorkspaceID and
+	// fallback logic don't choke on it.
+	if cfg.WorkspaceID == "none" {
+		cfg.WorkspaceID = ""
+	}
 	client, err := client.New(cfg)
 	if err != nil {
 		return nil, err

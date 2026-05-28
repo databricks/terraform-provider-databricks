@@ -18,6 +18,9 @@ import (
 func TestWorkspaceIDValidateFunc(t *testing.T) {
 	validateFunc := workspaceIDValidateFunc()
 
+	// The validator now accepts any non-empty string so the provider can route
+	// either a classic numeric workspace ID or a connection ID that the platform
+	// gateway disambiguates server-side.
 	testCases := []struct {
 		name        string
 		input       interface{}
@@ -39,43 +42,23 @@ func TestWorkspaceIDValidateFunc(t *testing.T) {
 			expectError: false,
 		},
 		{
+			name:        "valid connection ID",
+			input:       "cpdr-abc-def-123",
+			expectError: false,
+		},
+		{
+			name:        "value with leading zero now accepted",
+			input:       "0123",
+			expectError: false,
+		},
+		{
+			name:        "valid arbitrary non-empty string",
+			input:       "abc123",
+			expectError: false,
+		},
+		{
 			name:        "invalid empty string",
 			input:       "",
-			expectError: true,
-		},
-		{
-			name:        "invalid non-numeric string",
-			input:       "abc123",
-			expectError: true,
-		},
-		{
-			name:        "invalid string with spaces",
-			input:       "123 456",
-			expectError: true,
-		},
-		{
-			name:        "invalid string with special characters",
-			input:       "123-456",
-			expectError: true,
-		},
-		{
-			name:        "invalid string with leading zero",
-			input:       "0123",
-			expectError: true, // Leading zeros are not allowed
-		},
-		{
-			name:        "invalid single zero",
-			input:       "0",
-			expectError: true, // Zero is not a valid workspace ID
-		},
-		{
-			name:        "invalid negative number",
-			input:       "-123",
-			expectError: true,
-		},
-		{
-			name:        "invalid decimal number",
-			input:       "123.456",
 			expectError: true,
 		},
 	}
@@ -489,8 +472,8 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 						Host: cachedWorkspaceHost,
 					},
 				}
-				c.cachedDatabricksClients = map[int64]*client.DatabricksClient{
-					123456: mockDatabricksClient,
+				c.cachedDatabricksClients = map[string]*client.DatabricksClient{
+					"123456": mockDatabricksClient,
 				}
 				return c
 			}(),
@@ -535,12 +518,12 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 			description:      "When workspace_id is set and client is not cached, should create new client",
 		},
 		{
-			name: "invalid workspace_id - returns error",
+			name: "connection ID workspace_id on workspace-level provider - hard fail",
 			resourceData: map[string]interface{}{
 				"name": "test",
 				"provider_config": []interface{}{
 					map[string]interface{}{
-						"workspace_id": "invalid",
+						"workspace_id": "cpdr-connection-id",
 					},
 				},
 			},
@@ -553,8 +536,8 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 				},
 			},
 			expectError:   true,
-			errorContains: "failed to parse workspace_id",
-			description:   "When workspace_id is invalid, should return error",
+			errorContains: "Connection IDs are only supported when the provider is configured against an account-level",
+			description:   "Connection IDs cannot be reconciled against a workspace-level provider; surface a clear error directing the user to account-level credentials",
 		},
 		{
 			name: "account level provider without workspace_id - returns current client",
@@ -769,7 +752,7 @@ func TestNamespaceCustomizeDiff_AccountLevelProvider_ValidWorkspace(t *testing.T
 		},
 	}
 	// Pre-cache the workspace client so WorkspaceClientForWorkspace returns it
-	c.SetWorkspaceClientForWorkspace(123, mockWS)
+	c.SetWorkspaceClientForWorkspace("123", mockWS)
 
 	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
 		"name": "test",
@@ -811,7 +794,7 @@ func TestNamespaceCustomizeDiff_UnifiedHost_ValidWorkspace(t *testing.T) {
 			Config: unifiedHostConfig(t, "https://unified.cloud.databricks.com"),
 		},
 	}
-	c.SetWorkspaceClientForWorkspace(456, mockWS)
+	c.SetWorkspaceClientForWorkspace("456", mockWS)
 
 	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
 		"name": "test",
@@ -849,6 +832,7 @@ func TestNamespaceCustomizeDiff_UnifiedHost_DirectFallback(t *testing.T) {
 // (mirroring dual resources that call AddApiField) wired to CustomizeDiffDualResources.
 func newDualResourceForCustomizeDiff() *schema.Resource {
 	r := Resource{
+		IsDual: true,
 		Schema: AddApiField(map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -1040,9 +1024,9 @@ func TestWorkspaceClientUnifiedProviderWithWorkspaceID(t *testing.T) {
 				}
 				overrideWsClient.Config = overrideWsClient.Config.WithTesting()
 				// Cache BOTH workspace clients
-				c.cachedWorkspaceClients = map[int64]*databricks.WorkspaceClient{
-					123456: defaultWsClient,  // workspace_id
-					789012: overrideWsClient, // potential override
+				c.cachedWorkspaceClients = map[string]*databricks.WorkspaceClient{
+					"123456": defaultWsClient,  // workspace_id
+					"789012": overrideWsClient, // potential override
 				}
 				return c
 			}(),
@@ -1089,9 +1073,9 @@ func TestWorkspaceClientUnifiedProviderWithWorkspaceID(t *testing.T) {
 				}
 				overrideWsClient.Config = overrideWsClient.Config.WithTesting()
 				// Cache BOTH workspace clients
-				c.cachedWorkspaceClients = map[int64]*databricks.WorkspaceClient{
-					123456: defaultWsClient,  // workspace_id - should NOT be used
-					789012: overrideWsClient, // provider_config override - SHOULD be used
+				c.cachedWorkspaceClients = map[string]*databricks.WorkspaceClient{
+					"123456": defaultWsClient,  // workspace_id - should NOT be used
+					"789012": overrideWsClient, // provider_config override - SHOULD be used
 				}
 				return c
 			}(),
@@ -1212,7 +1196,7 @@ func testCustomizeDiffForceNew(t *testing.T, instanceState map[string]string, ne
 			if !ok {
 				return fmt.Errorf("expected *DatabricksClient, got %T", m)
 			}
-			return namespaceForceNew(ctx, d, dc)
+			return namespaceForceNew(ctx, d, dc, true)
 		},
 	}
 
@@ -1717,8 +1701,8 @@ func TestGetDatabricksClientForUnifiedProvider_CopiesCommandFactory(t *testing.T
 			Token: "test-token",
 		},
 	}
-	parentClient.cachedDatabricksClients = map[int64]*client.DatabricksClient{
-		123456: innerClient,
+	parentClient.cachedDatabricksClients = map[string]*client.DatabricksClient{
+		"123456": innerClient,
 	}
 
 	// Call getDatabricksClientForUnifiedProvider — returned client must have

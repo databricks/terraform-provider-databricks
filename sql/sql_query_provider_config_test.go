@@ -19,18 +19,6 @@ func sqlQueryProviderConfigTemplate(providerConfig string) string {
 	`, providerConfig)
 }
 
-func TestAccSqlQuery_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: sqlQueryProviderConfigTemplate(`
-			provider_config {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccSqlQuery_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: sqlQueryProviderConfigTemplate(`

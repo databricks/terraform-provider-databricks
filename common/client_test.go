@@ -336,7 +336,7 @@ type mockInternalUserService struct {
 	count int
 }
 
-func (m *mockInternalUserService) Me(ctx context.Context) (user *iam.User, err error) {
+func (m *mockInternalUserService) Me(ctx context.Context, request iam.MeRequest) (user *iam.User, err error) {
 	m.count++
 	return &iam.User{
 		UserName: "test",
@@ -346,8 +346,8 @@ func (m *mockInternalUserService) Me(ctx context.Context) (user *iam.User, err e
 func TestCachedMe_Me_MakesSingleRequest(t *testing.T) {
 	mock := &mockInternalUserService{}
 	cm := newCachedMe(mock)
-	cm.Me(context.Background())
-	cm.Me(context.Background())
+	cm.Me(context.Background(), iam.MeRequest{})
+	cm.Me(context.Background(), iam.MeRequest{})
 	assert.Equal(t, 1, mock.count)
 }
 
@@ -371,13 +371,13 @@ func TestWorkspaceClientForWorkspace_AccountAPIFails_FallsBackToDirect(t *testin
 	dc.SetAccountClient(mockAcc.AccountClient)
 
 	// When account API fails, fallback creates a direct workspace client
-	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), 12345)
+	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), "12345")
 	assert.NoError(t, err)
 	assert.NotNil(t, workspaceClient)
 
 	// Verify the client is cached
 	dc.mu.Lock()
-	cachedClient, exists := dc.cachedWorkspaceClients[12345]
+	cachedClient, exists := dc.cachedWorkspaceClients["12345"]
 	dc.mu.Unlock()
 	assert.True(t, exists)
 	assert.Equal(t, workspaceClient, cachedClient)
@@ -412,7 +412,7 @@ func TestWorkspaceClientForWorkspace_WorkspaceExistsNotInCache(t *testing.T) {
 	dc.SetAccountClient(mockAcc.AccountClient)
 
 	// Call the method with the workspace ID
-	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), 12345)
+	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), "12345")
 
 	// Verify no error and client is returned
 	assert.NoError(t, err)
@@ -423,7 +423,7 @@ func TestWorkspaceClientForWorkspace_WorkspaceExistsNotInCache(t *testing.T) {
 
 	// Verify the client is cached
 	dc.mu.Lock()
-	cachedClient, exists := dc.cachedWorkspaceClients[12345]
+	cachedClient, exists := dc.cachedWorkspaceClients["12345"]
 	dc.mu.Unlock()
 
 	assert.True(t, exists)
@@ -442,14 +442,74 @@ func TestWorkspaceClientForWorkspace_WorkspaceExistsInCache(t *testing.T) {
 	}
 
 	// Set the workspace client in cache
-	dc.SetWorkspaceClientForWorkspace(12345, mockWorkspaceClient)
+	dc.SetWorkspaceClientForWorkspace("12345", mockWorkspaceClient)
 
 	// Call the method with the workspace ID
-	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), 12345)
+	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), "12345")
 
 	// Verify no error and the cached client is returned
 	assert.NoError(t, err)
 	assert.Equal(t, mockWorkspaceClient, workspaceClient)
+}
+
+// TestWorkspaceClientForWorkspace_ConnectionIDSkipsAccountAPI verifies that a
+// connection-ID workspace_id bypasses the account-API workspace deployment
+// lookup and routes directly via the configured unified host, so the SDK can
+// carry the value in the X-Databricks-Workspace-Id header.
+func TestWorkspaceClientForWorkspace_ConnectionIDSkipsAccountAPI(t *testing.T) {
+	// Account client whose Workspaces.Get would error if called. We don't set
+	// any expectations, so any call to it would fail testify-mock strict mode.
+	mockAcc := mocks.NewMockAccountClient(t)
+	mockAcc.AccountClient.Config = &config.Config{
+		Host:  "https://accounts.cloud.databricks.com",
+		Token: "dapi123",
+	}
+
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://unified.cloud.databricks.com",
+				Token:     "dapi123",
+				AccountID: "test-account-id",
+			},
+		},
+	}
+	dc.SetAccountClient(mockAcc.AccountClient)
+
+	// Connection-ID workspace_id: account API lookup must be skipped (any call
+	// would fail because no expectations are set) and direct routing must succeed.
+	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), "cpdr-connection-test-id")
+	assert.NoError(t, err)
+	assert.NotNil(t, workspaceClient)
+	// The resulting workspace client carries the connection ID in Config.WorkspaceID
+	// so the SDK middleware emits it as the X-Databricks-Workspace-Id header.
+	assert.Equal(t, "cpdr-connection-test-id", workspaceClient.Config.WorkspaceID)
+
+	// Cached under the connection-ID string key.
+	dc.mu.Lock()
+	_, exists := dc.cachedWorkspaceClients["cpdr-connection-test-id"]
+	dc.mu.Unlock()
+	assert.True(t, exists)
+}
+
+// TestValidateWorkspaceIDFromProvider_ConnectionIDOnWorkspaceLevelHardFails
+// verifies that a connection ID cannot be reconciled against a workspace-level
+// (host+token) provider, and that we surface a clear error directing the user
+// to switch to account-level credentials.
+func TestValidateWorkspaceIDFromProvider_ConnectionIDOnWorkspaceLevelHardFails(t *testing.T) {
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://workspace.cloud.databricks.com",
+				Token: "dapi123",
+			},
+		},
+	}
+
+	err := dc.validateWorkspaceIDFromProvider(context.Background(), "cpdr-connection-id", nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(),
+		"Connection IDs are only supported when the provider is configured against an account-level")
 }
 
 func TestAddApiField_ValidValues(t *testing.T) {

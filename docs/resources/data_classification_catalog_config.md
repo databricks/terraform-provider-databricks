@@ -58,7 +58,8 @@ The following arguments are supported:
 
 ### AutoTaggingConfig
 * `auto_tagging_mode` (string, required) - Whether auto-tagging is enabled or disabled for this classification tag. Possible values are: `AUTO_TAGGING_DISABLED`, `AUTO_TAGGING_ENABLED`
-* `classification_tag` (string, required) - The Classification Tag (e.g., "class.name", "class.location")
+* `classification_tag` (string, required) - The Classification Tag. For built-in classes this is a system tag (e.g., "class.name",
+  "class.location"); for custom classes it is a user-defined governance tag key
 
 ### CatalogConfigSchemaNames
 * `names` (list of string, required)

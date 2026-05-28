@@ -72,52 +72,102 @@ func (m App) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Databricks connection. Supported connection: external mcp server.
-type Connection struct {
-	Name types.String `tfsdk:"name"`
+type CreateExampleRequest struct {
+	// The example to create under the parent Supervisor Agent.
+	Example types.Object `tfsdk:"example"`
+	// Parent resource where this example will be created. Format:
+	// supervisor-agents/{supervisor_agent_id}
+	Parent types.String `tfsdk:"-"`
 }
 
-func (to *Connection) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Connection) {
+func (to *CreateExampleRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateExampleRequest) {
+	if !from.Example.IsNull() && !from.Example.IsUnknown() {
+		if toExample, ok := to.GetExample(ctx); ok {
+			if fromExample, ok := from.GetExample(ctx); ok {
+				// Recursively sync the fields of Example
+				toExample.SyncFieldsDuringCreateOrUpdate(ctx, fromExample)
+				to.SetExample(ctx, toExample)
+			}
+		}
+	}
 }
 
-func (to *Connection) SyncFieldsDuringRead(ctx context.Context, from Connection) {
+func (to *CreateExampleRequest) SyncFieldsDuringRead(ctx context.Context, from CreateExampleRequest) {
+	if !from.Example.IsNull() && !from.Example.IsUnknown() {
+		if toExample, ok := to.GetExample(ctx); ok {
+			if fromExample, ok := from.GetExample(ctx); ok {
+				toExample.SyncFieldsDuringRead(ctx, fromExample)
+				to.SetExample(ctx, toExample)
+			}
+		}
+	}
 }
 
-func (m Connection) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
+func (m CreateExampleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["example"] = attrs["example"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
 
 	return attrs
 }
 
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in Connection.
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExampleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
 // retrieve the type information of the elements in complex fields at runtime. The values of the map
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (m Connection) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+func (m CreateExampleRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"example": reflect.TypeOf(Example{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, Connection
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateExampleRequest
 // only implements ToObjectValue() and Type().
-func (m Connection) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CreateExampleRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name": m.Name,
+			"example": m.Example,
+			"parent":  m.Parent,
 		})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (m Connection) Type(ctx context.Context) attr.Type {
+func (m CreateExampleRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name": types.StringType,
+			"example": Example{}.Type(ctx),
+			"parent":  types.StringType,
 		},
 	}
+}
+
+// GetExample returns the value of the Example field in CreateExampleRequest as
+// a Example value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateExampleRequest) GetExample(ctx context.Context) (Example, bool) {
+	var e Example
+	if m.Example.IsNull() || m.Example.IsUnknown() {
+		return e, false
+	}
+	var v Example
+	d := m.Example.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExample sets the value of the Example field in CreateExampleRequest.
+func (m *CreateExampleRequest) SetExample(ctx context.Context, v Example) {
+	vs := v.ToObjectValue(ctx)
+	m.Example = vs
 }
 
 type CreateSupervisorAgentRequest struct {
@@ -316,6 +366,55 @@ func (m *CreateToolRequest) SetTool(ctx context.Context, v Tool) {
 	m.Tool = vs
 }
 
+type DeleteExampleRequest struct {
+	// The resource name of the example to delete. Format:
+	// supervisor-agents/{supervisor_agent_id}/examples/{example_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteExampleRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteExampleRequest) {
+}
+
+func (to *DeleteExampleRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteExampleRequest) {
+}
+
+func (m DeleteExampleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteExampleRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteExampleRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteExampleRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteExampleRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteExampleRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type DeleteSupervisorAgentRequest struct {
 	// The resource name of the Supervisor Agent. Format:
 	// supervisor-agents/{supervisor_agent_id}
@@ -414,8 +513,105 @@ func (m DeleteToolRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// An example associated with a Supervisor Agent. Contains a question and
+// guidelines for how the agent should respond.
+type Example struct {
+	// The universally unique identifier (UUID) of the example.
+	ExampleId types.String `tfsdk:"example_id"`
+	// Guidelines for answering the question.
+	Guidelines types.List `tfsdk:"guidelines"`
+	// Full resource name:
+	// supervisor-agents/{supervisor_agent_id}/examples/{example_id}
+	Name types.String `tfsdk:"name"`
+	// The example question.
+	Question types.String `tfsdk:"question"`
+}
+
+func (to *Example) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Example) {
+}
+
+func (to *Example) SyncFieldsDuringRead(ctx context.Context, from Example) {
+}
+
+func (m Example) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["example_id"] = attrs["example_id"].SetComputed()
+	attrs["guidelines"] = attrs["guidelines"].SetRequired()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["question"] = attrs["question"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Example.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Example) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"guidelines": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Example
+// only implements ToObjectValue() and Type().
+func (m Example) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"example_id": m.ExampleId,
+			"guidelines": m.Guidelines,
+			"name":       m.Name,
+			"question":   m.Question,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Example) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"example_id": types.StringType,
+			"guidelines": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"name":     types.StringType,
+			"question": types.StringType,
+		},
+	}
+}
+
+// GetGuidelines returns the value of the Guidelines field in Example as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Example) GetGuidelines(ctx context.Context) ([]types.String, bool) {
+	if m.Guidelines.IsNull() || m.Guidelines.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Guidelines.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGuidelines sets the value of the Guidelines field in Example.
+func (m *Example) SetGuidelines(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["guidelines"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Guidelines = types.ListValueMust(t, vs)
+}
+
 type GenieSpace struct {
-	// The ID of the genie space.
+	// Deprecated: use space_id instead. Still REQUIRED for backward
+	// compatibility until a future API version removes it.
 	Id types.String `tfsdk:"id"`
 }
 
@@ -458,6 +654,241 @@ func (m GenieSpace) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
+		},
+	}
+}
+
+type GetExampleRequest struct {
+	// The resource name of the example. Format:
+	// supervisor-agents/{supervisor_agent_id}/examples/{example_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetExampleRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetExampleRequest) {
+}
+
+func (to *GetExampleRequest) SyncFieldsDuringRead(ctx context.Context, from GetExampleRequest) {
+}
+
+func (m GetExampleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExampleRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetExampleRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetExampleRequest
+// only implements ToObjectValue() and Type().
+func (m GetExampleRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetExampleRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type GetSupervisorAgentPermissionLevelsRequest struct {
+	// The supervisor agent for which to get or manage permissions.
+	SupervisorAgentId types.String `tfsdk:"-"`
+}
+
+func (to *GetSupervisorAgentPermissionLevelsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetSupervisorAgentPermissionLevelsRequest) {
+}
+
+func (to *GetSupervisorAgentPermissionLevelsRequest) SyncFieldsDuringRead(ctx context.Context, from GetSupervisorAgentPermissionLevelsRequest) {
+}
+
+func (m GetSupervisorAgentPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["supervisor_agent_id"] = attrs["supervisor_agent_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSupervisorAgentPermissionLevelsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetSupervisorAgentPermissionLevelsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetSupervisorAgentPermissionLevelsRequest
+// only implements ToObjectValue() and Type().
+func (m GetSupervisorAgentPermissionLevelsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"supervisor_agent_id": m.SupervisorAgentId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetSupervisorAgentPermissionLevelsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"supervisor_agent_id": types.StringType,
+		},
+	}
+}
+
+type GetSupervisorAgentPermissionLevelsResponse struct {
+	// Specific permission levels
+	PermissionLevels types.List `tfsdk:"permission_levels"`
+}
+
+func (to *GetSupervisorAgentPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetSupervisorAgentPermissionLevelsResponse) {
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() && to.PermissionLevels.IsNull() && len(from.PermissionLevels.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PermissionLevels = from.PermissionLevels
+	}
+}
+
+func (to *GetSupervisorAgentPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, from GetSupervisorAgentPermissionLevelsResponse) {
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() && to.PermissionLevels.IsNull() && len(from.PermissionLevels.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PermissionLevels = from.PermissionLevels
+	}
+}
+
+func (m GetSupervisorAgentPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSupervisorAgentPermissionLevelsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetSupervisorAgentPermissionLevelsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"permission_levels": reflect.TypeOf(SupervisorAgentPermissionsDescription{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetSupervisorAgentPermissionLevelsResponse
+// only implements ToObjectValue() and Type().
+func (m GetSupervisorAgentPermissionLevelsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"permission_levels": m.PermissionLevels,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetSupervisorAgentPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"permission_levels": basetypes.ListType{
+				ElemType: SupervisorAgentPermissionsDescription{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetPermissionLevels returns the value of the PermissionLevels field in GetSupervisorAgentPermissionLevelsResponse as
+// a slice of SupervisorAgentPermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GetSupervisorAgentPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]SupervisorAgentPermissionsDescription, bool) {
+	if m.PermissionLevels.IsNull() || m.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []SupervisorAgentPermissionsDescription
+	d := m.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetSupervisorAgentPermissionLevelsResponse.
+func (m *GetSupervisorAgentPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []SupervisorAgentPermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.PermissionLevels = types.ListValueMust(t, vs)
+}
+
+type GetSupervisorAgentPermissionsRequest struct {
+	// The supervisor agent for which to get or manage permissions.
+	SupervisorAgentId types.String `tfsdk:"-"`
+}
+
+func (to *GetSupervisorAgentPermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetSupervisorAgentPermissionsRequest) {
+}
+
+func (to *GetSupervisorAgentPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, from GetSupervisorAgentPermissionsRequest) {
+}
+
+func (m GetSupervisorAgentPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["supervisor_agent_id"] = attrs["supervisor_agent_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSupervisorAgentPermissionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetSupervisorAgentPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetSupervisorAgentPermissionsRequest
+// only implements ToObjectValue() and Type().
+func (m GetSupervisorAgentPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"supervisor_agent_id": m.SupervisorAgentId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetSupervisorAgentPermissionsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"supervisor_agent_id": types.StringType,
 		},
 	}
 }
@@ -611,6 +1042,164 @@ func (m KnowledgeAssistant) Type(ctx context.Context) attr.Type {
 			"serving_endpoint_name":  types.StringType,
 		},
 	}
+}
+
+type ListExamplesRequest struct {
+	// The maximum number of examples to return. If unspecified, at most 100
+	// examples will be returned. The maximum value is 100; values above 100
+	// will be coerced to 100.
+	PageSize types.Int64 `tfsdk:"-"`
+	// A page token, received from a previous `ListExamples` call. Provide this
+	// to retrieve the subsequent page. If unspecified, the first page will be
+	// returned.
+	PageToken types.String `tfsdk:"-"`
+	// Parent resource to list from. Format:
+	// supervisor-agents/{supervisor_agent_id}
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *ListExamplesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListExamplesRequest) {
+}
+
+func (to *ListExamplesRequest) SyncFieldsDuringRead(ctx context.Context, from ListExamplesRequest) {
+}
+
+func (m ListExamplesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExamplesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListExamplesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListExamplesRequest
+// only implements ToObjectValue() and Type().
+func (m ListExamplesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListExamplesRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+		},
+	}
+}
+
+// A list of Supervisor Agent examples.
+type ListExamplesResponse struct {
+	Examples types.List `tfsdk:"examples"`
+
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListExamplesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListExamplesResponse) {
+	if !from.Examples.IsNull() && !from.Examples.IsUnknown() && to.Examples.IsNull() && len(from.Examples.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Examples, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Examples = from.Examples
+	}
+}
+
+func (to *ListExamplesResponse) SyncFieldsDuringRead(ctx context.Context, from ListExamplesResponse) {
+	if !from.Examples.IsNull() && !from.Examples.IsUnknown() && to.Examples.IsNull() && len(from.Examples.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Examples, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Examples = from.Examples
+	}
+}
+
+func (m ListExamplesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["examples"] = attrs["examples"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExamplesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListExamplesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"examples": reflect.TypeOf(Example{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListExamplesResponse
+// only implements ToObjectValue() and Type().
+func (m ListExamplesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"examples":        m.Examples,
+			"next_page_token": m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListExamplesResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"examples": basetypes.ListType{
+				ElemType: Example{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetExamples returns the value of the Examples field in ListExamplesResponse as
+// a slice of Example values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListExamplesResponse) GetExamples(ctx context.Context) ([]Example, bool) {
+	if m.Examples.IsNull() || m.Examples.IsUnknown() {
+		return nil, false
+	}
+	var v []Example
+	d := m.Examples.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExamples sets the value of the Examples field in ListExamplesResponse.
+func (m *ListExamplesResponse) SetExamples(ctx context.Context, v []Example) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["examples"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Examples = types.ListValueMust(t, vs)
 }
 
 type ListSupervisorAgentsRequest struct {
@@ -951,7 +1540,7 @@ func (to *SupervisorAgent) SyncFieldsDuringRead(ctx context.Context, from Superv
 func (m SupervisorAgent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
-	attrs["description"] = attrs["description"].SetRequired()
+	attrs["description"] = attrs["description"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetRequired()
 	attrs["endpoint_name"] = attrs["endpoint_name"].SetComputed()
 	attrs["experiment_id"] = attrs["experiment_id"].SetComputed()
@@ -1012,10 +1601,525 @@ func (m SupervisorAgent) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type SupervisorAgentAccessControlRequest struct {
+	// name of the group
+	GroupName types.String `tfsdk:"group_name"`
+
+	PermissionLevel types.String `tfsdk:"permission_level"`
+	// application ID of a service principal
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	// name of the user
+	UserName types.String `tfsdk:"user_name"`
+}
+
+func (to *SupervisorAgentAccessControlRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SupervisorAgentAccessControlRequest) {
+}
+
+func (to *SupervisorAgentAccessControlRequest) SyncFieldsDuringRead(ctx context.Context, from SupervisorAgentAccessControlRequest) {
+}
+
+func (m SupervisorAgentAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SupervisorAgentAccessControlRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SupervisorAgentAccessControlRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SupervisorAgentAccessControlRequest
+// only implements ToObjectValue() and Type().
+func (m SupervisorAgentAccessControlRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"group_name":             m.GroupName,
+			"permission_level":       m.PermissionLevel,
+			"service_principal_name": m.ServicePrincipalName,
+			"user_name":              m.UserName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SupervisorAgentAccessControlRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"group_name":             types.StringType,
+			"permission_level":       types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
+		},
+	}
+}
+
+type SupervisorAgentAccessControlResponse struct {
+	// All permissions.
+	AllPermissions types.List `tfsdk:"all_permissions"`
+	// Display name of the user or service principal.
+	DisplayName types.String `tfsdk:"display_name"`
+	// name of the group
+	GroupName types.String `tfsdk:"group_name"`
+	// Name of the service principal.
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	// name of the user
+	UserName types.String `tfsdk:"user_name"`
+}
+
+func (to *SupervisorAgentAccessControlResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SupervisorAgentAccessControlResponse) {
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() && to.AllPermissions.IsNull() && len(from.AllPermissions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AllPermissions = from.AllPermissions
+	}
+}
+
+func (to *SupervisorAgentAccessControlResponse) SyncFieldsDuringRead(ctx context.Context, from SupervisorAgentAccessControlResponse) {
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() && to.AllPermissions.IsNull() && len(from.AllPermissions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AllPermissions = from.AllPermissions
+	}
+}
+
+func (m SupervisorAgentAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SupervisorAgentAccessControlResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SupervisorAgentAccessControlResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"all_permissions": reflect.TypeOf(SupervisorAgentPermission{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SupervisorAgentAccessControlResponse
+// only implements ToObjectValue() and Type().
+func (m SupervisorAgentAccessControlResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"all_permissions":        m.AllPermissions,
+			"display_name":           m.DisplayName,
+			"group_name":             m.GroupName,
+			"service_principal_name": m.ServicePrincipalName,
+			"user_name":              m.UserName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SupervisorAgentAccessControlResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"all_permissions": basetypes.ListType{
+				ElemType: SupervisorAgentPermission{}.Type(ctx),
+			},
+			"display_name":           types.StringType,
+			"group_name":             types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
+		},
+	}
+}
+
+// GetAllPermissions returns the value of the AllPermissions field in SupervisorAgentAccessControlResponse as
+// a slice of SupervisorAgentPermission values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SupervisorAgentAccessControlResponse) GetAllPermissions(ctx context.Context) ([]SupervisorAgentPermission, bool) {
+	if m.AllPermissions.IsNull() || m.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []SupervisorAgentPermission
+	d := m.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in SupervisorAgentAccessControlResponse.
+func (m *SupervisorAgentAccessControlResponse) SetAllPermissions(ctx context.Context, v []SupervisorAgentPermission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.AllPermissions = types.ListValueMust(t, vs)
+}
+
+type SupervisorAgentPermission struct {
+	Inherited types.Bool `tfsdk:"inherited"`
+
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
+
+	PermissionLevel types.String `tfsdk:"permission_level"`
+}
+
+func (to *SupervisorAgentPermission) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SupervisorAgentPermission) {
+	if !from.InheritedFromObject.IsNull() && !from.InheritedFromObject.IsUnknown() && to.InheritedFromObject.IsNull() && len(from.InheritedFromObject.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InheritedFromObject, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InheritedFromObject = from.InheritedFromObject
+	}
+}
+
+func (to *SupervisorAgentPermission) SyncFieldsDuringRead(ctx context.Context, from SupervisorAgentPermission) {
+	if !from.InheritedFromObject.IsNull() && !from.InheritedFromObject.IsUnknown() && to.InheritedFromObject.IsNull() && len(from.InheritedFromObject.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InheritedFromObject, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InheritedFromObject = from.InheritedFromObject
+	}
+}
+
+func (m SupervisorAgentPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inherited"] = attrs["inherited"].SetOptional()
+	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SupervisorAgentPermission.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SupervisorAgentPermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"inherited_from_object": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SupervisorAgentPermission
+// only implements ToObjectValue() and Type().
+func (m SupervisorAgentPermission) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"inherited":             m.Inherited,
+			"inherited_from_object": m.InheritedFromObject,
+			"permission_level":      m.PermissionLevel,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SupervisorAgentPermission) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"inherited": types.BoolType,
+			"inherited_from_object": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"permission_level": types.StringType,
+		},
+	}
+}
+
+// GetInheritedFromObject returns the value of the InheritedFromObject field in SupervisorAgentPermission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SupervisorAgentPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if m.InheritedFromObject.IsNull() || m.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in SupervisorAgentPermission.
+func (m *SupervisorAgentPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
+type SupervisorAgentPermissions struct {
+	AccessControlList types.List `tfsdk:"access_control_list"`
+
+	ObjectId types.String `tfsdk:"object_id"`
+
+	ObjectType types.String `tfsdk:"object_type"`
+}
+
+func (to *SupervisorAgentPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SupervisorAgentPermissions) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+}
+
+func (to *SupervisorAgentPermissions) SyncFieldsDuringRead(ctx context.Context, from SupervisorAgentPermissions) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+}
+
+func (m SupervisorAgentPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SupervisorAgentPermissions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SupervisorAgentPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"access_control_list": reflect.TypeOf(SupervisorAgentAccessControlResponse{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SupervisorAgentPermissions
+// only implements ToObjectValue() and Type().
+func (m SupervisorAgentPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"access_control_list": m.AccessControlList,
+			"object_id":           m.ObjectId,
+			"object_type":         m.ObjectType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SupervisorAgentPermissions) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"access_control_list": basetypes.ListType{
+				ElemType: SupervisorAgentAccessControlResponse{}.Type(ctx),
+			},
+			"object_id":   types.StringType,
+			"object_type": types.StringType,
+		},
+	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in SupervisorAgentPermissions as
+// a slice of SupervisorAgentAccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SupervisorAgentPermissions) GetAccessControlList(ctx context.Context) ([]SupervisorAgentAccessControlResponse, bool) {
+	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []SupervisorAgentAccessControlResponse
+	d := m.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in SupervisorAgentPermissions.
+func (m *SupervisorAgentPermissions) SetAccessControlList(ctx context.Context, v []SupervisorAgentAccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.AccessControlList = types.ListValueMust(t, vs)
+}
+
+type SupervisorAgentPermissionsDescription struct {
+	Description types.String `tfsdk:"description"`
+
+	PermissionLevel types.String `tfsdk:"permission_level"`
+}
+
+func (to *SupervisorAgentPermissionsDescription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SupervisorAgentPermissionsDescription) {
+}
+
+func (to *SupervisorAgentPermissionsDescription) SyncFieldsDuringRead(ctx context.Context, from SupervisorAgentPermissionsDescription) {
+}
+
+func (m SupervisorAgentPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SupervisorAgentPermissionsDescription.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SupervisorAgentPermissionsDescription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SupervisorAgentPermissionsDescription
+// only implements ToObjectValue() and Type().
+func (m SupervisorAgentPermissionsDescription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"description":      m.Description,
+			"permission_level": m.PermissionLevel,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SupervisorAgentPermissionsDescription) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"description":      types.StringType,
+			"permission_level": types.StringType,
+		},
+	}
+}
+
+type SupervisorAgentPermissionsRequest struct {
+	AccessControlList types.List `tfsdk:"access_control_list"`
+	// The supervisor agent for which to get or manage permissions.
+	SupervisorAgentId types.String `tfsdk:"-"`
+}
+
+func (to *SupervisorAgentPermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SupervisorAgentPermissionsRequest) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+}
+
+func (to *SupervisorAgentPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, from SupervisorAgentPermissionsRequest) {
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() && to.AccessControlList.IsNull() && len(from.AccessControlList.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AccessControlList = from.AccessControlList
+	}
+}
+
+func (m SupervisorAgentPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["supervisor_agent_id"] = attrs["supervisor_agent_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SupervisorAgentPermissionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SupervisorAgentPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"access_control_list": reflect.TypeOf(SupervisorAgentAccessControlRequest{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SupervisorAgentPermissionsRequest
+// only implements ToObjectValue() and Type().
+func (m SupervisorAgentPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"access_control_list": m.AccessControlList,
+			"supervisor_agent_id": m.SupervisorAgentId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SupervisorAgentPermissionsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"access_control_list": basetypes.ListType{
+				ElemType: SupervisorAgentAccessControlRequest{}.Type(ctx),
+			},
+			"supervisor_agent_id": types.StringType,
+		},
+	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in SupervisorAgentPermissionsRequest as
+// a slice of SupervisorAgentAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SupervisorAgentPermissionsRequest) GetAccessControlList(ctx context.Context) ([]SupervisorAgentAccessControlRequest, bool) {
+	if m.AccessControlList.IsNull() || m.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []SupervisorAgentAccessControlRequest
+	d := m.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in SupervisorAgentPermissionsRequest.
+func (m *SupervisorAgentPermissionsRequest) SetAccessControlList(ctx context.Context, v []SupervisorAgentAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.AccessControlList = types.ListValueMust(t, vs)
+}
+
 type Tool struct {
 	App types.Object `tfsdk:"app"`
-
-	UcConnection types.Object `tfsdk:"uc_connection"`
 	// Description of what this tool does (user-facing).
 	Description types.String `tfsdk:"description"`
 
@@ -1030,9 +2134,14 @@ type Tool struct {
 	// User specified id of the Tool.
 	ToolId types.String `tfsdk:"tool_id"`
 	// Tool type. Must be one of: "genie_space", "knowledge_assistant",
-	// "uc_function", "connection", "app", "volume", "lakeview_dashboard",
-	// "serving_endpoint", "uc_table", "vector_search_index".
+	// "uc_function", "uc_connection", "app", "volume", "dashboard",
+	// "serving_endpoint", "table", "vector_search_index", "catalog", "schema",
+	// "supervisor_agent", "web_search". The legacy values "lakeview_dashboard"
+	// and "uc_table" are also accepted and remain equivalent to "dashboard" and
+	// "table" respectively.
 	ToolType types.String `tfsdk:"tool_type"`
+
+	UcConnection types.Object `tfsdk:"uc_connection"`
 
 	UcFunction types.Object `tfsdk:"uc_function"`
 
@@ -1046,15 +2155,6 @@ func (to *Tool) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Tool) {
 				// Recursively sync the fields of App
 				toApp.SyncFieldsDuringCreateOrUpdate(ctx, fromApp)
 				to.SetApp(ctx, toApp)
-			}
-		}
-	}
-	if !from.UcConnection.IsNull() && !from.UcConnection.IsUnknown() {
-		if toUcConnection, ok := to.GetUcConnection(ctx); ok {
-			if fromUcConnection, ok := from.GetUcConnection(ctx); ok {
-				// Recursively sync the fields of UcConnection
-				toUcConnection.SyncFieldsDuringCreateOrUpdate(ctx, fromUcConnection)
-				to.SetUcConnection(ctx, toUcConnection)
 			}
 		}
 	}
@@ -1073,6 +2173,15 @@ func (to *Tool) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Tool) {
 				// Recursively sync the fields of KnowledgeAssistant
 				toKnowledgeAssistant.SyncFieldsDuringCreateOrUpdate(ctx, fromKnowledgeAssistant)
 				to.SetKnowledgeAssistant(ctx, toKnowledgeAssistant)
+			}
+		}
+	}
+	if !from.UcConnection.IsNull() && !from.UcConnection.IsUnknown() {
+		if toUcConnection, ok := to.GetUcConnection(ctx); ok {
+			if fromUcConnection, ok := from.GetUcConnection(ctx); ok {
+				// Recursively sync the fields of UcConnection
+				toUcConnection.SyncFieldsDuringCreateOrUpdate(ctx, fromUcConnection)
+				to.SetUcConnection(ctx, toUcConnection)
 			}
 		}
 	}
@@ -1105,14 +2214,6 @@ func (to *Tool) SyncFieldsDuringRead(ctx context.Context, from Tool) {
 			}
 		}
 	}
-	if !from.UcConnection.IsNull() && !from.UcConnection.IsUnknown() {
-		if toUcConnection, ok := to.GetUcConnection(ctx); ok {
-			if fromUcConnection, ok := from.GetUcConnection(ctx); ok {
-				toUcConnection.SyncFieldsDuringRead(ctx, fromUcConnection)
-				to.SetUcConnection(ctx, toUcConnection)
-			}
-		}
-	}
 	if !from.GenieSpace.IsNull() && !from.GenieSpace.IsUnknown() {
 		if toGenieSpace, ok := to.GetGenieSpace(ctx); ok {
 			if fromGenieSpace, ok := from.GetGenieSpace(ctx); ok {
@@ -1126,6 +2227,14 @@ func (to *Tool) SyncFieldsDuringRead(ctx context.Context, from Tool) {
 			if fromKnowledgeAssistant, ok := from.GetKnowledgeAssistant(ctx); ok {
 				toKnowledgeAssistant.SyncFieldsDuringRead(ctx, fromKnowledgeAssistant)
 				to.SetKnowledgeAssistant(ctx, toKnowledgeAssistant)
+			}
+		}
+	}
+	if !from.UcConnection.IsNull() && !from.UcConnection.IsUnknown() {
+		if toUcConnection, ok := to.GetUcConnection(ctx); ok {
+			if fromUcConnection, ok := from.GetUcConnection(ctx); ok {
+				toUcConnection.SyncFieldsDuringRead(ctx, fromUcConnection)
+				to.SetUcConnection(ctx, toUcConnection)
 			}
 		}
 	}
@@ -1149,14 +2258,14 @@ func (to *Tool) SyncFieldsDuringRead(ctx context.Context, from Tool) {
 
 func (m Tool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["app"] = attrs["app"].SetOptional()
-	attrs["uc_connection"] = attrs["uc_connection"].SetOptional()
-	attrs["description"] = attrs["description"].SetRequired()
+	attrs["description"] = attrs["description"].SetOptional()
 	attrs["genie_space"] = attrs["genie_space"].SetOptional()
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["knowledge_assistant"] = attrs["knowledge_assistant"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["tool_id"] = attrs["tool_id"].SetComputed()
 	attrs["tool_type"] = attrs["tool_type"].SetRequired()
+	attrs["uc_connection"] = attrs["uc_connection"].SetOptional()
 	attrs["uc_function"] = attrs["uc_function"].SetOptional()
 	attrs["volume"] = attrs["volume"].SetOptional()
 
@@ -1173,9 +2282,9 @@ func (m Tool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 func (m Tool) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"app":                 reflect.TypeOf(App{}),
-		"uc_connection":       reflect.TypeOf(Connection{}),
 		"genie_space":         reflect.TypeOf(GenieSpace{}),
 		"knowledge_assistant": reflect.TypeOf(KnowledgeAssistant{}),
+		"uc_connection":       reflect.TypeOf(UcConnection{}),
 		"uc_function":         reflect.TypeOf(UcFunction{}),
 		"volume":              reflect.TypeOf(Volume{}),
 	}
@@ -1189,7 +2298,6 @@ func (m Tool) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"app":                 m.App,
-			"uc_connection":       m.UcConnection,
 			"description":         m.Description,
 			"genie_space":         m.GenieSpace,
 			"id":                  m.Id,
@@ -1197,6 +2305,7 @@ func (m Tool) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"name":                m.Name,
 			"tool_id":             m.ToolId,
 			"tool_type":           m.ToolType,
+			"uc_connection":       m.UcConnection,
 			"uc_function":         m.UcFunction,
 			"volume":              m.Volume,
 		})
@@ -1207,7 +2316,6 @@ func (m Tool) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app":                 App{}.Type(ctx),
-			"uc_connection":       Connection{}.Type(ctx),
 			"description":         types.StringType,
 			"genie_space":         GenieSpace{}.Type(ctx),
 			"id":                  types.StringType,
@@ -1215,6 +2323,7 @@ func (m Tool) Type(ctx context.Context) attr.Type {
 			"name":                types.StringType,
 			"tool_id":             types.StringType,
 			"tool_type":           types.StringType,
+			"uc_connection":       UcConnection{}.Type(ctx),
 			"uc_function":         UcFunction{}.Type(ctx),
 			"volume":              Volume{}.Type(ctx),
 		},
@@ -1244,31 +2353,6 @@ func (m *Tool) GetApp(ctx context.Context) (App, bool) {
 func (m *Tool) SetApp(ctx context.Context, v App) {
 	vs := v.ToObjectValue(ctx)
 	m.App = vs
-}
-
-// GetUcConnection returns the value of the UcConnection field in Tool as
-// a Connection value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *Tool) GetUcConnection(ctx context.Context) (Connection, bool) {
-	var e Connection
-	if m.UcConnection.IsNull() || m.UcConnection.IsUnknown() {
-		return e, false
-	}
-	var v Connection
-	d := m.UcConnection.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetUcConnection sets the value of the UcConnection field in Tool.
-func (m *Tool) SetUcConnection(ctx context.Context, v Connection) {
-	vs := v.ToObjectValue(ctx)
-	m.UcConnection = vs
 }
 
 // GetGenieSpace returns the value of the GenieSpace field in Tool as
@@ -1321,6 +2405,31 @@ func (m *Tool) SetKnowledgeAssistant(ctx context.Context, v KnowledgeAssistant) 
 	m.KnowledgeAssistant = vs
 }
 
+// GetUcConnection returns the value of the UcConnection field in Tool as
+// a UcConnection value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Tool) GetUcConnection(ctx context.Context) (UcConnection, bool) {
+	var e UcConnection
+	if m.UcConnection.IsNull() || m.UcConnection.IsUnknown() {
+		return e, false
+	}
+	var v UcConnection
+	d := m.UcConnection.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUcConnection sets the value of the UcConnection field in Tool.
+func (m *Tool) SetUcConnection(ctx context.Context, v UcConnection) {
+	vs := v.ToObjectValue(ctx)
+	m.UcConnection = vs
+}
+
 // GetUcFunction returns the value of the UcFunction field in Tool as
 // a UcFunction value.
 // If the field is unknown or null, the boolean return value is false.
@@ -1371,6 +2480,54 @@ func (m *Tool) SetVolume(ctx context.Context, v Volume) {
 	m.Volume = vs
 }
 
+// Databricks UC connection. Supported connection: external mcp server.
+type UcConnection struct {
+	Name types.String `tfsdk:"name"`
+}
+
+func (to *UcConnection) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UcConnection) {
+}
+
+func (to *UcConnection) SyncFieldsDuringRead(ctx context.Context, from UcConnection) {
+}
+
+func (m UcConnection) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UcConnection.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UcConnection) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UcConnection
+// only implements ToObjectValue() and Type().
+func (m UcConnection) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UcConnection) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type UcFunction struct {
 	// Full uc function name
 	Name types.String `tfsdk:"name"`
@@ -1417,6 +2574,109 @@ func (m UcFunction) Type(ctx context.Context) attr.Type {
 			"name": types.StringType,
 		},
 	}
+}
+
+type UpdateExampleRequest struct {
+	Example types.Object `tfsdk:"example"`
+	// The resource name of the example to update. Format:
+	// supervisor-agents/{supervisor_agent_id}/examples/{example_id}
+	Name types.String `tfsdk:"-"`
+	// Comma-delimited list of fields to update on the example. Allowed values:
+	// `question`, `guidelines`. Examples: - `question` - `question,guidelines`
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateExampleRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateExampleRequest) {
+	if !from.Example.IsNull() && !from.Example.IsUnknown() {
+		if toExample, ok := to.GetExample(ctx); ok {
+			if fromExample, ok := from.GetExample(ctx); ok {
+				// Recursively sync the fields of Example
+				toExample.SyncFieldsDuringCreateOrUpdate(ctx, fromExample)
+				to.SetExample(ctx, toExample)
+			}
+		}
+	}
+}
+
+func (to *UpdateExampleRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateExampleRequest) {
+	if !from.Example.IsNull() && !from.Example.IsUnknown() {
+		if toExample, ok := to.GetExample(ctx); ok {
+			if fromExample, ok := from.GetExample(ctx); ok {
+				toExample.SyncFieldsDuringRead(ctx, fromExample)
+				to.SetExample(ctx, toExample)
+			}
+		}
+	}
+}
+
+func (m UpdateExampleRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["example"] = attrs["example"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExampleRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateExampleRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"example": reflect.TypeOf(Example{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateExampleRequest
+// only implements ToObjectValue() and Type().
+func (m UpdateExampleRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"example":     m.Example,
+			"name":        m.Name,
+			"update_mask": m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateExampleRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"example":     Example{}.Type(ctx),
+			"name":        types.StringType,
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetExample returns the value of the Example field in UpdateExampleRequest as
+// a Example value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateExampleRequest) GetExample(ctx context.Context) (Example, bool) {
+	var e Example
+	if m.Example.IsNull() || m.Example.IsUnknown() {
+		return e, false
+	}
+	var v Example
+	d := m.Example.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExample sets the value of the Example field in UpdateExampleRequest.
+func (m *UpdateExampleRequest) SetExample(ctx context.Context, v Example) {
+	vs := v.ToObjectValue(ctx)
+	m.Example = vs
 }
 
 type UpdateSupervisorAgentRequest struct {

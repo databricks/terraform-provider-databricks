@@ -28,6 +28,28 @@ var (
 	TestingOwner     = "testOwner"
 )
 
+func TestResourcePermissionsValidate_CurrentUserCaseInsensitive(t *testing.T) {
+	var mapping resourcePermissions
+	for _, candidate := range allResourcePermissions() {
+		if candidate.field == "cluster_id" {
+			mapping = candidate
+			break
+		}
+	}
+
+	err := mapping.validate(context.Background(), entity.PermissionsEntity{
+		AccessControlList: []iam.AccessControlRequest{
+			{
+				UserName:        "user@example.com",
+				PermissionLevel: "CAN_ATTACH_TO",
+			},
+		},
+	}, "User@Example.com")
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot remove management permissions for the current user for cluster")
+}
+
 func TestResourcePermissionsRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {

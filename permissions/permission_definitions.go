@@ -127,7 +127,7 @@ func (p resourcePermissions) validate(ctx context.Context, entity entity.Permiss
 		}
 		// Check that the user is preventing themselves from managing the object
 		level := p.allowedPermissionLevels[string(change.PermissionLevel)]
-		if (change.UserName == currentUsername || change.ServicePrincipalName == currentUsername) && !level.isManagementPermission {
+		if (strings.EqualFold(change.UserName, currentUsername) || strings.EqualFold(change.ServicePrincipalName, currentUsername)) && !level.isManagementPermission {
 			allowedLevelsForCurrentUser := p.getAllowedPermissionLevels(false)
 			return fmt.Errorf("cannot remove management permissions for the current user for %s, allowed levels: %s", p.objectType, strings.Join(allowedLevelsForCurrentUser, ", "))
 		}

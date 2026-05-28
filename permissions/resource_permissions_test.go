@@ -3,6 +3,7 @@ package permissions
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -1026,11 +1027,11 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwner(t *testing.T) {
 			t.Fatalf("Expected the entry to be of type map[string]any, got %T", entry)
 		}
 		if userName, exists := entryMap["user_name"].(string); exists {
-			switch userName {
+			switch strings.ToLower(userName) {
 			case TestingUser:
 				foundTestingUser = true
 				assert.Equal(t, "CAN_USE", entryMap["permission_level"], "Permission level for TestingUser is not CAN_USE")
-			case TestingOwner:
+			case strings.ToLower(TestingOwner):
 				foundTestingOwner = true
 				assert.Equal(t, "IS_OWNER", entryMap["permission_level"], "Permission level for TestingOwner is not IS_OWNER")
 			}

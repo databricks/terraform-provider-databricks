@@ -280,7 +280,7 @@ func appTemplate(provider_config string) string {
 	`, provider_config)
 }
 
-func TestAccApp_ProviderConfig_Invalid(t *testing.T) {
+func TestUcAccApp_ProviderConfig_Invalid(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: appTemplate(`
 			provider_config = {
@@ -294,7 +294,7 @@ func TestAccApp_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestAccApp_ProviderConfig_Mismatched(t *testing.T) {
+func TestUcAccApp_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: appTemplate(`
 			provider_config = {
@@ -308,7 +308,7 @@ func TestAccApp_ProviderConfig_Mismatched(t *testing.T) {
 	})
 }
 
-func TestAccApp_ProviderConfig_Apply(t *testing.T) {
+func TestUcAccApp_ProviderConfig_Apply(t *testing.T) {
 	acceptance.LoadUcwsEnv(t)
 	ctx := context.Background()
 	w := databricks.Must(databricks.NewWorkspaceClient())

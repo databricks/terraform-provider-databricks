@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-func TestAccDataSourceMwsNetworkConnectivityConfigTest(t *testing.T) {
+func TestMwsAccDataSourceMwsNetworkConnectivityConfigTest(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
 	if acceptance.IsGcp(t) {
 		acceptance.Skipf(t)("GCP not supported")

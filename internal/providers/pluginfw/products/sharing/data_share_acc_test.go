@@ -28,7 +28,7 @@ func dataSourceShareTemplate(provider_config string) string {
 `, provider_config)
 }
 
-func TestAccShareData_ProviderConfig_Invalid(t *testing.T) {
+func TestUcAccShareData_ProviderConfig_Invalid(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + dataSourceShareTemplate(`
 			provider_config = {
@@ -42,7 +42,7 @@ func TestAccShareData_ProviderConfig_Invalid(t *testing.T) {
 	})
 }
 
-func TestAccShareData_ProviderConfig_Mismatched(t *testing.T) {
+func TestUcAccShareData_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + dataSourceShareTemplate(`
 			provider_config = {
@@ -57,7 +57,7 @@ func TestAccShareData_ProviderConfig_Mismatched(t *testing.T) {
 	})
 }
 
-func TestAccShareData_ProviderConfig_Apply(t *testing.T) {
+func TestUcAccShareData_ProviderConfig_Apply(t *testing.T) {
 	acceptance.LoadUcwsEnv(t)
 	ctx := context.Background()
 	w := databricks.Must(databricks.NewWorkspaceClient())

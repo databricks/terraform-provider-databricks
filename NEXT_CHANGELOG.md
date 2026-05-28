@@ -32,3 +32,6 @@
 
 * Add `internal/retrier` package for unified retry and backoff handling ([#5746](https://github.com/databricks/terraform-provider-databricks/pull/5746)).
 * Pass `excludedAttributes=entitlements` on SCIM `/Me` requests ([#5725](https://github.com/databricks/terraform-provider-databricks/pull/5725)).
+* `workspace_id` (provider attribute and `provider_config.workspace_id` block) now accepts workspace connection IDs in addition to classic numeric workspace IDs. On unified Databricks hosts, the platform gateway disambiguates the value server-side via the `X-Databricks-Workspace-Id` request header. The previous positive-integer validator has been relaxed to require only a non-empty string.
+
+  Numeric workspace IDs continue to behave exactly as before, including the account-API workspace-deployment lookup. Connection IDs skip that lookup and route directly via the configured host. When the provider is configured at the workspace level (host + token), connection IDs surface a clear error directing the user to reconfigure with account-level credentials, since a workspace-level provider can only operate on a single workspace.

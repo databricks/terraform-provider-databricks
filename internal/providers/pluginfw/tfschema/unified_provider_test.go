@@ -334,7 +334,10 @@ func TestValidateWorkspaceID_ReadsFromRespPlan(t *testing.T) {
 
 	// Server simulates a workspace with ID 999.
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		switch req.RequestURI {
+		// Match on URL.Path (ignoring the query string) so the mock keeps
+		// matching even when the SDK appends query params like
+		// `?excludedAttributes=entitlements` on the SCIM /Me probe.
+		switch req.URL.Path {
 		case "/.well-known/databricks-config":
 			rw.WriteHeader(404)
 		case "/api/2.0/preview/scim/v2/Me":

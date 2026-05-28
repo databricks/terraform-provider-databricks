@@ -136,12 +136,7 @@ In addition to the above arguments, the following attributes are exported:
 * `update_time` (string) - A timestamp indicating when the branch was last updated
 
 ### BranchStatus
-* `branch_id` (string) - The short identifier of the branch, suitable for showing to the users.
-  For a branch with name `projects/my-project/branches/my-branch`, the branch_id is `my-branch`.
-  
-  Use this field when building UI components that display branches to users (e.g., a drop-down
-  selector). Prefer showing `branch_id` instead of the full resource name from `Branch.name`,
-  which follows the `projects/{project_id}/branches/{branch_id}` format and is not user-friendly
+* `branch_id` (string) - Part of the resource name
 * `current_state` (string) - The branch's state, indicating if it is initializing, ready for use, or archived. Possible values are: `ARCHIVED`, `DELETED`, `IMPORTING`, `INIT`, `READY`, `RESETTING`
 * `default` (boolean) - Whether the branch is the project's default branch
 * `delete_time` (string) - A timestamp indicating when the branch was deleted.

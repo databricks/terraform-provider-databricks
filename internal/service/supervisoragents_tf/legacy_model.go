@@ -2147,11 +2147,11 @@ type Tool_SdkV2 struct {
 	// User specified id of the Tool.
 	ToolId types.String `tfsdk:"tool_id"`
 	// Tool type. Must be one of: "genie_space", "knowledge_assistant",
-	// "uc_function", "uc_connection", "app", "volume", "dashboard",
+	// "uc_function", "uc_connection", "uc_mcp", "app", "volume", "dashboard",
 	// "serving_endpoint", "table", "vector_search_index", "catalog", "schema",
-	// "supervisor_agent", "web_search". The legacy values "lakeview_dashboard"
-	// and "uc_table" are also accepted and remain equivalent to "dashboard" and
-	// "table" respectively.
+	// "supervisor_agent", "web_search", "skill". The legacy values
+	// "lakeview_dashboard" and "uc_table" are also accepted and remain
+	// equivalent to "dashboard" and "table" respectively.
 	ToolType types.String `tfsdk:"tool_type"`
 
 	UcConnection types.List `tfsdk:"uc_connection"`

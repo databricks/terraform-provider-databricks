@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -599,6 +601,68 @@ func TestGetApiLevelFromDiff_ReturnsWorkspace(t *testing.T) {
 
 func TestGetApiLevelFromDiff_ReturnsEmptyWhenNotSet(t *testing.T) {
 	assert.Equal(t, "", testGetApiLevelFromDiff(t, ""))
+}
+
+// newHeaderCaptureClient spins up a test HTTP server that records the headers
+// of every incoming request, and returns a DatabricksClient pointed at it.
+// Use it to assert that raw-HTTP helpers (Get/Post/Patch/Delete/Put/Scim)
+// inject X-Databricks-Workspace-Id per AddWorkspaceIdHeader.
+func newHeaderCaptureClient(t *testing.T, workspaceID string) (*DatabricksClient, *[]http.Header) {
+	t.Helper()
+	var mu sync.Mutex
+	var captured []http.Header
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		mu.Lock()
+		captured = append(captured, req.Header.Clone())
+		mu.Unlock()
+		rw.WriteHeader(http.StatusOK)
+		_, _ = rw.Write([]byte(`{}`))
+	}))
+	t.Cleanup(server.Close)
+
+	cfg := &config.Config{
+		Host:        server.URL,
+		Token:       "dapi-test",
+		WorkspaceID: workspaceID,
+		HostMetadataResolver: func(ctx context.Context, host string) (*config.HostMetadata, error) {
+			return nil, nil
+		},
+	}
+	sdkClient, err := client.New(cfg)
+	require.NoError(t, err)
+	return &DatabricksClient{DatabricksClient: sdkClient}, &captured
+}
+
+func TestWorkspaceIdHeader_InjectedWhenWorkspaceIDSet(t *testing.T) {
+	dc, captured := newHeaderCaptureClient(t, "12345")
+	ctx := context.Background()
+
+	require.NoError(t, dc.Get(ctx, "/clusters/list", nil, nil))
+	require.NoError(t, dc.Post(ctx, "/instance-pools/create", map[string]string{}, nil))
+	require.NoError(t, dc.Patch(ctx, "/repos/1", map[string]string{}))
+	require.NoError(t, dc.Delete(ctx, "/token/delete", map[string]string{}))
+	require.NoError(t, dc.Put(ctx, "/sql/config/warehouses", map[string]string{}))
+	require.NoError(t, dc.Scim(ctx, http.MethodGet, "/preview/scim/v2/Me", nil, nil, ""))
+
+	require.Len(t, *captured, 6)
+	for i, h := range *captured {
+		assert.Equal(t, "12345", h.Get("X-Databricks-Workspace-Id"), "request %d missing workspace-id header", i)
+	}
+	// Sanity-check the SCIM content-type is still set alongside the new header.
+	assert.Equal(t, "application/scim+json; charset=utf-8", (*captured)[5].Get("Content-Type"))
+}
+
+func TestWorkspaceIdHeader_OmittedWhenWorkspaceIDEmpty(t *testing.T) {
+	dc, captured := newHeaderCaptureClient(t, "")
+	ctx := context.Background()
+
+	require.NoError(t, dc.Get(ctx, "/clusters/list", nil, nil))
+	require.NoError(t, dc.Scim(ctx, http.MethodGet, "/preview/scim/v2/Me", nil, nil, ""))
+
+	require.Len(t, *captured, 2)
+	for i, h := range *captured {
+		assert.Empty(t, h.Get("X-Databricks-Workspace-Id"), "request %d should not carry workspace-id header", i)
+	}
 }
 
 func TestCurrentWorkspaceID_ReturnsCachedValue(t *testing.T) {

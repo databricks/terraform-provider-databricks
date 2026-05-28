@@ -510,37 +510,37 @@ func (c *DatabricksClient) AccountOrWorkspaceRequest(d *schema.ResourceData, acc
 
 // Get on path
 func (c *DatabricksClient) Get(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodGet, path, nil, nil, request, response, c.addApiPrefix)
+	return c.Do(ctx, http.MethodGet, path, nil, nil, request, response, c.addApiPrefix, c.AddWorkspaceIdHeader)
 }
 
 // Post on path
 func (c *DatabricksClient) Post(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodPost, path, nil, nil, request, response, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPost, path, nil, nil, request, response, c.addApiPrefix, c.AddWorkspaceIdHeader)
 }
 
 // Delete on path. Ignores succesfull responses from the server.
 func (c *DatabricksClient) Delete(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodDelete, path, nil, nil, request, nil, c.addApiPrefix)
+	return c.Do(ctx, http.MethodDelete, path, nil, nil, request, nil, c.addApiPrefix, c.AddWorkspaceIdHeader)
 }
 
 // Delete on path. Deserializes the response into the response parameter.
 func (c *DatabricksClient) DeleteWithResponse(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodDelete, path, nil, nil, request, response, c.addApiPrefix)
+	return c.Do(ctx, http.MethodDelete, path, nil, nil, request, response, c.addApiPrefix, c.AddWorkspaceIdHeader)
 }
 
 // Patch on path. Ignores succesfull responses from the server.
 func (c *DatabricksClient) Patch(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodPatch, path, nil, nil, request, nil, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPatch, path, nil, nil, request, nil, c.addApiPrefix, c.AddWorkspaceIdHeader)
 }
 
 // Patch on path. Deserializes the response into the response parameter.
 func (c *DatabricksClient) PatchWithResponse(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodPatch, path, nil, nil, request, response, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPatch, path, nil, nil, request, response, c.addApiPrefix, c.AddWorkspaceIdHeader)
 }
 
 // Put on path
 func (c *DatabricksClient) Put(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodPut, path, nil, nil, request, nil, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPut, path, nil, nil, request, nil, c.addApiPrefix, c.AddWorkspaceIdHeader)
 }
 
 const (
@@ -626,6 +626,27 @@ const (
 	API_2_1 ApiVersion = "2.1"
 )
 
+// AddWorkspaceIdHeader injects the X-Databricks-Workspace-Id routing header
+// from Config.WorkspaceID. This mirrors the per-method header injection in the
+// generated Go SDK service impls (see vendor/.../service/<svc>/impl.go) and is
+// required on unified hosts, where the gateway uses the header to route the
+// request to the correct workspace. Without it, raw-HTTP resources (those
+// going through common.DatabricksClient.Get/Post/Patch/Delete/Put/Scim rather
+// than a generated w.<Service>.<Method> call) send no routing information and
+// the request fails or routes to the wrong workspace.
+//
+// The platform accepts both the legacy X-Databricks-Org-Id and the new
+// X-Databricks-Workspace-Id on requests during the migration window
+// (databricks/databricks-sdk-go#1688). The response echo header remains
+// X-Databricks-Org-Id for now.
+func (c *DatabricksClient) AddWorkspaceIdHeader(r *http.Request) error {
+	if c.Config == nil || c.Config.WorkspaceID == "" {
+		return nil
+	}
+	r.Header.Set("X-Databricks-Workspace-Id", c.Config.WorkspaceID)
+	return nil
+}
+
 func (c *DatabricksClient) addApiPrefix(r *http.Request) error {
 	if r.URL == nil {
 		return fmt.Errorf("no URL found in request")
@@ -666,7 +687,7 @@ func (c *DatabricksClient) scimVisitorForLevel(apiLevel string) func(*http.Reque
 func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request any, response any, apiLevel string) error {
 	return c.Do(ctx, method, path, map[string]string{
 		"Content-Type": "application/scim+json; charset=utf-8",
-	}, nil, request, response, c.addApiPrefix, c.scimVisitorForLevel(apiLevel))
+	}, nil, request, response, c.addApiPrefix, c.scimVisitorForLevel(apiLevel), c.AddWorkspaceIdHeader)
 }
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination

@@ -31,6 +31,19 @@ resource "databricks_git_credential" "ado" {
 }
 ```
 
+### Git credential for a service principal
+
+You can manage Git credentials on behalf of a service principal by specifying `principal_id`:
+
+```hcl
+resource "databricks_git_credential" "spn" {
+  git_provider          = "gitHub"
+  git_username          = "my-service-principal"
+  personal_access_token = var.github_pat
+  principal_id          = var.databricks_spn_id
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -41,6 +54,7 @@ The following arguments are supported:
 * `git_provider` -  (Required) case insensitive name of the Git provider.  Following values are supported right now (could be a subject for a change, consult [Git Credentials API documentation](https://docs.databricks.com/dev-tools/api/latest/gitcredentials.html)): `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`, `awsCodeCommit`, `azureDevOpsServicesAad`.
 * `is_default_for_provider` - (Optional) boolean flag specifying if the credential is the default for the given provider type.
 * `name` - (Optional) the name of the git credential, used for identification and ease of lookup.
+* `principal_id` - (Optional) The ID of the service principal whose credentials will be managed. Only service principal managers can use this field. When specified, the git credential is created or updated for the given service principal instead of the calling user.
 * `force` - (Optional) specify if settings need to be enforced (i.e., to overwrite previously set credential for service principals).
 * `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
   * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.

@@ -6,6 +6,7 @@
 
 ### New Features and Improvements
 
+* Added `principal_id` argument to `databricks_git_credential` resource, enabling management of Git credentials on behalf of service principals.
 * Add support for managing permissions of Agent Bricks resources ([#5708](https://github.com/databricks/terraform-provider-databricks/issues/5669)). Reverts [#5582](https://github.com/databricks/terraform-provider-databricks/pull/5708).
 
 ### Bug Fixes
@@ -20,6 +21,7 @@
 
 * Document that some `databricks_mws_*` resources on GCP require Google-issued OIDC tokens (not Databricks OAuth) ([#5654](https://github.com/databricks/terraform-provider-databricks/issues/5654)).
 * Remove non-existent field from the `databricks_vector_search_index` doc ([#5605](https://github.com/databricks/terraform-provider-databricks/pull/5605)).
+* Documented `principal_id` argument for `databricks_git_credential` resource.
 
 ### Exporter
 

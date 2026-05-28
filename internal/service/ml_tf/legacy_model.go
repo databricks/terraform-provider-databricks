@@ -4489,6 +4489,56 @@ func (m *CreateWebhookResponse_SdkV2) SetWebhook(ctx context.Context, v Registry
 	m.Webhook = types.ListValueMust(t, vs)
 }
 
+// A cron-based schedule trigger for the materialization pipeline.
+type CronSchedule_SdkV2 struct {
+	// The cron expression defining the schedule (e.g., "0 0 * * *" for daily at
+	// midnight).
+	CronExpression types.String `tfsdk:"cron_expression"`
+}
+
+func (to *CronSchedule_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CronSchedule_SdkV2) {
+}
+
+func (to *CronSchedule_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CronSchedule_SdkV2) {
+}
+
+func (m CronSchedule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cron_expression"] = attrs["cron_expression"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CronSchedule.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CronSchedule_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CronSchedule_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CronSchedule_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"cron_expression": m.CronExpression,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CronSchedule_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"cron_expression": types.StringType,
+		},
+	}
+}
+
 // Specifies the data source backing a feature. Exactly one source type must be
 // set.
 type DataSource_SdkV2 struct {
@@ -15348,6 +15398,8 @@ type MaterializedFeature_SdkV2 struct {
 	// The quartz cron expression that defines the schedule of the
 	// materialization pipeline. The schedule is evaluated in the UTC timezone.
 	CronSchedule types.String `tfsdk:"cron_schedule"`
+	// A cron-based schedule trigger for the materialization pipeline.
+	CronScheduleTrigger types.List `tfsdk:"cron_schedule_trigger"`
 	// The full name of the feature in Unity Catalog.
 	FeatureName types.String `tfsdk:"feature_name"`
 	// True if this is an online materialized feature. False if it is an offline
@@ -15356,23 +15408,35 @@ type MaterializedFeature_SdkV2 struct {
 	// The timestamp when the pipeline last ran and updated the materialized
 	// feature values. If the pipeline has not run yet, this field will be null.
 	LastMaterializationTime types.String `tfsdk:"last_materialization_time"`
-	// Unique identifier for the materialized feature.
+	// Server-assigned unique identifier for the materialized feature.
 	MaterializedFeatureId types.String `tfsdk:"materialized_feature_id"`
-
+	// Destination for writing feature values to an offline Delta table.
 	OfflineStoreConfig types.List `tfsdk:"offline_store_config"`
-
+	// Destination for writing feature values to an online Lakebase table.
 	OnlineStoreConfig types.List `tfsdk:"online_store_config"`
 	// The schedule state of the materialization pipeline.
 	PipelineScheduleState types.String `tfsdk:"pipeline_schedule_state"`
+	// The Structured Streaming trigger mode used for materialization. Real-time
+	// mode (RTM) targets sub-second latency for operational workloads;
+	// micro-batch mode (MBM) favors cost efficiency for ETL and analytics
+	// workloads.
+	StreamingMode types.List `tfsdk:"streaming_mode"`
 	// The fully qualified Unity Catalog path to the table containing the
 	// materialized feature (Delta table or Lakebase table). Output only.
 	TableName types.String `tfsdk:"table_name"`
+	// A trigger that fires when the upstream source table changes.
+	TableTrigger types.List `tfsdk:"table_trigger"`
 }
 
 func (to *MaterializedFeature_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MaterializedFeature_SdkV2) {
-	if !from.OfflineStoreConfig.IsUnknown() && !from.OfflineStoreConfig.IsNull() {
-		// OfflineStoreConfig is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.OfflineStoreConfig = from.OfflineStoreConfig
+	if !from.CronScheduleTrigger.IsNull() && !from.CronScheduleTrigger.IsUnknown() {
+		if toCronScheduleTrigger, ok := to.GetCronScheduleTrigger(ctx); ok {
+			if fromCronScheduleTrigger, ok := from.GetCronScheduleTrigger(ctx); ok {
+				// Recursively sync the fields of CronScheduleTrigger
+				toCronScheduleTrigger.SyncFieldsDuringCreateOrUpdate(ctx, fromCronScheduleTrigger)
+				to.SetCronScheduleTrigger(ctx, toCronScheduleTrigger)
+			}
+		}
 	}
 	if !from.OfflineStoreConfig.IsNull() && !from.OfflineStoreConfig.IsUnknown() {
 		if toOfflineStoreConfig, ok := to.GetOfflineStoreConfig(ctx); ok {
@@ -15383,10 +15447,6 @@ func (to *MaterializedFeature_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 			}
 		}
 	}
-	if !from.OnlineStoreConfig.IsUnknown() && !from.OnlineStoreConfig.IsNull() {
-		// OnlineStoreConfig is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.OnlineStoreConfig = from.OnlineStoreConfig
-	}
 	if !from.OnlineStoreConfig.IsNull() && !from.OnlineStoreConfig.IsUnknown() {
 		if toOnlineStoreConfig, ok := to.GetOnlineStoreConfig(ctx); ok {
 			if fromOnlineStoreConfig, ok := from.GetOnlineStoreConfig(ctx); ok {
@@ -15396,12 +15456,34 @@ func (to *MaterializedFeature_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 			}
 		}
 	}
+	if !from.StreamingMode.IsNull() && !from.StreamingMode.IsUnknown() {
+		if toStreamingMode, ok := to.GetStreamingMode(ctx); ok {
+			if fromStreamingMode, ok := from.GetStreamingMode(ctx); ok {
+				// Recursively sync the fields of StreamingMode
+				toStreamingMode.SyncFieldsDuringCreateOrUpdate(ctx, fromStreamingMode)
+				to.SetStreamingMode(ctx, toStreamingMode)
+			}
+		}
+	}
+	if !from.TableTrigger.IsNull() && !from.TableTrigger.IsUnknown() {
+		if toTableTrigger, ok := to.GetTableTrigger(ctx); ok {
+			if fromTableTrigger, ok := from.GetTableTrigger(ctx); ok {
+				// Recursively sync the fields of TableTrigger
+				toTableTrigger.SyncFieldsDuringCreateOrUpdate(ctx, fromTableTrigger)
+				to.SetTableTrigger(ctx, toTableTrigger)
+			}
+		}
+	}
 }
 
 func (to *MaterializedFeature_SdkV2) SyncFieldsDuringRead(ctx context.Context, from MaterializedFeature_SdkV2) {
-	if !from.OfflineStoreConfig.IsUnknown() && !from.OfflineStoreConfig.IsNull() {
-		// OfflineStoreConfig is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.OfflineStoreConfig = from.OfflineStoreConfig
+	if !from.CronScheduleTrigger.IsNull() && !from.CronScheduleTrigger.IsUnknown() {
+		if toCronScheduleTrigger, ok := to.GetCronScheduleTrigger(ctx); ok {
+			if fromCronScheduleTrigger, ok := from.GetCronScheduleTrigger(ctx); ok {
+				toCronScheduleTrigger.SyncFieldsDuringRead(ctx, fromCronScheduleTrigger)
+				to.SetCronScheduleTrigger(ctx, toCronScheduleTrigger)
+			}
+		}
 	}
 	if !from.OfflineStoreConfig.IsNull() && !from.OfflineStoreConfig.IsUnknown() {
 		if toOfflineStoreConfig, ok := to.GetOfflineStoreConfig(ctx); ok {
@@ -15411,10 +15493,6 @@ func (to *MaterializedFeature_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 			}
 		}
 	}
-	if !from.OnlineStoreConfig.IsUnknown() && !from.OnlineStoreConfig.IsNull() {
-		// OnlineStoreConfig is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.OnlineStoreConfig = from.OnlineStoreConfig
-	}
 	if !from.OnlineStoreConfig.IsNull() && !from.OnlineStoreConfig.IsUnknown() {
 		if toOnlineStoreConfig, ok := to.GetOnlineStoreConfig(ctx); ok {
 			if fromOnlineStoreConfig, ok := from.GetOnlineStoreConfig(ctx); ok {
@@ -15423,24 +15501,43 @@ func (to *MaterializedFeature_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 			}
 		}
 	}
+	if !from.StreamingMode.IsNull() && !from.StreamingMode.IsUnknown() {
+		if toStreamingMode, ok := to.GetStreamingMode(ctx); ok {
+			if fromStreamingMode, ok := from.GetStreamingMode(ctx); ok {
+				toStreamingMode.SyncFieldsDuringRead(ctx, fromStreamingMode)
+				to.SetStreamingMode(ctx, toStreamingMode)
+			}
+		}
+	}
+	if !from.TableTrigger.IsNull() && !from.TableTrigger.IsUnknown() {
+		if toTableTrigger, ok := to.GetTableTrigger(ctx); ok {
+			if fromTableTrigger, ok := from.GetTableTrigger(ctx); ok {
+				toTableTrigger.SyncFieldsDuringRead(ctx, fromTableTrigger)
+				to.SetTableTrigger(ctx, toTableTrigger)
+			}
+		}
+	}
 }
 
 func (m MaterializedFeature_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["cron_schedule"] = attrs["cron_schedule"].SetOptional()
+	attrs["cron_schedule_trigger"] = attrs["cron_schedule_trigger"].SetOptional()
+	attrs["cron_schedule_trigger"] = attrs["cron_schedule_trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["feature_name"] = attrs["feature_name"].SetRequired()
 	attrs["is_online"] = attrs["is_online"].SetComputed()
 	attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetOptional()
+	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetOptional()
-	attrs["offline_store_config"] = attrs["offline_store_config"].SetComputed()
-	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["online_store_config"] = attrs["online_store_config"].SetOptional()
-	attrs["online_store_config"] = attrs["online_store_config"].SetComputed()
-	attrs["online_store_config"] = attrs["online_store_config"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["online_store_config"] = attrs["online_store_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["pipeline_schedule_state"] = attrs["pipeline_schedule_state"].SetOptional()
+	attrs["streaming_mode"] = attrs["streaming_mode"].SetOptional()
+	attrs["streaming_mode"] = attrs["streaming_mode"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["table_name"] = attrs["table_name"].SetComputed()
+	attrs["table_trigger"] = attrs["table_trigger"].SetOptional()
+	attrs["table_trigger"] = attrs["table_trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -15454,8 +15551,11 @@ func (m MaterializedFeature_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 // SDK values.
 func (m MaterializedFeature_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"offline_store_config": reflect.TypeOf(OfflineStoreConfig_SdkV2{}),
-		"online_store_config":  reflect.TypeOf(OnlineStoreConfig_SdkV2{}),
+		"cron_schedule_trigger": reflect.TypeOf(CronSchedule_SdkV2{}),
+		"offline_store_config":  reflect.TypeOf(OfflineStoreConfig_SdkV2{}),
+		"online_store_config":   reflect.TypeOf(OnlineStoreConfig_SdkV2{}),
+		"streaming_mode":        reflect.TypeOf(StreamingMode_SdkV2{}),
+		"table_trigger":         reflect.TypeOf(TableTrigger_SdkV2{}),
 	}
 }
 
@@ -15467,6 +15567,7 @@ func (m MaterializedFeature_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"cron_schedule":             m.CronSchedule,
+			"cron_schedule_trigger":     m.CronScheduleTrigger,
 			"feature_name":              m.FeatureName,
 			"is_online":                 m.IsOnline,
 			"last_materialization_time": m.LastMaterializationTime,
@@ -15474,7 +15575,9 @@ func (m MaterializedFeature_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 			"offline_store_config":      m.OfflineStoreConfig,
 			"online_store_config":       m.OnlineStoreConfig,
 			"pipeline_schedule_state":   m.PipelineScheduleState,
+			"streaming_mode":            m.StreamingMode,
 			"table_name":                m.TableName,
+			"table_trigger":             m.TableTrigger,
 		})
 }
 
@@ -15482,7 +15585,10 @@ func (m MaterializedFeature_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 func (m MaterializedFeature_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cron_schedule":             types.StringType,
+			"cron_schedule": types.StringType,
+			"cron_schedule_trigger": basetypes.ListType{
+				ElemType: CronSchedule_SdkV2{}.Type(ctx),
+			},
 			"feature_name":              types.StringType,
 			"is_online":                 types.BoolType,
 			"last_materialization_time": types.StringType,
@@ -15494,9 +15600,41 @@ func (m MaterializedFeature_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: OnlineStoreConfig_SdkV2{}.Type(ctx),
 			},
 			"pipeline_schedule_state": types.StringType,
-			"table_name":              types.StringType,
+			"streaming_mode": basetypes.ListType{
+				ElemType: StreamingMode_SdkV2{}.Type(ctx),
+			},
+			"table_name": types.StringType,
+			"table_trigger": basetypes.ListType{
+				ElemType: TableTrigger_SdkV2{}.Type(ctx),
+			},
 		},
 	}
+}
+
+// GetCronScheduleTrigger returns the value of the CronScheduleTrigger field in MaterializedFeature_SdkV2 as
+// a CronSchedule_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializedFeature_SdkV2) GetCronScheduleTrigger(ctx context.Context) (CronSchedule_SdkV2, bool) {
+	var e CronSchedule_SdkV2
+	if m.CronScheduleTrigger.IsNull() || m.CronScheduleTrigger.IsUnknown() {
+		return e, false
+	}
+	var v []CronSchedule_SdkV2
+	d := m.CronScheduleTrigger.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCronScheduleTrigger sets the value of the CronScheduleTrigger field in MaterializedFeature_SdkV2.
+func (m *MaterializedFeature_SdkV2) SetCronScheduleTrigger(ctx context.Context, v CronSchedule_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["cron_schedule_trigger"]
+	m.CronScheduleTrigger = types.ListValueMust(t, vs)
 }
 
 // GetOfflineStoreConfig returns the value of the OfflineStoreConfig field in MaterializedFeature_SdkV2 as
@@ -15549,6 +15687,58 @@ func (m *MaterializedFeature_SdkV2) SetOnlineStoreConfig(ctx context.Context, v 
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["online_store_config"]
 	m.OnlineStoreConfig = types.ListValueMust(t, vs)
+}
+
+// GetStreamingMode returns the value of the StreamingMode field in MaterializedFeature_SdkV2 as
+// a StreamingMode_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializedFeature_SdkV2) GetStreamingMode(ctx context.Context) (StreamingMode_SdkV2, bool) {
+	var e StreamingMode_SdkV2
+	if m.StreamingMode.IsNull() || m.StreamingMode.IsUnknown() {
+		return e, false
+	}
+	var v []StreamingMode_SdkV2
+	d := m.StreamingMode.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStreamingMode sets the value of the StreamingMode field in MaterializedFeature_SdkV2.
+func (m *MaterializedFeature_SdkV2) SetStreamingMode(ctx context.Context, v StreamingMode_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["streaming_mode"]
+	m.StreamingMode = types.ListValueMust(t, vs)
+}
+
+// GetTableTrigger returns the value of the TableTrigger field in MaterializedFeature_SdkV2 as
+// a TableTrigger_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializedFeature_SdkV2) GetTableTrigger(ctx context.Context) (TableTrigger_SdkV2, bool) {
+	var e TableTrigger_SdkV2
+	if m.TableTrigger.IsNull() || m.TableTrigger.IsUnknown() {
+		return e, false
+	}
+	var v []TableTrigger_SdkV2
+	d := m.TableTrigger.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTableTrigger sets the value of the TableTrigger field in MaterializedFeature_SdkV2.
+func (m *MaterializedFeature_SdkV2) SetTableTrigger(ctx context.Context, v TableTrigger_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["table_trigger"]
+	m.TableTrigger = types.ListValueMust(t, vs)
 }
 
 // Computes the maximum value.
@@ -21758,6 +21948,55 @@ func (m StddevSampFunction_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The streaming mode configuration for a streaming materialization pipeline.
+type StreamingMode_SdkV2 struct {
+	// The type of streaming mode used by the materialization pipeline.
+	Mode types.String `tfsdk:"mode"`
+}
+
+func (to *StreamingMode_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamingMode_SdkV2) {
+}
+
+func (to *StreamingMode_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StreamingMode_SdkV2) {
+}
+
+func (m StreamingMode_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["mode"] = attrs["mode"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StreamingMode.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StreamingMode_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StreamingMode_SdkV2
+// only implements ToObjectValue() and Type().
+func (m StreamingMode_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"mode": m.Mode,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StreamingMode_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"mode": types.StringType,
+		},
+	}
+}
+
 // Deprecated: Use KafkaSubscriptionMode instead.
 type SubscriptionMode_SdkV2 struct {
 	// A JSON string that contains the specific topic-partitions to consume
@@ -21871,6 +22110,48 @@ func (m SumFunction_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"input": types.StringType,
 		},
+	}
+}
+
+// A trigger that fires when the upstream source table changes.
+type TableTrigger_SdkV2 struct {
+}
+
+func (to *TableTrigger_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TableTrigger_SdkV2) {
+}
+
+func (to *TableTrigger_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TableTrigger_SdkV2) {
+}
+
+func (m TableTrigger_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TableTrigger.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TableTrigger_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TableTrigger_SdkV2
+// only implements ToObjectValue() and Type().
+func (m TableTrigger_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TableTrigger_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -23215,7 +23496,7 @@ func (m *UpdateKafkaConfigRequest_SdkV2) SetKafkaConfig(ctx context.Context, v K
 type UpdateMaterializedFeatureRequest_SdkV2 struct {
 	// The materialized feature to update.
 	MaterializedFeature types.List `tfsdk:"materialized_feature"`
-	// Unique identifier for the materialized feature.
+	// Server-assigned unique identifier for the materialized feature.
 	MaterializedFeatureId types.String `tfsdk:"-"`
 	// Provide the materialization feature fields which should be updated.
 	// Currently, only the pipeline_state field can be updated.
@@ -23249,6 +23530,7 @@ func (m UpdateMaterializedFeatureRequest_SdkV2) ApplySchemaCustomizations(attrs 
 	attrs["materialized_feature"] = attrs["materialized_feature"].SetRequired()
 	attrs["materialized_feature"] = attrs["materialized_feature"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetRequired()
+	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
 	return attrs

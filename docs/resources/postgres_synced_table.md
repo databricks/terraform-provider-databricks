@@ -220,6 +220,7 @@ In addition to the above arguments, the following attributes are exported:
   
   Format: "projects/{project_id}"
 * `provisioning_phase` (string) - The current phase of the data synchronization pipeline. Possible values are: `PROVISIONING_PHASE_INDEX_SCAN`, `PROVISIONING_PHASE_INDEX_SORT`, `PROVISIONING_PHASE_MAIN`
+* `synced_table_id` (string) - Part of the resource name
 * `unity_catalog_provisioning_state` (string) - The provisioning state of the synced table entity in Unity Catalog. Possible values are: `ACTIVE`, `DEGRADED`, `DELETING`, `FAILED`, `PROVISIONING`, `UPDATING`
 
 ## Import

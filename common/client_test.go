@@ -727,6 +727,47 @@ func TestScim_AccountLevel_OmitsHeader(t *testing.T) {
 	assert.Contains(t, (*captured)[0].URL, "/accounts/test-account/scim/v2/Users")
 }
 
+// TestAddWorkspaceIdHeader_SuppressedOnAccountPath verifies the defensive
+// guard: if AddWorkspaceIdHeader is called on an /api/<ver>/accounts/... path
+// (defensive — this means a workspace-only visitor leaked onto an account
+// resource), the header is suppressed and a warning is logged.
+func TestAddWorkspaceIdHeader_SuppressedOnAccountPath(t *testing.T) {
+	dc, captured := newHeaderCaptureClient(t, "12345")
+	ctx := context.Background()
+
+	// Capture log output so we can verify the warning fired.
+	var logbuf strings.Builder
+	prev := log.Writer()
+	log.SetOutput(&logbuf)
+	t.Cleanup(func() { log.SetOutput(prev) })
+
+	// Simulate an account-scoped path being hit through Post + AddWorkspaceIdHeader.
+	// In production this would be a code bug; here we exercise it directly.
+	require.NoError(t, dc.Post(ctx, "/accounts/test-account/credentials", map[string]string{}, nil, dc.AddWorkspaceIdHeader))
+
+	require.Len(t, *captured, 1)
+	assert.Empty(t, (*captured)[0].Header.Get("X-Databricks-Workspace-Id"),
+		"header must not be set on /accounts/... paths even when the visitor is passed")
+	assert.Contains(t, logbuf.String(), "AddWorkspaceIdHeader invoked on account-scoped path",
+		"expected a warning when the visitor is mis-applied to an account path")
+}
+
+// TestAddWorkspaceIdHeader_FiresOnWorkspacePath confirms the guard is precise:
+// non-account paths still get the header.
+func TestAddWorkspaceIdHeader_FiresOnWorkspacePath(t *testing.T) {
+	dc, captured := newHeaderCaptureClient(t, "12345")
+	ctx := context.Background()
+
+	require.NoError(t, dc.Post(ctx, "/repos", map[string]string{}, nil, dc.AddWorkspaceIdHeader))
+	require.NoError(t, dc.Get(ctx, "/unity-catalog/tables", nil, nil, dc.AddWorkspaceIdHeader))
+
+	require.Len(t, *captured, 2)
+	for i, c := range *captured {
+		assert.Equal(t, "12345", c.Header.Get("X-Databricks-Workspace-Id"),
+			"request %d should carry the workspace-id header on a workspace path", i)
+	}
+}
+
 func TestCurrentWorkspaceID_ReturnsCachedValue(t *testing.T) {
 	c := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{

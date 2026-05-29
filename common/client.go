@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -648,6 +649,10 @@ const (
 	API_2_1 ApiVersion = "2.1"
 )
 
+// accountPathRE matches account-scoped request paths after addApiPrefix has
+// run: /api/<version>/accounts/<account_id>/...
+var accountPathRE = regexp.MustCompile(`^/api/[^/]+/accounts/`)
+
 // AddWorkspaceIdHeader injects the X-Databricks-Workspace-Id routing header
 // from Config.WorkspaceID. This mirrors the per-method header injection in the
 // generated Go SDK service impls (see vendor/.../service/<svc>/impl.go) and is
@@ -661,8 +666,22 @@ const (
 // X-Databricks-Workspace-Id on requests during the migration window
 // (databricks/databricks-sdk-go#1688). The response echo header remains
 // X-Databricks-Org-Id for now.
+//
+// Defensive guard: this helper is the per-resource opt-in for workspace-scoped
+// calls. If it's invoked on an account-scoped path (/api/<ver>/accounts/...)
+// the header is suppressed and a warning is logged — this is a code bug, not
+// expected runtime behavior. Account-only resources (mws_*) and dual resources
+// at api=account must never pass AddWorkspaceIdHeader.
+//
+// TODO: replace this URL-path heuristic with an explicit resource-type check
+// (account / workspace / dual) once we have a typed annotation on each
+// resource — see follow-up around resource classification metadata.
 func (c *DatabricksClient) AddWorkspaceIdHeader(r *http.Request) error {
 	if c.Config == nil || c.Config.WorkspaceID == "" {
+		return nil
+	}
+	if r.URL != nil && accountPathRE.MatchString(r.URL.Path) {
+		log.Printf("[WARN] AddWorkspaceIdHeader invoked on account-scoped path %q; suppressing header. This is a code bug — see common/client.go.", r.URL.Path)
 		return nil
 	}
 	r.Header.Set("X-Databricks-Workspace-Id", c.Config.WorkspaceID)

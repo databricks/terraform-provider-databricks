@@ -143,7 +143,11 @@ func TestMwsAccAccountHostCreateJobs(t *testing.T) {
 // the contrast is direct: jobs (Go SDK) passes, repo (raw HTTP) is expected to
 // fail on the unified host.
 func createRepoWithProviderConfig(t *testing.T, workspaceID string, providerFactories map[string]func() (tfprotov6.ProviderServer, error)) {
-	repoPath := "/Repos/tf-acc-" + RandomName()
+	// Path validator on databricks_repo.path requires /Repos/<directory>/<repo>
+	// (3 components after the leading slash) — see repos/resource_repo.go's
+	// validatePath. Use a fixed middle segment so each run is unique only in
+	// the leaf to avoid collisions between concurrent matrix jobs.
+	repoPath := "/Repos/tf-acc/repo-" + RandomName()
 
 	step := Step{
 		Template: `

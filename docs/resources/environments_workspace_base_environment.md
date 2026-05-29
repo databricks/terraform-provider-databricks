@@ -4,6 +4,8 @@ subcategory: "Environments"
 # databricks_environments_workspace_base_environment Resource
 [![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/environments)
+
 A Workspace Base Environment is a shareable specification that defines a serverless environment version and additional Python dependencies for serverless notebooks and jobs.
 
 By pre-materializing environments, Databricks reduces startup time and ensures consistent, reproducible environments across notebooks and jobs within the workspace.

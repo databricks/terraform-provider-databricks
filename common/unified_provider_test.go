@@ -47,13 +47,28 @@ func TestWorkspaceIDValidateFunc(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:        "value with leading zero now accepted",
+			name:        "numeric value with leading zero rejected",
 			input:       "0123",
+			expectError: true,
+		},
+		{
+			name:        "numeric value with leading zero rejected - long form",
+			input:       "0470576644108500",
+			expectError: true,
+		},
+		{
+			name:        "single zero accepted",
+			input:       "0",
 			expectError: false,
 		},
 		{
 			name:        "valid arbitrary non-empty string",
 			input:       "abc123",
+			expectError: false,
+		},
+		{
+			name:        "connection ID with leading zero accepted",
+			input:       "0abc-def-123",
 			expectError: false,
 		},
 		{

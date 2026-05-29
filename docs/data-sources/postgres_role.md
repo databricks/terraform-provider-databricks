@@ -103,11 +103,4 @@ The following attributes are exported:
 * `identity_type` (string) - The type of the role. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
 * `membership_roles` (list of string) - An enum value for a standard role that this role is a member of
 * `postgres_role` (string) - The name of the Postgres role
-* `role_id` (string) - The short identifier of the role, suitable for showing to the users.
-  For a role with name `projects/my-project/branches/my-branch/roles/my-role`,
-  the role_id is `my-role`.
-  
-  Use this field when building UI components that display roles to users (e.g., a drop-down
-  selector). Prefer showing `role_id` instead of the full resource name from `Role.name`,
-  which follows the `projects/{project_id}/branches/{branch_id}/roles/{role_id}` format
-  and is not user-friendly
+* `role_id` (string) - Part of the resource name

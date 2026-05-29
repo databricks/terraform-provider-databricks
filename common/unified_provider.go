@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
@@ -30,8 +31,31 @@ type ProviderConfig struct {
 // workspaceIDValidateFunc is used to validate the workspace ID for the provider configuration.
 // Accepts either a classic numeric workspace ID or a connection ID that the platform gateway
 // can disambiguate via the X-Databricks-Workspace-Id header.
+//
+// All-digit values are treated as classic numeric workspace IDs and must be in
+// canonical form: a leading zero (e.g. "0470576644108500") is rejected. Although
+// strconv.ParseInt tolerates leading zeros and the resource would still be created
+// in the correct workspace, the literal value is written verbatim to Terraform
+// state, where it no longer matches the canonical numeric form returned by the API.
+// That mismatch poisons every downstream string comparison (perpetual diffs,
+// failed workspace_id reconciliation). Non-numeric connection IDs are left
+// untouched so the platform gateway can disambiguate them server-side.
 func workspaceIDValidateFunc() func(interface{}, string) ([]string, []error) {
-	return validation.StringIsNotEmpty
+	return func(i interface{}, k string) ([]string, []error) {
+		if warnings, errs := validation.StringIsNotEmpty(i, k); len(errs) > 0 {
+			return warnings, errs
+		}
+		v := i.(string)
+		// Only constrain all-digit values; connection IDs (containing non-digit
+		// characters) are passed through unchanged.
+		if isNumericWorkspaceID(v) && len(v) > 1 && v[0] == '0' {
+			return nil, []error{fmt.Errorf(
+				"expected %s to be a numeric workspace ID without a leading zero, got %q; "+
+					"use the canonical numeric form (e.g. %q)",
+				k, v, strings.TrimLeft(v, "0"))}
+		}
+		return nil, nil
+	}
 }
 
 // AddNamespaceInSchema adds the provider_config schema to the given schema map.

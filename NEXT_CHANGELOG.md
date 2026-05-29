@@ -10,6 +10,8 @@
 
 ### Documentation
 
+* Document `STORAGE_OPTIMIZED` endpoint type for `databricks_vector_search_endpoint` ([#5765](https://github.com/databricks/terraform-provider-databricks/issues/5765)).
+
 ### Exporter
 
 ### Internal Changes

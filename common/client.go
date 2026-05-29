@@ -508,39 +508,61 @@ func (c *DatabricksClient) AccountOrWorkspaceRequest(d *schema.ResourceData, acc
 	return wsCallback(ws)
 }
 
-// Get on path
-func (c *DatabricksClient) Get(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodGet, path, nil, nil, request, response, c.addApiPrefix, c.AddWorkspaceIdHeader)
+// Get on path. Extra visitors are appended after addApiPrefix; workspace-level
+// resources should pass c.AddWorkspaceIdHeader to send the routing header.
+func (c *DatabricksClient) Get(ctx context.Context, path string, request any, response any, visitors ...func(*http.Request) error) error {
+	return c.Do(ctx, http.MethodGet, path, nil, nil, request, response, prependVisitor(c.addApiPrefix, visitors)...)
 }
 
-// Post on path
-func (c *DatabricksClient) Post(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodPost, path, nil, nil, request, response, c.addApiPrefix, c.AddWorkspaceIdHeader)
+// Post on path. Extra visitors are appended after addApiPrefix; workspace-level
+// resources should pass c.AddWorkspaceIdHeader to send the routing header.
+func (c *DatabricksClient) Post(ctx context.Context, path string, request any, response any, visitors ...func(*http.Request) error) error {
+	return c.Do(ctx, http.MethodPost, path, nil, nil, request, response, prependVisitor(c.addApiPrefix, visitors)...)
 }
 
 // Delete on path. Ignores succesfull responses from the server.
-func (c *DatabricksClient) Delete(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodDelete, path, nil, nil, request, nil, c.addApiPrefix, c.AddWorkspaceIdHeader)
+// Extra visitors are appended after addApiPrefix; workspace-level resources
+// should pass c.AddWorkspaceIdHeader to send the routing header.
+func (c *DatabricksClient) Delete(ctx context.Context, path string, request any, visitors ...func(*http.Request) error) error {
+	return c.Do(ctx, http.MethodDelete, path, nil, nil, request, nil, prependVisitor(c.addApiPrefix, visitors)...)
 }
 
 // Delete on path. Deserializes the response into the response parameter.
-func (c *DatabricksClient) DeleteWithResponse(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodDelete, path, nil, nil, request, response, c.addApiPrefix, c.AddWorkspaceIdHeader)
+// Extra visitors are appended after addApiPrefix; workspace-level resources
+// should pass c.AddWorkspaceIdHeader to send the routing header.
+func (c *DatabricksClient) DeleteWithResponse(ctx context.Context, path string, request any, response any, visitors ...func(*http.Request) error) error {
+	return c.Do(ctx, http.MethodDelete, path, nil, nil, request, response, prependVisitor(c.addApiPrefix, visitors)...)
 }
 
 // Patch on path. Ignores succesfull responses from the server.
-func (c *DatabricksClient) Patch(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodPatch, path, nil, nil, request, nil, c.addApiPrefix, c.AddWorkspaceIdHeader)
+// Extra visitors are appended after addApiPrefix; workspace-level resources
+// should pass c.AddWorkspaceIdHeader to send the routing header.
+func (c *DatabricksClient) Patch(ctx context.Context, path string, request any, visitors ...func(*http.Request) error) error {
+	return c.Do(ctx, http.MethodPatch, path, nil, nil, request, nil, prependVisitor(c.addApiPrefix, visitors)...)
 }
 
 // Patch on path. Deserializes the response into the response parameter.
-func (c *DatabricksClient) PatchWithResponse(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodPatch, path, nil, nil, request, response, c.addApiPrefix, c.AddWorkspaceIdHeader)
+// Extra visitors are appended after addApiPrefix; workspace-level resources
+// should pass c.AddWorkspaceIdHeader to send the routing header.
+func (c *DatabricksClient) PatchWithResponse(ctx context.Context, path string, request any, response any, visitors ...func(*http.Request) error) error {
+	return c.Do(ctx, http.MethodPatch, path, nil, nil, request, response, prependVisitor(c.addApiPrefix, visitors)...)
 }
 
-// Put on path
-func (c *DatabricksClient) Put(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodPut, path, nil, nil, request, nil, c.addApiPrefix, c.AddWorkspaceIdHeader)
+// Put on path.
+// Extra visitors are appended after addApiPrefix; workspace-level resources
+// should pass c.AddWorkspaceIdHeader to send the routing header.
+func (c *DatabricksClient) Put(ctx context.Context, path string, request any, visitors ...func(*http.Request) error) error {
+	return c.Do(ctx, http.MethodPut, path, nil, nil, request, nil, prependVisitor(c.addApiPrefix, visitors)...)
+}
+
+// prependVisitor returns a visitor slice with head first, then the rest.
+// addApiPrefix must run first to translate the path; subsequent visitors see
+// the prefixed URL.
+func prependVisitor(head func(*http.Request) error, rest []func(*http.Request) error) []func(*http.Request) error {
+	out := make([]func(*http.Request) error, 0, 1+len(rest))
+	out = append(out, head)
+	out = append(out, rest...)
+	return out
 }
 
 const (
@@ -684,10 +706,20 @@ func (c *DatabricksClient) scimVisitorForLevel(apiLevel string) func(*http.Reque
 
 // Scim sets SCIM headers. The apiLevel parameter controls whether account-level
 // or workspace-level SCIM endpoints are used. Pass "" to infer from the provider host.
+//
+// SCIM is dual-mode: users/groups/service_principals can be addressed at either
+// the account or the workspace level. The X-Databricks-Workspace-Id routing
+// header is only meaningful for workspace-level calls — on account-level calls
+// the request targets /api/2.0/accounts/{account_id}/scim/v2/... and must not
+// be tagged with a workspace.
 func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request any, response any, apiLevel string) error {
+	visitors := []func(*http.Request) error{c.addApiPrefix, c.scimVisitorForLevel(apiLevel)}
+	if !isAccountLevelFromApiLevel(apiLevel, c) {
+		visitors = append(visitors, c.AddWorkspaceIdHeader)
+	}
 	return c.Do(ctx, method, path, map[string]string{
 		"Content-Type": "application/scim+json; charset=utf-8",
-	}, nil, request, response, c.addApiPrefix, c.scimVisitorForLevel(apiLevel), c.AddWorkspaceIdHeader)
+	}, nil, request, response, visitors...)
 }
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination

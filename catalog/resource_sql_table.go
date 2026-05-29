@@ -108,7 +108,7 @@ func NewSqlTablesAPI(ctx context.Context, m any) SqlTablesAPI {
 }
 
 func (a SqlTablesAPI) getTable(name string) (ti SqlTableInfo, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/tables/"+name, nil, &ti)
+	err = a.client.Get(a.context, "/unity-catalog/tables/"+name, nil, &ti, a.client.AddWorkspaceIdHeader)
 	// Copy returned properties & options to read-only attributes
 	ti.EffectiveProperties = ti.Properties
 	ti.Properties = nil

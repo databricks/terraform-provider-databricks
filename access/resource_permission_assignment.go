@@ -53,7 +53,7 @@ func (a PermissionAssignmentAPI) CreateOrUpdate(assignment permissionAssignmentE
 				},
 			},
 		}
-		err := a.client.Post(a.context, "/preview/permissionassignments", request, &principal)
+		err := a.client.Post(a.context, "/preview/permissionassignments", request, &principal, a.client.AddWorkspaceIdHeader)
 		if err != nil {
 			return principalInfo{}, err
 		}
@@ -69,7 +69,7 @@ func (a PermissionAssignmentAPI) CreateOrUpdate(assignment permissionAssignmentE
 
 func (a PermissionAssignmentAPI) Remove(principalId string) error {
 	path := fmt.Sprintf("/preview/permissionassignments/principals/%s", principalId)
-	return a.client.Delete(a.context, path, nil)
+	return a.client.Delete(a.context, path, nil, a.client.AddWorkspaceIdHeader)
 }
 
 type principalInfo struct {
@@ -121,7 +121,7 @@ func (l permissionAssignmentResponse) ForPrincipal(principalId int64) (res permi
 }
 
 func (a PermissionAssignmentAPI) List() (list permissionAssignmentResponse, err error) {
-	err = a.client.Get(a.context, "/preview/permissionassignments", nil, &list)
+	err = a.client.Get(a.context, "/preview/permissionassignments", nil, &list, a.client.AddWorkspaceIdHeader)
 	return
 }
 

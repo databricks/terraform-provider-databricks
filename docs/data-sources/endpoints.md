@@ -4,6 +4,8 @@ subcategory: "Provisioning"
 # databricks_endpoints Data Source
 [![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/account/endpoints)
+
 Endpoints datasource retrieves a list of all network connectivity endpoints for private access to Databricks workspaces.
 
 -> **Note** This resource can only be used with an account-level provider!

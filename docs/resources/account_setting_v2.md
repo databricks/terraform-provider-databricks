@@ -4,6 +4,8 @@ subcategory: "Settings"
 # databricks_account_setting_v2 Resource
 [![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/account/accountsettingsv2)
+
 Setting is a configurable value or control that determines how a feature or behavior works within the databricks platform.
 
 [//]: # (todo: add public link to metadata api after production doc link available)

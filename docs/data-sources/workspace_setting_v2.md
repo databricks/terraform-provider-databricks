@@ -4,6 +4,8 @@ subcategory: "Settings"
 # databricks_workspace_setting_v2 Data Source
 [![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/workspacesettingsv2)
+
 This data source can be used to get a single account setting. 
 
 ## Example Usage

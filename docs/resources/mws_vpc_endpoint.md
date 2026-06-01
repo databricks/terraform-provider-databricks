@@ -109,6 +109,8 @@ resource "databricks_mws_workspaces" "this" {
 
 ### Databricks on GCP usage
 
+~> On GCP, the provider must be authenticated with a Google-issued OIDC token (not a Databricks OAuth token), because creating or updating this resource triggers operations against your GCP project (such as validating the PSC endpoint). See [Authenticate with Databricks account API](../guides/gcp-workspace.md#authenticate-with-databricks-account-api) for setup instructions.
+
 Before using this resource, you will need to create the necessary Private Service Connect (PSC) connections on your Google Cloud VPC networks. You can see [Enable Private Service Connect for your workspace](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) for more details.
 
 Once you have created the necessary PSC connections, you need to register each of them via *this* Terraform resource, which calls out to the Databricks Account API.

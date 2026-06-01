@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -57,8 +56,6 @@ func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -130,9 +127,11 @@ type Tool struct {
 	// User specified id of the Tool.
 	ToolId types.String `tfsdk:"tool_id"`
 	// Tool type. Must be one of: "genie_space", "knowledge_assistant",
-	// "uc_function", "uc_connection", "app", "volume", "lakeview_dashboard",
-	// "serving_endpoint", "uc_table", "vector_search_index", "catalog",
-	// "schema", "supervisor_agent", "web_search".
+	// "uc_function", "uc_connection", "uc_mcp", "app", "volume", "dashboard",
+	// "serving_endpoint", "table", "vector_search_index", "catalog", "schema",
+	// "supervisor_agent", "web_search", "skill". The legacy values
+	// "lakeview_dashboard" and "uc_table" are also accepted and remain
+	// equivalent to "dashboard" and "table" respectively.
 	ToolType types.String `tfsdk:"tool_type"`
 
 	UcConnection types.Object `tfsdk:"uc_connection"`
@@ -344,7 +343,7 @@ func (m Tool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["tool_id"] = attrs["tool_id"].SetRequired()
 	attrs["tool_id"] = attrs["tool_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["tool_id"] = attrs["tool_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["tool_id"] = attrs["tool_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["tool_type"] = attrs["tool_type"].SetRequired()
 	attrs["uc_connection"] = attrs["uc_connection"].SetOptional()
 	attrs["uc_function"] = attrs["uc_function"].SetOptional()

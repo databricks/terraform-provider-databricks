@@ -146,26 +146,26 @@ type InstancePoolsAPI struct {
 // Create creates the instance pool to given the instance pool configuration
 func (a InstancePoolsAPI) Create(instancePool InstancePool) (InstancePoolAndStats, error) {
 	var instancePoolInfo InstancePoolAndStats
-	err := a.client.Post(a.context, "/instance-pools/create", instancePool, &instancePoolInfo)
+	err := a.client.Post(a.context, "/instance-pools/create", instancePool, &instancePoolInfo, a.client.AddWorkspaceIdHeader)
 	return instancePoolInfo, err
 }
 
 // Update edits the configuration of a instance pool to match the provided attributes and size
 func (a InstancePoolsAPI) Update(ip InstancePool) error {
-	return a.client.Post(a.context, "/instance-pools/edit", ip, nil)
+	return a.client.Post(a.context, "/instance-pools/edit", ip, nil, a.client.AddWorkspaceIdHeader)
 }
 
 // Read retrieves the information for a instance pool given its identifier
 func (a InstancePoolsAPI) Read(instancePoolID string) (ip InstancePool, err error) {
 	err = a.client.Get(a.context, "/instance-pools/get", map[string]string{
 		"instance_pool_id": instancePoolID,
-	}, &ip)
+	}, &ip, a.client.AddWorkspaceIdHeader)
 	return
 }
 
 // List retrieves the list of existing instance pools
 func (a InstancePoolsAPI) List() (ipl InstancePoolList, err error) {
-	err = a.client.Get(a.context, "/instance-pools/list", nil, &ipl)
+	err = a.client.Get(a.context, "/instance-pools/list", nil, &ipl, a.client.AddWorkspaceIdHeader)
 	return
 }
 
@@ -173,7 +173,7 @@ func (a InstancePoolsAPI) List() (ipl InstancePoolList, err error) {
 func (a InstancePoolsAPI) Delete(instancePoolID string) error {
 	return a.client.Post(a.context, "/instance-pools/delete", map[string]string{
 		"instance_pool_id": instancePoolID,
-	}, nil)
+	}, nil, a.client.AddWorkspaceIdHeader)
 }
 
 // ResourceInstancePool ...

@@ -1161,7 +1161,7 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Me",
+			Resource: "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 			Response: `{}`, // we just need a JSON for this
 		},
 	}, func(ctx context.Context, wsClient *common.DatabricksClient) {
@@ -1200,7 +1200,7 @@ func updateWorkspaceScimFixture(t *testing.T, fixtures []qa.HTTPFixture, state m
 	scimAPI := []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Me",
+			Resource: "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 			Response: `{}`, // we just need a JSON for this
 		},
 	}
@@ -1246,7 +1246,7 @@ func updateWorkspaceScimFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixture
 	scimAPI := []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Me",
+			Resource: "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 			Response: `{}`, // we just need a JSON for this
 		},
 	}

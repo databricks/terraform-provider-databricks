@@ -744,8 +744,11 @@ func (m GetStableUrlRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListFailoverGroupsRequest_SdkV2 struct {
-	// Maximum number of failover groups to return per page. Default: 50,
-	// maximum: 100.
+	// Maximum number of failover groups to return per page: - when set to a
+	// value greater than 0, the page length is the minimum of this value and a
+	// server configured value; - when set to 0 or unset, the page length is set
+	// to a server configured value (recommended); - when set to a value less
+	// than 0, an invalid parameter error is returned.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Page token received from a previous ListFailoverGroups call. Provide this
 	// to retrieve the subsequent page.
@@ -901,8 +904,11 @@ func (m *ListFailoverGroupsResponse_SdkV2) SetFailoverGroups(ctx context.Context
 }
 
 type ListStableUrlsRequest_SdkV2 struct {
-	// Maximum number of stable URLs to return per page. Default: 50, maximum:
-	// 100.
+	// Maximum number of stable URLs to return per page: - when set to a value
+	// greater than 0, the page length is the minimum of this value and a server
+	// configured value; - when set to 0 or unset, the page length is set to a
+	// server configured value (recommended); - when set to a value less than 0,
+	// an invalid parameter error is returned.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Page token received from a previous ListStableUrls call. Provide this to
 	// retrieve the subsequent page.
@@ -1200,6 +1206,13 @@ func (m LocationMappingEntry_SdkV2) Type(ctx context.Context) attr.Type {
 // A stable URL provides a failover-aware endpoint for accessing a workspace.
 // Its lifecycle is independent of any failover group.
 type StableUrl_SdkV2 struct {
+	// Fully qualified resource name of the FailoverGroup this stable URL is
+	// currently linked to, in the format
+	// `accounts/{account_id}/failover-groups/{failover_group_id}`. Empty when
+	// the stable URL is not attached to any failover group. Server-controlled:
+	// written by CreateFailoverGroup / UpdateFailoverGroup on link, cleared by
+	// DeleteFailoverGroup / UpdateFailoverGroup on unlink.
+	FailoverGroupName types.String `tfsdk:"failover_group_name"`
 	// The workspace this stable URL is initially bound to. Used only in Create
 	// requests to associate the stable URL with a workspace. Not returned in
 	// responses. Mirrors FailoverGroup.initial_primary_region semantics.
@@ -1229,6 +1242,7 @@ func (to *StableUrl_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Stable
 }
 
 func (m StableUrl_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["failover_group_name"] = attrs["failover_group_name"].SetComputed()
 	attrs["initial_workspace_id"] = attrs["initial_workspace_id"].SetRequired()
 	attrs["initial_workspace_id"] = attrs["initial_workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
@@ -1257,6 +1271,7 @@ func (m StableUrl_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"failover_group_name":  m.FailoverGroupName,
 			"initial_workspace_id": m.InitialWorkspaceId,
 			"name":                 m.Name,
 			"url":                  m.Url,
@@ -1267,6 +1282,7 @@ func (m StableUrl_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m StableUrl_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"failover_group_name":  types.StringType,
 			"initial_workspace_id": types.StringType,
 			"name":                 types.StringType,
 			"url":                  types.StringType,

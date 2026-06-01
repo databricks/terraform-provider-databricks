@@ -83,16 +83,6 @@ func notebookWithProviderBlock(providerAttrs, providerConfig string) string {
 // Validation Tests
 // ==========================================
 
-// TestMwsAccWorkspaceIDHttp_InvalidWorkspaceID tests that
-// invalid workspace_id values in the provider block are rejected.
-func TestMwsAccWorkspaceIDHttp_InvalidWorkspaceID(t *testing.T) {
-	AccountLevel(t, Step{
-		Template:    notebookWithProviderBlock(`workspace_id = "invalid"`, ""),
-		ExpectError: regexp.MustCompile(`failed to parse workspace_id`),
-		PlanOnly:    true,
-	})
-}
-
 // ==========================================
 // Workspace-Level Lifecycle Tests
 // ==========================================

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -89,7 +90,7 @@ func ResourceSecretACL() common.Resource {
 			// This prevents users from accidentally locking themselves out of managing the secret scope.
 			permission := d.Get("permission").(string)
 			if permission == string(workspace.AclPermissionManage) {
-				me, err := w.CurrentUser.Me(ctx)
+				me, err := w.CurrentUser.Me(ctx, iam.MeRequest{ExcludedAttributes: "entitlements"})
 				if err != nil {
 					return err
 				}

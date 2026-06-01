@@ -50,6 +50,10 @@ type Setting struct {
 	// effective_aibi_dashboard_embedding_approved_domains for final setting
 	// value.
 	AibiDashboardEmbeddingApprovedDomains types.Object `tfsdk:"aibi_dashboard_embedding_approved_domains"`
+	// Setting value for allowed_apps_user_api_scopes setting. This is the
+	// setting value set by consumers, check
+	// effective_allowed_apps_user_api_scopes for final setting value.
+	AllowedAppsUserApiScopes types.Object `tfsdk:"allowed_apps_user_api_scopes"`
 	// Setting value for automatic_cluster_update_workspace setting. This is the
 	// setting value set by consumers, check
 	// effective_automatic_cluster_update_workspace for final setting value.
@@ -65,6 +69,10 @@ type Setting struct {
 	// setting. This is the final effective value of setting. To set a value use
 	// aibi_dashboard_embedding_approved_domains.
 	EffectiveAibiDashboardEmbeddingApprovedDomains types.Object `tfsdk:"effective_aibi_dashboard_embedding_approved_domains"`
+	// Effective setting value for allowed_apps_user_api_scopes setting. This is
+	// the final effective value of setting. To set a value use
+	// allowed_apps_user_api_scopes.
+	EffectiveAllowedAppsUserApiScopes types.Object `tfsdk:"effective_allowed_apps_user_api_scopes"`
 	// Effective setting value for automatic_cluster_update_workspace setting.
 	// This is the final effective value of setting. To set a value use
 	// automatic_cluster_update_workspace.
@@ -75,6 +83,10 @@ type Setting struct {
 	// Effective setting value for integer type setting. This is the final
 	// effective value of setting. To set a value use integer_val.
 	EffectiveIntegerVal types.Object `tfsdk:"effective_integer_val"`
+	// Effective setting value for operational_email_custom_recipient setting.
+	// This is the final effective value of setting. To set a value use
+	// operational_email_custom_recipient.
+	EffectiveOperationalEmailCustomRecipient types.Object `tfsdk:"effective_operational_email_custom_recipient"`
 	// Effective setting value for personal_compute setting. This is the final
 	// effective value of setting. To set a value use personal_compute.
 	EffectivePersonalCompute types.Object `tfsdk:"effective_personal_compute"`
@@ -90,6 +102,10 @@ type Setting struct {
 	IntegerVal types.Object `tfsdk:"integer_val"`
 	// Name of the setting.
 	Name types.String `tfsdk:"name"`
+	// Setting value for operational_email_custom_recipient setting. This is the
+	// setting value set by consumers, check
+	// effective_operational_email_custom_recipient for final setting value.
+	OperationalEmailCustomRecipient types.Object `tfsdk:"operational_email_custom_recipient"`
 	// Setting value for personal_compute setting. This is the setting value set
 	// by consumers, check effective_personal_compute for final setting value.
 	PersonalCompute types.Object `tfsdk:"personal_compute"`
@@ -113,17 +129,21 @@ func (m Setting) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 	return map[string]reflect.Type{
 		"aibi_dashboard_embedding_access_policy":              reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}),
 		"aibi_dashboard_embedding_approved_domains":           reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}),
+		"allowed_apps_user_api_scopes":                        reflect.TypeOf(settingsv2_tf.AllowedAppsUserApiScopesMessage{}),
 		"automatic_cluster_update_workspace":                  reflect.TypeOf(settingsv2_tf.ClusterAutoRestartMessage{}),
 		"boolean_val":                                         reflect.TypeOf(settingsv2_tf.BooleanMessage{}),
 		"effective_aibi_dashboard_embedding_access_policy":    reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}),
 		"effective_aibi_dashboard_embedding_approved_domains": reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}),
+		"effective_allowed_apps_user_api_scopes":              reflect.TypeOf(settingsv2_tf.AllowedAppsUserApiScopesMessage{}),
 		"effective_automatic_cluster_update_workspace":        reflect.TypeOf(settingsv2_tf.ClusterAutoRestartMessage{}),
 		"effective_boolean_val":                               reflect.TypeOf(settingsv2_tf.BooleanMessage{}),
 		"effective_integer_val":                               reflect.TypeOf(settingsv2_tf.IntegerMessage{}),
+		"effective_operational_email_custom_recipient":        reflect.TypeOf(settingsv2_tf.OperationalEmailCustomRecipientMessage{}),
 		"effective_personal_compute":                          reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
 		"effective_restrict_workspace_admins":                 reflect.TypeOf(settingsv2_tf.RestrictWorkspaceAdminsMessage{}),
 		"effective_string_val":                                reflect.TypeOf(settingsv2_tf.StringMessage{}),
 		"integer_val":                                         reflect.TypeOf(settingsv2_tf.IntegerMessage{}),
+		"operational_email_custom_recipient":                  reflect.TypeOf(settingsv2_tf.OperationalEmailCustomRecipientMessage{}),
 		"personal_compute":                                    reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
 		"restrict_workspace_admins":                           reflect.TypeOf(settingsv2_tf.RestrictWorkspaceAdminsMessage{}),
 		"string_val":                                          reflect.TypeOf(settingsv2_tf.StringMessage{}),
@@ -141,18 +161,22 @@ func (m Setting) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"aibi_dashboard_embedding_access_policy": m.AibiDashboardEmbeddingAccessPolicy,
 			"aibi_dashboard_embedding_approved_domains":           m.AibiDashboardEmbeddingApprovedDomains,
+			"allowed_apps_user_api_scopes":                        m.AllowedAppsUserApiScopes,
 			"automatic_cluster_update_workspace":                  m.AutomaticClusterUpdateWorkspace,
 			"boolean_val":                                         m.BooleanVal,
 			"effective_aibi_dashboard_embedding_access_policy":    m.EffectiveAibiDashboardEmbeddingAccessPolicy,
 			"effective_aibi_dashboard_embedding_approved_domains": m.EffectiveAibiDashboardEmbeddingApprovedDomains,
+			"effective_allowed_apps_user_api_scopes":              m.EffectiveAllowedAppsUserApiScopes,
 			"effective_automatic_cluster_update_workspace":        m.EffectiveAutomaticClusterUpdateWorkspace,
 			"effective_boolean_val":                               m.EffectiveBooleanVal,
 			"effective_integer_val":                               m.EffectiveIntegerVal,
+			"effective_operational_email_custom_recipient":        m.EffectiveOperationalEmailCustomRecipient,
 			"effective_personal_compute":                          m.EffectivePersonalCompute,
 			"effective_restrict_workspace_admins":                 m.EffectiveRestrictWorkspaceAdmins,
 			"effective_string_val":                                m.EffectiveStringVal,
 			"integer_val":                                         m.IntegerVal,
 			"name":                                                m.Name,
+			"operational_email_custom_recipient":                  m.OperationalEmailCustomRecipient,
 			"personal_compute":                                    m.PersonalCompute,
 			"restrict_workspace_admins":                           m.RestrictWorkspaceAdmins,
 			"string_val":                                          m.StringVal,
@@ -166,18 +190,22 @@ func (m Setting) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"aibi_dashboard_embedding_access_policy": settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}.Type(ctx),
 			"aibi_dashboard_embedding_approved_domains":           settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}.Type(ctx),
+			"allowed_apps_user_api_scopes":                        settingsv2_tf.AllowedAppsUserApiScopesMessage{}.Type(ctx),
 			"automatic_cluster_update_workspace":                  settingsv2_tf.ClusterAutoRestartMessage{}.Type(ctx),
 			"boolean_val":                                         settingsv2_tf.BooleanMessage{}.Type(ctx),
 			"effective_aibi_dashboard_embedding_access_policy":    settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}.Type(ctx),
 			"effective_aibi_dashboard_embedding_approved_domains": settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}.Type(ctx),
+			"effective_allowed_apps_user_api_scopes":              settingsv2_tf.AllowedAppsUserApiScopesMessage{}.Type(ctx),
 			"effective_automatic_cluster_update_workspace":        settingsv2_tf.ClusterAutoRestartMessage{}.Type(ctx),
 			"effective_boolean_val":                               settingsv2_tf.BooleanMessage{}.Type(ctx),
 			"effective_integer_val":                               settingsv2_tf.IntegerMessage{}.Type(ctx),
+			"effective_operational_email_custom_recipient":        settingsv2_tf.OperationalEmailCustomRecipientMessage{}.Type(ctx),
 			"effective_personal_compute":                          settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
 			"effective_restrict_workspace_admins":                 settingsv2_tf.RestrictWorkspaceAdminsMessage{}.Type(ctx),
 			"effective_string_val":                                settingsv2_tf.StringMessage{}.Type(ctx),
 			"integer_val":                                         settingsv2_tf.IntegerMessage{}.Type(ctx),
 			"name":                                                types.StringType,
+			"operational_email_custom_recipient":                  settingsv2_tf.OperationalEmailCustomRecipientMessage{}.Type(ctx),
 			"personal_compute":                                    settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
 			"restrict_workspace_admins":                           settingsv2_tf.RestrictWorkspaceAdminsMessage{}.Type(ctx),
 			"string_val":                                          settingsv2_tf.StringMessage{}.Type(ctx),
@@ -204,6 +232,15 @@ func (to *Setting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sett
 				// Recursively sync the fields of AibiDashboardEmbeddingApprovedDomains
 				toAibiDashboardEmbeddingApprovedDomains.SyncFieldsDuringCreateOrUpdate(ctx, fromAibiDashboardEmbeddingApprovedDomains)
 				to.SetAibiDashboardEmbeddingApprovedDomains(ctx, toAibiDashboardEmbeddingApprovedDomains)
+			}
+		}
+	}
+	if !from.AllowedAppsUserApiScopes.IsNull() && !from.AllowedAppsUserApiScopes.IsUnknown() {
+		if toAllowedAppsUserApiScopes, ok := to.GetAllowedAppsUserApiScopes(ctx); ok {
+			if fromAllowedAppsUserApiScopes, ok := from.GetAllowedAppsUserApiScopes(ctx); ok {
+				// Recursively sync the fields of AllowedAppsUserApiScopes
+				toAllowedAppsUserApiScopes.SyncFieldsDuringCreateOrUpdate(ctx, fromAllowedAppsUserApiScopes)
+				to.SetAllowedAppsUserApiScopes(ctx, toAllowedAppsUserApiScopes)
 			}
 		}
 	}
@@ -243,6 +280,15 @@ func (to *Setting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sett
 			}
 		}
 	}
+	if !from.EffectiveAllowedAppsUserApiScopes.IsNull() && !from.EffectiveAllowedAppsUserApiScopes.IsUnknown() {
+		if toEffectiveAllowedAppsUserApiScopes, ok := to.GetEffectiveAllowedAppsUserApiScopes(ctx); ok {
+			if fromEffectiveAllowedAppsUserApiScopes, ok := from.GetEffectiveAllowedAppsUserApiScopes(ctx); ok {
+				// Recursively sync the fields of EffectiveAllowedAppsUserApiScopes
+				toEffectiveAllowedAppsUserApiScopes.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveAllowedAppsUserApiScopes)
+				to.SetEffectiveAllowedAppsUserApiScopes(ctx, toEffectiveAllowedAppsUserApiScopes)
+			}
+		}
+	}
 	if !from.EffectiveAutomaticClusterUpdateWorkspace.IsNull() && !from.EffectiveAutomaticClusterUpdateWorkspace.IsUnknown() {
 		if toEffectiveAutomaticClusterUpdateWorkspace, ok := to.GetEffectiveAutomaticClusterUpdateWorkspace(ctx); ok {
 			if fromEffectiveAutomaticClusterUpdateWorkspace, ok := from.GetEffectiveAutomaticClusterUpdateWorkspace(ctx); ok {
@@ -267,6 +313,15 @@ func (to *Setting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sett
 				// Recursively sync the fields of EffectiveIntegerVal
 				toEffectiveIntegerVal.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveIntegerVal)
 				to.SetEffectiveIntegerVal(ctx, toEffectiveIntegerVal)
+			}
+		}
+	}
+	if !from.EffectiveOperationalEmailCustomRecipient.IsNull() && !from.EffectiveOperationalEmailCustomRecipient.IsUnknown() {
+		if toEffectiveOperationalEmailCustomRecipient, ok := to.GetEffectiveOperationalEmailCustomRecipient(ctx); ok {
+			if fromEffectiveOperationalEmailCustomRecipient, ok := from.GetEffectiveOperationalEmailCustomRecipient(ctx); ok {
+				// Recursively sync the fields of EffectiveOperationalEmailCustomRecipient
+				toEffectiveOperationalEmailCustomRecipient.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveOperationalEmailCustomRecipient)
+				to.SetEffectiveOperationalEmailCustomRecipient(ctx, toEffectiveOperationalEmailCustomRecipient)
 			}
 		}
 	}
@@ -303,6 +358,15 @@ func (to *Setting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sett
 				// Recursively sync the fields of IntegerVal
 				toIntegerVal.SyncFieldsDuringCreateOrUpdate(ctx, fromIntegerVal)
 				to.SetIntegerVal(ctx, toIntegerVal)
+			}
+		}
+	}
+	if !from.OperationalEmailCustomRecipient.IsNull() && !from.OperationalEmailCustomRecipient.IsUnknown() {
+		if toOperationalEmailCustomRecipient, ok := to.GetOperationalEmailCustomRecipient(ctx); ok {
+			if fromOperationalEmailCustomRecipient, ok := from.GetOperationalEmailCustomRecipient(ctx); ok {
+				// Recursively sync the fields of OperationalEmailCustomRecipient
+				toOperationalEmailCustomRecipient.SyncFieldsDuringCreateOrUpdate(ctx, fromOperationalEmailCustomRecipient)
+				to.SetOperationalEmailCustomRecipient(ctx, toOperationalEmailCustomRecipient)
 			}
 		}
 	}
@@ -355,6 +419,14 @@ func (to *Setting) SyncFieldsDuringRead(ctx context.Context, from Setting) {
 			}
 		}
 	}
+	if !from.AllowedAppsUserApiScopes.IsNull() && !from.AllowedAppsUserApiScopes.IsUnknown() {
+		if toAllowedAppsUserApiScopes, ok := to.GetAllowedAppsUserApiScopes(ctx); ok {
+			if fromAllowedAppsUserApiScopes, ok := from.GetAllowedAppsUserApiScopes(ctx); ok {
+				toAllowedAppsUserApiScopes.SyncFieldsDuringRead(ctx, fromAllowedAppsUserApiScopes)
+				to.SetAllowedAppsUserApiScopes(ctx, toAllowedAppsUserApiScopes)
+			}
+		}
+	}
 	if !from.AutomaticClusterUpdateWorkspace.IsNull() && !from.AutomaticClusterUpdateWorkspace.IsUnknown() {
 		if toAutomaticClusterUpdateWorkspace, ok := to.GetAutomaticClusterUpdateWorkspace(ctx); ok {
 			if fromAutomaticClusterUpdateWorkspace, ok := from.GetAutomaticClusterUpdateWorkspace(ctx); ok {
@@ -387,6 +459,14 @@ func (to *Setting) SyncFieldsDuringRead(ctx context.Context, from Setting) {
 			}
 		}
 	}
+	if !from.EffectiveAllowedAppsUserApiScopes.IsNull() && !from.EffectiveAllowedAppsUserApiScopes.IsUnknown() {
+		if toEffectiveAllowedAppsUserApiScopes, ok := to.GetEffectiveAllowedAppsUserApiScopes(ctx); ok {
+			if fromEffectiveAllowedAppsUserApiScopes, ok := from.GetEffectiveAllowedAppsUserApiScopes(ctx); ok {
+				toEffectiveAllowedAppsUserApiScopes.SyncFieldsDuringRead(ctx, fromEffectiveAllowedAppsUserApiScopes)
+				to.SetEffectiveAllowedAppsUserApiScopes(ctx, toEffectiveAllowedAppsUserApiScopes)
+			}
+		}
+	}
 	if !from.EffectiveAutomaticClusterUpdateWorkspace.IsNull() && !from.EffectiveAutomaticClusterUpdateWorkspace.IsUnknown() {
 		if toEffectiveAutomaticClusterUpdateWorkspace, ok := to.GetEffectiveAutomaticClusterUpdateWorkspace(ctx); ok {
 			if fromEffectiveAutomaticClusterUpdateWorkspace, ok := from.GetEffectiveAutomaticClusterUpdateWorkspace(ctx); ok {
@@ -408,6 +488,14 @@ func (to *Setting) SyncFieldsDuringRead(ctx context.Context, from Setting) {
 			if fromEffectiveIntegerVal, ok := from.GetEffectiveIntegerVal(ctx); ok {
 				toEffectiveIntegerVal.SyncFieldsDuringRead(ctx, fromEffectiveIntegerVal)
 				to.SetEffectiveIntegerVal(ctx, toEffectiveIntegerVal)
+			}
+		}
+	}
+	if !from.EffectiveOperationalEmailCustomRecipient.IsNull() && !from.EffectiveOperationalEmailCustomRecipient.IsUnknown() {
+		if toEffectiveOperationalEmailCustomRecipient, ok := to.GetEffectiveOperationalEmailCustomRecipient(ctx); ok {
+			if fromEffectiveOperationalEmailCustomRecipient, ok := from.GetEffectiveOperationalEmailCustomRecipient(ctx); ok {
+				toEffectiveOperationalEmailCustomRecipient.SyncFieldsDuringRead(ctx, fromEffectiveOperationalEmailCustomRecipient)
+				to.SetEffectiveOperationalEmailCustomRecipient(ctx, toEffectiveOperationalEmailCustomRecipient)
 			}
 		}
 	}
@@ -443,6 +531,14 @@ func (to *Setting) SyncFieldsDuringRead(ctx context.Context, from Setting) {
 			}
 		}
 	}
+	if !from.OperationalEmailCustomRecipient.IsNull() && !from.OperationalEmailCustomRecipient.IsUnknown() {
+		if toOperationalEmailCustomRecipient, ok := to.GetOperationalEmailCustomRecipient(ctx); ok {
+			if fromOperationalEmailCustomRecipient, ok := from.GetOperationalEmailCustomRecipient(ctx); ok {
+				toOperationalEmailCustomRecipient.SyncFieldsDuringRead(ctx, fromOperationalEmailCustomRecipient)
+				to.SetOperationalEmailCustomRecipient(ctx, toOperationalEmailCustomRecipient)
+			}
+		}
+	}
 	if !from.PersonalCompute.IsNull() && !from.PersonalCompute.IsUnknown() {
 		if toPersonalCompute, ok := to.GetPersonalCompute(ctx); ok {
 			if fromPersonalCompute, ok := from.GetPersonalCompute(ctx); ok {
@@ -472,18 +568,22 @@ func (to *Setting) SyncFieldsDuringRead(ctx context.Context, from Setting) {
 func (m Setting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["aibi_dashboard_embedding_access_policy"] = attrs["aibi_dashboard_embedding_access_policy"].SetOptional()
 	attrs["aibi_dashboard_embedding_approved_domains"] = attrs["aibi_dashboard_embedding_approved_domains"].SetOptional()
+	attrs["allowed_apps_user_api_scopes"] = attrs["allowed_apps_user_api_scopes"].SetOptional()
 	attrs["automatic_cluster_update_workspace"] = attrs["automatic_cluster_update_workspace"].SetOptional()
 	attrs["boolean_val"] = attrs["boolean_val"].SetOptional()
 	attrs["effective_aibi_dashboard_embedding_access_policy"] = attrs["effective_aibi_dashboard_embedding_access_policy"].SetOptional()
 	attrs["effective_aibi_dashboard_embedding_approved_domains"] = attrs["effective_aibi_dashboard_embedding_approved_domains"].SetOptional()
+	attrs["effective_allowed_apps_user_api_scopes"] = attrs["effective_allowed_apps_user_api_scopes"].SetComputed()
 	attrs["effective_automatic_cluster_update_workspace"] = attrs["effective_automatic_cluster_update_workspace"].SetOptional()
 	attrs["effective_boolean_val"] = attrs["effective_boolean_val"].SetComputed()
 	attrs["effective_integer_val"] = attrs["effective_integer_val"].SetComputed()
+	attrs["effective_operational_email_custom_recipient"] = attrs["effective_operational_email_custom_recipient"].SetComputed()
 	attrs["effective_personal_compute"] = attrs["effective_personal_compute"].SetOptional()
 	attrs["effective_restrict_workspace_admins"] = attrs["effective_restrict_workspace_admins"].SetOptional()
 	attrs["effective_string_val"] = attrs["effective_string_val"].SetComputed()
 	attrs["integer_val"] = attrs["integer_val"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["operational_email_custom_recipient"] = attrs["operational_email_custom_recipient"].SetOptional()
 	attrs["personal_compute"] = attrs["personal_compute"].SetOptional()
 	attrs["restrict_workspace_admins"] = attrs["restrict_workspace_admins"].SetOptional()
 	attrs["string_val"] = attrs["string_val"].SetOptional()
@@ -540,6 +640,31 @@ func (m *Setting) GetAibiDashboardEmbeddingApprovedDomains(ctx context.Context) 
 func (m *Setting) SetAibiDashboardEmbeddingApprovedDomains(ctx context.Context, v settingsv2_tf.AibiDashboardEmbeddingApprovedDomains) {
 	vs := v.ToObjectValue(ctx)
 	m.AibiDashboardEmbeddingApprovedDomains = vs
+}
+
+// GetAllowedAppsUserApiScopes returns the value of the AllowedAppsUserApiScopes field in Setting as
+// a settingsv2_tf.AllowedAppsUserApiScopesMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Setting) GetAllowedAppsUserApiScopes(ctx context.Context) (settingsv2_tf.AllowedAppsUserApiScopesMessage, bool) {
+	var e settingsv2_tf.AllowedAppsUserApiScopesMessage
+	if m.AllowedAppsUserApiScopes.IsNull() || m.AllowedAppsUserApiScopes.IsUnknown() {
+		return e, false
+	}
+	var v settingsv2_tf.AllowedAppsUserApiScopesMessage
+	d := m.AllowedAppsUserApiScopes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllowedAppsUserApiScopes sets the value of the AllowedAppsUserApiScopes field in Setting.
+func (m *Setting) SetAllowedAppsUserApiScopes(ctx context.Context, v settingsv2_tf.AllowedAppsUserApiScopesMessage) {
+	vs := v.ToObjectValue(ctx)
+	m.AllowedAppsUserApiScopes = vs
 }
 
 // GetAutomaticClusterUpdateWorkspace returns the value of the AutomaticClusterUpdateWorkspace field in Setting as
@@ -642,6 +767,31 @@ func (m *Setting) SetEffectiveAibiDashboardEmbeddingApprovedDomains(ctx context.
 	m.EffectiveAibiDashboardEmbeddingApprovedDomains = vs
 }
 
+// GetEffectiveAllowedAppsUserApiScopes returns the value of the EffectiveAllowedAppsUserApiScopes field in Setting as
+// a settingsv2_tf.AllowedAppsUserApiScopesMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Setting) GetEffectiveAllowedAppsUserApiScopes(ctx context.Context) (settingsv2_tf.AllowedAppsUserApiScopesMessage, bool) {
+	var e settingsv2_tf.AllowedAppsUserApiScopesMessage
+	if m.EffectiveAllowedAppsUserApiScopes.IsNull() || m.EffectiveAllowedAppsUserApiScopes.IsUnknown() {
+		return e, false
+	}
+	var v settingsv2_tf.AllowedAppsUserApiScopesMessage
+	d := m.EffectiveAllowedAppsUserApiScopes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectiveAllowedAppsUserApiScopes sets the value of the EffectiveAllowedAppsUserApiScopes field in Setting.
+func (m *Setting) SetEffectiveAllowedAppsUserApiScopes(ctx context.Context, v settingsv2_tf.AllowedAppsUserApiScopesMessage) {
+	vs := v.ToObjectValue(ctx)
+	m.EffectiveAllowedAppsUserApiScopes = vs
+}
+
 // GetEffectiveAutomaticClusterUpdateWorkspace returns the value of the EffectiveAutomaticClusterUpdateWorkspace field in Setting as
 // a settingsv2_tf.ClusterAutoRestartMessage value.
 // If the field is unknown or null, the boolean return value is false.
@@ -715,6 +865,31 @@ func (m *Setting) GetEffectiveIntegerVal(ctx context.Context) (settingsv2_tf.Int
 func (m *Setting) SetEffectiveIntegerVal(ctx context.Context, v settingsv2_tf.IntegerMessage) {
 	vs := v.ToObjectValue(ctx)
 	m.EffectiveIntegerVal = vs
+}
+
+// GetEffectiveOperationalEmailCustomRecipient returns the value of the EffectiveOperationalEmailCustomRecipient field in Setting as
+// a settingsv2_tf.OperationalEmailCustomRecipientMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Setting) GetEffectiveOperationalEmailCustomRecipient(ctx context.Context) (settingsv2_tf.OperationalEmailCustomRecipientMessage, bool) {
+	var e settingsv2_tf.OperationalEmailCustomRecipientMessage
+	if m.EffectiveOperationalEmailCustomRecipient.IsNull() || m.EffectiveOperationalEmailCustomRecipient.IsUnknown() {
+		return e, false
+	}
+	var v settingsv2_tf.OperationalEmailCustomRecipientMessage
+	d := m.EffectiveOperationalEmailCustomRecipient.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectiveOperationalEmailCustomRecipient sets the value of the EffectiveOperationalEmailCustomRecipient field in Setting.
+func (m *Setting) SetEffectiveOperationalEmailCustomRecipient(ctx context.Context, v settingsv2_tf.OperationalEmailCustomRecipientMessage) {
+	vs := v.ToObjectValue(ctx)
+	m.EffectiveOperationalEmailCustomRecipient = vs
 }
 
 // GetEffectivePersonalCompute returns the value of the EffectivePersonalCompute field in Setting as
@@ -815,6 +990,31 @@ func (m *Setting) GetIntegerVal(ctx context.Context) (settingsv2_tf.IntegerMessa
 func (m *Setting) SetIntegerVal(ctx context.Context, v settingsv2_tf.IntegerMessage) {
 	vs := v.ToObjectValue(ctx)
 	m.IntegerVal = vs
+}
+
+// GetOperationalEmailCustomRecipient returns the value of the OperationalEmailCustomRecipient field in Setting as
+// a settingsv2_tf.OperationalEmailCustomRecipientMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Setting) GetOperationalEmailCustomRecipient(ctx context.Context) (settingsv2_tf.OperationalEmailCustomRecipientMessage, bool) {
+	var e settingsv2_tf.OperationalEmailCustomRecipientMessage
+	if m.OperationalEmailCustomRecipient.IsNull() || m.OperationalEmailCustomRecipient.IsUnknown() {
+		return e, false
+	}
+	var v settingsv2_tf.OperationalEmailCustomRecipientMessage
+	d := m.OperationalEmailCustomRecipient.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOperationalEmailCustomRecipient sets the value of the OperationalEmailCustomRecipient field in Setting.
+func (m *Setting) SetOperationalEmailCustomRecipient(ctx context.Context, v settingsv2_tf.OperationalEmailCustomRecipientMessage) {
+	vs := v.ToObjectValue(ctx)
+	m.OperationalEmailCustomRecipient = vs
 }
 
 // GetPersonalCompute returns the value of the PersonalCompute field in Setting as

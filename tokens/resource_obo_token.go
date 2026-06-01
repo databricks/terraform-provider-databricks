@@ -26,17 +26,17 @@ type TokenManagementAPI struct {
 }
 
 func (a TokenManagementAPI) CreateTokenOnBehalfOfServicePrincipal(request OboToken) (token TokenResponse, err error) {
-	err = a.client.Post(a.context, "/token-management/on-behalf-of/tokens", request, &token)
+	err = a.client.Post(a.context, "/token-management/on-behalf-of/tokens", request, &token, a.client.AddWorkspaceIdHeader)
 	return
 }
 
 func (a TokenManagementAPI) Delete(tokenID string) error {
-	err := a.client.Delete(a.context, fmt.Sprintf("/token-management/tokens/%s", tokenID), map[string]any{})
+	err := a.client.Delete(a.context, fmt.Sprintf("/token-management/tokens/%s", tokenID), map[string]any{}, a.client.AddWorkspaceIdHeader)
 	return common.IgnoreNotFoundError(err) // ignore not found error on delete, as it is idempotent
 }
 
 func (a TokenManagementAPI) Read(tokenID string) (ti TokenResponse, err error) {
-	err = a.client.Get(a.context, fmt.Sprintf("/token-management/tokens/%s", tokenID), nil, &ti)
+	err = a.client.Get(a.context, fmt.Sprintf("/token-management/tokens/%s", tokenID), nil, &ti, a.client.AddWorkspaceIdHeader)
 	return
 }
 

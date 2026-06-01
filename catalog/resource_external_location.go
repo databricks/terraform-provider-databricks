@@ -82,6 +82,10 @@ func ResourceExternalLocation() common.Resource {
 			}
 			var createExternalLocationRequest catalog.CreateExternalLocation
 			common.DataToStructPointer(d, s, &createExternalLocationRequest)
+			// SDK marshals these bools with omitempty; force-send so an explicit
+			// false from HCL reaches the server instead of being elided.
+			common.SetForceSendFields(&createExternalLocationRequest, d,
+				[]string{"read_only", "fallback", "enable_file_events"})
 			el, err := w.ExternalLocations.Create(ctx, createExternalLocationRequest)
 			if err != nil {
 				return err
@@ -199,6 +203,11 @@ func ResourceExternalLocation() common.Resource {
 				return err
 			}
 			err = validateMetastoreId(ctx, w, d.Get("metastore_id").(string))
+			if err != nil {
+				return err
+			}
+			// If the external location is isolated, re-bind the current workspace so it's accessible for deletion.
+			err = bindings.AddCurrentWorkspaceBindings(ctx, d, w, d.Id(), bindings.BindingsSecurableTypeExternalLocation)
 			if err != nil {
 				return err
 			}

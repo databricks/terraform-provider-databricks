@@ -299,6 +299,7 @@ internal/providers/pluginfw/tfschema/map_attribute.go linguist-generated=true
 internal/providers/pluginfw/tfschema/map_nested_attribute.go linguist-generated=true
 internal/providers/pluginfw/tfschema/nested_attribute_object.go linguist-generated=true
 internal/providers/pluginfw/tfschema/nested_block_object.go linguist-generated=true
+internal/providers/pluginfw/tfschema/requires_replace_if_known_change.go linguist-generated=true
 internal/providers/pluginfw/tfschema/set_attribute.go linguist-generated=true
 internal/providers/pluginfw/tfschema/set_nested_attribute.go linguist-generated=true
 internal/providers/pluginfw/tfschema/single_nested_attribute.go linguist-generated=true

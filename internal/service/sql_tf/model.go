@@ -15034,6 +15034,7 @@ func (m SetWorkspaceWarehouseConfigResponse) Type(ctx context.Context) attr.Type
 	}
 }
 
+// Starts a SQL warehouse. This API is idempotent.
 type StartRequest struct {
 	// Required. Id of the SQL warehouse.
 	Id types.String `tfsdk:"-"`
@@ -15491,6 +15492,7 @@ func (m *StatementStatus) SetError(ctx context.Context, v ServiceError) {
 	m.Error = vs
 }
 
+// Stops a SQL warehouse. This API is idempotent.
 type StopRequest struct {
 	// Required. Id of the SQL warehouse.
 	Id types.String `tfsdk:"-"`

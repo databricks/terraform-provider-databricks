@@ -3,8 +3,9 @@ module github.com/databricks/terraform-provider-databricks
 go 1.25.8
 
 require (
-	github.com/databricks/databricks-sdk-go v0.132.0
+	github.com/databricks/databricks-sdk-go v0.139.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
+	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/hcl v1.0.0
 	github.com/hashicorp/hcl/v2 v2.24.0
@@ -42,7 +43,6 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect

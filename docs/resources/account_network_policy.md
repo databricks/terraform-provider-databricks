@@ -4,6 +4,8 @@ subcategory: "Settings"
 # databricks_account_network_policy Resource
 [![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/account/networkpolicies)
+
 Network policies control which network destinations can be accessed from the Databricks environment. 
 
 Each Databricks account includes a default policy named `default-policy`. This policy is:
@@ -54,6 +56,7 @@ The following arguments are supported:
 * `network_policy_id` (string, optional) - The unique identifier for the network policy
 
 ### CustomerFacingIngressNetworkPolicy
+* `cross_workspace_access` (CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess, optional)
 * `private_access` (CustomerFacingIngressNetworkPolicyPrivateAccess, optional) - The network policy restrictions for private access to the workspace.
   Configures how registered private endpoints are allowed or denied access
 * `public_access` (CustomerFacingIngressNetworkPolicyPublicAccess, optional) - The network policy restrictions for public access to the workspace.
@@ -79,6 +82,21 @@ The following arguments are supported:
 ### CustomerFacingIngressNetworkPolicyAuthenticationIdentity
 * `principal_id` (integer, optional)
 * `principal_type` (string, optional) - Possible values are: `PRINCIPAL_TYPE_SERVICE_PRINCIPAL`, `PRINCIPAL_TYPE_USER`
+
+### CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess
+* `restriction_mode` (string, required) - Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
+* `allow_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule, optional)
+* `deny_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule, optional)
+
+### CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule
+* `authentication` (CustomerFacingIngressNetworkPolicyAuthentication, optional)
+* `destination` (CustomerFacingIngressNetworkPolicyRequestDestination, optional)
+* `label` (string, optional) - The label for this ingress rule
+* `origin` (CustomerFacingIngressNetworkPolicyCrossWorkspaceRequestOrigin, optional)
+
+### CustomerFacingIngressNetworkPolicyCrossWorkspaceRequestOrigin
+* `all_source_workspaces` (boolean, optional) - Matches all source workspaces
+* `selected_workspaces` (CustomerFacingIngressNetworkPolicyWorkspaceIdList, optional) - Specific source workspace IDs to match
 
 ### CustomerFacingIngressNetworkPolicyEndpoints
 * `endpoint_ids` (list of string, optional)
@@ -136,6 +154,9 @@ The following arguments are supported:
 ### CustomerFacingIngressNetworkPolicyWorkspaceApiDestination
 * `scope_qualifier` (string, optional) - Qualifies the breadth of API access for the listed scopes. See ApiScopeQualifier. Possible values are: `API_SCOPE_QUALIFIER_ALL`, `API_SCOPE_QUALIFIER_READ`
 * `scopes` (list of string, optional)
+
+### CustomerFacingIngressNetworkPolicyWorkspaceIdList
+* `workspace_ids` (list of integer, optional)
 
 ### CustomerFacingIngressNetworkPolicyWorkspaceUiDestination
 * `all_destinations` (boolean, optional) - Must be set to true

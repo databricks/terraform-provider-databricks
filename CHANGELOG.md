@@ -1,5 +1,59 @@
 # Version changelog
 
+## Release v1.116.0 (2026-05-28)
+
+### New Features and Improvements
+
+* Added `principal_id` argument to `databricks_git_credential` resource, enabling management of Git credentials on behalf of service principals.
+* Add support for managing permissions of Agent Bricks resources ([#5708](https://github.com/databricks/terraform-provider-databricks/issues/5669)). Reverts [#5582](https://github.com/databricks/terraform-provider-databricks/pull/5708).
+
+### Bug Fixes
+
+* Fix `databricks_metastore` so that updating `external_access_enabled` from `true` to `false` is sent in the PATCH request. Previously the field was silently dropped from the request body, so the change never reached the API.
+* Fixed destroying of UC objects when workspace binding removed before actual destroy ([#5581](https://github.com/databricks/terraform-provider-databricks/pull/5581)).
+* Fixed handling of the case when library is removed outside of Terraform ([#5678](https://github.com/databricks/terraform-provider-databricks/pull/5678)).
+* Fix `databricks_vector_search_index` hardcoded 15-minute creation timeout: increased default to 75 minutes (consistent with `databricks_vector_search_endpoint`) and made it user-overridable via the `timeouts` block.
+* Fixed child groups collection in `databricks_group` data source ([#5679](https://github.com/databricks/terraform-provider-databricks/pull/5679)).
+
+### Documentation
+
+* Document that some `databricks_mws_*` resources on GCP require Google-issued OIDC tokens (not Databricks OAuth) ([#5654](https://github.com/databricks/terraform-provider-databricks/issues/5654)).
+* Remove non-existent field from the `databricks_vector_search_index` doc ([#5605](https://github.com/databricks/terraform-provider-databricks/pull/5605)).
+* Documented `principal_id` argument for `databricks_git_credential` resource.
+
+### Exporter
+
+* Support `alert_task` when exporting `databricks_job` ([#5629](https://github.com/databricks/terraform-provider-databricks/pull/5629)).
+* Add support for exporting Agent Bricks resources ([#5704](https://github.com/databricks/terraform-provider-databricks/issues/5704)).
+
+### Internal Changes
+
+* Add `internal/retrier` package for unified retry and backoff handling ([#5746](https://github.com/databricks/terraform-provider-databricks/pull/5746)).
+* Pass `excludedAttributes=entitlements` on SCIM `/Me` requests ([#5725](https://github.com/databricks/terraform-provider-databricks/pull/5725)).
+* `workspace_id` (provider attribute and `provider_config.workspace_id` block) now accepts workspace connection IDs in addition to classic numeric workspace IDs. On unified Databricks hosts, the platform gateway disambiguates the value server-side via the `X-Databricks-Workspace-Id` request header. The previous positive-integer validator has been relaxed to require only a non-empty string.
+
+  Numeric workspace IDs continue to behave exactly as before, including the account-API workspace-deployment lookup. Connection IDs skip that lookup and route directly via the configured host. When the provider is configured at the workspace level (host + token), connection IDs surface a clear error directing the user to reconfigure with account-level credentials, since a workspace-level provider can only operate on a single workspace.
+
+
+## Release v1.115.0 (2026-05-11)
+
+### Bug Fixes
+
+* Fix `databricks_library`, `databricks_share`, and `databricks_quality_monitor` failing to decode prior state with `Error decoding ... from prior state: missing expected {` after upgrading from v1.113.0 to v1.114.0 ([#5669](https://github.com/databricks/terraform-provider-databricks/issues/5669)). Reverts [#5582](https://github.com/databricks/terraform-provider-databricks/pull/5582).
+
+  > **Note for users upgrading from v1.114.0**: any state written by v1.114.0 for `databricks_library`, `databricks_share`, or `databricks_quality_monitor` encodes `provider_config` as a single object instead of a list, and `terraform plan` against the upgraded provider will fail to decode it. Mitigate with a one-time edit of each affected resource instance in your state file: change the `provider_config` value from the object form to either the list form or null.
+  >
+  >   - If you set `provider_config` explicitly in HCL: change `"provider_config": {"workspace_id": "X"}` to `"provider_config": [{"workspace_id": "X"}]` (wrap the existing object in a single-element list).
+  >   - If you did NOT set `provider_config` in HCL: change `"provider_config": {"workspace_id": "X"}` to `"provider_config": null`. This avoids a one-time replacement plan on `databricks_library` (where the block-level plan modifier forces replacement on any provider_config diff).
+  >
+  > Users on v1.113.0 are unaffected — their state already matches the restored schema.
+
+* Fix `databricks_service_principal` data source failing on account-level provider with `cannot populate provider_config for service principal: failed to resolve workspace_id` ([#5664](https://github.com/databricks/terraform-provider-databricks/issues/5664)). The data source now supports the `api` field and skips workspace-tracking when used at account level.
+* Fix `databricks_service_principals` data source failing on account-level provider with the same `cannot populate provider_config for service principals: failed to resolve workspace_id` regression ([#5664](https://github.com/databricks/terraform-provider-databricks/issues/5664)). The data source now supports the `api` field and skips workspace-tracking when used at account level.
+* Fix `databricks_mws_workspaces` and `databricks_mws_credentials` data sources failing on account-level provider with `cannot populate provider_config for mws workspaces: failed to resolve workspace_id` ([#5672](https://github.com/databricks/terraform-provider-databricks/issues/5672)). These account-only data sources are now exempted from the post-Read workspace-tracking hook, and `provider_config` (which had no effect on them) is now deprecated and will be removed in a future major release.
+* Fix `databricks_disable_legacy_features_setting` failing on account-level provider with `cannot populate provider_config for disable legacy features setting: failed to resolve workspace_id: ... Unable to load OAuth Config`. This account-only setting is now exempted from the post-Read workspace-tracking hook, and the auto-injected `provider_config` block is deprecated. The fix is applied at the generic-setting builder level (`makeSettingResource` in `settings/generic_setting.go`), so any future `accountSetting`-based resource inherits the opt-out automatically.
+
+
 ## Release v1.114.0 (2026-04-29)
 
 ### New Features and Improvements

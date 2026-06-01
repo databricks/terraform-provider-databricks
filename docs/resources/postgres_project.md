@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_project Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 ### Understanding Lakebase Autoscaling Terraform Behavior
 
 This resource uses Lakebase Autoscaling Terraform semantics, which differ from typical Databricks Terraform resources:
@@ -63,7 +65,7 @@ resource "databricks_postgres_project" "this" {
     default_endpoint_settings = {
       autoscaling_limit_min_cu    = 1.0
       autoscaling_limit_max_cu    = 8.0
-      suspend_timeout_duration    = "300s"  # 5 minutes
+      suspend_timeout_duration    = "86400s"  # 24 hours
     }
   }
 }
@@ -71,9 +73,11 @@ resource "databricks_postgres_project" "this" {
 
 ### Project with High Availability Endpoint
 
-Create a project whose initial read-write endpoint is configured with multiple compute instances for high availability. 
+Create a project whose read-write endpoint is configured with multiple compute instances for high availability. 
 One compute instance acts as the read-write primary. 
 The remaining secondary compute instances are ready for automatic failover if the primary becomes unavailable.
+
+This example manages implicitly created resources for the root branch and read-write endpoint. For more details, see the documentation for `databricks_postgres_branch` and `databricks_postgres_endpoint`.
 
 ```hcl
 resource "databricks_postgres_project" "ha" {
@@ -82,13 +86,33 @@ resource "databricks_postgres_project" "ha" {
     pg_version   = 17
     display_name = "HA Production Project"
   }
-  initial_endpoint_spec = {
+}
+
+resource "databricks_postgres_branch" "production" {
+  branch_id = "production"
+  parent    = databricks_postgres_project.ha.name
+  spec = {
+    no_expiry    = true
+    is_protected = true
+  }
+  replace_existing = true
+}
+
+resource "databricks_postgres_endpoint" "primary" {
+  endpoint_id = "primary"
+  parent      = databricks_postgres_branch.production.name
+  spec = {
+    endpoint_type            = "ENDPOINT_TYPE_READ_WRITE"
+    no_suspension            = true
+    autoscaling_limit_min_cu = 0.5
+    autoscaling_limit_max_cu = 4.0
     group = {
       min                         = 2
       max                         = 2
       enable_readable_secondaries = false
     }
   }
+  replace_existing = true
 }
 ```
 
@@ -118,10 +142,12 @@ The following arguments are supported:
 * `project_id` (string, required) - The ID to use for the Project. This becomes the final component of the project's resource name.
   The ID is required and must be 1-63 characters long, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens.
   For example, `my-app` becomes `projects/my-app`
-* `initial_endpoint_spec` (InitialEndpointSpec, optional) - Configuration settings for the initial Read/Write endpoint created inside the default branch for a newly
+* `initial_endpoint_spec` (InitialEndpointSpec, optional) - Configuration settings for the initial Read/Write endpoint created inside the initial branch for a newly
   created project. If omitted, the initial endpoint created will have default settings, without high availability
   configured. This field does not apply to any endpoints created after project creation. Use
   spec.default_endpoint_settings to configure default settings for endpoints created after project creation
+* `purge_on_delete` (boolean, optional) - If true, permanently deletes the project (hard delete).
+  If false or unset, performs a soft delete
 * `spec` (ProjectSpec, optional) - The spec contains the project configuration, including display_name, pg_version (Postgres version), history_retention_duration, and default_endpoint_settings
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
@@ -148,10 +174,12 @@ The following arguments are supported:
 * `autoscaling_limit_max_cu` (number, optional) - The maximum number of Compute Units. Minimum value is 0.5
 * `autoscaling_limit_min_cu` (number, optional) - The minimum number of Compute Units. Minimum value is 0.5
 * `no_suspension` (boolean, optional) - When set to true, explicitly disables automatic suspension (never suspend).
-  Should be set to true when provided
+  Should be set to true when provided.
+  Mutually exclusive with `suspend_timeout_duration`. When updating, use `spec.project_default_settings.suspension` in the update_mask
 * `pg_settings` (object, optional) - A raw representation of Postgres settings
 * `suspend_timeout_duration` (string, optional) - Duration of inactivity after which the compute endpoint is automatically suspended.
-  If specified should be between 60s and 604800s (1 minute to 1 week)
+  If specified should be between 60s and 604800s (1 minute to 1 week).
+  Mutually exclusive with `no_suspension`. When updating, use `spec.project_default_settings.suspension` in the update_mask
 
 ### ProjectSpec
 * `budget_policy_id` (string, optional) - The desired budget policy to associate with the project.
@@ -164,15 +192,19 @@ The following arguments are supported:
   Format: projects/{project_id}/branches/{branch_id}
 * `default_endpoint_settings` (ProjectDefaultEndpointSettings, optional)
 * `display_name` (string, optional) - Human-readable project name. Length should be between 1 and 256 characters
-* `enable_pg_native_login` (boolean, optional) - Whether to enable PG native password login on all endpoints in this project. Defaults to true
-* `history_retention_duration` (string, optional) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 172800s (2 days) and 2592000s (30 days)
-* `pg_version` (integer, optional) - The major Postgres version number. Supported versions are 16 and 17
+* `enable_pg_native_login` (boolean, optional) - Whether to enable PG native password login on all endpoints in this project. Defaults to false
+* `history_retention_duration` (string, optional) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 172800s (2 days) and 3024000s (35 days)
+* `pg_version` (integer, optional) - The major Postgres version number. The set of supported versions may vary; consult the API documentation for currently accepted values
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 * `create_time` (string) - A timestamp indicating when the project was created
+* `delete_time` (string) - A timestamp indicating when the project was soft-deleted.
+  Empty if the project is not deleted, otherwise set to a timestamp in the past
 * `name` (string) - Output only. The full resource path of the project.
   Format: projects/{project_id}
+* `purge_time` (string) - A timestamp indicating when the project is scheduled for permanent deletion.
+  Empty if the project is not deleted, otherwise set to a timestamp in the future
 * `status` (ProjectStatus) - The current status of a Project
 * `uid` (string) - System-generated unique ID for the project
 * `update_time` (string) - A timestamp indicating when the project was last updated
@@ -188,12 +220,7 @@ In addition to the above arguments, the following attributes are exported:
 * `history_retention_duration` (string) - The effective number of seconds to retain the shared history for point in time recovery
 * `owner` (string) - The email of the project owner
 * `pg_version` (integer) - The effective major Postgres version number
-* `project_id` (string) - The short identifier of the project, suitable for showing to the users.
-  For a project with name `projects/my-project`, the project_id is `my-project`.
-  
-  Use this field when building UI components that display projects to users (e.g., a drop-down
-  selector). Prefer showing `project_id` instead of the full resource name from `Project.name`,
-  which follows the `projects/{project_id}` format and is not user-friendly
+* `project_id` (string) - Part of the resource name
 * `synthetic_storage_size_bytes` (integer) - The current space occupied by the project in storage
 
 ## Import

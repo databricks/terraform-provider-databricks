@@ -4,6 +4,8 @@ subcategory: "Tags"
 # databricks_tag_policies Data Source
 [![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/tagpolicies)
+
 This data source can be used to list all tag policies in the account.
 
 The following resources are often used in the same context:

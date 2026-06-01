@@ -1161,6 +1161,9 @@ func (m ApiKeyAuth) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Deprecated: legacy inference table configuration. Please use AI Gateway
+// inference tables instead. See
+// https://docs.databricks.com/aws/en/ai-gateway/inference-tables.
 type AutoCaptureConfigInput struct {
 	// The name of the catalog in Unity Catalog. NOTE: On update, you cannot
 	// change the catalog name if the inference table is already enabled.
@@ -1227,6 +1230,9 @@ func (m AutoCaptureConfigInput) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Deprecated: legacy inference table configuration. Please use AI Gateway
+// inference tables instead. See
+// https://docs.databricks.com/aws/en/ai-gateway/inference-tables.
 type AutoCaptureConfigOutput struct {
 	// The name of the catalog in Unity Catalog. NOTE: On update, you cannot
 	// change the catalog name if the inference table is already enabled.
@@ -3001,11 +3007,10 @@ func (m *EmbeddingsV1ResponseEmbeddingElement) SetEmbedding(ctx context.Context,
 }
 
 type EndpointCoreConfigInput struct {
-	// Configuration for Inference Tables which automatically logs requests and
-	// responses to Unity Catalog. Note: this field is deprecated for creating
-	// new provisioned throughput endpoints, or updating existing provisioned
-	// throughput endpoints that never have inference table configured; in these
-	// cases please use AI Gateway to manage inference tables.
+	// Configuration for legacy Inference Tables which automatically log
+	// requests and responses to Unity Catalog. Deprecated: please use AI
+	// Gateway inference tables instead. See
+	// https://docs.databricks.com/aws/en/ai-gateway/inference-tables.
 	AutoCaptureConfig types.Object `tfsdk:"auto_capture_config"`
 	// The name of the serving endpoint to update. This field is required.
 	Name types.String `tfsdk:"-"`
@@ -3243,11 +3248,10 @@ func (m *EndpointCoreConfigInput) SetTrafficConfig(ctx context.Context, v Traffi
 }
 
 type EndpointCoreConfigOutput struct {
-	// Configuration for Inference Tables which automatically logs requests and
-	// responses to Unity Catalog. Note: this field is deprecated for creating
-	// new provisioned throughput endpoints, or updating existing provisioned
-	// throughput endpoints that never have inference table configured; in these
-	// cases please use AI Gateway to manage inference tables.
+	// Configuration for legacy Inference Tables which automatically log
+	// requests and responses to Unity Catalog. Deprecated: please use AI
+	// Gateway inference tables instead. See
+	// https://docs.databricks.com/aws/en/ai-gateway/inference-tables.
 	AutoCaptureConfig types.Object `tfsdk:"auto_capture_config"`
 	// The config version that the serving endpoint is currently serving.
 	ConfigVersion types.Int64 `tfsdk:"config_version"`
@@ -3622,11 +3626,10 @@ func (m *EndpointCoreConfigSummary) SetServedModels(ctx context.Context, v []Ser
 }
 
 type EndpointPendingConfig struct {
-	// Configuration for Inference Tables which automatically logs requests and
-	// responses to Unity Catalog. Note: this field is deprecated for creating
-	// new provisioned throughput endpoints, or updating existing provisioned
-	// throughput endpoints that never have inference table configured; in these
-	// cases please use AI Gateway to manage inference tables.
+	// Configuration for legacy Inference Tables which automatically log
+	// requests and responses to Unity Catalog. Deprecated: please use AI
+	// Gateway inference tables instead. See
+	// https://docs.databricks.com/aws/en/ai-gateway/inference-tables.
 	AutoCaptureConfig types.Object `tfsdk:"auto_capture_config"`
 	// The config version that the serving endpoint is currently serving.
 	ConfigVersion types.Int64 `tfsdk:"config_version"`

@@ -94,18 +94,6 @@ func jobClusterTemplate(provider_config string) string {
 `, provider_config)
 }
 
-func TestAccJobCluster_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: jobClusterTemplate(`
-			provider_config {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccJobCluster_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: jobClusterTemplate(`

@@ -4,9 +4,23 @@ subcategory: "Postgres"
 # databricks_postgres_synced_table Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
+This data source retrieves a single Postgres synced table.
 
 
 ## Example Usage
+### Retrieve Synced Table by Name
+
+```hcl
+data "databricks_postgres_synced_table" "this" {
+  name = "synced_tables/my_catalog.my_schema.my_synced_table"
+}
+
+output "synced_table_state" {
+  value = data.databricks_postgres_synced_table.this.status.detailed_state
+}
+```
 
 
 ## Arguments

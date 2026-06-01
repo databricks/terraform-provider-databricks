@@ -691,7 +691,7 @@ func (a JobsAPI) ListByName(name string, expandTasks bool) ([]Job, error) {
 		if nextPageToken != "" {
 			params["page_token"] = nextPageToken
 		}
-		err := a.client.Get(ctx, "/jobs/list", params, &resp)
+		err := a.client.Get(ctx, "/jobs/list", params, &resp, a.client.AddWorkspaceIdHeader)
 		if err != nil {
 			return nil, err
 		}
@@ -711,7 +711,7 @@ func (a JobsAPI) List() (l []Job, err error) {
 
 // RunsList returns a job runs list
 func (a JobsAPI) RunsList(r JobRunsListRequest) (jrl JobRunsList, err error) {
-	err = a.client.Get(a.context, "/jobs/runs/list", r, &jrl)
+	err = a.client.Get(a.context, "/jobs/runs/list", r, &jrl, a.client.AddWorkspaceIdHeader)
 	return
 }
 
@@ -720,7 +720,7 @@ func (a JobsAPI) RunsCancel(runID int64, timeout time.Duration) error {
 	var response any
 	err := a.client.Post(a.context, "/jobs/runs/cancel", map[string]any{
 		"run_id": runID,
-	}, &response)
+	}, &response, a.client.AddWorkspaceIdHeader)
 	if err != nil {
 		return err
 	}
@@ -755,7 +755,7 @@ func (a JobsAPI) RunNow(jobID int64) (int64, error) {
 	var jr JobRun
 	err := a.client.Post(a.context, "/jobs/run-now", RunParameters{
 		JobID: jobID,
-	}, &jr)
+	}, &jr, a.client.AddWorkspaceIdHeader)
 	return jr.RunID, err
 }
 
@@ -764,7 +764,7 @@ func (a JobsAPI) RunsGet(runID int64) (JobRun, error) {
 	var jr JobRun
 	err := a.client.Get(a.context, "/jobs/runs/get", map[string]any{
 		"run_id": runID,
-	}, &jr)
+	}, &jr, a.client.AddWorkspaceIdHeader)
 	return jr, err
 }
 
@@ -810,7 +810,7 @@ func (a JobsAPI) Create(jobSettings JobSettings) (Job, error) {
 			return job, fmt.Errorf("git source is not empty but none of branch, commit and tag is specified")
 		}
 	}
-	err := a.client.Post(a.context, "/jobs/create", jobSettings, &job)
+	err := a.client.Post(a.context, "/jobs/create", jobSettings, &job, a.client.AddWorkspaceIdHeader)
 	return job, err
 }
 
@@ -823,7 +823,7 @@ func (a JobsAPI) Update(id string, jobSettings JobSettings) error {
 	return wrapMissingJobError(a.client.Post(a.context, "/jobs/reset", UpdateJobRequest{
 		JobID:       jobID,
 		NewSettings: &jobSettings,
-	}, nil), id)
+	}, nil, a.client.AddWorkspaceIdHeader), id)
 }
 
 // Read returns the job object with all the attributes
@@ -834,7 +834,7 @@ func (a JobsAPI) Read(id string) (job Job, err error) {
 	}
 	err = wrapMissingJobError(a.client.Get(a.context, "/jobs/get", map[string]int64{
 		"job_id": jobID,
-	}, &job), id)
+	}, &job, a.client.AddWorkspaceIdHeader), id)
 	if job.Settings != nil {
 		job.Settings.adjustTasks()
 		job.Settings.sortWebhooksByID()
@@ -866,7 +866,7 @@ func (a JobsAPI) Delete(id string) error {
 	}
 	return wrapMissingJobError(a.client.Post(a.context, "/jobs/delete", map[string]int64{
 		"job_id": jobID,
-	}, nil), id)
+	}, nil, a.client.AddWorkspaceIdHeader), id)
 }
 
 func wrapMissingJobError(err error, id string) error {
@@ -1138,7 +1138,7 @@ func ResourceJob() common.Resource {
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var jsr JobSettingsResource
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
-			if jsr.isMultiTask() {
+			if jsr.isMultiTask() || ctx.Value(common.Api) == common.API_2_1 {
 				// Api 2.1
 				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 				if err != nil {

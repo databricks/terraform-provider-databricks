@@ -22,7 +22,7 @@ func ResourceGroupInstanceProfile() common.Resource {
 		return m
 	}).BindResource(common.BindResource{
 		ReadContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient, d *schema.ResourceData) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -38,14 +38,14 @@ func ResourceGroupInstanceProfile() common.Resource {
 			return err
 		},
 		CreateContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient, d *schema.ResourceData) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
 			return scim.NewGroupsAPI(ctx, c, common.GetApiLevel(d)).Patch(groupID, scim.PatchRequestWithValue("add", "roles", roleARN))
 		},
 		DeleteContext: func(ctx context.Context, groupID, roleARN string, c *common.DatabricksClient, d *schema.ResourceData) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -57,5 +57,6 @@ func ResourceGroupInstanceProfile() common.Resource {
 	r.CustomizeDiff = func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 		return common.CustomizeDiffDualResources(ctx, d, c)
 	}
+	r.IsDual = true
 	return r
 }

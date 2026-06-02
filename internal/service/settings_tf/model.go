@@ -16513,7 +16513,7 @@ func (m *PersonalComputeSetting) SetPersonalCompute(ctx context.Context, v Perso
 
 type PublicTokenInfo struct {
 	// Output only. The autoscope state of this token.
-	AutoscopeState types.Object `tfsdk:"autoscope_state"`
+	AutoscopeState types.String `tfsdk:"autoscope_state"`
 	// Output only. Scopes inferred from offline backfill processing.
 	BackfillScopes types.List `tfsdk:"backfill_scopes"`
 	// Comment the token was created with, if applicable.
@@ -17494,7 +17494,7 @@ func (m *TokenAccessControlResponse) SetAllPermissions(ctx context.Context, v []
 
 type TokenInfo struct {
 	// Output only. The autoscope state of this token.
-	AutoscopeState types.Object `tfsdk:"autoscope_state"`
+	AutoscopeState types.String `tfsdk:"autoscope_state"`
 	// Output only. Scopes inferred from offline backfill processing.
 	BackfillScopes types.List `tfsdk:"backfill_scopes"`
 	// Comment that describes the purpose of the token, specified by the token

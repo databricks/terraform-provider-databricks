@@ -140,19 +140,23 @@ func TestAccInstancePool_WorkspaceLevel(t *testing.T) {
 // ==========================================
 // databricks_instance_profile (aws/resource_instance_profile.go)
 //
-// AWS-only. Needs a real, registerable IAM instance-profile ARN
-// (TEST_EC2_INSTANCE_PROFILE). The terraform ID is the ARN itself.
+// AWS-only. Registers a syntactically-valid but throwaway ARN with
+// skip_validation = true. A shared real profile is already attached to the test
+// workspace, so re-adding it fails with "already added"; and the routing-header
+// round-trip we want to exercise does not depend on a functional IAM role. The
+// ARN is unique per run so parallel tests never collide. ID is the ARN itself.
 // ==========================================
 
 func createInstanceProfileWithProviderConfig(t *testing.T, workspaceID string, providerFactories map[string]func() (tfprotov6.ProviderServer, error)) {
 	if !IsAws(t) {
 		Skipf(t)("databricks_instance_profile is AWS-only")
 	}
-	arn := GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
+	arn := "arn:aws:iam::999999999999:instance-profile/tf-acc-" + RandomName()
 	step := Step{
 		Template: `
 		resource "databricks_instance_profile" "this" {
 			instance_profile_arn = "` + arn + `"
+			skip_validation      = true
 			` + pcBlock(workspaceID) + `
 		}
 		`,

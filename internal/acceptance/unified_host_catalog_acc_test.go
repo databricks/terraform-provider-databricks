@@ -117,6 +117,7 @@ func createTableWithProviderConfig(t *testing.T, workspaceID string, providerFac
 				position  = 0
 				type_name = "INT"
 				type_text = "int"
+				type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
 			}
 			` + pcBlock(workspaceID) + `
 		}

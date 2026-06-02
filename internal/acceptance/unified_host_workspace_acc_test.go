@@ -187,6 +187,7 @@ func createPermissionAssignmentWithProviderConfig(t *testing.T, workspaceID stri
 		Template: `
 		resource "databricks_service_principal" "this" {
 			display_name = "` + spName + `"
+			api          = "account"
 		}
 		resource "databricks_permission_assignment" "this" {
 			principal_id = databricks_service_principal.this.id

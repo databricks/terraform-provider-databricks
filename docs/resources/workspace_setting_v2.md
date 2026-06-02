@@ -4,7 +4,7 @@ subcategory: "Settings"
 # databricks_workspace_setting_v2 Resource
 [![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
-[API Documentation](https://docs.databricks.com/api/workspace/workspacesettingsv2)
+[API Documentation](https://docs.databricks.com/api/workspace/settingsv2)
 
 Setting is a configurable value or control that determines how a feature or behavior works within the databricks platform.
 

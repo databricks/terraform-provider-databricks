@@ -120,7 +120,8 @@ The following attributes are exported:
 
 ### CustomerFacingIngressNetworkPolicyRequestDestination
 * `account_api` (CustomerFacingIngressNetworkPolicyAccountApiDestination)
-* `account_databricks_one` (CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination)
+* `account_databricks_one` (CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination) - Account DatabricksOne destination is not supported.
+  DO NOT change the stage of this destination past PRIVATE_PREVIEW
 * `account_ui` (CustomerFacingIngressNetworkPolicyAccountUiDestination)
 * `all_destinations` (boolean) - When true, match all destinations, no other destination fields can be set.
   When not set or false, at least one specific destination must be provided

@@ -142,7 +142,8 @@ The following arguments are supported:
 
 ### CustomerFacingIngressNetworkPolicyRequestDestination
 * `account_api` (CustomerFacingIngressNetworkPolicyAccountApiDestination, optional)
-* `account_databricks_one` (CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination, optional)
+* `account_databricks_one` (CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination, optional) - Account DatabricksOne destination is not supported.
+  DO NOT change the stage of this destination past PRIVATE_PREVIEW
 * `account_ui` (CustomerFacingIngressNetworkPolicyAccountUiDestination, optional)
 * `all_destinations` (boolean, optional) - When true, match all destinations, no other destination fields can be set.
   When not set or false, at least one specific destination must be provided

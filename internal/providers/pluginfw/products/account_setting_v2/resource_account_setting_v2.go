@@ -61,6 +61,10 @@ type Setting struct {
 	// Setting value for boolean type setting. This is the setting value set by
 	// consumers, check effective_boolean_val for final setting value.
 	BooleanVal types.Object `tfsdk:"boolean_val"`
+	// Setting value for collaboration_platform_connectivity setting. This is
+	// the setting value set by consumers, check
+	// effective_collaboration_platform_connectivity for final setting value.
+	CollaborationPlatformConnectivity types.Object `tfsdk:"collaboration_platform_connectivity"`
 	// Effective setting value for aibi_dashboard_embedding_access_policy
 	// setting. This is the final effective value of setting. To set a value use
 	// aibi_dashboard_embedding_access_policy.
@@ -80,6 +84,10 @@ type Setting struct {
 	// Effective setting value for boolean type setting. This is the final
 	// effective value of setting. To set a value use boolean_val.
 	EffectiveBooleanVal types.Object `tfsdk:"effective_boolean_val"`
+	// Effective setting value for collaboration_platform_connectivity setting.
+	// This is the final effective value of setting. To set a value use
+	// collaboration_platform_connectivity.
+	EffectiveCollaborationPlatformConnectivity types.Object `tfsdk:"effective_collaboration_platform_connectivity"`
 	// Effective setting value for integer type setting. This is the final
 	// effective value of setting. To set a value use integer_val.
 	EffectiveIntegerVal types.Object `tfsdk:"effective_integer_val"`
@@ -132,11 +140,13 @@ func (m Setting) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 		"allowed_apps_user_api_scopes":                        reflect.TypeOf(settingsv2_tf.AllowedAppsUserApiScopesMessage{}),
 		"automatic_cluster_update_workspace":                  reflect.TypeOf(settingsv2_tf.ClusterAutoRestartMessage{}),
 		"boolean_val":                                         reflect.TypeOf(settingsv2_tf.BooleanMessage{}),
+		"collaboration_platform_connectivity":                 reflect.TypeOf(settingsv2_tf.CollaborationPlatformConnectivityMessage{}),
 		"effective_aibi_dashboard_embedding_access_policy":    reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}),
 		"effective_aibi_dashboard_embedding_approved_domains": reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}),
 		"effective_allowed_apps_user_api_scopes":              reflect.TypeOf(settingsv2_tf.AllowedAppsUserApiScopesMessage{}),
 		"effective_automatic_cluster_update_workspace":        reflect.TypeOf(settingsv2_tf.ClusterAutoRestartMessage{}),
 		"effective_boolean_val":                               reflect.TypeOf(settingsv2_tf.BooleanMessage{}),
+		"effective_collaboration_platform_connectivity":       reflect.TypeOf(settingsv2_tf.CollaborationPlatformConnectivityMessage{}),
 		"effective_integer_val":                               reflect.TypeOf(settingsv2_tf.IntegerMessage{}),
 		"effective_operational_email_custom_recipient":        reflect.TypeOf(settingsv2_tf.OperationalEmailCustomRecipientMessage{}),
 		"effective_personal_compute":                          reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
@@ -164,11 +174,13 @@ func (m Setting) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"allowed_apps_user_api_scopes":                        m.AllowedAppsUserApiScopes,
 			"automatic_cluster_update_workspace":                  m.AutomaticClusterUpdateWorkspace,
 			"boolean_val":                                         m.BooleanVal,
+			"collaboration_platform_connectivity":                 m.CollaborationPlatformConnectivity,
 			"effective_aibi_dashboard_embedding_access_policy":    m.EffectiveAibiDashboardEmbeddingAccessPolicy,
 			"effective_aibi_dashboard_embedding_approved_domains": m.EffectiveAibiDashboardEmbeddingApprovedDomains,
 			"effective_allowed_apps_user_api_scopes":              m.EffectiveAllowedAppsUserApiScopes,
 			"effective_automatic_cluster_update_workspace":        m.EffectiveAutomaticClusterUpdateWorkspace,
 			"effective_boolean_val":                               m.EffectiveBooleanVal,
+			"effective_collaboration_platform_connectivity":       m.EffectiveCollaborationPlatformConnectivity,
 			"effective_integer_val":                               m.EffectiveIntegerVal,
 			"effective_operational_email_custom_recipient":        m.EffectiveOperationalEmailCustomRecipient,
 			"effective_personal_compute":                          m.EffectivePersonalCompute,
@@ -193,11 +205,13 @@ func (m Setting) Type(ctx context.Context) attr.Type {
 			"allowed_apps_user_api_scopes":                        settingsv2_tf.AllowedAppsUserApiScopesMessage{}.Type(ctx),
 			"automatic_cluster_update_workspace":                  settingsv2_tf.ClusterAutoRestartMessage{}.Type(ctx),
 			"boolean_val":                                         settingsv2_tf.BooleanMessage{}.Type(ctx),
+			"collaboration_platform_connectivity":                 settingsv2_tf.CollaborationPlatformConnectivityMessage{}.Type(ctx),
 			"effective_aibi_dashboard_embedding_access_policy":    settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}.Type(ctx),
 			"effective_aibi_dashboard_embedding_approved_domains": settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}.Type(ctx),
 			"effective_allowed_apps_user_api_scopes":              settingsv2_tf.AllowedAppsUserApiScopesMessage{}.Type(ctx),
 			"effective_automatic_cluster_update_workspace":        settingsv2_tf.ClusterAutoRestartMessage{}.Type(ctx),
 			"effective_boolean_val":                               settingsv2_tf.BooleanMessage{}.Type(ctx),
+			"effective_collaboration_platform_connectivity":       settingsv2_tf.CollaborationPlatformConnectivityMessage{}.Type(ctx),
 			"effective_integer_val":                               settingsv2_tf.IntegerMessage{}.Type(ctx),
 			"effective_operational_email_custom_recipient":        settingsv2_tf.OperationalEmailCustomRecipientMessage{}.Type(ctx),
 			"effective_personal_compute":                          settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
@@ -262,6 +276,15 @@ func (to *Setting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sett
 			}
 		}
 	}
+	if !from.CollaborationPlatformConnectivity.IsNull() && !from.CollaborationPlatformConnectivity.IsUnknown() {
+		if toCollaborationPlatformConnectivity, ok := to.GetCollaborationPlatformConnectivity(ctx); ok {
+			if fromCollaborationPlatformConnectivity, ok := from.GetCollaborationPlatformConnectivity(ctx); ok {
+				// Recursively sync the fields of CollaborationPlatformConnectivity
+				toCollaborationPlatformConnectivity.SyncFieldsDuringCreateOrUpdate(ctx, fromCollaborationPlatformConnectivity)
+				to.SetCollaborationPlatformConnectivity(ctx, toCollaborationPlatformConnectivity)
+			}
+		}
+	}
 	if !from.EffectiveAibiDashboardEmbeddingAccessPolicy.IsNull() && !from.EffectiveAibiDashboardEmbeddingAccessPolicy.IsUnknown() {
 		if toEffectiveAibiDashboardEmbeddingAccessPolicy, ok := to.GetEffectiveAibiDashboardEmbeddingAccessPolicy(ctx); ok {
 			if fromEffectiveAibiDashboardEmbeddingAccessPolicy, ok := from.GetEffectiveAibiDashboardEmbeddingAccessPolicy(ctx); ok {
@@ -304,6 +327,15 @@ func (to *Setting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sett
 				// Recursively sync the fields of EffectiveBooleanVal
 				toEffectiveBooleanVal.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveBooleanVal)
 				to.SetEffectiveBooleanVal(ctx, toEffectiveBooleanVal)
+			}
+		}
+	}
+	if !from.EffectiveCollaborationPlatformConnectivity.IsNull() && !from.EffectiveCollaborationPlatformConnectivity.IsUnknown() {
+		if toEffectiveCollaborationPlatformConnectivity, ok := to.GetEffectiveCollaborationPlatformConnectivity(ctx); ok {
+			if fromEffectiveCollaborationPlatformConnectivity, ok := from.GetEffectiveCollaborationPlatformConnectivity(ctx); ok {
+				// Recursively sync the fields of EffectiveCollaborationPlatformConnectivity
+				toEffectiveCollaborationPlatformConnectivity.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveCollaborationPlatformConnectivity)
+				to.SetEffectiveCollaborationPlatformConnectivity(ctx, toEffectiveCollaborationPlatformConnectivity)
 			}
 		}
 	}
@@ -443,6 +475,14 @@ func (to *Setting) SyncFieldsDuringRead(ctx context.Context, from Setting) {
 			}
 		}
 	}
+	if !from.CollaborationPlatformConnectivity.IsNull() && !from.CollaborationPlatformConnectivity.IsUnknown() {
+		if toCollaborationPlatformConnectivity, ok := to.GetCollaborationPlatformConnectivity(ctx); ok {
+			if fromCollaborationPlatformConnectivity, ok := from.GetCollaborationPlatformConnectivity(ctx); ok {
+				toCollaborationPlatformConnectivity.SyncFieldsDuringRead(ctx, fromCollaborationPlatformConnectivity)
+				to.SetCollaborationPlatformConnectivity(ctx, toCollaborationPlatformConnectivity)
+			}
+		}
+	}
 	if !from.EffectiveAibiDashboardEmbeddingAccessPolicy.IsNull() && !from.EffectiveAibiDashboardEmbeddingAccessPolicy.IsUnknown() {
 		if toEffectiveAibiDashboardEmbeddingAccessPolicy, ok := to.GetEffectiveAibiDashboardEmbeddingAccessPolicy(ctx); ok {
 			if fromEffectiveAibiDashboardEmbeddingAccessPolicy, ok := from.GetEffectiveAibiDashboardEmbeddingAccessPolicy(ctx); ok {
@@ -480,6 +520,14 @@ func (to *Setting) SyncFieldsDuringRead(ctx context.Context, from Setting) {
 			if fromEffectiveBooleanVal, ok := from.GetEffectiveBooleanVal(ctx); ok {
 				toEffectiveBooleanVal.SyncFieldsDuringRead(ctx, fromEffectiveBooleanVal)
 				to.SetEffectiveBooleanVal(ctx, toEffectiveBooleanVal)
+			}
+		}
+	}
+	if !from.EffectiveCollaborationPlatformConnectivity.IsNull() && !from.EffectiveCollaborationPlatformConnectivity.IsUnknown() {
+		if toEffectiveCollaborationPlatformConnectivity, ok := to.GetEffectiveCollaborationPlatformConnectivity(ctx); ok {
+			if fromEffectiveCollaborationPlatformConnectivity, ok := from.GetEffectiveCollaborationPlatformConnectivity(ctx); ok {
+				toEffectiveCollaborationPlatformConnectivity.SyncFieldsDuringRead(ctx, fromEffectiveCollaborationPlatformConnectivity)
+				to.SetEffectiveCollaborationPlatformConnectivity(ctx, toEffectiveCollaborationPlatformConnectivity)
 			}
 		}
 	}
@@ -571,11 +619,13 @@ func (m Setting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["allowed_apps_user_api_scopes"] = attrs["allowed_apps_user_api_scopes"].SetOptional()
 	attrs["automatic_cluster_update_workspace"] = attrs["automatic_cluster_update_workspace"].SetOptional()
 	attrs["boolean_val"] = attrs["boolean_val"].SetOptional()
+	attrs["collaboration_platform_connectivity"] = attrs["collaboration_platform_connectivity"].SetOptional()
 	attrs["effective_aibi_dashboard_embedding_access_policy"] = attrs["effective_aibi_dashboard_embedding_access_policy"].SetOptional()
 	attrs["effective_aibi_dashboard_embedding_approved_domains"] = attrs["effective_aibi_dashboard_embedding_approved_domains"].SetOptional()
 	attrs["effective_allowed_apps_user_api_scopes"] = attrs["effective_allowed_apps_user_api_scopes"].SetComputed()
 	attrs["effective_automatic_cluster_update_workspace"] = attrs["effective_automatic_cluster_update_workspace"].SetOptional()
 	attrs["effective_boolean_val"] = attrs["effective_boolean_val"].SetComputed()
+	attrs["effective_collaboration_platform_connectivity"] = attrs["effective_collaboration_platform_connectivity"].SetComputed()
 	attrs["effective_integer_val"] = attrs["effective_integer_val"].SetComputed()
 	attrs["effective_operational_email_custom_recipient"] = attrs["effective_operational_email_custom_recipient"].SetComputed()
 	attrs["effective_personal_compute"] = attrs["effective_personal_compute"].SetOptional()
@@ -717,6 +767,31 @@ func (m *Setting) SetBooleanVal(ctx context.Context, v settingsv2_tf.BooleanMess
 	m.BooleanVal = vs
 }
 
+// GetCollaborationPlatformConnectivity returns the value of the CollaborationPlatformConnectivity field in Setting as
+// a settingsv2_tf.CollaborationPlatformConnectivityMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Setting) GetCollaborationPlatformConnectivity(ctx context.Context) (settingsv2_tf.CollaborationPlatformConnectivityMessage, bool) {
+	var e settingsv2_tf.CollaborationPlatformConnectivityMessage
+	if m.CollaborationPlatformConnectivity.IsNull() || m.CollaborationPlatformConnectivity.IsUnknown() {
+		return e, false
+	}
+	var v settingsv2_tf.CollaborationPlatformConnectivityMessage
+	d := m.CollaborationPlatformConnectivity.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCollaborationPlatformConnectivity sets the value of the CollaborationPlatformConnectivity field in Setting.
+func (m *Setting) SetCollaborationPlatformConnectivity(ctx context.Context, v settingsv2_tf.CollaborationPlatformConnectivityMessage) {
+	vs := v.ToObjectValue(ctx)
+	m.CollaborationPlatformConnectivity = vs
+}
+
 // GetEffectiveAibiDashboardEmbeddingAccessPolicy returns the value of the EffectiveAibiDashboardEmbeddingAccessPolicy field in Setting as
 // a settingsv2_tf.AibiDashboardEmbeddingAccessPolicy value.
 // If the field is unknown or null, the boolean return value is false.
@@ -840,6 +915,31 @@ func (m *Setting) GetEffectiveBooleanVal(ctx context.Context) (settingsv2_tf.Boo
 func (m *Setting) SetEffectiveBooleanVal(ctx context.Context, v settingsv2_tf.BooleanMessage) {
 	vs := v.ToObjectValue(ctx)
 	m.EffectiveBooleanVal = vs
+}
+
+// GetEffectiveCollaborationPlatformConnectivity returns the value of the EffectiveCollaborationPlatformConnectivity field in Setting as
+// a settingsv2_tf.CollaborationPlatformConnectivityMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Setting) GetEffectiveCollaborationPlatformConnectivity(ctx context.Context) (settingsv2_tf.CollaborationPlatformConnectivityMessage, bool) {
+	var e settingsv2_tf.CollaborationPlatformConnectivityMessage
+	if m.EffectiveCollaborationPlatformConnectivity.IsNull() || m.EffectiveCollaborationPlatformConnectivity.IsUnknown() {
+		return e, false
+	}
+	var v settingsv2_tf.CollaborationPlatformConnectivityMessage
+	d := m.EffectiveCollaborationPlatformConnectivity.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectiveCollaborationPlatformConnectivity sets the value of the EffectiveCollaborationPlatformConnectivity field in Setting.
+func (m *Setting) SetEffectiveCollaborationPlatformConnectivity(ctx context.Context, v settingsv2_tf.CollaborationPlatformConnectivityMessage) {
+	vs := v.ToObjectValue(ctx)
+	m.EffectiveCollaborationPlatformConnectivity = vs
 }
 
 // GetEffectiveIntegerVal returns the value of the EffectiveIntegerVal field in Setting as

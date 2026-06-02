@@ -21,8 +21,9 @@ import (
 //
 //   - TestMwsAccUnifiedHost*  : account-level provider pointed at the UNIFIED host;
 //     the only way the request can reach the right workspace is the routing header.
-//   - TestAcc*_WorkspaceLevel : workspace-level provider on a normal host; added only
-//     for resources that previously had NO real (apply) acceptance test at all.
+//   - TestAcc*_WorkspaceLevel / TestUcAcc*_WorkspaceLevel : workspace-level provider on
+//     a normal host — one per resource (except databricks_permission_assignment, which
+//     needs an account principal a workspace-level provider cannot create; see below).
 //
 // The existing *_provider_config_test.go tests do not count for this purpose —
 // they are PlanOnly and never call the API.
@@ -112,6 +113,11 @@ func TestMwsAccUnifiedHostCreateToken(t *testing.T) {
 	workspaceID := GetEnvOrSkipTest(t, "TEST_WORKSPACE_ID")
 	accountID := GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	createTokenWithProviderConfig(t, workspaceID, unifiedHostProviderFactories(unifiedHost, accountID))
+}
+
+func TestAccToken_WorkspaceLevel(t *testing.T) {
+	LoadWorkspaceEnv(t)
+	createTokenWithProviderConfig(t, currentWorkspaceID(t), nil)
 }
 
 // ==========================================

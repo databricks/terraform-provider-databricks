@@ -75,6 +75,11 @@ func TestMwsAccUnifiedHostCreateCluster(t *testing.T) {
 	createClusterWithProviderConfig(t, workspaceID, unifiedHostProviderFactories(unifiedHost, accountID))
 }
 
+func TestAccCluster_WorkspaceLevel(t *testing.T) {
+	LoadWorkspaceEnv(t)
+	createClusterWithProviderConfig(t, currentWorkspaceID(t), nil)
+}
+
 // ==========================================
 // databricks_instance_pool (pools/resource_instance_pool.go)
 //
@@ -180,4 +185,9 @@ func TestMwsAccUnifiedHostCreateInstanceProfile(t *testing.T) {
 	workspaceID := GetEnvOrSkipTest(t, "TEST_WORKSPACE_ID")
 	accountID := GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	createInstanceProfileWithProviderConfig(t, workspaceID, unifiedHostProviderFactories(unifiedHost, accountID))
+}
+
+func TestAccInstanceProfile_WorkspaceLevel(t *testing.T) {
+	LoadWorkspaceEnv(t)
+	createInstanceProfileWithProviderConfig(t, currentWorkspaceID(t), nil)
 }

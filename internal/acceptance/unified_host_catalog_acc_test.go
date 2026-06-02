@@ -81,6 +81,12 @@ func TestMwsAccUnifiedHostCreateSqlTable(t *testing.T) {
 	createSqlTableWithProviderConfig(t, workspaceID, warehouseID, unifiedHostProviderFactories(unifiedHost, accountID))
 }
 
+func TestUcAccSqlTable_WorkspaceLevel(t *testing.T) {
+	LoadUcwsEnv(t)
+	warehouseID := GetEnvOrSkipTest(t, "TEST_DEFAULT_WAREHOUSE_ID")
+	createSqlTableWithProviderConfig(t, currentWorkspaceID(t), warehouseID, nil)
+}
+
 // ==========================================
 // databricks_table (catalog/resource_table.go) — LEGACY/deprecated.
 //
@@ -201,4 +207,9 @@ func TestMwsAccUnifiedHostCreateSharingProvider(t *testing.T) {
 	workspaceID := GetEnvOrSkipTest(t, "TEST_WORKSPACE_ID")
 	accountID := GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	createSharingProviderWithProviderConfig(t, workspaceID, unifiedHostProviderFactories(unifiedHost, accountID))
+}
+
+func TestUcAccSharingProvider_WorkspaceLevel(t *testing.T) {
+	LoadUcwsEnv(t)
+	createSharingProviderWithProviderConfig(t, currentWorkspaceID(t), nil)
 }

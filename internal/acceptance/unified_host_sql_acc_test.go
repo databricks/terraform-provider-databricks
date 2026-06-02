@@ -59,6 +59,12 @@ func TestMwsAccUnifiedHostCreateSqlQuery(t *testing.T) {
 	createSqlQueryWithProviderConfig(t, workspaceID, dataSourceID, unifiedHostProviderFactories(unifiedHost, accountID))
 }
 
+func TestAccSqlQuery_WorkspaceLevel(t *testing.T) {
+	LoadWorkspaceEnv(t)
+	dataSourceID := GetEnvOrSkipTest(t, "TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID")
+	createSqlQueryWithProviderConfig(t, currentWorkspaceID(t), dataSourceID, nil)
+}
+
 // ==========================================
 // databricks_sql_visualization (sql/resource_sql_visualization.go)
 //
@@ -120,4 +126,10 @@ func TestMwsAccUnifiedHostCreateSqlVisualization(t *testing.T) {
 	accountID := GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")
 	dataSourceID := GetEnvOrSkipTest(t, "TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID")
 	createSqlVisualizationWithProviderConfig(t, workspaceID, dataSourceID, unifiedHostProviderFactories(unifiedHost, accountID))
+}
+
+func TestAccSqlVisualization_WorkspaceLevel(t *testing.T) {
+	LoadWorkspaceEnv(t)
+	dataSourceID := GetEnvOrSkipTest(t, "TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID")
+	createSqlVisualizationWithProviderConfig(t, currentWorkspaceID(t), dataSourceID, nil)
 }

@@ -18,7 +18,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -732,7 +731,6 @@ func (to *DataProfilingConfig) SyncFieldsDuringRead(ctx context.Context, from Da
 
 func (m DataProfilingConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["assets_dir"] = attrs["assets_dir"].SetOptional()
-	attrs["assets_dir"] = attrs["assets_dir"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["baseline_table_name"] = attrs["baseline_table_name"].SetOptional()
 	attrs["custom_metrics"] = attrs["custom_metrics"].SetOptional()
 	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()

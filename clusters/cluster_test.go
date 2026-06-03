@@ -179,6 +179,44 @@ func TestAccClusterResource_WorkloadType(t *testing.T) {
 	})
 }
 
+func clusterWithLibraryTemplate(autoTerminationMinutes int, libraryPackage string) string {
+	return fmt.Sprintf(`
+		data "databricks_spark_version" "latest" {
+		}
+		resource "databricks_cluster" "this" {
+			cluster_name = "lib-restart-{var.STICKY_RANDOM}"
+			spark_version = data.databricks_spark_version.latest.id
+			instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
+			autotermination_minutes = %d
+			num_workers = 1
+			library {
+				pypi {
+					package = "%s"
+				}
+			}
+		}
+	`, autoTerminationMinutes, libraryPackage)
+}
+
+// Regression test for the "unexpected state Restarting" failure when a user
+// modifies a cluster attribute and a library block in the same apply on a
+// running cluster. Step 1 creates the cluster (terraform waits until it is
+// RUNNING). Step 2 changes both an attribute (autotermination_minutes) and
+// the library; the cluster Edit triggers an asynchronous restart, and the
+// resource must wait for RUNNING before applying library changes instead of
+// calling Start on a RESTARTING cluster.
+func TestAccClusterResource_AttributeAndLibraryUpdateOnRunningCluster(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: clusterWithLibraryTemplate(10, "networkx"),
+	}, acceptance.Step{
+		Template: clusterWithLibraryTemplate(20, "databricks-sdk"),
+		Check: resource.ComposeAggregateTestCheckFunc(
+			resource.TestCheckResourceAttr("databricks_cluster.this", "autotermination_minutes", "20"),
+			resource.TestCheckResourceAttr("databricks_cluster.this", "library.0.pypi.0.package", "databricks-sdk"),
+		),
+	})
+}
+
 func TestAccClusterResource_PinAndUnpin(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: singleNodeClusterTemplate("10", false),

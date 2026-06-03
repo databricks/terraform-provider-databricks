@@ -1397,6 +1397,121 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
 }
 
+func TestResourceClusterUpdate_LibrariesChangeOnRestartingCluster(t *testing.T) {
+	// Regression test: when a user changes both a cluster attribute and a
+	// library on a running cluster, the cluster Edit triggers an asynchronous
+	// restart. The subsequent GET returns RESTARTING; the resource must wait
+	// for RUNNING before applying library changes. Previously, the code called
+	// Start on the restarting cluster, which fails with "unexpected state".
+	running := compute.ClusterDetails{
+		ClusterId:    "abc",
+		NumWorkers:   100,
+		SparkVersion: "7.1-scala12",
+		NodeTypeId:   "i3.xlarge",
+		State:        compute.StateRunning,
+	}
+	restarting := compute.ClusterDetails{
+		ClusterId:    "abc",
+		NumWorkers:   100,
+		SparkVersion: "7.1-scala12",
+		NodeTypeId:   "i3.xlarge",
+		State:        compute.StateRestarting,
+	}
+	initialLibs := compute.ClusterLibraryStatuses{
+		ClusterId: "abc",
+		LibraryStatuses: []compute.LibraryFullStatus{
+			{
+				Library: &compute.Library{Jar: "dbfs://old.jar"},
+				Status:  compute.LibraryInstallStatusInstalled,
+			},
+		},
+	}
+	finalLibs := compute.ClusterLibraryStatuses{
+		ClusterId: "abc",
+		LibraryStatuses: []compute.LibraryFullStatus{
+			{
+				Library: &compute.Library{Jar: "dbfs://new.jar"},
+				Status:  compute.LibraryInstallStatusInstalled,
+			},
+		},
+	}
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
+			{ // initial GET before Edit decision
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/get?cluster_id=abc",
+				Response: running,
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/edit",
+				ExpectedRequest: compute.EditCluster{
+					AutoterminationMinutes: 60,
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: initialLibs,
+			},
+			{ // GET after edit returns RESTARTING — this is the bug trigger
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/get?cluster_id=abc",
+				Response: restarting,
+			},
+			{ // WaitGetClusterRunning poll: cluster is now RUNNING
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				Response:     running,
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/libraries/uninstall",
+				ExpectedRequest: compute.UninstallLibraries{
+					ClusterId: "abc",
+					Libraries: []compute.Library{
+						{Jar: "dbfs://old.jar"},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/libraries/install",
+				ExpectedRequest: compute.InstallLibraries{
+					ClusterId: "abc",
+					Libraries: []compute.Library{
+						{Jar: "dbfs://new.jar"},
+					},
+				},
+			},
+			{ // poll for libraries installed
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response:     finalLibs,
+			},
+		},
+		ID:       "abc",
+		Update:   true,
+		Resource: ResourceCluster(),
+		HCL: `num_workers = 100
+		spark_version = "7.1-scala12"
+		node_type_id = "i3.xlarge"
+
+		library {
+			jar = "dbfs://new.jar"
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
 func TestResourceClusterUpdate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

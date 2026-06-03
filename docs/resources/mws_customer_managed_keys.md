@@ -12,6 +12,8 @@ This resource to configure KMS keys for new workspaces within AWS or GCP. This i
 
 -> This resource can only be used with an account-level provider!
 
+~> On GCP, the provider must be authenticated with a Google-issued OIDC token (not a Databricks OAuth token), because creating or updating this resource triggers operations against your GCP project (such as validating the KMS key). See [Authenticate with Databricks account API](../guides/gcp-workspace.md#authenticate-with-databricks-account-api) for setup instructions.
+
 Please follow this [complete runnable example](../guides/aws-workspace.md) with new VPC and new workspace setup. Please pay special attention to the fact that there you have two different instances of a databricks provider - one for deploying workspaces (with `host="https://accounts.cloud.databricks.com/"`) and another for the workspace you've created with databricks_mws_workspaces resource. If you want both creation of workspaces & clusters within workspace within the same terraform module (essentially same directory), you should use the provider aliasing feature of Terraform. We strongly recommend having one Terraform module for creation of workspace + PAT token and the rest in different modules.
 
 ## Example Usage

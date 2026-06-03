@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -1200,18 +1201,39 @@ func (m ApproxPercentileFunction_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type AuthConfig_SdkV2 struct {
+	// Mutual-TLS authentication. See MtlsConfig.
+	MtlsConfig types.List `tfsdk:"mtls_config"`
 	// Name of the Unity Catalog service credential. This value will be set
 	// under the option databricks.serviceCredential
 	UcServiceCredentialName types.String `tfsdk:"uc_service_credential_name"`
 }
 
 func (to *AuthConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AuthConfig_SdkV2) {
+	if !from.MtlsConfig.IsNull() && !from.MtlsConfig.IsUnknown() {
+		if toMtlsConfig, ok := to.GetMtlsConfig(ctx); ok {
+			if fromMtlsConfig, ok := from.GetMtlsConfig(ctx); ok {
+				// Recursively sync the fields of MtlsConfig
+				toMtlsConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromMtlsConfig)
+				to.SetMtlsConfig(ctx, toMtlsConfig)
+			}
+		}
+	}
 }
 
 func (to *AuthConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AuthConfig_SdkV2) {
+	if !from.MtlsConfig.IsNull() && !from.MtlsConfig.IsUnknown() {
+		if toMtlsConfig, ok := to.GetMtlsConfig(ctx); ok {
+			if fromMtlsConfig, ok := from.GetMtlsConfig(ctx); ok {
+				toMtlsConfig.SyncFieldsDuringRead(ctx, fromMtlsConfig)
+				to.SetMtlsConfig(ctx, toMtlsConfig)
+			}
+		}
+	}
 }
 
 func (m AuthConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["mtls_config"] = attrs["mtls_config"].SetOptional()
+	attrs["mtls_config"] = attrs["mtls_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["uc_service_credential_name"] = attrs["uc_service_credential_name"].SetOptional()
 
 	return attrs
@@ -1225,7 +1247,9 @@ func (m AuthConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m AuthConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"mtls_config": reflect.TypeOf(MtlsConfig_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -1235,6 +1259,7 @@ func (m AuthConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"mtls_config":                m.MtlsConfig,
 			"uc_service_credential_name": m.UcServiceCredentialName,
 		})
 }
@@ -1243,9 +1268,38 @@ func (m AuthConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m AuthConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"mtls_config": basetypes.ListType{
+				ElemType: MtlsConfig_SdkV2{}.Type(ctx),
+			},
 			"uc_service_credential_name": types.StringType,
 		},
 	}
+}
+
+// GetMtlsConfig returns the value of the MtlsConfig field in AuthConfig_SdkV2 as
+// a MtlsConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AuthConfig_SdkV2) GetMtlsConfig(ctx context.Context) (MtlsConfig_SdkV2, bool) {
+	var e MtlsConfig_SdkV2
+	if m.MtlsConfig.IsNull() || m.MtlsConfig.IsUnknown() {
+		return e, false
+	}
+	var v []MtlsConfig_SdkV2
+	d := m.MtlsConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMtlsConfig sets the value of the MtlsConfig field in AuthConfig_SdkV2.
+func (m *AuthConfig_SdkV2) SetMtlsConfig(ctx context.Context, v MtlsConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["mtls_config"]
+	m.MtlsConfig = types.ListValueMust(t, vs)
 }
 
 // Computes the average of values.
@@ -1302,9 +1356,13 @@ func (m AvgFunction_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type BackfillSource_SdkV2 struct {
-	// The Delta table source containing the historic data to backfill. Only the
-	// delta table name is used for backfill, the entity columns and timeseries
-	// column are ignored as they are defined by the associated KafkaSource.
+	// The full three-part name (catalog, schema, name) of the Delta table
+	// containing the historical data to backfill.
+	DeltaTableName types.String `tfsdk:"delta_table_name"`
+	// Deprecated: Use delta_table_name instead. Kept for backwards
+	// compatibility. The Delta table source containing the historical data to
+	// backfill. Only the delta table name is used for backfill, other fields
+	// are ignored.
 	DeltaTableSource types.List `tfsdk:"delta_table_source"`
 }
 
@@ -1332,6 +1390,7 @@ func (to *BackfillSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from B
 }
 
 func (m BackfillSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delta_table_name"] = attrs["delta_table_name"].SetOptional()
 	attrs["delta_table_source"] = attrs["delta_table_source"].SetOptional()
 	attrs["delta_table_source"] = attrs["delta_table_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -1358,6 +1417,7 @@ func (m BackfillSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"delta_table_name":   m.DeltaTableName,
 			"delta_table_source": m.DeltaTableSource,
 		})
 }
@@ -1366,6 +1426,7 @@ func (m BackfillSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m BackfillSource_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"delta_table_name": types.StringType,
 			"delta_table_source": basetypes.ListType{
 				ElemType: DeltaTableSource_SdkV2{}.Type(ctx),
 			},
@@ -1788,6 +1849,7 @@ func (m *CommentObject_SdkV2) SetAvailableActions(ctx context.Context, v []types
 	m.AvailableActions = types.ListValueMust(t, vs)
 }
 
+// Deprecated: use RollingWindow with `delay` instead.
 type ContinuousWindow_SdkV2 struct {
 	// The offset of the continuous window (must be non-positive).
 	Offset types.String `tfsdk:"offset"`
@@ -4164,6 +4226,102 @@ func (m *CreateRunResponse_SdkV2) SetRun(ctx context.Context, v Run_SdkV2) {
 	m.Run = types.ListValueMust(t, vs)
 }
 
+type CreateStreamRequest_SdkV2 struct {
+	// The Stream to create.
+	Stream types.List `tfsdk:"stream"`
+}
+
+func (to *CreateStreamRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateStreamRequest_SdkV2) {
+	if !from.Stream.IsNull() && !from.Stream.IsUnknown() {
+		if toStream, ok := to.GetStream(ctx); ok {
+			if fromStream, ok := from.GetStream(ctx); ok {
+				// Recursively sync the fields of Stream
+				toStream.SyncFieldsDuringCreateOrUpdate(ctx, fromStream)
+				to.SetStream(ctx, toStream)
+			}
+		}
+	}
+}
+
+func (to *CreateStreamRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateStreamRequest_SdkV2) {
+	if !from.Stream.IsNull() && !from.Stream.IsUnknown() {
+		if toStream, ok := to.GetStream(ctx); ok {
+			if fromStream, ok := from.GetStream(ctx); ok {
+				toStream.SyncFieldsDuringRead(ctx, fromStream)
+				to.SetStream(ctx, toStream)
+			}
+		}
+	}
+}
+
+func (m CreateStreamRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["stream"] = attrs["stream"].SetRequired()
+	attrs["stream"] = attrs["stream"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateStreamRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateStreamRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"stream": reflect.TypeOf(Stream_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateStreamRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CreateStreamRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"stream": m.Stream,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateStreamRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"stream": basetypes.ListType{
+				ElemType: Stream_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetStream returns the value of the Stream field in CreateStreamRequest_SdkV2 as
+// a Stream_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateStreamRequest_SdkV2) GetStream(ctx context.Context) (Stream_SdkV2, bool) {
+	var e Stream_SdkV2
+	if m.Stream.IsNull() || m.Stream.IsUnknown() {
+		return e, false
+	}
+	var v []Stream_SdkV2
+	d := m.Stream.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStream sets the value of the Stream field in CreateStreamRequest_SdkV2.
+func (m *CreateStreamRequest_SdkV2) SetStream(ctx context.Context, v Stream_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["stream"]
+	m.Stream = types.ListValueMust(t, vs)
+}
+
 // Details required to create a model version stage transition request.
 type CreateTransitionRequest_SdkV2 struct {
 	// User-provided comment on the action.
@@ -4425,6 +4583,56 @@ func (m *CreateWebhookResponse_SdkV2) SetWebhook(ctx context.Context, v Registry
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook"]
 	m.Webhook = types.ListValueMust(t, vs)
+}
+
+// A cron-based schedule trigger for the materialization pipeline.
+type CronSchedule_SdkV2 struct {
+	// The cron expression defining the schedule (e.g., "0 0 * * *" for daily at
+	// midnight).
+	CronExpression types.String `tfsdk:"cron_expression"`
+}
+
+func (to *CronSchedule_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CronSchedule_SdkV2) {
+}
+
+func (to *CronSchedule_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CronSchedule_SdkV2) {
+}
+
+func (m CronSchedule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cron_expression"] = attrs["cron_expression"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CronSchedule.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CronSchedule_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CronSchedule_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CronSchedule_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"cron_expression": m.CronExpression,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CronSchedule_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"cron_expression": types.StringType,
+		},
+	}
 }
 
 // Specifies the data source backing a feature. Exactly one source type must be
@@ -6091,6 +6299,54 @@ func (m DeleteRunsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type DeleteStreamRequest_SdkV2 struct {
+	// Full three-part name (catalog.schema.stream) of the Stream to delete.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteStreamRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteStreamRequest_SdkV2) {
+}
+
+func (to *DeleteStreamRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteStreamRequest_SdkV2) {
+}
+
+func (m DeleteStreamRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteStreamRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteStreamRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteStreamRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DeleteStreamRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteStreamRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type DeleteTag_SdkV2 struct {
 	// Name of the tag. Maximum size is 255 bytes. Must be provided.
 	Key types.String `tfsdk:"key"`
@@ -6572,6 +6828,265 @@ func (m *DeltaTableSource_SdkV2) SetEntityColumns(ctx context.Context, v []types
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entity_columns"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.EntityColumns = types.ListValueMust(t, vs)
+}
+
+// Direct connection configs for mTLS, as Kafka Connections do not support mTLS
+// yet (XTA-18030). Temporarily used until UC Kafka Connections gain mTLS
+// support.
+type DirectMtlsConfig_SdkV2 struct {
+	// A comma-separated list of host:port pairs for the Kafka bootstrap
+	// servers.
+	BootstrapServers types.String `tfsdk:"bootstrap_servers"`
+	// Mutual-TLS authentication configuration.
+	MtlsConfig types.List `tfsdk:"mtls_config"`
+}
+
+func (to *DirectMtlsConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DirectMtlsConfig_SdkV2) {
+	if !from.MtlsConfig.IsNull() && !from.MtlsConfig.IsUnknown() {
+		if toMtlsConfig, ok := to.GetMtlsConfig(ctx); ok {
+			if fromMtlsConfig, ok := from.GetMtlsConfig(ctx); ok {
+				// Recursively sync the fields of MtlsConfig
+				toMtlsConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromMtlsConfig)
+				to.SetMtlsConfig(ctx, toMtlsConfig)
+			}
+		}
+	}
+}
+
+func (to *DirectMtlsConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DirectMtlsConfig_SdkV2) {
+	if !from.MtlsConfig.IsNull() && !from.MtlsConfig.IsUnknown() {
+		if toMtlsConfig, ok := to.GetMtlsConfig(ctx); ok {
+			if fromMtlsConfig, ok := from.GetMtlsConfig(ctx); ok {
+				toMtlsConfig.SyncFieldsDuringRead(ctx, fromMtlsConfig)
+				to.SetMtlsConfig(ctx, toMtlsConfig)
+			}
+		}
+	}
+}
+
+func (m DirectMtlsConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["bootstrap_servers"] = attrs["bootstrap_servers"].SetRequired()
+	attrs["mtls_config"] = attrs["mtls_config"].SetRequired()
+	attrs["mtls_config"] = attrs["mtls_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DirectMtlsConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DirectMtlsConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"mtls_config": reflect.TypeOf(MtlsConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DirectMtlsConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DirectMtlsConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"bootstrap_servers": m.BootstrapServers,
+			"mtls_config":       m.MtlsConfig,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DirectMtlsConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"bootstrap_servers": types.StringType,
+			"mtls_config": basetypes.ListType{
+				ElemType: MtlsConfig_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetMtlsConfig returns the value of the MtlsConfig field in DirectMtlsConfig_SdkV2 as
+// a MtlsConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DirectMtlsConfig_SdkV2) GetMtlsConfig(ctx context.Context) (MtlsConfig_SdkV2, bool) {
+	var e MtlsConfig_SdkV2
+	if m.MtlsConfig.IsNull() || m.MtlsConfig.IsUnknown() {
+		return e, false
+	}
+	var v []MtlsConfig_SdkV2
+	d := m.MtlsConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMtlsConfig sets the value of the MtlsConfig field in DirectMtlsConfig_SdkV2.
+func (m *DirectMtlsConfig_SdkV2) SetMtlsConfig(ctx context.Context, v MtlsConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["mtls_config"]
+	m.MtlsConfig = types.ListValueMust(t, vs)
+}
+
+// Schema definitions provided directly on the Stream, as opposed to referencing
+// a schema registry. In a future milestone, we will support schema registries
+// through a UC Connection.
+type DirectSchemas_SdkV2 struct {
+	// Schema for the message key. This is only used for Kafka streams. For
+	// Kafka, at least one of payload_schema or key_schema must be specified.
+	KeySchema types.List `tfsdk:"key_schema"`
+	// Schema for the message payload. For Kafka, this is the value schema.
+	// Unless the platform supports another schema (e.g. keys for Kafka), this
+	// must be specified.
+	PayloadSchema types.List `tfsdk:"payload_schema"`
+}
+
+func (to *DirectSchemas_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DirectSchemas_SdkV2) {
+	if !from.KeySchema.IsNull() && !from.KeySchema.IsUnknown() {
+		if toKeySchema, ok := to.GetKeySchema(ctx); ok {
+			if fromKeySchema, ok := from.GetKeySchema(ctx); ok {
+				// Recursively sync the fields of KeySchema
+				toKeySchema.SyncFieldsDuringCreateOrUpdate(ctx, fromKeySchema)
+				to.SetKeySchema(ctx, toKeySchema)
+			}
+		}
+	}
+	if !from.PayloadSchema.IsNull() && !from.PayloadSchema.IsUnknown() {
+		if toPayloadSchema, ok := to.GetPayloadSchema(ctx); ok {
+			if fromPayloadSchema, ok := from.GetPayloadSchema(ctx); ok {
+				// Recursively sync the fields of PayloadSchema
+				toPayloadSchema.SyncFieldsDuringCreateOrUpdate(ctx, fromPayloadSchema)
+				to.SetPayloadSchema(ctx, toPayloadSchema)
+			}
+		}
+	}
+}
+
+func (to *DirectSchemas_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DirectSchemas_SdkV2) {
+	if !from.KeySchema.IsNull() && !from.KeySchema.IsUnknown() {
+		if toKeySchema, ok := to.GetKeySchema(ctx); ok {
+			if fromKeySchema, ok := from.GetKeySchema(ctx); ok {
+				toKeySchema.SyncFieldsDuringRead(ctx, fromKeySchema)
+				to.SetKeySchema(ctx, toKeySchema)
+			}
+		}
+	}
+	if !from.PayloadSchema.IsNull() && !from.PayloadSchema.IsUnknown() {
+		if toPayloadSchema, ok := to.GetPayloadSchema(ctx); ok {
+			if fromPayloadSchema, ok := from.GetPayloadSchema(ctx); ok {
+				toPayloadSchema.SyncFieldsDuringRead(ctx, fromPayloadSchema)
+				to.SetPayloadSchema(ctx, toPayloadSchema)
+			}
+		}
+	}
+}
+
+func (m DirectSchemas_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key_schema"] = attrs["key_schema"].SetOptional()
+	attrs["key_schema"] = attrs["key_schema"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["payload_schema"] = attrs["payload_schema"].SetOptional()
+	attrs["payload_schema"] = attrs["payload_schema"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DirectSchemas.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DirectSchemas_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"key_schema":     reflect.TypeOf(SchemaConfig_SdkV2{}),
+		"payload_schema": reflect.TypeOf(SchemaConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DirectSchemas_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DirectSchemas_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"key_schema":     m.KeySchema,
+			"payload_schema": m.PayloadSchema,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DirectSchemas_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"key_schema": basetypes.ListType{
+				ElemType: SchemaConfig_SdkV2{}.Type(ctx),
+			},
+			"payload_schema": basetypes.ListType{
+				ElemType: SchemaConfig_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetKeySchema returns the value of the KeySchema field in DirectSchemas_SdkV2 as
+// a SchemaConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DirectSchemas_SdkV2) GetKeySchema(ctx context.Context) (SchemaConfig_SdkV2, bool) {
+	var e SchemaConfig_SdkV2
+	if m.KeySchema.IsNull() || m.KeySchema.IsUnknown() {
+		return e, false
+	}
+	var v []SchemaConfig_SdkV2
+	d := m.KeySchema.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetKeySchema sets the value of the KeySchema field in DirectSchemas_SdkV2.
+func (m *DirectSchemas_SdkV2) SetKeySchema(ctx context.Context, v SchemaConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["key_schema"]
+	m.KeySchema = types.ListValueMust(t, vs)
+}
+
+// GetPayloadSchema returns the value of the PayloadSchema field in DirectSchemas_SdkV2 as
+// a SchemaConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DirectSchemas_SdkV2) GetPayloadSchema(ctx context.Context) (SchemaConfig_SdkV2, bool) {
+	var e SchemaConfig_SdkV2
+	if m.PayloadSchema.IsNull() || m.PayloadSchema.IsUnknown() {
+		return e, false
+	}
+	var v []SchemaConfig_SdkV2
+	d := m.PayloadSchema.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPayloadSchema sets the value of the PayloadSchema field in DirectSchemas_SdkV2.
+func (m *DirectSchemas_SdkV2) SetPayloadSchema(ctx context.Context, v SchemaConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["payload_schema"]
+	m.PayloadSchema = types.ListValueMust(t, vs)
 }
 
 type EntityColumn_SdkV2 struct {
@@ -7323,6 +7838,12 @@ func (m ExperimentTag_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type Feature_SdkV2 struct {
+	// Name of parent catalog.
+	CatalogName types.String `tfsdk:"catalog_name"`
+	// Time at which this feature was created.
+	CreatedAt timetypes.RFC3339 `tfsdk:"created_at"`
+	// Username of the feature creator.
+	CreatedBy types.String `tfsdk:"created_by"`
 	// The description of the feature.
 	Description types.String `tfsdk:"description"`
 	// The entity columns for the feature, used as aggregation keys and for
@@ -7332,7 +7853,9 @@ type Feature_SdkV2 struct {
 	// KafkaSource.filter_condition instead. Kept for backwards compatibility.
 	// The filter condition applied to the source data before aggregation.
 	FilterCondition types.String `tfsdk:"filter_condition"`
-	// The full three-part name (catalog, schema, name) of the feature.
+	// The full three-part name (catalog, schema, name) of the feature. This is
+	// the feature's resource identifier; the catalog_name, schema_name, and
+	// name fields below are OUTPUT_ONLY decomposed views of this value.
 	FullName types.String `tfsdk:"full_name"`
 	// The function by which the feature is computed.
 	Function types.List `tfsdk:"function"`
@@ -7347,6 +7870,11 @@ type Feature_SdkV2 struct {
 	// This field will be set by feature-engineering client and should be left
 	// unset by SDK and terraform users.
 	LineageContext types.List `tfsdk:"lineage_context"`
+	// Name of the feature, extracted from the full three-part name
+	// (catalog.schema.name).
+	Name types.String `tfsdk:"name"`
+	// Name of parent schema relative to its parent catalog.
+	SchemaName types.String `tfsdk:"schema_name"`
 	// The data source of the feature.
 	Source types.List `tfsdk:"source"`
 	// Deprecated: Use Function.aggregation_function.time_window instead. Kept
@@ -7474,6 +8002,9 @@ func (to *Feature_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Feature_
 }
 
 func (m Feature_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetComputed()
+	attrs["created_at"] = attrs["created_at"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["entities"] = attrs["entities"].SetOptional()
 	attrs["filter_condition"] = attrs["filter_condition"].SetOptional()
@@ -7486,6 +8017,8 @@ func (m Feature_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["inputs"] = attrs["inputs"].(tfschema.ListAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["lineage_context"] = attrs["lineage_context"].SetOptional()
 	attrs["lineage_context"] = attrs["lineage_context"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["schema_name"] = attrs["schema_name"].SetComputed()
 	attrs["source"] = attrs["source"].SetRequired()
 	attrs["source"] = attrs["source"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["source"] = attrs["source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -7524,6 +8057,9 @@ func (m Feature_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"catalog_name":      m.CatalogName,
+			"created_at":        m.CreatedAt,
+			"created_by":        m.CreatedBy,
 			"description":       m.Description,
 			"entities":          m.Entities,
 			"filter_condition":  m.FilterCondition,
@@ -7531,6 +8067,8 @@ func (m Feature_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"function":          m.Function,
 			"inputs":            m.Inputs,
 			"lineage_context":   m.LineageContext,
+			"name":              m.Name,
+			"schema_name":       m.SchemaName,
 			"source":            m.Source,
 			"time_window":       m.TimeWindow,
 			"timeseries_column": m.TimeseriesColumn,
@@ -7541,7 +8079,10 @@ func (m Feature_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m Feature_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"description": types.StringType,
+			"catalog_name": types.StringType,
+			"created_at":   timetypes.RFC3339{}.Type(ctx),
+			"created_by":   types.StringType,
+			"description":  types.StringType,
 			"entities": basetypes.ListType{
 				ElemType: EntityColumn_SdkV2{}.Type(ctx),
 			},
@@ -7556,6 +8097,8 @@ func (m Feature_SdkV2) Type(ctx context.Context) attr.Type {
 			"lineage_context": basetypes.ListType{
 				ElemType: LineageContext_SdkV2{}.Type(ctx),
 			},
+			"name":        types.StringType,
+			"schema_name": types.StringType,
 			"source": basetypes.ListType{
 				ElemType: DataSource_SdkV2{}.Type(ctx),
 			},
@@ -10998,6 +11541,54 @@ func (m *GetRunResponse_SdkV2) SetRun(ctx context.Context, v Run_SdkV2) {
 	m.Run = types.ListValueMust(t, vs)
 }
 
+type GetStreamRequest_SdkV2 struct {
+	// Full three-part name (catalog.schema.stream) of the Stream to get.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetStreamRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetStreamRequest_SdkV2) {
+}
+
+func (to *GetStreamRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetStreamRequest_SdkV2) {
+}
+
+func (m GetStreamRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetStreamRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetStreamRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetStreamRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetStreamRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetStreamRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type HttpUrlSpec_SdkV2 struct {
 	// Value of the authorization header that should be sent in the request sent
 	// by the wehbook. It should be of the form `"<auth type> <credentials>"`.
@@ -11127,6 +11718,282 @@ func (m HttpUrlSpecWithoutSecret_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"enable_ssl_verification": types.BoolType,
 			"url":                     types.StringType,
+		},
+	}
+}
+
+// Configuration for the Databricks-managed ingestion pipeline. Groups the
+// ingestion destination (required) and optional backfill source.
+type IngestionConfig_SdkV2 struct {
+	// The ID of the Databricks Job that performs the historical backfill of the
+	// ingestion Delta table.
+	BackfillJobId types.Int64 `tfsdk:"backfill_job_id"`
+	// A user-provided source for backfilling data. Historical data is used when
+	// creating a training set from streaming features linked to this Stream.
+	// The backfill data stored in this location will be copied into the
+	// ingestion table for offline querying and training. The schema for this
+	// source must match exactly that of the key and payload schemas specified
+	// for this Stream.
+	BackfillSource types.List `tfsdk:"backfill_source"`
+	// Column paths used to identify duplicate rows during ingestion; only one
+	// row per distinct combination of these values is kept. Use dot notation
+	// for nested fields (e.g. `value.user_id`). Empty list means every column
+	// is compared.
+	DeduplicationColumns types.List `tfsdk:"deduplication_columns"`
+	// Destination for the Databricks-managed Delta table that holds an offline
+	// copy of the streaming data for querying and training. This table contains
+	// both 1) forward-filled data from the Stream and 2) backfilled data from
+	// the BackfillSource (if provided). This table is created and managed by
+	// Databricks and is deleted when the Stream is deleted.
+	IngestionDestination types.List `tfsdk:"ingestion_destination"`
+	// The ID of the Databricks Job that performs the forward-fill ingestion.
+	IngestionJobId types.Int64 `tfsdk:"ingestion_job_id"`
+	// The ID of the SDP pipeline that continuously copies new events from the
+	// streaming source into the ingestion Delta table.
+	IngestionPipelineId types.String `tfsdk:"ingestion_pipeline_id"`
+}
+
+func (to *IngestionConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from IngestionConfig_SdkV2) {
+	if !from.BackfillSource.IsNull() && !from.BackfillSource.IsUnknown() {
+		if toBackfillSource, ok := to.GetBackfillSource(ctx); ok {
+			if fromBackfillSource, ok := from.GetBackfillSource(ctx); ok {
+				// Recursively sync the fields of BackfillSource
+				toBackfillSource.SyncFieldsDuringCreateOrUpdate(ctx, fromBackfillSource)
+				to.SetBackfillSource(ctx, toBackfillSource)
+			}
+		}
+	}
+	if !from.DeduplicationColumns.IsNull() && !from.DeduplicationColumns.IsUnknown() && to.DeduplicationColumns.IsNull() && len(from.DeduplicationColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DeduplicationColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DeduplicationColumns = from.DeduplicationColumns
+	}
+	if !from.IngestionDestination.IsNull() && !from.IngestionDestination.IsUnknown() {
+		if toIngestionDestination, ok := to.GetIngestionDestination(ctx); ok {
+			if fromIngestionDestination, ok := from.GetIngestionDestination(ctx); ok {
+				// Recursively sync the fields of IngestionDestination
+				toIngestionDestination.SyncFieldsDuringCreateOrUpdate(ctx, fromIngestionDestination)
+				to.SetIngestionDestination(ctx, toIngestionDestination)
+			}
+		}
+	}
+}
+
+func (to *IngestionConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from IngestionConfig_SdkV2) {
+	if !from.BackfillSource.IsNull() && !from.BackfillSource.IsUnknown() {
+		if toBackfillSource, ok := to.GetBackfillSource(ctx); ok {
+			if fromBackfillSource, ok := from.GetBackfillSource(ctx); ok {
+				toBackfillSource.SyncFieldsDuringRead(ctx, fromBackfillSource)
+				to.SetBackfillSource(ctx, toBackfillSource)
+			}
+		}
+	}
+	if !from.DeduplicationColumns.IsNull() && !from.DeduplicationColumns.IsUnknown() && to.DeduplicationColumns.IsNull() && len(from.DeduplicationColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DeduplicationColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DeduplicationColumns = from.DeduplicationColumns
+	}
+	if !from.IngestionDestination.IsNull() && !from.IngestionDestination.IsUnknown() {
+		if toIngestionDestination, ok := to.GetIngestionDestination(ctx); ok {
+			if fromIngestionDestination, ok := from.GetIngestionDestination(ctx); ok {
+				toIngestionDestination.SyncFieldsDuringRead(ctx, fromIngestionDestination)
+				to.SetIngestionDestination(ctx, toIngestionDestination)
+			}
+		}
+	}
+}
+
+func (m IngestionConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["backfill_job_id"] = attrs["backfill_job_id"].SetComputed()
+	attrs["backfill_source"] = attrs["backfill_source"].SetOptional()
+	attrs["backfill_source"] = attrs["backfill_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["deduplication_columns"] = attrs["deduplication_columns"].SetOptional()
+	attrs["ingestion_destination"] = attrs["ingestion_destination"].SetRequired()
+	attrs["ingestion_destination"] = attrs["ingestion_destination"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["ingestion_job_id"] = attrs["ingestion_job_id"].SetComputed()
+	attrs["ingestion_pipeline_id"] = attrs["ingestion_pipeline_id"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in IngestionConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m IngestionConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"backfill_source":       reflect.TypeOf(BackfillSource_SdkV2{}),
+		"deduplication_columns": reflect.TypeOf(types.String{}),
+		"ingestion_destination": reflect.TypeOf(IngestionDestination_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, IngestionConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m IngestionConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"backfill_job_id":       m.BackfillJobId,
+			"backfill_source":       m.BackfillSource,
+			"deduplication_columns": m.DeduplicationColumns,
+			"ingestion_destination": m.IngestionDestination,
+			"ingestion_job_id":      m.IngestionJobId,
+			"ingestion_pipeline_id": m.IngestionPipelineId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m IngestionConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"backfill_job_id": types.Int64Type,
+			"backfill_source": basetypes.ListType{
+				ElemType: BackfillSource_SdkV2{}.Type(ctx),
+			},
+			"deduplication_columns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"ingestion_destination": basetypes.ListType{
+				ElemType: IngestionDestination_SdkV2{}.Type(ctx),
+			},
+			"ingestion_job_id":      types.Int64Type,
+			"ingestion_pipeline_id": types.StringType,
+		},
+	}
+}
+
+// GetBackfillSource returns the value of the BackfillSource field in IngestionConfig_SdkV2 as
+// a BackfillSource_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *IngestionConfig_SdkV2) GetBackfillSource(ctx context.Context) (BackfillSource_SdkV2, bool) {
+	var e BackfillSource_SdkV2
+	if m.BackfillSource.IsNull() || m.BackfillSource.IsUnknown() {
+		return e, false
+	}
+	var v []BackfillSource_SdkV2
+	d := m.BackfillSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBackfillSource sets the value of the BackfillSource field in IngestionConfig_SdkV2.
+func (m *IngestionConfig_SdkV2) SetBackfillSource(ctx context.Context, v BackfillSource_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["backfill_source"]
+	m.BackfillSource = types.ListValueMust(t, vs)
+}
+
+// GetDeduplicationColumns returns the value of the DeduplicationColumns field in IngestionConfig_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *IngestionConfig_SdkV2) GetDeduplicationColumns(ctx context.Context) ([]types.String, bool) {
+	if m.DeduplicationColumns.IsNull() || m.DeduplicationColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.DeduplicationColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDeduplicationColumns sets the value of the DeduplicationColumns field in IngestionConfig_SdkV2.
+func (m *IngestionConfig_SdkV2) SetDeduplicationColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["deduplication_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.DeduplicationColumns = types.ListValueMust(t, vs)
+}
+
+// GetIngestionDestination returns the value of the IngestionDestination field in IngestionConfig_SdkV2 as
+// a IngestionDestination_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *IngestionConfig_SdkV2) GetIngestionDestination(ctx context.Context) (IngestionDestination_SdkV2, bool) {
+	var e IngestionDestination_SdkV2
+	if m.IngestionDestination.IsNull() || m.IngestionDestination.IsUnknown() {
+		return e, false
+	}
+	var v []IngestionDestination_SdkV2
+	d := m.IngestionDestination.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetIngestionDestination sets the value of the IngestionDestination field in IngestionConfig_SdkV2.
+func (m *IngestionConfig_SdkV2) SetIngestionDestination(ctx context.Context, v IngestionDestination_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["ingestion_destination"]
+	m.IngestionDestination = types.ListValueMust(t, vs)
+}
+
+// Destination for the Databricks-managed Delta table that holds an offline copy
+// of the streaming data for querying and training.
+type IngestionDestination_SdkV2 struct {
+	// The full three-part name (catalog, schema, name) of the Delta table to be
+	// created for ingestion.
+	DeltaTableName types.String `tfsdk:"delta_table_name"`
+}
+
+func (to *IngestionDestination_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from IngestionDestination_SdkV2) {
+}
+
+func (to *IngestionDestination_SdkV2) SyncFieldsDuringRead(ctx context.Context, from IngestionDestination_SdkV2) {
+}
+
+func (m IngestionDestination_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delta_table_name"] = attrs["delta_table_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in IngestionDestination.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m IngestionDestination_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, IngestionDestination_SdkV2
+// only implements ToObjectValue() and Type().
+func (m IngestionDestination_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"delta_table_name": m.DeltaTableName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m IngestionDestination_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"delta_table_name": types.StringType,
 		},
 	}
 }
@@ -11866,6 +12733,204 @@ func (m *KafkaSource_SdkV2) SetTimeseriesColumnIdentifier(ctx context.Context, v
 	m.TimeseriesColumnIdentifier = types.ListValueMust(t, vs)
 }
 
+// Kafka-specific configuration for a Stream.
+type KafkaStreamConfig_SdkV2 struct {
+	// Miscellaneous source options. Accepted keys are source options or Kafka
+	// consumer options (kafka.*), validated against an allow-list at request
+	// time. All auth configuration goes through the underlying UC Connection(s)
+	// or configs and should not be stored here.
+	ExtraOptions types.Map `tfsdk:"extra_options"`
+	// Options to configure which Kafka topics to pull data from.
+	SubscriptionMode types.List `tfsdk:"subscription_mode"`
+}
+
+func (to *KafkaStreamConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from KafkaStreamConfig_SdkV2) {
+	if !from.SubscriptionMode.IsNull() && !from.SubscriptionMode.IsUnknown() {
+		if toSubscriptionMode, ok := to.GetSubscriptionMode(ctx); ok {
+			if fromSubscriptionMode, ok := from.GetSubscriptionMode(ctx); ok {
+				// Recursively sync the fields of SubscriptionMode
+				toSubscriptionMode.SyncFieldsDuringCreateOrUpdate(ctx, fromSubscriptionMode)
+				to.SetSubscriptionMode(ctx, toSubscriptionMode)
+			}
+		}
+	}
+}
+
+func (to *KafkaStreamConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from KafkaStreamConfig_SdkV2) {
+	if !from.SubscriptionMode.IsNull() && !from.SubscriptionMode.IsUnknown() {
+		if toSubscriptionMode, ok := to.GetSubscriptionMode(ctx); ok {
+			if fromSubscriptionMode, ok := from.GetSubscriptionMode(ctx); ok {
+				toSubscriptionMode.SyncFieldsDuringRead(ctx, fromSubscriptionMode)
+				to.SetSubscriptionMode(ctx, toSubscriptionMode)
+			}
+		}
+	}
+}
+
+func (m KafkaStreamConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["extra_options"] = attrs["extra_options"].SetOptional()
+	attrs["subscription_mode"] = attrs["subscription_mode"].SetRequired()
+	attrs["subscription_mode"] = attrs["subscription_mode"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in KafkaStreamConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m KafkaStreamConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"extra_options":     reflect.TypeOf(types.String{}),
+		"subscription_mode": reflect.TypeOf(KafkaSubscriptionMode_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, KafkaStreamConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m KafkaStreamConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"extra_options":     m.ExtraOptions,
+			"subscription_mode": m.SubscriptionMode,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m KafkaStreamConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"extra_options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"subscription_mode": basetypes.ListType{
+				ElemType: KafkaSubscriptionMode_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetExtraOptions returns the value of the ExtraOptions field in KafkaStreamConfig_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KafkaStreamConfig_SdkV2) GetExtraOptions(ctx context.Context) (map[string]types.String, bool) {
+	if m.ExtraOptions.IsNull() || m.ExtraOptions.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.ExtraOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExtraOptions sets the value of the ExtraOptions field in KafkaStreamConfig_SdkV2.
+func (m *KafkaStreamConfig_SdkV2) SetExtraOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["extra_options"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ExtraOptions = types.MapValueMust(t, vs)
+}
+
+// GetSubscriptionMode returns the value of the SubscriptionMode field in KafkaStreamConfig_SdkV2 as
+// a KafkaSubscriptionMode_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KafkaStreamConfig_SdkV2) GetSubscriptionMode(ctx context.Context) (KafkaSubscriptionMode_SdkV2, bool) {
+	var e KafkaSubscriptionMode_SdkV2
+	if m.SubscriptionMode.IsNull() || m.SubscriptionMode.IsUnknown() {
+		return e, false
+	}
+	var v []KafkaSubscriptionMode_SdkV2
+	d := m.SubscriptionMode.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSubscriptionMode sets the value of the SubscriptionMode field in KafkaStreamConfig_SdkV2.
+func (m *KafkaStreamConfig_SdkV2) SetSubscriptionMode(ctx context.Context, v KafkaSubscriptionMode_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["subscription_mode"]
+	m.SubscriptionMode = types.ListValueMust(t, vs)
+}
+
+// Subscription mode for Kafka topic selection, matching standard Spark
+// Structured Streaming options.
+type KafkaSubscriptionMode_SdkV2 struct {
+	// A JSON string that contains the specific topic-partitions to consume
+	// from. For example, for '{"topicA":[0,1],"topicB":[2,4]}', topicA's 0'th
+	// and 1st partitions will be consumed from.
+	Assign types.String `tfsdk:"assign"`
+	// A comma-separated list of Kafka topics to read from. For example,
+	// 'topicA,topicB,topicC'.
+	Subscribe types.String `tfsdk:"subscribe"`
+	// A regular expression matching topics to subscribe to. For example,
+	// 'topic.*' will subscribe to all topics starting with 'topic'.
+	SubscribePattern types.String `tfsdk:"subscribe_pattern"`
+}
+
+func (to *KafkaSubscriptionMode_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from KafkaSubscriptionMode_SdkV2) {
+}
+
+func (to *KafkaSubscriptionMode_SdkV2) SyncFieldsDuringRead(ctx context.Context, from KafkaSubscriptionMode_SdkV2) {
+}
+
+func (m KafkaSubscriptionMode_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["assign"] = attrs["assign"].SetOptional()
+	attrs["subscribe"] = attrs["subscribe"].SetOptional()
+	attrs["subscribe_pattern"] = attrs["subscribe_pattern"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in KafkaSubscriptionMode.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m KafkaSubscriptionMode_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, KafkaSubscriptionMode_SdkV2
+// only implements ToObjectValue() and Type().
+func (m KafkaSubscriptionMode_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"assign":            m.Assign,
+			"subscribe":         m.Subscribe,
+			"subscribe_pattern": m.SubscribePattern,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m KafkaSubscriptionMode_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"assign":            types.StringType,
+			"subscribe":         types.StringType,
+			"subscribe_pattern": types.StringType,
+		},
+	}
+}
+
 // Returns the last value.
 type LastFunction_SdkV2 struct {
 	// The input column from which the last value is returned.
@@ -12566,10 +13631,14 @@ func (m *ListFeatureTagsResponse_SdkV2) SetFeatureTags(ctx context.Context, v []
 }
 
 type ListFeaturesRequest_SdkV2 struct {
+	// Name of parent catalog for features of interest.
+	CatalogName types.String `tfsdk:"-"`
 	// The maximum number of results to return.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Pagination token to go to the next page based on a previous query.
 	PageToken types.String `tfsdk:"-"`
+	// Name of parent schema relative to its parent catalog.
+	SchemaName types.String `tfsdk:"-"`
 }
 
 func (to *ListFeaturesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListFeaturesRequest_SdkV2) {
@@ -12581,6 +13650,8 @@ func (to *ListFeaturesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 func (m ListFeaturesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
+	attrs["schema_name"] = attrs["schema_name"].SetRequired()
 
 	return attrs
 }
@@ -12603,8 +13674,10 @@ func (m ListFeaturesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_size":  m.PageSize,
-			"page_token": m.PageToken,
+			"catalog_name": m.CatalogName,
+			"page_size":    m.PageSize,
+			"page_token":   m.PageToken,
+			"schema_name":  m.SchemaName,
 		})
 }
 
@@ -12612,8 +13685,10 @@ func (m ListFeaturesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 func (m ListFeaturesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"page_size":  types.Int64Type,
-			"page_token": types.StringType,
+			"catalog_name": types.StringType,
+			"page_size":    types.Int64Type,
+			"page_token":   types.StringType,
+			"schema_name":  types.StringType,
 		},
 	}
 }
@@ -13394,6 +14469,160 @@ func (m *ListRegistryWebhooks_SdkV2) SetWebhooks(ctx context.Context, v []Regist
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["webhooks"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Webhooks = types.ListValueMust(t, vs)
+}
+
+type ListStreamsRequest_SdkV2 struct {
+	// The maximum number of results to return.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Pagination token to go to the next page based on a previous query.
+	PageToken types.String `tfsdk:"-"`
+	// Two-part name (catalog.schema) of the parent under which to list Streams.
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *ListStreamsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListStreamsRequest_SdkV2) {
+}
+
+func (to *ListStreamsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListStreamsRequest_SdkV2) {
+}
+
+func (m ListStreamsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListStreamsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListStreamsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListStreamsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListStreamsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListStreamsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+		},
+	}
+}
+
+// Response to a ListStreamsRequest.
+type ListStreamsResponse_SdkV2 struct {
+	// Pagination token to request the next page of results for this query.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// List of Streams.
+	Streams types.List `tfsdk:"streams"`
+}
+
+func (to *ListStreamsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListStreamsResponse_SdkV2) {
+	if !from.Streams.IsNull() && !from.Streams.IsUnknown() && to.Streams.IsNull() && len(from.Streams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Streams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Streams = from.Streams
+	}
+}
+
+func (to *ListStreamsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListStreamsResponse_SdkV2) {
+	if !from.Streams.IsNull() && !from.Streams.IsUnknown() && to.Streams.IsNull() && len(from.Streams.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Streams, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Streams = from.Streams
+	}
+}
+
+func (m ListStreamsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["streams"] = attrs["streams"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListStreamsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListStreamsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"streams": reflect.TypeOf(Stream_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListStreamsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListStreamsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token": m.NextPageToken,
+			"streams":         m.Streams,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListStreamsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"streams": basetypes.ListType{
+				ElemType: Stream_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetStreams returns the value of the Streams field in ListStreamsResponse_SdkV2 as
+// a slice of Stream_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListStreamsResponse_SdkV2) GetStreams(ctx context.Context) ([]Stream_SdkV2, bool) {
+	if m.Streams.IsNull() || m.Streams.IsUnknown() {
+		return nil, false
+	}
+	var v []Stream_SdkV2
+	d := m.Streams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStreams sets the value of the Streams field in ListStreamsResponse_SdkV2.
+func (m *ListStreamsResponse_SdkV2) SetStreams(ctx context.Context, v []Stream_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["streams"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Streams = types.ListValueMust(t, vs)
 }
 
 type ListTransitionRequestsRequest_SdkV2 struct {
@@ -15248,6 +16477,8 @@ type MaterializedFeature_SdkV2 struct {
 	// The quartz cron expression that defines the schedule of the
 	// materialization pipeline. The schedule is evaluated in the UTC timezone.
 	CronSchedule types.String `tfsdk:"cron_schedule"`
+	// A cron-based schedule trigger for the materialization pipeline.
+	CronScheduleTrigger types.List `tfsdk:"cron_schedule_trigger"`
 	// The full name of the feature in Unity Catalog.
 	FeatureName types.String `tfsdk:"feature_name"`
 	// True if this is an online materialized feature. False if it is an offline
@@ -15256,23 +16487,35 @@ type MaterializedFeature_SdkV2 struct {
 	// The timestamp when the pipeline last ran and updated the materialized
 	// feature values. If the pipeline has not run yet, this field will be null.
 	LastMaterializationTime types.String `tfsdk:"last_materialization_time"`
-	// Unique identifier for the materialized feature.
+	// Server-assigned unique identifier for the materialized feature.
 	MaterializedFeatureId types.String `tfsdk:"materialized_feature_id"`
-
+	// Destination for writing feature values to an offline Delta table.
 	OfflineStoreConfig types.List `tfsdk:"offline_store_config"`
-
+	// Destination for writing feature values to an online Lakebase table.
 	OnlineStoreConfig types.List `tfsdk:"online_store_config"`
 	// The schedule state of the materialization pipeline.
 	PipelineScheduleState types.String `tfsdk:"pipeline_schedule_state"`
+	// The Structured Streaming trigger mode used for materialization. Real-time
+	// mode (RTM) targets sub-second latency for operational workloads;
+	// micro-batch mode (MBM) favors cost efficiency for ETL and analytics
+	// workloads.
+	StreamingMode types.List `tfsdk:"streaming_mode"`
 	// The fully qualified Unity Catalog path to the table containing the
 	// materialized feature (Delta table or Lakebase table). Output only.
 	TableName types.String `tfsdk:"table_name"`
+	// A trigger that fires when the upstream source table changes.
+	TableTrigger types.List `tfsdk:"table_trigger"`
 }
 
 func (to *MaterializedFeature_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MaterializedFeature_SdkV2) {
-	if !from.OfflineStoreConfig.IsUnknown() && !from.OfflineStoreConfig.IsNull() {
-		// OfflineStoreConfig is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.OfflineStoreConfig = from.OfflineStoreConfig
+	if !from.CronScheduleTrigger.IsNull() && !from.CronScheduleTrigger.IsUnknown() {
+		if toCronScheduleTrigger, ok := to.GetCronScheduleTrigger(ctx); ok {
+			if fromCronScheduleTrigger, ok := from.GetCronScheduleTrigger(ctx); ok {
+				// Recursively sync the fields of CronScheduleTrigger
+				toCronScheduleTrigger.SyncFieldsDuringCreateOrUpdate(ctx, fromCronScheduleTrigger)
+				to.SetCronScheduleTrigger(ctx, toCronScheduleTrigger)
+			}
+		}
 	}
 	if !from.OfflineStoreConfig.IsNull() && !from.OfflineStoreConfig.IsUnknown() {
 		if toOfflineStoreConfig, ok := to.GetOfflineStoreConfig(ctx); ok {
@@ -15283,10 +16526,6 @@ func (to *MaterializedFeature_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 			}
 		}
 	}
-	if !from.OnlineStoreConfig.IsUnknown() && !from.OnlineStoreConfig.IsNull() {
-		// OnlineStoreConfig is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.OnlineStoreConfig = from.OnlineStoreConfig
-	}
 	if !from.OnlineStoreConfig.IsNull() && !from.OnlineStoreConfig.IsUnknown() {
 		if toOnlineStoreConfig, ok := to.GetOnlineStoreConfig(ctx); ok {
 			if fromOnlineStoreConfig, ok := from.GetOnlineStoreConfig(ctx); ok {
@@ -15296,12 +16535,34 @@ func (to *MaterializedFeature_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 			}
 		}
 	}
+	if !from.StreamingMode.IsNull() && !from.StreamingMode.IsUnknown() {
+		if toStreamingMode, ok := to.GetStreamingMode(ctx); ok {
+			if fromStreamingMode, ok := from.GetStreamingMode(ctx); ok {
+				// Recursively sync the fields of StreamingMode
+				toStreamingMode.SyncFieldsDuringCreateOrUpdate(ctx, fromStreamingMode)
+				to.SetStreamingMode(ctx, toStreamingMode)
+			}
+		}
+	}
+	if !from.TableTrigger.IsNull() && !from.TableTrigger.IsUnknown() {
+		if toTableTrigger, ok := to.GetTableTrigger(ctx); ok {
+			if fromTableTrigger, ok := from.GetTableTrigger(ctx); ok {
+				// Recursively sync the fields of TableTrigger
+				toTableTrigger.SyncFieldsDuringCreateOrUpdate(ctx, fromTableTrigger)
+				to.SetTableTrigger(ctx, toTableTrigger)
+			}
+		}
+	}
 }
 
 func (to *MaterializedFeature_SdkV2) SyncFieldsDuringRead(ctx context.Context, from MaterializedFeature_SdkV2) {
-	if !from.OfflineStoreConfig.IsUnknown() && !from.OfflineStoreConfig.IsNull() {
-		// OfflineStoreConfig is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.OfflineStoreConfig = from.OfflineStoreConfig
+	if !from.CronScheduleTrigger.IsNull() && !from.CronScheduleTrigger.IsUnknown() {
+		if toCronScheduleTrigger, ok := to.GetCronScheduleTrigger(ctx); ok {
+			if fromCronScheduleTrigger, ok := from.GetCronScheduleTrigger(ctx); ok {
+				toCronScheduleTrigger.SyncFieldsDuringRead(ctx, fromCronScheduleTrigger)
+				to.SetCronScheduleTrigger(ctx, toCronScheduleTrigger)
+			}
+		}
 	}
 	if !from.OfflineStoreConfig.IsNull() && !from.OfflineStoreConfig.IsUnknown() {
 		if toOfflineStoreConfig, ok := to.GetOfflineStoreConfig(ctx); ok {
@@ -15311,10 +16572,6 @@ func (to *MaterializedFeature_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 			}
 		}
 	}
-	if !from.OnlineStoreConfig.IsUnknown() && !from.OnlineStoreConfig.IsNull() {
-		// OnlineStoreConfig is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.OnlineStoreConfig = from.OnlineStoreConfig
-	}
 	if !from.OnlineStoreConfig.IsNull() && !from.OnlineStoreConfig.IsUnknown() {
 		if toOnlineStoreConfig, ok := to.GetOnlineStoreConfig(ctx); ok {
 			if fromOnlineStoreConfig, ok := from.GetOnlineStoreConfig(ctx); ok {
@@ -15323,24 +16580,43 @@ func (to *MaterializedFeature_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 			}
 		}
 	}
+	if !from.StreamingMode.IsNull() && !from.StreamingMode.IsUnknown() {
+		if toStreamingMode, ok := to.GetStreamingMode(ctx); ok {
+			if fromStreamingMode, ok := from.GetStreamingMode(ctx); ok {
+				toStreamingMode.SyncFieldsDuringRead(ctx, fromStreamingMode)
+				to.SetStreamingMode(ctx, toStreamingMode)
+			}
+		}
+	}
+	if !from.TableTrigger.IsNull() && !from.TableTrigger.IsUnknown() {
+		if toTableTrigger, ok := to.GetTableTrigger(ctx); ok {
+			if fromTableTrigger, ok := from.GetTableTrigger(ctx); ok {
+				toTableTrigger.SyncFieldsDuringRead(ctx, fromTableTrigger)
+				to.SetTableTrigger(ctx, toTableTrigger)
+			}
+		}
+	}
 }
 
 func (m MaterializedFeature_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["cron_schedule"] = attrs["cron_schedule"].SetOptional()
+	attrs["cron_schedule_trigger"] = attrs["cron_schedule_trigger"].SetOptional()
+	attrs["cron_schedule_trigger"] = attrs["cron_schedule_trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["feature_name"] = attrs["feature_name"].SetRequired()
 	attrs["is_online"] = attrs["is_online"].SetComputed()
 	attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetOptional()
+	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetOptional()
-	attrs["offline_store_config"] = attrs["offline_store_config"].SetComputed()
-	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["online_store_config"] = attrs["online_store_config"].SetOptional()
-	attrs["online_store_config"] = attrs["online_store_config"].SetComputed()
-	attrs["online_store_config"] = attrs["online_store_config"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["online_store_config"] = attrs["online_store_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["pipeline_schedule_state"] = attrs["pipeline_schedule_state"].SetOptional()
+	attrs["streaming_mode"] = attrs["streaming_mode"].SetOptional()
+	attrs["streaming_mode"] = attrs["streaming_mode"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["table_name"] = attrs["table_name"].SetComputed()
+	attrs["table_trigger"] = attrs["table_trigger"].SetOptional()
+	attrs["table_trigger"] = attrs["table_trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -15354,8 +16630,11 @@ func (m MaterializedFeature_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 // SDK values.
 func (m MaterializedFeature_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"offline_store_config": reflect.TypeOf(OfflineStoreConfig_SdkV2{}),
-		"online_store_config":  reflect.TypeOf(OnlineStoreConfig_SdkV2{}),
+		"cron_schedule_trigger": reflect.TypeOf(CronSchedule_SdkV2{}),
+		"offline_store_config":  reflect.TypeOf(OfflineStoreConfig_SdkV2{}),
+		"online_store_config":   reflect.TypeOf(OnlineStoreConfig_SdkV2{}),
+		"streaming_mode":        reflect.TypeOf(StreamingMode_SdkV2{}),
+		"table_trigger":         reflect.TypeOf(TableTrigger_SdkV2{}),
 	}
 }
 
@@ -15367,6 +16646,7 @@ func (m MaterializedFeature_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"cron_schedule":             m.CronSchedule,
+			"cron_schedule_trigger":     m.CronScheduleTrigger,
 			"feature_name":              m.FeatureName,
 			"is_online":                 m.IsOnline,
 			"last_materialization_time": m.LastMaterializationTime,
@@ -15374,7 +16654,9 @@ func (m MaterializedFeature_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 			"offline_store_config":      m.OfflineStoreConfig,
 			"online_store_config":       m.OnlineStoreConfig,
 			"pipeline_schedule_state":   m.PipelineScheduleState,
+			"streaming_mode":            m.StreamingMode,
 			"table_name":                m.TableName,
+			"table_trigger":             m.TableTrigger,
 		})
 }
 
@@ -15382,7 +16664,10 @@ func (m MaterializedFeature_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 func (m MaterializedFeature_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cron_schedule":             types.StringType,
+			"cron_schedule": types.StringType,
+			"cron_schedule_trigger": basetypes.ListType{
+				ElemType: CronSchedule_SdkV2{}.Type(ctx),
+			},
 			"feature_name":              types.StringType,
 			"is_online":                 types.BoolType,
 			"last_materialization_time": types.StringType,
@@ -15394,9 +16679,41 @@ func (m MaterializedFeature_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: OnlineStoreConfig_SdkV2{}.Type(ctx),
 			},
 			"pipeline_schedule_state": types.StringType,
-			"table_name":              types.StringType,
+			"streaming_mode": basetypes.ListType{
+				ElemType: StreamingMode_SdkV2{}.Type(ctx),
+			},
+			"table_name": types.StringType,
+			"table_trigger": basetypes.ListType{
+				ElemType: TableTrigger_SdkV2{}.Type(ctx),
+			},
 		},
 	}
+}
+
+// GetCronScheduleTrigger returns the value of the CronScheduleTrigger field in MaterializedFeature_SdkV2 as
+// a CronSchedule_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializedFeature_SdkV2) GetCronScheduleTrigger(ctx context.Context) (CronSchedule_SdkV2, bool) {
+	var e CronSchedule_SdkV2
+	if m.CronScheduleTrigger.IsNull() || m.CronScheduleTrigger.IsUnknown() {
+		return e, false
+	}
+	var v []CronSchedule_SdkV2
+	d := m.CronScheduleTrigger.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCronScheduleTrigger sets the value of the CronScheduleTrigger field in MaterializedFeature_SdkV2.
+func (m *MaterializedFeature_SdkV2) SetCronScheduleTrigger(ctx context.Context, v CronSchedule_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["cron_schedule_trigger"]
+	m.CronScheduleTrigger = types.ListValueMust(t, vs)
 }
 
 // GetOfflineStoreConfig returns the value of the OfflineStoreConfig field in MaterializedFeature_SdkV2 as
@@ -15449,6 +16766,58 @@ func (m *MaterializedFeature_SdkV2) SetOnlineStoreConfig(ctx context.Context, v 
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["online_store_config"]
 	m.OnlineStoreConfig = types.ListValueMust(t, vs)
+}
+
+// GetStreamingMode returns the value of the StreamingMode field in MaterializedFeature_SdkV2 as
+// a StreamingMode_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializedFeature_SdkV2) GetStreamingMode(ctx context.Context) (StreamingMode_SdkV2, bool) {
+	var e StreamingMode_SdkV2
+	if m.StreamingMode.IsNull() || m.StreamingMode.IsUnknown() {
+		return e, false
+	}
+	var v []StreamingMode_SdkV2
+	d := m.StreamingMode.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStreamingMode sets the value of the StreamingMode field in MaterializedFeature_SdkV2.
+func (m *MaterializedFeature_SdkV2) SetStreamingMode(ctx context.Context, v StreamingMode_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["streaming_mode"]
+	m.StreamingMode = types.ListValueMust(t, vs)
+}
+
+// GetTableTrigger returns the value of the TableTrigger field in MaterializedFeature_SdkV2 as
+// a TableTrigger_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializedFeature_SdkV2) GetTableTrigger(ctx context.Context) (TableTrigger_SdkV2, bool) {
+	var e TableTrigger_SdkV2
+	if m.TableTrigger.IsNull() || m.TableTrigger.IsUnknown() {
+		return e, false
+	}
+	var v []TableTrigger_SdkV2
+	d := m.TableTrigger.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTableTrigger sets the value of the TableTrigger field in MaterializedFeature_SdkV2.
+func (m *MaterializedFeature_SdkV2) SetTableTrigger(ctx context.Context, v TableTrigger_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["table_trigger"]
+	m.TableTrigger = types.ListValueMust(t, vs)
 }
 
 // Computes the maximum value.
@@ -16598,6 +17967,250 @@ func (m ModelVersionTag_SdkV2) Type(ctx context.Context) attr.Type {
 			"value": types.StringType,
 		},
 	}
+}
+
+// Mutual-TLS (mTLS) authentication configuration. The keystore (client
+// certificate + private key) and truststore (CAs trusted to verify the broker)
+// live as JKS files on Unity Catalog volumes, with their passwords stored in
+// Databricks secret scopes. This matches the SSL setup pattern documented at
+// https://docs.databricks.com/en/connect/streaming/kafka/authentication#use-ssl-to-connect-databricks-to-kafka.
+//
+// At materialization time, the generated PySpark code passes the JKS file paths
+// and resolved passwords through to the Kafka SSL options
+// (kafka.ssl.keystore.location, kafka.ssl.keystore.password,
+// kafka.ssl.key.password, kafka.ssl.truststore.location,
+// kafka.ssl.truststore.password). Passwords are resolved on the Spark cluster
+// via dbutils.secrets.get; this message stores only references, never password
+// values.
+type MtlsConfig_SdkV2 struct {
+	// Set to true only when the broker certificate's SAN intentionally does not
+	// match the connection endpoint — for example when reaching the cluster
+	// through a PrivateLink endpoint whose DNS name is not in the broker
+	// certificate. Skipping the hostname check removes a defense against
+	// man-in-the-middle attacks; do not enable casually. mTLS client
+	// authentication is unaffected by this option.
+	//
+	// See the Apache Kafka SSL security guide for background on this check:
+	// https://kafka.apache.org/42/security/encryption-and-authentication-using-ssl/#host-name-verification
+	DisableHostnameVerification types.Bool `tfsdk:"disable_hostname_verification"`
+	// Secret-scope reference for the private key password. Often the same value
+	// as the keystore password (keytool's default), but provided as a separate
+	// field because Apache Kafka requires it as a distinct option
+	// (kafka.ssl.key.password).
+	KeyPasswordRef types.List `tfsdk:"key_password_ref"`
+	// Unity Catalog volume path to the JKS keystore file containing the client
+	// certificate and private key. e.g.
+	// "/Volumes/<catalog>/<schema>/<volume>/client.jks". The materialization
+	// compute must have read permission on this volume.
+	KeystoreLocation types.String `tfsdk:"keystore_location"`
+	// Secret-scope reference for the JKS keystore password.
+	KeystorePasswordRef types.List `tfsdk:"keystore_password_ref"`
+	// Unity Catalog volume path to the JKS truststore file containing the CA
+	// certificate(s) trusted to verify the Kafka broker's server certificate.
+	// e.g. "/Volumes/<catalog>/<schema>/<volume>/truststore.jks".
+	TruststoreLocation types.String `tfsdk:"truststore_location"`
+	// Secret-scope reference for the JKS truststore password.
+	TruststorePasswordRef types.List `tfsdk:"truststore_password_ref"`
+}
+
+func (to *MtlsConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MtlsConfig_SdkV2) {
+	if !from.KeyPasswordRef.IsNull() && !from.KeyPasswordRef.IsUnknown() {
+		if toKeyPasswordRef, ok := to.GetKeyPasswordRef(ctx); ok {
+			if fromKeyPasswordRef, ok := from.GetKeyPasswordRef(ctx); ok {
+				// Recursively sync the fields of KeyPasswordRef
+				toKeyPasswordRef.SyncFieldsDuringCreateOrUpdate(ctx, fromKeyPasswordRef)
+				to.SetKeyPasswordRef(ctx, toKeyPasswordRef)
+			}
+		}
+	}
+	if !from.KeystorePasswordRef.IsNull() && !from.KeystorePasswordRef.IsUnknown() {
+		if toKeystorePasswordRef, ok := to.GetKeystorePasswordRef(ctx); ok {
+			if fromKeystorePasswordRef, ok := from.GetKeystorePasswordRef(ctx); ok {
+				// Recursively sync the fields of KeystorePasswordRef
+				toKeystorePasswordRef.SyncFieldsDuringCreateOrUpdate(ctx, fromKeystorePasswordRef)
+				to.SetKeystorePasswordRef(ctx, toKeystorePasswordRef)
+			}
+		}
+	}
+	if !from.TruststorePasswordRef.IsNull() && !from.TruststorePasswordRef.IsUnknown() {
+		if toTruststorePasswordRef, ok := to.GetTruststorePasswordRef(ctx); ok {
+			if fromTruststorePasswordRef, ok := from.GetTruststorePasswordRef(ctx); ok {
+				// Recursively sync the fields of TruststorePasswordRef
+				toTruststorePasswordRef.SyncFieldsDuringCreateOrUpdate(ctx, fromTruststorePasswordRef)
+				to.SetTruststorePasswordRef(ctx, toTruststorePasswordRef)
+			}
+		}
+	}
+}
+
+func (to *MtlsConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from MtlsConfig_SdkV2) {
+	if !from.KeyPasswordRef.IsNull() && !from.KeyPasswordRef.IsUnknown() {
+		if toKeyPasswordRef, ok := to.GetKeyPasswordRef(ctx); ok {
+			if fromKeyPasswordRef, ok := from.GetKeyPasswordRef(ctx); ok {
+				toKeyPasswordRef.SyncFieldsDuringRead(ctx, fromKeyPasswordRef)
+				to.SetKeyPasswordRef(ctx, toKeyPasswordRef)
+			}
+		}
+	}
+	if !from.KeystorePasswordRef.IsNull() && !from.KeystorePasswordRef.IsUnknown() {
+		if toKeystorePasswordRef, ok := to.GetKeystorePasswordRef(ctx); ok {
+			if fromKeystorePasswordRef, ok := from.GetKeystorePasswordRef(ctx); ok {
+				toKeystorePasswordRef.SyncFieldsDuringRead(ctx, fromKeystorePasswordRef)
+				to.SetKeystorePasswordRef(ctx, toKeystorePasswordRef)
+			}
+		}
+	}
+	if !from.TruststorePasswordRef.IsNull() && !from.TruststorePasswordRef.IsUnknown() {
+		if toTruststorePasswordRef, ok := to.GetTruststorePasswordRef(ctx); ok {
+			if fromTruststorePasswordRef, ok := from.GetTruststorePasswordRef(ctx); ok {
+				toTruststorePasswordRef.SyncFieldsDuringRead(ctx, fromTruststorePasswordRef)
+				to.SetTruststorePasswordRef(ctx, toTruststorePasswordRef)
+			}
+		}
+	}
+}
+
+func (m MtlsConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["disable_hostname_verification"] = attrs["disable_hostname_verification"].SetOptional()
+	attrs["key_password_ref"] = attrs["key_password_ref"].SetRequired()
+	attrs["key_password_ref"] = attrs["key_password_ref"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["keystore_location"] = attrs["keystore_location"].SetRequired()
+	attrs["keystore_password_ref"] = attrs["keystore_password_ref"].SetRequired()
+	attrs["keystore_password_ref"] = attrs["keystore_password_ref"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["truststore_location"] = attrs["truststore_location"].SetRequired()
+	attrs["truststore_password_ref"] = attrs["truststore_password_ref"].SetRequired()
+	attrs["truststore_password_ref"] = attrs["truststore_password_ref"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MtlsConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m MtlsConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"key_password_ref":        reflect.TypeOf(SecretScopeReference_SdkV2{}),
+		"keystore_password_ref":   reflect.TypeOf(SecretScopeReference_SdkV2{}),
+		"truststore_password_ref": reflect.TypeOf(SecretScopeReference_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MtlsConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m MtlsConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"disable_hostname_verification": m.DisableHostnameVerification,
+			"key_password_ref":              m.KeyPasswordRef,
+			"keystore_location":             m.KeystoreLocation,
+			"keystore_password_ref":         m.KeystorePasswordRef,
+			"truststore_location":           m.TruststoreLocation,
+			"truststore_password_ref":       m.TruststorePasswordRef,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m MtlsConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"disable_hostname_verification": types.BoolType,
+			"key_password_ref": basetypes.ListType{
+				ElemType: SecretScopeReference_SdkV2{}.Type(ctx),
+			},
+			"keystore_location": types.StringType,
+			"keystore_password_ref": basetypes.ListType{
+				ElemType: SecretScopeReference_SdkV2{}.Type(ctx),
+			},
+			"truststore_location": types.StringType,
+			"truststore_password_ref": basetypes.ListType{
+				ElemType: SecretScopeReference_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetKeyPasswordRef returns the value of the KeyPasswordRef field in MtlsConfig_SdkV2 as
+// a SecretScopeReference_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MtlsConfig_SdkV2) GetKeyPasswordRef(ctx context.Context) (SecretScopeReference_SdkV2, bool) {
+	var e SecretScopeReference_SdkV2
+	if m.KeyPasswordRef.IsNull() || m.KeyPasswordRef.IsUnknown() {
+		return e, false
+	}
+	var v []SecretScopeReference_SdkV2
+	d := m.KeyPasswordRef.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetKeyPasswordRef sets the value of the KeyPasswordRef field in MtlsConfig_SdkV2.
+func (m *MtlsConfig_SdkV2) SetKeyPasswordRef(ctx context.Context, v SecretScopeReference_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["key_password_ref"]
+	m.KeyPasswordRef = types.ListValueMust(t, vs)
+}
+
+// GetKeystorePasswordRef returns the value of the KeystorePasswordRef field in MtlsConfig_SdkV2 as
+// a SecretScopeReference_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MtlsConfig_SdkV2) GetKeystorePasswordRef(ctx context.Context) (SecretScopeReference_SdkV2, bool) {
+	var e SecretScopeReference_SdkV2
+	if m.KeystorePasswordRef.IsNull() || m.KeystorePasswordRef.IsUnknown() {
+		return e, false
+	}
+	var v []SecretScopeReference_SdkV2
+	d := m.KeystorePasswordRef.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetKeystorePasswordRef sets the value of the KeystorePasswordRef field in MtlsConfig_SdkV2.
+func (m *MtlsConfig_SdkV2) SetKeystorePasswordRef(ctx context.Context, v SecretScopeReference_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["keystore_password_ref"]
+	m.KeystorePasswordRef = types.ListValueMust(t, vs)
+}
+
+// GetTruststorePasswordRef returns the value of the TruststorePasswordRef field in MtlsConfig_SdkV2 as
+// a SecretScopeReference_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MtlsConfig_SdkV2) GetTruststorePasswordRef(ctx context.Context) (SecretScopeReference_SdkV2, bool) {
+	var e SecretScopeReference_SdkV2
+	if m.TruststorePasswordRef.IsNull() || m.TruststorePasswordRef.IsUnknown() {
+		return e, false
+	}
+	var v []SecretScopeReference_SdkV2
+	d := m.TruststorePasswordRef.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTruststorePasswordRef sets the value of the TruststorePasswordRef field in MtlsConfig_SdkV2.
+func (m *MtlsConfig_SdkV2) SetTruststorePasswordRef(ctx context.Context, v SecretScopeReference_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["truststore_password_ref"]
+	m.TruststorePasswordRef = types.ListValueMust(t, vs)
 }
 
 // Configuration for offline store destination.
@@ -18549,6 +20162,64 @@ func (m RestoreRunsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"runs_restored": types.Int64Type,
+		},
+	}
+}
+
+// A rolling time window with an optional delay. This is the SQL-spec-aligned
+// replacement for ContinuousWindow: `delay` is the non-negative counterpart of
+// the legacy non-positive `ContinuousWindow.offset`.
+type RollingWindow_SdkV2 struct {
+	// The delay applied to the end of the rolling window (must be
+	// non-negative). For example, delay=1d shifts the window end 1 day before
+	// the evaluation time.
+	Delay timetypes.GoDuration `tfsdk:"delay"`
+	// The duration of the rolling window (must be positive).
+	WindowDuration timetypes.GoDuration `tfsdk:"window_duration"`
+}
+
+func (to *RollingWindow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RollingWindow_SdkV2) {
+}
+
+func (to *RollingWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RollingWindow_SdkV2) {
+}
+
+func (m RollingWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delay"] = attrs["delay"].SetOptional()
+	attrs["window_duration"] = attrs["window_duration"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RollingWindow.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RollingWindow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RollingWindow_SdkV2
+// only implements ToObjectValue() and Type().
+func (m RollingWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"delay":           m.Delay,
+			"window_duration": m.WindowDuration,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RollingWindow_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"delay":           timetypes.GoDuration{}.Type(ctx),
+			"window_duration": timetypes.GoDuration{}.Type(ctx),
 		},
 	}
 }
@@ -20589,6 +22260,62 @@ func (m *SearchRunsResponse_SdkV2) SetRuns(ctx context.Context, v []Run_SdkV2) {
 	m.Runs = types.ListValueMust(t, vs)
 }
 
+// Reference to an entry in a Databricks secret scope. The referenced value is
+// fetched on the Spark cluster at materialization time via
+// dbutils.secrets.get(scope, key).
+type SecretScopeReference_SdkV2 struct {
+	// The key within the scope.
+	Key types.String `tfsdk:"key"`
+	// The Databricks secret scope name.
+	Scope types.String `tfsdk:"scope"`
+}
+
+func (to *SecretScopeReference_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SecretScopeReference_SdkV2) {
+}
+
+func (to *SecretScopeReference_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SecretScopeReference_SdkV2) {
+}
+
+func (m SecretScopeReference_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["scope"] = attrs["scope"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SecretScopeReference.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SecretScopeReference_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SecretScopeReference_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SecretScopeReference_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"key":   m.Key,
+			"scope": m.Scope,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SecretScopeReference_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"key":   types.StringType,
+			"scope": types.StringType,
+		},
+	}
+}
+
 type SetExperimentTag_SdkV2 struct {
 	// ID of the experiment under which to log the tag. Must be provided.
 	ExperimentId types.String `tfsdk:"experiment_id"`
@@ -21300,6 +23027,653 @@ func (m StddevSampFunction_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A Stream is a governed UC entity representing an external streaming data
+// source. The source_config oneof determines the streaming platform source
+// (e.g. Kafka, Kinesis, etc.).
+type Stream_SdkV2 struct {
+	// Indicates whether the principal is limited to retrieving metadata for the
+	// associated object through the BROWSE privilege when include_browse is
+	// enabled in the request.
+	BrowseOnly types.Bool `tfsdk:"browse_only"`
+	// Specifies how to connect and authenticate to the stream platform.
+	ConnectionConfig types.List `tfsdk:"connection_config"`
+	// Time at which this Stream was created.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// Username of the Stream creator.
+	CreatedBy types.String `tfsdk:"created_by"`
+	// User-provided description.
+	Description types.String `tfsdk:"description"`
+	// Configuration for streaming data ingestion: the managed table storing an
+	// offline copy of forward fill data and optional historical backfill.
+	IngestionConfig types.List `tfsdk:"ingestion_config"`
+	// Full three-part (catalog.schema.stream) name of the stream.
+	Name types.String `tfsdk:"name"`
+	// Schema definitions for the stream. Currently only direct schemas are
+	// supported. In a future milestone, we will support schema registries
+	// through a UC Connection.
+	SchemaConfig types.List `tfsdk:"schema_config"`
+	// Source-specific configuration. Determines the streaming platform source.
+	SourceConfig types.List `tfsdk:"source_config"`
+	// Time at which this Stream was last modified.
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
+	// Username of user who last modified the Stream.
+	UpdatedBy types.String `tfsdk:"updated_by"`
+}
+
+func (to *Stream_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Stream_SdkV2) {
+	if !from.ConnectionConfig.IsNull() && !from.ConnectionConfig.IsUnknown() {
+		if toConnectionConfig, ok := to.GetConnectionConfig(ctx); ok {
+			if fromConnectionConfig, ok := from.GetConnectionConfig(ctx); ok {
+				// Recursively sync the fields of ConnectionConfig
+				toConnectionConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromConnectionConfig)
+				to.SetConnectionConfig(ctx, toConnectionConfig)
+			}
+		}
+	}
+	if !from.IngestionConfig.IsNull() && !from.IngestionConfig.IsUnknown() {
+		if toIngestionConfig, ok := to.GetIngestionConfig(ctx); ok {
+			if fromIngestionConfig, ok := from.GetIngestionConfig(ctx); ok {
+				// Recursively sync the fields of IngestionConfig
+				toIngestionConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromIngestionConfig)
+				to.SetIngestionConfig(ctx, toIngestionConfig)
+			}
+		}
+	}
+	if !from.SchemaConfig.IsNull() && !from.SchemaConfig.IsUnknown() {
+		if toSchemaConfig, ok := to.GetSchemaConfig(ctx); ok {
+			if fromSchemaConfig, ok := from.GetSchemaConfig(ctx); ok {
+				// Recursively sync the fields of SchemaConfig
+				toSchemaConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromSchemaConfig)
+				to.SetSchemaConfig(ctx, toSchemaConfig)
+			}
+		}
+	}
+	if !from.SourceConfig.IsNull() && !from.SourceConfig.IsUnknown() {
+		if toSourceConfig, ok := to.GetSourceConfig(ctx); ok {
+			if fromSourceConfig, ok := from.GetSourceConfig(ctx); ok {
+				// Recursively sync the fields of SourceConfig
+				toSourceConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromSourceConfig)
+				to.SetSourceConfig(ctx, toSourceConfig)
+			}
+		}
+	}
+}
+
+func (to *Stream_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Stream_SdkV2) {
+	if !from.ConnectionConfig.IsNull() && !from.ConnectionConfig.IsUnknown() {
+		if toConnectionConfig, ok := to.GetConnectionConfig(ctx); ok {
+			if fromConnectionConfig, ok := from.GetConnectionConfig(ctx); ok {
+				toConnectionConfig.SyncFieldsDuringRead(ctx, fromConnectionConfig)
+				to.SetConnectionConfig(ctx, toConnectionConfig)
+			}
+		}
+	}
+	if !from.IngestionConfig.IsNull() && !from.IngestionConfig.IsUnknown() {
+		if toIngestionConfig, ok := to.GetIngestionConfig(ctx); ok {
+			if fromIngestionConfig, ok := from.GetIngestionConfig(ctx); ok {
+				toIngestionConfig.SyncFieldsDuringRead(ctx, fromIngestionConfig)
+				to.SetIngestionConfig(ctx, toIngestionConfig)
+			}
+		}
+	}
+	if !from.SchemaConfig.IsNull() && !from.SchemaConfig.IsUnknown() {
+		if toSchemaConfig, ok := to.GetSchemaConfig(ctx); ok {
+			if fromSchemaConfig, ok := from.GetSchemaConfig(ctx); ok {
+				toSchemaConfig.SyncFieldsDuringRead(ctx, fromSchemaConfig)
+				to.SetSchemaConfig(ctx, toSchemaConfig)
+			}
+		}
+	}
+	if !from.SourceConfig.IsNull() && !from.SourceConfig.IsUnknown() {
+		if toSourceConfig, ok := to.GetSourceConfig(ctx); ok {
+			if fromSourceConfig, ok := from.GetSourceConfig(ctx); ok {
+				toSourceConfig.SyncFieldsDuringRead(ctx, fromSourceConfig)
+				to.SetSourceConfig(ctx, toSourceConfig)
+			}
+		}
+	}
+}
+
+func (m Stream_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["browse_only"] = attrs["browse_only"].SetComputed()
+	attrs["connection_config"] = attrs["connection_config"].SetRequired()
+	attrs["connection_config"] = attrs["connection_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["ingestion_config"] = attrs["ingestion_config"].SetRequired()
+	attrs["ingestion_config"] = attrs["ingestion_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["schema_config"] = attrs["schema_config"].SetRequired()
+	attrs["schema_config"] = attrs["schema_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["source_config"] = attrs["source_config"].SetRequired()
+	attrs["source_config"] = attrs["source_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["updated_by"] = attrs["updated_by"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Stream.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Stream_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"connection_config": reflect.TypeOf(StreamConnectionConfig_SdkV2{}),
+		"ingestion_config":  reflect.TypeOf(IngestionConfig_SdkV2{}),
+		"schema_config":     reflect.TypeOf(StreamSchemaConfig_SdkV2{}),
+		"source_config":     reflect.TypeOf(StreamSourceConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Stream_SdkV2
+// only implements ToObjectValue() and Type().
+func (m Stream_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"browse_only":       m.BrowseOnly,
+			"connection_config": m.ConnectionConfig,
+			"create_time":       m.CreateTime,
+			"created_by":        m.CreatedBy,
+			"description":       m.Description,
+			"ingestion_config":  m.IngestionConfig,
+			"name":              m.Name,
+			"schema_config":     m.SchemaConfig,
+			"source_config":     m.SourceConfig,
+			"update_time":       m.UpdateTime,
+			"updated_by":        m.UpdatedBy,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Stream_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"browse_only": types.BoolType,
+			"connection_config": basetypes.ListType{
+				ElemType: StreamConnectionConfig_SdkV2{}.Type(ctx),
+			},
+			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"created_by":  types.StringType,
+			"description": types.StringType,
+			"ingestion_config": basetypes.ListType{
+				ElemType: IngestionConfig_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
+			"schema_config": basetypes.ListType{
+				ElemType: StreamSchemaConfig_SdkV2{}.Type(ctx),
+			},
+			"source_config": basetypes.ListType{
+				ElemType: StreamSourceConfig_SdkV2{}.Type(ctx),
+			},
+			"update_time": timetypes.RFC3339{}.Type(ctx),
+			"updated_by":  types.StringType,
+		},
+	}
+}
+
+// GetConnectionConfig returns the value of the ConnectionConfig field in Stream_SdkV2 as
+// a StreamConnectionConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Stream_SdkV2) GetConnectionConfig(ctx context.Context) (StreamConnectionConfig_SdkV2, bool) {
+	var e StreamConnectionConfig_SdkV2
+	if m.ConnectionConfig.IsNull() || m.ConnectionConfig.IsUnknown() {
+		return e, false
+	}
+	var v []StreamConnectionConfig_SdkV2
+	d := m.ConnectionConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConnectionConfig sets the value of the ConnectionConfig field in Stream_SdkV2.
+func (m *Stream_SdkV2) SetConnectionConfig(ctx context.Context, v StreamConnectionConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["connection_config"]
+	m.ConnectionConfig = types.ListValueMust(t, vs)
+}
+
+// GetIngestionConfig returns the value of the IngestionConfig field in Stream_SdkV2 as
+// a IngestionConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Stream_SdkV2) GetIngestionConfig(ctx context.Context) (IngestionConfig_SdkV2, bool) {
+	var e IngestionConfig_SdkV2
+	if m.IngestionConfig.IsNull() || m.IngestionConfig.IsUnknown() {
+		return e, false
+	}
+	var v []IngestionConfig_SdkV2
+	d := m.IngestionConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetIngestionConfig sets the value of the IngestionConfig field in Stream_SdkV2.
+func (m *Stream_SdkV2) SetIngestionConfig(ctx context.Context, v IngestionConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["ingestion_config"]
+	m.IngestionConfig = types.ListValueMust(t, vs)
+}
+
+// GetSchemaConfig returns the value of the SchemaConfig field in Stream_SdkV2 as
+// a StreamSchemaConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Stream_SdkV2) GetSchemaConfig(ctx context.Context) (StreamSchemaConfig_SdkV2, bool) {
+	var e StreamSchemaConfig_SdkV2
+	if m.SchemaConfig.IsNull() || m.SchemaConfig.IsUnknown() {
+		return e, false
+	}
+	var v []StreamSchemaConfig_SdkV2
+	d := m.SchemaConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchemaConfig sets the value of the SchemaConfig field in Stream_SdkV2.
+func (m *Stream_SdkV2) SetSchemaConfig(ctx context.Context, v StreamSchemaConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schema_config"]
+	m.SchemaConfig = types.ListValueMust(t, vs)
+}
+
+// GetSourceConfig returns the value of the SourceConfig field in Stream_SdkV2 as
+// a StreamSourceConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Stream_SdkV2) GetSourceConfig(ctx context.Context) (StreamSourceConfig_SdkV2, bool) {
+	var e StreamSourceConfig_SdkV2
+	if m.SourceConfig.IsNull() || m.SourceConfig.IsUnknown() {
+		return e, false
+	}
+	var v []StreamSourceConfig_SdkV2
+	d := m.SourceConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSourceConfig sets the value of the SourceConfig field in Stream_SdkV2.
+func (m *Stream_SdkV2) SetSourceConfig(ctx context.Context, v StreamSourceConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["source_config"]
+	m.SourceConfig = types.ListValueMust(t, vs)
+}
+
+// Specifies how to connect and authenticate to the stream platform.
+type StreamConnectionConfig_SdkV2 struct {
+	// Direct mTLS configuration for stream platform access. This is only used
+	// in the short term until UC Kafka Connections support mTLS (XTA-18030).
+	// Once UC Kafka Connections support mTLS, this will be deprecated.
+	DirectMtlsConfig types.List `tfsdk:"direct_mtls_config"`
+	// Name of an existing UC Connection for stream platform access. Must be the
+	// correct type for the streaming platform (e.g. a Kafka Connection for a
+	// Kafka Stream).
+	UcConnectionName types.String `tfsdk:"uc_connection_name"`
+}
+
+func (to *StreamConnectionConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamConnectionConfig_SdkV2) {
+	if !from.DirectMtlsConfig.IsNull() && !from.DirectMtlsConfig.IsUnknown() {
+		if toDirectMtlsConfig, ok := to.GetDirectMtlsConfig(ctx); ok {
+			if fromDirectMtlsConfig, ok := from.GetDirectMtlsConfig(ctx); ok {
+				// Recursively sync the fields of DirectMtlsConfig
+				toDirectMtlsConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromDirectMtlsConfig)
+				to.SetDirectMtlsConfig(ctx, toDirectMtlsConfig)
+			}
+		}
+	}
+}
+
+func (to *StreamConnectionConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StreamConnectionConfig_SdkV2) {
+	if !from.DirectMtlsConfig.IsNull() && !from.DirectMtlsConfig.IsUnknown() {
+		if toDirectMtlsConfig, ok := to.GetDirectMtlsConfig(ctx); ok {
+			if fromDirectMtlsConfig, ok := from.GetDirectMtlsConfig(ctx); ok {
+				toDirectMtlsConfig.SyncFieldsDuringRead(ctx, fromDirectMtlsConfig)
+				to.SetDirectMtlsConfig(ctx, toDirectMtlsConfig)
+			}
+		}
+	}
+}
+
+func (m StreamConnectionConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["direct_mtls_config"] = attrs["direct_mtls_config"].SetOptional()
+	attrs["direct_mtls_config"] = attrs["direct_mtls_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["uc_connection_name"] = attrs["uc_connection_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StreamConnectionConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StreamConnectionConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"direct_mtls_config": reflect.TypeOf(DirectMtlsConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StreamConnectionConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m StreamConnectionConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"direct_mtls_config": m.DirectMtlsConfig,
+			"uc_connection_name": m.UcConnectionName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StreamConnectionConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"direct_mtls_config": basetypes.ListType{
+				ElemType: DirectMtlsConfig_SdkV2{}.Type(ctx),
+			},
+			"uc_connection_name": types.StringType,
+		},
+	}
+}
+
+// GetDirectMtlsConfig returns the value of the DirectMtlsConfig field in StreamConnectionConfig_SdkV2 as
+// a DirectMtlsConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StreamConnectionConfig_SdkV2) GetDirectMtlsConfig(ctx context.Context) (DirectMtlsConfig_SdkV2, bool) {
+	var e DirectMtlsConfig_SdkV2
+	if m.DirectMtlsConfig.IsNull() || m.DirectMtlsConfig.IsUnknown() {
+		return e, false
+	}
+	var v []DirectMtlsConfig_SdkV2
+	d := m.DirectMtlsConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDirectMtlsConfig sets the value of the DirectMtlsConfig field in StreamConnectionConfig_SdkV2.
+func (m *StreamConnectionConfig_SdkV2) SetDirectMtlsConfig(ctx context.Context, v DirectMtlsConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["direct_mtls_config"]
+	m.DirectMtlsConfig = types.ListValueMust(t, vs)
+}
+
+// Schema definitions for the stream. Currently only direct schemas are
+// supported. In a future milestone, we will support schema registries through a
+// UC Connection.
+type StreamSchemaConfig_SdkV2 struct {
+	// Schema definitions provided directly on the Stream.
+	DirectSchemas types.List `tfsdk:"direct_schemas"`
+}
+
+func (to *StreamSchemaConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamSchemaConfig_SdkV2) {
+	if !from.DirectSchemas.IsNull() && !from.DirectSchemas.IsUnknown() {
+		if toDirectSchemas, ok := to.GetDirectSchemas(ctx); ok {
+			if fromDirectSchemas, ok := from.GetDirectSchemas(ctx); ok {
+				// Recursively sync the fields of DirectSchemas
+				toDirectSchemas.SyncFieldsDuringCreateOrUpdate(ctx, fromDirectSchemas)
+				to.SetDirectSchemas(ctx, toDirectSchemas)
+			}
+		}
+	}
+}
+
+func (to *StreamSchemaConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StreamSchemaConfig_SdkV2) {
+	if !from.DirectSchemas.IsNull() && !from.DirectSchemas.IsUnknown() {
+		if toDirectSchemas, ok := to.GetDirectSchemas(ctx); ok {
+			if fromDirectSchemas, ok := from.GetDirectSchemas(ctx); ok {
+				toDirectSchemas.SyncFieldsDuringRead(ctx, fromDirectSchemas)
+				to.SetDirectSchemas(ctx, toDirectSchemas)
+			}
+		}
+	}
+}
+
+func (m StreamSchemaConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["direct_schemas"] = attrs["direct_schemas"].SetOptional()
+	attrs["direct_schemas"] = attrs["direct_schemas"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StreamSchemaConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StreamSchemaConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"direct_schemas": reflect.TypeOf(DirectSchemas_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StreamSchemaConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m StreamSchemaConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"direct_schemas": m.DirectSchemas,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StreamSchemaConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"direct_schemas": basetypes.ListType{
+				ElemType: DirectSchemas_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetDirectSchemas returns the value of the DirectSchemas field in StreamSchemaConfig_SdkV2 as
+// a DirectSchemas_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StreamSchemaConfig_SdkV2) GetDirectSchemas(ctx context.Context) (DirectSchemas_SdkV2, bool) {
+	var e DirectSchemas_SdkV2
+	if m.DirectSchemas.IsNull() || m.DirectSchemas.IsUnknown() {
+		return e, false
+	}
+	var v []DirectSchemas_SdkV2
+	d := m.DirectSchemas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDirectSchemas sets the value of the DirectSchemas field in StreamSchemaConfig_SdkV2.
+func (m *StreamSchemaConfig_SdkV2) SetDirectSchemas(ctx context.Context, v DirectSchemas_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["direct_schemas"]
+	m.DirectSchemas = types.ListValueMust(t, vs)
+}
+
+// Source-specific configuration. Determines the streaming platform source.
+type StreamSourceConfig_SdkV2 struct {
+	// Configuration for Apache Kafka streams.
+	KafkaStreamConfig types.List `tfsdk:"kafka_stream_config"`
+}
+
+func (to *StreamSourceConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamSourceConfig_SdkV2) {
+	if !from.KafkaStreamConfig.IsNull() && !from.KafkaStreamConfig.IsUnknown() {
+		if toKafkaStreamConfig, ok := to.GetKafkaStreamConfig(ctx); ok {
+			if fromKafkaStreamConfig, ok := from.GetKafkaStreamConfig(ctx); ok {
+				// Recursively sync the fields of KafkaStreamConfig
+				toKafkaStreamConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromKafkaStreamConfig)
+				to.SetKafkaStreamConfig(ctx, toKafkaStreamConfig)
+			}
+		}
+	}
+}
+
+func (to *StreamSourceConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StreamSourceConfig_SdkV2) {
+	if !from.KafkaStreamConfig.IsNull() && !from.KafkaStreamConfig.IsUnknown() {
+		if toKafkaStreamConfig, ok := to.GetKafkaStreamConfig(ctx); ok {
+			if fromKafkaStreamConfig, ok := from.GetKafkaStreamConfig(ctx); ok {
+				toKafkaStreamConfig.SyncFieldsDuringRead(ctx, fromKafkaStreamConfig)
+				to.SetKafkaStreamConfig(ctx, toKafkaStreamConfig)
+			}
+		}
+	}
+}
+
+func (m StreamSourceConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["kafka_stream_config"] = attrs["kafka_stream_config"].SetOptional()
+	attrs["kafka_stream_config"] = attrs["kafka_stream_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StreamSourceConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StreamSourceConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"kafka_stream_config": reflect.TypeOf(KafkaStreamConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StreamSourceConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m StreamSourceConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"kafka_stream_config": m.KafkaStreamConfig,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StreamSourceConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"kafka_stream_config": basetypes.ListType{
+				ElemType: KafkaStreamConfig_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetKafkaStreamConfig returns the value of the KafkaStreamConfig field in StreamSourceConfig_SdkV2 as
+// a KafkaStreamConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StreamSourceConfig_SdkV2) GetKafkaStreamConfig(ctx context.Context) (KafkaStreamConfig_SdkV2, bool) {
+	var e KafkaStreamConfig_SdkV2
+	if m.KafkaStreamConfig.IsNull() || m.KafkaStreamConfig.IsUnknown() {
+		return e, false
+	}
+	var v []KafkaStreamConfig_SdkV2
+	d := m.KafkaStreamConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetKafkaStreamConfig sets the value of the KafkaStreamConfig field in StreamSourceConfig_SdkV2.
+func (m *StreamSourceConfig_SdkV2) SetKafkaStreamConfig(ctx context.Context, v KafkaStreamConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["kafka_stream_config"]
+	m.KafkaStreamConfig = types.ListValueMust(t, vs)
+}
+
+// The streaming mode configuration for a streaming materialization pipeline.
+type StreamingMode_SdkV2 struct {
+	// The type of streaming mode used by the materialization pipeline.
+	Mode types.String `tfsdk:"mode"`
+}
+
+func (to *StreamingMode_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamingMode_SdkV2) {
+}
+
+func (to *StreamingMode_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StreamingMode_SdkV2) {
+}
+
+func (m StreamingMode_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["mode"] = attrs["mode"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StreamingMode.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StreamingMode_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StreamingMode_SdkV2
+// only implements ToObjectValue() and Type().
+func (m StreamingMode_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"mode": m.Mode,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StreamingMode_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"mode": types.StringType,
+		},
+	}
+}
+
+// Deprecated: Use KafkaSubscriptionMode instead.
 type SubscriptionMode_SdkV2 struct {
 	// A JSON string that contains the specific topic-partitions to consume
 	// from. For example, for '{"topicA":[0,1],"topicB":[2,4]}', topicA's 0'th
@@ -21415,6 +23789,48 @@ func (m SumFunction_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A trigger that fires when the upstream source table changes.
+type TableTrigger_SdkV2 struct {
+}
+
+func (to *TableTrigger_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TableTrigger_SdkV2) {
+}
+
+func (to *TableTrigger_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TableTrigger_SdkV2) {
+}
+
+func (m TableTrigger_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TableTrigger.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TableTrigger_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TableTrigger_SdkV2
+// only implements ToObjectValue() and Type().
+func (m TableTrigger_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TableTrigger_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 // Details required to test a registry webhook.
 type TestRegistryWebhookRequest_SdkV2 struct {
 	// If `event` is specified, the test trigger uses the specified event. If
@@ -21527,6 +23943,8 @@ func (m TestRegistryWebhookResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type TimeWindow_SdkV2 struct {
 	Continuous types.List `tfsdk:"continuous"`
 
+	Rolling types.List `tfsdk:"rolling"`
+
 	Sliding types.List `tfsdk:"sliding"`
 
 	Tumbling types.List `tfsdk:"tumbling"`
@@ -21539,6 +23957,15 @@ func (to *TimeWindow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 				// Recursively sync the fields of Continuous
 				toContinuous.SyncFieldsDuringCreateOrUpdate(ctx, fromContinuous)
 				to.SetContinuous(ctx, toContinuous)
+			}
+		}
+	}
+	if !from.Rolling.IsNull() && !from.Rolling.IsUnknown() {
+		if toRolling, ok := to.GetRolling(ctx); ok {
+			if fromRolling, ok := from.GetRolling(ctx); ok {
+				// Recursively sync the fields of Rolling
+				toRolling.SyncFieldsDuringCreateOrUpdate(ctx, fromRolling)
+				to.SetRolling(ctx, toRolling)
 			}
 		}
 	}
@@ -21571,6 +23998,14 @@ func (to *TimeWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TimeW
 			}
 		}
 	}
+	if !from.Rolling.IsNull() && !from.Rolling.IsUnknown() {
+		if toRolling, ok := to.GetRolling(ctx); ok {
+			if fromRolling, ok := from.GetRolling(ctx); ok {
+				toRolling.SyncFieldsDuringRead(ctx, fromRolling)
+				to.SetRolling(ctx, toRolling)
+			}
+		}
+	}
 	if !from.Sliding.IsNull() && !from.Sliding.IsUnknown() {
 		if toSliding, ok := to.GetSliding(ctx); ok {
 			if fromSliding, ok := from.GetSliding(ctx); ok {
@@ -21592,6 +24027,8 @@ func (to *TimeWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TimeW
 func (m TimeWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["continuous"] = attrs["continuous"].SetOptional()
 	attrs["continuous"] = attrs["continuous"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["rolling"] = attrs["rolling"].SetOptional()
+	attrs["rolling"] = attrs["rolling"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["sliding"] = attrs["sliding"].SetOptional()
 	attrs["sliding"] = attrs["sliding"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["tumbling"] = attrs["tumbling"].SetOptional()
@@ -21610,6 +24047,7 @@ func (m TimeWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 func (m TimeWindow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"continuous": reflect.TypeOf(ContinuousWindow_SdkV2{}),
+		"rolling":    reflect.TypeOf(RollingWindow_SdkV2{}),
 		"sliding":    reflect.TypeOf(SlidingWindow_SdkV2{}),
 		"tumbling":   reflect.TypeOf(TumblingWindow_SdkV2{}),
 	}
@@ -21623,6 +24061,7 @@ func (m TimeWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"continuous": m.Continuous,
+			"rolling":    m.Rolling,
 			"sliding":    m.Sliding,
 			"tumbling":   m.Tumbling,
 		})
@@ -21634,6 +24073,9 @@ func (m TimeWindow_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"continuous": basetypes.ListType{
 				ElemType: ContinuousWindow_SdkV2{}.Type(ctx),
+			},
+			"rolling": basetypes.ListType{
+				ElemType: RollingWindow_SdkV2{}.Type(ctx),
 			},
 			"sliding": basetypes.ListType{
 				ElemType: SlidingWindow_SdkV2{}.Type(ctx),
@@ -21669,6 +24111,32 @@ func (m *TimeWindow_SdkV2) SetContinuous(ctx context.Context, v ContinuousWindow
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["continuous"]
 	m.Continuous = types.ListValueMust(t, vs)
+}
+
+// GetRolling returns the value of the Rolling field in TimeWindow_SdkV2 as
+// a RollingWindow_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TimeWindow_SdkV2) GetRolling(ctx context.Context) (RollingWindow_SdkV2, bool) {
+	var e RollingWindow_SdkV2
+	if m.Rolling.IsNull() || m.Rolling.IsUnknown() {
+		return e, false
+	}
+	var v []RollingWindow_SdkV2
+	d := m.Rolling.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRolling sets the value of the Rolling field in TimeWindow_SdkV2.
+func (m *TimeWindow_SdkV2) SetRolling(ctx context.Context, v RollingWindow_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["rolling"]
+	m.Rolling = types.ListValueMust(t, vs)
 }
 
 // GetSliding returns the value of the Sliding field in TimeWindow_SdkV2 as
@@ -22372,7 +24840,9 @@ func (m UpdateExperimentResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type UpdateFeatureRequest_SdkV2 struct {
 	// Feature to update.
 	Feature types.List `tfsdk:"feature"`
-	// The full three-part name (catalog, schema, name) of the feature.
+	// The full three-part name (catalog, schema, name) of the feature. This is
+	// the feature's resource identifier; the catalog_name, schema_name, and
+	// name fields below are OUTPUT_ONLY decomposed views of this value.
 	FullName types.String `tfsdk:"-"`
 	// The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
@@ -22702,7 +25172,7 @@ func (m *UpdateKafkaConfigRequest_SdkV2) SetKafkaConfig(ctx context.Context, v K
 type UpdateMaterializedFeatureRequest_SdkV2 struct {
 	// The materialized feature to update.
 	MaterializedFeature types.List `tfsdk:"materialized_feature"`
-	// Unique identifier for the materialized feature.
+	// Server-assigned unique identifier for the materialized feature.
 	MaterializedFeatureId types.String `tfsdk:"-"`
 	// Provide the materialization feature fields which should be updated.
 	// Currently, only the pipeline_state field can be updated.
@@ -22736,6 +25206,7 @@ func (m UpdateMaterializedFeatureRequest_SdkV2) ApplySchemaCustomizations(attrs 
 	attrs["materialized_feature"] = attrs["materialized_feature"].SetRequired()
 	attrs["materialized_feature"] = attrs["materialized_feature"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetRequired()
+	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
 	return attrs
@@ -23622,6 +26093,112 @@ func (m *UpdateRunResponse_SdkV2) SetRunInfo(ctx context.Context, v RunInfo_SdkV
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["run_info"]
 	m.RunInfo = types.ListValueMust(t, vs)
+}
+
+type UpdateStreamRequest_SdkV2 struct {
+	// Full three-part (catalog.schema.stream) name of the stream.
+	Name types.String `tfsdk:"-"`
+	// The Stream to update.
+	Stream types.List `tfsdk:"stream"`
+	// The list of fields to update.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateStreamRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateStreamRequest_SdkV2) {
+	if !from.Stream.IsNull() && !from.Stream.IsUnknown() {
+		if toStream, ok := to.GetStream(ctx); ok {
+			if fromStream, ok := from.GetStream(ctx); ok {
+				// Recursively sync the fields of Stream
+				toStream.SyncFieldsDuringCreateOrUpdate(ctx, fromStream)
+				to.SetStream(ctx, toStream)
+			}
+		}
+	}
+}
+
+func (to *UpdateStreamRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateStreamRequest_SdkV2) {
+	if !from.Stream.IsNull() && !from.Stream.IsUnknown() {
+		if toStream, ok := to.GetStream(ctx); ok {
+			if fromStream, ok := from.GetStream(ctx); ok {
+				toStream.SyncFieldsDuringRead(ctx, fromStream)
+				to.SetStream(ctx, toStream)
+			}
+		}
+	}
+}
+
+func (m UpdateStreamRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["stream"] = attrs["stream"].SetRequired()
+	attrs["stream"] = attrs["stream"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateStreamRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateStreamRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"stream": reflect.TypeOf(Stream_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateStreamRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UpdateStreamRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":        m.Name,
+			"stream":      m.Stream,
+			"update_mask": m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateStreamRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+			"stream": basetypes.ListType{
+				ElemType: Stream_SdkV2{}.Type(ctx),
+			},
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetStream returns the value of the Stream field in UpdateStreamRequest_SdkV2 as
+// a Stream_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateStreamRequest_SdkV2) GetStream(ctx context.Context) (Stream_SdkV2, bool) {
+	var e Stream_SdkV2
+	if m.Stream.IsNull() || m.Stream.IsUnknown() {
+		return e, false
+	}
+	var v []Stream_SdkV2
+	d := m.Stream.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStream sets the value of the Stream field in UpdateStreamRequest_SdkV2.
+func (m *UpdateStreamRequest_SdkV2) SetStream(ctx context.Context, v Stream_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["stream"]
+	m.Stream = types.ListValueMust(t, vs)
 }
 
 type UpdateWebhookResponse_SdkV2 struct {

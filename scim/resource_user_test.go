@@ -156,6 +156,61 @@ func TestResourceUserCreate(t *testing.T) {
 	})
 }
 
+// Mirrors the per-user assertions in TestAccUserResource for the
+// allow_instance_pool_create entitlement, so the entitlement wiring is covered
+// in unit tests even though the integration test is skipped on Azure.
+func TestResourceUserCreate_WithInstancePoolEntitlement(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/preview/scim/v2/Users",
+				ExpectedRequest: User{
+					DisplayName: "Derde",
+					Active:      true,
+					Entitlements: entitlements{
+						{
+							Value: "allow-instance-pool-create",
+						},
+					},
+					UserName: "tf-derde@example.com",
+					Schemas:  []URN{UserSchema},
+				},
+				Response: User{
+					ID: "abc",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
+				Response: User{
+					DisplayName: "Derde",
+					Active:      true,
+					UserName:    "tf-derde@example.com",
+					ID:          "abc",
+					Entitlements: entitlements{
+						{
+							Value: "allow-instance-pool-create",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceUser(),
+		Create:   true,
+		HCL: `
+		user_name                  = "tf-derde@example.com"
+		display_name               = "Derde"
+		allow_instance_pool_create = true
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"display_name":               "Derde",
+		"user_name":                  "tf-derde@example.com",
+		"allow_cluster_create":       false,
+		"allow_instance_pool_create": true,
+	})
+}
+
 func TestResourceUserCreateInactive(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -9,7 +9,9 @@ import (
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 
+	"github.com/databricks/terraform-provider-databricks/catalog/bindings"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -131,6 +133,51 @@ func TestCreateIsolatedExternalLocation(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestDeleteIsolatedExternalLocation(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockMetastoresAPI().EXPECT().Current(mock.Anything).Return(&catalog.MetastoreAssignment{
+				MetastoreId: "e",
+				WorkspaceId: 123456789101112,
+			}, nil)
+			w.GetMockWorkspaceBindingsAPI().EXPECT().UpdateBindings(mock.Anything, catalog.UpdateWorkspaceBindingsParameters{
+				SecurableName: "abc",
+				SecurableType: string(bindings.BindingsSecurableTypeExternalLocation),
+				Add: []catalog.WorkspaceBinding{
+					{
+						WorkspaceId: int64(123456789101112),
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+					},
+				},
+			}).Return(&catalog.UpdateWorkspaceBindingsResponse{
+				Bindings: []catalog.WorkspaceBinding{
+					{
+						WorkspaceId: int64(123456789101112),
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+					},
+				},
+			}, nil)
+			w.GetMockExternalLocationsAPI().EXPECT().Delete(mock.Anything, catalog.DeleteExternalLocationRequest{
+				Name: "abc",
+			}).Return(nil)
+		},
+		Resource: ResourceExternalLocation(),
+		Delete:   true,
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"name":           "abc",
+			"isolation_mode": "ISOLATION_MODE_ISOLATED",
+		},
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		comment = "def"
+		isolation_mode = "ISOLATION_MODE_ISOLATED"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestCreateExternalLocationWithOwner(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -221,6 +268,51 @@ func TestCreateExternalLocationReadOnly(t *testing.T) {
 		credential_name = "bcd"
 		comment = "def"
 		read_only = true
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestCreateExternalLocationEnableFileEventsFalse(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/external-locations",
+				ExpectedRequest: catalog.CreateExternalLocation{
+					Name:             "abc",
+					Url:              "s3://foo/bar",
+					CredentialName:   "bcd",
+					Comment:          "def",
+					EnableFileEvents: false,
+					ForceSendFields:  []string{"EnableFileEvents"},
+				},
+				Response: catalog.ExternalLocationInfo{
+					Name:             "abc",
+					Url:              "s3://foo/bar",
+					CredentialName:   "bcd",
+					Comment:          "def",
+					EnableFileEvents: false,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc?",
+				Response: catalog.ExternalLocationInfo{
+					Owner:                     "efg",
+					MetastoreId:               "fgh",
+					EnableFileEvents:          false,
+					EffectiveEnableFileEvents: false,
+				},
+			},
+		},
+		Resource: ResourceExternalLocation(),
+		Create:   true,
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		comment = "def"
+		enable_file_events = false
 		`,
 	}.ApplyNoError(t)
 }
@@ -691,6 +783,135 @@ func TestCreateExternalLocationWithEffectiveEnableFileEvents(t *testing.T) {
 		comment = "def"
 		`,
 	}.ApplyNoError(t)
+}
+
+func TestCreateExternalLocationWithEffectiveFileEventQueue(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/external-locations",
+				ExpectedRequest: catalog.CreateExternalLocation{
+					Name:           "abc",
+					Url:            "s3://foo/bar",
+					CredentialName: "bcd",
+					Comment:        "def",
+				},
+				Response: catalog.ExternalLocationInfo{
+					Name:           "abc",
+					Url:            "s3://foo/bar",
+					CredentialName: "bcd",
+					Comment:        "def",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc?",
+				Response: catalog.ExternalLocationInfo{
+					Name:           "abc",
+					Url:            "s3://foo/bar",
+					CredentialName: "bcd",
+					Comment:        "def",
+					Owner:          "efg",
+					MetastoreId:    "fgh",
+					EffectiveFileEventQueue: &catalog.FileEventQueue{
+						ManagedSqs: &catalog.AwsSqsQueue{},
+					},
+				},
+			},
+		},
+		Resource: ResourceExternalLocation(),
+		Create:   true,
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		comment = "def"
+		`,
+	}.ApplyNoError(t)
+}
+
+// Verifies Read behavior when the server response has no `effective_file_event_queue`
+// (current API behavior when file events are disabled). The Go SDK unmarshals this as a
+// nil pointer, which `StructToData` skips, leaving state empty for the field.
+// This test asserts that empty-list shape so we don't accidentally regress to writing a
+// concrete-but-empty block, which would interact differently with the diff suppressor.
+func TestReadExternalLocationServerOmitsEffectiveFileEventQueue(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc?",
+				Response: catalog.ExternalLocationInfo{
+					Name:                      "abc",
+					Url:                       "s3://foo/bar",
+					CredentialName:            "bcd",
+					Comment:                   "def",
+					Owner:                     "efg",
+					MetastoreId:               "fgh",
+					EffectiveEnableFileEvents: false,
+					// EffectiveFileEventQueue intentionally nil — mirrors current server behavior.
+				},
+			},
+		},
+		Resource: ResourceExternalLocation(),
+		Read:     true,
+		ID:       "abc",
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		comment = "def"
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Empty(t, d.Get("effective_file_event_queue").([]any), "expected empty list when server omits the field")
+}
+
+// Verifies Read behavior when the server returns a populated `effective_file_event_queue`
+// (e.g. with a server-assigned `managed_pubsub.managed_resource_id`). Asserts that the
+// nested values land in state verbatim under the expected paths — drift suppression then
+// keeps these populated children from showing diffs on subsequent plans even though the
+// user's HCL never references them.
+func TestReadExternalLocationServerReturnsEffectiveFileEventQueue(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc?",
+				Response: catalog.ExternalLocationInfo{
+					Name:           "abc",
+					Url:            "s3://foo/bar",
+					CredentialName: "bcd",
+					Comment:        "def",
+					Owner:          "efg",
+					MetastoreId:    "fgh",
+					EffectiveFileEventQueue: &catalog.FileEventQueue{
+						ManagedPubsub: &catalog.GcpPubsub{
+							ManagedResourceId: "projects/p/subscriptions/s",
+						},
+					},
+					EffectiveEnableFileEvents: true,
+				},
+			},
+		},
+		Resource: ResourceExternalLocation(),
+		Read:     true,
+		ID:       "abc",
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		comment = "def"
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, true, d.Get("effective_enable_file_events"))
+	effective := d.Get("effective_file_event_queue").([]any)
+	assert.Len(t, effective, 1)
+	pubsub := effective[0].(map[string]any)["managed_pubsub"].([]any)
+	assert.Len(t, pubsub, 1)
+	assert.Equal(t, "projects/p/subscriptions/s", pubsub[0].(map[string]any)["managed_resource_id"])
 }
 
 func TestUpdateExternalLocationForce(t *testing.T) {

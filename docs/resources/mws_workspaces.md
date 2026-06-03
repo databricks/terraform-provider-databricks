@@ -13,6 +13,8 @@ This resource allows you to set up [workspaces on AWS](https://docs.databricks.c
 
 ~> On Azure you need to use [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource to create Azure Databricks workspaces.
 
+~> On GCP, the provider must be authenticated with a Google-issued OIDC token (not a Databricks OAuth token), because creating or updating this resource triggers operations against your GCP project. See [Authenticate with Databricks account API](../guides/gcp-workspace.md#authenticate-with-databricks-account-api) for setup instructions.
+
 ## Example Usage
 
 ### Creating a serverless workspace in AWS and GCP

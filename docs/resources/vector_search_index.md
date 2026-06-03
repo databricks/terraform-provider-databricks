@@ -44,7 +44,6 @@ The following arguments are supported (change of any parameter leads to recreati
 ### delta_sync_index_spec Configuration Block
 
 * `source_table` (required) The name of the source table.
-* `columns_to_sync` - (optional) list of columns to sync. If not specified, all columns are syncronized.
 * `embedding_source_columns` - (required if `embedding_vector_columns` isn't provided) array of objects representing columns that contain the embedding source.  Each entry consists of:
   * `name` - The name of the column
   * `embedding_model_endpoint_name` - The name of the embedding model endpoint, used by default for both ingestion and querying.

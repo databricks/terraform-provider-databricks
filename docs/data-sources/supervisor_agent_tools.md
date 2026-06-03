@@ -4,6 +4,8 @@ subcategory: "Agent Bricks"
 # databricks_supervisor_agent_tools Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/supervisoragents)
+
 
 
 ## Example Usage
@@ -23,7 +25,6 @@ The following arguments are supported:
 ## Attributes
 This data source exports a single attribute, `tools`. It is a list of resources, each with the following attributes:
 * `app` (App)
-* `uc_connection` (UcConnection)
 * `description` (string) - Description of what this tool does (user-facing)
 * `genie_space` (GenieSpace)
 * `id` (string, deprecated) - Deprecated: Use tool_id instead
@@ -31,22 +32,24 @@ This data source exports a single attribute, `tools`. It is a list of resources,
 * `name` (string) - Full resource name:
   supervisor-agents/{supervisor_agent_id}/tools/{tool_id}
 * `tool_id` (string) - User specified id of the Tool
-* `tool_type` (string) - Tool type. Must be one of: "genie_space", "knowledge_assistant", "uc_function", "connection", "app", "volume", "lakeview_dashboard", "serving_endpoint", "uc_table", "vector_search_index"
+* `tool_type` (string) - Tool type. Must be one of: "genie_space", "knowledge_assistant", "uc_function", "uc_connection", "uc_mcp", "app", "volume", "dashboard", "serving_endpoint", "table", "vector_search_index", "catalog", "schema", "supervisor_agent", "web_search", "skill". The legacy values "lakeview_dashboard" and "uc_table" are also accepted and remain equivalent to "dashboard" and "table" respectively
+* `uc_connection` (UcConnection)
 * `uc_function` (UcFunction)
 * `volume` (Volume)
 
 ### App
 * `name` (string) - App name
 
-### UcConnection
-* `name` (string)
-
 ### GenieSpace
-* `id` (string) - The ID of the genie space
+* `id` (string, deprecated) - Deprecated: use space_id instead. Still REQUIRED for backward compatibility
+  until a future API version removes it
 
 ### KnowledgeAssistant
 * `knowledge_assistant_id` (string) - The ID of the knowledge assistant
 * `serving_endpoint_name` (string, deprecated) - Deprecated: use knowledge_assistant_id instead
+
+### UcConnection
+* `name` (string)
 
 ### UcFunction
 * `name` (string) - Full uc function name

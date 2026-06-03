@@ -2,7 +2,9 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_policy_info Resource
-[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/policies)
 
 Attribute-Based Access Control (ABAC) policies in Unity Catalog provide high leverage governance for enforcing compliance policies. With ABAC policies, access is controlled in a hierarchical and scalable manner, based on data attributes rather than specific resources, enabling more flexible and comprehensive access control.
 
@@ -21,8 +23,6 @@ ABAC policies can be applied to the following securable types:
 - Catalogs
 - Schemas
 - Tables
-
-[API Documentation](https://docs.databricks.com/api/workspace/policies)
 
 
 

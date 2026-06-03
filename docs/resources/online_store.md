@@ -4,9 +4,6 @@ subcategory: "Machine Learning"
 # databricks_online_store Resource
 [![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
-<!-- TODO: verify API docs URL -->
-[API Documentation](https://docs.databricks.com/api/workspace/introduction)
-
 
 
 ## Example Usage

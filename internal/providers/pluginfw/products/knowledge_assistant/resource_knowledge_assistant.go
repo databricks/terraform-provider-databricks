@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -56,8 +55,6 @@ func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -129,7 +126,7 @@ type KnowledgeAssistant struct {
 	ErrorInfo types.String `tfsdk:"error_info"`
 	// The MLflow experiment ID.
 	ExperimentId types.String `tfsdk:"experiment_id"`
-	// The universally unique identifier (UUID) of the Knowledge Assistant.
+	// Deprecated: use knowledge_assistant_id instead.
 	Id types.String `tfsdk:"id"`
 	// Additional global instructions on how the agent should generate answers.
 	// Optional on create and update. When updating a Knowledge Assistant,

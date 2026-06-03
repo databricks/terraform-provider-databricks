@@ -4,9 +4,116 @@ subcategory: "Postgres"
 # databricks_postgres_synced_table Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
+### Lakebase Autoscaling Terraform Behavior
+
+This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
+
+### Overview
+
+A Postgres synced table replicates data from a Delta table in Unity Catalog into a Postgres table for low-latency serving. The synchronization is managed by an underlying Lakeflow pipeline.
+
+### Hierarchy Context
+
+Synced tables exist within the Lakebase Autoscaling resource hierarchy:
+- A **synced table** belongs to a **catalog** within a **branch** and **project**
+- Each synced table replicates exactly one source Delta table into Postgres
+- The `synced_table_id` is the three-part Unity Catalog name: `catalog.schema.table`
+
+### Use Cases
+
+- **Low-latency serving**: Serve Delta table data through Postgres for millisecond read latency
+- **Feature store**: Provide online feature serving for ML models backed by Delta tables
+- **Reverse ETL**: Push lakehouse data into Postgres for consumption by external applications and APIs
 
 
 ## Example Usage
+### Basic Synced Table with Snapshot Policy
+
+```hcl
+resource "databricks_postgres_project" "this" {
+  project_id = "my-project"
+  spec = {
+    pg_version   = 17
+    display_name = "My Project"
+  }
+}
+
+resource "databricks_postgres_branch" "main" {
+  branch_id = "main"
+  parent    = databricks_postgres_project.this.name
+  spec = {
+    no_expiry = true
+  }
+}
+
+resource "databricks_postgres_catalog" "this" {
+  catalog_id = "app_catalog"
+  spec = {
+    postgres_database          = "app_db"
+    create_database_if_missing = true
+    branch                     = databricks_postgres_branch.main.name
+  }
+}
+
+resource "databricks_postgres_synced_table" "this" {
+  synced_table_id = "app_catalog.default.users_synced"
+  spec = {
+    source_table_full_name            = "main.default.users"
+    primary_key_columns               = ["user_id"]
+    scheduling_policy                 = "SNAPSHOT"
+    postgres_database                 = "app_db"
+    branch                            = databricks_postgres_branch.main.name
+    create_database_objects_if_missing = true
+    new_pipeline_spec = {
+      storage_catalog = "main"
+      storage_schema  = "default"
+    }
+  }
+}
+```
+
+### Synced Table with Triggered Policy
+
+Use `TRIGGERED` for on-demand updates. Requires Change Data Feed (CDF) enabled on the source table.
+
+```hcl
+resource "databricks_postgres_synced_table" "triggered" {
+  synced_table_id = "app_catalog.default.orders_synced"
+  spec = {
+    source_table_full_name            = "main.default.orders"
+    primary_key_columns               = ["order_id"]
+    scheduling_policy                 = "TRIGGERED"
+    postgres_database                 = "app_db"
+    branch                            = databricks_postgres_branch.main.name
+    create_database_objects_if_missing = true
+    new_pipeline_spec = {
+      storage_catalog = "main"
+      storage_schema  = "default"
+    }
+  }
+}
+```
+
+### Synced Table with Existing Pipeline
+
+Bin-pack into an existing pipeline instead of creating a new one:
+
+```hcl
+resource "databricks_postgres_synced_table" "this" {
+  synced_table_id = "app_catalog.default.products_synced"
+  spec = {
+    source_table_full_name            = "main.default.products"
+    primary_key_columns               = ["product_id"]
+    scheduling_policy                 = "SNAPSHOT"
+    postgres_database                 = "app_db"
+    branch                            = databricks_postgres_branch.main.name
+    create_database_objects_if_missing = true
+    existing_pipeline_id              = "abc123-def456"
+  }
+}
+```
 
 
 ## Arguments

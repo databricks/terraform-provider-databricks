@@ -74,7 +74,10 @@ var dacSchema = common.StructToSchema(StorageCredentialInfo{},
 
 		common.AddApiField(m)
 		common.AddNamespaceInSchema(m)
-		common.NamespaceCustomizeSchemaMap(m)
+		// metastore_data_access has no real Update API (immutable after Create).
+		// Use the *Immutable variant so workspace_id is ForceNew → switching the
+		// provider workspace_id destroys and recreates via the new workspace.
+		common.NamespaceCustomizeSchemaMapImmutable(m)
 		return adjustDataAccessSchema(m)
 	})
 
@@ -110,6 +113,7 @@ func toUpdateAccountsStorageCredential(update *catalog.UpdateStorageCredential) 
 func ResourceMetastoreDataAccess() common.Resource {
 	p := common.NewPairID("metastore_id", "name")
 	return common.Resource{
+		IsDual:        true,
 		Schema:        dacSchema,
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -120,15 +124,14 @@ func ResourceMetastoreDataAccess() common.Resource {
 			},
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-			return common.CustomizeDiffDualResources(ctx, d, c)
+			return common.CustomizeDiffDualResourcesNoForceNew(ctx, d, c)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
 			metastoreId := d.Get("metastore_id").(string)
-
 			var create catalog.CreateStorageCredential
 			common.DataToStructPointer(d, dacSchema, &create)
 
@@ -174,7 +177,7 @@ func ResourceMetastoreDataAccess() common.Resource {
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -217,7 +220,7 @@ func ResourceMetastoreDataAccess() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}

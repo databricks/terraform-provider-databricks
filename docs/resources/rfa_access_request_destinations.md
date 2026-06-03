@@ -4,8 +4,7 @@ subcategory: "Unity Catalog"
 # databricks_rfa_access_request_destinations Resource
 [![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
-<!-- TODO: verify API docs URL -->
-[API Documentation](https://docs.databricks.com/api/workspace/introduction)
+[API Documentation](https://docs.databricks.com/api/workspace/rfa)
 
 Request for Access (RFA) access request destinations allow you to configure where notifications are sent when users request access to securable objects in Unity Catalog. This resource enables you to manage access request destinations for specific securable objects, such as tables, catalogs, or schemas.
 

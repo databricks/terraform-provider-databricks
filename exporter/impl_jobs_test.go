@@ -33,6 +33,26 @@ func TestJobName(t *testing.T) {
 	assert.Equal(t, "test_1pm_12345", resourcesMap["databricks_job"].Name(ic, d))
 }
 
+func TestImportTaskAlertTaskEmitsDependencies(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("jobs,alerts,sql-endpoints,settings,users")
+	importTask(ic, sdk_jobs.Task{
+		AlertTask: &sdk_jobs.AlertTask{
+			AlertId:     "alert-id-1",
+			WarehouseId: "warehouse-1",
+			Subscribers: []sdk_jobs.AlertTaskSubscriber{
+				{UserName: "subscriber@example.com"},
+				{DestinationId: "nd-destination-1"},
+			},
+		},
+	}, "test_job", "99")
+	assert.Len(t, ic.testEmits, 4)
+	assert.Contains(t, ic.testEmits, "databricks_alert_v2[<unknown>] (id: alert-id-1)")
+	assert.Contains(t, ic.testEmits, "databricks_sql_endpoint[<unknown>] (id: warehouse-1)")
+	assert.Contains(t, ic.testEmits, "databricks_user[<unknown>] (user_name: subscriber@example.com)")
+	assert.Contains(t, ic.testEmits, "databricks_notification_destination[<unknown>] (id: nd-destination-1)")
+}
+
 func TestJobListNoNameMatchOrFromBundles(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{

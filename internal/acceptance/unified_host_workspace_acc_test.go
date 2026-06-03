@@ -205,6 +205,9 @@ func createPermissionAssignmentWithProviderConfig(t *testing.T, workspaceID stri
 
 func TestMwsAccUnifiedHostCreatePermissionAssignment(t *testing.T) {
 	initUnifiedHostAccountEnv(t)
+	if IsGcp(t) && os.Getenv("TEST_ENVIRONMENT_TYPE") == "ACCOUNT" {
+		Skipf(t)("Permission assignment APIs are not available for this workspace")
+	}
 	unifiedHost := os.Getenv("UNIFIED_HOST")
 	workspaceID := GetEnvOrSkipTest(t, "TEST_WORKSPACE_ID")
 	accountID := GetEnvOrSkipTest(t, "DATABRICKS_ACCOUNT_ID")

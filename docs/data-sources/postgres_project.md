@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_project Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 This data source retrieves a single Postgres project.
 
 
@@ -94,7 +96,7 @@ The following attributes are exported:
   Format: projects/{project_id}/branches/{branch_id}
 * `default_endpoint_settings` (ProjectDefaultEndpointSettings)
 * `display_name` (string) - Human-readable project name. Length should be between 1 and 256 characters
-* `enable_pg_native_login` (boolean) - Whether to enable PG native password login on all endpoints in this project. Defaults to true
+* `enable_pg_native_login` (boolean) - Whether to enable PG native password login on all endpoints in this project. Defaults to false
 * `history_retention_duration` (string) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 172800s (2 days) and 3024000s (35 days)
 * `pg_version` (integer) - The major Postgres version number. The set of supported versions may vary; consult the API documentation for currently accepted values
 
@@ -109,10 +111,5 @@ The following attributes are exported:
 * `history_retention_duration` (string) - The effective number of seconds to retain the shared history for point in time recovery
 * `owner` (string) - The email of the project owner
 * `pg_version` (integer) - The effective major Postgres version number
-* `project_id` (string) - The short identifier of the project, suitable for showing to the users.
-  For a project with name `projects/my-project`, the project_id is `my-project`.
-  
-  Use this field when building UI components that display projects to users (e.g., a drop-down
-  selector). Prefer showing `project_id` instead of the full resource name from `Project.name`,
-  which follows the `projects/{project_id}` format and is not user-friendly
+* `project_id` (string) - Part of the resource name
 * `synthetic_storage_size_bytes` (integer) - The current space occupied by the project in storage

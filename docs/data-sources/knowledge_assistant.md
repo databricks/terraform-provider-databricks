@@ -4,6 +4,8 @@ subcategory: "Agent Bricks"
 # databricks_knowledge_assistant Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/knowledgeassistants)
+
 
 
 ## Example Usage

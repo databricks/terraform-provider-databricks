@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_endpoint Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 ### Lakebase Autoscaling Terraform Behavior
 
 This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
@@ -309,14 +311,7 @@ In addition to the above arguments, the following attributes are exported:
   Enabling this option schedules a suspend compute operation.
   A disabled compute endpoint cannot be enabled by a connection or
   console action
-* `endpoint_id` (string) - The short identifier of the endpoint, suitable for showing to the users.
-  For an endpoint with name `projects/my-project/branches/my-branch/endpoints/my-endpoint`,
-  the endpoint_id is `my-endpoint`.
-  
-  Use this field when building UI components that display endpoints to users (e.g., a drop-down
-  selector). Prefer showing `endpoint_id` instead of the full resource name from `Endpoint.name`,
-  which follows the `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}` format
-  and is not user-friendly
+* `endpoint_id` (string) - Part of the resource name
 * `endpoint_type` (string) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `ENDPOINT_TYPE_READ_ONLY`, `ENDPOINT_TYPE_READ_WRITE`
 * `group` (EndpointGroupStatus) - Details on the HA configuration of the endpoint
 * `hosts` (EndpointHosts) - Contains host information for connecting to the endpoint

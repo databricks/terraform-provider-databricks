@@ -5,7 +5,6 @@ package workspace_setting_v2
 import (
 	"context"
 	"reflect"
-	"regexp"
 
 	"github.com/databricks/databricks-sdk-go/service/settingsv2"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
@@ -46,8 +45,6 @@ func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -121,6 +118,10 @@ type SettingData struct {
 	// Setting value for boolean type setting. This is the setting value set by
 	// consumers, check effective_boolean_val for final setting value.
 	BooleanVal types.Object `tfsdk:"boolean_val"`
+	// Setting value for collaboration_platform_connectivity setting. This is
+	// the setting value set by consumers, check
+	// effective_collaboration_platform_connectivity for final setting value.
+	CollaborationPlatformConnectivity types.Object `tfsdk:"collaboration_platform_connectivity"`
 	// Effective setting value for aibi_dashboard_embedding_access_policy
 	// setting. This is the final effective value of setting. To set a value use
 	// aibi_dashboard_embedding_access_policy.
@@ -140,6 +141,10 @@ type SettingData struct {
 	// Effective setting value for boolean type setting. This is the final
 	// effective value of setting. To set a value use boolean_val.
 	EffectiveBooleanVal types.Object `tfsdk:"effective_boolean_val"`
+	// Effective setting value for collaboration_platform_connectivity setting.
+	// This is the final effective value of setting. To set a value use
+	// collaboration_platform_connectivity.
+	EffectiveCollaborationPlatformConnectivity types.Object `tfsdk:"effective_collaboration_platform_connectivity"`
 	// Effective setting value for integer type setting. This is the final
 	// effective value of setting. To set a value use integer_val.
 	EffectiveIntegerVal types.Object `tfsdk:"effective_integer_val"`
@@ -193,11 +198,13 @@ func (m SettingData) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 		"allowed_apps_user_api_scopes":                        reflect.TypeOf(settingsv2_tf.AllowedAppsUserApiScopesMessage{}),
 		"automatic_cluster_update_workspace":                  reflect.TypeOf(settingsv2_tf.ClusterAutoRestartMessage{}),
 		"boolean_val":                                         reflect.TypeOf(settingsv2_tf.BooleanMessage{}),
+		"collaboration_platform_connectivity":                 reflect.TypeOf(settingsv2_tf.CollaborationPlatformConnectivityMessage{}),
 		"effective_aibi_dashboard_embedding_access_policy":    reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}),
 		"effective_aibi_dashboard_embedding_approved_domains": reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}),
 		"effective_allowed_apps_user_api_scopes":              reflect.TypeOf(settingsv2_tf.AllowedAppsUserApiScopesMessage{}),
 		"effective_automatic_cluster_update_workspace":        reflect.TypeOf(settingsv2_tf.ClusterAutoRestartMessage{}),
 		"effective_boolean_val":                               reflect.TypeOf(settingsv2_tf.BooleanMessage{}),
+		"effective_collaboration_platform_connectivity":       reflect.TypeOf(settingsv2_tf.CollaborationPlatformConnectivityMessage{}),
 		"effective_integer_val":                               reflect.TypeOf(settingsv2_tf.IntegerMessage{}),
 		"effective_operational_email_custom_recipient":        reflect.TypeOf(settingsv2_tf.OperationalEmailCustomRecipientMessage{}),
 		"effective_personal_compute":                          reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
@@ -227,11 +234,13 @@ func (m SettingData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"allowed_apps_user_api_scopes":                        m.AllowedAppsUserApiScopes,
 			"automatic_cluster_update_workspace":                  m.AutomaticClusterUpdateWorkspace,
 			"boolean_val":                                         m.BooleanVal,
+			"collaboration_platform_connectivity":                 m.CollaborationPlatformConnectivity,
 			"effective_aibi_dashboard_embedding_access_policy":    m.EffectiveAibiDashboardEmbeddingAccessPolicy,
 			"effective_aibi_dashboard_embedding_approved_domains": m.EffectiveAibiDashboardEmbeddingApprovedDomains,
 			"effective_allowed_apps_user_api_scopes":              m.EffectiveAllowedAppsUserApiScopes,
 			"effective_automatic_cluster_update_workspace":        m.EffectiveAutomaticClusterUpdateWorkspace,
 			"effective_boolean_val":                               m.EffectiveBooleanVal,
+			"effective_collaboration_platform_connectivity":       m.EffectiveCollaborationPlatformConnectivity,
 			"effective_integer_val":                               m.EffectiveIntegerVal,
 			"effective_operational_email_custom_recipient":        m.EffectiveOperationalEmailCustomRecipient,
 			"effective_personal_compute":                          m.EffectivePersonalCompute,
@@ -259,11 +268,13 @@ func (m SettingData) Type(ctx context.Context) attr.Type {
 			"allowed_apps_user_api_scopes":                        settingsv2_tf.AllowedAppsUserApiScopesMessage{}.Type(ctx),
 			"automatic_cluster_update_workspace":                  settingsv2_tf.ClusterAutoRestartMessage{}.Type(ctx),
 			"boolean_val":                                         settingsv2_tf.BooleanMessage{}.Type(ctx),
+			"collaboration_platform_connectivity":                 settingsv2_tf.CollaborationPlatformConnectivityMessage{}.Type(ctx),
 			"effective_aibi_dashboard_embedding_access_policy":    settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}.Type(ctx),
 			"effective_aibi_dashboard_embedding_approved_domains": settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}.Type(ctx),
 			"effective_allowed_apps_user_api_scopes":              settingsv2_tf.AllowedAppsUserApiScopesMessage{}.Type(ctx),
 			"effective_automatic_cluster_update_workspace":        settingsv2_tf.ClusterAutoRestartMessage{}.Type(ctx),
 			"effective_boolean_val":                               settingsv2_tf.BooleanMessage{}.Type(ctx),
+			"effective_collaboration_platform_connectivity":       settingsv2_tf.CollaborationPlatformConnectivityMessage{}.Type(ctx),
 			"effective_integer_val":                               settingsv2_tf.IntegerMessage{}.Type(ctx),
 			"effective_operational_email_custom_recipient":        settingsv2_tf.OperationalEmailCustomRecipientMessage{}.Type(ctx),
 			"effective_personal_compute":                          settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
@@ -287,11 +298,13 @@ func (m SettingData) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["allowed_apps_user_api_scopes"] = attrs["allowed_apps_user_api_scopes"].SetComputed()
 	attrs["automatic_cluster_update_workspace"] = attrs["automatic_cluster_update_workspace"].SetComputed()
 	attrs["boolean_val"] = attrs["boolean_val"].SetComputed()
+	attrs["collaboration_platform_connectivity"] = attrs["collaboration_platform_connectivity"].SetComputed()
 	attrs["effective_aibi_dashboard_embedding_access_policy"] = attrs["effective_aibi_dashboard_embedding_access_policy"].SetComputed()
 	attrs["effective_aibi_dashboard_embedding_approved_domains"] = attrs["effective_aibi_dashboard_embedding_approved_domains"].SetComputed()
 	attrs["effective_allowed_apps_user_api_scopes"] = attrs["effective_allowed_apps_user_api_scopes"].SetComputed()
 	attrs["effective_automatic_cluster_update_workspace"] = attrs["effective_automatic_cluster_update_workspace"].SetComputed()
 	attrs["effective_boolean_val"] = attrs["effective_boolean_val"].SetComputed()
+	attrs["effective_collaboration_platform_connectivity"] = attrs["effective_collaboration_platform_connectivity"].SetComputed()
 	attrs["effective_integer_val"] = attrs["effective_integer_val"].SetComputed()
 	attrs["effective_operational_email_custom_recipient"] = attrs["effective_operational_email_custom_recipient"].SetComputed()
 	attrs["effective_personal_compute"] = attrs["effective_personal_compute"].SetComputed()

@@ -4,6 +4,8 @@ subcategory: "Database Instances"
 # databricks_database_synced_database_table Data Source
 [![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/database)
+
 This data source can be used to get a single Synced Database Table.
 
 

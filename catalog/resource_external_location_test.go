@@ -272,6 +272,51 @@ func TestCreateExternalLocationReadOnly(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestCreateExternalLocationEnableFileEventsFalse(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/external-locations",
+				ExpectedRequest: catalog.CreateExternalLocation{
+					Name:             "abc",
+					Url:              "s3://foo/bar",
+					CredentialName:   "bcd",
+					Comment:          "def",
+					EnableFileEvents: false,
+					ForceSendFields:  []string{"EnableFileEvents"},
+				},
+				Response: catalog.ExternalLocationInfo{
+					Name:             "abc",
+					Url:              "s3://foo/bar",
+					CredentialName:   "bcd",
+					Comment:          "def",
+					EnableFileEvents: false,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc?",
+				Response: catalog.ExternalLocationInfo{
+					Owner:                     "efg",
+					MetastoreId:               "fgh",
+					EnableFileEvents:          false,
+					EffectiveEnableFileEvents: false,
+				},
+			},
+		},
+		Resource: ResourceExternalLocation(),
+		Create:   true,
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		comment = "def"
+		enable_file_events = false
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestCreateExternalLocationWithAPAndEncryptionDetails(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -4,6 +4,8 @@ subcategory: "Agent Bricks"
 # databricks_supervisor_agent_tool Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/supervisoragents)
+
 
 
 ## Example Usage
@@ -28,7 +30,7 @@ The following attributes are exported:
 * `name` (string) - Full resource name:
   supervisor-agents/{supervisor_agent_id}/tools/{tool_id}
 * `tool_id` (string) - User specified id of the Tool
-* `tool_type` (string) - Tool type. Must be one of: "genie_space", "knowledge_assistant", "uc_function", "uc_connection", "app", "volume", "dashboard", "serving_endpoint", "table", "vector_search_index", "catalog", "schema", "supervisor_agent", "web_search". The legacy values "lakeview_dashboard" and "uc_table" are also accepted and remain equivalent to "dashboard" and "table" respectively
+* `tool_type` (string) - Tool type. Must be one of: "genie_space", "knowledge_assistant", "uc_function", "uc_connection", "uc_mcp", "app", "volume", "dashboard", "serving_endpoint", "table", "vector_search_index", "catalog", "schema", "supervisor_agent", "web_search", "skill". The legacy values "lakeview_dashboard" and "uc_table" are also accepted and remain equivalent to "dashboard" and "table" respectively
 * `uc_connection` (UcConnection)
 * `uc_function` (UcFunction)
 * `volume` (Volume)

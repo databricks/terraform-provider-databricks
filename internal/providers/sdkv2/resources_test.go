@@ -43,8 +43,7 @@ func TestApiField_RegistrationConsistency(t *testing.T) {
 // A small set of account-only data sources defined via the deprecated
 // common.DataResource helper still expose a (deprecated) provider_config block
 // for backward compatibility. These are pinned in exceptions so that no new
-// account resource silently gains the block. See
-// https://github.com/databricks/terraform-provider-databricks/issues/5672.
+// account resource silently gains the block.
 func TestProviderConfig_AccountRegistrationConsistency(t *testing.T) {
 	cases := []struct {
 		name    string

@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/stretchr/testify/mock"
+	"golang.org/x/exp/slices"
 )
 
 var createRequest = pipelines.CreatePipeline{
@@ -844,6 +845,42 @@ func TestDefaultIngestionPipeline(t *testing.T) {
 		  connection_name = "myconn"
 		  objects {}
 		}
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "abcd",
+	})
+}
+
+// TestServerlessFalseInForceSendFields verifies that explicitly setting serverless = false
+// causes "Serverless" to be included in ForceSendFields so the zero value is not dropped
+// by the SDK's omitempty marshaling.
+func TestServerlessFalseInForceSendFields(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Create(mock.Anything, mock.MatchedBy(func(req pipelines.CreatePipeline) bool {
+				return req.Name == "test-pipeline" &&
+					!req.Serverless &&
+					slices.Contains(req.ForceSendFields, "Serverless")
+			})).Return(&pipelines.CreatePipelineResponse{
+				PipelineId: "abcd",
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Name:       "test-pipeline",
+				State:      pipelines.PipelineStateRunning,
+				Spec: &pipelines.PipelineSpec{
+					Id:   "abcd",
+					Name: "test-pipeline",
+				},
+			}, nil)
+		},
+		Create:   true,
+		Resource: ResourcePipeline(),
+		HCL: `name = "test-pipeline"
+		serverless = false
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
 		"id": "abcd",

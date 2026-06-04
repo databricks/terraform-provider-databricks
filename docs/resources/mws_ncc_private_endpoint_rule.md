@@ -93,12 +93,15 @@ The possible values are:
   * `REJECTED`: Connection was rejected by the private link resource owner.
   * `DISCONNECTED`: Connection was removed by the private link resource owner, the private endpoint becomes informative and should be deleted for clean-up.
   * `EXPIRED`: If the endpoint was created but not approved in 14 days, it will be EXPIRED.
+  * `CREATING`: The endpoint creation is in progress. Once successfully created, the state will transition to PENDING.
+  * `CREATE_FAILED`: The endpoint creation failed. You can check the error_message field for more details.
 * `deactivated` - Whether this private endpoint is deactivated.
 * `deactivated_at` - Time in epoch milliseconds when this object was deactivated.
 * `creation_time` - Time in epoch milliseconds when this object was created.
 * `updated_time` - Time in epoch milliseconds when this object was updated.
 * `enabled` - Activation status. Only used by private endpoints towards an AWS S3 service.
 * `vpc_endpoint_id` - The AWS VPC endpoint ID. You can use this ID to identify the VPC endpoint created by Databricks.
+* `error_message` - Error message if creation fails with state CREATE_FAILED
 
 ## Import
 

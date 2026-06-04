@@ -2,12 +2,15 @@ package mws
 
 import (
 	"context"
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func ResourceMwsNccPrivateEndpointRule() common.Resource {
@@ -25,6 +28,7 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 
 		common.CustomizeSchemaPath(m, "network_connectivity_config_id").SetRequired().SetForceNew()
 		common.CustomizeSchemaPath(m, "enabled").SetOptional().SetComputed()
+		common.CustomizeSchemaPath(m, "error_message").SetOptional().SetComputed()
 
 		// only one of `domain_names`, `resource_names`, `group_id` can be specified, as they are applicable
 		// to different type of endpoints
@@ -55,9 +59,27 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 			if err != nil {
 				return err
 			}
-			common.StructToData(rule, s, d)
+			d.Set("rule_id", rule.RuleId)
 			p.Pack(d)
-			return nil
+
+			// Poll until ConnectionState != CREATING
+			return resource.RetryContext(ctx, 15*time.Minute, func() *resource.RetryError {
+				rule, err := acc.NetworkConnectivity.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(
+					ctx, create.NetworkConnectivityConfigId, rule.RuleId)
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+				common.StructToData(rule, s, d)
+
+				switch rule.ConnectionState {
+				case "CREATING":
+					return resource.RetryableError(fmt.Errorf("private endpoint rule %s is still creating", rule.RuleId))
+				case "CREATE_FAILED":
+					return resource.NonRetryableError(fmt.Errorf("private endpoint rule creation failed: %s", rule.ErrorMessage))
+				default:
+					return nil
+				}
+			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			nccId, ruleId, err := p.Unpack(d)

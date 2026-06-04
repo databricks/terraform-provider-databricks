@@ -52,16 +52,16 @@ func (ti TableInfo) FullName() string {
 }
 
 func (a TablesAPI) createTable(ti *TableInfo) error {
-	return a.client.Post(a.context, "/unity-catalog/tables", ti, ti)
+	return a.client.Post(a.context, "/unity-catalog/tables", ti, ti, a.client.AddWorkspaceIdHeader)
 }
 
 func (a TablesAPI) getTable(name string) (ti TableInfo, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/tables/"+name, nil, &ti)
+	err = a.client.Get(a.context, "/unity-catalog/tables/"+name, nil, &ti, a.client.AddWorkspaceIdHeader)
 	return
 }
 
 func (a TablesAPI) deleteTable(name string) error {
-	return a.client.Delete(a.context, "/unity-catalog/tables/"+name, nil)
+	return a.client.Delete(a.context, "/unity-catalog/tables/"+name, nil, a.client.AddWorkspaceIdHeader)
 }
 
 type TableSchemaStruct struct {

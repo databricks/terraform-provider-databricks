@@ -466,7 +466,7 @@ type QueryAPI struct {
 
 // Create ...
 func (a QueryAPI) Create(q *api.Query) error {
-	err := a.client.Post(a.context, "/preview/sql/queries", q, &q)
+	err := a.client.Post(a.context, "/preview/sql/queries", q, &q, a.client.AddWorkspaceIdHeader)
 	if err != nil {
 		return err
 	}
@@ -492,7 +492,7 @@ func (a QueryAPI) Create(q *api.Query) error {
 // Read ...
 func (a QueryAPI) Read(queryID string) (*api.Query, error) {
 	var q api.Query
-	err := a.client.Get(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), nil, &q)
+	err := a.client.Get(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), nil, &q, a.client.AddWorkspaceIdHeader)
 	if err != nil {
 		return nil, err
 	}
@@ -502,12 +502,12 @@ func (a QueryAPI) Read(queryID string) (*api.Query, error) {
 
 // Update ...
 func (a QueryAPI) Update(queryID string, q *api.Query) error {
-	return a.client.Post(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), q, nil)
+	return a.client.Post(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), q, nil, a.client.AddWorkspaceIdHeader)
 }
 
 // Delete ...
 func (a QueryAPI) Delete(queryID string) error {
-	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), nil)
+	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), nil, a.client.AddWorkspaceIdHeader)
 }
 
 func ResourceSqlQuery() common.Resource {

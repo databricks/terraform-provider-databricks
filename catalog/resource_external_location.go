@@ -82,6 +82,10 @@ func ResourceExternalLocation() common.Resource {
 			}
 			var createExternalLocationRequest catalog.CreateExternalLocation
 			common.DataToStructPointer(d, s, &createExternalLocationRequest)
+			// SDK marshals these bools with omitempty; force-send so an explicit
+			// false from HCL reaches the server instead of being elided.
+			common.SetForceSendFields(&createExternalLocationRequest, d,
+				[]string{"read_only", "fallback", "enable_file_events"})
 			el, err := w.ExternalLocations.Create(ctx, createExternalLocationRequest)
 			if err != nil {
 				return err

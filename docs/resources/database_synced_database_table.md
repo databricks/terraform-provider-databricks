@@ -4,6 +4,8 @@ subcategory: "Database Instances"
 # databricks_database_synced_database_table Resource
 [![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/database)
+
 Lakebase Synced Database Tables are Postgres tables automatically synced from a source table inside Unity Catalog.
 They can be used to serve realtime queries without the operational overhead of managing ETL pipelines. 
 

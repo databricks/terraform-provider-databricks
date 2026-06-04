@@ -211,7 +211,7 @@ type WidgetAPI struct {
 
 // Create ...
 func (a WidgetAPI) Create(w *api.Widget) error {
-	return a.client.Post(a.context, "/preview/sql/widgets", w, &w)
+	return a.client.Post(a.context, "/preview/sql/widgets", w, &w, a.client.AddWorkspaceIdHeader)
 }
 
 // Read ...
@@ -246,12 +246,12 @@ func (a WidgetAPI) Read(dashboardID, widgetID string) (*api.Widget, error) {
 
 // Update ...
 func (a WidgetAPI) Update(widgetID string, w *api.Widget) error {
-	return a.client.Post(a.context, fmt.Sprintf("/preview/sql/widgets/%s", widgetID), w, nil)
+	return a.client.Post(a.context, fmt.Sprintf("/preview/sql/widgets/%s", widgetID), w, nil, a.client.AddWorkspaceIdHeader)
 }
 
 // Delete ...
 func (a WidgetAPI) Delete(widgetID string) error {
-	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/widgets/%s", widgetID), nil)
+	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/widgets/%s", widgetID), nil, a.client.AddWorkspaceIdHeader)
 }
 
 func ResourceSqlWidget() common.Resource {

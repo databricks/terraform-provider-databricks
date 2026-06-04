@@ -29,16 +29,16 @@ type Providers struct {
 }
 
 func (a ProvidersAPI) createProvider(ci *ProviderInfo) error {
-	return a.client.Post(a.context, "/unity-catalog/providers", ci, ci)
+	return a.client.Post(a.context, "/unity-catalog/providers", ci, ci, a.client.AddWorkspaceIdHeader)
 }
 
 func (a ProvidersAPI) getProvider(name string) (ci ProviderInfo, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/providers/"+name, nil, &ci)
+	err = a.client.Get(a.context, "/unity-catalog/providers/"+name, nil, &ci, a.client.AddWorkspaceIdHeader)
 	return
 }
 
 func (a ProvidersAPI) deleteProvider(name string) error {
-	return a.client.Delete(a.context, "/unity-catalog/providers/"+name, nil)
+	return a.client.Delete(a.context, "/unity-catalog/providers/"+name, nil, a.client.AddWorkspaceIdHeader)
 }
 
 func (a ProvidersAPI) updateProvider(ci *ProviderInfo) error {
@@ -47,7 +47,7 @@ func (a ProvidersAPI) updateProvider(ci *ProviderInfo) error {
 	}{
 		Comment: ci.Comment,
 	}
-	return a.client.Patch(a.context, "/unity-catalog/providers/"+ci.Name, patch)
+	return a.client.Patch(a.context, "/unity-catalog/providers/"+ci.Name, patch, a.client.AddWorkspaceIdHeader)
 }
 
 func ResourceProvider() common.Resource {

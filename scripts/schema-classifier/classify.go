@@ -1,3 +1,7 @@
+// Rule taxonomy: see scripts/schema-classifier/README.md for the full
+// human-readable table of every rule, its verdict, and the rationale.
+// classify_test.go pins each rule with a passing test row.
+
 package main
 
 import (

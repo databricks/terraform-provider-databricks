@@ -57,12 +57,4 @@ fi
 CLASSIFIER_EXIT=0
 /tmp/schema-classifier --base "$CURRENT_SCHEMA" --head "$NEW_SCHEMA" "${CLASSIFIER_FLAGS[@]}" || CLASSIFIER_EXIT=$?
 
-# If a Markdown report path was provided (CI sets this for the sticky-comment step),
-# write the report there too. --allow-breaking on this invocation so the exit code
-# we already captured above is the one that matters.
-if [ -n "${CLASSIFIER_REPORT:-}" ]; then
-    /tmp/schema-classifier --base "$CURRENT_SCHEMA" --head "$NEW_SCHEMA" \
-        --format markdown --allow-breaking > "$CLASSIFIER_REPORT" || true
-fi
-
 exit $CLASSIFIER_EXIT

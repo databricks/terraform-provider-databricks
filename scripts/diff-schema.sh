@@ -29,3 +29,33 @@ set -e
 if [ $RES -eq 0 ]; then
     echo "No schema changes detected."
 fi
+
+# Classify changes as breaking vs non-breaking. The classifier exits non-zero on any
+# breaking change unless ALLOW_BREAKING=1 is set in the environment (for local dev or
+# when the PR carries the ALLOW_SCHEMA_BREAKING_CHANGE=true bypass directive).
+echo
+echo "===== Breaking-change classification ====="
+# -mod=mod skips the vendor consistency check. We need this because this script does
+# base/head checkouts in sequence, and the vendor/ directory may match neither at the
+# point we build the classifier. The classifier itself is stdlib-only.
+go build -mod=mod -o /tmp/schema-classifier ./scripts/schema-classifier
+
+CLASSIFIER_FLAGS=()
+if [ "${ALLOW_BREAKING:-0}" = "1" ] || [ "${ALLOW_BREAKING:-}" = "true" ]; then
+    CLASSIFIER_FLAGS+=(--allow-breaking)
+fi
+
+# Always print the human-readable text view to the log. Use the `|| CLASSIFIER_EXIT=$?`
+# pattern so `set -e` (at the top of this script) doesn't kill us when the classifier
+# legitimately exits 1 on breaking changes.
+CLASSIFIER_EXIT=0
+/tmp/schema-classifier --base "$CURRENT_SCHEMA" --head "$NEW_SCHEMA" "${CLASSIFIER_FLAGS[@]}" || CLASSIFIER_EXIT=$?
+
+# If a Markdown report was requested (set by CI for the sticky-comment step), write it too.
+# The classifier is re-invoked without --allow-breaking so the report always reflects truth.
+if [ -n "${CLASSIFIER_REPORT:-}" ]; then
+    /tmp/schema-classifier --base "$CURRENT_SCHEMA" --head "$NEW_SCHEMA" \
+        --format markdown --allow-breaking > "$CLASSIFIER_REPORT" || true
+fi
+
+exit $CLASSIFIER_EXIT

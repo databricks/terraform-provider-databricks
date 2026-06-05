@@ -17,7 +17,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   breaking-schema-check:
@@ -59,17 +58,20 @@ jobs:
       - name: "Install jd"
         run: go install github.com/josephburnett/jd@11eae3c9ffb1dd32796ca741691bf4733a27dfa4 # v1.8.1
 
-      # Read the PR description for the bypass directive. Sanitization mirrors
-      # .github/workflows/next-changelog.yml's NO_CHANGELOG=true precedent.
+      # Read the PR description for the bypass directive directly from the event
+      # payload — no `gh` API call needed, which means this step works on the
+      # default `ubuntu-latest` runner (the org's IP allow list would block API
+      # calls from those runners). Trade-off: editing the PR body after-the-fact
+      # only takes effect on the next `synchronize` event (i.e., push a new
+      # commit). Sanitization mirrors the precedent in `.github/workflows/next-changelog.yml`.
       - name: Check PR description for bypass directive
         if: github.event_name == 'pull_request'
         id: bypass
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          body=$(gh pr view ${{ github.event.pull_request.number }} --json body -q '.body')
-          sanitized=$(printf '%s' "$body" | sed 's/[^a-zA-Z0-9._=/-]/_/g')
-          if printf '%s' "$sanitized" | grep -q 'ALLOW_SCHEMA_BREAKING_CHANGE=true'; then
+          sanitized=$(printf '%s' "${PR_BODY}" | sed 's/[^a-zA-Z0-9._=/-]/_/g')
+          if printf '%s' "${sanitized}" | grep -q 'ALLOW_SCHEMA_BREAKING_CHANGE=true'; then
             echo "allow=true" >> "$GITHUB_OUTPUT"
           else
             echo "allow=false" >> "$GITHUB_OUTPUT"
@@ -80,69 +82,18 @@ jobs:
         continue-on-error: true
         env:
           BASE_COMMIT: ${{ github.event_name == 'pull_request' && github.base_ref || github.event.inputs.base }}
-          CLASSIFIER_REPORT: /tmp/classifier-report.md
         run: make diff-schema
-
-      # Sticky-comment pattern mirrors .github/workflows/next-changelog.yml.
-      # Only runs for same-repo PRs because GITHUB_TOKEN can't comment on fork PRs
-      # under the pull_request event. Fork PRs still see the failing status.
-      - name: Update sticky PR comment
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MARKER: "<!-- SCHEMA_BREAKING_CHECK -->"
-          CLASSIFY_OUTCOME: ${{ steps.classify.outcome }}
-          BYPASS_ALLOWED: ${{ steps.bypass.outputs.allow }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          set -euo pipefail
-          prev=$(gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
-            --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id")
-          if [ "${CLASSIFY_OUTCOME}" = "success" ]; then
-            for id in ${prev}; do
-              gh api "repos/${{ github.repository }}/issues/comments/${id}" --method DELETE
-            done
-            exit 0
-          fi
-          body=$(mktemp)
-          {
-            echo "${MARKER}"
-            echo
-            if [ "${BYPASS_ALLOWED}" = "true" ]; then
-              echo "## Breaking schema changes detected (bypass active)"
-              echo
-              echo "This PR carries \`ALLOW_SCHEMA_BREAKING_CHANGE=true\` in its description, so the breaking-schema check is **not blocking**. Please review the changes below carefully."
-            else
-              echo "## Breaking schema changes detected"
-              echo
-              echo "This check is blocking the PR. If the break is intentional, add this line anywhere in the PR description and re-run the workflow:"
-              echo
-              echo '```'
-              echo 'ALLOW_SCHEMA_BREAKING_CHANGE=true'
-              echo '```'
-            fi
-            echo
-            if [ -s /tmp/classifier-report.md ]; then
-              cat /tmp/classifier-report.md
-            else
-              echo "_(classifier report missing — see the Action log for details)_"
-            fi
-            echo
-            echo "_Note: ForceNew flips are **not** detected by this classifier (the Terraform schema dump doesn't expose ForceNew). Please review such changes manually._"
-          } > "${body}"
-          if [ -z "${prev}" ]; then
-            gh pr comment "${PR_NUMBER}" --body-file "${body}"
-          else
-            first=$(echo "${prev}" | head -1)
-            gh api "repos/${{ github.repository }}/issues/comments/${first}" --method PATCH -F body=@"${body}"
-            for id in $(echo "${prev}" | tail -n +2); do
-              gh api "repos/${{ github.repository }}/issues/comments/${id}" --method DELETE
-            done
-          fi
 
       - name: Fail on breaking changes
         if: steps.classify.outcome != 'success' && steps.bypass.outputs.allow != 'true'
         run: |
-          echo "Breaking schema changes detected. See the classifier report in the previous step."
-          echo "If intentional, add ALLOW_SCHEMA_BREAKING_CHANGE=true to the PR description and re-run the workflow."
+          echo "Breaking schema changes detected. See the classifier report in the previous step's logs."
+          echo
+          echo "If the break is intentional, add this line anywhere in the PR description:"
+          echo
+          echo "    ALLOW_SCHEMA_BREAKING_CHANGE=true"
+          echo
+          echo "...then push a new commit to re-trigger the workflow. (Editing the description alone won't pick up the directive — the workflow reads the body from the synchronize event payload.)"
+          echo
+          echo "Note: ForceNew flips are NOT detected by this classifier (the Terraform schema dump doesn't expose ForceNew). Please review such changes manually."
           exit 1

@@ -94,6 +94,4 @@ jobs:
           echo "    ALLOW_SCHEMA_BREAKING_CHANGE=true"
           echo
           echo "...then push a new commit to re-trigger the workflow. (Editing the description alone won't pick up the directive — the workflow reads the body from the synchronize event payload.)"
-          echo
-          echo "Note: ForceNew flips are NOT detected by this classifier (the Terraform schema dump doesn't expose ForceNew). Please review such changes manually."
           exit 1

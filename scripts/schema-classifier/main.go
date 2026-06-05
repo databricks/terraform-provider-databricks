@@ -1,12 +1,11 @@
 // schema-classifier walks two `terraform providers schema -json` dumps and
 // reports which deltas are breaking. Exits 1 on any breaking change unless
-// --allow-breaking is set. See scripts/schema-classifier/README.md for the
-// rule taxonomy.
+// --allow-breaking is set.
 //
-// Known limitation: ForceNew is NOT emitted by `terraform providers schema
-// -json`. Flipping an attribute to ForceNew silently destroys/recreates
-// resources and is INVISIBLE to this classifier. Reviewers must catch those
-// changes manually.
+// Scope: this tool classifies only what Terraform Core sees in the schema
+// dump. Provider-side concepts (ForceNew, ConflictsWith, validators,
+// DiffSuppressFunc, etc.) are not present in that dump and are intentionally
+// out of scope.
 package main
 
 import (
@@ -43,10 +42,9 @@ func run(args []string, stdout, stderr io.Writer) error {
 		fmt.Fprintln(stderr, "Usage: schema-classifier --base BASE.json --head HEAD.json [--format text|markdown] [--allow-breaking]")
 		fmt.Fprintln(stderr, "")
 		fmt.Fprintln(stderr, "Classifies Terraform provider schema deltas as breaking or non-breaking and")
-		fmt.Fprintln(stderr, "exits non-zero when any breaking change is present.")
-		fmt.Fprintln(stderr, "")
-		fmt.Fprintln(stderr, "Known limitation: ForceNew flips are NOT detected (the Terraform schema")
-		fmt.Fprintln(stderr, "dump does not expose ForceNew). Reviewers must catch those manually.")
+		fmt.Fprintln(stderr, "exits non-zero when any breaking change is present. Scope is limited to what")
+		fmt.Fprintln(stderr, "Terraform Core sees in the schema dump; provider-side concepts like ForceNew,")
+		fmt.Fprintln(stderr, "ConflictsWith, and validators are not in the dump and are out of scope.")
 	}
 	if err := fs.Parse(args); err != nil {
 		return err

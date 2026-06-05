@@ -17,16 +17,10 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   breaking-schema-check:
-    # Protected runner group is IP-allowlisted on the `databricks` org, which lets
-    # the sticky-comment step call the GitHub API. `ubuntu-latest` (GitHub-hosted)
-    # is not allowlisted; gh API calls from there fail.
-    runs-on:
-      group: databricks-protected-runner-group
-      labels: linux-ubuntu-latest
+    runs-on: ubuntu-latest
 
     steps:
       # Check out the base commit first and the head commit second. diff-schema
@@ -65,14 +59,15 @@ jobs:
         run: go install github.com/josephburnett/jd@11eae3c9ffb1dd32796ca741691bf4733a27dfa4 # v1.8.1
 
       # Read the PR description for the bypass directive directly from the event
-      # payload — no `gh` API call needed here, so we don't waste API quota on
-      # something that's stable for the run. The grep is line-anchored so the
-      # directive only fires when it's on its own line; a substring match would
-      # falsely activate the bypass when the directive appears inside an
-      # explanatory sentence or code-block sample.
+      # payload — no `gh` API call needed, which means this step works on the
+      # default `ubuntu-latest` runner (the org's IP allow list would block API
+      # calls from those runners). Trade-off: editing the PR body after-the-fact
+      # only takes effect on the next `synchronize` event (i.e., push a new
+      # commit).
       #
-      # Trade-off: editing the PR body after-the-fact only takes effect on the
-      # next `synchronize` event (i.e., push a new commit).
+      # The grep is line-anchored so the directive only fires when it's on its
+      # own line. A substring match would falsely activate the bypass when the
+      # directive appears inside an explanatory sentence or code-block sample.
       - name: Check PR description for bypass directive
         if: github.event_name == 'pull_request'
         id: bypass
@@ -90,76 +85,16 @@ jobs:
         continue-on-error: true
         env:
           BASE_COMMIT: ${{ github.event_name == 'pull_request' && github.base_ref || github.event.inputs.base }}
-          CLASSIFIER_REPORT: /tmp/classifier-report.md
         run: make diff-schema
-
-      # Sticky-comment pattern mirrors .github/workflows/next-changelog.yml.
-      # Only runs for same-repo PRs because GITHUB_TOKEN can't post comments on
-      # fork PRs under the pull_request event regardless of runner. Fork PRs
-      # still see the failed status and the classifier report in the Action log.
-      - name: Update sticky PR comment
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MARKER: "<!-- SCHEMA_BREAKING_CHECK -->"
-          CLASSIFY_OUTCOME: ${{ steps.classify.outcome }}
-          BYPASS_ALLOWED: ${{ steps.bypass.outputs.allow }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          prev=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" \
-            --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id")
-          if [ "${CLASSIFY_OUTCOME}" = "success" ]; then
-            for id in ${prev}; do
-              gh api "repos/${REPO}/issues/comments/${id}" --method DELETE
-            done
-            exit 0
-          fi
-          body=$(mktemp)
-          {
-            echo "${MARKER}"
-            echo
-            if [ "${BYPASS_ALLOWED}" = "true" ]; then
-              echo "## Breaking schema changes detected (bypass active)"
-              echo
-              echo "This PR carries \`ALLOW_SCHEMA_BREAKING_CHANGE=true\` on its own line in the description, so the breaking-schema check is **not blocking**. Please review the changes below carefully."
-            else
-              echo "## Breaking schema changes detected"
-              echo
-              echo "This check is blocking the PR. If the break is intentional, add this line **on its own** in the PR description and push a new commit:"
-              echo
-              echo '```'
-              echo 'ALLOW_SCHEMA_BREAKING_CHANGE=true'
-              echo '```'
-              echo
-              echo "(Editing the PR body alone doesn't re-trigger the workflow — the directive is read from the synchronize event payload.)"
-            fi
-            echo
-            if [ -s /tmp/classifier-report.md ]; then
-              cat /tmp/classifier-report.md
-            else
-              echo "_(classifier report missing — see the Action log for details)_"
-            fi
-          } > "${body}"
-          if [ -z "${prev}" ]; then
-            gh pr comment "${PR_NUMBER}" --body-file "${body}"
-          else
-            first=$(echo "${prev}" | head -1)
-            gh api "repos/${REPO}/issues/comments/${first}" --method PATCH -F body=@"${body}"
-            for id in $(echo "${prev}" | tail -n +2); do
-              gh api "repos/${REPO}/issues/comments/${id}" --method DELETE
-            done
-          fi
 
       - name: Fail on breaking changes
         if: steps.classify.outcome != 'success' && steps.bypass.outputs.allow != 'true'
         run: |
           echo "Breaking schema changes detected. See the classifier report in the previous step's logs."
           echo
-          echo "If the break is intentional, add this line on its own in the PR description:"
+          echo "If the break is intentional, add this line anywhere in the PR description:"
           echo
           echo "    ALLOW_SCHEMA_BREAKING_CHANGE=true"
           echo
-          echo "...then push a new commit to re-trigger the workflow."
+          echo "...then push a new commit to re-trigger the workflow. (Editing the description alone won't pick up the directive — the workflow reads the body from the synchronize event payload.)"
           exit 1

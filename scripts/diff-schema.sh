@@ -4,7 +4,10 @@ set -eo pipefail
 source scripts/libschema.sh
 
 BASE=${BASE_COMMIT:-"main"}
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+# Capture the actual SHA so we can return here reliably. `git rev-parse --abbrev-ref HEAD`
+# returns the literal string "HEAD" when we're in a detached-HEAD state (as we are during
+# GitHub Actions PR checkouts), which makes the final restore-checkout a silent no-op.
+HEAD_SHA=$(git rev-parse HEAD)
 
 checkout() {
     local ref=$1
@@ -17,10 +20,17 @@ if [ -n "$(git status --porcelain)" ]; then
     exit 1
 fi
 
+# Build the classifier from HEAD *before* any base/head checkouts, so the build is
+# guaranteed to see the HEAD source tree. The base may not contain the classifier
+# directory (e.g., the very PR that introduces it), and the final restore-checkout
+# below also depends on the build artifact already existing in /tmp.
+# -mod=mod skips the vendor consistency check; the classifier itself is stdlib-only.
+go build -mod=mod -o /tmp/schema-classifier ./scripts/schema-classifier
+
 NEW_SCHEMA=$(generate_schema)
 checkout $BASE
 CURRENT_SCHEMA=$(generate_schema)
-checkout $CURRENT_BRANCH
+checkout $HEAD_SHA
 
 set +e
 jd -color "$CURRENT_SCHEMA" "$NEW_SCHEMA"
@@ -35,10 +45,6 @@ fi
 # when the PR carries the ALLOW_SCHEMA_BREAKING_CHANGE=true bypass directive).
 echo
 echo "===== Breaking-change classification ====="
-# -mod=mod skips the vendor consistency check. We need this because this script does
-# base/head checkouts in sequence, and the vendor/ directory may match neither at the
-# point we build the classifier. The classifier itself is stdlib-only.
-go build -mod=mod -o /tmp/schema-classifier ./scripts/schema-classifier
 
 CLASSIFIER_FLAGS=()
 if [ "${ALLOW_BREAKING:-0}" = "1" ] || [ "${ALLOW_BREAKING:-}" = "true" ]; then

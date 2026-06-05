@@ -63,15 +63,18 @@ jobs:
       # default `ubuntu-latest` runner (the org's IP allow list would block API
       # calls from those runners). Trade-off: editing the PR body after-the-fact
       # only takes effect on the next `synchronize` event (i.e., push a new
-      # commit). Sanitization mirrors the precedent in `.github/workflows/next-changelog.yml`.
+      # commit).
+      #
+      # The grep is line-anchored so the directive only fires when it's on its
+      # own line. A substring match would falsely activate the bypass when the
+      # directive appears inside an explanatory sentence or code-block sample.
       - name: Check PR description for bypass directive
         if: github.event_name == 'pull_request'
         id: bypass
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          sanitized=$(printf '%s' "${PR_BODY}" | sed 's/[^a-zA-Z0-9._=/-]/_/g')
-          if printf '%s' "${sanitized}" | grep -q 'ALLOW_SCHEMA_BREAKING_CHANGE=true'; then
+          if printf '%s\n' "${PR_BODY}" | grep -qE '^[[:space:]]*ALLOW_SCHEMA_BREAKING_CHANGE=true[[:space:]]*$'; then
             echo "allow=true" >> "$GITHUB_OUTPUT"
           else
             echo "allow=false" >> "$GITHUB_OUTPUT"

@@ -4,6 +4,8 @@ subcategory: "Settings"
 # databricks_account_setting_v2 Resource
 [![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/account/settingsv2)
+
 Setting is a configurable value or control that determines how a feature or behavior works within the databricks platform.
 
 [//]: # (todo: add public link to metadata api after production doc link available)
@@ -28,6 +30,7 @@ The following arguments are supported:
 * `allowed_apps_user_api_scopes` (AllowedAppsUserApiScopesMessage, optional) - Setting value for allowed_apps_user_api_scopes setting. This is the setting value set by consumers, check effective_allowed_apps_user_api_scopes for final setting value
 * `automatic_cluster_update_workspace` (ClusterAutoRestartMessage, optional) - Setting value for automatic_cluster_update_workspace setting. This is the setting value set by consumers, check effective_automatic_cluster_update_workspace for final setting value
 * `boolean_val` (BooleanMessage, optional) - Setting value for boolean type setting. This is the setting value set by consumers, check effective_boolean_val for final setting value
+* `collaboration_platform_connectivity` (CollaborationPlatformConnectivityMessage, optional) - Setting value for collaboration_platform_connectivity setting. This is the setting value set by consumers, check effective_collaboration_platform_connectivity for final setting value
 * `effective_aibi_dashboard_embedding_access_policy` (AibiDashboardEmbeddingAccessPolicy, optional) - Effective setting value for aibi_dashboard_embedding_access_policy setting. This is the final effective value of setting. To set a value use aibi_dashboard_embedding_access_policy
 * `effective_aibi_dashboard_embedding_approved_domains` (AibiDashboardEmbeddingApprovedDomains, optional) - Effective setting value for aibi_dashboard_embedding_approved_domains setting. This is the final effective value of setting. To set a value use aibi_dashboard_embedding_approved_domains
 * `effective_automatic_cluster_update_workspace` (ClusterAutoRestartMessage, optional) - Effective setting value for automatic_cluster_update_workspace setting. This is the final effective value of setting. To set a value use automatic_cluster_update_workspace
@@ -76,6 +79,9 @@ The following arguments are supported:
 * `hours` (integer, optional)
 * `minutes` (integer, optional)
 
+### CollaborationPlatformConnectivityMessage
+* `connectivity` (string, required) - Possible values are: `ALLOW_ALL`, `ALLOW_SLACK`, `ALLOW_TEAMS`, `DENY_ALL`
+
 ### IntegerMessage
 * `value` (integer, optional)
 
@@ -97,6 +103,7 @@ The following arguments are supported:
 In addition to the above arguments, the following attributes are exported:
 * `effective_allowed_apps_user_api_scopes` (AllowedAppsUserApiScopesMessage) - Effective setting value for allowed_apps_user_api_scopes setting. This is the final effective value of setting. To set a value use allowed_apps_user_api_scopes
 * `effective_boolean_val` (BooleanMessage) - Effective setting value for boolean type setting. This is the final effective value of setting. To set a value use boolean_val
+* `effective_collaboration_platform_connectivity` (CollaborationPlatformConnectivityMessage) - Effective setting value for collaboration_platform_connectivity setting. This is the final effective value of setting. To set a value use collaboration_platform_connectivity
 * `effective_integer_val` (IntegerMessage) - Effective setting value for integer type setting. This is the final effective value of setting. To set a value use integer_val
 * `effective_operational_email_custom_recipient` (OperationalEmailCustomRecipientMessage) - Effective setting value for operational_email_custom_recipient setting. This is the final effective value of setting. To set a value use operational_email_custom_recipient
 * `effective_string_val` (StringMessage) - Effective setting value for string type setting. This is the final effective value of setting. To set a value use string_val

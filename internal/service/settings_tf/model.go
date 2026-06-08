@@ -17,6 +17,8 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	// .tmpl
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -2343,6 +2345,8 @@ func (m *CreateNotificationDestinationRequest) SetConfig(ctx context.Context, v 
 type CreateOboTokenRequest struct {
 	// Application ID of the service principal.
 	ApplicationId types.String `tfsdk:"application_id"`
+	// Whether to enable autoscoping for this token.
+	AutoscopeEnabled types.Bool `tfsdk:"autoscope_enabled"`
 	// Comment that describes the purpose of the token.
 	Comment types.String `tfsdk:"comment"`
 	// The number of seconds before the token expires.
@@ -2371,6 +2375,7 @@ func (to *CreateOboTokenRequest) SyncFieldsDuringRead(ctx context.Context, from 
 
 func (m CreateOboTokenRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["application_id"] = attrs["application_id"].SetRequired()
+	attrs["autoscope_enabled"] = attrs["autoscope_enabled"].SetOptional()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["lifetime_seconds"] = attrs["lifetime_seconds"].SetOptional()
 	attrs["scopes"] = attrs["scopes"].SetOptional()
@@ -2398,10 +2403,11 @@ func (m CreateOboTokenRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"application_id":   m.ApplicationId,
-			"comment":          m.Comment,
-			"lifetime_seconds": m.LifetimeSeconds,
-			"scopes":           m.Scopes,
+			"application_id":    m.ApplicationId,
+			"autoscope_enabled": m.AutoscopeEnabled,
+			"comment":           m.Comment,
+			"lifetime_seconds":  m.LifetimeSeconds,
+			"scopes":            m.Scopes,
 		})
 }
 
@@ -2409,9 +2415,10 @@ func (m CreateOboTokenRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (m CreateOboTokenRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"application_id":   types.StringType,
-			"comment":          types.StringType,
-			"lifetime_seconds": types.Int64Type,
+			"application_id":    types.StringType,
+			"autoscope_enabled": types.BoolType,
+			"comment":           types.StringType,
+			"lifetime_seconds":  types.Int64Type,
 			"scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -2861,6 +2868,9 @@ func (m *CreatePrivateEndpointRuleRequest) SetPrivateEndpointRule(ctx context.Co
 }
 
 type CreateTokenRequest struct {
+	// Whether to enable autoscoping for this token. When true, the token will
+	// automatically collect inferred API path scopes as it is used.
+	AutoscopeEnabled types.Bool `tfsdk:"autoscope_enabled"`
 	// Optional description to attach to the token.
 	Comment types.String `tfsdk:"comment"`
 	// The lifetime of the token, in seconds.
@@ -2890,6 +2900,7 @@ func (to *CreateTokenRequest) SyncFieldsDuringRead(ctx context.Context, from Cre
 }
 
 func (m CreateTokenRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["autoscope_enabled"] = attrs["autoscope_enabled"].SetOptional()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["lifetime_seconds"] = attrs["lifetime_seconds"].SetOptional()
 	attrs["scopes"] = attrs["scopes"].SetOptional()
@@ -2917,9 +2928,10 @@ func (m CreateTokenRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"comment":          m.Comment,
-			"lifetime_seconds": m.LifetimeSeconds,
-			"scopes":           m.Scopes,
+			"autoscope_enabled": m.AutoscopeEnabled,
+			"comment":           m.Comment,
+			"lifetime_seconds":  m.LifetimeSeconds,
+			"scopes":            m.Scopes,
 		})
 }
 
@@ -2927,8 +2939,9 @@ func (m CreateTokenRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (m CreateTokenRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment":          types.StringType,
-			"lifetime_seconds": types.Int64Type,
+			"autoscope_enabled": types.BoolType,
+			"comment":           types.StringType,
+			"lifetime_seconds":  types.Int64Type,
 			"scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -5421,7 +5434,8 @@ func (m *CustomerFacingIngressNetworkPolicyPublicRequestOrigin) SetIncludedIpRan
 
 type CustomerFacingIngressNetworkPolicyRequestDestination struct {
 	AccountApi types.Object `tfsdk:"account_api"`
-
+	// Account DatabricksOne destination is not supported. DO NOT change the
+	// stage of this destination past PRIVATE_PREVIEW.
 	AccountDatabricksOne types.Object `tfsdk:"account_databricks_one"`
 
 	AccountUi types.Object `tfsdk:"account_ui"`
@@ -16499,6 +16513,10 @@ func (m *PersonalComputeSetting) SetPersonalCompute(ctx context.Context, v Perso
 }
 
 type PublicTokenInfo struct {
+	// Output only. The autoscope state of this token.
+	AutoscopeState types.String `tfsdk:"autoscope_state"`
+	// Output only. Scopes inferred from offline backfill processing.
+	BackfillScopes types.List `tfsdk:"backfill_scopes"`
 	// Comment the token was created with, if applicable.
 	Comment types.String `tfsdk:"comment"`
 	// Server time (in epoch milliseconds) when the token was created.
@@ -16506,20 +16524,65 @@ type PublicTokenInfo struct {
 	// Server time (in epoch milliseconds) when the token will expire, or -1 if
 	// not applicable.
 	ExpiryTime types.Int64 `tfsdk:"expiry_time"`
+	// Output only. Inferred API path scopes collected for this token when
+	// autoscope is enabled.
+	InferredScopes types.List `tfsdk:"inferred_scopes"`
+	// Scope of the token was created with, if applicable.
+	Scopes types.List `tfsdk:"scopes"`
 	// The ID of this token.
 	TokenId types.String `tfsdk:"token_id"`
 }
 
 func (to *PublicTokenInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PublicTokenInfo) {
+	if !from.BackfillScopes.IsNull() && !from.BackfillScopes.IsUnknown() && to.BackfillScopes.IsNull() && len(from.BackfillScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for BackfillScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.BackfillScopes = from.BackfillScopes
+	}
+	if !from.InferredScopes.IsNull() && !from.InferredScopes.IsUnknown() && to.InferredScopes.IsNull() && len(from.InferredScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InferredScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InferredScopes = from.InferredScopes
+	}
+	if !from.Scopes.IsNull() && !from.Scopes.IsUnknown() && to.Scopes.IsNull() && len(from.Scopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Scopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Scopes = from.Scopes
+	}
 }
 
 func (to *PublicTokenInfo) SyncFieldsDuringRead(ctx context.Context, from PublicTokenInfo) {
+	if !from.BackfillScopes.IsNull() && !from.BackfillScopes.IsUnknown() && to.BackfillScopes.IsNull() && len(from.BackfillScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for BackfillScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.BackfillScopes = from.BackfillScopes
+	}
+	if !from.InferredScopes.IsNull() && !from.InferredScopes.IsUnknown() && to.InferredScopes.IsNull() && len(from.InferredScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InferredScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InferredScopes = from.InferredScopes
+	}
+	if !from.Scopes.IsNull() && !from.Scopes.IsUnknown() && to.Scopes.IsNull() && len(from.Scopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Scopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Scopes = from.Scopes
+	}
 }
 
 func (m PublicTokenInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["autoscope_state"] = attrs["autoscope_state"].SetOptional()
+	attrs["backfill_scopes"] = attrs["backfill_scopes"].SetOptional()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetOptional()
 	attrs["expiry_time"] = attrs["expiry_time"].SetOptional()
+	attrs["inferred_scopes"] = attrs["inferred_scopes"].SetOptional()
+	attrs["scopes"] = attrs["scopes"].SetOptional()
 	attrs["token_id"] = attrs["token_id"].SetOptional()
 
 	return attrs
@@ -16533,7 +16596,11 @@ func (m PublicTokenInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PublicTokenInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"backfill_scopes": reflect.TypeOf(types.String{}),
+		"inferred_scopes": reflect.TypeOf(types.String{}),
+		"scopes":          reflect.TypeOf(types.String{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -16543,10 +16610,14 @@ func (m PublicTokenInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"comment":       m.Comment,
-			"creation_time": m.CreationTime,
-			"expiry_time":   m.ExpiryTime,
-			"token_id":      m.TokenId,
+			"autoscope_state": m.AutoscopeState,
+			"backfill_scopes": m.BackfillScopes,
+			"comment":         m.Comment,
+			"creation_time":   m.CreationTime,
+			"expiry_time":     m.ExpiryTime,
+			"inferred_scopes": m.InferredScopes,
+			"scopes":          m.Scopes,
+			"token_id":        m.TokenId,
 		})
 }
 
@@ -16554,12 +16625,100 @@ func (m PublicTokenInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m PublicTokenInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"autoscope_state": types.StringType,
+			"backfill_scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"comment":       types.StringType,
 			"creation_time": types.Int64Type,
 			"expiry_time":   types.Int64Type,
-			"token_id":      types.StringType,
+			"inferred_scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"token_id": types.StringType,
 		},
 	}
+}
+
+// GetBackfillScopes returns the value of the BackfillScopes field in PublicTokenInfo as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PublicTokenInfo) GetBackfillScopes(ctx context.Context) ([]types.String, bool) {
+	if m.BackfillScopes.IsNull() || m.BackfillScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.BackfillScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBackfillScopes sets the value of the BackfillScopes field in PublicTokenInfo.
+func (m *PublicTokenInfo) SetBackfillScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["backfill_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.BackfillScopes = types.ListValueMust(t, vs)
+}
+
+// GetInferredScopes returns the value of the InferredScopes field in PublicTokenInfo as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PublicTokenInfo) GetInferredScopes(ctx context.Context) ([]types.String, bool) {
+	if m.InferredScopes.IsNull() || m.InferredScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.InferredScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInferredScopes sets the value of the InferredScopes field in PublicTokenInfo.
+func (m *PublicTokenInfo) SetInferredScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inferred_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.InferredScopes = types.ListValueMust(t, vs)
+}
+
+// GetScopes returns the value of the Scopes field in PublicTokenInfo as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PublicTokenInfo) GetScopes(ctx context.Context) ([]types.String, bool) {
+	if m.Scopes.IsNull() || m.Scopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Scopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetScopes sets the value of the Scopes field in PublicTokenInfo.
+func (m *PublicTokenInfo) SetScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Scopes = types.ListValueMust(t, vs)
 }
 
 // Details required to replace an IP access list.
@@ -17335,6 +17494,10 @@ func (m *TokenAccessControlResponse) SetAllPermissions(ctx context.Context, v []
 }
 
 type TokenInfo struct {
+	// Output only. The autoscope state of this token.
+	AutoscopeState types.String `tfsdk:"autoscope_state"`
+	// Output only. Scopes inferred from offline backfill processing.
+	BackfillScopes types.List `tfsdk:"backfill_scopes"`
 	// Comment that describes the purpose of the token, specified by the token
 	// creator.
 	Comment types.String `tfsdk:"comment"`
@@ -17346,11 +17509,16 @@ type TokenInfo struct {
 	CreationTime types.Int64 `tfsdk:"creation_time"`
 	// Timestamp when the token expires.
 	ExpiryTime types.Int64 `tfsdk:"expiry_time"`
+	// Output only. Inferred API path scopes collected for this token when
+	// autoscope is enabled.
+	InferredScopes types.List `tfsdk:"inferred_scopes"`
 	// Approximate timestamp for the day the token was last used. Accurate up to
 	// 1 day.
 	LastUsedDay types.Int64 `tfsdk:"last_used_day"`
 	// User ID of the user that owns the token.
 	OwnerId types.Int64 `tfsdk:"owner_id"`
+	// Scope of the token was created with, if applicable.
+	Scopes types.List `tfsdk:"scopes"`
 	// ID of the token.
 	TokenId types.String `tfsdk:"token_id"`
 	// If applicable, the ID of the workspace that the token was created in.
@@ -17358,19 +17526,59 @@ type TokenInfo struct {
 }
 
 func (to *TokenInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TokenInfo) {
+	if !from.BackfillScopes.IsNull() && !from.BackfillScopes.IsUnknown() && to.BackfillScopes.IsNull() && len(from.BackfillScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for BackfillScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.BackfillScopes = from.BackfillScopes
+	}
+	if !from.InferredScopes.IsNull() && !from.InferredScopes.IsUnknown() && to.InferredScopes.IsNull() && len(from.InferredScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InferredScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InferredScopes = from.InferredScopes
+	}
+	if !from.Scopes.IsNull() && !from.Scopes.IsUnknown() && to.Scopes.IsNull() && len(from.Scopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Scopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Scopes = from.Scopes
+	}
 }
 
 func (to *TokenInfo) SyncFieldsDuringRead(ctx context.Context, from TokenInfo) {
+	if !from.BackfillScopes.IsNull() && !from.BackfillScopes.IsUnknown() && to.BackfillScopes.IsNull() && len(from.BackfillScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for BackfillScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.BackfillScopes = from.BackfillScopes
+	}
+	if !from.InferredScopes.IsNull() && !from.InferredScopes.IsUnknown() && to.InferredScopes.IsNull() && len(from.InferredScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InferredScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InferredScopes = from.InferredScopes
+	}
+	if !from.Scopes.IsNull() && !from.Scopes.IsUnknown() && to.Scopes.IsNull() && len(from.Scopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Scopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Scopes = from.Scopes
+	}
 }
 
 func (m TokenInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["autoscope_state"] = attrs["autoscope_state"].SetOptional()
+	attrs["backfill_scopes"] = attrs["backfill_scopes"].SetOptional()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["created_by_id"] = attrs["created_by_id"].SetOptional()
 	attrs["created_by_username"] = attrs["created_by_username"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetOptional()
 	attrs["expiry_time"] = attrs["expiry_time"].SetOptional()
+	attrs["inferred_scopes"] = attrs["inferred_scopes"].SetOptional()
 	attrs["last_used_day"] = attrs["last_used_day"].SetOptional()
 	attrs["owner_id"] = attrs["owner_id"].SetOptional()
+	attrs["scopes"] = attrs["scopes"].SetOptional()
 	attrs["token_id"] = attrs["token_id"].SetOptional()
 	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
 
@@ -17385,7 +17593,11 @@ func (m TokenInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m TokenInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"backfill_scopes": reflect.TypeOf(types.String{}),
+		"inferred_scopes": reflect.TypeOf(types.String{}),
+		"scopes":          reflect.TypeOf(types.String{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -17395,13 +17607,17 @@ func (m TokenInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"autoscope_state":     m.AutoscopeState,
+			"backfill_scopes":     m.BackfillScopes,
 			"comment":             m.Comment,
 			"created_by_id":       m.CreatedById,
 			"created_by_username": m.CreatedByUsername,
 			"creation_time":       m.CreationTime,
 			"expiry_time":         m.ExpiryTime,
+			"inferred_scopes":     m.InferredScopes,
 			"last_used_day":       m.LastUsedDay,
 			"owner_id":            m.OwnerId,
+			"scopes":              m.Scopes,
 			"token_id":            m.TokenId,
 			"workspace_id":        m.WorkspaceId,
 		})
@@ -17411,17 +17627,105 @@ func (m TokenInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m TokenInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"autoscope_state": types.StringType,
+			"backfill_scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"comment":             types.StringType,
 			"created_by_id":       types.Int64Type,
 			"created_by_username": types.StringType,
 			"creation_time":       types.Int64Type,
 			"expiry_time":         types.Int64Type,
-			"last_used_day":       types.Int64Type,
-			"owner_id":            types.Int64Type,
-			"token_id":            types.StringType,
-			"workspace_id":        types.Int64Type,
+			"inferred_scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"last_used_day": types.Int64Type,
+			"owner_id":      types.Int64Type,
+			"scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"token_id":     types.StringType,
+			"workspace_id": types.Int64Type,
 		},
 	}
+}
+
+// GetBackfillScopes returns the value of the BackfillScopes field in TokenInfo as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TokenInfo) GetBackfillScopes(ctx context.Context) ([]types.String, bool) {
+	if m.BackfillScopes.IsNull() || m.BackfillScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.BackfillScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBackfillScopes sets the value of the BackfillScopes field in TokenInfo.
+func (m *TokenInfo) SetBackfillScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["backfill_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.BackfillScopes = types.ListValueMust(t, vs)
+}
+
+// GetInferredScopes returns the value of the InferredScopes field in TokenInfo as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TokenInfo) GetInferredScopes(ctx context.Context) ([]types.String, bool) {
+	if m.InferredScopes.IsNull() || m.InferredScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.InferredScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInferredScopes sets the value of the InferredScopes field in TokenInfo.
+func (m *TokenInfo) SetInferredScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inferred_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.InferredScopes = types.ListValueMust(t, vs)
+}
+
+// GetScopes returns the value of the Scopes field in TokenInfo as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TokenInfo) GetScopes(ctx context.Context) ([]types.String, bool) {
+	if m.Scopes.IsNull() || m.Scopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Scopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetScopes sets the value of the Scopes field in TokenInfo.
+func (m *TokenInfo) SetScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Scopes = types.ListValueMust(t, vs)
 }
 
 type TokenPermission struct {
@@ -21026,12 +21330,130 @@ func (m *UpdateSqlResultsDownloadRequest) SetSetting(ctx context.Context, v SqlR
 	m.Setting = vs
 }
 
+// For the list of supported token scopes, see
+// https://docs.databricks.com/api/workspace/api/scopes.
+type UpdateTokenManagementRequest struct {
+	Token types.Object `tfsdk:"token"`
+	// ID of the token.
+	TokenId types.String `tfsdk:"-"`
+	// A list of field name under token, For example, {"update_mask":
+	// "comment,scopes"}
+	//
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	UpdateMask types.String `tfsdk:"update_mask"`
+}
+
+func (to *UpdateTokenManagementRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateTokenManagementRequest) {
+	if !from.Token.IsNull() && !from.Token.IsUnknown() {
+		if toToken, ok := to.GetToken(ctx); ok {
+			if fromToken, ok := from.GetToken(ctx); ok {
+				// Recursively sync the fields of Token
+				toToken.SyncFieldsDuringCreateOrUpdate(ctx, fromToken)
+				to.SetToken(ctx, toToken)
+			}
+		}
+	}
+}
+
+func (to *UpdateTokenManagementRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateTokenManagementRequest) {
+	if !from.Token.IsNull() && !from.Token.IsUnknown() {
+		if toToken, ok := to.GetToken(ctx); ok {
+			if fromToken, ok := from.GetToken(ctx); ok {
+				toToken.SyncFieldsDuringRead(ctx, fromToken)
+				to.SetToken(ctx, toToken)
+			}
+		}
+	}
+}
+
+func (m UpdateTokenManagementRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["token"] = attrs["token"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+	attrs["token_id"] = attrs["token_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateTokenManagementRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateTokenManagementRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"token": reflect.TypeOf(TokenInfo{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateTokenManagementRequest
+// only implements ToObjectValue() and Type().
+func (m UpdateTokenManagementRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"token":       m.Token,
+			"token_id":    m.TokenId,
+			"update_mask": m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateTokenManagementRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"token":       TokenInfo{}.Type(ctx),
+			"token_id":    types.StringType,
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetToken returns the value of the Token field in UpdateTokenManagementRequest as
+// a TokenInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateTokenManagementRequest) GetToken(ctx context.Context) (TokenInfo, bool) {
+	var e TokenInfo
+	if m.Token.IsNull() || m.Token.IsUnknown() {
+		return e, false
+	}
+	var v TokenInfo
+	d := m.Token.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetToken sets the value of the Token field in UpdateTokenManagementRequest.
+func (m *UpdateTokenManagementRequest) SetToken(ctx context.Context, v TokenInfo) {
+	vs := v.ToObjectValue(ctx)
+	m.Token = vs
+}
+
+// For the list of supported token scopes, see
+// https://docs.databricks.com/api/workspace/api/scopes.
 type UpdateTokenRequest struct {
 	Token types.Object `tfsdk:"token"`
 	// The SHA-256 hash of the token to be updated.
 	TokenId types.String `tfsdk:"-"`
-	// A list of field name under PublicTokenInfo, For example in request use
-	// {"update_mask": "comment,scopes"}
+	// A list of field name under token, For example, {"update_mask":
+	// "comment,scopes"}
 	//
 	// The field mask must be a single string, with multiple fields separated by
 	// commas (no spaces). The field path is relative to the resource object,

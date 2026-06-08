@@ -1,4 +1,16 @@
-name: Provider schema
+name: Provider schema (classify)
+
+# Producer half of the breaking-schema check. This workflow builds the provider
+# on base and head, diffs the schemas, runs the classifier, and uploads the
+# result as a workflow artifact. It is purely informational — it never gates
+# the PR directly. The companion workflow `schema-status.yml` owns the
+# `breaking-schema-check` commit status (the actual required check) and is
+# where the bypass directive in the PR description is honored.
+#
+# The split exists because the classifier needs to BUILD head code (which can't
+# safely run under `pull_request_target` for fork PRs), while the comment /
+# status step needs `gh` API access AND the ability to re-fire on body edits
+# (both of which require `pull_request_target` on a protected runner).
 
 on:
   pull_request:
@@ -19,18 +31,8 @@ permissions:
   contents: read
 
 jobs:
-  # Job 1: classify on ubuntu-latest where Go module downloads work via the public
-  # proxy. Builds the provider on base and head, diffs the schemas, runs the
-  # classifier, and uploads the markdown report as an artifact. Exits non-zero on
-  # breaking changes so the PR check fails. This job has no GitHub-API access (the
-  # databricks org's IP allow list blocks ubuntu-latest runners) — that's why the
-  # comment job below runs separately on a protected runner.
   classify:
     runs-on: ubuntu-latest
-
-    outputs:
-      classify-outcome: ${{ steps.classify.outcome }}
-      bypass-allowed: ${{ steps.bypass.outputs.allow }}
 
     steps:
       # Check out the base commit first and the head commit second. diff-schema
@@ -68,25 +70,6 @@ jobs:
       - name: "Install jd"
         run: go install github.com/josephburnett/jd@11eae3c9ffb1dd32796ca741691bf4733a27dfa4 # v1.8.1
 
-      # Read the PR description for the bypass directive directly from the event
-      # payload. The grep is line-anchored so the directive only fires when it's
-      # on its own line — a substring match would falsely activate the bypass
-      # when the directive appears inside an explanatory sentence.
-      #
-      # Trade-off: editing the PR body after-the-fact only takes effect on the
-      # next `synchronize` event (i.e., push a new commit).
-      - name: Check PR description for bypass directive
-        if: github.event_name == 'pull_request'
-        id: bypass
-        env:
-          PR_BODY: ${{ github.event.pull_request.body }}
-        run: |
-          if printf '%s\n' "${PR_BODY}" | grep -qE '^[[:space:]]*ALLOW_SCHEMA_BREAKING_CHANGE=true[[:space:]]*$'; then
-            echo "allow=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "allow=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Run schema diff and breaking-change classifier
         id: classify
         continue-on-error: true
@@ -95,111 +78,21 @@ jobs:
           CLASSIFIER_REPORT: /tmp/classifier-report.md
         run: make diff-schema
 
-      - name: Upload classifier report artifact
+      # Write the step outcome to a marker file so the downstream status
+      # workflow (which runs under pull_request_target and can't read this
+      # workflow's job outputs directly) can pick it up from the artifact.
+      - name: Write outcome marker
+        run: |
+          echo "${{ steps.classify.outcome }}" > /tmp/classifier-outcome.txt
+          cat /tmp/classifier-outcome.txt
+
+      - name: Upload classifier artifact
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
-          name: classifier-report
-          path: /tmp/classifier-report.md
-          if-no-files-found: ignore
-          retention-days: 1
-
-      - name: Fail on breaking changes
-        if: steps.classify.outcome != 'success' && steps.bypass.outputs.allow != 'true'
-        run: |
-          echo "Breaking schema changes detected. See the classifier report in the previous step's logs."
-          echo
-          echo "If the break is intentional, add this line on its own in the PR description:"
-          echo
-          echo "    ALLOW_SCHEMA_BREAKING_CHANGE=true"
-          echo
-          echo "...then push a new commit to re-trigger the workflow."
-          exit 1
-
-  # Job 2: post / update / delete the sticky PR comment with the classifier report.
-  # Runs on the protected runner because that's where gh API calls work (the
-  # databricks org's IP allow list blocks ubuntu-latest). This job does no Go
-  # builds, only `gh` calls, so JFrog isn't needed. Mirrors the pattern used by
-  # .github/workflows/next-changelog.yml.
-  #
-  # Only runs for same-repo PRs (GITHUB_TOKEN is read-only on fork PRs under the
-  # pull_request event regardless of runner). Always runs after `classify` even
-  # when that job failed, so we can post the report on the breaking-change path.
-  comment:
-    needs: classify
-    if: |
-      always() &&
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.head.repo.full_name == github.repository
-    permissions:
-      pull-requests: write
-    runs-on:
-      group: databricks-protected-runner-group
-      labels: linux-ubuntu-latest
-
-    steps:
-      - name: Download classifier report
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          name: classifier-report
-          path: /tmp
-        continue-on-error: true  # classify may have died before producing the report
-
-      - name: Update sticky PR comment
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # GH_REPO is what tells gh which repo to operate on without needing a
-          # local git checkout (this job has none on purpose — it only needs
-          # gh API access, no source). Without it, gh shells out to git to detect
-          # the repo and the job dies with "not a git repository".
-          GH_REPO: ${{ github.repository }}
-          MARKER: "<!-- SCHEMA_BREAKING_CHECK -->"
-          CLASSIFY_OUTCOME: ${{ needs.classify.outputs.classify-outcome }}
-          BYPASS_ALLOWED: ${{ needs.classify.outputs.bypass-allowed }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          prev=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" \
-            --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id")
-          if [ "${CLASSIFY_OUTCOME}" = "success" ]; then
-            for id in ${prev}; do
-              gh api "repos/${REPO}/issues/comments/${id}" --method DELETE
-            done
-            exit 0
-          fi
-          body=$(mktemp)
-          {
-            echo "${MARKER}"
-            echo
-            if [ "${BYPASS_ALLOWED}" = "true" ]; then
-              echo "## Breaking schema changes detected (bypass active)"
-              echo
-              echo "This PR carries \`ALLOW_SCHEMA_BREAKING_CHANGE=true\` on its own line in the description, so the breaking-schema check is **not blocking**. Please review the changes below carefully."
-            else
-              echo "## Breaking schema changes detected"
-            fi
-            echo
-            if [ -s /tmp/classifier-report.md ]; then
-              cat /tmp/classifier-report.md
-            else
-              echo "_(classifier report missing — see the classify job's log for details)_"
-            fi
-            if [ "${BYPASS_ALLOWED}" != "true" ]; then
-              echo
-              echo "<details><summary>How to bypass this check</summary>"
-              echo
-              echo "If the break is intentional, add \`ALLOW_SCHEMA_BREAKING_CHANGE=true\` on its own line in the PR description."
-              echo
-              echo "</details>"
-            fi
-          } > "${body}"
-          if [ -z "${prev}" ]; then
-            gh pr comment "${PR_NUMBER}" --body-file "${body}"
-          else
-            first=$(echo "${prev}" | head -1)
-            gh api "repos/${REPO}/issues/comments/${first}" --method PATCH -F body=@"${body}"
-            for id in $(echo "${prev}" | tail -n +2); do
-              gh api "repos/${REPO}/issues/comments/${id}" --method DELETE
-            done
-          fi
+          name: classifier-output
+          path: |
+            /tmp/classifier-report.md
+            /tmp/classifier-outcome.txt
+          if-no-files-found: warn
+          retention-days: 3

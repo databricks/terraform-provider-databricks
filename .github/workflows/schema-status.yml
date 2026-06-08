@@ -1,0 +1,194 @@
+name: Provider schema (status)
+
+# Consumer half of the breaking-schema check. This workflow runs on the
+# protected runner group (IP-allowlisted for GitHub API access) and is
+# triggered by pull_request_target so it can also fire on PR description
+# edits — that's what makes the bypass directive `ALLOW_SCHEMA_BREAKING_CHANGE=true`
+# take effect without forcing the contributor to push a new commit, matching
+# the UX of .github/workflows/next-changelog.yml.
+#
+# This workflow never executes head code — it only reads PR metadata, downloads
+# an artifact produced by the classify workflow, and posts a comment + sets a
+# commit status. That's what keeps `pull_request_target` safe even for fork PRs.
+#
+# Owns the `breaking-schema-check` commit status (required check). The
+# classify workflow always exits 0 and is purely informational.
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+  actions: read
+
+jobs:
+  status:
+    # Skip the noisy `edited` events that aren't body changes (title-only,
+    # base-only, etc.). For non-edited events, always run.
+    if: |
+      github.event.action != 'edited' ||
+      github.event.changes.body != null
+    runs-on:
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
+
+    steps:
+      - name: Read PR body for bypass directive
+        id: bypass
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if printf '%s\n' "${PR_BODY}" | grep -qE '^[[:space:]]*ALLOW_SCHEMA_BREAKING_CHANGE=true[[:space:]]*$'; then
+            echo "allow=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "allow=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Find the classify run for this PR's head SHA and wait for it to
+      # complete. On `opened`/`synchronize`, classify and this workflow fire
+      # simultaneously, so we have to poll until classify finishes. On
+      # `edited`, classify is already done from the last push — the first poll
+      # finds it immediately.
+      - name: Wait for classify run
+        id: classify-run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          START=$(date +%s)
+          TIMEOUT_S=900   # 15 min
+          while true; do
+            run_json=$(gh api "repos/${REPO}/actions/workflows/schema.yml/runs?head_sha=${HEAD_SHA}&per_page=1" \
+              --jq '.workflow_runs[0] // empty')
+            if [ -n "${run_json}" ]; then
+              status=$(printf '%s' "${run_json}" | jq -r '.status')
+              if [ "${status}" = "completed" ]; then
+                run_id=$(printf '%s' "${run_json}" | jq -r '.id')
+                echo "Classify run ${run_id} completed"
+                echo "run-id=${run_id}" >> "$GITHUB_OUTPUT"
+                break
+              fi
+              echo "Classify run found, status=${status}; waiting..."
+            else
+              echo "No classify run yet for ${HEAD_SHA}; waiting..."
+            fi
+            elapsed=$(( $(date +%s) - START ))
+            if [ "${elapsed}" -gt "${TIMEOUT_S}" ]; then
+              echo "Timed out waiting for classify run on ${HEAD_SHA}" >&2
+              exit 1
+            fi
+            sleep 15
+          done
+
+      - name: Download classifier artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: classifier-output
+          run-id: ${{ steps.classify-run.outputs.run-id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: /tmp
+          # repository is required for cross-workflow artifact downloads
+          repository: ${{ github.repository }}
+
+      - name: Read classify outcome from marker file
+        id: outcome
+        run: |
+          if [ -f /tmp/classifier-outcome.txt ]; then
+            outcome=$(tr -d '\n' < /tmp/classifier-outcome.txt)
+          else
+            outcome="unknown"
+          fi
+          echo "Outcome from marker: ${outcome}"
+          echo "classify=${outcome}" >> "$GITHUB_OUTPUT"
+
+      - name: Update sticky PR comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          MARKER: "<!-- SCHEMA_BREAKING_CHECK -->"
+          CLASSIFY_OUTCOME: ${{ steps.outcome.outputs.classify }}
+          BYPASS_ALLOWED: ${{ steps.bypass.outputs.allow }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          prev=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id")
+          # Treat the classify step's outcome literally: "success" means the
+          # classifier exited 0 (no breaking changes detected). Anything else
+          # means breaking changes (or the classifier itself failed, which we
+          # treat as breaking out of an abundance of caution).
+          if [ "${CLASSIFY_OUTCOME}" = "success" ]; then
+            for id in ${prev}; do
+              gh api "repos/${REPO}/issues/comments/${id}" --method DELETE
+            done
+            exit 0
+          fi
+          body=$(mktemp)
+          {
+            echo "${MARKER}"
+            echo
+            if [ "${BYPASS_ALLOWED}" = "true" ]; then
+              echo "## Breaking schema changes detected (bypass active)"
+              echo
+              echo "This PR carries \`ALLOW_SCHEMA_BREAKING_CHANGE=true\` on its own line in the description, so the breaking-schema check is **not blocking**. Please review the changes below carefully."
+            else
+              echo "## Breaking schema changes detected"
+            fi
+            echo
+            if [ -s /tmp/classifier-report.md ]; then
+              cat /tmp/classifier-report.md
+            else
+              echo "_(classifier report missing — see the classify job's log for details)_"
+            fi
+            if [ "${BYPASS_ALLOWED}" != "true" ]; then
+              echo
+              echo "<details><summary>How to bypass this check</summary>"
+              echo
+              echo "If the break is intentional, add \`ALLOW_SCHEMA_BREAKING_CHANGE=true\` on its own line in the PR description."
+              echo
+              echo "</details>"
+            fi
+          } > "${body}"
+          if [ -z "${prev}" ]; then
+            gh pr comment "${PR_NUMBER}" --body-file "${body}"
+          else
+            first=$(echo "${prev}" | head -1)
+            gh api "repos/${REPO}/issues/comments/${first}" --method PATCH -F body=@"${body}"
+            for id in $(echo "${prev}" | tail -n +2); do
+              gh api "repos/${REPO}/issues/comments/${id}" --method DELETE
+            done
+          fi
+
+      - name: Set commit status
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          CLASSIFY_OUTCOME: ${{ steps.outcome.outputs.classify }}
+          BYPASS_ALLOWED: ${{ steps.bypass.outputs.allow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          if [ "${CLASSIFY_OUTCOME}" = "success" ]; then
+            state="success"
+            description="No breaking schema changes"
+          elif [ "${BYPASS_ALLOWED}" = "true" ]; then
+            state="success"
+            description="Breaking schema changes detected; bypassed by PR description"
+          else
+            state="failure"
+            description="Breaking schema changes detected; see PR comment for details"
+          fi
+          gh api "repos/${REPO}/statuses/${HEAD_SHA}" \
+            -F context="breaking-schema-check" \
+            -F state="${state}" \
+            -F description="${description}" \
+            -F target_url="${RUN_URL}"

@@ -178,20 +178,20 @@ jobs:
               echo "This PR carries \`ALLOW_SCHEMA_BREAKING_CHANGE=true\` on its own line in the description, so the breaking-schema check is **not blocking**. Please review the changes below carefully."
             else
               echo "## Breaking schema changes detected"
-              echo
-              echo "This check is blocking the PR. If the break is intentional, add this line **on its own** in the PR description and push a new commit:"
-              echo
-              echo '```'
-              echo 'ALLOW_SCHEMA_BREAKING_CHANGE=true'
-              echo '```'
-              echo
-              echo "(Editing the PR body alone doesn't re-trigger the workflow — the directive is read from the synchronize event payload.)"
             fi
             echo
             if [ -s /tmp/classifier-report.md ]; then
               cat /tmp/classifier-report.md
             else
               echo "_(classifier report missing — see the classify job's log for details)_"
+            fi
+            if [ "${BYPASS_ALLOWED}" != "true" ]; then
+              echo
+              echo "<details><summary>How to bypass this check</summary>"
+              echo
+              echo "If the break is intentional, add \`ALLOW_SCHEMA_BREAKING_CHANGE=true\` on its own line in the PR description."
+              echo
+              echo "</details>"
             fi
           } > "${body}"
           if [ -z "${prev}" ]; then

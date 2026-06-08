@@ -148,6 +148,11 @@ jobs:
       - name: Update sticky PR comment
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GH_REPO is what tells gh which repo to operate on without needing a
+          # local git checkout (this job has none on purpose — it only needs
+          # gh API access, no source). Without it, gh shells out to git to detect
+          # the repo and the job dies with "not a git repository".
+          GH_REPO: ${{ github.repository }}
           MARKER: "<!-- SCHEMA_BREAKING_CHECK -->"
           CLASSIFY_OUTCOME: ${{ needs.classify.outputs.classify-outcome }}
           BYPASS_ALLOWED: ${{ needs.classify.outputs.bypass-allowed }}

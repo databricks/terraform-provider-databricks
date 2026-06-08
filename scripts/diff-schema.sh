@@ -57,4 +57,13 @@ fi
 CLASSIFIER_EXIT=0
 /tmp/schema-classifier --base "$CURRENT_SCHEMA" --head "$NEW_SCHEMA" "${CLASSIFIER_FLAGS[@]}" || CLASSIFIER_EXIT=$?
 
+# When CLASSIFIER_REPORT is set (CI uses this so the comment job can pick it up
+# via an artifact), also write the markdown view to that path. --allow-breaking
+# on this second invocation so the exit code we already captured above is the
+# one that matters.
+if [ -n "${CLASSIFIER_REPORT:-}" ]; then
+    /tmp/schema-classifier --base "$CURRENT_SCHEMA" --head "$NEW_SCHEMA" \
+        --format markdown --allow-breaking > "$CLASSIFIER_REPORT" || true
+fi
+
 exit $CLASSIFIER_EXIT

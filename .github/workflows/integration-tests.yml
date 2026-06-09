@@ -32,12 +32,12 @@ jobs:
               echo "has_token=true" >> $GITHUB_OUTPUT
             fi
 
-  # Classify the PR diff. If every changed file is in the inert allowlist
-  # (docs, root *.md, issue templates, dependabot.yml, CODEOWNERS, LICENSE),
-  # `non_inert_changed` is 'false' and we skip the long integration-test
+  # Classify the PR diff. `inert_only` is 'true' iff every changed file is in
+  # the inert allowlist (docs, root *.md, issue templates, dependabot.yml,
+  # CODEOWNERS, LICENSE); in that case we skip the long integration-test
   # dispatch in favor of posting a synthetic success check.
   detect-changes:
-    name: Detect non-inert changes
+    name: Detect inert-only changes
     if: github.event_name == 'pull_request'
 
     runs-on:
@@ -45,7 +45,10 @@ jobs:
       labels: ubuntu-latest-deco
 
     outputs:
-      non_inert_changed: ${{ steps.filter.outputs.non_inert }}
+      # paths-filter v3.0.2 doesn't support predicate-quantifier: 'every',
+      # so the filter computes "any non-inert file changed" and we invert
+      # here to expose the positive form the consumers want.
+      inert_only: ${{ steps.filter.outputs.non_inert == 'false' }}
 
     steps:
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
@@ -72,7 +75,7 @@ jobs:
     needs: [check-token, detect-changes]
     if: github.event_name == 'pull_request'
         && needs.check-token.outputs.has_token == 'true'
-        && needs.detect-changes.outputs.non_inert_changed == 'true'
+        && needs.detect-changes.outputs.inert_only == 'false'
     environment: "test-trigger-is"
 
     steps:
@@ -111,7 +114,7 @@ jobs:
     needs: [check-token, detect-changes]
     if: github.event_name == 'pull_request'
         && needs.check-token.outputs.has_token == 'true'
-        && needs.detect-changes.outputs.non_inert_changed == 'false'
+        && needs.detect-changes.outputs.inert_only == 'true'
         && github.event.pull_request.base.ref == 'main'
 
     permissions:

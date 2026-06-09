@@ -47,6 +47,8 @@ var createRequest = pipelines.CreatePipeline{
 	},
 	Edition: "ADVANCED",
 	Channel: "CURRENT",
+	// continuous = false is set explicitly in the HCL, so it is force-sent.
+	ForceSendFields: []string{"Continuous"},
 }
 
 var updateRequest = pipelines.EditPipeline{

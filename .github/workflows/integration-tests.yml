@@ -65,6 +65,131 @@ jobs:
               - '!CODEOWNERS'
               - '!LICENSE'
 
+  # For PRs that contain code (inert_only == 'false'), a follow-up push that
+  # only touches inert paths (e.g. a NEXT_CHANGELOG.md bump after the code
+  # already passed) does not invalidate the previous test result. Carry the
+  # success forward instead of re-running the 75-minute suite, but ONLY when
+  # ALL of the following hold (each gate closes a known attack):
+  #   1. The event is a `synchronize` push whose incremental diff
+  #      (before...after) touches inert paths only.
+  #   2. The push is fast-forward: compare status is 'ahead'. A force-push or
+  #      rebase ('diverged'/'behind') never carries forward.
+  #   3. The "Integration Tests" check on the PREVIOUS head (`before`) is
+  #      completed with conclusion success. Stacking docs on top of failing
+  #      or unrun code therefore never mints a green check.
+  #   4. The PR targets main (trigger-level branches filter + base.ref guard).
+  # Any error or ambiguity (>=300 files in the compare, empty diff, rename
+  # from a non-inert path) falls through to carried=false and the full suite
+  # runs. Fail-open to running tests, never to skipping them.
+  carry-forward:
+    name: Carry forward prior Integration Tests success
+
+    runs-on:
+      group: databricks-deco-testing-runner-group
+      labels: ubuntu-latest-deco
+
+    needs: [check-token, detect-changes]
+    if: github.event_name == 'pull_request'
+        && needs.check-token.outputs.has_token == 'true'
+        && needs.detect-changes.outputs.inert_only == 'false'
+        && github.event.pull_request.base.ref == 'main'
+
+    permissions:
+      checks: write
+      contents: read
+
+    outputs:
+      carried: ${{ steps.carry.outputs.carried }}
+
+    steps:
+      - name: Evaluate and carry forward
+        id: carry
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            const fail = (reason) => {
+              core.info(`No carry-forward: ${reason}`);
+              core.setOutput('carried', 'false');
+            };
+            try {
+              if (context.payload.action !== 'synchronize') {
+                return fail('not a synchronize push');
+              }
+              const before = context.payload.before;
+              const after = context.payload.after;
+              if (!before || !after) {
+                return fail('missing before/after SHAs in payload');
+              }
+
+              const cmp = await github.rest.repos.compareCommitsWithBasehead({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                basehead: `${before}...${after}`,
+                per_page: 300,
+              });
+              if (cmp.data.status !== 'ahead') {
+                return fail(`compare status is '${cmp.data.status}' (force-push or rebase)`);
+              }
+              const files = cmp.data.files ?? [];
+              if (files.length === 0) {
+                return fail('empty incremental diff');
+              }
+              if (files.length >= 300) {
+                return fail('too many files in incremental diff to classify confidently');
+              }
+
+              // Keep in sync with the paths-filter allowlist in detect-changes.
+              const INERT = [
+                /^docs\//,
+                /^[^\/]+\.md$/,
+                /^\.github\/ISSUE_TEMPLATE\//,
+                /^\.github\/PULL_REQUEST_TEMPLATE\.md$/,
+                /^\.github\/dependabot\.yml$/,
+                /^CODEOWNERS$/,
+                /^LICENSE$/,
+              ];
+              const isInert = (p) => INERT.some((re) => re.test(p));
+              for (const f of files) {
+                const paths = [f.filename, f.previous_filename].filter(Boolean);
+                if (!paths.every(isInert)) {
+                  return fail(`non-inert path in pushed commits: ${f.filename}`);
+                }
+              }
+
+              const checks = await github.rest.checks.listForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: before,
+                check_name: 'Integration Tests',
+                filter: 'latest',
+                per_page: 50,
+              });
+              const green = checks.data.check_runs.some(
+                (c) => c.status === 'completed' && c.conclusion === 'success'
+              );
+              if (!green) {
+                return fail('Integration Tests is not successful on the previous head');
+              }
+
+              await github.rest.checks.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'Integration Tests',
+                head_sha: after,
+                status: 'completed',
+                conclusion: 'success',
+                output: {
+                  title: 'Integration Tests',
+                  summary: `Carried forward from ${before}: the newly pushed commits touch inert paths only and Integration Tests passed on the previous head.`
+                }
+              });
+              core.info(`Carried forward success from ${before} to ${after}`);
+              core.setOutput('carried', 'true');
+            } catch (e) {
+              core.warning(`carry-forward errored, falling back to full test run: ${e.message}`);
+              core.setOutput('carried', 'false');
+            }
+
   trigger-tests:
     name: Trigger Tests
 
@@ -72,10 +197,11 @@ jobs:
       group: databricks-release-runner-group-emu-access
       labels: linux-ubuntu-latest-emu-access
 
-    needs: [check-token, detect-changes]
+    needs: [check-token, detect-changes, carry-forward]
     if: github.event_name == 'pull_request'
         && needs.check-token.outputs.has_token == 'true'
         && needs.detect-changes.outputs.inert_only == 'false'
+        && needs.carry-forward.outputs.carried != 'true'
     environment: "test-trigger-is"
 
     steps:

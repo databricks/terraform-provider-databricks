@@ -51,46 +51,19 @@ resource "google_service_account_iam_policy" "impersonatable" {
   policy_data        = data.google_iam_policy.this.policy_data
 }
 
+data "databricks_gcp_crossaccount_policy" "this" {}
+
+data "databricks_gcp_vpc_policy" "this" {
+  enable_byovpc = true
+}
+
 resource "google_project_iam_custom_role" "workspace_creator" {
   role_id = "${var.prefix}_workspace_creator"
   title   = "Databricks Workspace Creator"
-  permissions = [
-    # IAM Role Management
-    "iam.roles.create",
-    "iam.roles.delete",
-    "iam.roles.get",
-    "iam.roles.update",
-    # Service Account Management
-    "iam.serviceAccounts.create",
-    "iam.serviceAccounts.get",
-    "iam.serviceAccounts.getIamPolicy",
-    "iam.serviceAccounts.setIamPolicy",
-    # Project Management
-    "resourcemanager.projects.get",
-    "resourcemanager.projects.getIamPolicy",
-    "resourcemanager.projects.setIamPolicy",
-    # Service Usage
-    "serviceusage.services.get",
-    "serviceusage.services.list",
-    "serviceusage.services.enable",
-    # Network Management
-    "compute.networks.get",
-    "compute.networks.updatePolicy",
-    "compute.projects.get",
-    "compute.subnetworks.get",
-    "compute.subnetworks.getIamPolicy",
-    "compute.subnetworks.setIamPolicy",
-    # Firewall Management
-    "compute.firewalls.get",
-    "compute.firewalls.create",
-    # Private Service Connect (required if using PSC)
-    "compute.forwardingRules.get",
-    "compute.forwardingRules.list",
-    # Customer-Managed Keys (required if using CMK)
-    # Uncomment these if you plan to use customer-managed encryption keys:
-    # "cloudkms.cryptoKeys.getIamPolicy",
-    # "cloudkms.cryptoKeys.setIamPolicy",
-  ]
+  permissions = tolist(toset(concat(
+    data.databricks_gcp_crossaccount_policy.this.permissions,
+    data.databricks_gcp_vpc_policy.this.permissions,
+  )))
 }
 
 data "google_client_config" "current" {}

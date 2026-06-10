@@ -99,6 +99,7 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `delta_table_source` (DeltaTableSource) - A Delta table data source
 * `kafka_source` (KafkaSource) - A Kafka stream data source
 * `request_source` (RequestSource) - A request-time data source
+* `stream_source` (StreamSource) - A Stream data source
 
 ### DeltaTableSource
 * `dataframe_schema` (string) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
@@ -189,6 +190,10 @@ This data source exports a single attribute, `features`. It is a list of resourc
 
 ### StddevSampFunction
 * `input` (string) - The input column from which the sample standard deviation is computed
+
+### StreamSource
+* `filter_condition` (string) - The filter condition applied to the source data before aggregation
+* `full_name` (string) - Three-part full name of the Stream (catalog.schema.stream)
 
 ### SumFunction
 * `input` (string) - The input column from which the sum is computed. For Kafka sources, use dot-prefixed path

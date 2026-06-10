@@ -139,9 +139,7 @@ resource "databricks_postgres_branch" "dev" {
 
 ## Arguments
 The following arguments are supported:
-* `project_id` (string, required) - The ID to use for the Project. This becomes the final component of the project's resource name.
-  The ID is required and must be 1-63 characters long, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens.
-  For example, `my-app` becomes `projects/my-app`
+* `project_id` (string, required) - The part of the name, chosen by the user when the resource was created
 * `initial_endpoint_spec` (InitialEndpointSpec, optional) - Configuration settings for the initial Read/Write endpoint created inside the initial branch for a newly
   created project. If omitted, the initial endpoint created will have default settings, without high availability
   configured. This field does not apply to any endpoints created after project creation. Use

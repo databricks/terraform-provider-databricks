@@ -22,7 +22,7 @@ resource "databricks_endpoint" "this" {
   parent       = "accounts/123e4567-e89b-12d3-a456-426614174000"
   display_name = "my-private-endpoint"
   region       = "westus"
-  azure_private_endpoint_info {
+  azure_private_endpoint_info = {
     private_endpoint_name          = "my-pe"
     private_endpoint_resource_guid = "12345678-1234-1234-1234-123456789abc"
   }

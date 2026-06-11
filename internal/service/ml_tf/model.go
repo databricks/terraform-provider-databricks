@@ -1242,7 +1242,7 @@ func (m *AuthConfig) SetMtlsConfig(ctx context.Context, v MtlsConfig) {
 type AvgFunction struct {
 	// The input column from which the average is computed. For Kafka sources,
 	// use dot-prefixed path notation (e.g., "value.amount"). For nested fields,
-	// the leaf node name is used. TODO(FS-939): Colon-prefixed notation (e.g.,
+	// the leaf node name is used. Colon-prefixed notation (e.g.,
 	// "value:amount") is supported for backwards compatibility but is
 	// deprecated; migrate to dot notation.
 	Input types.String `tfsdk:"input"`
@@ -1839,9 +1839,9 @@ func (m ContinuousWindow) Type(ctx context.Context) attr.Type {
 type CountFunction struct {
 	// The input column from which the count is computed. For Kafka sources, use
 	// dot-prefixed path notation (e.g., "value.amount"). For nested fields, the
-	// leaf node name is used. TODO(FS-939): Colon-prefixed notation (e.g.,
-	// "value:amount") is supported for backwards compatibility but is
-	// deprecated; migrate to dot notation.
+	// leaf node name is used. Colon-prefixed notation (e.g., "value:amount") is
+	// supported for backwards compatibility but is deprecated; migrate to dot
+	// notation.
 	Input types.String `tfsdk:"input"`
 }
 
@@ -6731,8 +6731,7 @@ func (m *DeltaTableSource) SetEntityColumns(ctx context.Context, v []types.Strin
 }
 
 // Direct connection configs for mTLS, as Kafka Connections do not support mTLS
-// yet (XTA-18030). Temporarily used until UC Kafka Connections gain mTLS
-// support.
+// yet . Temporarily used until UC Kafka Connections gain mTLS support.
 type DirectMtlsConfig struct {
 	// A comma-separated list of host:port pairs for the Kafka bootstrap
 	// servers.
@@ -6983,9 +6982,8 @@ type EntityColumn struct {
 	// "value.user_id", "key.partition_key"). For nested fields, the leaf node
 	// name (e.g., "user_id" from "value.trip_details.user_id") is what will be
 	// present in materialized tables and expected to match at query time.
-	// TODO(FS-939): Colon-prefixed notation (e.g., "value:user_id") is
-	// supported for backwards compatibility but is deprecated; migrate to dot
-	// notation.
+	// Colon-prefixed notation (e.g., "value:user_id") is supported for
+	// backwards compatibility but is deprecated; migrate to dot notation.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -12925,7 +12923,7 @@ func (m *LineageContext) SetJobContext(ctx context.Context, v JobContext) {
 	m.JobContext = vs
 }
 
-// Feature for model version. ([ML-57150] Renamed from Feature to LinkedFeature)
+// Feature for model version.
 type LinkedFeature struct {
 	// Feature name
 	FeatureName types.String `tfsdk:"feature_name"`
@@ -22701,8 +22699,8 @@ type StddevPopFunction struct {
 	// The input column from which the population standard deviation is
 	// computed. For Kafka sources, use dot-prefixed path notation (e.g.,
 	// "value.amount"). For nested fields, the leaf node name is used.
-	// TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported
-	// for backwards compatibility but is deprecated; migrate to dot notation.
+	// Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+	// compatibility but is deprecated; migrate to dot notation.
 	Input types.String `tfsdk:"input"`
 }
 
@@ -23080,8 +23078,8 @@ func (m *Stream) SetSourceConfig(ctx context.Context, v StreamSourceConfig) {
 // Specifies how to connect and authenticate to the stream platform.
 type StreamConnectionConfig struct {
 	// Direct mTLS configuration for stream platform access. This is only used
-	// in the short term until UC Kafka Connections support mTLS (XTA-18030).
-	// Once UC Kafka Connections support mTLS, this will be deprecated.
+	// in the short term until UC Kafka Connections support mTLS . Once UC Kafka
+	// Connections support mTLS, this will be deprecated.
 	DirectMtlsConfig types.Object `tfsdk:"direct_mtls_config"`
 	// Name of an existing UC Connection for stream platform access. Must be the
 	// correct type for the streaming platform (e.g. a Kafka Connection for a
@@ -23537,9 +23535,9 @@ func (m SubscriptionMode) Type(ctx context.Context) attr.Type {
 type SumFunction struct {
 	// The input column from which the sum is computed. For Kafka sources, use
 	// dot-prefixed path notation (e.g., "value.amount"). For nested fields, the
-	// leaf node name is used. TODO(FS-939): Colon-prefixed notation (e.g.,
-	// "value:amount") is supported for backwards compatibility but is
-	// deprecated; migrate to dot notation.
+	// leaf node name is used. Colon-prefixed notation (e.g., "value:amount") is
+	// supported for backwards compatibility but is deprecated; migrate to dot
+	// notation.
 	Input types.String `tfsdk:"input"`
 }
 
@@ -23978,9 +23976,9 @@ type TimeseriesColumn struct {
 	// "value.event_timestamp"). For nested fields, the leaf node name (e.g.,
 	// "event_timestamp" from "value.event_details.event_timestamp") is what
 	// will be present in materialized tables and expected to match at query
-	// time. TODO(FS-939): Colon-prefixed notation (e.g.,
-	// "value:event_timestamp") is supported for backwards compatibility but is
-	// deprecated; migrate to dot notation.
+	// time. Colon-prefixed notation (e.g., "value:event_timestamp") is
+	// supported for backwards compatibility but is deprecated; migrate to dot
+	// notation.
 	Name types.String `tfsdk:"name"`
 }
 

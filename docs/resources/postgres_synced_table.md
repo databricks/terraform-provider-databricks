@@ -118,16 +118,7 @@ resource "databricks_postgres_synced_table" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `synced_table_id` (string, required) - The ID to use for the Synced Table. This becomes the final component of the SyncedTable's resource name.
-  ID is required and is the synced table name, containing (catalog, schema, table) tuple.
-  Elements of the tuple are the UC entity names.
-  
-  Example: "{catalog}.{schema}.{table}"
-  
-  synced_table_id represents both of the following:
-  
-  1. An online VIEW virtual table in the Unity Catalog accessible via the Lakehouse Federation.
-  2. Postgres table named "{table}" in schema "{schema}" in the connected Postgres database
+* `synced_table_id` (string, required) - The part of the name, chosen by the user when the resource was created
 * `spec` (SyncedTableSyncedTableSpec, optional) - Configuration details of the synced table, such as the source table, scheduling policy, etc.
   This attribute is specified at creation time and most fields are returned as is on subsequent queries
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.

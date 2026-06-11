@@ -99,6 +99,8 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // CatalogData extends the main model with additional fields.
 type CatalogData struct {
+	// The part of the name, chosen by the user when the resource was created.
+	CatalogId types.String `tfsdk:"catalog_id"`
 	// A timestamp indicating when the catalog was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Output only. The full resource path of the catalog.
@@ -141,6 +143,7 @@ func (m CatalogData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"catalog_id":  m.CatalogId,
 			"create_time": m.CreateTime,
 			"name":        m.Name,
 			"spec":        m.Spec,
@@ -158,6 +161,7 @@ func (m CatalogData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m CatalogData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"catalog_id":  types.StringType,
 			"create_time": timetypes.RFC3339{}.Type(ctx),
 			"name":        types.StringType,
 			"spec":        postgres_tf.CatalogCatalogSpec{}.Type(ctx),
@@ -171,6 +175,7 @@ func (m CatalogData) Type(ctx context.Context) attr.Type {
 }
 
 func (m CatalogData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_id"] = attrs["catalog_id"].SetComputed()
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["spec"] = attrs["spec"].SetComputed()

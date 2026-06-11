@@ -144,6 +144,7 @@ This block describes individual tasks:
 * `disable_auto_optimization` - (Optional) A flag to disable auto optimization in serverless tasks.
 * `email_notifications` - (Optional) An optional block to specify a set of email addresses notified when this task begins, completes or fails. The default behavior is to not send any emails. This block is [documented below](#email_notifications-configuration-block).
 * `environment_key` - (Optional) identifier of an `environment` block that is used to specify libraries.  Required for some tasks (`spark_python_task`, `python_wheel_task`, ...) running on serverless compute.
+* `disabled` - (Optional) (Bool) An optional flag to disable the task. If set to `true`, the task will not run even if it is part of a job.
 * `existing_cluster_id` - (Optional) Identifier of the [interactive cluster](cluster.md) to run job on.  *Note: running tasks on interactive clusters may lead to increased costs!*
 * `health` - (Optional) block described below that specifies health conditions for a given task.
 * `job_cluster_key` - (Optional) Identifier of the Job cluster specified in the `job_cluster` block.

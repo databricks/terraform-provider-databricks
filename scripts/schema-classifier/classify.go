@@ -131,10 +131,15 @@ func classifyAttributeAdded(path, name string, a Attribute) Change {
 func classifyAttributeChanged(path, name string, base, head Attribute) []Change {
 	var out []Change
 
-	if !jsonEqual(base.Type, head.Type) || !jsonEqual(base.NestedType, head.NestedType) {
+	if !jsonEqual(base.Type, head.Type) {
 		out = append(out, Change{Path: path, Kind: "TypeChanged", Severity: Breaking,
 			Message: fmt.Sprintf("Attribute %q type changed (any type delta is breaking)", name)})
 	}
+
+	// `nested_type` is a structured object — recurse into its attributes instead
+	// of comparing raw JSON. A naive equality check would mis-flag benign deltas
+	// (e.g. adding an optional sub-attribute) as TypeChanged.
+	out = append(out, diffNestedType(path, name, base.NestedType, head.NestedType)...)
 
 	switch {
 	case base.Optional && head.Required:
@@ -172,6 +177,47 @@ func classifyAttributeChanged(path, name string, base, head Attribute) []Change 
 			Message: fmt.Sprintf("Attribute %q is no longer sensitive (un-masks previously hidden values)", name)})
 	}
 
+	return out
+}
+
+// diffNestedType compares two `nested_type` blocks structurally — like diffBlock
+// for BlockTypes, but for Plugin Framework's NestedType (no child block_types).
+// Recurses into the attributes so that benign sub-attribute changes (e.g.,
+// adding an optional sub-attribute) are classified by their own rules instead
+// of being lumped under TypeChanged.
+func diffNestedType(path, name string, base, head *NestedType) []Change {
+	if base == nil && head == nil {
+		return nil
+	}
+	if base == nil || head == nil {
+		return []Change{{
+			Path: path, Kind: "TypeChanged", Severity: Breaking,
+			Message: fmt.Sprintf("Attribute %q nested-type shape changed (nested_type added or removed)", name),
+		}}
+	}
+	var out []Change
+	if base.NestingMode != head.NestingMode {
+		out = append(out, Change{Path: path, Kind: "NestingModeChanged", Severity: Breaking,
+			Message: fmt.Sprintf("Attribute %q nesting_mode changed: %s -> %s", name, base.NestingMode, head.NestingMode)})
+	}
+	if head.MinItems > base.MinItems {
+		out = append(out, Change{Path: path, Kind: "MinItemsIncreased", Severity: Breaking,
+			Message: fmt.Sprintf("Attribute %q min_items increased: %d -> %d", name, base.MinItems, head.MinItems)})
+	} else if head.MinItems < base.MinItems {
+		out = append(out, Change{Path: path, Kind: "MinItemsDecreased", Severity: NonBreaking,
+			Message: fmt.Sprintf("Attribute %q min_items decreased: %d -> %d", name, base.MinItems, head.MinItems)})
+	}
+	baseMax, headMax := base.MaxItems, head.MaxItems
+	if baseMax != 0 && (headMax == 0 || headMax > baseMax) {
+		out = append(out, Change{Path: path, Kind: "MaxItemsRelaxed", Severity: NonBreaking,
+			Message: fmt.Sprintf("Attribute %q max_items relaxed: %d -> %d", name, baseMax, headMax)})
+	} else if headMax != 0 && (baseMax == 0 || headMax < baseMax) {
+		out = append(out, Change{Path: path, Kind: "MaxItemsDecreased", Severity: Breaking,
+			Message: fmt.Sprintf("Attribute %q max_items decreased: %d -> %d", name, baseMax, headMax)})
+	}
+	// Recurse into the nested attributes. Sub-attribute add/remove/change is
+	// classified by the same rules as top-level attributes.
+	out = append(out, diffAttributes(path, base.Attributes, head.Attributes)...)
 	return out
 }
 

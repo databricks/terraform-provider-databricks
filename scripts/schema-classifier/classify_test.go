@@ -170,6 +170,116 @@ func TestClassify_RuleTaxonomy(t *testing.T) {
 			wantKind: "TypeChanged",
 			wantSev:  Breaking,
 		},
+		// Nested-type (Plugin Framework structured attribute) transitions
+		{
+			name: "adding optional sub-attribute to nested type is non-breaking",
+			base: providerWith("r", schemaWith("a", Attribute{
+				Optional: true,
+				NestedType: &NestedType{
+					NestingMode: "single",
+					Attributes: map[string]Attribute{
+						"x": {Type: rawType("string"), Optional: true},
+					},
+				},
+			})),
+			head: providerWith("r", schemaWith("a", Attribute{
+				Optional: true,
+				NestedType: &NestedType{
+					NestingMode: "single",
+					Attributes: map[string]Attribute{
+						"x": {Type: rawType("string"), Optional: true},
+						"y": {Type: rawType("string"), Optional: true},
+					},
+				},
+			})),
+			wantKind: "OptionalAttributeAdded",
+			wantSev:  NonBreaking,
+		},
+		{
+			name: "removing sub-attribute from nested type is breaking",
+			base: providerWith("r", schemaWith("a", Attribute{
+				Optional: true,
+				NestedType: &NestedType{
+					NestingMode: "single",
+					Attributes: map[string]Attribute{
+						"x": {Type: rawType("string"), Optional: true},
+						"y": {Type: rawType("string"), Optional: true},
+					},
+				},
+			})),
+			head: providerWith("r", schemaWith("a", Attribute{
+				Optional: true,
+				NestedType: &NestedType{
+					NestingMode: "single",
+					Attributes: map[string]Attribute{
+						"x": {Type: rawType("string"), Optional: true},
+					},
+				},
+			})),
+			wantKind: "AttributeRemoved",
+			wantSev:  Breaking,
+		},
+		{
+			name: "sub-attribute optional to required in nested type is breaking",
+			base: providerWith("r", schemaWith("a", Attribute{
+				Optional: true,
+				NestedType: &NestedType{
+					NestingMode: "single",
+					Attributes: map[string]Attribute{
+						"x": {Type: rawType("string"), Optional: true},
+					},
+				},
+			})),
+			head: providerWith("r", schemaWith("a", Attribute{
+				Optional: true,
+				NestedType: &NestedType{
+					NestingMode: "single",
+					Attributes: map[string]Attribute{
+						"x": {Type: rawType("string"), Required: true},
+					},
+				},
+			})),
+			wantKind: "OptionalToRequired",
+			wantSev:  Breaking,
+		},
+		{
+			name: "nested-type nesting_mode change is breaking",
+			base: providerWith("r", schemaWith("a", Attribute{
+				Optional: true,
+				NestedType: &NestedType{
+					NestingMode: "single",
+					Attributes:  map[string]Attribute{"x": {Type: rawType("string"), Optional: true}},
+				},
+			})),
+			head: providerWith("r", schemaWith("a", Attribute{
+				Optional: true,
+				NestedType: &NestedType{
+					NestingMode: "list",
+					Attributes:  map[string]Attribute{"x": {Type: rawType("string"), Optional: true}},
+				},
+			})),
+			wantKind: "NestingModeChanged",
+			wantSev:  Breaking,
+		},
+		{
+			name: "identical nested type emits no change",
+			base: providerWith("r", schemaWith("a", Attribute{
+				Optional: true,
+				NestedType: &NestedType{
+					NestingMode: "single",
+					Attributes:  map[string]Attribute{"x": {Type: rawType("string"), Optional: true}},
+				},
+			})),
+			head: providerWith("r", schemaWith("a", Attribute{
+				Optional: true,
+				NestedType: &NestedType{
+					NestingMode: "single",
+					Attributes:  map[string]Attribute{"x": {Type: rawType("string"), Optional: true}},
+				},
+			})),
+			wantKind:    "",
+			wantNoOther: true,
+		},
 		// Description-only change is silent
 		{
 			name: "description change is non-breaking and emits no change",

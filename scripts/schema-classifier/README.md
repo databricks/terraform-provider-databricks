@@ -22,7 +22,7 @@ Every rule below is encoded in `classify.go` and pinned by a unit test in `class
 | `BecameComputedOnly` | A previously-settable attribute is now computed-only | Configs that set it fail (the schema rejects writes) |
 | `ComputedRemoved` | A still-settable attribute loses `computed: true` | Drift behavior changes — values previously sourced from the API now show as permanent diffs |
 | `SensitiveRemoved` | `sensitive: true` → `sensitive: false` | Un-masks previously hidden values in plan output; secrets may leak to CI logs / screenshots / session recordings |
-| `TypeChanged` | An attribute's cty `type` (or `nested_type`) JSON differs | HCL value coercion breaks (e.g. `string` → `number`, `list(string)` → `list(number)`) |
+| `TypeChanged` | An attribute's cty `type` JSON differs, OR `nested_type` is added/removed on an existing attribute | HCL value coercion breaks (e.g. `string` → `number`, `list(string)` → `list(number)`). Sub-attribute changes within an existing nested type recurse via the normal rules below — only an overall shape change emits `TypeChanged`. |
 | `BlockTypeRemoved` | A nested block disappears | Configs declaring the block fail with `Unsupported block type` |
 | `RequiredBlockTypeAdded` | A new nested block appears with `min_items > 0` | Required-by-definition; existing configs without it fail |
 | `NestingModeChanged` | `nesting_mode` changes (e.g. `list` → `set`, `single` → `list`) | Plan diffs and/or HCL syntax change |

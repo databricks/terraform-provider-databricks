@@ -7,6 +7,8 @@ With this resource you can insert a secret under the provided scope with the giv
 
 -> This resource can only be used with a workspace-level provider!
 
+-> **Note** Write-Only argument string_value_wo is available to use in place of string_value. Write-Only argumentss are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/manage-sensitive-data/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ```hcl
@@ -33,7 +35,9 @@ resource "databricks_cluster" "this" {
 
 The following arguments are required:
 
-* `string_value` - (Required) (String) super secret sensitive value.
+* `string_value` - (Optional) (String) Specifies text data that you want to encrypt and store in the secret. This is required if `string_value_wo` is not set.
+* `string_value_wo` (Optional) (String) Specifies text data that you want to encrypt and store in the secret. This is required if `string_value` is not set.
+* `string_value_wo_version` (Optional) (Integer) Use together with string_value_wo to trigger an update. Increment this value when an update to `string_value_wo` is required.
 * `scope` - (Required) (String) name of databricks secret scope. Must consist of alphanumeric characters, dashes, underscores, and periods, and may not exceed 128 characters.
 * `key` - (Required) (String) key within secret scope. Must consist of alphanumeric characters, dashes, underscores, and periods, and may not exceed 128 characters.
 * `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:

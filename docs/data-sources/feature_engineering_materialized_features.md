@@ -21,7 +21,8 @@ The following arguments are supported:
 
 ## Attributes
 This data source exports a single attribute, `materialized_features`. It is a list of resources, each with the following attributes:
-* `cron_schedule` (string) - The quartz cron expression that defines the schedule of the materialization pipeline. The schedule is evaluated in the UTC timezone
+* `cron_schedule` (string) - The quartz cron expression that defines the schedule of the materialization pipeline. The schedule is evaluated in the UTC timezone.
+  Hidden from GraphQL: superseded by the `trigger` oneof (cron_schedule_trigger), so not exposed to Catalog Explorer
 * `cron_schedule_trigger` (CronSchedule) - A cron-based schedule trigger for the materialization pipeline
 * `feature_name` (string) - The full name of the feature in Unity Catalog
 * `is_online` (boolean) - True if this is an online materialized feature. False if it is an offline materialized feature
@@ -30,7 +31,8 @@ This data source exports a single attribute, `materialized_features`. It is a li
 * `materialized_feature_id` (string) - Server-assigned unique identifier for the materialized feature
 * `offline_store_config` (OfflineStoreConfig) - Destination for writing feature values to an offline Delta table
 * `online_store_config` (OnlineStoreConfig) - Destination for writing feature values to an online Lakebase table
-* `pipeline_schedule_state` (string) - The schedule state of the materialization pipeline. Possible values are: `ACTIVE`, `PAUSED`, `SNAPSHOT`
+* `pipeline_schedule_state` (string) - The schedule state of the materialization pipeline.
+  Hidden from GraphQL: being deprecated, so not exposed to Catalog Explorer. Possible values are: `ACTIVE`, `PAUSED`, `SNAPSHOT`
 * `streaming_mode` (StreamingMode) - The Structured Streaming trigger mode used for materialization. Real-time mode (RTM) targets
   sub-second latency for operational workloads; micro-batch mode (MBM) favors cost efficiency
   for ETL and analytics workloads

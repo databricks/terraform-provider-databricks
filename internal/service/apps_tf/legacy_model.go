@@ -3861,6 +3861,8 @@ func (m AppUpdateUpdateStatus_SdkV2) Type(ctx context.Context) attr.Type {
 type ApplicationStatus_SdkV2 struct {
 	// Application status message
 	Message types.String `tfsdk:"message"`
+	// The number of running instances of this application.
+	RunningInstances types.Int64 `tfsdk:"running_instances"`
 	// State of the application.
 	State types.String `tfsdk:"state"`
 }
@@ -3873,6 +3875,7 @@ func (to *ApplicationStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 
 func (m ApplicationStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["message"] = attrs["message"].SetComputed()
+	attrs["running_instances"] = attrs["running_instances"].SetComputed()
 	attrs["state"] = attrs["state"].SetComputed()
 
 	return attrs
@@ -3896,8 +3899,9 @@ func (m ApplicationStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"message": m.Message,
-			"state":   m.State,
+			"message":           m.Message,
+			"running_instances": m.RunningInstances,
+			"state":             m.State,
 		})
 }
 
@@ -3905,8 +3909,9 @@ func (m ApplicationStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 func (m ApplicationStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"message": types.StringType,
-			"state":   types.StringType,
+			"message":           types.StringType,
+			"running_instances": types.Int64Type,
+			"state":             types.StringType,
 		},
 	}
 }

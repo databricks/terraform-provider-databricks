@@ -297,6 +297,108 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestResourceJobCreate_DisabledTask(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, jobs.CreateJob{
+				Name:              "DisabledTaskJob",
+				MaxConcurrentRuns: 1,
+				Queue: &jobs.QueueSettings{
+					Enabled: false,
+				},
+				Tasks: []jobs.Task{
+					{
+						TaskKey:           "disabled_task",
+						Disabled:          true,
+						ExistingClusterId: "abc",
+						DependsOn: []jobs.TaskDependency{
+							{
+								TaskKey: "enabled_task",
+							},
+						},
+						NotebookTask: &jobs.NotebookTask{
+							NotebookPath: "/Inactive",
+						},
+					},
+					{
+						TaskKey:           "enabled_task",
+						ExistingClusterId: "abc",
+						NotebookTask: &jobs.NotebookTask{
+							NotebookPath: "/Active",
+						},
+					},
+				},
+			}).Return(&jobs.CreateResponse{
+				JobId: 123,
+			}, nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 123,
+			}).Return(&jobs.Job{
+				JobId: 123,
+				Settings: &jobs.JobSettings{
+					Name: "DisabledTaskJob",
+					Tasks: []jobs.Task{
+						{
+							TaskKey:           "enabled_task",
+							ExistingClusterId: "abc",
+							NotebookTask: &jobs.NotebookTask{
+								NotebookPath: "/Active",
+							},
+						},
+						{
+							TaskKey:           "disabled_task",
+							Disabled:          true,
+							ExistingClusterId: "abc",
+							DependsOn: []jobs.TaskDependency{
+								{
+									TaskKey: "enabled_task",
+								},
+							},
+							NotebookTask: &jobs.NotebookTask{
+								NotebookPath: "/Inactive",
+							},
+						},
+					},
+				},
+			}, nil)
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "DisabledTaskJob"
+
+		task {
+			task_key = "enabled_task"
+
+			existing_cluster_id = "abc"
+
+			notebook_task {
+				notebook_path = "/Active"
+			}
+		}
+
+		task {
+			task_key = "disabled_task"
+			disabled = true
+
+			depends_on {
+				task_key = "enabled_task"
+			}
+
+			existing_cluster_id = "abc"
+
+			notebook_task {
+				notebook_path = "/Inactive"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "123", d.Id())
+	assert.Equal(t, true, d.Get("task.0.disabled"))
+	assert.Equal(t, false, d.Get("task.1.disabled"))
+}
+
 func TestResourceJobCreate_TaskOrder(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

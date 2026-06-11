@@ -8,9 +8,11 @@
 * Add resource and data sources for `databricks_ai_search_endpoint`.
 * Add resource and data sources for `databricks_ai_search_index`.
 
+
 ### Bug Fixes
 
 ### Documentation
+* Added `disabled` field to `task` block in `databricks_job` resource, allowing individual tasks to be disabled ([#5767](https://github.com/databricks/terraform-provider-databricks/pull/5767)).
 
 ### Exporter
 

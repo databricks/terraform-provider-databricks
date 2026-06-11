@@ -140,6 +140,9 @@ func classifyAttributeChanged(path, name string, base, head Attribute) []Change 
 	case base.Optional && head.Required:
 		out = append(out, Change{Path: path, Kind: "OptionalToRequired", Severity: Breaking,
 			Message: fmt.Sprintf("Attribute %q became required (existing configs missing it now error)", name)})
+	case base.IsComputedOnly() && head.Required:
+		out = append(out, Change{Path: path, Kind: "ComputedOnlyToRequired", Severity: Breaking,
+			Message: fmt.Sprintf("Attribute %q was computed-only and is now required (users must now set it; existing configs error)", name)})
 	case base.Required && head.Optional:
 		out = append(out, Change{Path: path, Kind: "RequiredToOptional", Severity: NonBreaking,
 			Message: fmt.Sprintf("Attribute %q became optional (strictly looser)", name)})

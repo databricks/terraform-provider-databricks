@@ -18,6 +18,7 @@ Every rule below is encoded in `classify.go` and pinned by a unit test in `class
 | `AttributeRemoved` | An attribute disappears from a resource / data source / nested block | Configs setting it fail with `Unsupported argument` |
 | `RequiredAttributeAdded` | A new attribute appears with `required: true` | Existing configs that don't set it fail with `Missing required argument` |
 | `OptionalToRequired` | Attribute went from `optional: true` to `required: true` | Configs missing it now error |
+| `ComputedOnlyToRequired` | Attribute was computed-only (Computed=true, Optional=false, Required=false) and is now required | Users couldn't set it before; now they must. Existing configs that relied on the API default error |
 | `BecameComputedOnly` | A previously-settable attribute is now computed-only | Configs that set it fail (the schema rejects writes) |
 | `ComputedRemoved` | A still-settable attribute loses `computed: true` | Drift behavior changes — values previously sourced from the API now show as permanent diffs |
 | `SensitiveRemoved` | `sensitive: true` → `sensitive: false` | Un-masks previously hidden values in plan output; secrets may leak to CI logs / screenshots / session recordings |

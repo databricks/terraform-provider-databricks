@@ -100,6 +100,20 @@ func TestClassify_RuleTaxonomy(t *testing.T) {
 			wantKind: "RequiredToOptional",
 			wantSev:  NonBreaking,
 		},
+		{
+			name:     "computed-only to required is breaking",
+			base:     providerWith("r", schemaWith("a", Attribute{Type: rawType("string"), Computed: true})),
+			head:     providerWith("r", schemaWith("a", Attribute{Type: rawType("string"), Required: true})),
+			wantKind: "ComputedOnlyToRequired",
+			wantSev:  Breaking,
+		},
+		{
+			name:     "computed-only to required+computed is breaking",
+			base:     providerWith("r", schemaWith("a", Attribute{Type: rawType("string"), Computed: true})),
+			head:     providerWith("r", schemaWith("a", Attribute{Type: rawType("string"), Required: true, Computed: true})),
+			wantKind: "ComputedOnlyToRequired",
+			wantSev:  Breaking,
+		},
 		// Computed transitions
 		{
 			name:     "adding computed to settable attr is non-breaking",

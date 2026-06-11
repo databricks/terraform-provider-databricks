@@ -5,7 +5,6 @@ package supervisor_agent_tool
 import (
 	"context"
 	"reflect"
-	"regexp"
 
 	"github.com/databricks/databricks-sdk-go/service/supervisoragents"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
@@ -46,8 +45,6 @@ func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -116,9 +113,11 @@ type ToolData struct {
 	// User specified id of the Tool.
 	ToolId types.String `tfsdk:"tool_id"`
 	// Tool type. Must be one of: "genie_space", "knowledge_assistant",
-	// "uc_function", "uc_connection", "app", "volume", "lakeview_dashboard",
-	// "serving_endpoint", "uc_table", "vector_search_index", "catalog",
-	// "schema", "supervisor_agent", "web_search".
+	// "uc_function", "uc_connection", "uc_mcp", "app", "volume", "dashboard",
+	// "serving_endpoint", "table", "vector_search_index", "catalog", "schema",
+	// "supervisor_agent", "web_search", "skill". The legacy values
+	// "lakeview_dashboard" and "uc_table" are also accepted and remain
+	// equivalent to "dashboard" and "table" respectively.
 	ToolType types.String `tfsdk:"tool_type"`
 
 	UcConnection types.Object `tfsdk:"uc_connection"`

@@ -345,21 +345,16 @@ func (m BranchSpec) Type(ctx context.Context) attr.Type {
 }
 
 type BranchStatus struct {
-	// The short identifier of the branch, suitable for showing to the users.
-	// For a branch with name `projects/my-project/branches/my-branch`, the
-	// branch_id is `my-branch`.
-	//
-	// Use this field when building UI components that display branches to users
-	// (e.g., a drop-down selector). Prefer showing `branch_id` instead of the
-	// full resource name from `Branch.name`, which follows the
-	// `projects/{project_id}/branches/{branch_id}` format and is not
-	// user-friendly.
+	// Part of the resource name.
 	BranchId types.String `tfsdk:"branch_id"`
 	// The branch's state, indicating if it is initializing, ready for use, or
 	// archived.
 	CurrentState types.String `tfsdk:"current_state"`
 	// Whether the branch is the project's default branch.
 	Default types.Bool `tfsdk:"default"`
+	// A timestamp indicating when the branch was deleted. Empty if the branch
+	// is not deleted.
+	DeleteTime timetypes.RFC3339 `tfsdk:"delete_time"`
 	// Absolute expiration time for the branch. Empty if expiration is disabled.
 	ExpireTime timetypes.RFC3339 `tfsdk:"expire_time"`
 	// Whether the branch is protected.
@@ -368,6 +363,9 @@ type BranchStatus struct {
 	LogicalSizeBytes types.Int64 `tfsdk:"logical_size_bytes"`
 	// The pending state of the branch, if a state transition is in progress.
 	PendingState types.String `tfsdk:"pending_state"`
+	// A timestamp indicating when the branch is scheduled to be purged. Empty
+	// if the branch is not deleted, otherwise set to a timestamp in the future.
+	PurgeTime timetypes.RFC3339 `tfsdk:"purge_time"`
 	// The name of the source branch from which this branch was created. Format:
 	// projects/{project_id}/branches/{branch_id}
 	SourceBranch types.String `tfsdk:"source_branch"`
@@ -391,10 +389,12 @@ func (m BranchStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["branch_id"] = attrs["branch_id"].SetComputed()
 	attrs["current_state"] = attrs["current_state"].SetComputed()
 	attrs["default"] = attrs["default"].SetComputed()
+	attrs["delete_time"] = attrs["delete_time"].SetComputed()
 	attrs["expire_time"] = attrs["expire_time"].SetComputed()
 	attrs["is_protected"] = attrs["is_protected"].SetComputed()
 	attrs["logical_size_bytes"] = attrs["logical_size_bytes"].SetComputed()
 	attrs["pending_state"] = attrs["pending_state"].SetComputed()
+	attrs["purge_time"] = attrs["purge_time"].SetComputed()
 	attrs["source_branch"] = attrs["source_branch"].SetComputed()
 	attrs["source_branch_lsn"] = attrs["source_branch_lsn"].SetComputed()
 	attrs["source_branch_time"] = attrs["source_branch_time"].SetComputed()
@@ -424,10 +424,12 @@ func (m BranchStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"branch_id":          m.BranchId,
 			"current_state":      m.CurrentState,
 			"default":            m.Default,
+			"delete_time":        m.DeleteTime,
 			"expire_time":        m.ExpireTime,
 			"is_protected":       m.IsProtected,
 			"logical_size_bytes": m.LogicalSizeBytes,
 			"pending_state":      m.PendingState,
+			"purge_time":         m.PurgeTime,
 			"source_branch":      m.SourceBranch,
 			"source_branch_lsn":  m.SourceBranchLsn,
 			"source_branch_time": m.SourceBranchTime,
@@ -442,10 +444,12 @@ func (m BranchStatus) Type(ctx context.Context) attr.Type {
 			"branch_id":          types.StringType,
 			"current_state":      types.StringType,
 			"default":            types.BoolType,
+			"delete_time":        timetypes.RFC3339{}.Type(ctx),
 			"expire_time":        timetypes.RFC3339{}.Type(ctx),
 			"is_protected":       types.BoolType,
 			"logical_size_bytes": types.Int64Type,
 			"pending_state":      types.StringType,
+			"purge_time":         timetypes.RFC3339{}.Type(ctx),
 			"source_branch":      types.StringType,
 			"source_branch_lsn":  types.StringType,
 			"source_branch_time": timetypes.RFC3339{}.Type(ctx),
@@ -728,15 +732,6 @@ type CatalogCatalogStatus struct {
 	//
 	// Format: projects/{project_id}/branches/{branch_id}.
 	Branch types.String `tfsdk:"branch"`
-	// The short identifier of the catalog, suitable for showing to the users.
-	// For a catalog with name `catalogs/my-catalog`, the catalog_id is
-	// `my-catalog`.
-	//
-	// Use this field when building UI components that display catalogs to users
-	// (e.g., a drop-down selector). Prefer showing `catalog_id` instead of the
-	// full resource name from `Catalog.name`, which follows the
-	// `catalogs/{catalog_id}` format and is not user-friendly.
-	CatalogId types.String `tfsdk:"catalog_id"`
 	// The name of the Postgres database associated with the catalog.
 	PostgresDatabase types.String `tfsdk:"postgres_database"`
 	// The resource path of the project associated with the catalog.
@@ -753,7 +748,6 @@ func (to *CatalogCatalogStatus) SyncFieldsDuringRead(ctx context.Context, from C
 
 func (m CatalogCatalogStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["branch"] = attrs["branch"].SetComputed()
-	attrs["catalog_id"] = attrs["catalog_id"].SetComputed()
 	attrs["postgres_database"] = attrs["postgres_database"].SetComputed()
 	attrs["project"] = attrs["project"].SetComputed()
 
@@ -779,7 +773,6 @@ func (m CatalogCatalogStatus) ToObjectValue(ctx context.Context) basetypes.Objec
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"branch":            m.Branch,
-			"catalog_id":        m.CatalogId,
 			"postgres_database": m.PostgresDatabase,
 			"project":           m.Project,
 		})
@@ -790,7 +783,6 @@ func (m CatalogCatalogStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"branch":            types.StringType,
-			"catalog_id":        types.StringType,
 			"postgres_database": types.StringType,
 			"project":           types.StringType,
 		},
@@ -1902,16 +1894,7 @@ func (m DatabaseDatabaseSpec) Type(ctx context.Context) attr.Type {
 }
 
 type DatabaseDatabaseStatus struct {
-	// The short identifier of the database, suitable for showing to the users.
-	// For a database with name
-	// `projects/my-project/branches/my-branch/databases/my-db`, the database_id
-	// is `my-db`.
-	//
-	// Use this field when building UI components that display databases to
-	// users (e.g., a drop-down selector). Prefer showing `database_id` instead
-	// of the full resource name from `Database.name`, which follows the
-	// `projects/{project_id}/branches/{branch_id}/databases/{database_id}`
-	// format and is not user-friendly.
+	// Part of the resource name.
 	DatabaseId types.String `tfsdk:"database_id"`
 	// The name of the Postgres database.
 	PostgresDatabase types.String `tfsdk:"postgres_database"`
@@ -2119,6 +2102,8 @@ type DeleteBranchRequest struct {
 	// The full resource path of the branch to delete. Format:
 	// projects/{project_id}/branches/{branch_id}
 	Name types.String `tfsdk:"-"`
+	// If true, permanently delete the branch; if false, soft delete.
+	Purge types.Bool `tfsdk:"-"`
 }
 
 func (to *DeleteBranchRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteBranchRequest) {
@@ -2129,6 +2114,7 @@ func (to *DeleteBranchRequest) SyncFieldsDuringRead(ctx context.Context, from De
 
 func (m DeleteBranchRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["purge"] = attrs["purge"].SetOptional()
 
 	return attrs
 }
@@ -2151,7 +2137,8 @@ func (m DeleteBranchRequest) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name": m.Name,
+			"name":  m.Name,
+			"purge": m.Purge,
 		})
 }
 
@@ -2159,7 +2146,8 @@ func (m DeleteBranchRequest) ToObjectValue(ctx context.Context) basetypes.Object
 func (m DeleteBranchRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name": types.StringType,
+			"name":  types.StringType,
+			"purge": types.BoolType,
 		},
 	}
 }
@@ -3211,16 +3199,7 @@ type EndpointStatus struct {
 	// option schedules a suspend compute operation. A disabled compute endpoint
 	// cannot be enabled by a connection or console action.
 	Disabled types.Bool `tfsdk:"disabled"`
-	// The short identifier of the endpoint, suitable for showing to the users.
-	// For an endpoint with name
-	// `projects/my-project/branches/my-branch/endpoints/my-endpoint`, the
-	// endpoint_id is `my-endpoint`.
-	//
-	// Use this field when building UI components that display endpoints to
-	// users (e.g., a drop-down selector). Prefer showing `endpoint_id` instead
-	// of the full resource name from `Endpoint.name`, which follows the
-	// `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`
-	// format and is not user-friendly.
+	// Part of the resource name.
 	EndpointId types.String `tfsdk:"endpoint_id"`
 	// The endpoint type. A branch can only have one READ_WRITE endpoint.
 	EndpointType types.String `tfsdk:"endpoint_type"`
@@ -3444,8 +3423,8 @@ type GenerateDatabaseCredentialRequest struct {
 	// The returned token will be scoped to UC tables with the specified
 	// permissions.
 	Claims types.List `tfsdk:"claims"`
-	// This field is not yet supported. The endpoint for which this credential
-	// will be generated. Format:
+	// The endpoint resource name for which this credential will be generated.
+	// Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Endpoint types.String `tfsdk:"endpoint"`
 }
@@ -4034,6 +4013,10 @@ type ListBranchesRequest struct {
 	// The Project that owns this collection of branches. Format:
 	// projects/{project_id}
 	Parent types.String `tfsdk:"-"`
+	// Whether to include soft-deleted branches in the response. When true,
+	// deleted branches are included alongside active branches. Purged branches
+	// are never returned.
+	ShowDeleted types.Bool `tfsdk:"-"`
 }
 
 func (to *ListBranchesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListBranchesRequest) {
@@ -4046,6 +4029,7 @@ func (m ListBranchesRequest) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["show_deleted"] = attrs["show_deleted"].SetOptional()
 
 	return attrs
 }
@@ -4068,9 +4052,10 @@ func (m ListBranchesRequest) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_size":  m.PageSize,
-			"page_token": m.PageToken,
-			"parent":     m.Parent,
+			"page_size":    m.PageSize,
+			"page_token":   m.PageToken,
+			"parent":       m.Parent,
+			"show_deleted": m.ShowDeleted,
 		})
 }
 
@@ -4078,9 +4063,10 @@ func (m ListBranchesRequest) ToObjectValue(ctx context.Context) basetypes.Object
 func (m ListBranchesRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"page_size":  types.Int64Type,
-			"page_token": types.StringType,
-			"parent":     types.StringType,
+			"page_size":    types.Int64Type,
+			"page_token":   types.StringType,
+			"parent":       types.StringType,
+			"show_deleted": types.BoolType,
 		},
 	}
 }
@@ -5454,13 +5440,14 @@ type ProjectSpec struct {
 	// characters.
 	DisplayName types.String `tfsdk:"display_name"`
 	// Whether to enable PG native password login on all endpoints in this
-	// project. Defaults to true.
+	// project. Defaults to false.
 	EnablePgNativeLogin types.Bool `tfsdk:"enable_pg_native_login"`
 	// The number of seconds to retain the shared history for point in time
 	// recovery for all branches in this project. Value should be between
 	// 172800s (2 days) and 3024000s (35 days).
 	HistoryRetentionDuration timetypes.GoDuration `tfsdk:"history_retention_duration"`
-	// The major Postgres version number. Supported versions are 16 and 17.
+	// The major Postgres version number. The set of supported versions may
+	// vary; consult the API documentation for currently accepted values.
 	PgVersion types.Int64 `tfsdk:"pg_version"`
 }
 
@@ -5637,14 +5624,7 @@ type ProjectStatus struct {
 	Owner types.String `tfsdk:"owner"`
 	// The effective major Postgres version number.
 	PgVersion types.Int64 `tfsdk:"pg_version"`
-	// The short identifier of the project, suitable for showing to the users.
-	// For a project with name `projects/my-project`, the project_id is
-	// `my-project`.
-	//
-	// Use this field when building UI components that display projects to users
-	// (e.g., a drop-down selector). Prefer showing `project_id` instead of the
-	// full resource name from `Project.name`, which follows the
-	// `projects/{project_id}` format and is not user-friendly.
+	// Part of the resource name.
 	ProjectId types.String `tfsdk:"project_id"`
 	// The current space occupied by the project in storage.
 	SyntheticStorageSizeBytes types.Int64 `tfsdk:"synthetic_storage_size_bytes"`
@@ -5908,8 +5888,6 @@ func (m *RequestedClaims) SetResources(ctx context.Context, v []RequestedResourc
 type RequestedResource struct {
 	// The full Unity Catalog table name.
 	TableName types.String `tfsdk:"table_name"`
-
-	UnspecifiedResourceName types.String `tfsdk:"unspecified_resource_name"`
 }
 
 func (to *RequestedResource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RequestedResource) {
@@ -5920,7 +5898,6 @@ func (to *RequestedResource) SyncFieldsDuringRead(ctx context.Context, from Requ
 
 func (m RequestedResource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["table_name"] = attrs["table_name"].SetOptional()
-	attrs["unspecified_resource_name"] = attrs["unspecified_resource_name"].SetOptional()
 
 	return attrs
 }
@@ -5943,8 +5920,7 @@ func (m RequestedResource) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"table_name":                m.TableName,
-			"unspecified_resource_name": m.UnspecifiedResourceName,
+			"table_name": m.TableName,
 		})
 }
 
@@ -5952,8 +5928,7 @@ func (m RequestedResource) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (m RequestedResource) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"table_name":                types.StringType,
-			"unspecified_resource_name": types.StringType,
+			"table_name": types.StringType,
 		},
 	}
 }
@@ -6435,15 +6410,7 @@ type RoleRoleStatus struct {
 	MembershipRoles types.List `tfsdk:"membership_roles"`
 	// The name of the Postgres role.
 	PostgresRole types.String `tfsdk:"postgres_role"`
-	// The short identifier of the role, suitable for showing to the users. For
-	// a role with name `projects/my-project/branches/my-branch/roles/my-role`,
-	// the role_id is `my-role`.
-	//
-	// Use this field when building UI components that display roles to users
-	// (e.g., a drop-down selector). Prefer showing `role_id` instead of the
-	// full resource name from `Role.name`, which follows the
-	// `projects/{project_id}/branches/{branch_id}/roles/{role_id}` format and
-	// is not user-friendly.
+	// Part of the resource name.
 	RoleId types.String `tfsdk:"role_id"`
 }
 
@@ -7366,6 +7333,55 @@ func (m *SyncedTableSyncedTableStatus) GetOngoingSyncProgress(ctx context.Contex
 func (m *SyncedTableSyncedTableStatus) SetOngoingSyncProgress(ctx context.Context, v SyncedTablePipelineProgress) {
 	vs := v.ToObjectValue(ctx)
 	m.OngoingSyncProgress = vs
+}
+
+type UndeleteBranchRequest struct {
+	// The full resource path of the branch to undelete. Format:
+	// projects/{project_id}/branches/{branch_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *UndeleteBranchRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UndeleteBranchRequest) {
+}
+
+func (to *UndeleteBranchRequest) SyncFieldsDuringRead(ctx context.Context, from UndeleteBranchRequest) {
+}
+
+func (m UndeleteBranchRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UndeleteBranchRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UndeleteBranchRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UndeleteBranchRequest
+// only implements ToObjectValue() and Type().
+func (m UndeleteBranchRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UndeleteBranchRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
 }
 
 // Request to restore a soft-deleted project within its retention period.

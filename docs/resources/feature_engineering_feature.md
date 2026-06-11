@@ -11,7 +11,9 @@ subcategory: "Machine Learning"
 
 ## Arguments
 The following arguments are supported:
-* `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature
+* `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature. This is the
+  feature's resource identifier; the catalog_name, schema_name, and name fields
+  below are OUTPUT_ONLY decomposed views of this value
 * `function` (Function, required) - The function by which the feature is computed
 * `source` (DataSource, required) - The data source of the feature
 * `description` (string, optional) - The description of the feature
@@ -158,6 +160,11 @@ The following arguments are supported:
 ### RequestSource
 * `flat_schema` (FlatSchema, optional) - A flat schema with scalar-typed fields only
 
+### RollingWindow
+* `window_duration` (string, required) - The duration of the rolling window (must be positive)
+* `delay` (string, optional) - The delay applied to the end of the rolling window (must be non-negative).
+  For example, delay=1d shifts the window end 1 day before the evaluation time
+
 ### SlidingWindow
 * `slide_duration` (string, required) - The slide duration (interval by which windows advance, must be positive and less than duration)
 * `window_duration` (string, required) - The duration of the sliding window
@@ -178,7 +185,8 @@ The following arguments are supported:
   compatibility but is deprecated; migrate to dot notation
 
 ### TimeWindow
-* `continuous` (ContinuousWindow, optional)
+* `continuous` (ContinuousWindow, optional, deprecated)
+* `rolling` (RollingWindow, optional)
 * `sliding` (SlidingWindow, optional)
 * `tumbling` (TumblingWindow, optional)
 
@@ -199,7 +207,13 @@ The following arguments are supported:
 ### VarSampFunction
 * `input` (string, required) - The input column from which the sample variance is computed
 
-
+## Attributes
+In addition to the above arguments, the following attributes are exported:
+* `catalog_name` (string) - Name of parent catalog
+* `created_at` (string) - Time at which this feature was created
+* `created_by` (string) - Username of the feature creator
+* `name` (string) - Name of the feature, extracted from the full three-part name (catalog.schema.name)
+* `schema_name` (string) - Name of parent schema relative to its parent catalog
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

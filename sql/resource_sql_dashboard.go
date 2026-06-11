@@ -72,13 +72,13 @@ type DashboardAPI struct {
 
 // Create ...
 func (a DashboardAPI) Create(d *api.Dashboard) error {
-	return a.client.Post(a.context, "/preview/sql/dashboards", d, &d)
+	return a.client.Post(a.context, "/preview/sql/dashboards", d, &d, a.client.AddWorkspaceIdHeader)
 }
 
 // Read ...
 func (a DashboardAPI) Read(dashboardID string) (*api.Dashboard, error) {
 	var d api.Dashboard
-	err := a.client.Get(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), nil, &d)
+	err := a.client.Get(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), nil, &d, a.client.AddWorkspaceIdHeader)
 	if err != nil {
 		return nil, err
 	}
@@ -88,12 +88,12 @@ func (a DashboardAPI) Read(dashboardID string) (*api.Dashboard, error) {
 
 // Update ...
 func (a DashboardAPI) Update(dashboardID string, d *api.Dashboard) error {
-	return a.client.Post(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), d, nil)
+	return a.client.Post(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), d, nil, a.client.AddWorkspaceIdHeader)
 }
 
 // Delete ...
 func (a DashboardAPI) Delete(dashboardID string) error {
-	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), nil)
+	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), nil, a.client.AddWorkspaceIdHeader)
 }
 
 func ResourceSqlDashboard() common.Resource {

@@ -215,7 +215,7 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 	}
 	// make a request to SCIM API, just to verify there are no errors
 	var response map[string]any
-	err = wsClient.Get(ctx, "/preview/scim/v2/Me", nil, &response)
+	err = wsClient.Get(ctx, "/preview/scim/v2/Me?excludedAttributes=entitlements", nil, &response)
 	var dnsError *net.DNSError
 	if errors.As(err, &dnsError) {
 		err = fmt.Errorf("workspace %s is not yet reachable: %s",

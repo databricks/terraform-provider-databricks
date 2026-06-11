@@ -4,6 +4,8 @@ subcategory: "Settings"
 # databricks_account_setting_user_preference_v2 Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/account/settingsv2)
+
 User preference is a configurable value that determines how a feature or behavior works for a specific user within the Databricks platform.
 
 See user settings-metadata API for list of user preferences that can be modified using this resource.

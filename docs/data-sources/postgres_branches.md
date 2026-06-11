@@ -39,6 +39,7 @@ The following arguments are supported:
 
 ## Attributes
 This data source exports a single attribute, `branches`. It is a list of resources, each with the following attributes:
+* `branch_id` (string) - The part of the name, chosen by the user when the resource was created
 * `create_time` (string) - A timestamp indicating when the branch was created
 * `name` (string) - Output only. The full resource path of the branch.
   Format: projects/{project_id}/branches/{branch_id}

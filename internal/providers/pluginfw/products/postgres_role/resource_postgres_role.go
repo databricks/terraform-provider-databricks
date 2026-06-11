@@ -118,14 +118,7 @@ type Role struct {
 	// The Branch where this Role exists. Format:
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"parent"`
-	// The ID to use for the Role, which will become the final component of the
-	// role's resource name. This ID becomes the role in Postgres.
-	//
-	// This value should be 4-63 characters, and valid characters are lowercase
-	// letters, numbers, and hyphens, as defined by RFC 1123.
-	//
-	// If role_id is not specified in the request, it is generated
-	// automatically.
+	// The part of the name, chosen by the user when the resource was created.
 	RoleId types.String `tfsdk:"role_id"`
 	// The spec contains the role configuration, including identity type,
 	// authentication method, and role attributes.
@@ -196,9 +189,6 @@ func (m Role) Type(ctx context.Context) attr.Type {
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (to *Role) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Role) {
-	if !from.RoleId.IsUnknown() {
-		to.RoleId = from.RoleId
-	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -229,9 +219,6 @@ func (to *Role) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Role) {
 // including both embedded model fields and additional fields. This method is called
 // during read.
 func (to *Role) SyncFieldsDuringRead(ctx context.Context, from Role) {
-	if !from.RoleId.IsUnknown() {
-		to.RoleId = from.RoleId
-	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -261,15 +248,15 @@ func (m Role) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["role_id"] = attrs["role_id"].SetComputed()
+	attrs["role_id"] = attrs["role_id"].SetOptional()
+	attrs["role_id"] = attrs["role_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["role_id"] = attrs["role_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["role_id"] = attrs["role_id"].SetComputed()
-	attrs["role_id"] = attrs["role_id"].SetOptional()
-	attrs["role_id"] = attrs["role_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["role_id"] = attrs["role_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()

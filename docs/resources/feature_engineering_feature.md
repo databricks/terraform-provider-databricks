@@ -87,6 +87,7 @@ The following arguments are supported:
 * `delta_table_source` (DeltaTableSource, optional) - A Delta table data source
 * `kafka_source` (KafkaSource, optional) - A Kafka stream data source
 * `request_source` (RequestSource, optional) - A request-time data source
+* `stream_source` (StreamSource, optional) - A Stream data source
 
 ### DeltaTableSource
 * `full_name` (string, required) - The full three-part (catalog, schema, table) name of the Delta table
@@ -177,6 +178,10 @@ The following arguments are supported:
 
 ### StddevSampFunction
 * `input` (string, required) - The input column from which the sample standard deviation is computed
+
+### StreamSource
+* `full_name` (string, required) - Three-part full name of the Stream (catalog.schema.stream)
+* `filter_condition` (string, optional) - The filter condition applied to the source data before aggregation
 
 ### SumFunction
 * `input` (string, required) - The input column from which the sum is computed. For Kafka sources, use dot-prefixed path

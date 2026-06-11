@@ -97,9 +97,7 @@ resource "databricks_postgres_branch" "temporary" {
 
 ## Arguments
 The following arguments are supported:
-* `branch_id` (string, required) - The ID to use for the Branch. This becomes the final component of the branch's resource name.
-  The ID is required and must be 1-63 characters long, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens.
-  For example, `development` becomes `projects/my-app/branches/development`
+* `branch_id` (string, required) - The part of the name, chosen by the user when the resource was created
 * `parent` (string, required) - The project containing this branch (API resource hierarchy).
   Format: projects/{project_id}
   

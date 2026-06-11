@@ -12,11 +12,13 @@ subcategory: "Machine Learning"
 ## Arguments
 The following arguments are supported:
 * `feature_name` (string, required) - The full name of the feature in Unity Catalog
-* `cron_schedule` (string, optional) - The quartz cron expression that defines the schedule of the materialization pipeline. The schedule is evaluated in the UTC timezone
+* `cron_schedule` (string, optional) - The quartz cron expression that defines the schedule of the materialization pipeline. The schedule is evaluated in the UTC timezone.
+  Hidden from GraphQL: superseded by the `trigger` oneof (cron_schedule_trigger), so not exposed to Catalog Explorer
 * `cron_schedule_trigger` (CronSchedule, optional) - A cron-based schedule trigger for the materialization pipeline
 * `offline_store_config` (OfflineStoreConfig, optional) - Destination for writing feature values to an offline Delta table
 * `online_store_config` (OnlineStoreConfig, optional) - Destination for writing feature values to an online Lakebase table
-* `pipeline_schedule_state` (string, optional) - The schedule state of the materialization pipeline. Possible values are: `ACTIVE`, `PAUSED`, `SNAPSHOT`
+* `pipeline_schedule_state` (string, optional) - The schedule state of the materialization pipeline.
+  Hidden from GraphQL: being deprecated, so not exposed to Catalog Explorer. Possible values are: `ACTIVE`, `PAUSED`, `SNAPSHOT`
 * `streaming_mode` (StreamingMode, optional) - The Structured Streaming trigger mode used for materialization. Real-time mode (RTM) targets
   sub-second latency for operational workloads; micro-batch mode (MBM) favors cost efficiency
   for ETL and analytics workloads

@@ -29,6 +29,8 @@ import (
 )
 
 type Branch_SdkV2 struct {
+	// The part of the name, chosen by the user when the resource was created.
+	BranchId types.String `tfsdk:"branch_id"`
 	// A timestamp indicating when the branch was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Output only. The full resource path of the branch. Format:
@@ -100,6 +102,7 @@ func (to *Branch_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Branch_Sd
 }
 
 func (m Branch_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch_id"] = attrs["branch_id"].SetComputed()
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
@@ -136,6 +139,7 @@ func (m Branch_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"branch_id":   m.BranchId,
 			"create_time": m.CreateTime,
 			"name":        m.Name,
 			"parent":      m.Parent,
@@ -150,6 +154,7 @@ func (m Branch_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Branch_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"branch_id":   types.StringType,
 			"create_time": timetypes.RFC3339{}.Type(ctx),
 			"name":        types.StringType,
 			"parent":      types.StringType,
@@ -468,6 +473,8 @@ func (m BranchStatus_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type Catalog_SdkV2 struct {
+	// The part of the name, chosen by the user when the resource was created.
+	CatalogId types.String `tfsdk:"catalog_id"`
 	// A timestamp indicating when the catalog was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Output only. The full resource path of the catalog.
@@ -533,6 +540,7 @@ func (to *Catalog_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Catalog_
 }
 
 func (m Catalog_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_id"] = attrs["catalog_id"].SetComputed()
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetOptional()
@@ -568,6 +576,7 @@ func (m Catalog_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"catalog_id":  m.CatalogId,
 			"create_time": m.CreateTime,
 			"name":        m.Name,
 			"spec":        m.Spec,
@@ -581,6 +590,7 @@ func (m Catalog_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m Catalog_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"catalog_id":  types.StringType,
 			"create_time": timetypes.RFC3339{}.Type(ctx),
 			"name":        types.StringType,
 			"spec": basetypes.ListType{
@@ -684,24 +694,14 @@ type CatalogCatalogSpec_SdkV2 struct {
 }
 
 func (to *CatalogCatalogSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CatalogCatalogSpec_SdkV2) {
-	if !from.CreateDatabaseIfMissing.IsUnknown() && !from.CreateDatabaseIfMissing.IsNull() {
-		// CreateDatabaseIfMissing is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.CreateDatabaseIfMissing = from.CreateDatabaseIfMissing
-	}
 }
 
 func (to *CatalogCatalogSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CatalogCatalogSpec_SdkV2) {
-	if !from.CreateDatabaseIfMissing.IsUnknown() && !from.CreateDatabaseIfMissing.IsNull() {
-		// CreateDatabaseIfMissing is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.CreateDatabaseIfMissing = from.CreateDatabaseIfMissing
-	}
 }
 
 func (m CatalogCatalogSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["branch"] = attrs["branch"].SetOptional()
 	attrs["create_database_if_missing"] = attrs["create_database_if_missing"].SetOptional()
-	attrs["create_database_if_missing"] = attrs["create_database_if_missing"].SetComputed()
-	attrs["create_database_if_missing"] = attrs["create_database_if_missing"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["postgres_database"] = attrs["postgres_database"].SetRequired()
 	attrs["postgres_database"] = attrs["postgres_database"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
@@ -1650,6 +1650,8 @@ func (m *CreateSyncedTableRequest_SdkV2) SetSyncedTable(ctx context.Context, v S
 type Database_SdkV2 struct {
 	// A timestamp indicating when the database was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// The part of the name, chosen by the user when the resource was created.
+	DatabaseId types.String `tfsdk:"database_id"`
 	// The resource name of the database. Format:
 	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
 	Name types.String `tfsdk:"name"`
@@ -1714,6 +1716,7 @@ func (to *Database_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Databas
 
 func (m Database_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["database_id"] = attrs["database_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
@@ -1749,6 +1752,7 @@ func (m Database_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"create_time": m.CreateTime,
+			"database_id": m.DatabaseId,
 			"name":        m.Name,
 			"parent":      m.Parent,
 			"spec":        m.Spec,
@@ -1762,6 +1766,7 @@ func (m Database_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"database_id": types.StringType,
 			"name":        types.StringType,
 			"parent":      types.StringType,
 			"spec": basetypes.ListType{
@@ -2574,6 +2579,8 @@ func (m DeltaTableSyncInfo_SdkV2) Type(ctx context.Context) attr.Type {
 type Endpoint_SdkV2 struct {
 	// A timestamp indicating when the compute endpoint was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// The part of the name, chosen by the user when the resource was created.
+	EndpointId types.String `tfsdk:"endpoint_id"`
 	// Output only. The full resource path of the endpoint. Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Name types.String `tfsdk:"name"`
@@ -2641,6 +2648,7 @@ func (to *Endpoint_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Endpoin
 
 func (m Endpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["endpoint_id"] = attrs["endpoint_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
@@ -2677,6 +2685,7 @@ func (m Endpoint_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"create_time": m.CreateTime,
+			"endpoint_id": m.EndpointId,
 			"name":        m.Name,
 			"parent":      m.Parent,
 			"spec":        m.Spec,
@@ -2691,6 +2700,7 @@ func (m Endpoint_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"endpoint_id": types.StringType,
 			"name":        types.StringType,
 			"parent":      types.StringType,
 			"spec": basetypes.ListType{
@@ -5076,6 +5086,8 @@ type Project_SdkV2 struct {
 	// Output only. The full resource path of the project. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
+	// The part of the name, chosen by the user when the resource was created.
+	ProjectId types.String `tfsdk:"project_id"`
 	// A timestamp indicating when the project is scheduled for permanent
 	// deletion. Empty if the project is not deleted, otherwise set to a
 	// timestamp in the future.
@@ -5173,6 +5185,7 @@ func (m Project_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["project_id"] = attrs["project_id"].SetComputed()
 	attrs["purge_time"] = attrs["purge_time"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetComputed()
@@ -5212,6 +5225,7 @@ func (m Project_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"delete_time":           m.DeleteTime,
 			"initial_endpoint_spec": m.InitialEndpointSpec,
 			"name":                  m.Name,
+			"project_id":            m.ProjectId,
 			"purge_time":            m.PurgeTime,
 			"spec":                  m.Spec,
 			"status":                m.Status,
@@ -5230,6 +5244,7 @@ func (m Project_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: InitialEndpointSpec_SdkV2{}.Type(ctx),
 			},
 			"name":       types.StringType,
+			"project_id": types.StringType,
 			"purge_time": timetypes.RFC3339{}.Type(ctx),
 			"spec": basetypes.ListType{
 				ElemType: ProjectSpec_SdkV2{}.Type(ctx),
@@ -6051,6 +6066,8 @@ type Role_SdkV2 struct {
 	// The Branch where this Role exists. Format:
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"parent"`
+	// The part of the name, chosen by the user when the resource was created.
+	RoleId types.String `tfsdk:"role_id"`
 	// The spec contains the role configuration, including identity type,
 	// authentication method, and role attributes.
 	Spec types.List `tfsdk:"spec"`
@@ -6113,6 +6130,7 @@ func (m Role_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["role_id"] = attrs["role_id"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["spec"] = attrs["spec"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -6148,6 +6166,7 @@ func (m Role_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"create_time": m.CreateTime,
 			"name":        m.Name,
 			"parent":      m.Parent,
+			"role_id":     m.RoleId,
 			"spec":        m.Spec,
 			"status":      m.Status,
 			"update_time": m.UpdateTime,
@@ -6161,6 +6180,7 @@ func (m Role_SdkV2) Type(ctx context.Context) attr.Type {
 			"create_time": timetypes.RFC3339{}.Type(ctx),
 			"name":        types.StringType,
 			"parent":      types.StringType,
+			"role_id":     types.StringType,
 			"spec": basetypes.ListType{
 				ElemType: RoleRoleSpec_SdkV2{}.Type(ctx),
 			},
@@ -6698,6 +6718,8 @@ type SyncedTable_SdkV2 struct {
 	Spec types.List `tfsdk:"spec"`
 	// Synced Table data synchronization status.
 	Status types.List `tfsdk:"status"`
+	// The part of the name, chosen by the user when the resource was created.
+	SyncedTableId types.String `tfsdk:"synced_table_id"`
 	// The Unity Catalog table ID for this synced table.
 	Uid types.String `tfsdk:"uid"`
 }
@@ -6759,6 +6781,7 @@ func (m SyncedTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["spec"] = attrs["spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["status"] = attrs["status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["synced_table_id"] = attrs["synced_table_id"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 
 	return attrs
@@ -6785,11 +6808,12 @@ func (m SyncedTable_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time": m.CreateTime,
-			"name":        m.Name,
-			"spec":        m.Spec,
-			"status":      m.Status,
-			"uid":         m.Uid,
+			"create_time":     m.CreateTime,
+			"name":            m.Name,
+			"spec":            m.Spec,
+			"status":          m.Status,
+			"synced_table_id": m.SyncedTableId,
+			"uid":             m.Uid,
 		})
 }
 
@@ -6805,7 +6829,8 @@ func (m SyncedTable_SdkV2) Type(ctx context.Context) attr.Type {
 			"status": basetypes.ListType{
 				ElemType: SyncedTableSyncedTableStatus_SdkV2{}.Type(ctx),
 			},
-			"uid": types.StringType,
+			"synced_table_id": types.StringType,
+			"uid":             types.StringType,
 		},
 	}
 }

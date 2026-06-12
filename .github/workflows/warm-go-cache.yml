@@ -54,11 +54,21 @@ jobs:
         if: inputs.pr_number != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ inputs.pr_number }}
         run: |
-          pr_data=$(gh api "repos/${{ github.repository }}/pulls/${{ inputs.pr_number }}")
+          [[ "$PR_NUMBER" =~ ^[0-9]+$ ]] || { echo "pr_number must be a positive integer"; exit 1; }
+          pr_data=$(gh api "repos/${{ github.repository }}/pulls/${PR_NUMBER}")
           fork_repo=$(echo "$pr_data" | jq -r '.head.repo.full_name')
           fork_ref=$(echo "$pr_data" | jq -r '.head.ref')
-          echo "Warming cache for PR #${{ inputs.pr_number }} from ${fork_repo}@${fork_ref}"
+          # Both values come from the PR head and are attacker-controlled:
+          # restrict the repo to owner/name characters and reject refs that
+          # git itself considers invalid or that start with "-" (git fetch
+          # would parse those as options even when quoted).
+          [[ "$fork_repo" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9_.-]+$ ]] || { echo "unexpected fork repository name: $fork_repo"; exit 1; }
+          if [[ "$fork_ref" == -* ]] || ! git check-ref-format "refs/heads/$fork_ref"; then
+            echo "unexpected fork ref: $fork_ref"; exit 1
+          fi
+          echo "Warming cache for PR #${PR_NUMBER} from ${fork_repo}@${fork_ref}"
           git remote add fork "https://github.com/${fork_repo}.git"
           git fetch --depth=1 fork "${fork_ref}"
           git checkout FETCH_HEAD -- go.mod go.sum

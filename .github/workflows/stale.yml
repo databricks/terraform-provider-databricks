@@ -31,7 +31,7 @@ jobs:
           days-before-pr-close: 30
           stale-pr-label: "stale"
           exempt-pr-labels: "merge-hold"
-          operations-per-run: 100
+          operations-per-run: 30
           ascending: true
           debug-only: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
           stale-pr-message: |

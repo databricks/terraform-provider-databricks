@@ -16484,13 +16484,7 @@ func (m *NetworkConnectivityConfiguration_SdkV2) SetEgressConfig(ctx context.Con
 	m.EgressConfig = types.ListValueMust(t, vs)
 }
 
-// The network policies applying for egress traffic. This message is used by the
-// UI/REST API. We translate this message to the format expected by the
-// dataplane in Lakehouse Network Manager (for the format expected by the
-// dataplane, see networkconfig.textproto). This policy should be consistent
-// with [[com.databricks.api.proto.settingspolicy.EgressNetworkPolicy]]. Details
-// see API-design:
-// https://docs.google.com/document/d/1DKWO_FpZMCY4cF2O62LpwII1lx8gsnDGG-qgE3t3TOA/
+// The network policies applying for egress traffic.
 type NetworkPolicyEgress_SdkV2 struct {
 	// The access policy enforced for egress traffic to the internet.
 	NetworkAccess types.List `tfsdk:"network_access"`

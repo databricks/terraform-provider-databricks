@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_project Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 This data source retrieves a single Postgres project.
 
 
@@ -49,6 +51,7 @@ The following attributes are exported:
   spec.default_endpoint_settings to configure default settings for endpoints created after project creation
 * `name` (string) - Output only. The full resource path of the project.
   Format: projects/{project_id}
+* `project_id` (string) - The part of the name, chosen by the user when the resource was created
 * `purge_time` (string) - A timestamp indicating when the project is scheduled for permanent deletion.
   Empty if the project is not deleted, otherwise set to a timestamp in the future
 * `spec` (ProjectSpec) - The spec contains the project configuration, including display_name, pg_version (Postgres version), history_retention_duration, and default_endpoint_settings

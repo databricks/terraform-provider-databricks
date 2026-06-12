@@ -341,6 +341,10 @@ func TestValidateWorkspaceID_ReadsFromRespPlan(t *testing.T) {
 		case "/.well-known/databricks-config":
 			rw.WriteHeader(404)
 		case "/api/2.0/preview/scim/v2/Me":
+			// The server still emits the legacy X-Databricks-Org-Id response
+			// header on /Me; the SDK's CurrentWorkspaceID reads from it. The
+			// request-side header rename to X-Databricks-Workspace-Id is on a
+			// separate schedule from the response-side rename.
 			rw.Header().Set("X-Databricks-Org-Id", "999")
 			rw.WriteHeader(200)
 			rw.Write([]byte("{}"))

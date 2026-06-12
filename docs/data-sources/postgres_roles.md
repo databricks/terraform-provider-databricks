@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_roles Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 This data source lists all Postgres roles in a branch.
 
 
@@ -43,6 +45,7 @@ This data source exports a single attribute, `roles`. It is a list of resources,
   Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
 * `parent` (string) - The Branch where this Role exists.
   Format: projects/{project_id}/branches/{branch_id}
+* `role_id` (string) - The part of the name, chosen by the user when the resource was created
 * `spec` (RoleRoleSpec) - The spec contains the role configuration, including identity type, authentication method, and role attributes
 * `status` (RoleRoleStatus) - Current status of the role, including its identity type, authentication method, and role attributes
 * `update_time` (string)

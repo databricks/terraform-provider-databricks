@@ -4,6 +4,8 @@ subcategory: "Data Quality Monitoring"
 # databricks_data_quality_refreshes Data Source
 [![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/dataquality)
+
 This data source can be used to fetch the list of data quality refreshes on a Unity Catalog table.
 
 The caller must either:

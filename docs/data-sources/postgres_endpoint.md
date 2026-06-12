@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_endpoint Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 This data source retrieves a single Postgres endpoint.
 
 
@@ -33,6 +35,7 @@ The following arguments are supported:
 ## Attributes
 The following attributes are exported:
 * `create_time` (string) - A timestamp indicating when the compute endpoint was created
+* `endpoint_id` (string) - The part of the name, chosen by the user when the resource was created
 * `name` (string) - Output only. The full resource path of the endpoint.
   Format: projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 * `parent` (string) - The branch containing this endpoint (API resource hierarchy).

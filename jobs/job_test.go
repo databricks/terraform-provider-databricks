@@ -295,6 +295,87 @@ func TestAccJobTasks(t *testing.T) {
 	})
 }
 
+func TestAccJobDisabledTask(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+		data "databricks_current_user" "me" {}
+		data "databricks_spark_version" "latest" {}
+		data "databricks_node_type" "smallest" {
+			local_disk = true
+		}
+
+		resource "databricks_notebook" "this" {
+			path     = "${data.databricks_current_user.me.home}/Terraform{var.RANDOM}"
+			language = "PYTHON"
+			content_base64 = base64encode(<<-EOT
+				# created from ${abspath(path.module)}
+				display(spark.range(10))
+				EOT
+			)
+		}
+
+		resource "databricks_job" "this" {
+			name = "{var.RANDOM}"
+
+			task {
+				task_key = "a"
+
+				new_cluster {
+					num_workers   = 1
+					spark_version = data.databricks_spark_version.latest.id
+					node_type_id  = data.databricks_node_type.smallest.id
+				}
+
+				notebook_task {
+					notebook_path = databricks_notebook.this.path
+				}
+			}
+
+			task {
+				task_key = "b"
+				disabled = true
+
+				depends_on {
+					task_key = "a"
+				}
+
+				new_cluster {
+					num_workers   = 1
+					spark_version = data.databricks_spark_version.latest.id
+					node_type_id  = data.databricks_node_type.smallest.id
+				}
+
+				notebook_task {
+					notebook_path = databricks_notebook.this.path
+				}
+			}
+		}`,
+		Check: acceptance.ResourceCheck("databricks_job.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			assert.NoError(t, err)
+
+			jobID, err := strconv.ParseInt(id, 10, 64)
+			assert.NoError(t, err)
+
+			res, err := w.Jobs.Get(ctx, jobs.GetJobRequest{
+				JobId: jobID,
+			})
+			assert.NoError(t, err)
+
+			for _, task := range res.Settings.Tasks {
+				if task.TaskKey == "b" {
+					assert.True(t, task.Disabled, "expected task 'b' to have Disabled=true")
+				}
+				if task.TaskKey == "a" {
+					assert.False(t, task.Disabled, "expected task 'a' to have Disabled=false")
+				}
+			}
+
+			return nil
+		}),
+	})
+}
+
 func TestAccForEachTask(t *testing.T) {
 	t.Skip("Skipping this test because feature not enabled in Prod")
 	acceptance.WorkspaceLevel(t, acceptance.Step{

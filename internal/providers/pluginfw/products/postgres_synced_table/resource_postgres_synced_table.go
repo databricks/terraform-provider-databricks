@@ -123,18 +123,7 @@ type SyncedTable struct {
 	Spec types.Object `tfsdk:"spec"`
 	// Synced Table data synchronization status.
 	Status types.Object `tfsdk:"status"`
-	// The ID to use for the Synced Table. This becomes the final component of
-	// the SyncedTable's resource name. ID is required and is the synced table
-	// name, containing (catalog, schema, table) tuple. Elements of the tuple
-	// are the UC entity names.
-	//
-	// Example: "{catalog}.{schema}.{table}"
-	//
-	// synced_table_id represents both of the following:
-	//
-	// 1. An online VIEW virtual table in the Unity Catalog accessible via the
-	// Lakehouse Federation. 2. Postgres table named "{table}" in schema
-	// "{schema}" in the connected Postgres database
+	// The part of the name, chosen by the user when the resource was created.
 	SyncedTableId types.String `tfsdk:"synced_table_id"`
 	// The Unity Catalog table ID for this synced table.
 	Uid            types.String `tfsdk:"uid"`
@@ -219,9 +208,6 @@ func (to *SyncedTable) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 			}
 		}
 	}
-	if !from.SyncedTableId.IsUnknown() {
-		to.SyncedTableId = from.SyncedTableId
-	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -250,9 +236,6 @@ func (to *SyncedTable) SyncFieldsDuringRead(ctx context.Context, from SyncedTabl
 			}
 		}
 	}
-	if !from.SyncedTableId.IsUnknown() {
-		to.SyncedTableId = from.SyncedTableId
-	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -268,12 +251,11 @@ func (m SyncedTable) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["status"] = attrs["status"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["uid"] = attrs["uid"].SetComputed()
-	attrs["uid"] = attrs["uid"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["synced_table_id"] = attrs["synced_table_id"].SetRequired()
 	attrs["synced_table_id"] = attrs["synced_table_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["synced_table_id"] = attrs["synced_table_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
-	attrs["synced_table_id"] = attrs["synced_table_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["uid"] = attrs["uid"].SetComputed()
+	attrs["uid"] = attrs["uid"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()

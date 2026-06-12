@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_database Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 ### Lakebase Autoscaling Terraform Behavior
 
 This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
@@ -122,14 +124,6 @@ resource "databricks_postgres_database" "application2" {
 The following arguments are supported:
 * `parent` (string, required) - The branch containing this database.
   Format: projects/{project_id}/branches/{branch_id}
-* `database_id` (string, optional) - The ID to use for the Database, which will become the final component of
-  the database's resource name.
-  This ID becomes the database name in postgres.
-  
-  This value should be 4-63 characters, and only use characters available in DNS names,
-  as defined by RFC-1123
-  
-  If database_id is not specified in the request, it is generated automatically
 * `spec` (DatabaseDatabaseSpec, optional) - The desired state of the Database
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
@@ -159,6 +153,7 @@ The following arguments are supported:
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 * `create_time` (string) - A timestamp indicating when the database was created
+* `database_id` (string) - The part of the name, chosen by the user when the resource was created
 * `name` (string) - The resource name of the database.
   Format: projects/{project_id}/branches/{branch_id}/databases/{database_id}
 * `status` (DatabaseDatabaseStatus) - The observed state of the Database

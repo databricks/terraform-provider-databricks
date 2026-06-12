@@ -4,6 +4,8 @@ subcategory: "Settings"
 # databricks_account_network_policy Resource
 [![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/account/networkpolicies)
+
 Network policies control which network destinations can be accessed from the Databricks environment. 
 
 Each Databricks account includes a default policy named `default-policy`. This policy is:
@@ -140,7 +142,8 @@ The following arguments are supported:
 
 ### CustomerFacingIngressNetworkPolicyRequestDestination
 * `account_api` (CustomerFacingIngressNetworkPolicyAccountApiDestination, optional)
-* `account_databricks_one` (CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination, optional)
+* `account_databricks_one` (CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination, optional) - Account DatabricksOne destination is not supported.
+  DO NOT change the stage of this destination past PRIVATE_PREVIEW
 * `account_ui` (CustomerFacingIngressNetworkPolicyAccountUiDestination, optional)
 * `all_destinations` (boolean, optional) - When true, match all destinations, no other destination fields can be set.
   When not set or false, at least one specific destination must be provided
@@ -161,12 +164,17 @@ The following arguments are supported:
 
 ### EgressNetworkPolicyNetworkAccessPolicy
 * `restriction_mode` (string, required) - The restriction mode that controls how serverless workloads can access the internet. Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
+* `allowed_databricks_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyDatabricksDestination, optional) - List of Databricks workspace destinations that serverless workloads are
+  allowed to access when in RESTRICTED_ACCESS mode
 * `allowed_internet_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyInternetDestination, optional) - List of internet destinations that serverless workloads are allowed to access when in RESTRICTED_ACCESS mode
 * `allowed_storage_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyStorageDestination, optional) - List of storage destinations that serverless workloads are allowed to access when in RESTRICTED_ACCESS mode
 * `blocked_internet_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyInternetDestination, optional) - List of internet destinations that serverless workloads are blocked from accessing.
   These destinations are enforced when restriction mode is RESTRICTED_ACCESS or DRY_RUN.
   Currently supports DNS_NAME type only; IP_RANGE support is planned
 * `policy_enforcement` (EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement, optional) - Optional. When policy_enforcement is not provided, we default to ENFORCE_MODE_ALL_SERVICES
+
+### EgressNetworkPolicyNetworkAccessPolicyDatabricksDestination
+* `workspace_ids` (list of integer, optional) - The workspace IDs to allow egress traffic to
 
 ### EgressNetworkPolicyNetworkAccessPolicyInternetDestination
 * `destination` (string, optional) - The internet destination to which access will be allowed. Format dependent on the destination type

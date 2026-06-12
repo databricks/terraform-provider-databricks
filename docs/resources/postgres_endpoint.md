@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_endpoint Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 ### Lakebase Autoscaling Terraform Behavior
 
 This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
@@ -229,9 +231,7 @@ resource "databricks_postgres_endpoint" "read_replica" {
 
 ## Arguments
 The following arguments are supported:
-* `endpoint_id` (string, required) - The ID to use for the Endpoint. This becomes the final component of the endpoint's resource name.
-  The ID is required and must be 1-63 characters long, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens.
-  For example, `primary` becomes `projects/my-app/branches/development/endpoints/primary`
+* `endpoint_id` (string, required) - The part of the name, chosen by the user when the resource was created
 * `parent` (string, required) - The branch containing this endpoint (API resource hierarchy).
   Format: projects/{project_id}/branches/{branch_id}
 * `replace_existing` (boolean, optional) - If true, update the endpoint if it already exists instead of returning an error

@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_catalog Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 ### Lakebase Autoscaling Terraform Behavior
 
 This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
@@ -74,8 +76,7 @@ resource "databricks_postgres_catalog" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `catalog_id` (string, required) - The ID in the Unity Catalog.
-  It becomes the full resource name, for example "my_catalog" becomes "catalogs/my_catalog"
+* `catalog_id` (string, required) - The part of the name, chosen by the user when the resource was created
 * `spec` (CatalogCatalogSpec, optional) - The desired state of the Catalog
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 

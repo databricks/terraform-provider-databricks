@@ -122,7 +122,7 @@ func (a CommandsAPI) createCommand(contextID, clusterID, language, commandStr st
 		ClusterID: clusterID,
 		ContextID: contextID,
 		Command:   commandStr,
-	}, &command)
+	}, &command, a.client.AddWorkspaceIdHeader)
 	return command.ID, err
 }
 
@@ -132,7 +132,7 @@ func (a CommandsAPI) getCommand(commandID, contextID, clusterID string) (Command
 		CommandID: commandID,
 		ContextID: contextID,
 		ClusterID: clusterID,
-	}, &commandResp)
+	}, &commandResp, a.client.AddWorkspaceIdHeader)
 	return commandResp, err
 }
 
@@ -140,7 +140,7 @@ func (a CommandsAPI) deleteContext(contextID, clusterID string) error {
 	return a.client.Post(a.context, "/contexts/destroy", genericCommandRequest{
 		ContextID: contextID,
 		ClusterID: clusterID,
-	}, nil)
+	}, nil, a.client.AddWorkspaceIdHeader)
 }
 
 func (a CommandsAPI) getContext(contextID, clusterID string) (string, error) {
@@ -148,7 +148,7 @@ func (a CommandsAPI) getContext(contextID, clusterID string) (string, error) {
 	err := a.client.Get(a.context, "/contexts/status", genericCommandRequest{
 		ContextID: contextID,
 		ClusterID: clusterID,
-	}, &contextStatus)
+	}, &contextStatus, a.client.AddWorkspaceIdHeader)
 	return contextStatus.Status, err
 }
 
@@ -157,7 +157,7 @@ func (a CommandsAPI) createContext(language, clusterID string) (string, error) {
 	err := a.client.Post(a.context, "/contexts/create", genericCommandRequest{
 		Language:  language,
 		ClusterID: clusterID,
-	}, &context)
+	}, &context, a.client.AddWorkspaceIdHeader)
 	return context.ID, err
 }
 

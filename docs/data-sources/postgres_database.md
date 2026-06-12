@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_database Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 This data source retrieves a single Postgres database.
 
 
@@ -37,6 +39,7 @@ The following arguments are supported:
 ## Attributes
 The following attributes are exported:
 * `create_time` (string) - A timestamp indicating when the database was created
+* `database_id` (string) - The part of the name, chosen by the user when the resource was created
 * `name` (string) - The resource name of the database.
   Format: projects/{project_id}/branches/{branch_id}/databases/{database_id}
 * `parent` (string) - The branch containing this database.

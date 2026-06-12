@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_group_instance_profile Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/groups)
+
 -> **Deprecated** Please migrate to [databricks_group_role](group_role.md).
 
 This resource allows you to attach [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_group](group.md).

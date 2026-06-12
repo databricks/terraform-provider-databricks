@@ -104,6 +104,9 @@ This data source exports a single attribute, `synced_tables`. It is a list of re
   PROVISIONING_INITIAL_SNAPSHOT state
 
 ### SyncedTableSpec
+* `accelerated_sync` (boolean) - When true, enables accelerated sync mode for the initial data load.
+  This significantly improves performance for large tables.
+  Requires workspace-level enablement
 * `create_database_objects_if_missing` (boolean) - If true, the synced table's logical database and schema resources in PG
   will be created if they do not already exist
 * `existing_pipeline_id` (string) - At most one of existing_pipeline_id and new_pipeline_spec should be defined.
@@ -121,6 +124,14 @@ This data source exports a single attribute, `synced_tables`. It is a list of re
 * `scheduling_policy` (string) - Scheduling policy of the underlying pipeline. Possible values are: `CONTINUOUS`, `SNAPSHOT`, `TRIGGERED`
 * `source_table_full_name` (string) - Three-part (catalog, schema, table) name of the source Delta table
 * `timeseries_key` (string) - Time series key to deduplicate (tie-break) rows with the same primary key
+* `type_overrides` (list of SyncedTableSpecTypeOverride) - Override the default Delta->PG type mapping for specific columns.
+  A TypeOverride with PG_SPECIFIC_TYPE_UNSPECIFIED is rejected; a valid pg_type must be set
+
+### SyncedTableSpecTypeOverride
+* `column_name` (string) - Name of the source column whose target PostgreSQL type should be overridden
+* `pg_type` (string) - PostgreSQL-specific target type to use for the column. Possible values are: `PG_SPECIFIC_TYPE_VECTOR`
+* `size` (integer) - Size parameter for the target type. Required when pg_type is PG_SPECIFIC_TYPE_VECTOR
+  (specifies the vector dimension, e.g., 1024)
 
 ### SyncedTableStatus
 * `continuous_update_status` (SyncedTableContinuousUpdateStatus)

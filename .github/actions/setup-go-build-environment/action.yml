@@ -15,11 +15,16 @@ inputs:
   cache-dependency-path:
     description: "Path to go.sum for caching"
     required: false
+  is-fork:
+    description: "Whether the workflow runs for a fork PR (no JFrog/OIDC access; resolve modules from the pre-warmed cache instead)"
+    required: false
+    default: "false"
 
 runs:
   using: composite
   steps:
     - name: Setup JFrog CLI with OIDC
+      if: inputs.is-fork != 'true'
       uses: jfrog/setup-jfrog-cli@279b1f629f43dd5bc658d8361ac4802a7ef8d2d5 # v4.9.1
       env:
         JF_URL: https://databricks.jfrog.io
@@ -27,6 +32,7 @@ runs:
         oidc-provider-name: github-actions
 
     - name: Setup Go
+      if: inputs.is-fork != 'true'
       uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
       with:
         go-version: ${{ inputs.go-version }}
@@ -34,6 +40,45 @@ runs:
         cache: ${{ inputs.go-cache }}
         cache-dependency-path: ${{ inputs.cache-dependency-path }}
 
+    # Fork: setup-go without its built-in cache; the "Warm Go Cache" workflow
+    # is the sole writer of the module cache restored below.
+    - name: Setup Go (fork)
+      if: inputs.is-fork == 'true'
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      with:
+        go-version: ${{ inputs.go-version }}
+        go-version-file: ${{ inputs.go-version-file }}
+        cache: false
+
     - name: Configure Go module proxy via JFrog
+      if: inputs.is-fork != 'true'
       shell: bash
       run: jf goc --repo-resolve=db-golang
+
+    # Fork PRs cannot mint OIDC tokens to authenticate to JFrog. Restore the
+    # module cache pre-warmed by the "Warm Go Cache" workflow and resolve
+    # modules from it offline through Go's file:// proxy.
+    - name: Compute pre-warmed cache key (fork)
+      if: inputs.is-fork == 'true'
+      id: modcache
+      shell: bash
+      run: |
+        echo "prefix=go-modules-${{ runner.os }}-${{ hashFiles('go.sum') }}" >> "$GITHUB_OUTPUT"
+
+    - name: Restore pre-warmed Go module cache (fork)
+      if: inputs.is-fork == 'true'
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ~/go/pkg/mod/cache/download
+        key: ${{ steps.modcache.outputs.prefix }}
+        restore-keys: |
+          ${{ steps.modcache.outputs.prefix }}-
+          go-modules-${{ runner.os }}-
+
+    - name: Configure Go to resolve modules from the pre-warmed cache (fork)
+      if: inputs.is-fork == 'true'
+      shell: bash
+      run: |
+        echo "GOPROXY=file://$(go env GOMODCACHE)/cache/download" >> $GITHUB_ENV
+        echo "GONOSUMCHECK=*" >> $GITHUB_ENV
+        echo "GONOSUMDB=*" >> $GITHUB_ENV

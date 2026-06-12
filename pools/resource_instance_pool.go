@@ -118,7 +118,7 @@ type InstancePoolAndStats struct {
 	DefaultTags                        map[string]string                `json:"default_tags,omitempty" tf:"computed"`
 	CustomTags                         map[string]string                `json:"custom_tags,omitempty"`
 	IdleInstanceAutoTerminationMinutes int32                            `json:"idle_instance_autotermination_minutes"`
-	EnableElasticDisk                  bool                             `json:"enable_elastic_disk"`
+	EnableElasticDisk                  bool                             `json:"enable_elastic_disk" tf:"optional"`
 	DiskSpec                           *InstancePoolDiskSpec            `json:"disk_spec,omitempty"`
 	PreloadedSparkVersions             []string                         `json:"preloaded_spark_versions,omitempty"`
 	State                              string                           `json:"state,omitempty"`

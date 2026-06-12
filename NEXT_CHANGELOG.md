@@ -10,6 +10,7 @@
 
 
 ### Bug Fixes
+* Fixed `databricks_instance_pool` ignoring `enable_elastic_disk = false` due to `omitempty` JSON tag, which caused an infinite plan/replace cycle ([#NNNN](https://github.com/databricks/terraform-provider-databricks/pull/NNNN)).
 
 ### Documentation
 * Added `disabled` field to `task` block in `databricks_job` resource, allowing individual tasks to be disabled ([#5767](https://github.com/databricks/terraform-provider-databricks/pull/5767)).

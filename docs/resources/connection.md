@@ -129,13 +129,16 @@ resource "databricks_connection" "pbi" {
 
 The following arguments are supported:
 
-- `name` - Name of the Connection.
-- `connection_type` - Connection type. `MYSQL`, `POSTGRESQL`, `SNOWFLAKE`, `REDSHIFT` `SQLDW`, `SQLSERVER`, `DATABRICKS`, `SALESFORCE`, `BIGQUERY`, `WORKDAY_RAAS`, `HIVE_METASTORE`, `GA4_RAW_DATA`, `SERVICENOW`, `SALESFORCE_DATA_CLOUD`, `GLUE`, `ORACLE`, `TERADATA`, `HTTP` or `POWER_BI` are supported. Up-to-date list of connection type supported is in the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources). Change forces creation of a new resource.
-- `options` - The key value of options required by the connection, e.g. `host`, `port`, `user`, `password`, `authorization_endpoint`, `client_id`, `client_secret` or `GoogleServiceAccountKeyJson`. Please consult the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources) for the required option.
-- `owner` - (Optional) Name of the connection owner.
-- `properties` -  (Optional) Free-form connection properties. Change forces creation of a new resource.
-- `comment` - (Optional) Free-form text. Change forces creation of a new resource.
-- `read_only` - (Optional) Indicates whether the connection is read-only. Change forces creation of a new resource.
+- `name` - (Required) Name of the connection.
+- `connection_type` - (Required) The type of connection. Possible values are: `BIGQUERY`, `CONFLUENCE`, `DATABRICKS`, `GA4_RAW_DATA`, `GITHUB`, `GLUE`, `HIVE_METASTORE`, `HTTP`, `HUBSPOT`, `META_MARKETING`, `MYSQL`, `ORACLE`, `OUTLOOK`, `POSTGRESQL`, `POWER_BI`, `REDSHIFT`, `SALESFORCE`, `SALESFORCE_DATA_CLOUD`, `SERVICENOW`, `SMARTSHEET`, `SNOWFLAKE`, `SQLDW`, `SQLSERVER`, `TERADATA`, `WORKDAY_RAAS`, or `ZENDESK`. For an up-to-date list of connection types and required options, see the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources). Change forces creation of a new resource.
+- `options` - (Required) A map of key-value properties attached to the securable. The required keys depend on the connection type, e.g. `host`, `port`, `user`, `password`, `authorization_endpoint`, `client_id`, `client_secret`, or `GoogleServiceAccountKeyJson`. Please consult the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources) for the required options. This field is sensitive.
+- `comment` - (Optional) User-provided free-form text description. Change forces creation of a new resource.
+- `environment_settings` - (Optional) Connection environment settings. This block consists of the following fields:
+  - `environment_version` - Environment version.
+  - `java_dependencies` - List of Java dependencies.
+- `owner` - (Optional) Username of current owner of the connection.
+- `properties` - (Optional) A map of key-value properties attached to the securable. Change forces creation of a new resource.
+- `read_only` - (Optional) If the connection is read only. Change forces creation of a new resource.
 - `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
   - `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
@@ -144,15 +147,17 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 - `id` - ID of this connection in form of `<metastore_id>|<name>`.
-- `connection_id` - Unique ID of the connection.
+- `connection_id` - Unique identifier of the Connection.
 - `created_at` - Time at which this connection was created, in epoch milliseconds.
-- `created_by` -  Username of connection creator.
-- `credential_type` - The type of credential for this connection.
+- `created_by` - Username of connection creator.
+- `credential_type` - The type of credential.
 - `full_name` - Full name of connection.
-- `metastore_id` - Unique ID of the UC metastore for this connection.
-- `provisioning_info` - Object with the status of an asynchronously provisioned resource.
-- `updated_at` - Time at which connection this was last modified, in epoch milliseconds.
-- `updated_by` - Username of user who last modified the connection.
+- `metastore_id` - Unique identifier of parent metastore.
+- `provisioning_info` - Status of an asynchronously provisioned resource. This block consists of the following fields:
+  - `state` - The provisioning state of the resource. Possible values are: `ACTIVE`, `DEGRADED`, `DELETING`, `FAILED`, `PROVISIONING`, or `UPDATING`.
+- `securable_type` - Securable type.
+- `updated_at` - Time at which this connection was updated, in epoch milliseconds.
+- `updated_by` - Username of user who last modified connection.
 - `url` - URL of the remote data source, extracted from options.
 
 ## Import

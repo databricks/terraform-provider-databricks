@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_group_member Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/groups)
+
 This resource allows you to attach [users](user.md), [service_principal](service_principal.md), and [groups](group.md) as group members.
 
 -> This resource can be used with an account or workspace-level provider.

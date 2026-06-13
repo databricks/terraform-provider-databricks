@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_group_role Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/groups)
+
 This resource allows you to attach a role to [databricks_group](group.md). This role could be a pre-defined role such as account admin, or an instance profile ARN.
 
 -> This resource can be used with an account or workspace-level provider.

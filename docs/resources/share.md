@@ -3,6 +3,8 @@ subcategory: "Delta Sharing"
 ---
 # databricks_share Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/shares)
+
 In Delta Sharing, a share is a read-only collection of tables and table partitions that a provider wants to share with one or more recipients. If your recipient uses a Unity Catalog-enabled Databricks workspace, you can also include notebook files, views (including dynamic views that restrict access at the row and column level), Unity Catalog volumes, and Unity Catalog models in a share.
 
 -> This resource can only be used with a workspace-level provider!

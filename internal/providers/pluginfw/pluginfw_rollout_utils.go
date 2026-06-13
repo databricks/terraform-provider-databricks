@@ -8,9 +8,11 @@ package pluginfw
 
 import (
 	"context"
+	"log"
 	"os"
 	"slices"
 	"strings"
+	"sync"
 
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/app"
@@ -29,7 +31,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
-// List of resources that have been migrated from SDK V2 to plugin framework
+// migratedResources lists resources that were originally implemented on SDKv2
+// and have been re-implemented on the Plugin Framework. Entries here are served
+// by the Plugin Framework by default; users can opt back to SDKv2 by listing
+// the resource name in the USE_SDK_V2_RESOURCES environment variable.
+//
+// Deprecation contract for entries in this list:
+//  1. The SDKv2 implementation must stay present and functional for the rest of
+//     this major version so that USE_SDK_V2_RESOURCES still works.
+//  2. The resource's documentation must carry a `~> **Deprecation**` banner
+//     warning that the SDKv2 implementation will be removed in the next major.
+//  3. The PR that adds an entry must announce the deprecation in NEXT_CHANGELOG.
+//  4. In the next major release, the SDKv2 source file and test must be deleted
+//     and the entry moved from migratedResources to pluginFwOnlyResources.
+//
+// getPluginFrameworkResourcesToRegister emits a one-time runtime warning whenever
+// a user steers a name in this list back to SDKv2, so entries inherit the
+// deprecation signal automatically.
+//
 // Keep this list sorted.
 var migratedResources = []func() resource.Resource{
 	library.ResourceLibrary,
@@ -37,12 +56,41 @@ var migratedResources = []func() resource.Resource{
 	sharing.ResourceShare,
 }
 
-// List of data sources that have been migrated from SDK V2 to plugin framework
+// migratedDataSources lists data sources that were originally implemented on
+// SDKv2 and have been re-implemented on the Plugin Framework. The same
+// deprecation contract as migratedResources applies; see the comment above
+// migratedResources for details.
+//
 // Keep this list sorted.
 var migratedDataSources = []func() datasource.DataSource{
 	sharing.DataSourceShare,
 	sharing.DataSourceShares,
 	volume.DataSourceVolumes,
+}
+
+// warnedFallbackNames tracks resource/data-source names for which we have
+// already emitted the SDKv2-fallback deprecation warning, so we warn at most
+// once per name per provider process.
+var warnedFallbackNames sync.Map
+
+// emitSdkV2FallbackWarning logs a one-time deprecation warning when a name in
+// migratedResources / migratedDataSources is steered back to the SDKv2
+// implementation, either via the USE_SDK_V2_RESOURCES / USE_SDK_V2_DATA_SOURCES
+// environment variables or via the test-only WithSdkV2ResourceFallbacks /
+// WithSdkV2DataSourceFallbacks options. kind is "resource" or "data source".
+//
+// The warning is sent through log.Printf with a [WARN] prefix; the Terraform
+// CLI surfaces this to users running with TF_LOG=WARN or higher. This is the
+// same channel SDKv2 schema deprecations use.
+func emitSdkV2FallbackWarning(name, kind string) {
+	if _, loaded := warnedFallbackNames.LoadOrStore(name, struct{}{}); loaded {
+		return
+	}
+	log.Printf("[WARN] %s %q is being served by the deprecated SDKv2 implementation "+
+		"(selected via USE_SDK_V2_RESOURCES / USE_SDK_V2_DATA_SOURCES or a test-only "+
+		"fallback option). The SDKv2 implementation will be removed in the next major "+
+		"release of the provider; remove the override to use the Plugin Framework version.",
+		kind, name)
 }
 
 // List of resources that have been onboarded to the plugin framework - not migrated from sdkv2.
@@ -161,9 +209,11 @@ func getPluginFrameworkResourcesToRegister(resourceFallbacks []string) []func() 
 	// Loop through the map and add resources if they're not specifically marked to use the SDK V2
 	for _, resourceFunc := range migratedResources {
 		name := getResourceName(resourceFunc)
-		if !shouldUseSdkV2Resource(name) && !slices.Contains(resourceFallbacks, name) {
-			resources = append(resources, resourceFunc)
+		if shouldUseSdkV2Resource(name) || slices.Contains(resourceFallbacks, name) {
+			emitSdkV2FallbackWarning(name, "resource")
+			continue
 		}
+		resources = append(resources, resourceFunc)
 	}
 
 	return append(resources, pluginFwOnlyResources...)
@@ -176,9 +226,11 @@ func getPluginFrameworkDataSourcesToRegister(dataSourceFallbacks []string) []fun
 	// Loop through the map and add data sources if they're not specifically marked to use the SDK V2
 	for _, dataSourceFunc := range migratedDataSources {
 		name := getDataSourceName(dataSourceFunc)
-		if !shouldUseSdkV2DataSource(name) && !slices.Contains(dataSourceFallbacks, name) {
-			dataSources = append(dataSources, dataSourceFunc)
+		if shouldUseSdkV2DataSource(name) || slices.Contains(dataSourceFallbacks, name) {
+			emitSdkV2FallbackWarning(name, "data source")
+			continue
 		}
+		dataSources = append(dataSources, dataSourceFunc)
 	}
 
 	return append(dataSources, pluginFwOnlyDataSources...)

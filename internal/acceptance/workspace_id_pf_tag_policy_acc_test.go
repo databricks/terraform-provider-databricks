@@ -81,16 +81,6 @@ func tagPolicyWithProviderBlock(providerAttrs, providerConfig string) string {
 // Validation Tests
 // ==========================================
 
-// TestMwsAccWorkspaceIDTagPolicy_InvalidWorkspaceID tests that
-// invalid workspace_id values in the provider block are rejected.
-func TestMwsAccWorkspaceIDTagPolicy_InvalidWorkspaceID(t *testing.T) {
-	AccountLevel(t, Step{
-		Template:    tagPolicyWithProviderBlock(`workspace_id = "invalid"`, ""),
-		PlanOnly:    true,
-		ExpectError: regexp.MustCompile(`failed to parse workspace_id`),
-	})
-}
-
 // ==========================================
 // Workspace-Level Lifecycle Tests
 // ==========================================

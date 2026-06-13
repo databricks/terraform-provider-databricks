@@ -81,6 +81,13 @@ func DataSourceGroup() common.Resource {
 					}
 					if strings.HasPrefix(x.Ref, "Groups/") {
 						this.ChildGroups = append(this.ChildGroups, x.Value)
+						if this.Recursive {
+							childGroup, err := groupsAPI.Read(x.Value, groupAttributes)
+							if err != nil {
+								return err
+							}
+							queue = append(queue, childGroup)
+						}
 					}
 					if strings.HasPrefix(x.Ref, "ServicePrincipals/") {
 						this.ServicePrincipals = append(this.ServicePrincipals, x.Value)
@@ -92,13 +99,6 @@ func DataSourceGroup() common.Resource {
 				current.Entitlements.readIntoData(d)
 				for _, x := range current.Groups {
 					this.Groups = append(this.Groups, x.Value)
-					if this.Recursive {
-						childGroup, err := groupsAPI.Read(x.Value, groupAttributes)
-						if err != nil {
-							return err
-						}
-						queue = append(queue, childGroup)
-					}
 				}
 			}
 			this.ExternalID = group.ExternalID

@@ -2,7 +2,9 @@
 subcategory: "Postgres"
 ---
 # databricks_postgres_database Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
 
 This data source retrieves a single Postgres database.
 
@@ -37,6 +39,7 @@ The following arguments are supported:
 ## Attributes
 The following attributes are exported:
 * `create_time` (string) - A timestamp indicating when the database was created
+* `database_id` (string) - The part of the name, chosen by the user when the resource was created
 * `name` (string) - The resource name of the database.
   Format: projects/{project_id}/branches/{branch_id}/databases/{database_id}
 * `parent` (string) - The branch containing this database.
@@ -61,14 +64,7 @@ The following attributes are exported:
   A database always has an owner
 
 ### DatabaseDatabaseStatus
-* `database_id` (string) - The short identifier of the database, suitable for showing to the users.
-  For a database with name `projects/my-project/branches/my-branch/databases/my-db`,
-  the database_id is `my-db`.
-  
-  Use this field when building UI components that display databases to users (e.g., a drop-down
-  selector). Prefer showing `database_id` instead of the full resource name from `Database.name`,
-  which follows the `projects/{project_id}/branches/{branch_id}/databases/{database_id}` format
-  and is not user-friendly
+* `database_id` (string) - Part of the resource name
 * `postgres_database` (string) - The name of the Postgres database
 * `role` (string) - The name of the role that owns the database.
   Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}

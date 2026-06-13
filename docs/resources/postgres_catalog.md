@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_catalog Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 ### Lakebase Autoscaling Terraform Behavior
 
 This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
@@ -74,8 +76,7 @@ resource "databricks_postgres_catalog" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `catalog_id` (string, required) - The ID in the Unity Catalog.
-  It becomes the full resource name, for example "my_catalog" becomes "catalogs/my_catalog"
+* `catalog_id` (string, required) - The part of the name, chosen by the user when the resource was created
 * `spec` (CatalogCatalogSpec, optional) - The desired state of the Catalog
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
@@ -120,12 +121,6 @@ In addition to the above arguments, the following attributes are exported:
 * `branch` (string) - The resource path of the branch associated with the catalog.
   
   Format: projects/{project_id}/branches/{branch_id}
-* `catalog_id` (string) - The short identifier of the catalog, suitable for showing to the users.
-  For a catalog with name `catalogs/my-catalog`, the catalog_id is `my-catalog`.
-  
-  Use this field when building UI components that display catalogs to users (e.g., a drop-down
-  selector). Prefer showing `catalog_id` instead of the full resource name from `Catalog.name`,
-  which follows the `catalogs/{catalog_id}` format and is not user-friendly
 * `postgres_database` (string) - The name of the Postgres database associated with the catalog
 * `project` (string) - The resource path of the project associated with the catalog.
   

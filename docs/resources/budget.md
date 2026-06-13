@@ -3,6 +3,8 @@ subcategory: "Billing"
 ---
 # databricks_budget Resource
 
+[API Documentation](https://docs.databricks.com/api/account/budgets)
+
 This resource allows you to manage [Databricks Budgets](https://docs.databricks.com/en/admin/account-settings/budgets.html).
 
 -> This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).

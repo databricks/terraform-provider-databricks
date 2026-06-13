@@ -5,7 +5,6 @@ package postgres_synced_table
 import (
 	"context"
 	"reflect"
-	"regexp"
 
 	"github.com/databricks/databricks-sdk-go/service/postgres"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
@@ -47,8 +46,6 @@ func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -117,6 +114,8 @@ type SyncedTableData struct {
 	Spec types.Object `tfsdk:"spec"`
 	// Synced Table data synchronization status.
 	Status types.Object `tfsdk:"status"`
+	// The part of the name, chosen by the user when the resource was created.
+	SyncedTableId types.String `tfsdk:"synced_table_id"`
 	// The Unity Catalog table ID for this synced table.
 	Uid                types.String `tfsdk:"uid"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
@@ -147,11 +146,12 @@ func (m SyncedTableData) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time": m.CreateTime,
-			"name":        m.Name,
-			"spec":        m.Spec,
-			"status":      m.Status,
-			"uid":         m.Uid,
+			"create_time":     m.CreateTime,
+			"name":            m.Name,
+			"spec":            m.Spec,
+			"status":          m.Status,
+			"synced_table_id": m.SyncedTableId,
+			"uid":             m.Uid,
 
 			"provider_config": m.ProviderConfigData,
 		},
@@ -163,11 +163,12 @@ func (m SyncedTableData) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m SyncedTableData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time": timetypes.RFC3339{}.Type(ctx),
-			"name":        types.StringType,
-			"spec":        postgres_tf.SyncedTableSyncedTableSpec{}.Type(ctx),
-			"status":      postgres_tf.SyncedTableSyncedTableStatus{}.Type(ctx),
-			"uid":         types.StringType,
+			"create_time":     timetypes.RFC3339{}.Type(ctx),
+			"name":            types.StringType,
+			"spec":            postgres_tf.SyncedTableSyncedTableSpec{}.Type(ctx),
+			"status":          postgres_tf.SyncedTableSyncedTableStatus{}.Type(ctx),
+			"synced_table_id": types.StringType,
+			"uid":             types.StringType,
 
 			"provider_config": ProviderConfigData{}.Type(ctx),
 		},
@@ -179,6 +180,7 @@ func (m SyncedTableData) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["status"] = attrs["status"].SetComputed()
+	attrs["synced_table_id"] = attrs["synced_table_id"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()

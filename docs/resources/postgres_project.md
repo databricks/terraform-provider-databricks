@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_project Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 ### Understanding Lakebase Autoscaling Terraform Behavior
 
 This resource uses Lakebase Autoscaling Terraform semantics, which differ from typical Databricks Terraform resources:
@@ -137,9 +139,7 @@ resource "databricks_postgres_branch" "dev" {
 
 ## Arguments
 The following arguments are supported:
-* `project_id` (string, required) - The ID to use for the Project. This becomes the final component of the project's resource name.
-  The ID is required and must be 1-63 characters long, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens.
-  For example, `my-app` becomes `projects/my-app`
+* `project_id` (string, required) - The part of the name, chosen by the user when the resource was created
 * `initial_endpoint_spec` (InitialEndpointSpec, optional) - Configuration settings for the initial Read/Write endpoint created inside the initial branch for a newly
   created project. If omitted, the initial endpoint created will have default settings, without high availability
   configured. This field does not apply to any endpoints created after project creation. Use
@@ -190,7 +190,7 @@ The following arguments are supported:
   Format: projects/{project_id}/branches/{branch_id}
 * `default_endpoint_settings` (ProjectDefaultEndpointSettings, optional)
 * `display_name` (string, optional) - Human-readable project name. Length should be between 1 and 256 characters
-* `enable_pg_native_login` (boolean, optional) - Whether to enable PG native password login on all endpoints in this project. Defaults to true
+* `enable_pg_native_login` (boolean, optional) - Whether to enable PG native password login on all endpoints in this project. Defaults to false
 * `history_retention_duration` (string, optional) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 172800s (2 days) and 3024000s (35 days)
 * `pg_version` (integer, optional) - The major Postgres version number. The set of supported versions may vary; consult the API documentation for currently accepted values
 
@@ -218,12 +218,7 @@ In addition to the above arguments, the following attributes are exported:
 * `history_retention_duration` (string) - The effective number of seconds to retain the shared history for point in time recovery
 * `owner` (string) - The email of the project owner
 * `pg_version` (integer) - The effective major Postgres version number
-* `project_id` (string) - The short identifier of the project, suitable for showing to the users.
-  For a project with name `projects/my-project`, the project_id is `my-project`.
-  
-  Use this field when building UI components that display projects to users (e.g., a drop-down
-  selector). Prefer showing `project_id` instead of the full resource name from `Project.name`,
-  which follows the `projects/{project_id}` format and is not user-friendly
+* `project_id` (string) - Part of the resource name
 * `synthetic_storage_size_bytes` (integer) - The current space occupied by the project in storage
 
 ## Import

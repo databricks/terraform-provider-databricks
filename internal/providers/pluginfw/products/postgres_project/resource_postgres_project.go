@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -59,8 +58,6 @@ func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -129,10 +126,7 @@ type Project struct {
 	// Output only. The full resource path of the project. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
-	// The ID to use for the Project. This becomes the final component of the
-	// project's resource name. The ID is required and must be 1-63 characters
-	// long, start with a lowercase letter, and contain only lowercase letters,
-	// numbers, and hyphens. For example, `my-app` becomes `projects/my-app`.
+	// The part of the name, chosen by the user when the resource was created.
 	ProjectId types.String `tfsdk:"project_id"`
 	// If true, permanently deletes the project (hard delete). If false or
 	// unset, performs a soft delete.
@@ -234,9 +228,6 @@ func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Proj
 			}
 		}
 	}
-	if !from.ProjectId.IsUnknown() {
-		to.ProjectId = from.ProjectId
-	}
 	if !from.PurgeOnDelete.IsUnknown() {
 		to.PurgeOnDelete = from.PurgeOnDelete
 	}
@@ -282,9 +273,6 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 			}
 		}
 	}
-	if !from.ProjectId.IsUnknown() {
-		to.ProjectId = from.ProjectId
-	}
 	if !from.PurgeOnDelete.IsUnknown() {
 		to.PurgeOnDelete = from.PurgeOnDelete
 	}
@@ -319,6 +307,9 @@ func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
+	attrs["project_id"] = attrs["project_id"].SetRequired()
+	attrs["project_id"] = attrs["project_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["project_id"] = attrs["project_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["purge_time"] = attrs["purge_time"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetComputed()
@@ -326,9 +317,6 @@ func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["project_id"] = attrs["project_id"].SetRequired()
-	attrs["project_id"] = attrs["project_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["project_id"] = attrs["project_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["purge_on_delete"] = attrs["purge_on_delete"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)

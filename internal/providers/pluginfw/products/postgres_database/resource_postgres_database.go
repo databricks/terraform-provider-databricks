@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -59,8 +58,6 @@ func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -116,15 +113,7 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 type Database struct {
 	// A timestamp indicating when the database was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The ID to use for the Database, which will become the final component of
-	// the database's resource name. This ID becomes the database name in
-	// postgres.
-	//
-	// This value should be 4-63 characters, and only use characters available
-	// in DNS names, as defined by RFC-1123
-	//
-	// If database_id is not specified in the request, it is generated
-	// automatically.
+	// The part of the name, chosen by the user when the resource was created.
 	DatabaseId types.String `tfsdk:"database_id"`
 	// The resource name of the database. Format:
 	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
@@ -199,9 +188,6 @@ func (m Database) Type(ctx context.Context) attr.Type {
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (to *Database) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Database) {
-	if !from.DatabaseId.IsUnknown() {
-		to.DatabaseId = from.DatabaseId
-	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -232,9 +218,6 @@ func (to *Database) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Dat
 // including both embedded model fields and additional fields. This method is called
 // during read.
 func (to *Database) SyncFieldsDuringRead(ctx context.Context, from Database) {
-	if !from.DatabaseId.IsUnknown() {
-		to.DatabaseId = from.DatabaseId
-	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -261,6 +244,10 @@ func (to *Database) SyncFieldsDuringRead(ctx context.Context, from Database) {
 
 func (m Database) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["database_id"] = attrs["database_id"].SetComputed()
+	attrs["database_id"] = attrs["database_id"].SetOptional()
+	attrs["database_id"] = attrs["database_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["database_id"] = attrs["database_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
@@ -269,10 +256,6 @@ func (m Database) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["database_id"] = attrs["database_id"].SetComputed()
-	attrs["database_id"] = attrs["database_id"].SetOptional()
-	attrs["database_id"] = attrs["database_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["database_id"] = attrs["database_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()

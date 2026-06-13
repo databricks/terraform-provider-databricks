@@ -79,18 +79,6 @@ func directoryWithProviderBlock(providerAttrs, providerConfig string) string {
 // Validation Tests
 // ==========================================
 
-// TestAccWorkspaceID_InvalidWorkspaceID tests that
-// invalid workspace_id values in the provider block are rejected.
-// The SDK's workspace_id field does not have schema-level validation,
-// so invalid values are caught during workspace client creation.
-func TestMwsAccWorkspaceID_InvalidWorkspaceID(t *testing.T) {
-	AccountLevel(t, Step{
-		Template:    directoryWithProviderBlock(`workspace_id = "invalid"`, ""),
-		ExpectError: regexp.MustCompile(`failed to parse workspace_id`),
-		PlanOnly:    true,
-	})
-}
-
 // ==========================================
 // Workspace-Level Lifecycle Tests
 // ==========================================

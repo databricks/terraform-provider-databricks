@@ -499,6 +499,12 @@ func TestAccSecretAclResource(t *testing.T) {
 }
 ```
 
+## Unit Testing on Forked Pull Requests
+
+Unit tests run in CI on every PR. PRs opened from forks cannot authenticate to the internal Go module proxy, so CI resolves their Go modules offline from a dependency cache that the "Warm Go Cache" workflow pre-warms daily from the `main` branch.
+
+If your PR changes `go.mod` or `go.sum`, the `tests` check will fail until a maintainer re-warms the cache for your PR (Actions -> Warm Go Cache -> Run workflow -> pr_number). Once the warming run completes, re-run the failed check.
+
 ## Integration Testing
 
 Integration tests are run as part of every PR made to the Databricks Terraform provider. Tests are run against AWS, Azure, and GCP infrastructure, in workspaces and accounts, and in Unity Catalog and non-Unity Catalog environments.

@@ -13,6 +13,9 @@ jobs:
       labels: linux-ubuntu-latest
 
     permissions:
+      # Required for JFrog OIDC auth on same-repo runs. GitHub never issues
+      # OIDC tokens to fork PR runs, so the permission is inert there; GitHub
+      # offers no way to condition job-level permissions on the event.
       id-token: write
       contents: read
 
@@ -20,15 +23,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
+      # Fork PRs cannot authenticate to JFrog (GitHub does not issue OIDC
+      # tokens to fork runs); they resolve modules offline from the cache
+      # pre-warmed by the "Warm Go Cache" workflow instead.
+      - name: Detect fork PR
+        id: fork-check
+        shell: bash
+        run: |
+          if [ "${{ github.event.pull_request.head.repo.full_name }}" != "" ] && \
+             [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
+            echo "is_fork=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_fork=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Go build environment
         uses: ./.github/actions/setup-go-build-environment
         with:
           go-version-file: go.mod
+          is-fork: ${{ steps.fork-check.outputs.is_fork }}
 
       - name: Pull external libraries
         shell: bash
+        env:
+          IS_FORK: ${{ steps.fork-check.outputs.is_fork }}
         run: |
-          jf go mod vendor
+          if [ "$IS_FORK" = "true" ]; then
+            # Resolve modules offline from the pre-warmed cache. If this fails
+            # after a go.mod/go.sum change, a maintainer must run the
+            # "Warm Go Cache" workflow with this PR's number first.
+            go mod vendor
+          else
+            jf go mod vendor
+          fi
 
           # Point native go commands at the local module cache instead of
           # the network. go run pkg@version needs module lookups even when
@@ -48,6 +75,8 @@ jobs:
           make test
 
       - name: Publish test coverage
+        # Fork PRs have no access to CODECOV_TOKEN; skip the upload.
+        if: steps.fork-check.outputs.is_fork != 'true'
         uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

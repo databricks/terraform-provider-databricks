@@ -13,6 +13,8 @@ import (
 
 // OboTokenFields defines the schema fields for OBO token creation.
 type OboTokenFields struct {
+	common.Namespace
+
 	ApplicationID   string   `json:"application_id" tf:"force_new"`
 	LifetimeSeconds int64    `json:"lifetime_seconds,omitempty" tf:"force_new"`
 	Comment         string   `json:"comment,omitempty" tf:"force_new"`
@@ -29,7 +31,6 @@ func ResourceOboToken() common.Resource {
 			}
 			return m
 		})
-	common.AddNamespaceInSchema(oboTokenSchema)
 	common.NamespaceCustomizeSchemaMap(oboTokenSchema)
 	return common.Resource{
 		Schema: oboTokenSchema,

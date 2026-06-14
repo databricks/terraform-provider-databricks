@@ -100,11 +100,12 @@ func ResourceGlobalInitScript() common.Resource {
 				return err
 			}
 			return w.GlobalInitScripts.Update(ctx, compute.GlobalInitScriptUpdateRequest{
-				ScriptId: d.Id(),
-				Script:   base64.StdEncoding.EncodeToString(content),
-				Enabled:  d.Get("enabled").(bool),
-				Position: d.Get("position").(int),
-				Name:     d.Get("name").(string),
+				ScriptId:        d.Id(),
+				Script:          base64.StdEncoding.EncodeToString(content),
+				Enabled:         d.Get("enabled").(bool),
+				Position:        d.Get("position").(int),
+				Name:            d.Get("name").(string),
+				ForceSendFields: []string{"Enabled", "Position"},
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

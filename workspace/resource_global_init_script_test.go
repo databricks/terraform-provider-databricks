@@ -141,10 +141,11 @@ func TestResourceGlobalInitScriptUpdate(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			scriptsAPI := w.GetMockGlobalInitScriptsAPI().EXPECT()
 			scriptsAPI.Update(mock.Anything, compute.GlobalInitScriptUpdateRequest{
-				ScriptId: "1234",
-				Name:     "test",
-				Position: 0,
-				Script:   "ZWNobyBoZWxsbw==",
+				ScriptId:        "1234",
+				Name:            "test",
+				Position:        0,
+				Script:          "ZWNobyBoZWxsbw==",
+				ForceSendFields: []string{"Enabled", "Position"},
 			}).Return(nil)
 
 			scriptsAPI.GetByScriptId(mock.Anything, "1234").
@@ -213,10 +214,11 @@ func TestResourceGlobalInitScriptUpdateError(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			scriptsAPI := w.GetMockGlobalInitScriptsAPI().EXPECT()
 			scriptsAPI.Update(mock.Anything, compute.GlobalInitScriptUpdateRequest{
-				ScriptId: "1234",
-				Name:     "test",
-				Position: 0,
-				Script:   "ZWNobyBoZWxsbw==",
+				ScriptId:        "1234",
+				Name:            "test",
+				Position:        0,
+				Script:          "ZWNobyBoZWxsbw==",
+				ForceSendFields: []string{"Enabled", "Position"},
 			}).Return(errors.New("update failed"))
 		},
 		Update:   true,

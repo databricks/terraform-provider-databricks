@@ -9,6 +9,8 @@ import (
 
 func DataSourceMwsWorkspaces() common.Resource {
 	type mwsWorkspacesData struct {
+		common.Namespace
+
 		Ids map[string]int64 `json:"ids" tf:"computed"`
 	}
 	r := common.AccountData(func(ctx context.Context, data *mwsWorkspacesData, acc *databricks.AccountClient) error {

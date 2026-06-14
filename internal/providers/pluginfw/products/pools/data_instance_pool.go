@@ -31,6 +31,8 @@ type InstancePoolDataSource struct {
 }
 
 type InstancePoolInfo struct {
+	tfschema.Namespace
+
 	Id       types.String `tfsdk:"id"`
 	Name     types.String `tfsdk:"name"`
 	PoolInfo types.Object `tfsdk:"pool_info"`

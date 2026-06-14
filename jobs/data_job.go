@@ -13,6 +13,8 @@ import (
 
 func DataSourceJob() common.Resource {
 	type queryableJobData struct {
+		common.Namespace
+
 		Id      string        `json:"id,omitempty" tf:"computed"`
 		JobId   string        `json:"job_id,omitempty" tf:"computed"`
 		Name    string        `json:"name,omitempty" tf:"computed"`

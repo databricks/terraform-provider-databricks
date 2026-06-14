@@ -14,6 +14,8 @@
 ### Documentation
 * Added `disabled` field to `task` block in `databricks_job` resource, allowing individual tasks to be disabled ([#5767](https://github.com/databricks/terraform-provider-databricks/pull/5767)).
 
+* Document additional custom configuration properties for resource `workspace_conf` ([#4859](https://github.com/databricks/terraform-provider-databricks/pull/4859))
+
 ### Exporter
 
 ### Internal Changes

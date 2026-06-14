@@ -16,4 +16,6 @@
 
 ### Exporter
 
+* Rewrote Exporter logging so it works with Databricks Go SDK logging ([#5805](https://github.com/databricks/terraform-provider-databricks/pull/5805)).
+
 ### Internal Changes

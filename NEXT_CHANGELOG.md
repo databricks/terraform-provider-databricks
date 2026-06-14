@@ -8,7 +8,7 @@
 
 ### Bug Fixes
 
-* Fix `databricks_pipeline` so that `photon`, `serverless`, `continuous` and `development` set to `false` are sent in the create/update request. Previously these fields were silently dropped (Go SDK marshals the bool with `omitempty`), so the server applied its own default instead of the configured `false` ([#5806](https://github.com/databricks/terraform-provider-databricks/pull/5806)).
+* Fix `databricks_pipeline` so that `photon`, `serverless`, `continuous` and `development` set to `false` are sent in the create/update request if specified ([#5806](https://github.com/databricks/terraform-provider-databricks/pull/5806)).
 
 ### Documentation
 

@@ -3,62 +3,57 @@ package jobs
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestResourceJobUpdate_WebhookNotifications(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.2/jobs/reset",
-				ExpectedRequest: UpdateJobRequest{
-					JobID: 789,
-					NewSettings: &JobSettings{
-						Name: "Webhook test",
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey:           "task1",
-								ExistingClusterID: "abc",
-							},
-						},
-						WebhookNotifications: &jobs.WebhookNotifications{
-							OnSuccess: []jobs.Webhook{
-								{Id: "id1"},
-							},
-						},
-						MaxConcurrentRuns: 1,
-						Queue: &jobs.QueueSettings{
-							Enabled: false,
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Reset(mock.Anything, jobs.ResetJob{
+				JobId: 789,
+				NewSettings: jobs.JobSettings{
+					Name: "Webhook test",
+					Tasks: []jobs.Task{
+						{
+							TaskKey:           "task1",
+							ExistingClusterId: "abc",
 						},
 					},
-				},
-				Response: Job{
-					JobID: 789,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.2/jobs/get?job_id=789",
-				Response: Job{
-					Settings: &JobSettings{
-						Name: "Webhook test",
-						Tasks: []JobTaskSettings{
-							{
-								TaskKey:           "task1",
-								ExistingClusterID: "abc",
-							},
+					WebhookNotifications: &jobs.WebhookNotifications{
+						OnSuccess: []jobs.Webhook{
+							{Id: "id1"},
 						},
-						WebhookNotifications: &jobs.WebhookNotifications{
-							OnSuccess: []jobs.Webhook{
-								{Id: "id1"},
-							},
-						},
-						MaxConcurrentRuns: 1,
+					},
+					MaxConcurrentRuns: 1,
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
 					},
 				},
-			},
+			}).Return(nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 789,
+			}).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
+					Name: "Webhook test",
+					Tasks: []jobs.Task{
+						{
+							TaskKey:           "task1",
+							ExistingClusterId: "abc",
+						},
+					},
+					WebhookNotifications: &jobs.WebhookNotifications{
+						OnSuccess: []jobs.Webhook{
+							{Id: "id1"},
+						},
+					},
+					MaxConcurrentRuns: 1,
+				},
+			}, nil)
 		},
 		ID:       "789",
 		Update:   true,
@@ -87,5 +82,8 @@ func TestResourceJobUpdate_WebhookNotifications(t *testing.T) {
 			}
 		}
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "789",
+		"name": "Webhook test",
+	})
 }

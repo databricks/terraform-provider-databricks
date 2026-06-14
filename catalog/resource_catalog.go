@@ -132,8 +132,23 @@ func ResourceCatalog() common.Resource {
 				string(origCatalogData.EnablePredictiveOptimization) == "" {
 				ci.EnablePredictiveOptimization = origCatalogData.EnablePredictiveOptimization
 			}
+			// Preserve the configured storage_root when the only difference is a trailing slash.
+			// This prevents "inconsistent final plan" errors on first apply (#4136).
+			configuredStorageRoot := d.Get("storage_root").(string)
+			if configuredStorageRoot != "" && ucDirectoryPathSlashOnlySuppressDiff("", configuredStorageRoot, ci.StorageRoot, d) {
+				ci.StorageRoot = configuredStorageRoot
+			}
 
-			return common.StructToData(ci, catalogSchema, d)
+			err = common.StructToData(ci, catalogSchema, d)
+			if err != nil {
+				return err
+			}
+			// For non-new resources, StructToData may skip setting storage_root if GetOk returns false.
+			// Re-apply the normalized value to ensure it's preserved.
+			if configuredStorageRoot != "" && ci.StorageRoot == configuredStorageRoot {
+				d.Set("storage_root", configuredStorageRoot)
+			}
+			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)

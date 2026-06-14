@@ -58,6 +58,39 @@ func TestCreateExternalLocation(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestCreateExternalLocation_UrlTrailingSlashPreserved(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockExternalLocationsAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateExternalLocation{
+				Name:           "abc",
+				Url:            "s3://foo/bar",
+				CredentialName: "bcd",
+			}).Return(&catalog.ExternalLocationInfo{
+				Name:           "abc",
+				Url:            "s3://foo/bar/",
+				CredentialName: "bcd",
+			}, nil)
+			e.GetByName(mock.Anything, "abc").Return(&catalog.ExternalLocationInfo{
+				Name:           "abc",
+				Url:            "s3://foo/bar/",
+				CredentialName: "bcd",
+				Owner:          "efg",
+				MetastoreId:    "fgh",
+			}, nil)
+		},
+		Resource: ResourceExternalLocation(),
+		Create:   true,
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"url": "s3://foo/bar",
+	})
+}
+
 func TestCreateIsolatedExternalLocation(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

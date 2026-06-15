@@ -22,14 +22,14 @@ func ResourceUserInstanceProfile() common.Resource {
 		return m
 	}).BindResource(common.BindResource{
 		CreateContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient, d *schema.ResourceData) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
 			return scim.NewUsersAPI(ctx, c, common.GetApiLevel(d)).Patch(userID, scim.PatchRequestWithValue("add", "roles", roleARN))
 		},
 		ReadContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient, d *schema.ResourceData) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -41,7 +41,7 @@ func ResourceUserInstanceProfile() common.Resource {
 			return err
 		},
 		DeleteContext: func(ctx context.Context, userID, roleARN string, c *common.DatabricksClient, d *schema.ResourceData) error {
-			c, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -53,5 +53,6 @@ func ResourceUserInstanceProfile() common.Resource {
 	r.CustomizeDiff = func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 		return common.CustomizeDiffDualResources(ctx, d, c)
 	}
+	r.IsDual = true
 	return r
 }

@@ -4,15 +4,79 @@ subcategory: "Postgres"
 # databricks_postgres_catalog Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
+### Lakebase Autoscaling Terraform Behavior
+
+This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
+
+### Overview
+
+A Postgres catalog registers a Postgres database in Unity Catalog. This enables Lakehouse Federation queries against the Postgres data and is a prerequisite for creating synced tables.
+
+### Hierarchy Context
+
+Catalogs exist within the Lakebase Autoscaling resource hierarchy:
+- A **catalog** belongs to a **branch** within a **project**
+- A catalog registers exactly one Postgres database in Unity Catalog
+- A Postgres database can only be registered with one catalog at a time
+- **Synced tables** are created inside a catalog to replicate Delta tables into Postgres
+
+### Use Cases
+
+- **Unity Catalog governance**: Register Postgres databases in Unity Catalog for centralized access control and auditing
+- **Lakehouse Federation**: Query Postgres data directly from Databricks SQL and notebooks via Unity Catalog
+- **Synced table prerequisite**: Catalogs are required before creating synced tables that replicate Delta data into Postgres
 
 
 ## Example Usage
+### Basic Catalog Creation
+
+```hcl
+resource "databricks_postgres_project" "this" {
+  project_id = "my-project"
+  spec = {
+    pg_version   = 17
+    display_name = "My Project"
+  }
+}
+
+resource "databricks_postgres_branch" "main" {
+  branch_id = "main"
+  parent    = databricks_postgres_project.this.name
+  spec = {
+    no_expiry = true
+  }
+}
+
+resource "databricks_postgres_catalog" "this" {
+  catalog_id = "my_catalog"
+  spec = {
+    postgres_database          = "my_database"
+    create_database_if_missing = true
+    branch                     = databricks_postgres_branch.main.name
+  }
+}
+```
+
+### Catalog with Existing Database
+
+If the Postgres database already exists, omit `create_database_if_missing`:
+
+```hcl
+resource "databricks_postgres_catalog" "this" {
+  catalog_id = "existing_db_catalog"
+  spec = {
+    postgres_database = "existing_database"
+    branch            = databricks_postgres_branch.main.name
+  }
+}
+```
 
 
 ## Arguments
 The following arguments are supported:
-* `catalog_id` (string, required) - The ID in the Unity Catalog.
-  It becomes the full resource name, for example "my_catalog" becomes "catalogs/my_catalog"
+* `catalog_id` (string, required) - The part of the name, chosen by the user when the resource was created
 * `spec` (CatalogCatalogSpec, optional) - The desired state of the Catalog
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
@@ -57,12 +121,6 @@ In addition to the above arguments, the following attributes are exported:
 * `branch` (string) - The resource path of the branch associated with the catalog.
   
   Format: projects/{project_id}/branches/{branch_id}
-* `catalog_id` (string) - The short identifier of the catalog, suitable for showing to the users.
-  For a catalog with name `catalogs/my-catalog`, the catalog_id is `my-catalog`.
-  
-  Use this field when building UI components that display catalogs to users (e.g., a drop-down
-  selector). Prefer showing `catalog_id` instead of the full resource name from `Catalog.name`,
-  which follows the `catalogs/{catalog_id}` format and is not user-friendly
 * `postgres_database` (string) - The name of the Postgres database associated with the catalog
 * `project` (string) - The resource path of the project associated with the catalog.
   

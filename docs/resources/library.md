@@ -3,6 +3,8 @@ subcategory: "Compute"
 ---
 # databricks_library resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/libraries)
+
 Installs a [library](https://docs.databricks.com/libraries/index.html) on [databricks_cluster](cluster.md). Each different type of library has a slightly different syntax. It's possible to set only one type of library within one resource. Otherwise, the plan will fail with an error.
 
 -> This resource can only be used with a workspace-level provider!
@@ -13,7 +15,7 @@ Installs a [library](https://docs.databricks.com/libraries/index.html) on [datab
 
 The library resource has been migrated from sdkv2 to plugin framework. If you encounter any problem with this resource and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_RESOURCES="databricks_library"`.
 
--> **Note:** The SDKv2 fallback does not support `provider_config` or provider-level `workspace_id` routing. To manage libraries across workspaces from an account-level provider, use the default Plugin Framework implementation (do not set the override).
+-> **Upgrading from v1.114.0**: state written by v1.114.0 encodes `provider_config` as a single object instead of a list. After upgrading the provider, edit each `databricks_library` instance in your state file to convert `"provider_config": {"workspace_id": "X"}` to `"provider_config": null` (recommended if you didn't set `provider_config` in HCL) or to `"provider_config": [{"workspace_id": "X"}]` (if you did). Without this edit, `terraform plan` fails with `Error decoding ... missing expected [`. Users on v1.113.0 are unaffected.
 
 ## Installing library on all clusters
 

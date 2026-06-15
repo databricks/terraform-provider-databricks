@@ -11,7 +11,9 @@ subcategory: "Machine Learning"
 
 ## Arguments
 The following arguments are supported:
-* `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature
+* `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature. This is the
+  feature's resource identifier; the catalog_name, schema_name, and name fields
+  below are OUTPUT_ONLY decomposed views of this value
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -19,11 +21,16 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
+* `catalog_name` (string) - Name of parent catalog
+* `created_at` (string) - Time at which this feature was created
+* `created_by` (string) - Username of the feature creator
 * `description` (string) - The description of the feature
 * `entities` (list of EntityColumn) - The entity columns for the feature, used as aggregation keys and for query-time lookup
 * `filter_condition` (string, deprecated) - Deprecated: Use DeltaTableSource.filter_condition or KafkaSource.filter_condition instead. Kept for backwards compatibility.
   The filter condition applied to the source data before aggregation
-* `full_name` (string) - The full three-part name (catalog, schema, name) of the feature
+* `full_name` (string) - The full three-part name (catalog, schema, name) of the feature. This is the
+  feature's resource identifier; the catalog_name, schema_name, and name fields
+  below are OUTPUT_ONLY decomposed views of this value
 * `function` (Function) - The function by which the feature is computed
 * `inputs` (list of string, deprecated) - Deprecated: Use AggregationFunction.inputs instead. Kept for backwards compatibility.
   The input columns from which the feature is computed
@@ -32,6 +39,8 @@ The following attributes are exported:
   is automatically populated when features are created through Databricks notebooks or jobs.
   Users should not manually set this field as incorrect values may lead to inaccurate lineage tracking or unexpected behavior.
   This field will be set by feature-engineering client and should be left unset by SDK and terraform users
+* `name` (string) - Name of the feature, extracted from the full three-part name (catalog.schema.name)
+* `schema_name` (string) - Name of parent schema relative to its parent catalog
 * `source` (DataSource) - The data source of the feature
 * `time_window` (TimeWindow, deprecated) - Deprecated: Use Function.aggregation_function.time_window instead. Kept for backwards compatibility.
   The time window in which the feature is computed
@@ -65,7 +74,7 @@ The following attributes are exported:
 ### AvgFunction
 * `input` (string) - The input column from which the average is computed. For Kafka sources, use dot-prefixed path
   notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### ColumnIdentifier
@@ -82,13 +91,14 @@ The following attributes are exported:
 ### CountFunction
 * `input` (string) - The input column from which the count is computed. For Kafka sources, use dot-prefixed path
   notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### DataSource
 * `delta_table_source` (DeltaTableSource) - A Delta table data source
 * `kafka_source` (KafkaSource) - A Kafka stream data source
 * `request_source` (RequestSource) - A request-time data source
+* `stream_source` (StreamSource) - A Stream data source
 
 ### DeltaTableSource
 * `dataframe_schema` (string) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
@@ -109,7 +119,7 @@ The following attributes are exported:
   fields within the key or value schema (e.g., "value.user_id", "key.partition_key"). For nested
   fields, the leaf node name (e.g., "user_id" from "value.trip_details.user_id") is what will
   be present in materialized tables and expected to match at query time.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:user_id") is supported for backwards
+  Colon-prefixed notation (e.g., "value:user_id") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### FieldDefinition
@@ -162,6 +172,11 @@ The following attributes are exported:
 ### RequestSource
 * `flat_schema` (FlatSchema) - A flat schema with scalar-typed fields only
 
+### RollingWindow
+* `delay` (string) - The delay applied to the end of the rolling window (must be non-negative).
+  For example, delay=1d shifts the window end 1 day before the evaluation time
+* `window_duration` (string) - The duration of the rolling window (must be positive)
+
 ### SlidingWindow
 * `slide_duration` (string) - The slide duration (interval by which windows advance, must be positive and less than duration)
 * `window_duration` (string) - The duration of the sliding window
@@ -169,20 +184,25 @@ The following attributes are exported:
 ### StddevPopFunction
 * `input` (string) - The input column from which the population standard deviation is computed. For Kafka sources,
   use dot-prefixed path notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### StddevSampFunction
 * `input` (string) - The input column from which the sample standard deviation is computed
 
+### StreamSource
+* `filter_condition` (string) - The filter condition applied to the source data before aggregation
+* `full_name` (string) - Three-part full name of the Stream (catalog.schema.stream)
+
 ### SumFunction
 * `input` (string) - The input column from which the sum is computed. For Kafka sources, use dot-prefixed path
   notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### TimeWindow
-* `continuous` (ContinuousWindow)
+* `continuous` (ContinuousWindow, deprecated)
+* `rolling` (RollingWindow)
 * `sliding` (SlidingWindow)
 * `tumbling` (TumblingWindow)
 
@@ -191,7 +211,7 @@ The following attributes are exported:
   reference fields within the key or value schema (e.g., "value.event_timestamp"). For nested
   fields, the leaf node name (e.g., "event_timestamp" from "value.event_details.event_timestamp")
   is what will be present in materialized tables and expected to match at query time.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:event_timestamp") is supported for
+  Colon-prefixed notation (e.g., "value:event_timestamp") is supported for
   backwards compatibility but is deprecated; migrate to dot notation
 
 ### TumblingWindow

@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -59,8 +58,6 @@ func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -116,11 +113,7 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 type Endpoint struct {
 	// A timestamp indicating when the compute endpoint was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The ID to use for the Endpoint. This becomes the final component of the
-	// endpoint's resource name. The ID is required and must be 1-63 characters
-	// long, start with a lowercase letter, and contain only lowercase letters,
-	// numbers, and hyphens. For example, `primary` becomes
-	// `projects/my-app/branches/development/endpoints/primary`.
+	// The part of the name, chosen by the user when the resource was created.
 	EndpointId types.String `tfsdk:"endpoint_id"`
 	// Output only. The full resource path of the endpoint. Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
@@ -205,9 +198,6 @@ func (m Endpoint) Type(ctx context.Context) attr.Type {
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (to *Endpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Endpoint) {
-	if !from.EndpointId.IsUnknown() {
-		to.EndpointId = from.EndpointId
-	}
 	if !from.ReplaceExisting.IsUnknown() {
 		to.ReplaceExisting = from.ReplaceExisting
 	}
@@ -241,9 +231,6 @@ func (to *Endpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from End
 // including both embedded model fields and additional fields. This method is called
 // during read.
 func (to *Endpoint) SyncFieldsDuringRead(ctx context.Context, from Endpoint) {
-	if !from.EndpointId.IsUnknown() {
-		to.EndpointId = from.EndpointId
-	}
 	if !from.ReplaceExisting.IsUnknown() {
 		to.ReplaceExisting = from.ReplaceExisting
 	}
@@ -273,6 +260,9 @@ func (to *Endpoint) SyncFieldsDuringRead(ctx context.Context, from Endpoint) {
 
 func (m Endpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["endpoint_id"] = attrs["endpoint_id"].SetRequired()
+	attrs["endpoint_id"] = attrs["endpoint_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["endpoint_id"] = attrs["endpoint_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
@@ -282,9 +272,6 @@ func (m Endpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["endpoint_id"] = attrs["endpoint_id"].SetRequired()
-	attrs["endpoint_id"] = attrs["endpoint_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["endpoint_id"] = attrs["endpoint_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["replace_existing"] = attrs["replace_existing"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)

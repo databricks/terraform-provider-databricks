@@ -4,7 +4,12 @@ name: tagging
 on:
   # Manual dispatch.
   workflow_dispatch:
-    # No inputs are required for the manual dispatch.
+    inputs:
+      packages:
+        description: 'Comma-separated list of packages to tag (e.g. "pkg1,pkg2"). Leave empty to tag all packages with pending releases.'
+        required: false
+        type: string
+        default: ''
 
   # NOTE: Temporarily disable automated releases.
   #
@@ -45,6 +50,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          # Force re-resolution of ``main`` at step time. Without
+          # ``ref:``, checkout pins to ``github.sha`` — the SHA frozen
+          # at workflow_dispatch time — which means re-running a stale
+          # dispatch checks out an older main even when newer commits
+          # exist.
+          ref: main
           fetch-depth: 0
           token: ${{ steps.generate-token.outputs.token }}
 
@@ -61,7 +72,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: uv run --locked tagging.py
+          PACKAGES: ${{ inputs.packages }}
+        run: |
+          if [ -n "$PACKAGES" ]; then
+            uv run --locked tagging.py --package "$PACKAGES"
+          else
+            uv run --locked tagging.py
+          fi
 
       - name: Upload created tags artifact
         if: always()

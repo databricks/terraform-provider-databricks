@@ -4,6 +4,8 @@ subcategory: "Settings"
 # databricks_workspace_setting_v2 Data Source
 [![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/settingsv2)
+
 This data source can be used to get a single account setting. 
 
 ## Example Usage
@@ -29,18 +31,24 @@ The following arguments are supported:
 The following attributes are exported:
 * `aibi_dashboard_embedding_access_policy` (AibiDashboardEmbeddingAccessPolicy) - Setting value for aibi_dashboard_embedding_access_policy setting. This is the setting value set by consumers, check effective_aibi_dashboard_embedding_access_policy for final setting value
 * `aibi_dashboard_embedding_approved_domains` (AibiDashboardEmbeddingApprovedDomains) - Setting value for aibi_dashboard_embedding_approved_domains setting. This is the setting value set by consumers, check effective_aibi_dashboard_embedding_approved_domains for final setting value
+* `allowed_apps_user_api_scopes` (AllowedAppsUserApiScopesMessage) - Setting value for allowed_apps_user_api_scopes setting. This is the setting value set by consumers, check effective_allowed_apps_user_api_scopes for final setting value
 * `automatic_cluster_update_workspace` (ClusterAutoRestartMessage) - Setting value for automatic_cluster_update_workspace setting. This is the setting value set by consumers, check effective_automatic_cluster_update_workspace for final setting value
 * `boolean_val` (BooleanMessage) - Setting value for boolean type setting. This is the setting value set by consumers, check effective_boolean_val for final setting value
+* `collaboration_platform_connectivity` (CollaborationPlatformConnectivityMessage) - Setting value for collaboration_platform_connectivity setting. This is the setting value set by consumers, check effective_collaboration_platform_connectivity for final setting value
 * `effective_aibi_dashboard_embedding_access_policy` (AibiDashboardEmbeddingAccessPolicy) - Effective setting value for aibi_dashboard_embedding_access_policy setting. This is the final effective value of setting. To set a value use aibi_dashboard_embedding_access_policy
 * `effective_aibi_dashboard_embedding_approved_domains` (AibiDashboardEmbeddingApprovedDomains) - Effective setting value for aibi_dashboard_embedding_approved_domains setting. This is the final effective value of setting. To set a value use aibi_dashboard_embedding_approved_domains
+* `effective_allowed_apps_user_api_scopes` (AllowedAppsUserApiScopesMessage) - Effective setting value for allowed_apps_user_api_scopes setting. This is the final effective value of setting. To set a value use allowed_apps_user_api_scopes
 * `effective_automatic_cluster_update_workspace` (ClusterAutoRestartMessage) - Effective setting value for automatic_cluster_update_workspace setting. This is the final effective value of setting. To set a value use automatic_cluster_update_workspace
 * `effective_boolean_val` (BooleanMessage) - Effective setting value for boolean type setting. This is the final effective value of setting. To set a value use boolean_val
+* `effective_collaboration_platform_connectivity` (CollaborationPlatformConnectivityMessage) - Effective setting value for collaboration_platform_connectivity setting. This is the final effective value of setting. To set a value use collaboration_platform_connectivity
 * `effective_integer_val` (IntegerMessage) - Effective setting value for integer type setting. This is the final effective value of setting. To set a value use integer_val
+* `effective_operational_email_custom_recipient` (OperationalEmailCustomRecipientMessage) - Effective setting value for operational_email_custom_recipient setting. This is the final effective value of setting. To set a value use operational_email_custom_recipient
 * `effective_personal_compute` (PersonalComputeMessage) - Effective setting value for personal_compute setting. This is the final effective value of setting. To set a value use personal_compute
 * `effective_restrict_workspace_admins` (RestrictWorkspaceAdminsMessage) - Effective setting value for restrict_workspace_admins setting. This is the final effective value of setting. To set a value use restrict_workspace_admins
 * `effective_string_val` (StringMessage) - Effective setting value for string type setting. This is the final effective value of setting. To set a value use string_val
 * `integer_val` (IntegerMessage) - Setting value for integer type setting. This is the setting value set by consumers, check effective_integer_val for final setting value
 * `name` (string) - Name of the setting
+* `operational_email_custom_recipient` (OperationalEmailCustomRecipientMessage) - Setting value for operational_email_custom_recipient setting. This is the setting value set by consumers, check effective_operational_email_custom_recipient for final setting value
 * `personal_compute` (PersonalComputeMessage) - Setting value for personal_compute setting. This is the setting value set by consumers, check effective_personal_compute for final setting value
 * `restrict_workspace_admins` (RestrictWorkspaceAdminsMessage) - Setting value for restrict_workspace_admins setting. This is the setting value set by consumers, check effective_restrict_workspace_admins for final setting value
 * `string_val` (StringMessage) - Setting value for string type setting. This is the setting value set by consumers, check effective_string_val for final setting value
@@ -50,6 +58,9 @@ The following attributes are exported:
 
 ### AibiDashboardEmbeddingApprovedDomains
 * `approved_domains` (list of string)
+
+### AllowedAppsUserApiScopesMessage
+* `allowed_scopes` (list of string)
 
 ### BooleanMessage
 * `value` (boolean)
@@ -78,8 +89,14 @@ The following attributes are exported:
 * `hours` (integer)
 * `minutes` (integer)
 
+### CollaborationPlatformConnectivityMessage
+* `connectivity` (string) - Possible values are: `ALLOW_ALL`, `ALLOW_SLACK`, `ALLOW_TEAMS`, `DENY_ALL`
+
 ### IntegerMessage
 * `value` (integer)
+
+### OperationalEmailCustomRecipientMessage
+* `email` (string)
 
 ### PersonalComputeMessage
 * `value` (string) - Possible values are: `DELEGATE`, `ON`

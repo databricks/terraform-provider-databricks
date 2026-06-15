@@ -4,6 +4,8 @@ subcategory: "Data Classification"
 # databricks_data_classification_catalog_config Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/dataclassification)
+
 This data source can be used to fetch the Data Classification configuration for a Unity Catalog catalog.
 
 To read the Data Classification configuration, you must have browse permissions on the catalog.
@@ -48,7 +50,8 @@ The following attributes are exported:
 
 ### AutoTaggingConfig
 * `auto_tagging_mode` (string) - Whether auto-tagging is enabled or disabled for this classification tag. Possible values are: `AUTO_TAGGING_DISABLED`, `AUTO_TAGGING_ENABLED`
-* `classification_tag` (string) - The Classification Tag (e.g., "class.name", "class.location")
+* `classification_tag` (string) - The Classification Tag. For built-in classes this is a system tag (e.g., "class.name",
+  "class.location"); for custom classes it is a user-defined governance tag key
 
 ### CatalogConfigSchemaNames
 * `names` (list of string)

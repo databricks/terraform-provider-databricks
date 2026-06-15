@@ -48,3 +48,45 @@ func TestAccDataSourceSPNOnAzureBySCIMID(t *testing.T) {
 		Template: azureSpnBySCIMID,
 	})
 }
+
+// Regression test for https://github.com/databricks/terraform-provider-databricks/issues/5664.
+// The data source must work against an account-level provider with no workspace_id
+// configured anywhere. Before adding the `api` field, the post-Read provider_config
+// hook tried to resolve a workspace_id and failed with strconv.ParseInt: parsing "".
+const accountSpnByDisplayName = `
+resource "databricks_service_principal" "this" {
+	display_name = "SPN {var.RANDOM}"
+	api          = "account"
+}
+
+data "databricks_service_principal" "this" {
+	display_name = databricks_service_principal.this.display_name
+	api          = "account"
+	depends_on   = [databricks_service_principal.this]
+}`
+
+func TestMwsAccDataSourceSPNByDisplayNameOnAccount(t *testing.T) {
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: accountSpnByDisplayName,
+	})
+}
+
+// Same as above but does not set `api` on the data source — exercises the
+// host-based account-level inference path so the regression in 1.114.0 cannot
+// reappear under the no-explicit-api configuration the user originally hit.
+const accountSpnByDisplayNameNoApi = `
+resource "databricks_service_principal" "this" {
+	display_name = "SPN {var.RANDOM}"
+	api          = "account"
+}
+
+data "databricks_service_principal" "this" {
+	display_name = databricks_service_principal.this.display_name
+	depends_on   = [databricks_service_principal.this]
+}`
+
+func TestMwsAccDataSourceSPNByDisplayNameOnAccountNoApi(t *testing.T) {
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: accountSpnByDisplayNameNoApi,
+	})
+}

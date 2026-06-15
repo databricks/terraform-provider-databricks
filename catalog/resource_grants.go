@@ -1,9 +1,10 @@
 package catalog
 
 import (
+	"cmp"
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -68,8 +69,8 @@ func diffPermissions(pl []catalog.PrivilegeAssignment, existing []catalog.Privil
 		})
 	}
 	// so that we can deterministic tests
-	sort.Slice(diff, func(i, j int) bool {
-		return diff[i].Principal < diff[j].Principal
+	slices.SortFunc(diff, func(a, b catalog.PermissionsChange) int {
+		return cmp.Compare(a.Principal, b.Principal)
 	})
 	return diff
 }
@@ -165,7 +166,8 @@ func ResourceGrants() common.Resource {
 			return s
 		})
 	return common.Resource{
-		Schema: s,
+		Schema:        s,
+		CustomizeDiff: common.NamespaceCustomizeDiffNoForceNew,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {

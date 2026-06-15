@@ -3,17 +3,15 @@ subcategory: "Delta Sharing"
 ---
 # databricks_share Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/shares)
+
 In Delta Sharing, a share is a read-only collection of tables and table partitions that a provider wants to share with one or more recipients. If your recipient uses a Unity Catalog-enabled Databricks workspace, you can also include notebook files, views (including dynamic views that restrict access at the row and column level), Unity Catalog volumes, and Unity Catalog models in a share.
 
 -> This resource can only be used with a workspace-level provider!
 
-## Plugin Framework Migration
-
-The share resource has been migrated from sdkv2 to plugin framework. If you encounter any problem with this resource and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_RESOURCES="databricks_share"`.
-
--> **Note:** The SDKv2 fallback does not support `provider_config` or provider-level `workspace_id` routing. To manage shares across workspaces from an account-level provider, use the default Plugin Framework implementation (do not set the override).
-
 In a Unity Catalog-enabled Databricks workspace, a share is a securable object registered in Unity Catalog. A `databricks_share` is contained within a [databricks_metastore](metastore.md). If you remove a share from your Unity Catalog metastore, all recipients of that share lose the ability to access it.
+
+-> **Upgrading from v1.114.0**: state written by v1.114.0 encodes `provider_config` as a single object instead of a list. After upgrading the provider, edit each `databricks_share` instance in your state file to convert `"provider_config": {"workspace_id": "X"}` to `"provider_config": null` (recommended if you didn't set `provider_config` in HCL) or to `"provider_config": [{"workspace_id": "X"}]` (if you did). Without this edit, `terraform plan` fails with `Error decoding ... missing expected [`. Users on v1.113.0 are unaffected.
 
 ## Example Usage
 

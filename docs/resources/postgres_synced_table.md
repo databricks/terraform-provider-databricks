@@ -4,23 +4,121 @@ subcategory: "Postgres"
 # databricks_postgres_synced_table Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
+### Lakebase Autoscaling Terraform Behavior
+
+This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
+
+### Overview
+
+A Postgres synced table replicates data from a Delta table in Unity Catalog into a Postgres table for low-latency serving. The synchronization is managed by an underlying Lakeflow pipeline.
+
+### Hierarchy Context
+
+Synced tables exist within the Lakebase Autoscaling resource hierarchy:
+- A **synced table** belongs to a **catalog** within a **branch** and **project**
+- Each synced table replicates exactly one source Delta table into Postgres
+- The `synced_table_id` is the three-part Unity Catalog name: `catalog.schema.table`
+
+### Use Cases
+
+- **Low-latency serving**: Serve Delta table data through Postgres for millisecond read latency
+- **Feature store**: Provide online feature serving for ML models backed by Delta tables
+- **Reverse ETL**: Push lakehouse data into Postgres for consumption by external applications and APIs
 
 
 ## Example Usage
+### Basic Synced Table with Snapshot Policy
+
+```hcl
+resource "databricks_postgres_project" "this" {
+  project_id = "my-project"
+  spec = {
+    pg_version   = 17
+    display_name = "My Project"
+  }
+}
+
+resource "databricks_postgres_branch" "main" {
+  branch_id = "main"
+  parent    = databricks_postgres_project.this.name
+  spec = {
+    no_expiry = true
+  }
+}
+
+resource "databricks_postgres_catalog" "this" {
+  catalog_id = "app_catalog"
+  spec = {
+    postgres_database          = "app_db"
+    create_database_if_missing = true
+    branch                     = databricks_postgres_branch.main.name
+  }
+}
+
+resource "databricks_postgres_synced_table" "this" {
+  synced_table_id = "app_catalog.default.users_synced"
+  spec = {
+    source_table_full_name            = "main.default.users"
+    primary_key_columns               = ["user_id"]
+    scheduling_policy                 = "SNAPSHOT"
+    postgres_database                 = "app_db"
+    branch                            = databricks_postgres_branch.main.name
+    create_database_objects_if_missing = true
+    new_pipeline_spec = {
+      storage_catalog = "main"
+      storage_schema  = "default"
+    }
+  }
+}
+```
+
+### Synced Table with Triggered Policy
+
+Use `TRIGGERED` for on-demand updates. Requires Change Data Feed (CDF) enabled on the source table.
+
+```hcl
+resource "databricks_postgres_synced_table" "triggered" {
+  synced_table_id = "app_catalog.default.orders_synced"
+  spec = {
+    source_table_full_name            = "main.default.orders"
+    primary_key_columns               = ["order_id"]
+    scheduling_policy                 = "TRIGGERED"
+    postgres_database                 = "app_db"
+    branch                            = databricks_postgres_branch.main.name
+    create_database_objects_if_missing = true
+    new_pipeline_spec = {
+      storage_catalog = "main"
+      storage_schema  = "default"
+    }
+  }
+}
+```
+
+### Synced Table with Existing Pipeline
+
+Bin-pack into an existing pipeline instead of creating a new one:
+
+```hcl
+resource "databricks_postgres_synced_table" "this" {
+  synced_table_id = "app_catalog.default.products_synced"
+  spec = {
+    source_table_full_name            = "main.default.products"
+    primary_key_columns               = ["product_id"]
+    scheduling_policy                 = "SNAPSHOT"
+    postgres_database                 = "app_db"
+    branch                            = databricks_postgres_branch.main.name
+    create_database_objects_if_missing = true
+    existing_pipeline_id              = "abc123-def456"
+  }
+}
+```
 
 
 ## Arguments
 The following arguments are supported:
-* `synced_table_id` (string, required) - The ID to use for the Synced Table. This becomes the final component of the SyncedTable's resource name.
-  ID is required and is the synced table name, containing (catalog, schema, table) tuple.
-  Elements of the tuple are the UC entity names.
-  
-  Example: "{catalog}.{schema}.{table}"
-  
-  synced_table_id represents both of the following:
-  
-  1. An online VIEW virtual table in the Unity Catalog accessible via the Lakehouse Federation.
-  2. Postgres table named "{table}" in schema "{schema}" in the connected Postgres database
+* `synced_table_id` (string, required) - The part of the name, chosen by the user when the resource was created
 * `spec` (SyncedTableSyncedTableSpec, optional) - Configuration details of the synced table, such as the source table, scheduling policy, etc.
   This attribute is specified at creation time and most fields are returned as is on subsequent queries
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
@@ -36,6 +134,9 @@ The following arguments are supported:
   This needs to be in the standard catalog where the user has permissions to create Delta tables
 
 ### SyncedTableSyncedTableSpec
+* `accelerated_sync` (boolean, optional) - When true, enables accelerated sync mode for the initial data load.
+  This significantly improves performance for large tables.
+  Requires workspace-level enablement through Lakebase Accelerated Sync preview
 * `branch` (string, optional) - The full resource name the branch associated with the table.
   
   Format: "projects/{project_id}/branches/{branch_id}"
@@ -67,6 +168,14 @@ The following arguments are supported:
   * synced_table_id used at the creation of the SyncedTable
   * "name" consisting of "synced_tables/" prefix and the full name of the destination table
 * `timeseries_key` (string, optional) - Time series key to deduplicate (tie-break) rows with the same primary key
+* `type_overrides` (list of SyncedTableSyncedTableSpecTypeOverride, optional) - Override the default Delta->PG type mapping for specific columns.
+  A TypeOverride with PG_SPECIFIC_TYPE_UNSPECIFIED is rejected; a valid pg_type must be set
+
+### SyncedTableSyncedTableSpecTypeOverride
+* `column_name` (string, required) - Name of the source column whose target PostgreSQL type should be overridden
+* `pg_type` (string, required) - PostgreSQL-specific target type to use for the column. Possible values are: `PG_SPECIFIC_TYPE_VECTOR`
+* `size` (integer, optional) - Size parameter for the target type. Required when pg_type is PG_SPECIFIC_TYPE_VECTOR
+  (specifies the vector dimension, e.g., 1024)
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -55,8 +54,6 @@ func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -188,7 +185,7 @@ func (to *DefaultWarehouseOverride) SyncFieldsDuringRead(ctx context.Context, fr
 func (m DefaultWarehouseOverride) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].SetRequired()
 	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["default_warehouse_override_id"] = attrs["default_warehouse_override_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["type"] = attrs["type"].SetRequired()
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()

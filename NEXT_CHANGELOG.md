@@ -1,24 +1,23 @@
 # NEXT CHANGELOG
 
-## Release v1.114.0
+## Release v1.118.0
 
 ### Breaking Changes
 
 ### New Features and Improvements
-* Add resource and data sources for `databricks_supervisor_agent`.
-* Add resource and data sources for `databricks_supervisor_agent_tool`.
-* Add resource and data sources for `databricks_secret_uc`.
+* Add resource and data sources for `databricks_ai_search_endpoint`.
+* Add resource and data sources for `databricks_ai_search_index`.
+
 
 ### Bug Fixes
 
 * Fix import for jobs with >100 tasks ([#5417](https://github.com/databricks/terraform-provider-databricks/pull/5417)).
 
 ### Documentation
+* Added `disabled` field to `task` block in `databricks_job` resource, allowing individual tasks to be disabled ([#5767](https://github.com/databricks/terraform-provider-databricks/pull/5767)).
 
 ### Exporter
 
-### Internal Changes
+* Rewrote Exporter logging so it works with Databricks Go SDK logging ([#5805](https://github.com/databricks/terraform-provider-databricks/pull/5805)).
 
-* Update Go SDK to v0.128.0.
-* Bump minimum Go toolchain from 1.24.0 to 1.25.7 to pick up the `crypto/tls` TLS 1.3 session-resumption fix.
-* Fail at plan time with "please set api to account or workspace" for dual workspace/account resources when the provider is configured against a unified host and the resource's `api` field is not set.
+### Internal Changes

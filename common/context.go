@@ -2,28 +2,13 @@ package common
 
 import (
 	"context"
-	"log"
-	"runtime/debug"
 	"strings"
-	"sync/atomic"
 
 	"github.com/databricks/databricks-sdk-go/useragent"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-// DEBUG ONLY (do not merge): tripwire to locate runaway User-Agent growth.
-// The User-Agent accumulates duplicate "sdk/sdkv2 resource/<name>" dimensions in
-// integration tests. addContext only ever branches the context and passes it
-// down, so a long User-Agent arriving here means some caller upstream is feeding
-// an already-enriched context back into the wrap. Dump the stack of the first few
-// such calls to identify that caller. uaTripwireThreshold is well above any
-// single legitimate wrap (base + a couple of dimensions is ~150 bytes); fires are
-// capped to avoid flooding the logs once the runaway starts.
-const uaTripwireThreshold = 256
-
-var uaTripwireFires int32
 
 const sdkName = "sdkv2"
 
@@ -46,18 +31,6 @@ type op func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostic
 // wrap operation invokations with additional context
 func (f op) addContext(k contextKey, v string) op {
 	return func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-		// DEBUG ONLY (do not merge): a healthy context carries exactly one
-		// "sdk/sdkv2"; two or more means addContext ran on an already-enriched
-		// context (the bug). Log the stack and FAIL the operation: the -json reporter
-		// drops passing-test output, so failing is the only way the captured stack
-		// reaches the CI job log.
-		if ua := useragent.FromContext(ctx); strings.Count(ua, "sdk/sdkv2") >= 2 || len(ua) > uaTripwireThreshold {
-			if atomic.AddInt32(&uaTripwireFires, 1) <= 5 {
-				log.Printf("[WARN] ua-tripwire: User-Agent len=%d sdk/sdkv2x%d, about to add k=%v v=%s\nUA=%s\nstack:\n%s",
-					len(ua), strings.Count(ua, "sdk/sdkv2"), k, v, ua, debug.Stack())
-			}
-			return diag.Errorf("ua-tripwire: User-Agent accumulation detected (len=%d, sdk/sdkv2 x%d); see logged stack", len(ua), strings.Count(ua, "sdk/sdkv2"))
-		}
 		switch k {
 		case ResourceName:
 			ctx = useragent.InContext(ctx, "resource", v)

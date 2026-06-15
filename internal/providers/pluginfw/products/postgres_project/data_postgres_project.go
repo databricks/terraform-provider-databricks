@@ -114,6 +114,8 @@ type ProjectData struct {
 	// Output only. The full resource path of the project. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
+	// The part of the name, chosen by the user when the resource was created.
+	ProjectId types.String `tfsdk:"project_id"`
 	// A timestamp indicating when the project is scheduled for permanent
 	// deletion. Empty if the project is not deleted, otherwise set to a
 	// timestamp in the future.
@@ -161,6 +163,7 @@ func (m ProjectData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"delete_time":           m.DeleteTime,
 			"initial_endpoint_spec": m.InitialEndpointSpec,
 			"name":                  m.Name,
+			"project_id":            m.ProjectId,
 			"purge_time":            m.PurgeTime,
 			"spec":                  m.Spec,
 			"status":                m.Status,
@@ -181,6 +184,7 @@ func (m ProjectData) Type(ctx context.Context) attr.Type {
 			"delete_time":           timetypes.RFC3339{}.Type(ctx),
 			"initial_endpoint_spec": postgres_tf.InitialEndpointSpec{}.Type(ctx),
 			"name":                  types.StringType,
+			"project_id":            types.StringType,
 			"purge_time":            timetypes.RFC3339{}.Type(ctx),
 			"spec":                  postgres_tf.ProjectSpec{}.Type(ctx),
 			"status":                postgres_tf.ProjectStatus{}.Type(ctx),
@@ -197,6 +201,7 @@ func (m ProjectData) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["delete_time"] = attrs["delete_time"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["project_id"] = attrs["project_id"].SetComputed()
 	attrs["purge_time"] = attrs["purge_time"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["status"] = attrs["status"].SetComputed()

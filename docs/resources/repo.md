@@ -3,6 +3,8 @@ subcategory: "Workspace"
 ---
 # databricks_repo Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/repos)
+
 This resource allows you to manage [Databricks Git folders](https://docs.databricks.com/en/repos/index.html) (formerly known as Databricks Repos).
 
 -> This resource can only be used with a workspace-level provider!

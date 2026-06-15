@@ -1242,7 +1242,7 @@ func (m *AuthConfig) SetMtlsConfig(ctx context.Context, v MtlsConfig) {
 type AvgFunction struct {
 	// The input column from which the average is computed. For Kafka sources,
 	// use dot-prefixed path notation (e.g., "value.amount"). For nested fields,
-	// the leaf node name is used. TODO(FS-939): Colon-prefixed notation (e.g.,
+	// the leaf node name is used. Colon-prefixed notation (e.g.,
 	// "value:amount") is supported for backwards compatibility but is
 	// deprecated; migrate to dot notation.
 	Input types.String `tfsdk:"input"`
@@ -1839,9 +1839,9 @@ func (m ContinuousWindow) Type(ctx context.Context) attr.Type {
 type CountFunction struct {
 	// The input column from which the count is computed. For Kafka sources, use
 	// dot-prefixed path notation (e.g., "value.amount"). For nested fields, the
-	// leaf node name is used. TODO(FS-939): Colon-prefixed notation (e.g.,
-	// "value:amount") is supported for backwards compatibility but is
-	// deprecated; migrate to dot notation.
+	// leaf node name is used. Colon-prefixed notation (e.g., "value:amount") is
+	// supported for backwards compatibility but is deprecated; migrate to dot
+	// notation.
 	Input types.String `tfsdk:"input"`
 }
 
@@ -4516,6 +4516,8 @@ type DataSource struct {
 	KafkaSource types.Object `tfsdk:"kafka_source"`
 	// A request-time data source.
 	RequestSource types.Object `tfsdk:"request_source"`
+	// A Stream data source.
+	StreamSource types.Object `tfsdk:"stream_source"`
 }
 
 func (to *DataSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DataSource) {
@@ -4546,6 +4548,15 @@ func (to *DataSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from D
 			}
 		}
 	}
+	if !from.StreamSource.IsNull() && !from.StreamSource.IsUnknown() {
+		if toStreamSource, ok := to.GetStreamSource(ctx); ok {
+			if fromStreamSource, ok := from.GetStreamSource(ctx); ok {
+				// Recursively sync the fields of StreamSource
+				toStreamSource.SyncFieldsDuringCreateOrUpdate(ctx, fromStreamSource)
+				to.SetStreamSource(ctx, toStreamSource)
+			}
+		}
+	}
 }
 
 func (to *DataSource) SyncFieldsDuringRead(ctx context.Context, from DataSource) {
@@ -4573,12 +4584,21 @@ func (to *DataSource) SyncFieldsDuringRead(ctx context.Context, from DataSource)
 			}
 		}
 	}
+	if !from.StreamSource.IsNull() && !from.StreamSource.IsUnknown() {
+		if toStreamSource, ok := to.GetStreamSource(ctx); ok {
+			if fromStreamSource, ok := from.GetStreamSource(ctx); ok {
+				toStreamSource.SyncFieldsDuringRead(ctx, fromStreamSource)
+				to.SetStreamSource(ctx, toStreamSource)
+			}
+		}
+	}
 }
 
 func (m DataSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["delta_table_source"] = attrs["delta_table_source"].SetOptional()
 	attrs["kafka_source"] = attrs["kafka_source"].SetOptional()
 	attrs["request_source"] = attrs["request_source"].SetOptional()
+	attrs["stream_source"] = attrs["stream_source"].SetOptional()
 
 	return attrs
 }
@@ -4595,6 +4615,7 @@ func (m DataSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 		"delta_table_source": reflect.TypeOf(DeltaTableSource{}),
 		"kafka_source":       reflect.TypeOf(KafkaSource{}),
 		"request_source":     reflect.TypeOf(RequestSource{}),
+		"stream_source":      reflect.TypeOf(StreamSource{}),
 	}
 }
 
@@ -4608,6 +4629,7 @@ func (m DataSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"delta_table_source": m.DeltaTableSource,
 			"kafka_source":       m.KafkaSource,
 			"request_source":     m.RequestSource,
+			"stream_source":      m.StreamSource,
 		})
 }
 
@@ -4618,6 +4640,7 @@ func (m DataSource) Type(ctx context.Context) attr.Type {
 			"delta_table_source": DeltaTableSource{}.Type(ctx),
 			"kafka_source":       KafkaSource{}.Type(ctx),
 			"request_source":     RequestSource{}.Type(ctx),
+			"stream_source":      StreamSource{}.Type(ctx),
 		},
 	}
 }
@@ -4695,6 +4718,31 @@ func (m *DataSource) GetRequestSource(ctx context.Context) (RequestSource, bool)
 func (m *DataSource) SetRequestSource(ctx context.Context, v RequestSource) {
 	vs := v.ToObjectValue(ctx)
 	m.RequestSource = vs
+}
+
+// GetStreamSource returns the value of the StreamSource field in DataSource as
+// a StreamSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataSource) GetStreamSource(ctx context.Context) (StreamSource, bool) {
+	var e StreamSource
+	if m.StreamSource.IsNull() || m.StreamSource.IsUnknown() {
+		return e, false
+	}
+	var v StreamSource
+	d := m.StreamSource.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStreamSource sets the value of the StreamSource field in DataSource.
+func (m *DataSource) SetStreamSource(ctx context.Context, v StreamSource) {
+	vs := v.ToObjectValue(ctx)
+	m.StreamSource = vs
 }
 
 // Dataset. Represents a reference to data used for training, testing, or
@@ -6683,8 +6731,7 @@ func (m *DeltaTableSource) SetEntityColumns(ctx context.Context, v []types.Strin
 }
 
 // Direct connection configs for mTLS, as Kafka Connections do not support mTLS
-// yet (XTA-18030). Temporarily used until UC Kafka Connections gain mTLS
-// support.
+// yet . Temporarily used until UC Kafka Connections gain mTLS support.
 type DirectMtlsConfig struct {
 	// A comma-separated list of host:port pairs for the Kafka bootstrap
 	// servers.
@@ -6935,9 +6982,8 @@ type EntityColumn struct {
 	// "value.user_id", "key.partition_key"). For nested fields, the leaf node
 	// name (e.g., "user_id" from "value.trip_details.user_id") is what will be
 	// present in materialized tables and expected to match at query time.
-	// TODO(FS-939): Colon-prefixed notation (e.g., "value:user_id") is
-	// supported for backwards compatibility but is deprecated; migrate to dot
-	// notation.
+	// Colon-prefixed notation (e.g., "value:user_id") is supported for
+	// backwards compatibility but is deprecated; migrate to dot notation.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -12011,6 +12057,9 @@ type KafkaConfig struct {
 	// Catch-all for miscellaneous options. Keys should be source options or
 	// Kafka consumer options (kafka.*)
 	ExtraOptions types.Map `tfsdk:"extra_options"`
+	// Configuration for ingesting Kafka data into a Databricks-managed Delta
+	// table.
+	IngestionConfig types.Object `tfsdk:"ingestion_config"`
 	// Schema configuration for extracting message keys from topics. At least
 	// one of key_schema and value_schema must be provided.
 	KeySchema types.Object `tfsdk:"key_schema"`
@@ -12041,6 +12090,15 @@ func (to *KafkaConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 				// Recursively sync the fields of BackfillSource
 				toBackfillSource.SyncFieldsDuringCreateOrUpdate(ctx, fromBackfillSource)
 				to.SetBackfillSource(ctx, toBackfillSource)
+			}
+		}
+	}
+	if !from.IngestionConfig.IsNull() && !from.IngestionConfig.IsUnknown() {
+		if toIngestionConfig, ok := to.GetIngestionConfig(ctx); ok {
+			if fromIngestionConfig, ok := from.GetIngestionConfig(ctx); ok {
+				// Recursively sync the fields of IngestionConfig
+				toIngestionConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromIngestionConfig)
+				to.SetIngestionConfig(ctx, toIngestionConfig)
 			}
 		}
 	}
@@ -12090,6 +12148,14 @@ func (to *KafkaConfig) SyncFieldsDuringRead(ctx context.Context, from KafkaConfi
 			}
 		}
 	}
+	if !from.IngestionConfig.IsNull() && !from.IngestionConfig.IsUnknown() {
+		if toIngestionConfig, ok := to.GetIngestionConfig(ctx); ok {
+			if fromIngestionConfig, ok := from.GetIngestionConfig(ctx); ok {
+				toIngestionConfig.SyncFieldsDuringRead(ctx, fromIngestionConfig)
+				to.SetIngestionConfig(ctx, toIngestionConfig)
+			}
+		}
+	}
 	if !from.KeySchema.IsNull() && !from.KeySchema.IsUnknown() {
 		if toKeySchema, ok := to.GetKeySchema(ctx); ok {
 			if fromKeySchema, ok := from.GetKeySchema(ctx); ok {
@@ -12121,6 +12187,7 @@ func (m KafkaConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["backfill_source"] = attrs["backfill_source"].SetOptional()
 	attrs["bootstrap_servers"] = attrs["bootstrap_servers"].SetRequired()
 	attrs["extra_options"] = attrs["extra_options"].SetOptional()
+	attrs["ingestion_config"] = attrs["ingestion_config"].SetOptional()
 	attrs["key_schema"] = attrs["key_schema"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["subscription_mode"] = attrs["subscription_mode"].SetRequired()
@@ -12141,6 +12208,7 @@ func (m KafkaConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 		"auth_config":       reflect.TypeOf(AuthConfig{}),
 		"backfill_source":   reflect.TypeOf(BackfillSource{}),
 		"extra_options":     reflect.TypeOf(types.String{}),
+		"ingestion_config":  reflect.TypeOf(IngestionConfig{}),
 		"key_schema":        reflect.TypeOf(SchemaConfig{}),
 		"subscription_mode": reflect.TypeOf(SubscriptionMode{}),
 		"value_schema":      reflect.TypeOf(SchemaConfig{}),
@@ -12158,6 +12226,7 @@ func (m KafkaConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"backfill_source":   m.BackfillSource,
 			"bootstrap_servers": m.BootstrapServers,
 			"extra_options":     m.ExtraOptions,
+			"ingestion_config":  m.IngestionConfig,
 			"key_schema":        m.KeySchema,
 			"name":              m.Name,
 			"subscription_mode": m.SubscriptionMode,
@@ -12175,6 +12244,7 @@ func (m KafkaConfig) Type(ctx context.Context) attr.Type {
 			"extra_options": basetypes.MapType{
 				ElemType: types.StringType,
 			},
+			"ingestion_config":  IngestionConfig{}.Type(ctx),
 			"key_schema":        SchemaConfig{}.Type(ctx),
 			"name":              types.StringType,
 			"subscription_mode": SubscriptionMode{}.Type(ctx),
@@ -12257,6 +12327,31 @@ func (m *KafkaConfig) SetExtraOptions(ctx context.Context, v map[string]types.St
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["extra_options"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.ExtraOptions = types.MapValueMust(t, vs)
+}
+
+// GetIngestionConfig returns the value of the IngestionConfig field in KafkaConfig as
+// a IngestionConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KafkaConfig) GetIngestionConfig(ctx context.Context) (IngestionConfig, bool) {
+	var e IngestionConfig
+	if m.IngestionConfig.IsNull() || m.IngestionConfig.IsUnknown() {
+		return e, false
+	}
+	var v IngestionConfig
+	d := m.IngestionConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIngestionConfig sets the value of the IngestionConfig field in KafkaConfig.
+func (m *KafkaConfig) SetIngestionConfig(ctx context.Context, v IngestionConfig) {
+	vs := v.ToObjectValue(ctx)
+	m.IngestionConfig = vs
 }
 
 // GetKeySchema returns the value of the KeySchema field in KafkaConfig as
@@ -12828,7 +12923,7 @@ func (m *LineageContext) SetJobContext(ctx context.Context, v JobContext) {
 	m.JobContext = vs
 }
 
-// Feature for model version. ([ML-57150] Renamed from Feature to LinkedFeature)
+// Feature for model version.
 type LinkedFeature struct {
 	// Feature name
 	FeatureName types.String `tfsdk:"feature_name"`
@@ -14274,6 +14369,13 @@ func (m ListStreamsRequest) Type(ctx context.Context) attr.Type {
 }
 
 // Response to a ListStreamsRequest.
+//
+// NOTE: Results are post-filtered by access permission on each stream's
+// ingestion table. This means: - Returned results may be fewer than page_size
+// (including zero) - Page token points to next unfiltered batch, not next
+// filtered batch, and may point to an item that will be filtered out Callers
+// should paginate until next_page_token is empty to retrieve all accessible
+// streams.
 type ListStreamsResponse struct {
 	// Pagination token to request the next page of results for this query.
 	NextPageToken types.String `tfsdk:"next_page_token"`
@@ -16212,6 +16314,8 @@ func (m LoggedModelTag) Type(ctx context.Context) attr.Type {
 type MaterializedFeature struct {
 	// The quartz cron expression that defines the schedule of the
 	// materialization pipeline. The schedule is evaluated in the UTC timezone.
+	// Hidden from GraphQL: superseded by the `trigger` oneof
+	// (cron_schedule_trigger), so not exposed to Catalog Explorer.
 	CronSchedule types.String `tfsdk:"cron_schedule"`
 	// A cron-based schedule trigger for the materialization pipeline.
 	CronScheduleTrigger types.Object `tfsdk:"cron_schedule_trigger"`
@@ -16229,7 +16333,8 @@ type MaterializedFeature struct {
 	OfflineStoreConfig types.Object `tfsdk:"offline_store_config"`
 	// Destination for writing feature values to an online Lakebase table.
 	OnlineStoreConfig types.Object `tfsdk:"online_store_config"`
-	// The schedule state of the materialization pipeline.
+	// The schedule state of the materialization pipeline. Hidden from GraphQL:
+	// being deprecated, so not exposed to Catalog Explorer.
 	PipelineScheduleState types.String `tfsdk:"pipeline_schedule_state"`
 	// The Structured Streaming trigger mode used for materialization. Real-time
 	// mode (RTM) targets sub-second latency for operational workloads;
@@ -22594,8 +22699,8 @@ type StddevPopFunction struct {
 	// The input column from which the population standard deviation is
 	// computed. For Kafka sources, use dot-prefixed path notation (e.g.,
 	// "value.amount"). For nested fields, the leaf node name is used.
-	// TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported
-	// for backwards compatibility but is deprecated; migrate to dot notation.
+	// Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+	// compatibility but is deprecated; migrate to dot notation.
 	Input types.String `tfsdk:"input"`
 }
 
@@ -22973,8 +23078,8 @@ func (m *Stream) SetSourceConfig(ctx context.Context, v StreamSourceConfig) {
 // Specifies how to connect and authenticate to the stream platform.
 type StreamConnectionConfig struct {
 	// Direct mTLS configuration for stream platform access. This is only used
-	// in the short term until UC Kafka Connections support mTLS (XTA-18030).
-	// Once UC Kafka Connections support mTLS, this will be deprecated.
+	// in the short term until UC Kafka Connections support mTLS . Once UC Kafka
+	// Connections support mTLS, this will be deprecated.
 	DirectMtlsConfig types.Object `tfsdk:"direct_mtls_config"`
 	// Name of an existing UC Connection for stream platform access. Must be the
 	// correct type for the streaming platform (e.g. a Kafka Connection for a
@@ -23165,6 +23270,60 @@ func (m *StreamSchemaConfig) GetDirectSchemas(ctx context.Context) (DirectSchema
 func (m *StreamSchemaConfig) SetDirectSchemas(ctx context.Context, v DirectSchemas) {
 	vs := v.ToObjectValue(ctx)
 	m.DirectSchemas = vs
+}
+
+// A Stream entity used as a data source for a feature.
+type StreamSource struct {
+	// The filter condition applied to the source data before aggregation.
+	FilterCondition types.String `tfsdk:"filter_condition"`
+	// Three-part full name of the Stream (catalog.schema.stream).
+	FullName types.String `tfsdk:"full_name"`
+}
+
+func (to *StreamSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamSource) {
+}
+
+func (to *StreamSource) SyncFieldsDuringRead(ctx context.Context, from StreamSource) {
+}
+
+func (m StreamSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filter_condition"] = attrs["filter_condition"].SetOptional()
+	attrs["full_name"] = attrs["full_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StreamSource.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StreamSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StreamSource
+// only implements ToObjectValue() and Type().
+func (m StreamSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"filter_condition": m.FilterCondition,
+			"full_name":        m.FullName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StreamSource) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"filter_condition": types.StringType,
+			"full_name":        types.StringType,
+		},
+	}
 }
 
 // Source-specific configuration. Determines the streaming platform source.
@@ -23376,9 +23535,9 @@ func (m SubscriptionMode) Type(ctx context.Context) attr.Type {
 type SumFunction struct {
 	// The input column from which the sum is computed. For Kafka sources, use
 	// dot-prefixed path notation (e.g., "value.amount"). For nested fields, the
-	// leaf node name is used. TODO(FS-939): Colon-prefixed notation (e.g.,
-	// "value:amount") is supported for backwards compatibility but is
-	// deprecated; migrate to dot notation.
+	// leaf node name is used. Colon-prefixed notation (e.g., "value:amount") is
+	// supported for backwards compatibility but is deprecated; migrate to dot
+	// notation.
 	Input types.String `tfsdk:"input"`
 }
 
@@ -23817,9 +23976,9 @@ type TimeseriesColumn struct {
 	// "value.event_timestamp"). For nested fields, the leaf node name (e.g.,
 	// "event_timestamp" from "value.event_details.event_timestamp") is what
 	// will be present in materialized tables and expected to match at query
-	// time. TODO(FS-939): Colon-prefixed notation (e.g.,
-	// "value:event_timestamp") is supported for backwards compatibility but is
-	// deprecated; migrate to dot notation.
+	// time. Colon-prefixed notation (e.g., "value:event_timestamp") is
+	// supported for backwards compatibility but is deprecated; migrate to dot
+	// notation.
 	Name types.String `tfsdk:"name"`
 }
 

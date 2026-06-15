@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const baseResources = `
+const baseResourcesCore = `
 	resource "databricks_secret_scope" "this" {
 		name = "tf-{var.STICKY_RANDOM}"
 	}
@@ -43,7 +43,9 @@ const baseResources = `
 	resource "databricks_job" "this" {
 		name = "tf-{var.STICKY_RANDOM}"
 	}
+`
 
+const modelServingResource = `
 	resource "databricks_model_serving" "this" {
 		name = "tf-{var.STICKY_RANDOM}"
 		config {
@@ -58,8 +60,25 @@ const baseResources = `
 	}
 `
 
-func makeTemplate(description string) string {
-	appTemplate := baseResources + `
+func makeTemplate(description string, includeModelServing bool) string {
+	base := baseResourcesCore
+	if includeModelServing {
+		base += modelServingResource
+	}
+
+	var servingResourceBlock string
+	if includeModelServing {
+		servingResourceBlock = `, {
+			name = "serving endpoint"
+			description = "serving endpoint for app"
+			serving_endpoint = {
+				name = databricks_model_serving.this.name
+				permission = "CAN_MANAGE"
+			}
+		}`
+	}
+
+	appTemplate := base + `
 	resource "databricks_app" "this" {
 		name = "tf-{var.STICKY_RANDOM}"
 		description = "%s"
@@ -78,14 +97,7 @@ func makeTemplate(description string) string {
 				id = databricks_job.this.id
 				permission = "CAN_MANAGE"
 			}
-		}, {
-			name = "serving endpoint"
-			description = "serving endpoint for app"
-			serving_endpoint = {
-				name = databricks_model_serving.this.name
-				permission = "CAN_MANAGE"
-			}
-		}, {
+		}` + servingResourceBlock + `, {
 			name = "sql warehouse"
 			description = "sql warehouse for app"
 			sql_warehouse = {
@@ -128,17 +140,15 @@ is required`),
 func TestAccAppResource(t *testing.T) {
 	var updateTime string
 	acceptance.LoadWorkspaceEnv(t)
-	if acceptance.IsGcp(t) {
-		acceptance.Skipf(t)("not available on GCP")
-	}
+	includeModelServing := !acceptance.IsGcp(t)
 	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: makeTemplate("My app"),
+		Template: makeTemplate("My app", includeModelServing),
 		Check: func(s *terraform.State) error {
 			updateTime = s.RootModule().Resources["databricks_app.this"].Primary.Attributes["update_time"]
 			return nil
 		},
 	}, acceptance.Step{
-		Template: makeTemplate("My new app"),
+		Template: makeTemplate("My new app", includeModelServing),
 		Check: func(s *terraform.State) error {
 			var newUpdateTime = s.RootModule().Resources["databricks_app.this"].Primary.Attributes["update_time"]
 			assert.NotEqual(t, updateTime, newUpdateTime)
@@ -156,9 +166,6 @@ func TestAccAppResource(t *testing.T) {
 
 func TestAccAppResource_NoCompute(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
-	if acceptance.IsGcp(t) {
-		acceptance.Skipf(t)("not available on GCP")
-	}
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
 	resource "databricks_secret_scope" "this" {

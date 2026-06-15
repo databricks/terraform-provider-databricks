@@ -3,6 +3,8 @@ subcategory: "Deployment"
 ---
 # databricks_mws_storage_configurations Resource
 
+[API Documentation](https://docs.databricks.com/api/account/storage)
+
 This resource to configure root bucket new workspaces within AWS.
 
 -> This resource can only be used with an account-level provider!

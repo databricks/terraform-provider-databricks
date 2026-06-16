@@ -93,6 +93,13 @@ jobs:
         env:
           BASE_COMMIT: ${{ github.event_name == 'pull_request' && github.base_ref || github.event.inputs.base }}
           CLASSIFIER_REPORT: /tmp/classifier-report.md
+          # diff-schema.sh touches this file when `terraform providers schema -json`
+          # produces an empty / non-JSON output (typically a provider panic during
+          # schema introspection). Lets the status job distinguish "schema gen
+          # failed" from "breaking changes detected" — and skip the bypass
+          # directive in the gen-failure case (it's a provider bug, not an
+          # intentional break).
+          CLASSIFIER_GENERATION_ERROR_MARKER: /tmp/classifier-generation-error
         run: make diff-schema
 
       # Persist the step outcome so the downstream status job can read it.
@@ -109,6 +116,7 @@ jobs:
           path: |
             /tmp/classifier-report.md
             /tmp/classifier-outcome.txt
+            /tmp/classifier-generation-error
           if-no-files-found: warn
           retention-days: 3
 
@@ -157,6 +165,15 @@ jobs:
             outcome="unknown"
           fi
           echo "classify=${outcome}" >> "$GITHUB_OUTPUT"
+          # diff-schema.sh touches this marker when schema generation (terraform
+          # providers schema -json) failed on either side, typically because the
+          # provider panicked. The bypass directive must NOT apply in that case
+          # — generation failures are provider bugs, not intentional breaks.
+          if [ -f /tmp/classifier-generation-error ]; then
+            echo "generation-error=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "generation-error=false" >> "$GITHUB_OUTPUT"
+          fi
 
       # Sticky comment. Uses continue-on-error so that on fork PRs (where
       # GITHUB_TOKEN is read-only) the inability to post a comment doesn't
@@ -170,6 +187,7 @@ jobs:
           MARKER: "<!-- SCHEMA_BREAKING_CHECK -->"
           CLASSIFY_OUTCOME: ${{ steps.outcome.outputs.classify }}
           BYPASS_ALLOWED: ${{ steps.bypass.outputs.allow }}
+          GENERATION_ERROR: ${{ steps.outcome.outputs.generation-error }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
         run: |
@@ -189,26 +207,32 @@ jobs:
           {
             echo "${MARKER}"
             echo
-            if [ "${BYPASS_ALLOWED}" = "true" ]; then
-              echo "## Breaking schema changes detected (bypass active)"
-              echo
-              echo "This PR carries \`ALLOW_SCHEMA_BREAKING_CHANGE=true\` on its own line in the description, so the breaking-schema check is **not blocking**. Please review the changes below carefully."
-            else
-              echo "## Breaking schema changes detected"
-            fi
-            echo
-            if [ -s /tmp/classifier-report.md ]; then
+            if [ "${GENERATION_ERROR}" = "true" ]; then
+              # The report file already carries its own header explaining the
+              # generation failure — just paste it through, no wrapper heading.
               cat /tmp/classifier-report.md
             else
-              echo "_(classifier report missing — see the classify job's log for details)_"
-            fi
-            if [ "${BYPASS_ALLOWED}" != "true" ]; then
+              if [ "${BYPASS_ALLOWED}" = "true" ]; then
+                echo "## Breaking schema changes detected (bypass active)"
+                echo
+                echo "This PR carries \`ALLOW_SCHEMA_BREAKING_CHANGE=true\` on its own line in the description, so the breaking-schema check is **not blocking**. Please review the changes below carefully."
+              else
+                echo "## Breaking schema changes detected"
+              fi
               echo
-              echo "<details><summary>How to bypass this check</summary>"
-              echo
-              echo "If the break is intentional, add \`ALLOW_SCHEMA_BREAKING_CHANGE=true\` on its own line in the PR description."
-              echo
-              echo "</details>"
+              if [ -s /tmp/classifier-report.md ]; then
+                cat /tmp/classifier-report.md
+              else
+                echo "_(classifier report missing — see the classify job's log for details)_"
+              fi
+              if [ "${BYPASS_ALLOWED}" != "true" ]; then
+                echo
+                echo "<details><summary>How to bypass this check</summary>"
+                echo
+                echo "If the break is intentional, add \`ALLOW_SCHEMA_BREAKING_CHANGE=true\` on its own line in the PR description."
+                echo
+                echo "</details>"
+              fi
             fi
           } > "${body}"
           if [ -z "${prev}" ]; then
@@ -222,13 +246,25 @@ jobs:
           fi
 
       - name: Fail on breaking changes without bypass
-        if: steps.outcome.outputs.classify != 'success' && steps.bypass.outputs.allow != 'true'
+        # Bypass applies to ordinary breaking changes only. Generation errors
+        # (provider panics during schema dump) always fail, regardless of the
+        # bypass directive — those are provider bugs that block the check
+        # entirely, not intentional schema changes.
+        if: |
+          steps.outcome.outputs.classify != 'success' &&
+          (steps.outcome.outputs.generation-error == 'true' ||
+           steps.bypass.outputs.allow != 'true')
         run: |
-          echo "Breaking schema changes detected. See the classifier report in the classify job's logs."
-          echo
-          echo "If the break is intentional, add this line on its own in the PR description:"
-          echo
-          echo "    ALLOW_SCHEMA_BREAKING_CHANGE=true"
-          echo
-          echo "The workflow will re-fire on the next 'edited' event and pick up the bypass."
+          if [ "${{ steps.outcome.outputs.generation-error }}" = "true" ]; then
+            echo "Schema generation failed — see the classify job's logs for the provider panic or other error."
+            echo "The ALLOW_SCHEMA_BREAKING_CHANGE bypass does NOT apply to generation failures. Fix the underlying provider bug."
+          else
+            echo "Breaking schema changes detected. See the classifier report in the classify job's logs."
+            echo
+            echo "If the break is intentional, add this line on its own in the PR description:"
+            echo
+            echo "    ALLOW_SCHEMA_BREAKING_CHANGE=true"
+            echo
+            echo "The workflow will re-fire on the next 'edited' event and pick up the bypass."
+          fi
           exit 1

@@ -35,6 +35,13 @@ func TestAccEntitlements_ProviderConfig_EmptyID(t *testing.T) {
 // where Create's AccountHost guard fired before DatabricksClientForUnifiedProvider
 // was called, making provider_config non-functional for entitlements.
 func TestMwsAccEntitlements_AccountProvider_ProviderConfig(t *testing.T) {
+	// Only run on AWS. On Azure the workspace-level entitlement set on a
+	// freshly-federated service principal does not round-trip immediately,
+	// causing a non-empty plan; on GCP the account test workspace does not
+	// support the permission assignment API required by this test's setup.
+	if !acceptance.IsAws(t) {
+		t.Skip("databricks_entitlements account-level provider_config test only runs on AWS")
+	}
 	acceptance.AccountLevel(t, acceptance.Step{
 		Template: `
 		resource "databricks_service_principal" "this" {

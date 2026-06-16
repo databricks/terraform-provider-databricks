@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// Reproduces ES-1957213 / #5347.
+// Reproduces #5347.
 //
 // Step 1 sets account_id explicitly in HCL — necessary in CI because
 // common.StructToData (common/reflect_resource.go:715) deliberately skips
@@ -20,15 +20,17 @@ import (
 // provider version, etc.); the fix below addresses the underlying schema bug
 // regardless of how account_id got into state.
 //
-// Step 2 removes account_id from HCL. Before the fix the Update CRUD is
-// invoked but the spurious account_id drift isn't one of the updatable fields
-// (enabled/domain_names/resource_names), so the request goes out with an
-// empty update_mask and the backend rejects with "Update mask must be
+// Step 2 (apply) removes account_id from HCL. Before the fix the Update CRUD
+// is invoked but the spurious account_id drift isn't one of the updatable
+// fields (enabled/domain_names/resource_names), so the request goes out with
+// an empty update_mask and the backend rejects with "Update mask must be
 // specified" — exactly the customer-reported error. After the fix the schema
 // is Optional+Computed, the diff engine preserves state, no Update fires.
 //
-// Step 3 re-plans with the same HCL — asserts the plan stays empty on
-// subsequent runs.
+// Step 3 (PlanOnly with the same HCL as Step 2) is a regression guard against
+// a follow-on plan still being non-empty after Step 2's no-op apply — the
+// framework rejects any non-empty plan during PlanOnly, so this passes only
+// when the refresh+plan cycle is stable.
 func TestMwsAccNccPrivateEndpointRule_NoSpuriousAccountIdDrift(t *testing.T) {
 	var ncc, ruleBase string
 	switch {
@@ -41,7 +43,7 @@ func TestMwsAccNccPrivateEndpointRule_NoSpuriousAccountIdDrift(t *testing.T) {
 		ruleBase = `
 		resource "databricks_mws_ncc_private_endpoint_rule" "this" {
 			network_connectivity_config_id = databricks_mws_network_connectivity_config.this.network_connectivity_config_id
-			resource_id                    = "/subscriptions/2a5a4578-9ca9-47e2-ba46-f6ee6cc731f2/resourceGroups/deco-prod-azure-eastus2-rg/providers/Microsoft.Storage/storageAccounts/decotestprodunity"
+			resource_id                    = "{env.TEST_AZURE_STORAGE_RESOURCE_ID}"
 			group_id                       = "blob"`
 	case acceptance.IsAws(t):
 		ncc = `

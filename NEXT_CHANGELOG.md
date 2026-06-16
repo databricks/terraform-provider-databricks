@@ -7,6 +7,7 @@
 ### New Features and Improvements
 * Add resource and data sources for `databricks_ai_search_endpoint`.
 * Add resource and data sources for `databricks_ai_search_index`.
+* Add `clear_cloud_attributes_on_remove` to `databricks_cluster` ([#5812](https://github.com/databricks/terraform-provider-databricks/pull/5812)). When set to `true`, removing a cloud attributes block (`aws_attributes`, `azure_attributes`, `gcp_attributes`) from the configuration clears it instead of the removal being silently suppressed. The flag defaults to `false`, preserving the existing diff-suppression behavior that prevents perpetual drift from platform-returned cloud attribute defaults. Keeping a block, even partially specified, is unaffected; only removing the whole block clears.
 
 
 ### Bug Fixes

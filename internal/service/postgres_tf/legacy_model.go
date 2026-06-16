@@ -29,6 +29,8 @@ import (
 )
 
 type Branch_SdkV2 struct {
+	// The part of the name, chosen by the user when the resource was created.
+	BranchId types.String `tfsdk:"branch_id"`
 	// A timestamp indicating when the branch was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Output only. The full resource path of the branch. Format:
@@ -100,6 +102,7 @@ func (to *Branch_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Branch_Sd
 }
 
 func (m Branch_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch_id"] = attrs["branch_id"].SetComputed()
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
@@ -136,6 +139,7 @@ func (m Branch_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"branch_id":   m.BranchId,
 			"create_time": m.CreateTime,
 			"name":        m.Name,
 			"parent":      m.Parent,
@@ -150,6 +154,7 @@ func (m Branch_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Branch_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"branch_id":   types.StringType,
 			"create_time": timetypes.RFC3339{}.Type(ctx),
 			"name":        types.StringType,
 			"parent":      types.StringType,
@@ -468,6 +473,8 @@ func (m BranchStatus_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type Catalog_SdkV2 struct {
+	// The part of the name, chosen by the user when the resource was created.
+	CatalogId types.String `tfsdk:"catalog_id"`
 	// A timestamp indicating when the catalog was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Output only. The full resource path of the catalog.
@@ -533,6 +540,7 @@ func (to *Catalog_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Catalog_
 }
 
 func (m Catalog_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_id"] = attrs["catalog_id"].SetComputed()
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetOptional()
@@ -568,6 +576,7 @@ func (m Catalog_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"catalog_id":  m.CatalogId,
 			"create_time": m.CreateTime,
 			"name":        m.Name,
 			"spec":        m.Spec,
@@ -581,6 +590,7 @@ func (m Catalog_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m Catalog_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"catalog_id":  types.StringType,
 			"create_time": timetypes.RFC3339{}.Type(ctx),
 			"name":        types.StringType,
 			"spec": basetypes.ListType{
@@ -684,24 +694,14 @@ type CatalogCatalogSpec_SdkV2 struct {
 }
 
 func (to *CatalogCatalogSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CatalogCatalogSpec_SdkV2) {
-	if !from.CreateDatabaseIfMissing.IsUnknown() && !from.CreateDatabaseIfMissing.IsNull() {
-		// CreateDatabaseIfMissing is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.CreateDatabaseIfMissing = from.CreateDatabaseIfMissing
-	}
 }
 
 func (to *CatalogCatalogSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CatalogCatalogSpec_SdkV2) {
-	if !from.CreateDatabaseIfMissing.IsUnknown() && !from.CreateDatabaseIfMissing.IsNull() {
-		// CreateDatabaseIfMissing is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.CreateDatabaseIfMissing = from.CreateDatabaseIfMissing
-	}
 }
 
 func (m CatalogCatalogSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["branch"] = attrs["branch"].SetOptional()
 	attrs["create_database_if_missing"] = attrs["create_database_if_missing"].SetOptional()
-	attrs["create_database_if_missing"] = attrs["create_database_if_missing"].SetComputed()
-	attrs["create_database_if_missing"] = attrs["create_database_if_missing"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["postgres_database"] = attrs["postgres_database"].SetRequired()
 	attrs["postgres_database"] = attrs["postgres_database"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
@@ -1650,6 +1650,8 @@ func (m *CreateSyncedTableRequest_SdkV2) SetSyncedTable(ctx context.Context, v S
 type Database_SdkV2 struct {
 	// A timestamp indicating when the database was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// The part of the name, chosen by the user when the resource was created.
+	DatabaseId types.String `tfsdk:"database_id"`
 	// The resource name of the database. Format:
 	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
 	Name types.String `tfsdk:"name"`
@@ -1714,6 +1716,7 @@ func (to *Database_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Databas
 
 func (m Database_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["database_id"] = attrs["database_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
@@ -1749,6 +1752,7 @@ func (m Database_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"create_time": m.CreateTime,
+			"database_id": m.DatabaseId,
 			"name":        m.Name,
 			"parent":      m.Parent,
 			"spec":        m.Spec,
@@ -1762,6 +1766,7 @@ func (m Database_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"database_id": types.StringType,
 			"name":        types.StringType,
 			"parent":      types.StringType,
 			"spec": basetypes.ListType{
@@ -2574,6 +2579,8 @@ func (m DeltaTableSyncInfo_SdkV2) Type(ctx context.Context) attr.Type {
 type Endpoint_SdkV2 struct {
 	// A timestamp indicating when the compute endpoint was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// The part of the name, chosen by the user when the resource was created.
+	EndpointId types.String `tfsdk:"endpoint_id"`
 	// Output only. The full resource path of the endpoint. Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Name types.String `tfsdk:"name"`
@@ -2641,6 +2648,7 @@ func (to *Endpoint_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Endpoin
 
 func (m Endpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["endpoint_id"] = attrs["endpoint_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
@@ -2677,6 +2685,7 @@ func (m Endpoint_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"create_time": m.CreateTime,
+			"endpoint_id": m.EndpointId,
 			"name":        m.Name,
 			"parent":      m.Parent,
 			"spec":        m.Spec,
@@ -2691,6 +2700,7 @@ func (m Endpoint_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"endpoint_id": types.StringType,
 			"name":        types.StringType,
 			"parent":      types.StringType,
 			"spec": basetypes.ListType{
@@ -5076,6 +5086,8 @@ type Project_SdkV2 struct {
 	// Output only. The full resource path of the project. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
+	// The part of the name, chosen by the user when the resource was created.
+	ProjectId types.String `tfsdk:"project_id"`
 	// A timestamp indicating when the project is scheduled for permanent
 	// deletion. Empty if the project is not deleted, otherwise set to a
 	// timestamp in the future.
@@ -5173,6 +5185,7 @@ func (m Project_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["project_id"] = attrs["project_id"].SetComputed()
 	attrs["purge_time"] = attrs["purge_time"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetComputed()
@@ -5212,6 +5225,7 @@ func (m Project_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"delete_time":           m.DeleteTime,
 			"initial_endpoint_spec": m.InitialEndpointSpec,
 			"name":                  m.Name,
+			"project_id":            m.ProjectId,
 			"purge_time":            m.PurgeTime,
 			"spec":                  m.Spec,
 			"status":                m.Status,
@@ -5230,6 +5244,7 @@ func (m Project_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: InitialEndpointSpec_SdkV2{}.Type(ctx),
 			},
 			"name":       types.StringType,
+			"project_id": types.StringType,
 			"purge_time": timetypes.RFC3339{}.Type(ctx),
 			"spec": basetypes.ListType{
 				ElemType: ProjectSpec_SdkV2{}.Type(ctx),
@@ -6051,6 +6066,8 @@ type Role_SdkV2 struct {
 	// The Branch where this Role exists. Format:
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"parent"`
+	// The part of the name, chosen by the user when the resource was created.
+	RoleId types.String `tfsdk:"role_id"`
 	// The spec contains the role configuration, including identity type,
 	// authentication method, and role attributes.
 	Spec types.List `tfsdk:"spec"`
@@ -6113,6 +6130,7 @@ func (m Role_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["role_id"] = attrs["role_id"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["spec"] = attrs["spec"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -6148,6 +6166,7 @@ func (m Role_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"create_time": m.CreateTime,
 			"name":        m.Name,
 			"parent":      m.Parent,
+			"role_id":     m.RoleId,
 			"spec":        m.Spec,
 			"status":      m.Status,
 			"update_time": m.UpdateTime,
@@ -6161,6 +6180,7 @@ func (m Role_SdkV2) Type(ctx context.Context) attr.Type {
 			"create_time": timetypes.RFC3339{}.Type(ctx),
 			"name":        types.StringType,
 			"parent":      types.StringType,
+			"role_id":     types.StringType,
 			"spec": basetypes.ListType{
 				ElemType: RoleRoleSpec_SdkV2{}.Type(ctx),
 			},
@@ -6698,6 +6718,8 @@ type SyncedTable_SdkV2 struct {
 	Spec types.List `tfsdk:"spec"`
 	// Synced Table data synchronization status.
 	Status types.List `tfsdk:"status"`
+	// The part of the name, chosen by the user when the resource was created.
+	SyncedTableId types.String `tfsdk:"synced_table_id"`
 	// The Unity Catalog table ID for this synced table.
 	Uid types.String `tfsdk:"uid"`
 }
@@ -6759,6 +6781,7 @@ func (m SyncedTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["spec"] = attrs["spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["status"] = attrs["status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["synced_table_id"] = attrs["synced_table_id"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 
 	return attrs
@@ -6785,11 +6808,12 @@ func (m SyncedTable_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time": m.CreateTime,
-			"name":        m.Name,
-			"spec":        m.Spec,
-			"status":      m.Status,
-			"uid":         m.Uid,
+			"create_time":     m.CreateTime,
+			"name":            m.Name,
+			"spec":            m.Spec,
+			"status":          m.Status,
+			"synced_table_id": m.SyncedTableId,
+			"uid":             m.Uid,
 		})
 }
 
@@ -6805,7 +6829,8 @@ func (m SyncedTable_SdkV2) Type(ctx context.Context) attr.Type {
 			"status": basetypes.ListType{
 				ElemType: SyncedTableSyncedTableStatus_SdkV2{}.Type(ctx),
 			},
-			"uid": types.StringType,
+			"synced_table_id": types.StringType,
+			"uid":             types.StringType,
 		},
 	}
 }
@@ -7085,6 +7110,10 @@ func (m *SyncedTablePosition_SdkV2) SetDeltaTableSyncInfo(ctx context.Context, v
 }
 
 type SyncedTableSyncedTableSpec_SdkV2 struct {
+	// When true, enables accelerated sync mode for the initial data load. This
+	// significantly improves performance for large tables. Requires
+	// workspace-level enablement through Lakebase Accelerated Sync preview.
+	AcceleratedSync types.Bool `tfsdk:"accelerated_sync"`
 	// The full resource name the branch associated with the table.
 	//
 	// Format: "projects/{project_id}/branches/{branch_id}".
@@ -7132,6 +7161,10 @@ type SyncedTableSyncedTableSpec_SdkV2 struct {
 	// Time series key to deduplicate (tie-break) rows with the same primary
 	// key.
 	TimeseriesKey types.String `tfsdk:"timeseries_key"`
+	// Override the default Delta->PG type mapping for specific columns. A
+	// TypeOverride with PG_SPECIFIC_TYPE_UNSPECIFIED is rejected; a valid
+	// pg_type must be set.
+	TypeOverrides types.List `tfsdk:"type_overrides"`
 }
 
 func (to *SyncedTableSyncedTableSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SyncedTableSyncedTableSpec_SdkV2) {
@@ -7150,6 +7183,12 @@ func (to *SyncedTableSyncedTableSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PrimaryKeyColumns = from.PrimaryKeyColumns
 	}
+	if !from.TypeOverrides.IsNull() && !from.TypeOverrides.IsUnknown() && to.TypeOverrides.IsNull() && len(from.TypeOverrides.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TypeOverrides, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TypeOverrides = from.TypeOverrides
+	}
 }
 
 func (to *SyncedTableSyncedTableSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SyncedTableSyncedTableSpec_SdkV2) {
@@ -7167,9 +7206,16 @@ func (to *SyncedTableSyncedTableSpec_SdkV2) SyncFieldsDuringRead(ctx context.Con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PrimaryKeyColumns = from.PrimaryKeyColumns
 	}
+	if !from.TypeOverrides.IsNull() && !from.TypeOverrides.IsUnknown() && to.TypeOverrides.IsNull() && len(from.TypeOverrides.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TypeOverrides, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TypeOverrides = from.TypeOverrides
+	}
 }
 
 func (m SyncedTableSyncedTableSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["accelerated_sync"] = attrs["accelerated_sync"].SetOptional()
 	attrs["branch"] = attrs["branch"].SetOptional()
 	attrs["create_database_objects_if_missing"] = attrs["create_database_objects_if_missing"].SetOptional()
 	attrs["existing_pipeline_id"] = attrs["existing_pipeline_id"].SetOptional()
@@ -7180,6 +7226,7 @@ func (m SyncedTableSyncedTableSpec_SdkV2) ApplySchemaCustomizations(attrs map[st
 	attrs["scheduling_policy"] = attrs["scheduling_policy"].SetOptional()
 	attrs["source_table_full_name"] = attrs["source_table_full_name"].SetOptional()
 	attrs["timeseries_key"] = attrs["timeseries_key"].SetOptional()
+	attrs["type_overrides"] = attrs["type_overrides"].SetOptional()
 
 	return attrs
 }
@@ -7195,6 +7242,7 @@ func (m SyncedTableSyncedTableSpec_SdkV2) GetComplexFieldTypes(ctx context.Conte
 	return map[string]reflect.Type{
 		"new_pipeline_spec":   reflect.TypeOf(NewPipelineSpec_SdkV2{}),
 		"primary_key_columns": reflect.TypeOf(types.String{}),
+		"type_overrides":      reflect.TypeOf(SyncedTableSyncedTableSpecTypeOverride_SdkV2{}),
 	}
 }
 
@@ -7205,6 +7253,7 @@ func (m SyncedTableSyncedTableSpec_SdkV2) ToObjectValue(ctx context.Context) bas
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"accelerated_sync":                   m.AcceleratedSync,
 			"branch":                             m.Branch,
 			"create_database_objects_if_missing": m.CreateDatabaseObjectsIfMissing,
 			"existing_pipeline_id":               m.ExistingPipelineId,
@@ -7214,6 +7263,7 @@ func (m SyncedTableSyncedTableSpec_SdkV2) ToObjectValue(ctx context.Context) bas
 			"scheduling_policy":                  m.SchedulingPolicy,
 			"source_table_full_name":             m.SourceTableFullName,
 			"timeseries_key":                     m.TimeseriesKey,
+			"type_overrides":                     m.TypeOverrides,
 		})
 }
 
@@ -7221,6 +7271,7 @@ func (m SyncedTableSyncedTableSpec_SdkV2) ToObjectValue(ctx context.Context) bas
 func (m SyncedTableSyncedTableSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"accelerated_sync":                   types.BoolType,
 			"branch":                             types.StringType,
 			"create_database_objects_if_missing": types.BoolType,
 			"existing_pipeline_id":               types.StringType,
@@ -7234,6 +7285,9 @@ func (m SyncedTableSyncedTableSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"scheduling_policy":      types.StringType,
 			"source_table_full_name": types.StringType,
 			"timeseries_key":         types.StringType,
+			"type_overrides": basetypes.ListType{
+				ElemType: SyncedTableSyncedTableSpecTypeOverride_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7288,6 +7342,93 @@ func (m *SyncedTableSyncedTableSpec_SdkV2) SetPrimaryKeyColumns(ctx context.Cont
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["primary_key_columns"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.PrimaryKeyColumns = types.ListValueMust(t, vs)
+}
+
+// GetTypeOverrides returns the value of the TypeOverrides field in SyncedTableSyncedTableSpec_SdkV2 as
+// a slice of SyncedTableSyncedTableSpecTypeOverride_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SyncedTableSyncedTableSpec_SdkV2) GetTypeOverrides(ctx context.Context) ([]SyncedTableSyncedTableSpecTypeOverride_SdkV2, bool) {
+	if m.TypeOverrides.IsNull() || m.TypeOverrides.IsUnknown() {
+		return nil, false
+	}
+	var v []SyncedTableSyncedTableSpecTypeOverride_SdkV2
+	d := m.TypeOverrides.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTypeOverrides sets the value of the TypeOverrides field in SyncedTableSyncedTableSpec_SdkV2.
+func (m *SyncedTableSyncedTableSpec_SdkV2) SetTypeOverrides(ctx context.Context, v []SyncedTableSyncedTableSpecTypeOverride_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["type_overrides"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.TypeOverrides = types.ListValueMust(t, vs)
+}
+
+// Overrides the default Delta-to-PostgreSQL type mapping for a single column.
+type SyncedTableSyncedTableSpecTypeOverride_SdkV2 struct {
+	// Name of the source column whose target PostgreSQL type should be
+	// overridden.
+	ColumnName types.String `tfsdk:"column_name"`
+	// PostgreSQL-specific target type to use for the column.
+	PgType types.String `tfsdk:"pg_type"`
+	// Size parameter for the target type. Required when pg_type is
+	// PG_SPECIFIC_TYPE_VECTOR (specifies the vector dimension, e.g., 1024).
+	Size types.Int64 `tfsdk:"size"`
+}
+
+func (to *SyncedTableSyncedTableSpecTypeOverride_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SyncedTableSyncedTableSpecTypeOverride_SdkV2) {
+}
+
+func (to *SyncedTableSyncedTableSpecTypeOverride_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SyncedTableSyncedTableSpecTypeOverride_SdkV2) {
+}
+
+func (m SyncedTableSyncedTableSpecTypeOverride_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column_name"] = attrs["column_name"].SetRequired()
+	attrs["pg_type"] = attrs["pg_type"].SetRequired()
+	attrs["size"] = attrs["size"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SyncedTableSyncedTableSpecTypeOverride.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SyncedTableSyncedTableSpecTypeOverride_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SyncedTableSyncedTableSpecTypeOverride_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SyncedTableSyncedTableSpecTypeOverride_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"column_name": m.ColumnName,
+			"pg_type":     m.PgType,
+			"size":        m.Size,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SyncedTableSyncedTableSpecTypeOverride_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"column_name": types.StringType,
+			"pg_type":     types.StringType,
+			"size":        types.Int64Type,
+		},
+	}
 }
 
 type SyncedTableSyncedTableStatus_SdkV2 struct {

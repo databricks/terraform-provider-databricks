@@ -4,6 +4,8 @@ subcategory: "Settings"
 # databricks_account_network_policies Data Source
 [![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/account/networkpolicies)
+
 This data source can be used to fetch the list of network policies.
 
 -> **Note** This data source can only be used with an account-level provider!
@@ -31,6 +33,7 @@ This data source exports a single attribute, `items`. It is a list of resources,
 * `network_policy_id` (string) - The unique identifier for the network policy
 
 ### CustomerFacingIngressNetworkPolicy
+* `cross_workspace_access` (CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess)
 * `private_access` (CustomerFacingIngressNetworkPolicyPrivateAccess) - The network policy restrictions for private access to the workspace.
   Configures how registered private endpoints are allowed or denied access
 * `public_access` (CustomerFacingIngressNetworkPolicyPublicAccess) - The network policy restrictions for public access to the workspace.
@@ -56,6 +59,21 @@ This data source exports a single attribute, `items`. It is a list of resources,
 ### CustomerFacingIngressNetworkPolicyAuthenticationIdentity
 * `principal_id` (integer)
 * `principal_type` (string) - Possible values are: `PRINCIPAL_TYPE_SERVICE_PRINCIPAL`, `PRINCIPAL_TYPE_USER`
+
+### CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess
+* `allow_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule)
+* `deny_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule)
+* `restriction_mode` (string) - Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
+
+### CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule
+* `authentication` (CustomerFacingIngressNetworkPolicyAuthentication)
+* `destination` (CustomerFacingIngressNetworkPolicyRequestDestination)
+* `label` (string) - The label for this ingress rule
+* `origin` (CustomerFacingIngressNetworkPolicyCrossWorkspaceRequestOrigin)
+
+### CustomerFacingIngressNetworkPolicyCrossWorkspaceRequestOrigin
+* `all_source_workspaces` (boolean) - Matches all source workspaces
+* `selected_workspaces` (CustomerFacingIngressNetworkPolicyWorkspaceIdList) - Specific source workspace IDs to match
 
 ### CustomerFacingIngressNetworkPolicyEndpoints
 * `endpoint_ids` (list of string)
@@ -101,7 +119,8 @@ This data source exports a single attribute, `items`. It is a list of resources,
 
 ### CustomerFacingIngressNetworkPolicyRequestDestination
 * `account_api` (CustomerFacingIngressNetworkPolicyAccountApiDestination)
-* `account_databricks_one` (CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination)
+* `account_databricks_one` (CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination) - Account DatabricksOne destination is not supported.
+  DO NOT change the stage of this destination past PRIVATE_PREVIEW
 * `account_ui` (CustomerFacingIngressNetworkPolicyAccountUiDestination)
 * `all_destinations` (boolean) - When true, match all destinations, no other destination fields can be set.
   When not set or false, at least one specific destination must be provided
@@ -114,10 +133,15 @@ This data source exports a single attribute, `items`. It is a list of resources,
 * `scope_qualifier` (string) - Qualifies the breadth of API access for the listed scopes. See ApiScopeQualifier. Possible values are: `API_SCOPE_QUALIFIER_ALL`, `API_SCOPE_QUALIFIER_READ`
 * `scopes` (list of string)
 
+### CustomerFacingIngressNetworkPolicyWorkspaceIdList
+* `workspace_ids` (list of integer)
+
 ### CustomerFacingIngressNetworkPolicyWorkspaceUiDestination
 * `all_destinations` (boolean) - Must be set to true
 
 ### EgressNetworkPolicyNetworkAccessPolicy
+* `allowed_databricks_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyDatabricksDestination) - List of Databricks workspace destinations that serverless workloads are
+  allowed to access when in RESTRICTED_ACCESS mode
 * `allowed_internet_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyInternetDestination) - List of internet destinations that serverless workloads are allowed to access when in RESTRICTED_ACCESS mode
 * `allowed_storage_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyStorageDestination) - List of storage destinations that serverless workloads are allowed to access when in RESTRICTED_ACCESS mode
 * `blocked_internet_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyInternetDestination) - List of internet destinations that serverless workloads are blocked from accessing.
@@ -125,6 +149,9 @@ This data source exports a single attribute, `items`. It is a list of resources,
   Currently supports DNS_NAME type only; IP_RANGE support is planned
 * `policy_enforcement` (EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) - Optional. When policy_enforcement is not provided, we default to ENFORCE_MODE_ALL_SERVICES
 * `restriction_mode` (string) - The restriction mode that controls how serverless workloads can access the internet. Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
+
+### EgressNetworkPolicyNetworkAccessPolicyDatabricksDestination
+* `workspace_ids` (list of integer) - The workspace IDs to allow egress traffic to
 
 ### EgressNetworkPolicyNetworkAccessPolicyInternetDestination
 * `destination` (string) - The internet destination to which access will be allowed. Format dependent on the destination type

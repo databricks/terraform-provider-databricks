@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_role Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 ### Lakebase Autoscaling Terraform Behavior
 
 This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
@@ -165,14 +167,6 @@ Note: in a real setup, the `application` role would also need `GRANT` privileges
 The following arguments are supported:
 * `parent` (string, required) - The Branch where this Role exists.
   Format: projects/{project_id}/branches/{branch_id}
-* `role_id` (string, optional) - The ID to use for the Role, which will become the final component of
-  the role's resource name.
-  This ID becomes the role in Postgres.
-  
-  This value should be 4-63 characters, and valid characters
-  are lowercase letters, numbers, and hyphens, as defined by RFC 1123.
-  
-  If role_id is not specified in the request, it is generated automatically
 * `spec` (RoleRoleSpec, optional) - The spec contains the role configuration, including identity type, authentication method, and role attributes
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
@@ -239,18 +233,12 @@ In addition to the above arguments, the following attributes are exported:
 * `create_time` (string)
 * `name` (string) - Output only. The full resource path of the role.
   Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
+* `role_id` (string) - The part of the name, chosen by the user when the resource was created
 * `status` (RoleRoleStatus) - Current status of the role, including its identity type, authentication method, and role attributes
 * `update_time` (string)
 
 ### RoleRoleStatus
-* `role_id` (string) - The short identifier of the role, suitable for showing to the users.
-  For a role with name `projects/my-project/branches/my-branch/roles/my-role`,
-  the role_id is `my-role`.
-  
-  Use this field when building UI components that display roles to users (e.g., a drop-down
-  selector). Prefer showing `role_id` instead of the full resource name from `Role.name`,
-  which follows the `projects/{project_id}/branches/{branch_id}/roles/{role_id}` format
-  and is not user-friendly
+* `role_id` (string) - Part of the resource name
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

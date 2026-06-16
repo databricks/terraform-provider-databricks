@@ -134,10 +134,26 @@ All arguments are optional, and they tune what code is being generated.
 * `-updated-since` - timestamp (in ISO8601 format supported by Go language) for exporting of resources modified since a given timestamp. I.e., `2023-07-24T00:00:00Z`. If not specified, the exporter will try to load the last run timestamp from the `exporter-run-stats.json` file generated during the export and use it.
 * `-notebooksFormat` - optional format for exported notebooks. Supported values are `SOURCE` (default), `DBC`, `JUPYTER`.  This option could be used to export notebooks with embedded dashboards.
 * `-noformat` - optionally turn off the execution of `terraform fmt` on the exported files (enabled by default).
-* `-debug` - turn on debug output.
-* `-trace` - turn on trace output (includes debug level as well).
+* `-debug` - turn on debug output, including Databricks Go SDK HTTP request/response logs.
+* `-trace` - turn on trace output (includes debug level as well), including Databricks Go SDK HTTP request/response logs.
 * `-native-import` - turns on generation of [native import blocks](https://developer.hashicorp.com/terraform/language/import) (requires Terraform 1.5+).  This option is recommended for cases when you want to start managing an existing workspace.
 * `-export-secrets` - enables exporting of the secret values - they will be written into the `terraform.tfvars` file.  **Be very careful with this file!**
+
+### Logging
+
+The exporter also honors the standard `TF_LOG` environment variable:
+
+* `TF_LOG=DEBUG` - enables exporter debug output and Databricks Go SDK HTTP request/response logs.
+* `TF_LOG=TRACE` - enables trace output, debug output, and Databricks Go SDK HTTP request/response logs.
+* `TF_LOG=INFO`, `TF_LOG=WARN`, and `TF_LOG=ERROR` - restrict output to the corresponding level and above.
+
+The `-debug` and `-trace` flags take precedence over `TF_LOG` for backward compatibility. To increase the amount of request or response body included in SDK HTTP logs, set `DATABRICKS_DEBUG_TRUNCATE_BYTES`.
+
+```bash
+TF_LOG=DEBUG \
+DATABRICKS_DEBUG_TRUNCATE_BYTES=250000 \
+./terraform-provider-databricks exporter -skip-interactive -listing jobs -services jobs
+```
 
 ### Use of `-listing` and `-services` for granular resources selection
 
@@ -222,6 +238,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 -> Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.
 
 * `access` -  **listing** [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).   *Please note that for `databricks_permissions` we list only `authorization = "tokens"`, the permissions for other objects (notebooks, ...) will be emitted when corresponding objects are processed!*
+* `agentbricks` - **listing** [databricks_knowledge_assistant](../resources/knowledge_assistant.md) and [databricks_supervisor_agent](../resources/supervisor_agent.md) together with their child resources [databricks_knowledge_assistant_knowledge_source](../resources/knowledge_assistant_knowledge_source.md) and [databricks_supervisor_agent_tool](../resources/supervisor_agent_tool.md).
 * `alerts` - **listing** [databricks_alert](../resources/alert.md) and [databricks_alert_v2](../resources/alert_v2.md).
 * `apps` - **listing** [databricks_app](../resources/app.md) and [databricks_apps_settings_custom_template](../resources/apps_settings_custom_template.md).
 * `billing` - **listing** [databricks_budget](../resources/budget.md) and [databricks_budget_policy](../resources/budget_policy.md).
@@ -326,6 +343,8 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_instance_profile](../resources/instance_profile.md) | Yes | No | Yes | No |
 | [databricks_ip_access_list](../resources/ip_access_list.md) | Yes | Yes | Yes\*\* | No |
 | [databricks_job](../resources/job.md) | Yes | No | Yes | No |
+| [databricks_knowledge_assistant](../resources/knowledge_assistant.md) | Yes | Yes | Yes | No |
+| [databricks_knowledge_assistant_knowledge_source](../resources/knowledge_assistant_knowledge_source.md) | Yes | No | Yes | No |
 | [databricks_library](../resources/library.md) | Yes\* | No | Yes | No |
 | [databricks_metastore](../resources/metastore.md) | Yes | Yes | No | Yes |
 | [databricks_metastore_assignment](../resources/metastore_assignment.md) | Yes | No | No | Yes |
@@ -376,6 +395,8 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_sql_visualization](../resources/sql_visualization.md) | Yes | Yes | Yes | No |
 | [databricks_sql_widget](../resources/sql_widget.md) | Yes | Yes | Yes | No |
 | [databricks_storage_credential](../resources/storage_credential.md) | Yes | Yes | Yes | No |
+| [databricks_supervisor_agent](../resources/supervisor_agent.md) | Yes | Yes | Yes | No |
+| [databricks_supervisor_agent_tool](../resources/supervisor_agent_tool.md) | Yes | No | Yes | No |
 | [databricks_system_schema](../resources/system_schema.md) | Yes | No | Yes | No |
 | [databricks_tag_policy](../resources/tag_policy.md) | Yes | No | Yes | No |
 | [databricks_token](../resources/token.md) | Not Applicable | No | Yes | No |

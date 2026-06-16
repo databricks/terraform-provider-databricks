@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -55,8 +54,6 @@ func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -113,7 +110,7 @@ type DatabaseCatalog struct {
 	CreateDatabaseIfNotExists types.Bool `tfsdk:"create_database_if_not_exists"`
 	// The name of the DatabaseInstance housing the database.
 	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
-	// The name of the database (in a instance) associated with the catalog.
+	// The name of the database (in an instance) associated with the catalog.
 	DatabaseName types.String `tfsdk:"database_name"`
 	// The name of the catalog in UC.
 	Name types.String `tfsdk:"name"`

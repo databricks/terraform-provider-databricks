@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"reflect"
+	"slices"
 	"strings"
 	"time"
 
@@ -189,26 +190,16 @@ func updateTags(ctx context.Context, w *databricks.WorkspaceClient, name string,
 		Name: name,
 	}
 	for _, newTag := range newTags {
-		found := false
-		for _, oldTag := range oldTags {
-			if oldTag.Key == newTag.Key && oldTag.Value == newTag.Value {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if !slices.ContainsFunc(oldTags, func(t serving.EndpointTag) bool {
+			return t.Key == newTag.Key && t.Value == newTag.Value
+		}) {
 			req.AddTags = append(req.AddTags, newTag)
 		}
 	}
 	for _, oldTag := range oldTags {
-		found := false
-		for _, newTag := range newTags {
-			if oldTag.Key == newTag.Key {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if !slices.ContainsFunc(newTags, func(t serving.EndpointTag) bool {
+			return t.Key == oldTag.Key
+		}) {
 			req.DeleteTags = append(req.DeleteTags, oldTag.Key)
 		}
 	}

@@ -3,7 +3,7 @@ package scim
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -81,6 +81,13 @@ func DataSourceGroup() common.Resource {
 					}
 					if strings.HasPrefix(x.Ref, "Groups/") {
 						this.ChildGroups = append(this.ChildGroups, x.Value)
+						if this.Recursive {
+							childGroup, err := groupsAPI.Read(x.Value, groupAttributes)
+							if err != nil {
+								return err
+							}
+							queue = append(queue, childGroup)
+						}
 					}
 					if strings.HasPrefix(x.Ref, "ServicePrincipals/") {
 						this.ServicePrincipals = append(this.ServicePrincipals, x.Value)
@@ -92,23 +99,16 @@ func DataSourceGroup() common.Resource {
 				current.Entitlements.readIntoData(d)
 				for _, x := range current.Groups {
 					this.Groups = append(this.Groups, x.Value)
-					if this.Recursive {
-						childGroup, err := groupsAPI.Read(x.Value, groupAttributes)
-						if err != nil {
-							return err
-						}
-						queue = append(queue, childGroup)
-					}
 				}
 			}
 			this.ExternalID = group.ExternalID
 			this.AclPrincipalID = fmt.Sprintf("groups/%s", this.DisplayName)
-			sort.Strings(this.Groups)
-			sort.Strings(this.Members)
-			sort.Strings(this.Users)
-			sort.Strings(this.ChildGroups)
-			sort.Strings(this.ServicePrincipals)
-			sort.Strings(this.InstanceProfiles)
+			slices.Sort(this.Groups)
+			slices.Sort(this.Members)
+			slices.Sort(this.Users)
+			slices.Sort(this.ChildGroups)
+			slices.Sort(this.ServicePrincipals)
+			slices.Sort(this.InstanceProfiles)
 			err = common.StructToData(this, s, d)
 			if err != nil {
 				return err

@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -336,7 +338,7 @@ type mockInternalUserService struct {
 	count int
 }
 
-func (m *mockInternalUserService) Me(ctx context.Context) (user *iam.User, err error) {
+func (m *mockInternalUserService) Me(ctx context.Context, request iam.MeRequest) (user *iam.User, err error) {
 	m.count++
 	return &iam.User{
 		UserName: "test",
@@ -346,8 +348,8 @@ func (m *mockInternalUserService) Me(ctx context.Context) (user *iam.User, err e
 func TestCachedMe_Me_MakesSingleRequest(t *testing.T) {
 	mock := &mockInternalUserService{}
 	cm := newCachedMe(mock)
-	cm.Me(context.Background())
-	cm.Me(context.Background())
+	cm.Me(context.Background(), iam.MeRequest{})
+	cm.Me(context.Background(), iam.MeRequest{})
 	assert.Equal(t, 1, mock.count)
 }
 
@@ -371,13 +373,13 @@ func TestWorkspaceClientForWorkspace_AccountAPIFails_FallsBackToDirect(t *testin
 	dc.SetAccountClient(mockAcc.AccountClient)
 
 	// When account API fails, fallback creates a direct workspace client
-	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), 12345)
+	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), "12345")
 	assert.NoError(t, err)
 	assert.NotNil(t, workspaceClient)
 
 	// Verify the client is cached
 	dc.mu.Lock()
-	cachedClient, exists := dc.cachedWorkspaceClients[12345]
+	cachedClient, exists := dc.cachedWorkspaceClients["12345"]
 	dc.mu.Unlock()
 	assert.True(t, exists)
 	assert.Equal(t, workspaceClient, cachedClient)
@@ -412,7 +414,7 @@ func TestWorkspaceClientForWorkspace_WorkspaceExistsNotInCache(t *testing.T) {
 	dc.SetAccountClient(mockAcc.AccountClient)
 
 	// Call the method with the workspace ID
-	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), 12345)
+	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), "12345")
 
 	// Verify no error and client is returned
 	assert.NoError(t, err)
@@ -423,7 +425,7 @@ func TestWorkspaceClientForWorkspace_WorkspaceExistsNotInCache(t *testing.T) {
 
 	// Verify the client is cached
 	dc.mu.Lock()
-	cachedClient, exists := dc.cachedWorkspaceClients[12345]
+	cachedClient, exists := dc.cachedWorkspaceClients["12345"]
 	dc.mu.Unlock()
 
 	assert.True(t, exists)
@@ -442,14 +444,74 @@ func TestWorkspaceClientForWorkspace_WorkspaceExistsInCache(t *testing.T) {
 	}
 
 	// Set the workspace client in cache
-	dc.SetWorkspaceClientForWorkspace(12345, mockWorkspaceClient)
+	dc.SetWorkspaceClientForWorkspace("12345", mockWorkspaceClient)
 
 	// Call the method with the workspace ID
-	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), 12345)
+	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), "12345")
 
 	// Verify no error and the cached client is returned
 	assert.NoError(t, err)
 	assert.Equal(t, mockWorkspaceClient, workspaceClient)
+}
+
+// TestWorkspaceClientForWorkspace_ConnectionIDSkipsAccountAPI verifies that a
+// connection-ID workspace_id bypasses the account-API workspace deployment
+// lookup and routes directly via the configured unified host, so the SDK can
+// carry the value in the X-Databricks-Workspace-Id header.
+func TestWorkspaceClientForWorkspace_ConnectionIDSkipsAccountAPI(t *testing.T) {
+	// Account client whose Workspaces.Get would error if called. We don't set
+	// any expectations, so any call to it would fail testify-mock strict mode.
+	mockAcc := mocks.NewMockAccountClient(t)
+	mockAcc.AccountClient.Config = &config.Config{
+		Host:  "https://accounts.cloud.databricks.com",
+		Token: "dapi123",
+	}
+
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:      "https://unified.cloud.databricks.com",
+				Token:     "dapi123",
+				AccountID: "test-account-id",
+			},
+		},
+	}
+	dc.SetAccountClient(mockAcc.AccountClient)
+
+	// Connection-ID workspace_id: account API lookup must be skipped (any call
+	// would fail because no expectations are set) and direct routing must succeed.
+	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), "cpdr-connection-test-id")
+	assert.NoError(t, err)
+	assert.NotNil(t, workspaceClient)
+	// The resulting workspace client carries the connection ID in Config.WorkspaceID
+	// so the SDK middleware emits it as the X-Databricks-Workspace-Id header.
+	assert.Equal(t, "cpdr-connection-test-id", workspaceClient.Config.WorkspaceID)
+
+	// Cached under the connection-ID string key.
+	dc.mu.Lock()
+	_, exists := dc.cachedWorkspaceClients["cpdr-connection-test-id"]
+	dc.mu.Unlock()
+	assert.True(t, exists)
+}
+
+// TestValidateWorkspaceIDFromProvider_ConnectionIDOnWorkspaceLevelHardFails
+// verifies that a connection ID cannot be reconciled against a workspace-level
+// (host+token) provider, and that we surface a clear error directing the user
+// to switch to account-level credentials.
+func TestValidateWorkspaceIDFromProvider_ConnectionIDOnWorkspaceLevelHardFails(t *testing.T) {
+	dc := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://workspace.cloud.databricks.com",
+				Token: "dapi123",
+			},
+		},
+	}
+
+	err := dc.validateWorkspaceIDFromProvider(context.Background(), "cpdr-connection-id", nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(),
+		"Connection IDs are only supported when the provider is configured against an account-level")
 }
 
 func TestAddApiField_ValidValues(t *testing.T) {
@@ -539,6 +601,171 @@ func TestGetApiLevelFromDiff_ReturnsWorkspace(t *testing.T) {
 
 func TestGetApiLevelFromDiff_ReturnsEmptyWhenNotSet(t *testing.T) {
 	assert.Equal(t, "", testGetApiLevelFromDiff(t, ""))
+}
+
+// capturedRequest records an outbound HTTP request so tests can assert on its
+// headers and URL.
+type capturedRequest struct {
+	Header http.Header
+	URL    string
+}
+
+// newHeaderCaptureClient spins up a test HTTP server that records every
+// incoming request, and returns a DatabricksClient pointed at it.
+// Use it to assert that raw-HTTP helpers (Get/Post/Patch/Delete/Put/Scim)
+// inject X-Databricks-Workspace-Id per AddWorkspaceIdHeader.
+func newHeaderCaptureClient(t *testing.T, workspaceID string) (*DatabricksClient, *[]capturedRequest) {
+	t.Helper()
+	var mu sync.Mutex
+	var captured []capturedRequest
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		mu.Lock()
+		captured = append(captured, capturedRequest{
+			Header: req.Header.Clone(),
+			URL:    req.URL.String(),
+		})
+		mu.Unlock()
+		rw.WriteHeader(http.StatusOK)
+		_, _ = rw.Write([]byte(`{}`))
+	}))
+	t.Cleanup(server.Close)
+
+	cfg := &config.Config{
+		Host:        server.URL,
+		Token:       "dapi-test",
+		WorkspaceID: workspaceID,
+		HostMetadataResolver: func(ctx context.Context, host string) (*config.HostMetadata, error) {
+			return nil, nil
+		},
+	}
+	sdkClient, err := client.New(cfg)
+	require.NoError(t, err)
+	return &DatabricksClient{DatabricksClient: sdkClient}, &captured
+}
+
+// TestWorkspaceIdHeader_OmittedByDefault confirms the helpers no longer inject
+// X-Databricks-Workspace-Id automatically. Header injection is now per-callsite —
+// callers must opt in by passing AddWorkspaceIdHeader as a trailing visitor.
+// This catches accidental regressions where someone re-wires the helpers to
+// always inject the header (which would silently send routing headers from
+// account-only resources too).
+func TestWorkspaceIdHeader_OmittedByDefault(t *testing.T) {
+	dc, captured := newHeaderCaptureClient(t, "12345")
+	ctx := context.Background()
+
+	require.NoError(t, dc.Get(ctx, "/clusters/list", nil, nil))
+	require.NoError(t, dc.Post(ctx, "/instance-pools/create", map[string]string{}, nil))
+	require.NoError(t, dc.Patch(ctx, "/repos/1", map[string]string{}))
+	require.NoError(t, dc.Delete(ctx, "/token/delete", map[string]string{}))
+	require.NoError(t, dc.Put(ctx, "/sql/config/warehouses", map[string]string{}))
+
+	require.Len(t, *captured, 5)
+	for i, h := range *captured {
+		assert.Empty(t, h.Header.Get("X-Databricks-Workspace-Id"), "request %d unexpectedly carries workspace-id header by default", i)
+	}
+}
+
+// TestWorkspaceIdHeader_InjectedWithVisitor confirms callers can opt in by
+// passing AddWorkspaceIdHeader. This is the contract every workspace-level
+// resource follows.
+func TestWorkspaceIdHeader_InjectedWithVisitor(t *testing.T) {
+	dc, captured := newHeaderCaptureClient(t, "12345")
+	ctx := context.Background()
+
+	require.NoError(t, dc.Get(ctx, "/clusters/list", nil, nil, dc.AddWorkspaceIdHeader))
+	require.NoError(t, dc.Post(ctx, "/instance-pools/create", map[string]string{}, nil, dc.AddWorkspaceIdHeader))
+	require.NoError(t, dc.Patch(ctx, "/repos/1", map[string]string{}, dc.AddWorkspaceIdHeader))
+	require.NoError(t, dc.Delete(ctx, "/token/delete", map[string]string{}, dc.AddWorkspaceIdHeader))
+	require.NoError(t, dc.Put(ctx, "/sql/config/warehouses", map[string]string{}, dc.AddWorkspaceIdHeader))
+
+	require.Len(t, *captured, 5)
+	for i, h := range *captured {
+		assert.Equal(t, "12345", h.Header.Get("X-Databricks-Workspace-Id"), "request %d missing workspace-id header", i)
+	}
+}
+
+// TestWorkspaceIdHeader_VisitorNoOpWhenWorkspaceIDEmpty confirms the visitor is
+// safe to pass even when Config.WorkspaceID is empty (no-op, no header).
+func TestWorkspaceIdHeader_VisitorNoOpWhenWorkspaceIDEmpty(t *testing.T) {
+	dc, captured := newHeaderCaptureClient(t, "")
+	ctx := context.Background()
+
+	require.NoError(t, dc.Get(ctx, "/clusters/list", nil, nil, dc.AddWorkspaceIdHeader))
+
+	require.Len(t, *captured, 1)
+	assert.Empty(t, (*captured)[0].Header.Get("X-Databricks-Workspace-Id"))
+}
+
+// TestScim_WorkspaceLevel_InjectsHeader verifies that the SCIM helper injects
+// the routing header for workspace-level SCIM calls (the dual-resource case
+// where users/groups/service_principals are addressed at the workspace).
+func TestScim_WorkspaceLevel_InjectsHeader(t *testing.T) {
+	dc, captured := newHeaderCaptureClient(t, "12345")
+	ctx := context.Background()
+
+	require.NoError(t, dc.Scim(ctx, http.MethodGet, "/preview/scim/v2/Users", nil, nil, ApiLevelWorkspace))
+
+	require.Len(t, *captured, 1)
+	assert.Equal(t, "12345", (*captured)[0].Header.Get("X-Databricks-Workspace-Id"))
+	assert.Equal(t, "application/scim+json; charset=utf-8", (*captured)[0].Header.Get("Content-Type"))
+}
+
+// TestScim_AccountLevel_OmitsHeader verifies the SCIM helper does NOT inject
+// the routing header for account-level SCIM calls — those target
+// /api/2.0/accounts/{aid}/scim/v2/... and must not be workspace-tagged.
+func TestScim_AccountLevel_OmitsHeader(t *testing.T) {
+	dc, captured := newHeaderCaptureClient(t, "12345")
+	dc.Config.AccountID = "test-account"
+	ctx := context.Background()
+
+	require.NoError(t, dc.Scim(ctx, http.MethodGet, "/preview/scim/v2/Users", nil, nil, ApiLevelAccount))
+
+	require.Len(t, *captured, 1)
+	assert.Empty(t, (*captured)[0].Header.Get("X-Databricks-Workspace-Id"))
+	// Confirm the SCIM account rewrite still applied — the path should be
+	// /api/2.0/accounts/{aid}/scim/v2/Users (the scimVisitorForLevel did its job).
+	assert.Contains(t, (*captured)[0].URL, "/accounts/test-account/scim/v2/Users")
+}
+
+// TestAddWorkspaceIdHeader_SuppressedOnAccountPath verifies the defensive
+// guard: if AddWorkspaceIdHeader is called on an /api/<ver>/accounts/... path
+// (defensive — this means a workspace-only visitor leaked onto an account
+// resource), the header is suppressed and a warning is logged.
+func TestAddWorkspaceIdHeader_SuppressedOnAccountPath(t *testing.T) {
+	dc, captured := newHeaderCaptureClient(t, "12345")
+	ctx := context.Background()
+
+	// Capture log output so we can verify the warning fired.
+	var logbuf strings.Builder
+	prev := log.Writer()
+	log.SetOutput(&logbuf)
+	t.Cleanup(func() { log.SetOutput(prev) })
+
+	// Simulate an account-scoped path being hit through Post + AddWorkspaceIdHeader.
+	// In production this would be a code bug; here we exercise it directly.
+	require.NoError(t, dc.Post(ctx, "/accounts/test-account/credentials", map[string]string{}, nil, dc.AddWorkspaceIdHeader))
+
+	require.Len(t, *captured, 1)
+	assert.Empty(t, (*captured)[0].Header.Get("X-Databricks-Workspace-Id"),
+		"header must not be set on /accounts/... paths even when the visitor is passed")
+	assert.Contains(t, logbuf.String(), "AddWorkspaceIdHeader invoked on account-scoped path",
+		"expected a warning when the visitor is mis-applied to an account path")
+}
+
+// TestAddWorkspaceIdHeader_FiresOnWorkspacePath confirms the guard is precise:
+// non-account paths still get the header.
+func TestAddWorkspaceIdHeader_FiresOnWorkspacePath(t *testing.T) {
+	dc, captured := newHeaderCaptureClient(t, "12345")
+	ctx := context.Background()
+
+	require.NoError(t, dc.Post(ctx, "/repos", map[string]string{}, nil, dc.AddWorkspaceIdHeader))
+	require.NoError(t, dc.Get(ctx, "/unity-catalog/tables", nil, nil, dc.AddWorkspaceIdHeader))
+
+	require.Len(t, *captured, 2)
+	for i, c := range *captured {
+		assert.Equal(t, "12345", c.Header.Get("X-Databricks-Workspace-Id"),
+			"request %d should carry the workspace-id header on a workspace path", i)
+	}
 }
 
 func TestCurrentWorkspaceID_ReturnsCachedValue(t *testing.T) {

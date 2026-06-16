@@ -2,11 +2,23 @@
 subcategory: "Disaster Recovery"
 ---
 # databricks_disaster_recovery_failover_group Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/account/disasterrecovery)
+
+This data source can be used to get a single failover group by its fully qualified resource name.
+
+-> **Note** This data source can only be used with an account-level provider!
 
 
 ## Example Usage
+Referring to a failover group by its resource name:
+
+```hcl
+data "databricks_disaster_recovery_failover_group" "this" {
+  name = "accounts/${var.account_id}/failover-groups/accounting-failover-group"
+}
+```
 
 
 ## Arguments
@@ -51,10 +63,9 @@ The following attributes are exported:
 
 ### WorkspaceSet
 * `name` (string) - Resource name for this workspace set
-* `replicate_workspace_assets` (boolean) - Whether to enable control plane DR (notebooks, jobs, clusters, etc.) for this set.
-  Requires all workspaces in the set to be Mission Critical tier
+* `replicate_workspace_assets` (boolean) - Whether to enable control plane DR (notebooks, jobs, clusters, etc.) for this set
 * `stable_url_names` (list of string) - Resource names of stable URLs associated with this workspace set.
   Format: accounts/{account_id}/stable-urls/{stable_url_id}.
   The referenced stable URLs must already exist (via CreateStableUrl)
 * `workspace_ids` (list of string) - Workspace IDs in this set. The system derives and validates regions.
-  EA: exactly 2 workspaces (one per region)
+  All workspaces must be in the Mission Critical tier

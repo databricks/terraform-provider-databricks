@@ -5,7 +5,6 @@ package postgres_endpoint
 import (
 	"context"
 	"reflect"
-	"regexp"
 
 	"github.com/databricks/databricks-sdk-go/service/postgres"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
@@ -47,8 +46,6 @@ func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -104,6 +101,8 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 type EndpointData struct {
 	// A timestamp indicating when the compute endpoint was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// The part of the name, chosen by the user when the resource was created.
+	EndpointId types.String `tfsdk:"endpoint_id"`
 	// Output only. The full resource path of the endpoint. Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Name types.String `tfsdk:"name"`
@@ -148,6 +147,7 @@ func (m EndpointData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"create_time": m.CreateTime,
+			"endpoint_id": m.EndpointId,
 			"name":        m.Name,
 			"parent":      m.Parent,
 			"spec":        m.Spec,
@@ -166,6 +166,7 @@ func (m EndpointData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"endpoint_id": types.StringType,
 			"name":        types.StringType,
 			"parent":      types.StringType,
 			"spec":        postgres_tf.EndpointSpec{}.Type(ctx),
@@ -180,6 +181,7 @@ func (m EndpointData) Type(ctx context.Context) attr.Type {
 
 func (m EndpointData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["endpoint_id"] = attrs["endpoint_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetComputed()

@@ -32,6 +32,12 @@ type App_SdkV2 struct {
 	AppStatus types.List `tfsdk:"app_status"`
 
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+	// Maximum number of app instances. Must be set together with
+	// `compute_min_instances`.
+	ComputeMaxInstances types.Int64 `tfsdk:"compute_max_instances"`
+	// Minimum number of app instances. Must be set together with
+	// `compute_max_instances`.
+	ComputeMinInstances types.Int64 `tfsdk:"compute_min_instances"`
 
 	ComputeSize types.String `tfsdk:"compute_size"`
 
@@ -239,6 +245,8 @@ func (m App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["app_status"] = attrs["app_status"].SetComputed()
 	attrs["app_status"] = attrs["app_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["compute_max_instances"] = attrs["compute_max_instances"].SetOptional()
+	attrs["compute_min_instances"] = attrs["compute_min_instances"].SetOptional()
 	attrs["compute_size"] = attrs["compute_size"].SetOptional()
 	attrs["compute_status"] = attrs["compute_status"].SetComputed()
 	attrs["compute_status"] = attrs["compute_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -304,6 +312,8 @@ func (m App_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"active_deployment":             m.ActiveDeployment,
 			"app_status":                    m.AppStatus,
 			"budget_policy_id":              m.BudgetPolicyId,
+			"compute_max_instances":         m.ComputeMaxInstances,
+			"compute_min_instances":         m.ComputeMinInstances,
 			"compute_size":                  m.ComputeSize,
 			"compute_status":                m.ComputeStatus,
 			"create_time":                   m.CreateTime,
@@ -344,8 +354,10 @@ func (m App_SdkV2) Type(ctx context.Context) attr.Type {
 			"app_status": basetypes.ListType{
 				ElemType: ApplicationStatus_SdkV2{}.Type(ctx),
 			},
-			"budget_policy_id": types.StringType,
-			"compute_size":     types.StringType,
+			"budget_policy_id":      types.StringType,
+			"compute_max_instances": types.Int64Type,
+			"compute_min_instances": types.Int64Type,
+			"compute_size":          types.StringType,
 			"compute_status": basetypes.ListType{
 				ElemType: ComputeStatus_SdkV2{}.Type(ctx),
 			},
@@ -3525,6 +3537,12 @@ func (m AppThumbnail_SdkV2) Type(ctx context.Context) attr.Type {
 
 type AppUpdate_SdkV2 struct {
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+	// Maximum number of app instances. Must be set together with
+	// `compute_min_instances`.
+	ComputeMaxInstances types.Int64 `tfsdk:"compute_max_instances"`
+	// Minimum number of app instances. Must be set together with
+	// `compute_max_instances`.
+	ComputeMinInstances types.Int64 `tfsdk:"compute_min_instances"`
 
 	ComputeSize types.String `tfsdk:"compute_size"`
 
@@ -3607,6 +3625,8 @@ func (to *AppUpdate_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppUpd
 
 func (m AppUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["compute_max_instances"] = attrs["compute_max_instances"].SetOptional()
+	attrs["compute_min_instances"] = attrs["compute_min_instances"].SetOptional()
 	attrs["compute_size"] = attrs["compute_size"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["git_repository"] = attrs["git_repository"].SetOptional()
@@ -3643,14 +3663,16 @@ func (m AppUpdate_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"budget_policy_id": m.BudgetPolicyId,
-			"compute_size":     m.ComputeSize,
-			"description":      m.Description,
-			"git_repository":   m.GitRepository,
-			"resources":        m.Resources,
-			"status":           m.Status,
-			"usage_policy_id":  m.UsagePolicyId,
-			"user_api_scopes":  m.UserApiScopes,
+			"budget_policy_id":      m.BudgetPolicyId,
+			"compute_max_instances": m.ComputeMaxInstances,
+			"compute_min_instances": m.ComputeMinInstances,
+			"compute_size":          m.ComputeSize,
+			"description":           m.Description,
+			"git_repository":        m.GitRepository,
+			"resources":             m.Resources,
+			"status":                m.Status,
+			"usage_policy_id":       m.UsagePolicyId,
+			"user_api_scopes":       m.UserApiScopes,
 		})
 }
 
@@ -3658,9 +3680,11 @@ func (m AppUpdate_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m AppUpdate_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"budget_policy_id": types.StringType,
-			"compute_size":     types.StringType,
-			"description":      types.StringType,
+			"budget_policy_id":      types.StringType,
+			"compute_max_instances": types.Int64Type,
+			"compute_min_instances": types.Int64Type,
+			"compute_size":          types.StringType,
+			"description":           types.StringType,
 			"git_repository": basetypes.ListType{
 				ElemType: GitRepository_SdkV2{}.Type(ctx),
 			},
@@ -3837,6 +3861,8 @@ func (m AppUpdateUpdateStatus_SdkV2) Type(ctx context.Context) attr.Type {
 type ApplicationStatus_SdkV2 struct {
 	// Application status message
 	Message types.String `tfsdk:"message"`
+	// The number of running instances of this application.
+	RunningInstances types.Int64 `tfsdk:"running_instances"`
 	// State of the application.
 	State types.String `tfsdk:"state"`
 }
@@ -3849,6 +3875,7 @@ func (to *ApplicationStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 
 func (m ApplicationStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["message"] = attrs["message"].SetComputed()
+	attrs["running_instances"] = attrs["running_instances"].SetComputed()
 	attrs["state"] = attrs["state"].SetComputed()
 
 	return attrs
@@ -3872,8 +3899,9 @@ func (m ApplicationStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"message": m.Message,
-			"state":   m.State,
+			"message":           m.Message,
+			"running_instances": m.RunningInstances,
+			"state":             m.State,
 		})
 }
 
@@ -3881,8 +3909,9 @@ func (m ApplicationStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 func (m ApplicationStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"message": types.StringType,
-			"state":   types.StringType,
+			"message":           types.StringType,
+			"running_instances": types.Int64Type,
+			"state":             types.StringType,
 		},
 	}
 }

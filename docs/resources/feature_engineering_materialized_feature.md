@@ -12,15 +12,24 @@ subcategory: "Machine Learning"
 ## Arguments
 The following arguments are supported:
 * `feature_name` (string, required) - The full name of the feature in Unity Catalog
-* `cron_schedule` (string, optional) - The quartz cron expression that defines the schedule of the materialization pipeline. The schedule is evaluated in the UTC timezone
-* `materialized_feature_id` (string, optional) - Unique identifier for the materialized feature
-* `offline_store_config` (OfflineStoreConfig, optional)
-* `online_store_config` (OnlineStoreConfig, optional)
-* `pipeline_schedule_state` (string, optional) - The schedule state of the materialization pipeline. Possible values are: `ACTIVE`, `PAUSED`, `SNAPSHOT`
+* `cron_schedule` (string, optional) - The quartz cron expression that defines the schedule of the materialization pipeline. The schedule is evaluated in the UTC timezone.
+  Hidden from GraphQL: superseded by the `trigger` oneof (cron_schedule_trigger), so not exposed to Catalog Explorer
+* `cron_schedule_trigger` (CronSchedule, optional) - A cron-based schedule trigger for the materialization pipeline
+* `offline_store_config` (OfflineStoreConfig, optional) - Destination for writing feature values to an offline Delta table
+* `online_store_config` (OnlineStoreConfig, optional) - Destination for writing feature values to an online Lakebase table
+* `pipeline_schedule_state` (string, optional) - The schedule state of the materialization pipeline.
+  Hidden from GraphQL: being deprecated, so not exposed to Catalog Explorer. Possible values are: `ACTIVE`, `PAUSED`, `SNAPSHOT`
+* `streaming_mode` (StreamingMode, optional) - The Structured Streaming trigger mode used for materialization. Real-time mode (RTM) targets
+  sub-second latency for operational workloads; micro-batch mode (MBM) favors cost efficiency
+  for ETL and analytics workloads
+* `table_trigger` (TableTrigger, optional) - A trigger that fires when the upstream source table changes
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
 * `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
+### CronSchedule
+* `cron_expression` (string, optional) - The cron expression defining the schedule (e.g., "0 0 * * *" for daily at midnight)
 
 ### OfflineStoreConfig
 * `catalog_name` (string, required) - The Unity Catalog catalog name
@@ -37,11 +46,15 @@ The following arguments are supported:
 * `table_name_prefix` (string, required) - Prefix for Unity Catalog table name.
   The materialized feature will be stored in a Lakebase table with this prefix and a generated postfix
 
+### StreamingMode
+* `mode` (string, optional) - The type of streaming mode used by the materialization pipeline. Possible values are: `STREAMING_MODE_TYPE_MBM`, `STREAMING_MODE_TYPE_RTM`
+
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 * `is_online` (boolean) - True if this is an online materialized feature. False if it is an offline materialized feature
 * `last_materialization_time` (string) - The timestamp when the pipeline last ran and updated the materialized feature values.
   If the pipeline has not run yet, this field will be null
+* `materialized_feature_id` (string) - Server-assigned unique identifier for the materialized feature
 * `table_name` (string) - The fully qualified Unity Catalog path to the table containing the materialized feature (Delta table or Lakebase table). Output only
 
 ## Import

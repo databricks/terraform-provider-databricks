@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_role Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 This data source retrieves a single Postgres role.
 
 
@@ -45,6 +47,7 @@ The following attributes are exported:
   Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
 * `parent` (string) - The Branch where this Role exists.
   Format: projects/{project_id}/branches/{branch_id}
+* `role_id` (string) - The part of the name, chosen by the user when the resource was created
 * `spec` (RoleRoleSpec) - The spec contains the role configuration, including identity type, authentication method, and role attributes
 * `status` (RoleRoleStatus) - Current status of the role, including its identity type, authentication method, and role attributes
 * `update_time` (string)
@@ -103,11 +106,4 @@ The following attributes are exported:
 * `identity_type` (string) - The type of the role. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
 * `membership_roles` (list of string) - An enum value for a standard role that this role is a member of
 * `postgres_role` (string) - The name of the Postgres role
-* `role_id` (string) - The short identifier of the role, suitable for showing to the users.
-  For a role with name `projects/my-project/branches/my-branch/roles/my-role`,
-  the role_id is `my-role`.
-  
-  Use this field when building UI components that display roles to users (e.g., a drop-down
-  selector). Prefer showing `role_id` instead of the full resource name from `Role.name`,
-  which follows the `projects/{project_id}/branches/{branch_id}/roles/{role_id}` format
-  and is not user-friendly
+* `role_id` (string) - Part of the resource name

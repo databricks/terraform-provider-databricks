@@ -12,6 +12,21 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/scim
       test_name: TestMwsAccServicePrincipalResourceOnAws
       comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsSomeTrueSomeFalse
+      comment: Failures due to read-after-write inconsistency in the SCIM API; tracked internally.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsSomeTrueSomeFalse/user
+      comment: Failures due to read-after-write inconsistency in the SCIM API; tracked internally.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsSomeTrueSomeFalse/service_principal
+      comment: Failures due to read-after-write inconsistency in the SCIM API; tracked internally.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsRemoveExisting
+      comment: Failures due to read-after-write inconsistency in the SCIM API; tracked internally.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsRemoveExisting/service_principal
+      comment: Failures due to read-after-write inconsistency in the SCIM API; tracked internally.
     - package: github.com/databricks/terraform-provider-databricks/mws
       test_name: TestUcAccAssignGroupToWorkspace
       comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061

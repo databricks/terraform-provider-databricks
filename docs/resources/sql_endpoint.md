@@ -4,6 +4,8 @@ subcategory: "Databricks SQL"
 
 # databricks_sql_endpoint Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/warehouses)
+
 This resource is used to manage [Databricks SQL warehouses](https://docs.databricks.com/sql/admin/sql-endpoints.html). To create [SQL warehouses](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
 
 -> This resource can only be used with a workspace-level provider!

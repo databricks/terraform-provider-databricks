@@ -1,8 +1,30 @@
 name: Provider schema
 
+# Single workflow with two jobs:
+# - classify: builds the provider on base and head on ubuntu-latest (where the
+#   public Go proxy is reachable), runs the breaking-change classifier, uploads
+#   the markdown report + an outcome marker as a workflow artifact. Always
+#   exits 0 — purely a producer.
+# - status: runs on the protected runner (IP-allowlisted for the GitHub API),
+#   downloads the artifact from this run, reads the bypass directive from the
+#   PR body, posts/updates/deletes a sticky comment, and exits non-zero if
+#   breaking changes are present and no bypass directive is set. The status
+#   job is the required check.
+#
+# Triggered on `pull_request: [opened, synchronize, edited]` so that editing
+# the PR description to add `ALLOW_SCHEMA_BREAKING_CHANGE=true` re-fires the
+# workflow and the bypass takes effect without needing a new commit.
+#
+# Fork-PR caveat: GITHUB_TOKEN is intentionally read-only on `pull_request`
+# events from forks, so the sticky-comment step can't post on fork PRs. The
+# step uses `continue-on-error` so the workflow's overall pass/fail still
+# reflects the breaking-vs-not decision; only the in-PR sticky is missing.
+# Fork contributors see the failed check status and the classifier report
+# in the Action log.
+
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, edited]
 
   workflow_dispatch:
     inputs:
@@ -15,8 +37,18 @@ on:
         default: "main"
         required: true
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
-  compute_diff:
+  classify:
+    # Skip non-body PR edits (title-only, base-only) — those don't change the
+    # classifier's output and would waste CI time on a rebuild.
+    if: |
+      github.event_name != 'pull_request' ||
+      github.event.action != 'edited' ||
+      github.event.changes.body != null
     runs-on: ubuntu-latest
 
     steps:
@@ -55,6 +87,148 @@ jobs:
       - name: "Install jd"
         run: go install github.com/josephburnett/jd@11eae3c9ffb1dd32796ca741691bf4733a27dfa4 # v1.8.1
 
-      - run: make diff-schema
+      - name: Run schema diff and breaking-change classifier
+        id: classify
+        continue-on-error: true
         env:
           BASE_COMMIT: ${{ github.event_name == 'pull_request' && github.base_ref || github.event.inputs.base }}
+          CLASSIFIER_REPORT: /tmp/classifier-report.md
+        run: make diff-schema
+
+      # Persist the step outcome so the downstream status job can read it.
+      - name: Write outcome marker
+        run: |
+          echo "${{ steps.classify.outcome }}" > /tmp/classifier-outcome.txt
+          cat /tmp/classifier-outcome.txt
+
+      - name: Upload classifier artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: classifier-output
+          path: |
+            /tmp/classifier-report.md
+            /tmp/classifier-outcome.txt
+          if-no-files-found: warn
+          retention-days: 3
+
+  status:
+    needs: classify
+    # Only on PRs (workflow_dispatch has no PR to comment on). Also skip
+    # non-body edits, matching the classify job's gate.
+    if: |
+      always() &&
+      github.event_name == 'pull_request' &&
+      (github.event.action != 'edited' || github.event.changes.body != null)
+    # Protected runner is IP-allowlisted for the GitHub API; ubuntu-latest is
+    # not, and gh CLI calls from there hit the databricks org's IP allow list.
+    runs-on:
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
+
+    steps:
+      - name: Read PR body for bypass directive
+        id: bypass
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          # Line-anchored so the directive only counts when it's on its own
+          # line, with optional surrounding whitespace. A substring match
+          # would falsely activate the bypass when the directive appears
+          # inside an explanatory sentence or code-block sample.
+          if printf '%s\n' "${PR_BODY}" | grep -qE '^[[:space:]]*ALLOW_SCHEMA_BREAKING_CHANGE=true[[:space:]]*$'; then
+            echo "allow=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "allow=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download classifier artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: classifier-output
+          path: /tmp
+
+      - name: Read classify outcome from marker file
+        id: outcome
+        run: |
+          if [ -f /tmp/classifier-outcome.txt ]; then
+            outcome=$(tr -d '\n' < /tmp/classifier-outcome.txt)
+          else
+            outcome="unknown"
+          fi
+          echo "classify=${outcome}" >> "$GITHUB_OUTPUT"
+
+      # Sticky comment. Uses continue-on-error so that on fork PRs (where
+      # GITHUB_TOKEN is read-only) the inability to post a comment doesn't
+      # fail the job — fork contributors still see the workflow's overall
+      # pass/fail and can read the classifier report from the Action log.
+      - name: Update sticky PR comment
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          MARKER: "<!-- SCHEMA_BREAKING_CHECK -->"
+          CLASSIFY_OUTCOME: ${{ steps.outcome.outputs.classify }}
+          BYPASS_ALLOWED: ${{ steps.bypass.outputs.allow }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          prev=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id")
+          # "success" outcome = classifier exited 0 = no breaking changes.
+          # Anything else means breaking (or the classifier itself failed,
+          # which we treat as breaking out of caution).
+          if [ "${CLASSIFY_OUTCOME}" = "success" ]; then
+            for id in ${prev}; do
+              gh api "repos/${REPO}/issues/comments/${id}" --method DELETE
+            done
+            exit 0
+          fi
+          body=$(mktemp)
+          {
+            echo "${MARKER}"
+            echo
+            if [ "${BYPASS_ALLOWED}" = "true" ]; then
+              echo "## Breaking schema changes detected (bypass active)"
+              echo
+              echo "This PR carries \`ALLOW_SCHEMA_BREAKING_CHANGE=true\` on its own line in the description, so the breaking-schema check is **not blocking**. Please review the changes below carefully."
+            else
+              echo "## Breaking schema changes detected"
+            fi
+            echo
+            if [ -s /tmp/classifier-report.md ]; then
+              cat /tmp/classifier-report.md
+            else
+              echo "_(classifier report missing — see the classify job's log for details)_"
+            fi
+            if [ "${BYPASS_ALLOWED}" != "true" ]; then
+              echo
+              echo "<details><summary>How to bypass this check</summary>"
+              echo
+              echo "If the break is intentional, add \`ALLOW_SCHEMA_BREAKING_CHANGE=true\` on its own line in the PR description."
+              echo
+              echo "</details>"
+            fi
+          } > "${body}"
+          if [ -z "${prev}" ]; then
+            gh pr comment "${PR_NUMBER}" --body-file "${body}"
+          else
+            first=$(echo "${prev}" | head -1)
+            gh api "repos/${REPO}/issues/comments/${first}" --method PATCH -F body=@"${body}"
+            for id in $(echo "${prev}" | tail -n +2); do
+              gh api "repos/${REPO}/issues/comments/${id}" --method DELETE
+            done
+          fi
+
+      - name: Fail on breaking changes without bypass
+        if: steps.outcome.outputs.classify != 'success' && steps.bypass.outputs.allow != 'true'
+        run: |
+          echo "Breaking schema changes detected. See the classifier report in the classify job's logs."
+          echo
+          echo "If the break is intentional, add this line on its own in the PR description:"
+          echo
+          echo "    ALLOW_SCHEMA_BREAKING_CHANGE=true"
+          echo
+          echo "The workflow will re-fire on the next 'edited' event and pick up the bypass."
+          exit 1

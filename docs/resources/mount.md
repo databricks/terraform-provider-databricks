@@ -3,6 +3,8 @@ subcategory: "Storage"
 ---
 # databricks_mount Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/dbfs)
+
 -> Please switch to [databricks_volume](volume.md). DBFS mounts are deprecated.
 
 -> This resource can only be used with a workspace-level provider!

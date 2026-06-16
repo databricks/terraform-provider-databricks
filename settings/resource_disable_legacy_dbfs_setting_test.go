@@ -248,6 +248,73 @@ func TestDeleteDisableLegacyDbfs(t *testing.T) {
 	})
 }
 
+// TestDisableLegacyDbfsSettingLifecycle mirrors TestAccDisableLegacyDbfsSetting
+// (in settings/disable_legacy_dbfs_setting_test.go) at the unit level: the
+// acceptance test applies value=true and then destroys; this exercises the
+// same two transitions against mocked SDK calls. Use this as the per-resource
+// expected-behavior check while the acceptance test is skipped.
+func TestDisableLegacyDbfsSettingLifecycle(t *testing.T) {
+	t.Run("create with value=true persists into state", func(t *testing.T) {
+		d, err := qa.ResourceFixture{
+			MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+				e := w.GetMockDisableLegacyDbfsAPI().EXPECT()
+				e.Update(mock.Anything, settings.UpdateDisableLegacyDbfsRequest{
+					AllowMissing: true,
+					FieldMask:    "disable_legacy_dbfs.value",
+					Setting: settings.DisableLegacyDbfs{
+						DisableLegacyDbfs: settings.BooleanMessage{Value: true},
+						SettingName:       "disable_legacy_dbfs",
+					},
+				}).Return(&settings.DisableLegacyDbfs{
+					Etag:              "etag-after-create",
+					DisableLegacyDbfs: settings.BooleanMessage{Value: true},
+					SettingName:       "disable_legacy_dbfs",
+				}, nil)
+				e.Get(mock.Anything, settings.GetDisableLegacyDbfsRequest{
+					Etag: "etag-after-create",
+				}).Return(&settings.DisableLegacyDbfs{
+					Etag:              "etag-after-create",
+					DisableLegacyDbfs: settings.BooleanMessage{Value: true},
+					SettingName:       "disable_legacy_dbfs",
+				}, nil)
+			},
+			Resource: testDisableLegacyDbfs,
+			Create:   true,
+			HCL: `
+				disable_legacy_dbfs {
+					value = "true"
+				}
+			`,
+		}.Apply(t)
+		assert.NoError(t, err)
+		assert.Equal(t, defaultSettingId, d.Id())
+		assert.Equal(t, "etag-after-create", d.Get(etagAttrName).(string))
+		assert.Equal(t, true, d.Get("disable_legacy_dbfs.0.value"))
+	})
+
+	t.Run("destroy resets to default", func(t *testing.T) {
+		qa.ResourceFixture{
+			MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+				w.GetMockDisableLegacyDbfsAPI().EXPECT().Delete(mock.Anything, settings.DeleteDisableLegacyDbfsRequest{
+					Etag: "etag-after-create",
+				}).Return(&settings.DeleteDisableLegacyDbfsResponse{Etag: "etag-after-delete"}, nil)
+			},
+			Resource: testDisableLegacyDbfs,
+			Delete:   true,
+			HCL: `
+				disable_legacy_dbfs {
+					value = "true"
+				}
+				etag = "etag-after-create"
+			`,
+			ID: defaultSettingId,
+		}.ApplyAndExpectData(t, map[string]any{
+			"id":         defaultSettingId,
+			etagAttrName: "etag-after-delete",
+		})
+	})
+}
+
 func TestDeleteDisableLegacyDbfsWithConflict(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

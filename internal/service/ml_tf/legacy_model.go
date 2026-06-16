@@ -1306,7 +1306,7 @@ func (m *AuthConfig_SdkV2) SetMtlsConfig(ctx context.Context, v MtlsConfig_SdkV2
 type AvgFunction_SdkV2 struct {
 	// The input column from which the average is computed. For Kafka sources,
 	// use dot-prefixed path notation (e.g., "value.amount"). For nested fields,
-	// the leaf node name is used. TODO(FS-939): Colon-prefixed notation (e.g.,
+	// the leaf node name is used. Colon-prefixed notation (e.g.,
 	// "value:amount") is supported for backwards compatibility but is
 	// deprecated; migrate to dot notation.
 	Input types.String `tfsdk:"input"`
@@ -1907,9 +1907,9 @@ func (m ContinuousWindow_SdkV2) Type(ctx context.Context) attr.Type {
 type CountFunction_SdkV2 struct {
 	// The input column from which the count is computed. For Kafka sources, use
 	// dot-prefixed path notation (e.g., "value.amount"). For nested fields, the
-	// leaf node name is used. TODO(FS-939): Colon-prefixed notation (e.g.,
-	// "value:amount") is supported for backwards compatibility but is
-	// deprecated; migrate to dot notation.
+	// leaf node name is used. Colon-prefixed notation (e.g., "value:amount") is
+	// supported for backwards compatibility but is deprecated; migrate to dot
+	// notation.
 	Input types.String `tfsdk:"input"`
 }
 
@@ -4644,6 +4644,8 @@ type DataSource_SdkV2 struct {
 	KafkaSource types.List `tfsdk:"kafka_source"`
 	// A request-time data source.
 	RequestSource types.List `tfsdk:"request_source"`
+	// A Stream data source.
+	StreamSource types.List `tfsdk:"stream_source"`
 }
 
 func (to *DataSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DataSource_SdkV2) {
@@ -4674,6 +4676,15 @@ func (to *DataSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 			}
 		}
 	}
+	if !from.StreamSource.IsNull() && !from.StreamSource.IsUnknown() {
+		if toStreamSource, ok := to.GetStreamSource(ctx); ok {
+			if fromStreamSource, ok := from.GetStreamSource(ctx); ok {
+				// Recursively sync the fields of StreamSource
+				toStreamSource.SyncFieldsDuringCreateOrUpdate(ctx, fromStreamSource)
+				to.SetStreamSource(ctx, toStreamSource)
+			}
+		}
+	}
 }
 
 func (to *DataSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DataSource_SdkV2) {
@@ -4701,6 +4712,14 @@ func (to *DataSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DataS
 			}
 		}
 	}
+	if !from.StreamSource.IsNull() && !from.StreamSource.IsUnknown() {
+		if toStreamSource, ok := to.GetStreamSource(ctx); ok {
+			if fromStreamSource, ok := from.GetStreamSource(ctx); ok {
+				toStreamSource.SyncFieldsDuringRead(ctx, fromStreamSource)
+				to.SetStreamSource(ctx, toStreamSource)
+			}
+		}
+	}
 }
 
 func (m DataSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4710,6 +4729,8 @@ func (m DataSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["kafka_source"] = attrs["kafka_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["request_source"] = attrs["request_source"].SetOptional()
 	attrs["request_source"] = attrs["request_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["stream_source"] = attrs["stream_source"].SetOptional()
+	attrs["stream_source"] = attrs["stream_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -4726,6 +4747,7 @@ func (m DataSource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]r
 		"delta_table_source": reflect.TypeOf(DeltaTableSource_SdkV2{}),
 		"kafka_source":       reflect.TypeOf(KafkaSource_SdkV2{}),
 		"request_source":     reflect.TypeOf(RequestSource_SdkV2{}),
+		"stream_source":      reflect.TypeOf(StreamSource_SdkV2{}),
 	}
 }
 
@@ -4739,6 +4761,7 @@ func (m DataSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"delta_table_source": m.DeltaTableSource,
 			"kafka_source":       m.KafkaSource,
 			"request_source":     m.RequestSource,
+			"stream_source":      m.StreamSource,
 		})
 }
 
@@ -4754,6 +4777,9 @@ func (m DataSource_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"request_source": basetypes.ListType{
 				ElemType: RequestSource_SdkV2{}.Type(ctx),
+			},
+			"stream_source": basetypes.ListType{
+				ElemType: StreamSource_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4835,6 +4861,32 @@ func (m *DataSource_SdkV2) SetRequestSource(ctx context.Context, v RequestSource
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["request_source"]
 	m.RequestSource = types.ListValueMust(t, vs)
+}
+
+// GetStreamSource returns the value of the StreamSource field in DataSource_SdkV2 as
+// a StreamSource_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataSource_SdkV2) GetStreamSource(ctx context.Context) (StreamSource_SdkV2, bool) {
+	var e StreamSource_SdkV2
+	if m.StreamSource.IsNull() || m.StreamSource.IsUnknown() {
+		return e, false
+	}
+	var v []StreamSource_SdkV2
+	d := m.StreamSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStreamSource sets the value of the StreamSource field in DataSource_SdkV2.
+func (m *DataSource_SdkV2) SetStreamSource(ctx context.Context, v StreamSource_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["stream_source"]
+	m.StreamSource = types.ListValueMust(t, vs)
 }
 
 // Dataset. Represents a reference to data used for training, testing, or
@@ -6831,8 +6883,7 @@ func (m *DeltaTableSource_SdkV2) SetEntityColumns(ctx context.Context, v []types
 }
 
 // Direct connection configs for mTLS, as Kafka Connections do not support mTLS
-// yet (XTA-18030). Temporarily used until UC Kafka Connections gain mTLS
-// support.
+// yet . Temporarily used until UC Kafka Connections gain mTLS support.
 type DirectMtlsConfig_SdkV2 struct {
 	// A comma-separated list of host:port pairs for the Kafka bootstrap
 	// servers.
@@ -7095,9 +7146,8 @@ type EntityColumn_SdkV2 struct {
 	// "value.user_id", "key.partition_key"). For nested fields, the leaf node
 	// name (e.g., "user_id" from "value.trip_details.user_id") is what will be
 	// present in materialized tables and expected to match at query time.
-	// TODO(FS-939): Colon-prefixed notation (e.g., "value:user_id") is
-	// supported for backwards compatibility but is deprecated; migrate to dot
-	// notation.
+	// Colon-prefixed notation (e.g., "value:user_id") is supported for
+	// backwards compatibility but is deprecated; migrate to dot notation.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -12235,6 +12285,9 @@ type KafkaConfig_SdkV2 struct {
 	// Catch-all for miscellaneous options. Keys should be source options or
 	// Kafka consumer options (kafka.*)
 	ExtraOptions types.Map `tfsdk:"extra_options"`
+	// Configuration for ingesting Kafka data into a Databricks-managed Delta
+	// table.
+	IngestionConfig types.List `tfsdk:"ingestion_config"`
 	// Schema configuration for extracting message keys from topics. At least
 	// one of key_schema and value_schema must be provided.
 	KeySchema types.List `tfsdk:"key_schema"`
@@ -12265,6 +12318,15 @@ func (to *KafkaConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 				// Recursively sync the fields of BackfillSource
 				toBackfillSource.SyncFieldsDuringCreateOrUpdate(ctx, fromBackfillSource)
 				to.SetBackfillSource(ctx, toBackfillSource)
+			}
+		}
+	}
+	if !from.IngestionConfig.IsNull() && !from.IngestionConfig.IsUnknown() {
+		if toIngestionConfig, ok := to.GetIngestionConfig(ctx); ok {
+			if fromIngestionConfig, ok := from.GetIngestionConfig(ctx); ok {
+				// Recursively sync the fields of IngestionConfig
+				toIngestionConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromIngestionConfig)
+				to.SetIngestionConfig(ctx, toIngestionConfig)
 			}
 		}
 	}
@@ -12314,6 +12376,14 @@ func (to *KafkaConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Kafk
 			}
 		}
 	}
+	if !from.IngestionConfig.IsNull() && !from.IngestionConfig.IsUnknown() {
+		if toIngestionConfig, ok := to.GetIngestionConfig(ctx); ok {
+			if fromIngestionConfig, ok := from.GetIngestionConfig(ctx); ok {
+				toIngestionConfig.SyncFieldsDuringRead(ctx, fromIngestionConfig)
+				to.SetIngestionConfig(ctx, toIngestionConfig)
+			}
+		}
+	}
 	if !from.KeySchema.IsNull() && !from.KeySchema.IsUnknown() {
 		if toKeySchema, ok := to.GetKeySchema(ctx); ok {
 			if fromKeySchema, ok := from.GetKeySchema(ctx); ok {
@@ -12347,6 +12417,8 @@ func (m KafkaConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["backfill_source"] = attrs["backfill_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["bootstrap_servers"] = attrs["bootstrap_servers"].SetRequired()
 	attrs["extra_options"] = attrs["extra_options"].SetOptional()
+	attrs["ingestion_config"] = attrs["ingestion_config"].SetOptional()
+	attrs["ingestion_config"] = attrs["ingestion_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["key_schema"] = attrs["key_schema"].SetOptional()
 	attrs["key_schema"] = attrs["key_schema"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetRequired()
@@ -12370,6 +12442,7 @@ func (m KafkaConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]
 		"auth_config":       reflect.TypeOf(AuthConfig_SdkV2{}),
 		"backfill_source":   reflect.TypeOf(BackfillSource_SdkV2{}),
 		"extra_options":     reflect.TypeOf(types.String{}),
+		"ingestion_config":  reflect.TypeOf(IngestionConfig_SdkV2{}),
 		"key_schema":        reflect.TypeOf(SchemaConfig_SdkV2{}),
 		"subscription_mode": reflect.TypeOf(SubscriptionMode_SdkV2{}),
 		"value_schema":      reflect.TypeOf(SchemaConfig_SdkV2{}),
@@ -12387,6 +12460,7 @@ func (m KafkaConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"backfill_source":   m.BackfillSource,
 			"bootstrap_servers": m.BootstrapServers,
 			"extra_options":     m.ExtraOptions,
+			"ingestion_config":  m.IngestionConfig,
 			"key_schema":        m.KeySchema,
 			"name":              m.Name,
 			"subscription_mode": m.SubscriptionMode,
@@ -12407,6 +12481,9 @@ func (m KafkaConfig_SdkV2) Type(ctx context.Context) attr.Type {
 			"bootstrap_servers": types.StringType,
 			"extra_options": basetypes.MapType{
 				ElemType: types.StringType,
+			},
+			"ingestion_config": basetypes.ListType{
+				ElemType: IngestionConfig_SdkV2{}.Type(ctx),
 			},
 			"key_schema": basetypes.ListType{
 				ElemType: SchemaConfig_SdkV2{}.Type(ctx),
@@ -12498,6 +12575,32 @@ func (m *KafkaConfig_SdkV2) SetExtraOptions(ctx context.Context, v map[string]ty
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["extra_options"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.ExtraOptions = types.MapValueMust(t, vs)
+}
+
+// GetIngestionConfig returns the value of the IngestionConfig field in KafkaConfig_SdkV2 as
+// a IngestionConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KafkaConfig_SdkV2) GetIngestionConfig(ctx context.Context) (IngestionConfig_SdkV2, bool) {
+	var e IngestionConfig_SdkV2
+	if m.IngestionConfig.IsNull() || m.IngestionConfig.IsUnknown() {
+		return e, false
+	}
+	var v []IngestionConfig_SdkV2
+	d := m.IngestionConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetIngestionConfig sets the value of the IngestionConfig field in KafkaConfig_SdkV2.
+func (m *KafkaConfig_SdkV2) SetIngestionConfig(ctx context.Context, v IngestionConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["ingestion_config"]
+	m.IngestionConfig = types.ListValueMust(t, vs)
 }
 
 // GetKeySchema returns the value of the KeySchema field in KafkaConfig_SdkV2 as
@@ -12735,10 +12838,14 @@ func (m *KafkaSource_SdkV2) SetTimeseriesColumnIdentifier(ctx context.Context, v
 
 // Kafka-specific configuration for a Stream.
 type KafkaStreamConfig_SdkV2 struct {
-	// Miscellaneous source options. Accepted keys are source options or Kafka
-	// consumer options (kafka.*), validated against an allow-list at request
-	// time. All auth configuration goes through the underlying UC Connection(s)
-	// or configs and should not be stored here.
+	// Optional Kafka source or consumer options, validated against a
+	// server-side allowlist at request time. Allowed keys: -
+	// `maxOffsetsPerTrigger` - `startingOffsets` - `includeHeaders` -
+	// `kafka.request.timeout.ms` - `kafka.session.timeout.ms` -
+	// `kafka.max.partition.fetch.bytes` The following keys are ingestion-only
+	// and are stripped before being forwarded to the materialization pipeline:
+	// - `maxOffsetsPerTrigger` - `startingOffsets` Auth and connection details
+	// belong on the parent Stream's `connection_config`, not here.
 	ExtraOptions types.Map `tfsdk:"extra_options"`
 	// Options to configure which Kafka topics to pull data from.
 	SubscriptionMode types.List `tfsdk:"subscription_mode"`
@@ -13084,7 +13191,7 @@ func (m *LineageContext_SdkV2) SetJobContext(ctx context.Context, v JobContext_S
 	m.JobContext = types.ListValueMust(t, vs)
 }
 
-// Feature for model version. ([ML-57150] Renamed from Feature to LinkedFeature)
+// Feature for model version.
 type LinkedFeature_SdkV2 struct {
 	// Feature name
 	FeatureName types.String `tfsdk:"feature_name"`
@@ -14530,6 +14637,13 @@ func (m ListStreamsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 // Response to a ListStreamsRequest.
+//
+// NOTE: Results are post-filtered by access permission on each stream's
+// ingestion table. This means: - Returned results may be fewer than page_size
+// (including zero) - Page token points to next unfiltered batch, not next
+// filtered batch, and may point to an item that will be filtered out Callers
+// should paginate until next_page_token is empty to retrieve all accessible
+// streams.
 type ListStreamsResponse_SdkV2 struct {
 	// Pagination token to request the next page of results for this query.
 	NextPageToken types.String `tfsdk:"next_page_token"`
@@ -16476,6 +16590,8 @@ func (m LoggedModelTag_SdkV2) Type(ctx context.Context) attr.Type {
 type MaterializedFeature_SdkV2 struct {
 	// The quartz cron expression that defines the schedule of the
 	// materialization pipeline. The schedule is evaluated in the UTC timezone.
+	// Hidden from GraphQL: superseded by the `trigger` oneof
+	// (cron_schedule_trigger), so not exposed to Catalog Explorer.
 	CronSchedule types.String `tfsdk:"cron_schedule"`
 	// A cron-based schedule trigger for the materialization pipeline.
 	CronScheduleTrigger types.List `tfsdk:"cron_schedule_trigger"`
@@ -16493,7 +16609,8 @@ type MaterializedFeature_SdkV2 struct {
 	OfflineStoreConfig types.List `tfsdk:"offline_store_config"`
 	// Destination for writing feature values to an online Lakebase table.
 	OnlineStoreConfig types.List `tfsdk:"online_store_config"`
-	// The schedule state of the materialization pipeline.
+	// The schedule state of the materialization pipeline. Hidden from GraphQL:
+	// being deprecated, so not exposed to Catalog Explorer.
 	PipelineScheduleState types.String `tfsdk:"pipeline_schedule_state"`
 	// The Structured Streaming trigger mode used for materialization. Real-time
 	// mode (RTM) targets sub-second latency for operational workloads;
@@ -22930,8 +23047,8 @@ type StddevPopFunction_SdkV2 struct {
 	// The input column from which the population standard deviation is
 	// computed. For Kafka sources, use dot-prefixed path notation (e.g.,
 	// "value.amount"). For nested fields, the leaf node name is used.
-	// TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported
-	// for backwards compatibility but is deprecated; migrate to dot notation.
+	// Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+	// compatibility but is deprecated; migrate to dot notation.
 	Input types.String `tfsdk:"input"`
 }
 
@@ -23325,8 +23442,8 @@ func (m *Stream_SdkV2) SetSourceConfig(ctx context.Context, v StreamSourceConfig
 // Specifies how to connect and authenticate to the stream platform.
 type StreamConnectionConfig_SdkV2 struct {
 	// Direct mTLS configuration for stream platform access. This is only used
-	// in the short term until UC Kafka Connections support mTLS (XTA-18030).
-	// Once UC Kafka Connections support mTLS, this will be deprecated.
+	// in the short term until UC Kafka Connections support mTLS . Once UC Kafka
+	// Connections support mTLS, this will be deprecated.
 	DirectMtlsConfig types.List `tfsdk:"direct_mtls_config"`
 	// Name of an existing UC Connection for stream platform access. Must be the
 	// correct type for the streaming platform (e.g. a Kafka Connection for a
@@ -23525,6 +23642,60 @@ func (m *StreamSchemaConfig_SdkV2) SetDirectSchemas(ctx context.Context, v Direc
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["direct_schemas"]
 	m.DirectSchemas = types.ListValueMust(t, vs)
+}
+
+// A Stream entity used as a data source for a feature.
+type StreamSource_SdkV2 struct {
+	// The filter condition applied to the source data before aggregation.
+	FilterCondition types.String `tfsdk:"filter_condition"`
+	// Three-part full name of the Stream (catalog.schema.stream).
+	FullName types.String `tfsdk:"full_name"`
+}
+
+func (to *StreamSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamSource_SdkV2) {
+}
+
+func (to *StreamSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StreamSource_SdkV2) {
+}
+
+func (m StreamSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filter_condition"] = attrs["filter_condition"].SetOptional()
+	attrs["full_name"] = attrs["full_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StreamSource.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StreamSource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StreamSource_SdkV2
+// only implements ToObjectValue() and Type().
+func (m StreamSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"filter_condition": m.FilterCondition,
+			"full_name":        m.FullName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StreamSource_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"filter_condition": types.StringType,
+			"full_name":        types.StringType,
+		},
+	}
 }
 
 // Source-specific configuration. Determines the streaming platform source.
@@ -23740,9 +23911,9 @@ func (m SubscriptionMode_SdkV2) Type(ctx context.Context) attr.Type {
 type SumFunction_SdkV2 struct {
 	// The input column from which the sum is computed. For Kafka sources, use
 	// dot-prefixed path notation (e.g., "value.amount"). For nested fields, the
-	// leaf node name is used. TODO(FS-939): Colon-prefixed notation (e.g.,
-	// "value:amount") is supported for backwards compatibility but is
-	// deprecated; migrate to dot notation.
+	// leaf node name is used. Colon-prefixed notation (e.g., "value:amount") is
+	// supported for backwards compatibility but is deprecated; migrate to dot
+	// notation.
 	Input types.String `tfsdk:"input"`
 }
 
@@ -24197,9 +24368,9 @@ type TimeseriesColumn_SdkV2 struct {
 	// "value.event_timestamp"). For nested fields, the leaf node name (e.g.,
 	// "event_timestamp" from "value.event_details.event_timestamp") is what
 	// will be present in materialized tables and expected to match at query
-	// time. TODO(FS-939): Colon-prefixed notation (e.g.,
-	// "value:event_timestamp") is supported for backwards compatibility but is
-	// deprecated; migrate to dot notation.
+	// time. Colon-prefixed notation (e.g., "value:event_timestamp") is
+	// supported for backwards compatibility but is deprecated; migrate to dot
+	// notation.
 	Name types.String `tfsdk:"name"`
 }
 

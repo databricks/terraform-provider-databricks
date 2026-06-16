@@ -4,6 +4,7 @@ on:
 
   pull_request:
     types: [opened, synchronize]
+    branches: [main]
 
   merge_group:
 
@@ -31,6 +32,39 @@ jobs:
               echo "has_token=true" >> $GITHUB_OUTPUT
             fi
 
+  # Classify the PR diff. `inert_only` is 'true' iff every changed file is in
+  # the inert allowlist (docs, root *.md, issue templates, dependabot.yml,
+  # CODEOWNERS, LICENSE); in that case we skip the long integration-test
+  # dispatch in favor of posting a synthetic success check.
+  detect-changes:
+    name: Detect inert-only changes
+    if: github.event_name == 'pull_request'
+
+    runs-on:
+      group: databricks-deco-testing-runner-group
+      labels: ubuntu-latest-deco
+
+    outputs:
+      # paths-filter v3.0.2 doesn't support predicate-quantifier: 'every',
+      # so the filter computes "any non-inert file changed" and we invert
+      # here to expose the positive form the consumers want.
+      inert_only: ${{ steps.filter.outputs.non_inert == 'false' }}
+
+    steps:
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            non_inert:
+              - '**'
+              - '!docs/**'
+              - '!*.md'
+              - '!.github/ISSUE_TEMPLATE/**'
+              - '!.github/PULL_REQUEST_TEMPLATE.md'
+              - '!.github/dependabot.yml'
+              - '!CODEOWNERS'
+              - '!LICENSE'
+
   trigger-tests:
     name: Trigger Tests
 
@@ -38,8 +72,10 @@ jobs:
       group: databricks-release-runner-group-emu-access
       labels: linux-ubuntu-latest-emu-access
 
-    needs: check-token
-    if: github.event_name == 'pull_request'  && needs.check-token.outputs.has_token == 'true'
+    needs: [check-token, detect-changes]
+    if: github.event_name == 'pull_request'
+        && needs.check-token.outputs.has_token == 'true'
+        && needs.detect-changes.outputs.inert_only == 'false'
     environment: "test-trigger-is"
 
     steps:
@@ -63,7 +99,45 @@ jobs:
         -f pull_request_number=${{ github.event.pull_request.number }} \
         -f commit_sha=${{ github.event.pull_request.head.sha }}
 
+  # Inert-path PRs (docs only, etc.) do not warrant a 75-minute integration
+  # test run. When detect-changes finds no non-inert files, post a synthetic
+  # success for the required "Integration Tests" check directly, mirroring
+  # the auto-approve pattern used for merge_group below. The base.ref guard
+  # is belt-and-suspenders for the `branches: [main]` filter on the trigger.
+  skip-integration-tests:
+    name: Skip Integration Tests (inert paths only)
 
+    runs-on:
+      group: databricks-deco-testing-runner-group
+      labels: ubuntu-latest-deco
+
+    needs: [check-token, detect-changes]
+    if: github.event_name == 'pull_request'
+        && needs.check-token.outputs.has_token == 'true'
+        && needs.detect-changes.outputs.inert_only == 'true'
+        && github.event.pull_request.base.ref == 'main'
+
+    permissions:
+      checks: write
+      contents: read
+
+    steps:
+      - name: Post synthetic Integration Tests success
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'Integration Tests',
+              head_sha: context.payload.pull_request.head.sha,
+              status: 'completed',
+              conclusion: 'success',
+              output: {
+                title: 'Integration Tests',
+                summary: 'Skipped — only inert paths changed (docs/**, root *.md, issue templates, dependabot.yml, CODEOWNERS, LICENSE).'
+              }
+            });
 
   # Statuses and checks apply to specific commits (by hash).
   # Enforcement of required checks is done both at the PR level and the merge queue level.

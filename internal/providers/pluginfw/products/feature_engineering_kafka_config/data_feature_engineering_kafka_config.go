@@ -112,6 +112,9 @@ type KafkaConfigData struct {
 	// Catch-all for miscellaneous options. Keys should be source options or
 	// Kafka consumer options (kafka.*)
 	ExtraOptions types.Map `tfsdk:"extra_options"`
+	// Configuration for ingesting Kafka data into a Databricks-managed Delta
+	// table.
+	IngestionConfig types.Object `tfsdk:"ingestion_config"`
 	// Schema configuration for extracting message keys from topics. At least
 	// one of key_schema and value_schema must be provided.
 	KeySchema types.Object `tfsdk:"key_schema"`
@@ -139,6 +142,7 @@ func (m KafkaConfigData) GetComplexFieldTypes(ctx context.Context) map[string]re
 		"auth_config":       reflect.TypeOf(ml_tf.AuthConfig{}),
 		"backfill_source":   reflect.TypeOf(ml_tf.BackfillSource{}),
 		"extra_options":     reflect.TypeOf(types.String{}),
+		"ingestion_config":  reflect.TypeOf(ml_tf.IngestionConfig{}),
 		"key_schema":        reflect.TypeOf(ml_tf.SchemaConfig{}),
 		"subscription_mode": reflect.TypeOf(ml_tf.SubscriptionMode{}),
 		"value_schema":      reflect.TypeOf(ml_tf.SchemaConfig{}),
@@ -160,6 +164,7 @@ func (m KafkaConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"backfill_source":   m.BackfillSource,
 			"bootstrap_servers": m.BootstrapServers,
 			"extra_options":     m.ExtraOptions,
+			"ingestion_config":  m.IngestionConfig,
 			"key_schema":        m.KeySchema,
 			"name":              m.Name,
 			"subscription_mode": m.SubscriptionMode,
@@ -181,6 +186,7 @@ func (m KafkaConfigData) Type(ctx context.Context) attr.Type {
 			"extra_options": basetypes.MapType{
 				ElemType: types.StringType,
 			},
+			"ingestion_config":  ml_tf.IngestionConfig{}.Type(ctx),
 			"key_schema":        ml_tf.SchemaConfig{}.Type(ctx),
 			"name":              types.StringType,
 			"subscription_mode": ml_tf.SubscriptionMode{}.Type(ctx),
@@ -196,6 +202,7 @@ func (m KafkaConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["backfill_source"] = attrs["backfill_source"].SetComputed()
 	attrs["bootstrap_servers"] = attrs["bootstrap_servers"].SetComputed()
 	attrs["extra_options"] = attrs["extra_options"].SetComputed()
+	attrs["ingestion_config"] = attrs["ingestion_config"].SetComputed()
 	attrs["key_schema"] = attrs["key_schema"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["subscription_mode"] = attrs["subscription_mode"].SetComputed()

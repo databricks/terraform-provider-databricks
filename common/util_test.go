@@ -36,6 +36,20 @@ func TestSuppressDiffWhitespaceChange(t *testing.T) {
 	assert.False(t, SuppressDiffWhitespaceChange("k", "value", "new_value", nil))
 }
 
+func TestSuppressDiffWhitespaceAndEmptyLines(t *testing.T) {
+	assert.True(t, SuppressDiffWhitespaceAndEmptyLines("k", "value", "  value  ", nil))
+	assert.False(t, SuppressDiffWhitespaceAndEmptyLines("k", "value", "new_value", nil))
+	assert.True(t, SuppressDiffWhitespaceAndEmptyLines("k", "  value\n", "\nvalue  ", nil))
+	assert.False(t, SuppressDiffWhitespaceAndEmptyLines("k", "line1\nline2", "line1line2", nil))
+	assert.True(t, SuppressDiffWhitespaceAndEmptyLines("k", " line1\n\n\nline2 ", "\nline1\nline2\n", nil))
+	assert.True(t, SuppressDiffWhitespaceAndEmptyLines("k", "line1\n\nline2", "   line1\nline2   ", nil))
+	assert.True(t, SuppressDiffWhitespaceAndEmptyLines("k", "SELECT id, name FROM somewhere", "SELECT  id, name \n\n FROM  somewhere", nil))
+	assert.True(t, SuppressDiffWhitespaceAndEmptyLines("k", "SELECT\tid\r\nFROM table", "SELECT id FROM table", nil))
+	assert.False(t, SuppressDiffWhitespaceAndEmptyLines("k", "SELECT id FROM table", "SELECT name FROM table", nil))
+	assert.False(t, SuppressDiffWhitespaceAndEmptyLines("k", "SELECT 'a  b'", "SELECT 'a b'", nil))
+	assert.False(t, SuppressDiffWhitespaceAndEmptyLines("k", "SELECT `a  b`", "SELECT `a b`", nil))
+}
+
 func TestMustInt64(t *testing.T) {
 	assert.Equal(t, int64(123), MustInt64("123"))
 }

@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 
@@ -44,6 +45,47 @@ func IsExporter(ctx context.Context) bool {
 func SuppressDiffWhitespaceChange(k, old, new string, d *schema.ResourceData) bool {
 	log.Printf("[DEBUG] Suppressing diff for %v: old=%#v new=%#v", k, old, new)
 	return strings.TrimSpace(old) == strings.TrimSpace(new)
+}
+
+func NormalizeWhitespaceAndEmptyLines(s string) string {
+	var b strings.Builder
+	var quote rune
+	pendingSpace := false
+
+	for _, r := range s {
+		if quote != 0 {
+			b.WriteRune(r)
+			if r == quote {
+				quote = 0
+			}
+			continue
+		}
+
+		switch {
+		case r == '\'' || r == '"' || r == '`':
+			if pendingSpace && b.Len() > 0 {
+				b.WriteRune(' ')
+			}
+			pendingSpace = false
+			quote = r
+			b.WriteRune(r)
+		case unicode.IsSpace(r):
+			pendingSpace = b.Len() > 0
+		default:
+			if pendingSpace {
+				b.WriteRune(' ')
+			}
+			pendingSpace = false
+			b.WriteRune(r)
+		}
+	}
+
+	return b.String()
+}
+
+func SuppressDiffWhitespaceAndEmptyLines(k, old, new string, d *schema.ResourceData) bool {
+	log.Printf("[DEBUG] Suppressing diff for %v due to potential whitespace and empty line differences: old=%#v new=%#v", k, old, new)
+	return NormalizeWhitespaceAndEmptyLines(old) == NormalizeWhitespaceAndEmptyLines(new)
 }
 
 func MustInt64(s string) int64 {

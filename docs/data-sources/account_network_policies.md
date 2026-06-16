@@ -119,7 +119,8 @@ This data source exports a single attribute, `items`. It is a list of resources,
 
 ### CustomerFacingIngressNetworkPolicyRequestDestination
 * `account_api` (CustomerFacingIngressNetworkPolicyAccountApiDestination)
-* `account_databricks_one` (CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination)
+* `account_databricks_one` (CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination) - Account DatabricksOne destination is not supported.
+  DO NOT change the stage of this destination past PRIVATE_PREVIEW
 * `account_ui` (CustomerFacingIngressNetworkPolicyAccountUiDestination)
 * `all_destinations` (boolean) - When true, match all destinations, no other destination fields can be set.
   When not set or false, at least one specific destination must be provided
@@ -139,6 +140,8 @@ This data source exports a single attribute, `items`. It is a list of resources,
 * `all_destinations` (boolean) - Must be set to true
 
 ### EgressNetworkPolicyNetworkAccessPolicy
+* `allowed_databricks_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyDatabricksDestination) - List of Databricks workspace destinations that serverless workloads are
+  allowed to access when in RESTRICTED_ACCESS mode
 * `allowed_internet_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyInternetDestination) - List of internet destinations that serverless workloads are allowed to access when in RESTRICTED_ACCESS mode
 * `allowed_storage_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyStorageDestination) - List of storage destinations that serverless workloads are allowed to access when in RESTRICTED_ACCESS mode
 * `blocked_internet_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyInternetDestination) - List of internet destinations that serverless workloads are blocked from accessing.
@@ -146,6 +149,9 @@ This data source exports a single attribute, `items`. It is a list of resources,
   Currently supports DNS_NAME type only; IP_RANGE support is planned
 * `policy_enforcement` (EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) - Optional. When policy_enforcement is not provided, we default to ENFORCE_MODE_ALL_SERVICES
 * `restriction_mode` (string) - The restriction mode that controls how serverless workloads can access the internet. Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
+
+### EgressNetworkPolicyNetworkAccessPolicyDatabricksDestination
+* `workspace_ids` (list of integer) - The workspace IDs to allow egress traffic to
 
 ### EgressNetworkPolicyNetworkAccessPolicyInternetDestination
 * `destination` (string) - The internet destination to which access will be allowed. Format dependent on the destination type

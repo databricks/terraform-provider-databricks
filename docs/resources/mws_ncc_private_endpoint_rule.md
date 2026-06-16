@@ -3,6 +3,8 @@ subcategory: "Deployment"
 ---
 # databricks_mws_ncc_private_endpoint_rule Resource
 
+[API Documentation](https://docs.databricks.com/api/account/networkconnectivity)
+
 Allows you to create a private endpoint in a [Network Connectivity Config](mws_network_connectivity_config.md) that can be used to [configure private connectivity from serverless compute](https://learn.microsoft.com/en-us/azure/databricks/security/network/serverless-network-security/serverless-private-link).
 
 -> This resource can only be used with an account-level provider!

@@ -75,7 +75,7 @@ This data source exports a single attribute, `features`. It is a list of resourc
 ### AvgFunction
 * `input` (string) - The input column from which the average is computed. For Kafka sources, use dot-prefixed path
   notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### ColumnIdentifier
@@ -92,13 +92,14 @@ This data source exports a single attribute, `features`. It is a list of resourc
 ### CountFunction
 * `input` (string) - The input column from which the count is computed. For Kafka sources, use dot-prefixed path
   notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### DataSource
 * `delta_table_source` (DeltaTableSource) - A Delta table data source
 * `kafka_source` (KafkaSource) - A Kafka stream data source
 * `request_source` (RequestSource) - A request-time data source
+* `stream_source` (StreamSource) - A Stream data source
 
 ### DeltaTableSource
 * `dataframe_schema` (string) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
@@ -119,7 +120,7 @@ This data source exports a single attribute, `features`. It is a list of resourc
   fields within the key or value schema (e.g., "value.user_id", "key.partition_key"). For nested
   fields, the leaf node name (e.g., "user_id" from "value.trip_details.user_id") is what will
   be present in materialized tables and expected to match at query time.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:user_id") is supported for backwards
+  Colon-prefixed notation (e.g., "value:user_id") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### FieldDefinition
@@ -184,16 +185,20 @@ This data source exports a single attribute, `features`. It is a list of resourc
 ### StddevPopFunction
 * `input` (string) - The input column from which the population standard deviation is computed. For Kafka sources,
   use dot-prefixed path notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### StddevSampFunction
 * `input` (string) - The input column from which the sample standard deviation is computed
 
+### StreamSource
+* `filter_condition` (string) - The filter condition applied to the source data before aggregation
+* `full_name` (string) - Three-part full name of the Stream (catalog.schema.stream)
+
 ### SumFunction
 * `input` (string) - The input column from which the sum is computed. For Kafka sources, use dot-prefixed path
   notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### TimeWindow
@@ -207,7 +212,7 @@ This data source exports a single attribute, `features`. It is a list of resourc
   reference fields within the key or value schema (e.g., "value.event_timestamp"). For nested
   fields, the leaf node name (e.g., "event_timestamp" from "value.event_details.event_timestamp")
   is what will be present in materialized tables and expected to match at query time.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:event_timestamp") is supported for
+  Colon-prefixed notation (e.g., "value:event_timestamp") is supported for
   backwards compatibility but is deprecated; migrate to dot notation
 
 ### TumblingWindow

@@ -1,0 +1,42 @@
+name: Close stale pull requests
+
+on:
+  schedule:
+    - cron: "30 5 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Log actions without commenting or closing PRs"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on:
+      group: databricks-deco-testing-runner-group
+      labels: ubuntu-latest-deco
+
+    steps:
+      - uses: actions/stale@eb5cf3af3ac0a1aa4c9c45633dd1ae542a27a899 # v10.3.0
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
+          days-before-pr-stale: 180
+          days-before-pr-close: 30
+          stale-pr-label: "stale"
+          exempt-pr-labels: "merge-hold"
+          operations-per-run: 30
+          ascending: true
+          debug-only: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          stale-pr-message: |
+            Marking this pull request as stale because it has been open for 180 days with no activity. This helps our maintainers find and focus on the active pull requests. If this pull request receives no comments or updates in the next 30 days it will automatically be closed. Maintainers can also remove the stale label.
+
+            If this pull request was automatically closed and you feel this pull request should be reopened, we encourage creating a new pull request linking back to this one for added context. Thank you!
+          close-pr-message: |
+            Closing this pull request due to inactivity. If you feel this pull request should be reopened, we encourage creating a new pull request linking back to this one for added context. Thank you!

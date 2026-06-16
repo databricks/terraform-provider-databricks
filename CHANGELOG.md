@@ -1,5 +1,12 @@
 # Version changelog
 
+## Release v1.117.0 (2026-06-03)
+
+### Bug Fixes
+
+* Fix `databricks_external_location` so that creating a resource with `enable_file_events = false` is sent in the POST request. Previously the field was silently dropped (Go SDK marshals the bool with `omitempty`), so the server applied its `true` default and `effective_enable_file_events` came back `true`.
+
+
 ## Release v1.116.0 (2026-05-28)
 
 ### New Features and Improvements

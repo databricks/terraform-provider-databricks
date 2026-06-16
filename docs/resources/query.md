@@ -3,6 +3,8 @@ subcategory: "Databricks SQL"
 ---
 # databricks_query Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/queries)
+
 This resource allows you to manage [Databricks SQL Queries](https://docs.databricks.com/en/sql/user/queries/index.html).  It supersedes [databricks_sql_query](sql_query.md) resource - see migration guide below for more details.
 
 -> This resource can only be used with a workspace-level provider!

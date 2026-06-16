@@ -34,7 +34,7 @@ type AccessRequestDestinations struct {
 	// securable) or the nearest parent securable with destinations set.
 	DestinationSourceSecurable types.Object `tfsdk:"destination_source_securable"`
 	// The access request destinations for the securable.
-	Destinations types.List `tfsdk:"destinations"`
+	Destinations types.Set `tfsdk:"destinations"`
 	// The full name of the securable. Redundant with the name in the securable
 	// object, but necessary for Terraform integration
 	FullName types.String `tfsdk:"full_name"`
@@ -146,7 +146,7 @@ func (m AccessRequestDestinations) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"are_any_destinations_hidden":  types.BoolType,
 			"destination_source_securable": Securable{}.Type(ctx),
-			"destinations": basetypes.ListType{
+			"destinations": basetypes.SetType{
 				ElemType: NotificationDestination{}.Type(ctx),
 			},
 			"full_name":      types.StringType,
@@ -204,7 +204,7 @@ func (m *AccessRequestDestinations) SetDestinations(ctx context.Context, v []Not
 	}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["destinations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	m.Destinations = types.ListValueMust(t, vs)
+	m.Destinations = types.SetValueMust(t, vs)
 }
 
 // GetSecurable returns the value of the Securable field in AccessRequestDestinations as
@@ -3059,6 +3059,8 @@ type CatalogInfo struct {
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of catalog creator.
 	CreatedBy types.String `tfsdk:"created_by"`
+	// Custom maximum retention period in hours for the catalog
+	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
 
 	EffectivePredictiveOptimizationFlag types.Object `tfsdk:"effective_predictive_optimization_flag"`
 	// Whether predictive optimization should be enabled for this object and
@@ -3166,6 +3168,7 @@ func (m CatalogInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["connection_name"] = attrs["connection_name"].SetOptional()
 	attrs["created_at"] = attrs["created_at"].SetOptional()
 	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["custom_max_retention_hours"] = attrs["custom_max_retention_hours"].SetOptional()
 	attrs["effective_predictive_optimization_flag"] = attrs["effective_predictive_optimization_flag"].SetOptional()
 	attrs["enable_predictive_optimization"] = attrs["enable_predictive_optimization"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetOptional()
@@ -3218,6 +3221,7 @@ func (m CatalogInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"connection_name":                        m.ConnectionName,
 			"created_at":                             m.CreatedAt,
 			"created_by":                             m.CreatedBy,
+			"custom_max_retention_hours":             m.CustomMaxRetentionHours,
 			"effective_predictive_optimization_flag": m.EffectivePredictiveOptimizationFlag,
 			"enable_predictive_optimization":         m.EnablePredictiveOptimization,
 			"full_name":                              m.FullName,
@@ -3249,6 +3253,7 @@ func (m CatalogInfo) Type(ctx context.Context) attr.Type {
 			"connection_name":                        types.StringType,
 			"created_at":                             types.Int64Type,
 			"created_by":                             types.StringType,
+			"custom_max_retention_hours":             types.Int64Type,
 			"effective_predictive_optimization_flag": EffectivePredictiveOptimizationFlag{}.Type(ctx),
 			"enable_predictive_optimization":         types.StringType,
 			"full_name":                              types.StringType,
@@ -3978,6 +3983,9 @@ type ConnectionInfo struct {
 	CreatedBy types.String `tfsdk:"created_by"`
 	// The type of credential.
 	CredentialType types.String `tfsdk:"credential_type"`
+	// [Create,Update:OPT] Connection environment settings as
+	// EnvironmentSettings object.
+	EnvironmentSettings types.Object `tfsdk:"environment_settings"`
 	// Full name of connection.
 	FullName types.String `tfsdk:"full_name"`
 	// Unique identifier of parent metastore.
@@ -4005,6 +4013,15 @@ type ConnectionInfo struct {
 }
 
 func (to *ConnectionInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ConnectionInfo) {
+	if !from.EnvironmentSettings.IsNull() && !from.EnvironmentSettings.IsUnknown() {
+		if toEnvironmentSettings, ok := to.GetEnvironmentSettings(ctx); ok {
+			if fromEnvironmentSettings, ok := from.GetEnvironmentSettings(ctx); ok {
+				// Recursively sync the fields of EnvironmentSettings
+				toEnvironmentSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromEnvironmentSettings)
+				to.SetEnvironmentSettings(ctx, toEnvironmentSettings)
+			}
+		}
+	}
 	if !from.ProvisioningInfo.IsNull() && !from.ProvisioningInfo.IsUnknown() {
 		if toProvisioningInfo, ok := to.GetProvisioningInfo(ctx); ok {
 			if fromProvisioningInfo, ok := from.GetProvisioningInfo(ctx); ok {
@@ -4017,6 +4034,14 @@ func (to *ConnectionInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 }
 
 func (to *ConnectionInfo) SyncFieldsDuringRead(ctx context.Context, from ConnectionInfo) {
+	if !from.EnvironmentSettings.IsNull() && !from.EnvironmentSettings.IsUnknown() {
+		if toEnvironmentSettings, ok := to.GetEnvironmentSettings(ctx); ok {
+			if fromEnvironmentSettings, ok := from.GetEnvironmentSettings(ctx); ok {
+				toEnvironmentSettings.SyncFieldsDuringRead(ctx, fromEnvironmentSettings)
+				to.SetEnvironmentSettings(ctx, toEnvironmentSettings)
+			}
+		}
+	}
 	if !from.ProvisioningInfo.IsNull() && !from.ProvisioningInfo.IsUnknown() {
 		if toProvisioningInfo, ok := to.GetProvisioningInfo(ctx); ok {
 			if fromProvisioningInfo, ok := from.GetProvisioningInfo(ctx); ok {
@@ -4034,6 +4059,7 @@ func (m ConnectionInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["created_at"] = attrs["created_at"].SetOptional()
 	attrs["created_by"] = attrs["created_by"].SetOptional()
 	attrs["credential_type"] = attrs["credential_type"].SetOptional()
+	attrs["environment_settings"] = attrs["environment_settings"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetOptional()
 	attrs["metastore_id"] = attrs["metastore_id"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -4059,9 +4085,10 @@ func (m ConnectionInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // SDK values.
 func (m ConnectionInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"options":           reflect.TypeOf(types.String{}),
-		"properties":        reflect.TypeOf(types.String{}),
-		"provisioning_info": reflect.TypeOf(ProvisioningInfo{}),
+		"environment_settings": reflect.TypeOf(EnvironmentSettings{}),
+		"options":              reflect.TypeOf(types.String{}),
+		"properties":           reflect.TypeOf(types.String{}),
+		"provisioning_info":    reflect.TypeOf(ProvisioningInfo{}),
 	}
 }
 
@@ -4072,24 +4099,25 @@ func (m ConnectionInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"comment":           m.Comment,
-			"connection_id":     m.ConnectionId,
-			"connection_type":   m.ConnectionType,
-			"created_at":        m.CreatedAt,
-			"created_by":        m.CreatedBy,
-			"credential_type":   m.CredentialType,
-			"full_name":         m.FullName,
-			"metastore_id":      m.MetastoreId,
-			"name":              m.Name,
-			"options":           m.Options,
-			"owner":             m.Owner,
-			"properties":        m.Properties,
-			"provisioning_info": m.ProvisioningInfo,
-			"read_only":         m.ReadOnly,
-			"securable_type":    m.SecurableType,
-			"updated_at":        m.UpdatedAt,
-			"updated_by":        m.UpdatedBy,
-			"url":               m.Url,
+			"comment":              m.Comment,
+			"connection_id":        m.ConnectionId,
+			"connection_type":      m.ConnectionType,
+			"created_at":           m.CreatedAt,
+			"created_by":           m.CreatedBy,
+			"credential_type":      m.CredentialType,
+			"environment_settings": m.EnvironmentSettings,
+			"full_name":            m.FullName,
+			"metastore_id":         m.MetastoreId,
+			"name":                 m.Name,
+			"options":              m.Options,
+			"owner":                m.Owner,
+			"properties":           m.Properties,
+			"provisioning_info":    m.ProvisioningInfo,
+			"read_only":            m.ReadOnly,
+			"securable_type":       m.SecurableType,
+			"updated_at":           m.UpdatedAt,
+			"updated_by":           m.UpdatedBy,
+			"url":                  m.Url,
 		})
 }
 
@@ -4097,15 +4125,16 @@ func (m ConnectionInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (m ConnectionInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment":         types.StringType,
-			"connection_id":   types.StringType,
-			"connection_type": types.StringType,
-			"created_at":      types.Int64Type,
-			"created_by":      types.StringType,
-			"credential_type": types.StringType,
-			"full_name":       types.StringType,
-			"metastore_id":    types.StringType,
-			"name":            types.StringType,
+			"comment":              types.StringType,
+			"connection_id":        types.StringType,
+			"connection_type":      types.StringType,
+			"created_at":           types.Int64Type,
+			"created_by":           types.StringType,
+			"credential_type":      types.StringType,
+			"environment_settings": EnvironmentSettings{}.Type(ctx),
+			"full_name":            types.StringType,
+			"metastore_id":         types.StringType,
+			"name":                 types.StringType,
 			"options": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -4121,6 +4150,31 @@ func (m ConnectionInfo) Type(ctx context.Context) attr.Type {
 			"url":               types.StringType,
 		},
 	}
+}
+
+// GetEnvironmentSettings returns the value of the EnvironmentSettings field in ConnectionInfo as
+// a EnvironmentSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectionInfo) GetEnvironmentSettings(ctx context.Context) (EnvironmentSettings, bool) {
+	var e EnvironmentSettings
+	if m.EnvironmentSettings.IsNull() || m.EnvironmentSettings.IsUnknown() {
+		return e, false
+	}
+	var v EnvironmentSettings
+	d := m.EnvironmentSettings.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironmentSettings sets the value of the EnvironmentSettings field in ConnectionInfo.
+func (m *ConnectionInfo) SetEnvironmentSettings(ctx context.Context, v EnvironmentSettings) {
+	vs := v.ToObjectValue(ctx)
+	m.EnvironmentSettings = vs
 }
 
 // GetOptions returns the value of the Options field in ConnectionInfo as
@@ -4968,6 +5022,8 @@ type CreateCatalog struct {
 	Comment types.String `tfsdk:"comment"`
 	// The name of the connection to an external data source.
 	ConnectionName types.String `tfsdk:"connection_name"`
+	// Custom maximum retention period in hours for the catalog
+	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
 	// Control CMK encryption for managed catalog data
 	ManagedEncryptionSettings types.Object `tfsdk:"managed_encryption_settings"`
 	// Name of catalog.
@@ -5013,6 +5069,7 @@ func (to *CreateCatalog) SyncFieldsDuringRead(ctx context.Context, from CreateCa
 func (m CreateCatalog) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["connection_name"] = attrs["connection_name"].SetOptional()
+	attrs["custom_max_retention_hours"] = attrs["custom_max_retention_hours"].SetOptional()
 	attrs["managed_encryption_settings"] = attrs["managed_encryption_settings"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["options"] = attrs["options"].SetOptional()
@@ -5048,6 +5105,7 @@ func (m CreateCatalog) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 		map[string]attr.Value{
 			"comment":                     m.Comment,
 			"connection_name":             m.ConnectionName,
+			"custom_max_retention_hours":  m.CustomMaxRetentionHours,
 			"managed_encryption_settings": m.ManagedEncryptionSettings,
 			"name":                        m.Name,
 			"options":                     m.Options,
@@ -5064,6 +5122,7 @@ func (m CreateCatalog) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"comment":                     types.StringType,
 			"connection_name":             types.StringType,
+			"custom_max_retention_hours":  types.Int64Type,
 			"managed_encryption_settings": EncryptionSettings{}.Type(ctx),
 			"name":                        types.StringType,
 			"options": basetypes.MapType{
@@ -5161,6 +5220,9 @@ type CreateConnection struct {
 	Comment types.String `tfsdk:"comment"`
 	// The type of connection.
 	ConnectionType types.String `tfsdk:"connection_type"`
+	// [Create,Update:OPT] Connection environment settings as
+	// EnvironmentSettings object.
+	EnvironmentSettings types.Object `tfsdk:"environment_settings"`
 	// Name of the connection.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
@@ -5172,14 +5234,32 @@ type CreateConnection struct {
 }
 
 func (to *CreateConnection) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateConnection) {
+	if !from.EnvironmentSettings.IsNull() && !from.EnvironmentSettings.IsUnknown() {
+		if toEnvironmentSettings, ok := to.GetEnvironmentSettings(ctx); ok {
+			if fromEnvironmentSettings, ok := from.GetEnvironmentSettings(ctx); ok {
+				// Recursively sync the fields of EnvironmentSettings
+				toEnvironmentSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromEnvironmentSettings)
+				to.SetEnvironmentSettings(ctx, toEnvironmentSettings)
+			}
+		}
+	}
 }
 
 func (to *CreateConnection) SyncFieldsDuringRead(ctx context.Context, from CreateConnection) {
+	if !from.EnvironmentSettings.IsNull() && !from.EnvironmentSettings.IsUnknown() {
+		if toEnvironmentSettings, ok := to.GetEnvironmentSettings(ctx); ok {
+			if fromEnvironmentSettings, ok := from.GetEnvironmentSettings(ctx); ok {
+				toEnvironmentSettings.SyncFieldsDuringRead(ctx, fromEnvironmentSettings)
+				to.SetEnvironmentSettings(ctx, toEnvironmentSettings)
+			}
+		}
+	}
 }
 
 func (m CreateConnection) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["connection_type"] = attrs["connection_type"].SetRequired()
+	attrs["environment_settings"] = attrs["environment_settings"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["options"] = attrs["options"].SetRequired()
 	attrs["properties"] = attrs["properties"].SetOptional()
@@ -5197,8 +5277,9 @@ func (m CreateConnection) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (m CreateConnection) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"options":    reflect.TypeOf(types.String{}),
-		"properties": reflect.TypeOf(types.String{}),
+		"environment_settings": reflect.TypeOf(EnvironmentSettings{}),
+		"options":              reflect.TypeOf(types.String{}),
+		"properties":           reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -5209,12 +5290,13 @@ func (m CreateConnection) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"comment":         m.Comment,
-			"connection_type": m.ConnectionType,
-			"name":            m.Name,
-			"options":         m.Options,
-			"properties":      m.Properties,
-			"read_only":       m.ReadOnly,
+			"comment":              m.Comment,
+			"connection_type":      m.ConnectionType,
+			"environment_settings": m.EnvironmentSettings,
+			"name":                 m.Name,
+			"options":              m.Options,
+			"properties":           m.Properties,
+			"read_only":            m.ReadOnly,
 		})
 }
 
@@ -5222,9 +5304,10 @@ func (m CreateConnection) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m CreateConnection) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment":         types.StringType,
-			"connection_type": types.StringType,
-			"name":            types.StringType,
+			"comment":              types.StringType,
+			"connection_type":      types.StringType,
+			"environment_settings": EnvironmentSettings{}.Type(ctx),
+			"name":                 types.StringType,
 			"options": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -5234,6 +5317,31 @@ func (m CreateConnection) Type(ctx context.Context) attr.Type {
 			"read_only": types.BoolType,
 		},
 	}
+}
+
+// GetEnvironmentSettings returns the value of the EnvironmentSettings field in CreateConnection as
+// a EnvironmentSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateConnection) GetEnvironmentSettings(ctx context.Context) (EnvironmentSettings, bool) {
+	var e EnvironmentSettings
+	if m.EnvironmentSettings.IsNull() || m.EnvironmentSettings.IsUnknown() {
+		return e, false
+	}
+	var v EnvironmentSettings
+	d := m.EnvironmentSettings.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironmentSettings sets the value of the EnvironmentSettings field in CreateConnection.
+func (m *CreateConnection) SetEnvironmentSettings(ctx context.Context, v EnvironmentSettings) {
+	vs := v.ToObjectValue(ctx)
+	m.EnvironmentSettings = vs
 }
 
 // GetOptions returns the value of the Options field in CreateConnection as
@@ -7614,6 +7722,8 @@ type CreateSchema struct {
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
+	// Custom maximum retention period in hours for the schema.
+	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
 	// Name of schema, relative to parent catalog.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
@@ -7631,6 +7741,7 @@ func (to *CreateSchema) SyncFieldsDuringRead(ctx context.Context, from CreateSch
 func (m CreateSchema) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
 	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["custom_max_retention_hours"] = attrs["custom_max_retention_hours"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["properties"] = attrs["properties"].SetOptional()
 	attrs["storage_root"] = attrs["storage_root"].SetOptional()
@@ -7658,11 +7769,12 @@ func (m CreateSchema) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"catalog_name": m.CatalogName,
-			"comment":      m.Comment,
-			"name":         m.Name,
-			"properties":   m.Properties,
-			"storage_root": m.StorageRoot,
+			"catalog_name":               m.CatalogName,
+			"comment":                    m.Comment,
+			"custom_max_retention_hours": m.CustomMaxRetentionHours,
+			"name":                       m.Name,
+			"properties":                 m.Properties,
+			"storage_root":               m.StorageRoot,
 		})
 }
 
@@ -7670,9 +7782,10 @@ func (m CreateSchema) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m CreateSchema) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"catalog_name": types.StringType,
-			"comment":      types.StringType,
-			"name":         types.StringType,
+			"catalog_name":               types.StringType,
+			"comment":                    types.StringType,
+			"custom_max_retention_hours": types.Int64Type,
+			"name":                       types.StringType,
 			"properties": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -11899,6 +12012,100 @@ func (m EntityTagAssignment) Type(ctx context.Context) attr.Type {
 			"updated_by":  types.StringType,
 		},
 	}
+}
+
+type EnvironmentSettings struct {
+	EnvironmentVersion types.String `tfsdk:"environment_version"`
+
+	JavaDependencies types.List `tfsdk:"java_dependencies"`
+}
+
+func (to *EnvironmentSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EnvironmentSettings) {
+	if !from.JavaDependencies.IsNull() && !from.JavaDependencies.IsUnknown() && to.JavaDependencies.IsNull() && len(from.JavaDependencies.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JavaDependencies, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JavaDependencies = from.JavaDependencies
+	}
+}
+
+func (to *EnvironmentSettings) SyncFieldsDuringRead(ctx context.Context, from EnvironmentSettings) {
+	if !from.JavaDependencies.IsNull() && !from.JavaDependencies.IsUnknown() && to.JavaDependencies.IsNull() && len(from.JavaDependencies.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JavaDependencies, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JavaDependencies = from.JavaDependencies
+	}
+}
+
+func (m EnvironmentSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["environment_version"] = attrs["environment_version"].SetOptional()
+	attrs["java_dependencies"] = attrs["java_dependencies"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EnvironmentSettings.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m EnvironmentSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"java_dependencies": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EnvironmentSettings
+// only implements ToObjectValue() and Type().
+func (m EnvironmentSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"environment_version": m.EnvironmentVersion,
+			"java_dependencies":   m.JavaDependencies,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m EnvironmentSettings) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"environment_version": types.StringType,
+			"java_dependencies": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetJavaDependencies returns the value of the JavaDependencies field in EnvironmentSettings as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EnvironmentSettings) GetJavaDependencies(ctx context.Context) ([]types.String, bool) {
+	if m.JavaDependencies.IsNull() || m.JavaDependencies.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.JavaDependencies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJavaDependencies sets the value of the JavaDependencies field in EnvironmentSettings.
+func (m *EnvironmentSettings) SetJavaDependencies(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["java_dependencies"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.JavaDependencies = types.ListValueMust(t, vs)
 }
 
 type ExistsRequest struct {
@@ -26903,6 +27110,8 @@ type SchemaInfo struct {
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of schema creator.
 	CreatedBy types.String `tfsdk:"created_by"`
+	// Custom maximum retention period in hours for the schema.
+	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
 
 	EffectivePredictiveOptimizationFlag types.Object `tfsdk:"effective_predictive_optimization_flag"`
 	// Whether predictive optimization should be enabled for this object and
@@ -26960,6 +27169,7 @@ func (m SchemaInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["created_at"] = attrs["created_at"].SetOptional()
 	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["custom_max_retention_hours"] = attrs["custom_max_retention_hours"].SetOptional()
 	attrs["effective_predictive_optimization_flag"] = attrs["effective_predictive_optimization_flag"].SetOptional()
 	attrs["enable_predictive_optimization"] = attrs["enable_predictive_optimization"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetOptional()
@@ -27003,6 +27213,7 @@ func (m SchemaInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"comment":                                m.Comment,
 			"created_at":                             m.CreatedAt,
 			"created_by":                             m.CreatedBy,
+			"custom_max_retention_hours":             m.CustomMaxRetentionHours,
 			"effective_predictive_optimization_flag": m.EffectivePredictiveOptimizationFlag,
 			"enable_predictive_optimization":         m.EnablePredictiveOptimization,
 			"full_name":                              m.FullName,
@@ -27028,6 +27239,7 @@ func (m SchemaInfo) Type(ctx context.Context) attr.Type {
 			"comment":                                types.StringType,
 			"created_at":                             types.Int64Type,
 			"created_by":                             types.StringType,
+			"custom_max_retention_hours":             types.Int64Type,
 			"effective_predictive_optimization_flag": EffectivePredictiveOptimizationFlag{}.Type(ctx),
 			"enable_predictive_optimization":         types.StringType,
 			"full_name":                              types.StringType,
@@ -30471,6 +30683,8 @@ func (m UpdateAssignmentResponse) Type(ctx context.Context) attr.Type {
 type UpdateCatalog struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
+	// Custom maximum retention period in hours for the catalog
+	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
 	// Whether predictive optimization should be enabled for this object and
 	// objects under it.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization"`
@@ -30516,6 +30730,7 @@ func (to *UpdateCatalog) SyncFieldsDuringRead(ctx context.Context, from UpdateCa
 
 func (m UpdateCatalog) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["custom_max_retention_hours"] = attrs["custom_max_retention_hours"].SetOptional()
 	attrs["enable_predictive_optimization"] = attrs["enable_predictive_optimization"].SetOptional()
 	attrs["isolation_mode"] = attrs["isolation_mode"].SetOptional()
 	attrs["managed_encryption_settings"] = attrs["managed_encryption_settings"].SetOptional()
@@ -30551,6 +30766,7 @@ func (m UpdateCatalog) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"comment":                        m.Comment,
+			"custom_max_retention_hours":     m.CustomMaxRetentionHours,
 			"enable_predictive_optimization": m.EnablePredictiveOptimization,
 			"isolation_mode":                 m.IsolationMode,
 			"managed_encryption_settings":    m.ManagedEncryptionSettings,
@@ -30567,6 +30783,7 @@ func (m UpdateCatalog) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"comment":                        types.StringType,
+			"custom_max_retention_hours":     types.Int64Type,
 			"enable_predictive_optimization": types.StringType,
 			"isolation_mode":                 types.StringType,
 			"managed_encryption_settings":    EncryptionSettings{}.Type(ctx),
@@ -30751,6 +30968,9 @@ func (m *UpdateCatalogWorkspaceBindingsResponse) SetWorkspaces(ctx context.Conte
 }
 
 type UpdateConnection struct {
+	// [Create,Update:OPT] Connection environment settings as
+	// EnvironmentSettings object.
+	EnvironmentSettings types.Object `tfsdk:"environment_settings"`
 	// Name of the connection.
 	Name types.String `tfsdk:"-"`
 	// New name for the connection.
@@ -30762,12 +30982,30 @@ type UpdateConnection struct {
 }
 
 func (to *UpdateConnection) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateConnection) {
+	if !from.EnvironmentSettings.IsNull() && !from.EnvironmentSettings.IsUnknown() {
+		if toEnvironmentSettings, ok := to.GetEnvironmentSettings(ctx); ok {
+			if fromEnvironmentSettings, ok := from.GetEnvironmentSettings(ctx); ok {
+				// Recursively sync the fields of EnvironmentSettings
+				toEnvironmentSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromEnvironmentSettings)
+				to.SetEnvironmentSettings(ctx, toEnvironmentSettings)
+			}
+		}
+	}
 }
 
 func (to *UpdateConnection) SyncFieldsDuringRead(ctx context.Context, from UpdateConnection) {
+	if !from.EnvironmentSettings.IsNull() && !from.EnvironmentSettings.IsUnknown() {
+		if toEnvironmentSettings, ok := to.GetEnvironmentSettings(ctx); ok {
+			if fromEnvironmentSettings, ok := from.GetEnvironmentSettings(ctx); ok {
+				toEnvironmentSettings.SyncFieldsDuringRead(ctx, fromEnvironmentSettings)
+				to.SetEnvironmentSettings(ctx, toEnvironmentSettings)
+			}
+		}
+	}
 }
 
 func (m UpdateConnection) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["environment_settings"] = attrs["environment_settings"].SetOptional()
 	attrs["new_name"] = attrs["new_name"].SetOptional()
 	attrs["options"] = attrs["options"].SetRequired()
 	attrs["owner"] = attrs["owner"].SetOptional()
@@ -30785,7 +31023,8 @@ func (m UpdateConnection) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (m UpdateConnection) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"options": reflect.TypeOf(types.String{}),
+		"environment_settings": reflect.TypeOf(EnvironmentSettings{}),
+		"options":              reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -30796,10 +31035,11 @@ func (m UpdateConnection) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"name":     m.Name,
-			"new_name": m.NewName,
-			"options":  m.Options,
-			"owner":    m.Owner,
+			"environment_settings": m.EnvironmentSettings,
+			"name":                 m.Name,
+			"new_name":             m.NewName,
+			"options":              m.Options,
+			"owner":                m.Owner,
 		})
 }
 
@@ -30807,14 +31047,40 @@ func (m UpdateConnection) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m UpdateConnection) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name":     types.StringType,
-			"new_name": types.StringType,
+			"environment_settings": EnvironmentSettings{}.Type(ctx),
+			"name":                 types.StringType,
+			"new_name":             types.StringType,
 			"options": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"owner": types.StringType,
 		},
 	}
+}
+
+// GetEnvironmentSettings returns the value of the EnvironmentSettings field in UpdateConnection as
+// a EnvironmentSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateConnection) GetEnvironmentSettings(ctx context.Context) (EnvironmentSettings, bool) {
+	var e EnvironmentSettings
+	if m.EnvironmentSettings.IsNull() || m.EnvironmentSettings.IsUnknown() {
+		return e, false
+	}
+	var v EnvironmentSettings
+	d := m.EnvironmentSettings.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironmentSettings sets the value of the EnvironmentSettings field in UpdateConnection.
+func (m *UpdateConnection) SetEnvironmentSettings(ctx context.Context, v EnvironmentSettings) {
+	vs := v.ToObjectValue(ctx)
+	m.EnvironmentSettings = vs
 }
 
 // GetOptions returns the value of the Options field in UpdateConnection as
@@ -33373,6 +33639,8 @@ func (m UpdateResponse) Type(ctx context.Context) attr.Type {
 type UpdateSchema struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
+	// Custom maximum retention period in hours for the schema.
+	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
 	// Whether predictive optimization should be enabled for this object and
 	// objects under it.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization"`
@@ -33394,6 +33662,7 @@ func (to *UpdateSchema) SyncFieldsDuringRead(ctx context.Context, from UpdateSch
 
 func (m UpdateSchema) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["custom_max_retention_hours"] = attrs["custom_max_retention_hours"].SetOptional()
 	attrs["enable_predictive_optimization"] = attrs["enable_predictive_optimization"].SetOptional()
 	attrs["new_name"] = attrs["new_name"].SetOptional()
 	attrs["owner"] = attrs["owner"].SetOptional()
@@ -33424,6 +33693,7 @@ func (m UpdateSchema) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"comment":                        m.Comment,
+			"custom_max_retention_hours":     m.CustomMaxRetentionHours,
 			"enable_predictive_optimization": m.EnablePredictiveOptimization,
 			"full_name":                      m.FullName,
 			"new_name":                       m.NewName,
@@ -33437,6 +33707,7 @@ func (m UpdateSchema) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"comment":                        types.StringType,
+			"custom_max_retention_hours":     types.Int64Type,
 			"enable_predictive_optimization": types.StringType,
 			"full_name":                      types.StringType,
 			"new_name":                       types.StringType,

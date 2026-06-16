@@ -116,7 +116,7 @@ type AccessRequestDestinations struct {
 	// securable) or the nearest parent securable with destinations set.
 	DestinationSourceSecurable types.Object `tfsdk:"destination_source_securable"`
 	// The access request destinations for the securable.
-	Destinations types.List `tfsdk:"destinations"`
+	Destinations types.Set `tfsdk:"destinations"`
 	// The full name of the securable. Redundant with the name in the securable
 	// object, but necessary for Terraform integration
 	FullName types.String `tfsdk:"full_name"`
@@ -172,7 +172,7 @@ func (m AccessRequestDestinations) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"are_any_destinations_hidden": types.BoolType,
 			"destination_source_securable": catalog_tf.Securable{}.Type(ctx),
-			"destinations": basetypes.ListType{
+			"destinations": basetypes.SetType{
 				ElemType: catalog_tf.NotificationDestination{}.Type(ctx),
 			},
 			"full_name":      types.StringType,
@@ -311,7 +311,7 @@ func (m *AccessRequestDestinations) SetDestinations(ctx context.Context, v []cat
 	}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["destinations"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	m.Destinations = types.ListValueMust(t, vs)
+	m.Destinations = types.SetValueMust(t, vs)
 }
 
 // GetSecurable returns the value of the Securable field in AccessRequestDestinations as

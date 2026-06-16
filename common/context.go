@@ -46,9 +46,20 @@ type op func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostic
 func (f op) addContext(k contextKey, v string) op {
 	return func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 		// DEBUG ONLY (do not merge): see uaTripwireFires above.
-		if ua := useragent.FromContext(ctx); strings.Count(ua, "resource/") >= 1 && atomic.AddInt32(&uaTripwireFires, 1) <= 40 {
-			log.Printf("[WARN] ua-tripwire fire #%d: incoming ctx already carries %d resource/ dim(s) (uaLen=%d) before adding k=%v v=%s\nincomingUA=%s\nstack:\n%s",
-				atomic.LoadInt32(&uaTripwireFires), strings.Count(ua, "resource/"), len(ua), k, v, ua, debug.Stack())
+		// The -json test reporter drops passing-test output, so a plain log line
+		// never reaches the CI job log. Embed the stack in a diag error and FAIL
+		// the operation: failing-test output IS surfaced by the reporter. We fire
+		// the first few times the incoming context already carries a resource/
+		// dimension (the onset of accumulation), which pinpoints the caller that
+		// re-applied the wrap to an already-enriched context.
+		if ua := useragent.FromContext(ctx); strings.Count(ua, "resource/") >= 1 {
+			if n := atomic.AddInt32(&uaTripwireFires, 1); n <= 6 {
+				stack := string(debug.Stack())
+				log.Printf("[WARN] ua-tripwire fire #%d: incoming %d resource/ dim(s) uaLen=%d k=%v v=%s\n%s",
+					n, strings.Count(ua, "resource/"), len(ua), k, v, stack)
+				return diag.Errorf("UA-RUNAWAY-TRIPWIRE fire #%d: incoming ctx already carries %d resource/ dim(s) (uaLen=%d) before adding k=%v v=%s; STACK:\n%s",
+					n, strings.Count(ua, "resource/"), len(ua), k, v, stack)
+			}
 		}
 		switch k {
 		case ResourceName:

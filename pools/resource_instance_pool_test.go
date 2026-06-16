@@ -280,3 +280,56 @@ func TestResourceInstancePoolDelete_Error(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
 }
+
+// Regression test: the Create request body must carry
+// "enable_elastic_disk": false when the user opts out. A map[string]any
+// ExpectedRequest is used so the comparison does not depend on the
+// InstancePool struct's own JSON tags.
+func TestResourceInstancePoolCreate_ElasticDiskDisabled(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/instance-pools/create",
+				ExpectedRequest: map[string]any{
+					"custom_tags":                           nil,
+					"enable_elastic_disk":                   false,
+					"idle_instance_autotermination_minutes": 15,
+					"instance_pool_name":                    "Shared Pool",
+					"max_capacity":                          1000,
+					"min_idle_instances":                    10,
+					"node_type_id":                          "i3.xlarge",
+				},
+				Response: InstancePoolAndStats{
+					InstancePoolID: "abc",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/instance-pools/get?instance_pool_id=abc",
+				Response: InstancePoolAndStats{
+					InstancePoolID:                     "abc",
+					InstancePoolName:                   "Shared Pool",
+					MinIdleInstances:                   10,
+					MaxCapacity:                        1000,
+					NodeTypeID:                         "i3.xlarge",
+					IdleInstanceAutoTerminationMinutes: 15,
+					EnableElasticDisk:                  false,
+				},
+			},
+		},
+		Resource: ResourceInstancePool(),
+		State: map[string]any{
+			"enable_elastic_disk":                   false,
+			"idle_instance_autotermination_minutes": 15,
+			"instance_pool_name":                    "Shared Pool",
+			"max_capacity":                          1000,
+			"min_idle_instances":                    10,
+			"node_type_id":                          "i3.xlarge",
+		},
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":                  "abc",
+		"enable_elastic_disk": false,
+	})
+}

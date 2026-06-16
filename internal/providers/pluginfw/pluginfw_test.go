@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"log"
-	"strings"
-	"sync"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -15,41 +13,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// resetFallbackWarningState rewires the package logger to a buffer and resets
-// the once-per-name dedupe map, returning the buffer and a cleanup func.
-func resetFallbackWarningState(t *testing.T) *bytes.Buffer {
+// captureFallbackWarnings rewires the package logger to a buffer for the
+// duration of the test, restoring the original writer on cleanup.
+func captureFallbackWarnings(t *testing.T) *bytes.Buffer {
 	t.Helper()
 	var buf bytes.Buffer
 	origWriter := log.Writer()
 	origFlags := log.Flags()
 	log.SetOutput(&buf)
 	log.SetFlags(0)
-	warnedFallbackNames = sync.Map{}
 	t.Cleanup(func() {
 		log.SetOutput(origWriter)
 		log.SetFlags(origFlags)
-		warnedFallbackNames = sync.Map{}
 	})
 	return &buf
 }
 
-func TestEmitSdkV2FallbackWarning_LogsOncePerName(t *testing.T) {
-	buf := resetFallbackWarningState(t)
-
-	emitSdkV2FallbackWarning("databricks_library", "resource")
-	emitSdkV2FallbackWarning("databricks_library", "resource") // duplicate, suppressed
-	emitSdkV2FallbackWarning("databricks_shares", "data source")
-
-	out := buf.String()
-	assert.Equal(t, 1, strings.Count(out, `"databricks_library"`), "library warning should fire exactly once")
-	assert.Contains(t, out, `"databricks_shares"`)
-	assert.Contains(t, out, "[WARN]")
-	assert.Contains(t, out, "deprecated SDKv2 implementation")
-	assert.Contains(t, out, "next major release")
-}
-
 func TestGetPluginFrameworkResources_EnvVarFallbackEmitsWarning(t *testing.T) {
-	buf := resetFallbackWarningState(t)
+	buf := captureFallbackWarnings(t)
 	t.Setenv("USE_SDK_V2_RESOURCES", "databricks_library")
 
 	got := getPluginFrameworkResourcesToRegister(nil)
@@ -59,11 +40,12 @@ func TestGetPluginFrameworkResources_EnvVarFallbackEmitsWarning(t *testing.T) {
 			"databricks_library must be excluded from PF when fallback is requested")
 	}
 	assert.Contains(t, buf.String(), `"databricks_library"`)
-	assert.Contains(t, buf.String(), "resource")
+	assert.Contains(t, buf.String(), "[WARN] resource")
+	assert.Contains(t, buf.String(), "next major release")
 }
 
 func TestGetPluginFrameworkDataSources_FallbackOptionEmitsWarning(t *testing.T) {
-	buf := resetFallbackWarningState(t)
+	buf := captureFallbackWarnings(t)
 
 	got := getPluginFrameworkDataSourcesToRegister([]string{"databricks_volumes"})
 
@@ -72,11 +54,11 @@ func TestGetPluginFrameworkDataSources_FallbackOptionEmitsWarning(t *testing.T) 
 			"databricks_volumes must be excluded from PF when fallback is requested")
 	}
 	assert.Contains(t, buf.String(), `"databricks_volumes"`)
-	assert.Contains(t, buf.String(), "data source")
+	assert.Contains(t, buf.String(), "[WARN] data source")
 }
 
 func TestGetPluginFrameworkResources_NoFallbackNoWarning(t *testing.T) {
-	buf := resetFallbackWarningState(t)
+	buf := captureFallbackWarnings(t)
 
 	_ = getPluginFrameworkResourcesToRegister(nil)
 

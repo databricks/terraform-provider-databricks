@@ -1075,6 +1075,108 @@ func (m *CreateCatalogRequest_SdkV2) SetCatalog(ctx context.Context, v Catalog_S
 	m.Catalog = types.ListValueMust(t, vs)
 }
 
+type CreateDataApiRequest_SdkV2 struct {
+	// The Data API configuration to create.
+	DataApi types.List `tfsdk:"data_api"`
+	// Parent database:
+	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *CreateDataApiRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateDataApiRequest_SdkV2) {
+	if !from.DataApi.IsNull() && !from.DataApi.IsUnknown() {
+		if toDataApi, ok := to.GetDataApi(ctx); ok {
+			if fromDataApi, ok := from.GetDataApi(ctx); ok {
+				// Recursively sync the fields of DataApi
+				toDataApi.SyncFieldsDuringCreateOrUpdate(ctx, fromDataApi)
+				to.SetDataApi(ctx, toDataApi)
+			}
+		}
+	}
+}
+
+func (to *CreateDataApiRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateDataApiRequest_SdkV2) {
+	if !from.DataApi.IsNull() && !from.DataApi.IsUnknown() {
+		if toDataApi, ok := to.GetDataApi(ctx); ok {
+			if fromDataApi, ok := from.GetDataApi(ctx); ok {
+				toDataApi.SyncFieldsDuringRead(ctx, fromDataApi)
+				to.SetDataApi(ctx, toDataApi)
+			}
+		}
+	}
+}
+
+func (m CreateDataApiRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_api"] = attrs["data_api"].SetRequired()
+	attrs["data_api"] = attrs["data_api"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDataApiRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateDataApiRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"data_api": reflect.TypeOf(DataApi_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateDataApiRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CreateDataApiRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"data_api": m.DataApi,
+			"parent":   m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateDataApiRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"data_api": basetypes.ListType{
+				ElemType: DataApi_SdkV2{}.Type(ctx),
+			},
+			"parent": types.StringType,
+		},
+	}
+}
+
+// GetDataApi returns the value of the DataApi field in CreateDataApiRequest_SdkV2 as
+// a DataApi_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateDataApiRequest_SdkV2) GetDataApi(ctx context.Context) (DataApi_SdkV2, bool) {
+	var e DataApi_SdkV2
+	if m.DataApi.IsNull() || m.DataApi.IsUnknown() {
+		return e, false
+	}
+	var v []DataApi_SdkV2
+	d := m.DataApi.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDataApi sets the value of the DataApi field in CreateDataApiRequest_SdkV2.
+func (m *CreateDataApiRequest_SdkV2) SetDataApi(ctx context.Context, v DataApi_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["data_api"]
+	m.DataApi = types.ListValueMust(t, vs)
+}
+
 type CreateDatabaseRequest_SdkV2 struct {
 	// The desired specification of a Database.
 	Database types.List `tfsdk:"database"`
@@ -1644,6 +1746,714 @@ func (m *CreateSyncedTableRequest_SdkV2) SetSyncedTable(ctx context.Context, v S
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["synced_table"]
 	m.SyncedTable = types.ListValueMust(t, vs)
+}
+
+// DataApi represents the Data API (PostgREST) configuration for a Database. At
+// most one DataApi per database. Create enables Data API, Delete disables it.
+type DataApi_SdkV2 struct {
+	// A timestamp indicating when the Data API was first enabled.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// Resource name:
+	// projects/{project_id}/branches/{branch_id}/databases/{database_id}/data-api
+	Name types.String `tfsdk:"name"`
+	// The database containing this Data API configuration. Format:
+	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
+	Parent types.String `tfsdk:"parent"`
+	// The desired Data API configuration.
+	Spec types.List `tfsdk:"spec"`
+	// The observed Data API state (read-only).
+	Status types.List `tfsdk:"status"`
+	// A timestamp indicating when the Data API configuration was last updated.
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
+}
+
+func (to *DataApi_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DataApi_SdkV2) {
+	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
+		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Spec = from.Spec
+	}
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				// Recursively sync the fields of Spec
+				toSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
+			}
+		}
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				// Recursively sync the fields of Status
+				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
+}
+
+func (to *DataApi_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DataApi_SdkV2) {
+	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
+		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Spec = from.Spec
+	}
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				toSpec.SyncFieldsDuringRead(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
+			}
+		}
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				toStatus.SyncFieldsDuringRead(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
+}
+
+func (m DataApi_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["spec"] = attrs["spec"].SetOptional()
+	attrs["spec"] = attrs["spec"].SetComputed()
+	attrs["spec"] = attrs["spec"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["spec"] = attrs["spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["status"] = attrs["status"].SetComputed()
+	attrs["status"] = attrs["status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DataApi.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DataApi_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"spec":   reflect.TypeOf(DataApiDataApiSpec_SdkV2{}),
+		"status": reflect.TypeOf(DataApiDataApiStatus_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DataApi_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DataApi_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"create_time": m.CreateTime,
+			"name":        m.Name,
+			"parent":      m.Parent,
+			"spec":        m.Spec,
+			"status":      m.Status,
+			"update_time": m.UpdateTime,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DataApi_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"name":        types.StringType,
+			"parent":      types.StringType,
+			"spec": basetypes.ListType{
+				ElemType: DataApiDataApiSpec_SdkV2{}.Type(ctx),
+			},
+			"status": basetypes.ListType{
+				ElemType: DataApiDataApiStatus_SdkV2{}.Type(ctx),
+			},
+			"update_time": timetypes.RFC3339{}.Type(ctx),
+		},
+	}
+}
+
+// GetSpec returns the value of the Spec field in DataApi_SdkV2 as
+// a DataApiDataApiSpec_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataApi_SdkV2) GetSpec(ctx context.Context) (DataApiDataApiSpec_SdkV2, bool) {
+	var e DataApiDataApiSpec_SdkV2
+	if m.Spec.IsNull() || m.Spec.IsUnknown() {
+		return e, false
+	}
+	var v []DataApiDataApiSpec_SdkV2
+	d := m.Spec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSpec sets the value of the Spec field in DataApi_SdkV2.
+func (m *DataApi_SdkV2) SetSpec(ctx context.Context, v DataApiDataApiSpec_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spec"]
+	m.Spec = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in DataApi_SdkV2 as
+// a DataApiDataApiStatus_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataApi_SdkV2) GetStatus(ctx context.Context) (DataApiDataApiStatus_SdkV2, bool) {
+	var e DataApiDataApiStatus_SdkV2
+	if m.Status.IsNull() || m.Status.IsUnknown() {
+		return e, false
+	}
+	var v []DataApiDataApiStatus_SdkV2
+	d := m.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in DataApi_SdkV2.
+func (m *DataApi_SdkV2) SetStatus(ctx context.Context, v DataApiDataApiStatus_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	m.Status = types.ListValueMust(t, vs)
+}
+
+// Desired PostgREST configuration (input).
+type DataApiDataApiSpec_SdkV2 struct {
+	// Enable aggregate functions (count, sum, avg, etc.) in Data API responses.
+	// Default: true.
+	DbAggregatesEnabled types.Bool `tfsdk:"db_aggregates_enabled"`
+	// Additional schemas to include in the PostgreSQL search path. Each entry
+	// must be a valid PostgreSQL schema name.
+	DbExtraSearchPath types.List `tfsdk:"db_extra_search_path"`
+	// Maximum number of rows returned in a single Data API response. Must be a
+	// positive integer.
+	DbMaxRows types.Int64 `tfsdk:"db_max_rows"`
+	// Database schemas exposed through the Data API. Each entry must be a valid
+	// PostgreSQL schema name (1-63 chars, [a-zA-Z_][a-zA-Z0-9_$]*). Maximum 100
+	// entries. Default: ["public"].
+	DbSchemas types.List `tfsdk:"db_schemas"`
+	// Maximum lifetime for cached JWT tokens. Zero duration disables caching.
+	JwtCacheMaxLifetime timetypes.GoDuration `tfsdk:"jwt_cache_max_lifetime"`
+	// JSON path to the role claim in JWT tokens (e.g., ".sub"). Default:
+	// ".sub".
+	JwtRoleClaimKey types.String `tfsdk:"jwt_role_claim_key"`
+	// OpenAPI documentation mode for the Data API endpoint.
+	OpenapiMode types.String `tfsdk:"openapi_mode"`
+	// Allowed origins for CORS requests. Each entry should be a valid origin
+	// URL, or use "*" to allow all origins.
+	ServerCorsAllowedOrigins types.List `tfsdk:"server_cors_allowed_origins"`
+	// Enable the Server-Timing header in Data API responses.
+	ServerTimingEnabled types.Bool `tfsdk:"server_timing_enabled"`
+}
+
+func (to *DataApiDataApiSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DataApiDataApiSpec_SdkV2) {
+	if !from.DbExtraSearchPath.IsNull() && !from.DbExtraSearchPath.IsUnknown() && to.DbExtraSearchPath.IsNull() && len(from.DbExtraSearchPath.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbExtraSearchPath, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbExtraSearchPath = from.DbExtraSearchPath
+	}
+	if !from.DbSchemas.IsNull() && !from.DbSchemas.IsUnknown() && to.DbSchemas.IsNull() && len(from.DbSchemas.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbSchemas, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbSchemas = from.DbSchemas
+	}
+	if !from.ServerCorsAllowedOrigins.IsNull() && !from.ServerCorsAllowedOrigins.IsUnknown() && to.ServerCorsAllowedOrigins.IsNull() && len(from.ServerCorsAllowedOrigins.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ServerCorsAllowedOrigins, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ServerCorsAllowedOrigins = from.ServerCorsAllowedOrigins
+	}
+}
+
+func (to *DataApiDataApiSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DataApiDataApiSpec_SdkV2) {
+	if !from.DbExtraSearchPath.IsNull() && !from.DbExtraSearchPath.IsUnknown() && to.DbExtraSearchPath.IsNull() && len(from.DbExtraSearchPath.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbExtraSearchPath, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbExtraSearchPath = from.DbExtraSearchPath
+	}
+	if !from.DbSchemas.IsNull() && !from.DbSchemas.IsUnknown() && to.DbSchemas.IsNull() && len(from.DbSchemas.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbSchemas, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbSchemas = from.DbSchemas
+	}
+	if !from.ServerCorsAllowedOrigins.IsNull() && !from.ServerCorsAllowedOrigins.IsUnknown() && to.ServerCorsAllowedOrigins.IsNull() && len(from.ServerCorsAllowedOrigins.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ServerCorsAllowedOrigins, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ServerCorsAllowedOrigins = from.ServerCorsAllowedOrigins
+	}
+}
+
+func (m DataApiDataApiSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["db_aggregates_enabled"] = attrs["db_aggregates_enabled"].SetOptional()
+	attrs["db_extra_search_path"] = attrs["db_extra_search_path"].SetOptional()
+	attrs["db_max_rows"] = attrs["db_max_rows"].SetOptional()
+	attrs["db_schemas"] = attrs["db_schemas"].SetOptional()
+	attrs["jwt_cache_max_lifetime"] = attrs["jwt_cache_max_lifetime"].SetOptional()
+	attrs["jwt_role_claim_key"] = attrs["jwt_role_claim_key"].SetOptional()
+	attrs["openapi_mode"] = attrs["openapi_mode"].SetOptional()
+	attrs["server_cors_allowed_origins"] = attrs["server_cors_allowed_origins"].SetOptional()
+	attrs["server_timing_enabled"] = attrs["server_timing_enabled"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DataApiDataApiSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DataApiDataApiSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"db_extra_search_path":        reflect.TypeOf(types.String{}),
+		"db_schemas":                  reflect.TypeOf(types.String{}),
+		"server_cors_allowed_origins": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DataApiDataApiSpec_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DataApiDataApiSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"db_aggregates_enabled":       m.DbAggregatesEnabled,
+			"db_extra_search_path":        m.DbExtraSearchPath,
+			"db_max_rows":                 m.DbMaxRows,
+			"db_schemas":                  m.DbSchemas,
+			"jwt_cache_max_lifetime":      m.JwtCacheMaxLifetime,
+			"jwt_role_claim_key":          m.JwtRoleClaimKey,
+			"openapi_mode":                m.OpenapiMode,
+			"server_cors_allowed_origins": m.ServerCorsAllowedOrigins,
+			"server_timing_enabled":       m.ServerTimingEnabled,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DataApiDataApiSpec_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"db_aggregates_enabled": types.BoolType,
+			"db_extra_search_path": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"db_max_rows": types.Int64Type,
+			"db_schemas": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"jwt_cache_max_lifetime": timetypes.GoDuration{}.Type(ctx),
+			"jwt_role_claim_key":     types.StringType,
+			"openapi_mode":           types.StringType,
+			"server_cors_allowed_origins": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"server_timing_enabled": types.BoolType,
+		},
+	}
+}
+
+// GetDbExtraSearchPath returns the value of the DbExtraSearchPath field in DataApiDataApiSpec_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataApiDataApiSpec_SdkV2) GetDbExtraSearchPath(ctx context.Context) ([]types.String, bool) {
+	if m.DbExtraSearchPath.IsNull() || m.DbExtraSearchPath.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.DbExtraSearchPath.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDbExtraSearchPath sets the value of the DbExtraSearchPath field in DataApiDataApiSpec_SdkV2.
+func (m *DataApiDataApiSpec_SdkV2) SetDbExtraSearchPath(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["db_extra_search_path"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.DbExtraSearchPath = types.ListValueMust(t, vs)
+}
+
+// GetDbSchemas returns the value of the DbSchemas field in DataApiDataApiSpec_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataApiDataApiSpec_SdkV2) GetDbSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.DbSchemas.IsNull() || m.DbSchemas.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.DbSchemas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDbSchemas sets the value of the DbSchemas field in DataApiDataApiSpec_SdkV2.
+func (m *DataApiDataApiSpec_SdkV2) SetDbSchemas(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["db_schemas"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.DbSchemas = types.ListValueMust(t, vs)
+}
+
+// GetServerCorsAllowedOrigins returns the value of the ServerCorsAllowedOrigins field in DataApiDataApiSpec_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataApiDataApiSpec_SdkV2) GetServerCorsAllowedOrigins(ctx context.Context) ([]types.String, bool) {
+	if m.ServerCorsAllowedOrigins.IsNull() || m.ServerCorsAllowedOrigins.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.ServerCorsAllowedOrigins.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetServerCorsAllowedOrigins sets the value of the ServerCorsAllowedOrigins field in DataApiDataApiSpec_SdkV2.
+func (m *DataApiDataApiSpec_SdkV2) SetServerCorsAllowedOrigins(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["server_cors_allowed_origins"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ServerCorsAllowedOrigins = types.ListValueMust(t, vs)
+}
+
+// Observed state (output-only).
+type DataApiDataApiStatus_SdkV2 struct {
+	// Schemas available in the database (for reference when configuring
+	// db_schemas).
+	AvailableSchemas types.List `tfsdk:"available_schemas"`
+	// Actual aggregate function setting read from the database.
+	DbAggregatesEnabled types.Bool `tfsdk:"db_aggregates_enabled"`
+	// Actual extra search path schemas read from the database.
+	DbExtraSearchPath types.List `tfsdk:"db_extra_search_path"`
+	// Actual max rows setting read from the database.
+	DbMaxRows types.Int64 `tfsdk:"db_max_rows"`
+	// Actual exposed schemas read from the database.
+	DbSchemas types.List `tfsdk:"db_schemas"`
+	// Actual JWT cache max lifetime read from the database.
+	JwtCacheMaxLifetime timetypes.GoDuration `tfsdk:"jwt_cache_max_lifetime"`
+	// Actual JWT role claim key read from the database.
+	JwtRoleClaimKey types.String `tfsdk:"jwt_role_claim_key"`
+	// Actual OpenAPI mode read from the database.
+	OpenapiMode types.String `tfsdk:"openapi_mode"`
+	// Actual CORS allowed origins read from the database.
+	ServerCorsAllowedOrigins types.List `tfsdk:"server_cors_allowed_origins"`
+	// Actual Server-Timing header setting read from the database.
+	ServerTimingEnabled types.Bool `tfsdk:"server_timing_enabled"`
+	// Data API endpoint URL.
+	Url types.String `tfsdk:"url"`
+}
+
+func (to *DataApiDataApiStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DataApiDataApiStatus_SdkV2) {
+	if !from.AvailableSchemas.IsNull() && !from.AvailableSchemas.IsUnknown() && to.AvailableSchemas.IsNull() && len(from.AvailableSchemas.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AvailableSchemas, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AvailableSchemas = from.AvailableSchemas
+	}
+	if !from.DbExtraSearchPath.IsNull() && !from.DbExtraSearchPath.IsUnknown() && to.DbExtraSearchPath.IsNull() && len(from.DbExtraSearchPath.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbExtraSearchPath, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbExtraSearchPath = from.DbExtraSearchPath
+	}
+	if !from.DbSchemas.IsNull() && !from.DbSchemas.IsUnknown() && to.DbSchemas.IsNull() && len(from.DbSchemas.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbSchemas, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbSchemas = from.DbSchemas
+	}
+	if !from.ServerCorsAllowedOrigins.IsNull() && !from.ServerCorsAllowedOrigins.IsUnknown() && to.ServerCorsAllowedOrigins.IsNull() && len(from.ServerCorsAllowedOrigins.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ServerCorsAllowedOrigins, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ServerCorsAllowedOrigins = from.ServerCorsAllowedOrigins
+	}
+}
+
+func (to *DataApiDataApiStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DataApiDataApiStatus_SdkV2) {
+	if !from.AvailableSchemas.IsNull() && !from.AvailableSchemas.IsUnknown() && to.AvailableSchemas.IsNull() && len(from.AvailableSchemas.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AvailableSchemas, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AvailableSchemas = from.AvailableSchemas
+	}
+	if !from.DbExtraSearchPath.IsNull() && !from.DbExtraSearchPath.IsUnknown() && to.DbExtraSearchPath.IsNull() && len(from.DbExtraSearchPath.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbExtraSearchPath, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbExtraSearchPath = from.DbExtraSearchPath
+	}
+	if !from.DbSchemas.IsNull() && !from.DbSchemas.IsUnknown() && to.DbSchemas.IsNull() && len(from.DbSchemas.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DbSchemas, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DbSchemas = from.DbSchemas
+	}
+	if !from.ServerCorsAllowedOrigins.IsNull() && !from.ServerCorsAllowedOrigins.IsUnknown() && to.ServerCorsAllowedOrigins.IsNull() && len(from.ServerCorsAllowedOrigins.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ServerCorsAllowedOrigins, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ServerCorsAllowedOrigins = from.ServerCorsAllowedOrigins
+	}
+}
+
+func (m DataApiDataApiStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["available_schemas"] = attrs["available_schemas"].SetComputed()
+	attrs["db_aggregates_enabled"] = attrs["db_aggregates_enabled"].SetComputed()
+	attrs["db_extra_search_path"] = attrs["db_extra_search_path"].SetComputed()
+	attrs["db_max_rows"] = attrs["db_max_rows"].SetComputed()
+	attrs["db_schemas"] = attrs["db_schemas"].SetComputed()
+	attrs["jwt_cache_max_lifetime"] = attrs["jwt_cache_max_lifetime"].SetComputed()
+	attrs["jwt_role_claim_key"] = attrs["jwt_role_claim_key"].SetComputed()
+	attrs["openapi_mode"] = attrs["openapi_mode"].SetComputed()
+	attrs["server_cors_allowed_origins"] = attrs["server_cors_allowed_origins"].SetComputed()
+	attrs["server_timing_enabled"] = attrs["server_timing_enabled"].SetComputed()
+	attrs["url"] = attrs["url"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DataApiDataApiStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DataApiDataApiStatus_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"available_schemas":           reflect.TypeOf(types.String{}),
+		"db_extra_search_path":        reflect.TypeOf(types.String{}),
+		"db_schemas":                  reflect.TypeOf(types.String{}),
+		"server_cors_allowed_origins": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DataApiDataApiStatus_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DataApiDataApiStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"available_schemas":           m.AvailableSchemas,
+			"db_aggregates_enabled":       m.DbAggregatesEnabled,
+			"db_extra_search_path":        m.DbExtraSearchPath,
+			"db_max_rows":                 m.DbMaxRows,
+			"db_schemas":                  m.DbSchemas,
+			"jwt_cache_max_lifetime":      m.JwtCacheMaxLifetime,
+			"jwt_role_claim_key":          m.JwtRoleClaimKey,
+			"openapi_mode":                m.OpenapiMode,
+			"server_cors_allowed_origins": m.ServerCorsAllowedOrigins,
+			"server_timing_enabled":       m.ServerTimingEnabled,
+			"url":                         m.Url,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DataApiDataApiStatus_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"available_schemas": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"db_aggregates_enabled": types.BoolType,
+			"db_extra_search_path": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"db_max_rows": types.Int64Type,
+			"db_schemas": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"jwt_cache_max_lifetime": timetypes.GoDuration{}.Type(ctx),
+			"jwt_role_claim_key":     types.StringType,
+			"openapi_mode":           types.StringType,
+			"server_cors_allowed_origins": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"server_timing_enabled": types.BoolType,
+			"url":                   types.StringType,
+		},
+	}
+}
+
+// GetAvailableSchemas returns the value of the AvailableSchemas field in DataApiDataApiStatus_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataApiDataApiStatus_SdkV2) GetAvailableSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.AvailableSchemas.IsNull() || m.AvailableSchemas.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.AvailableSchemas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAvailableSchemas sets the value of the AvailableSchemas field in DataApiDataApiStatus_SdkV2.
+func (m *DataApiDataApiStatus_SdkV2) SetAvailableSchemas(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["available_schemas"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.AvailableSchemas = types.ListValueMust(t, vs)
+}
+
+// GetDbExtraSearchPath returns the value of the DbExtraSearchPath field in DataApiDataApiStatus_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataApiDataApiStatus_SdkV2) GetDbExtraSearchPath(ctx context.Context) ([]types.String, bool) {
+	if m.DbExtraSearchPath.IsNull() || m.DbExtraSearchPath.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.DbExtraSearchPath.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDbExtraSearchPath sets the value of the DbExtraSearchPath field in DataApiDataApiStatus_SdkV2.
+func (m *DataApiDataApiStatus_SdkV2) SetDbExtraSearchPath(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["db_extra_search_path"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.DbExtraSearchPath = types.ListValueMust(t, vs)
+}
+
+// GetDbSchemas returns the value of the DbSchemas field in DataApiDataApiStatus_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataApiDataApiStatus_SdkV2) GetDbSchemas(ctx context.Context) ([]types.String, bool) {
+	if m.DbSchemas.IsNull() || m.DbSchemas.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.DbSchemas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDbSchemas sets the value of the DbSchemas field in DataApiDataApiStatus_SdkV2.
+func (m *DataApiDataApiStatus_SdkV2) SetDbSchemas(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["db_schemas"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.DbSchemas = types.ListValueMust(t, vs)
+}
+
+// GetServerCorsAllowedOrigins returns the value of the ServerCorsAllowedOrigins field in DataApiDataApiStatus_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataApiDataApiStatus_SdkV2) GetServerCorsAllowedOrigins(ctx context.Context) ([]types.String, bool) {
+	if m.ServerCorsAllowedOrigins.IsNull() || m.ServerCorsAllowedOrigins.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.ServerCorsAllowedOrigins.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetServerCorsAllowedOrigins sets the value of the ServerCorsAllowedOrigins field in DataApiDataApiStatus_SdkV2.
+func (m *DataApiDataApiStatus_SdkV2) SetServerCorsAllowedOrigins(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["server_cors_allowed_origins"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ServerCorsAllowedOrigins = types.ListValueMust(t, vs)
+}
+
+type DataApiOperationMetadata_SdkV2 struct {
+}
+
+func (to *DataApiOperationMetadata_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DataApiOperationMetadata_SdkV2) {
+}
+
+func (to *DataApiOperationMetadata_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DataApiOperationMetadata_SdkV2) {
+}
+
+func (m DataApiOperationMetadata_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DataApiOperationMetadata.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DataApiOperationMetadata_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DataApiOperationMetadata_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DataApiOperationMetadata_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DataApiOperationMetadata_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Database represents a Postgres database within a Branch.
@@ -2253,6 +3063,55 @@ func (m DeleteCatalogRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteCatalogRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type DeleteDataApiRequest_SdkV2 struct {
+	// Resource name:
+	// projects/{project_id}/branches/{branch_id}/databases/{database_id}/data-api
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteDataApiRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteDataApiRequest_SdkV2) {
+}
+
+func (to *DeleteDataApiRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteDataApiRequest_SdkV2) {
+}
+
+func (m DeleteDataApiRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDataApiRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteDataApiRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteDataApiRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DeleteDataApiRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteDataApiRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -3700,6 +4559,55 @@ func (m GetCatalogRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 
 // Type implements basetypes.ObjectValuable.
 func (m GetCatalogRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type GetDataApiRequest_SdkV2 struct {
+	// Resource name:
+	// projects/{project_id}/branches/{branch_id}/databases/{database_id}/data-api
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetDataApiRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetDataApiRequest_SdkV2) {
+}
+
+func (to *GetDataApiRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetDataApiRequest_SdkV2) {
+}
+
+func (m GetDataApiRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDataApiRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetDataApiRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetDataApiRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetDataApiRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetDataApiRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -7833,6 +8741,115 @@ func (m *UpdateBranchRequest_SdkV2) SetBranch(ctx context.Context, v Branch_SdkV
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["branch"]
 	m.Branch = types.ListValueMust(t, vs)
+}
+
+type UpdateDataApiRequest_SdkV2 struct {
+	// The Data API configuration to update. The data_api's `name` field
+	// identifies the resource.
+	DataApi types.List `tfsdk:"data_api"`
+	// Resource name:
+	// projects/{project_id}/branches/{branch_id}/databases/{database_id}/data-api
+	Name types.String `tfsdk:"-"`
+	// The list of fields to update. If unspecified, all fields will be updated
+	// when possible.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateDataApiRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateDataApiRequest_SdkV2) {
+	if !from.DataApi.IsNull() && !from.DataApi.IsUnknown() {
+		if toDataApi, ok := to.GetDataApi(ctx); ok {
+			if fromDataApi, ok := from.GetDataApi(ctx); ok {
+				// Recursively sync the fields of DataApi
+				toDataApi.SyncFieldsDuringCreateOrUpdate(ctx, fromDataApi)
+				to.SetDataApi(ctx, toDataApi)
+			}
+		}
+	}
+}
+
+func (to *UpdateDataApiRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateDataApiRequest_SdkV2) {
+	if !from.DataApi.IsNull() && !from.DataApi.IsUnknown() {
+		if toDataApi, ok := to.GetDataApi(ctx); ok {
+			if fromDataApi, ok := from.GetDataApi(ctx); ok {
+				toDataApi.SyncFieldsDuringRead(ctx, fromDataApi)
+				to.SetDataApi(ctx, toDataApi)
+			}
+		}
+	}
+}
+
+func (m UpdateDataApiRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_api"] = attrs["data_api"].SetRequired()
+	attrs["data_api"] = attrs["data_api"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDataApiRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateDataApiRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"data_api": reflect.TypeOf(DataApi_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateDataApiRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UpdateDataApiRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"data_api":    m.DataApi,
+			"name":        m.Name,
+			"update_mask": m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateDataApiRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"data_api": basetypes.ListType{
+				ElemType: DataApi_SdkV2{}.Type(ctx),
+			},
+			"name":        types.StringType,
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetDataApi returns the value of the DataApi field in UpdateDataApiRequest_SdkV2 as
+// a DataApi_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateDataApiRequest_SdkV2) GetDataApi(ctx context.Context) (DataApi_SdkV2, bool) {
+	var e DataApi_SdkV2
+	if m.DataApi.IsNull() || m.DataApi.IsUnknown() {
+		return e, false
+	}
+	var v []DataApi_SdkV2
+	d := m.DataApi.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDataApi sets the value of the DataApi field in UpdateDataApiRequest_SdkV2.
+func (m *UpdateDataApiRequest_SdkV2) SetDataApi(ctx context.Context, v DataApi_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["data_api"]
+	m.DataApi = types.ListValueMust(t, vs)
 }
 
 type UpdateDatabaseRequest_SdkV2 struct {

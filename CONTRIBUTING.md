@@ -2,19 +2,28 @@
 
 ---
 
-- [Issues for new contributors](#issues-for-new-contributors)
-- [Contribution Workflow](#contribution-workflow)
-- [Changelog](#changelog)
 - [Contributing to Databricks Terraform Provider](#contributing-to-databricks-terraform-provider)
-- [Installing from source](#installing-from-source)
-- [Contributing documentation](#contributing-documentation)
-- [Developing provider](#developing-provider)
-- [Debugging](#debugging)
-- [Adding a new resource](#adding-a-new-resource)
-- [Testing](#testing)
-- [Code conventions](#code-conventions)
-- [Linting](#linting)
-- [Developing with Visual Studio Code Devcontainers](#developing-with-visual-studio-code-devcontainers)
+  - [Issues for new contributors](#issues-for-new-contributors)
+  - [Contribution Workflow](#contribution-workflow)
+  - [Changelog](#changelog)
+  - [Installing from source](#installing-from-source)
+  - [Contributing documentation](#contributing-documentation)
+  - [Developing provider](#developing-provider)
+  - [Developing Resources or Data Sources using Plugin Framework](#developing-resources-or-data-sources-using-plugin-framework)
+    - [Package organization for Providers](#package-organization-for-providers)
+    - [Adding a new resource](#adding-a-new-resource)
+    - [Adding a new data source](#adding-a-new-data-source)
+    - [Migrating resource to plugin framework](#migrating-resource-to-plugin-framework)
+      - [SDKv2 Compatibility](#sdkv2-compatibility)
+      - [Plugin Framework Compatibility](#plugin-framework-compatibility)
+    - [Code Organization](#code-organization)
+    - [Code Conventions](#code-conventions)
+  - [Debugging](#debugging)
+  - [Adding a new resource](#adding-a-new-resource-1)
+  - [Integration Testing](#integration-testing)
+  - [Code conventions](#code-conventions-1)
+  - [Linting](#linting)
+  - [Developing with Visual Studio Code Devcontainers](#developing-with-visual-studio-code-devcontainers)
 
 We happily welcome contributions to the Databricks Terraform Provider. We use GitHub Issues to track community reported issues and GitHub Pull Requests for accepting changes.
 
@@ -137,6 +146,8 @@ provider_installation {
 After installing the necessary software for building provider from sources, you should be able to run `make coverage` to run the tests and see the coverage.
 
 ## Developing Resources or Data Sources using Plugin Framework
+
+**Update, June 2026**: new resources and data sources are now automatically generated from Databricks API specifcation, so this section isn't applicable.  The bug fixes and improvements to existing, non-generated resources and data sources are still accepted.
 
 ### Package organization for Providers
 We are migrating the resource from SDKv2 to Plugin Framework provider and hence both of them exist in the codebase. For uniform code convention, readability and development, they are organized in the `internal/providers` directory under root as follows:

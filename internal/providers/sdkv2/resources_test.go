@@ -3,6 +3,7 @@ package sdkv2
 import (
 	"maps"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -67,6 +68,61 @@ func TestProviderConfig_AccountRegistrationConsistency(t *testing.T) {
 					t.Errorf("%s[%q] has a %q block; account resources/data sources have no workspace context", tc.name, key, "provider_config")
 				case !hasProviderConfig && tc.exceptions[key]:
 					t.Errorf("%s[%q] no longer has a %q block; remove it from the exceptions list", tc.name, key, "provider_config")
+				}
+			}
+		})
+	}
+}
+
+// TestProviderConfig_WorkspaceRegistrationConsistency is the mirror of
+// TestProviderConfig_AccountRegistrationConsistency: workspace resources and
+// data sources operate against a workspace and therefore carry the
+// provider_config block (injected by the WorkspaceData*/Namespace schema
+// helpers). An account-only resource accidentally placed in a Workspace* map
+// is built via common.AccountData and has no provider_config block, so this
+// test flags it.
+//
+// A small set of legitimately workspace-categorized entries carry no
+// provider_config block: the databricks_aws_*_policy data sources are pure
+// local policy-document generators (no client at all), and the databricks_*_mount
+// resources are deprecated in favor of databricks_mount and so were never
+// migrated to the unified provider. These are pinned as exceptions so that no
+// new account-only entry can silently slip into a Workspace* map.
+func TestProviderConfig_WorkspaceRegistrationConsistency(t *testing.T) {
+	cases := []struct {
+		name    string
+		entries map[string]*schema.Resource
+		// exceptions are workspace keys that legitimately have no provider_config block.
+		exceptions map[string]bool
+	}{
+		{"WorkspaceResources", WorkspaceResources(), map[string]bool{
+			// Deprecated, superseded by databricks_mount (which carries provider_config);
+			// these legacy mounts were never migrated to the unified provider.
+			"databricks_aws_s3_mount":          true,
+			"databricks_azure_adls_gen1_mount": true,
+			"databricks_azure_adls_gen2_mount": true,
+			"databricks_azure_blob_mount":      true,
+		}},
+		{"WorkspaceDataSources", WorkspaceDataSources(), map[string]bool{
+			// Pure local policy-document generators: they construct a JSON policy
+			// string client-side and never call a workspace (or account) API, so a
+			// workspace_id / provider_config block would be meaningless for them.
+			"databricks_aws_assume_role_policy":               true,
+			"databricks_aws_bucket_policy":                    true,
+			"databricks_aws_crossaccount_policy":              true,
+			"databricks_aws_unity_catalog_assume_role_policy": true,
+			"databricks_aws_unity_catalog_policy":             true,
+		}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, key := range slices.Sorted(maps.Keys(tc.entries)) {
+				hasProviderConfig := tc.entries[key].Schema["provider_config"] != nil
+				switch {
+				case !hasProviderConfig && !tc.exceptions[key]:
+					t.Errorf("%s[%q] has no %q block; workspace resources/data sources should carry it. If this is an account-only resource, move it to Account%s; if it is genuinely workspace-scoped but client-less, add it to the exceptions list", tc.name, key, "provider_config", strings.TrimPrefix(tc.name, "Workspace"))
+				case hasProviderConfig && tc.exceptions[key]:
+					t.Errorf("%s[%q] now has a %q block; remove it from the exceptions list", tc.name, key, "provider_config")
 				}
 			}
 		})

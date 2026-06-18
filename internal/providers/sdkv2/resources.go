@@ -72,7 +72,6 @@ func WorkspaceDataSources() map[string]*schema.Resource {
 		"databricks_instance_profiles":                    aws.DataSourceInstanceProfiles().ToResource(),
 		"databricks_jobs":                                 jobs.DataSourceJobs().ToResource(),
 		"databricks_job":                                  jobs.DataSourceJob().ToResource(),
-		"databricks_metastores":                           catalog.DataSourceMetastores().ToResource(),
 		"databricks_mlflow_experiment":                    mlflow.DataSourceExperiment().ToResource(),
 		"databricks_mlflow_model":                         mlflow.DataSourceModel().ToResource(),
 		"databricks_mlflow_models":                        mlflow.DataSourceModels().ToResource(),
@@ -103,6 +102,7 @@ func WorkspaceDataSources() map[string]*schema.Resource {
 func AccountDataSources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
 		"databricks_metastore":                        catalog.DataSourceMetastore().ToResource(),
+		"databricks_metastores":                       catalog.DataSourceMetastores().ToResource(),
 		"databricks_mws_credentials":                  mws.DataSourceMwsCredentials().ToResource(),
 		"databricks_mws_network_connectivity_config":  mws.DataSourceMwsNetworkConnectivityConfig().ToResource(),
 		"databricks_mws_network_connectivity_configs": mws.DataSourceMwsNetworkConnectivityConfigs().ToResource(),

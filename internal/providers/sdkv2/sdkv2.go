@@ -74,6 +74,8 @@ var terraformVersionOnce sync.Once
 type sdkV2ProviderOptions struct {
 	sdkV2ResourceFallbacks   []string
 	sdkV2DataSourceFallbacks []string
+	resourceOptIns           []string
+	dataSourceOptIns         []string
 	configCustomizer         func(*config.Config) error
 }
 
@@ -93,6 +95,24 @@ func WithSdkV2ResourceFallbacks(resources []string) SdkV2ProviderOption {
 func WithSdkV2DataSourceFallbacks(dataSources []string) SdkV2ProviderOption {
 	return func(o *sdkV2ProviderOptions) {
 		o.sdkV2DataSourceFallbacks = dataSources
+	}
+}
+
+// WithPluginFrameworkResources configures the SDKv2 provider to drop the
+// provided opt-in resources from its map so the plugin framework
+// implementation takes over. This should only be used for testing; production
+// reads DATABRICKS_TF_ENABLED_PF_RESOURCES.
+func WithPluginFrameworkResources(resources []string) SdkV2ProviderOption {
+	return func(o *sdkV2ProviderOptions) {
+		o.resourceOptIns = resources
+	}
+}
+
+// WithPluginFrameworkDataSources is the data source counterpart of
+// WithPluginFrameworkResources.
+func WithPluginFrameworkDataSources(dataSources []string) SdkV2ProviderOption {
+	return func(o *sdkV2ProviderOptions) {
+		o.dataSourceOptIns = dataSources
 	}
 }
 
@@ -271,14 +291,14 @@ func DatabricksProvider(opts ...SdkV2ProviderOption) *schema.Provider {
 	}
 
 	// Remove the resources and data sources that are being migrated to plugin framework
-	for _, dataSourceToRemove := range pluginfw.GetSdkV2DataSourcesToRemove(providerOptions.sdkV2DataSourceFallbacks) {
+	for _, dataSourceToRemove := range pluginfw.GetSdkV2DataSourcesToRemove(providerOptions.sdkV2DataSourceFallbacks, providerOptions.dataSourceOptIns) {
 		if _, ok := dataSourceMap[dataSourceToRemove]; !ok {
 			panic(fmt.Sprintf("data source %s not found", dataSourceToRemove))
 		}
 		delete(dataSourceMap, dataSourceToRemove)
 	}
 
-	for _, resourceToRemove := range pluginfw.GetSdkV2ResourcesToRemove(providerOptions.sdkV2ResourceFallbacks) {
+	for _, resourceToRemove := range pluginfw.GetSdkV2ResourcesToRemove(providerOptions.sdkV2ResourceFallbacks, providerOptions.resourceOptIns) {
 		if _, ok := resourceMap[resourceToRemove]; !ok {
 			panic(fmt.Sprintf("resource %s not found", resourceToRemove))
 		}

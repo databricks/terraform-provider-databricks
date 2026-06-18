@@ -63,15 +63,18 @@ jobs:
       labels: ubuntu-latest-deco
 
     outputs:
-      # paths-filter v3.0.2 doesn't support predicate-quantifier: 'every',
-      # so the filter computes "any non-inert file changed" and we invert
-      # here to expose the positive form the consumers want.
+      # non_inert lists changed files that are NOT inert; inert_only is the
+      # inverse. predicate-quantifier 'every' is required: a file is non_inert
+      # only if it matches ALL patterns ('**' AND none of the inert paths).
+      # The default 'some' would match any single pattern, and '**' matches
+      # everything, so non_inert would always be true and the skip never fire.
       inert_only: ${{ steps.filter.outputs.non_inert == 'false' }}
 
     steps:
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: filter
         with:
+          predicate-quantifier: 'every'
           filters: ${{ env.INERT_PATHS_FILTER }}
 
   # For PRs that contain code (inert_only == 'false'), a follow-up push that

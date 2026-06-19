@@ -3589,6 +3589,8 @@ func (m *CustomerFacingIngressNetworkPolicy_SdkV2) SetPublicAccess(ctx context.C
 	m.PublicAccess = types.ListValueMust(t, vs)
 }
 
+// Matches account-level Databricks API endpoints for an ingress network policy
+// rule.
 type CustomerFacingIngressNetworkPolicyAccountApiDestination_SdkV2 struct {
 	// Qualifies the breadth of API access for the listed scopes. See
 	// ApiScopeQualifier.
@@ -6016,6 +6018,8 @@ func (m *CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) SetWorkspac
 	m.WorkspaceUi = types.ListValueMust(t, vs)
 }
 
+// Matches workspace-level Databricks API endpoints for an ingress network
+// policy rule.
 type CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2 struct {
 	// Qualifies the breadth of API access for the listed scopes. See
 	// ApiScopeQualifier.

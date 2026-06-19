@@ -3547,7 +3547,7 @@ type CreateWarehouseRequest_SdkV2 struct {
 	// increase the number of concurrent queries, please tune max_num_clusters.
 	//
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
-	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large
+	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large - Auto
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
@@ -5460,7 +5460,7 @@ type EditWarehouseRequest_SdkV2 struct {
 	// increase the number of concurrent queries, please tune max_num_clusters.
 	//
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
-	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large
+	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large - Auto
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
@@ -5955,7 +5955,7 @@ type EndpointInfo_SdkV2 struct {
 	// increase the number of concurrent queries, please tune max_num_clusters.
 	//
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
-	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large
+	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large - Auto
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
@@ -8112,7 +8112,7 @@ type GetWarehouseResponse_SdkV2 struct {
 	// increase the number of concurrent queries, please tune max_num_clusters.
 	//
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
-	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large
+	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large - Auto
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
@@ -18385,7 +18385,7 @@ func (m *WarehousePermissionsRequest_SdkV2) SetAccessControlList(ctx context.Con
 // * Configuration values to enable or disable the access to specific warehouse
 // types in the workspace.
 type WarehouseTypePair_SdkV2 struct {
-	// If set to false the specific warehouse type will not be be allowed as a
+	// If set to false the specific warehouse type will not be allowed as a
 	// value for warehouse_type in CreateWarehouse and EditWarehouse
 	Enabled types.Bool `tfsdk:"enabled"`
 

@@ -570,7 +570,7 @@ type DatabaseCatalog_SdkV2 struct {
 	CreateDatabaseIfNotExists types.Bool `tfsdk:"create_database_if_not_exists"`
 	// The name of the DatabaseInstance housing the database.
 	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
-	// The name of the database (in a instance) associated with the catalog.
+	// The name of the database (in an instance) associated with the catalog.
 	DatabaseName types.String `tfsdk:"database_name"`
 	// The name of the catalog in UC.
 	Name types.String `tfsdk:"name"`
@@ -1605,7 +1605,7 @@ func (m DeleteDatabaseCatalogRequest_SdkV2) Type(ctx context.Context) attr.Type 
 }
 
 type DeleteDatabaseInstanceRequest_SdkV2 struct {
-	// By default, a instance cannot be deleted if it has descendant instances
+	// By default, an instance cannot be deleted if it has descendant instances
 	// created via PITR. If this flag is specified as true, all descendent
 	// instances will be deleted as well.
 	Force types.Bool `tfsdk:"-"`

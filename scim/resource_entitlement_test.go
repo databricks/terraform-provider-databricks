@@ -107,10 +107,9 @@ func TestResourceEntitlementsGroupCreate(t *testing.T) {
 				},
 			},
 			{
-				Method:       "GET",
-				Resource:     "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
-				Response:     newGroup,
-				ReuseRequest: true,
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
+				Response: newGroup,
 			},
 		},
 		Resource: ResourceEntitlements(),
@@ -224,10 +223,9 @@ func TestResourceEntitlementsGroupUpdate(t *testing.T) {
 				},
 			},
 			{
-				Method:       "GET",
-				Resource:     "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
-				Response:     newGroup,
-				ReuseRequest: true,
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
+				Response: newGroup,
 			},
 		},
 		Resource: ResourceEntitlements(),
@@ -393,10 +391,9 @@ func TestResourceEntitlementsUserCreate(t *testing.T) {
 				},
 			},
 			{
-				Method:       "GET",
-				Resource:     "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
-				Response:     newUser,
-				ReuseRequest: true,
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
+				Response: newUser,
 			},
 		},
 		Resource: ResourceEntitlements(),
@@ -507,10 +504,9 @@ func TestResourceEntitlementsUserUpdate(t *testing.T) {
 				},
 			},
 			{
-				Method:       "GET",
-				Resource:     "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
-				Response:     newUser,
-				ReuseRequest: true,
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
+				Response: newUser,
 			},
 		},
 		Resource: ResourceEntitlements(),
@@ -577,10 +573,9 @@ func TestResourceEntitlementsSPNCreate(t *testing.T) {
 				},
 			},
 			{
-				Method:       "GET",
-				Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
-				Response:     newUser,
-				ReuseRequest: true,
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
+				Response: newUser,
 			},
 		},
 		Resource: ResourceEntitlements(),
@@ -593,45 +588,6 @@ func TestResourceEntitlementsSPNCreate(t *testing.T) {
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "spn/abc", d.Id())
-	assert.Equal(t, true, d.Get("allow_cluster_create"))
-	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
-	assert.Equal(t, true, d.Get("databricks_sql_access"))
-}
-
-func TestResourceEntitlementsSPNCreateRetriesUntilEntitlementsPropagate(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:          "PATCH",
-				Resource:        "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				ExpectedRequest: addRequest,
-				Response: User{
-					ID: "abc",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
-				Response: oldUser,
-			},
-			{
-				Method:       "GET",
-				Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
-				Response:     newUser,
-				ReuseRequest: true,
-			},
-		},
-		Resource: ResourceEntitlements(),
-		HCL: `
-		service_principal_id = "abc"
-		allow_cluster_create = true
-		allow_instance_pool_create = true
-		databricks_sql_access = true
-		`,
-		Create: true,
-	}.Apply(t)
-	require.NoError(t, err)
 	assert.Equal(t, "spn/abc", d.Id())
 	assert.Equal(t, true, d.Get("allow_cluster_create"))
 	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
@@ -719,10 +675,9 @@ func TestResourceEntitlementsSPNUpdate(t *testing.T) {
 				},
 			},
 			{
-				Method:       "GET",
-				Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
-				Response:     newUser,
-				ReuseRequest: true,
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
+				Response: newUser,
 			},
 		},
 		Resource: ResourceEntitlements(),
@@ -789,10 +744,9 @@ func TestResourceEntitlementsGroupCreateEmpty(t *testing.T) {
 				},
 			},
 			{
-				Method:       "GET",
-				Resource:     "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
-				Response:     emptyGroup,
-				ReuseRequest: true,
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
+				Response: emptyGroup,
 			},
 		},
 		Resource: ResourceEntitlements(),

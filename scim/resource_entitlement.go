@@ -4,15 +4,10 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-const entitlementPropagationTimeout = 2 * time.Minute
 
 // ResourceGroup manages user groups
 func ResourceEntitlements() common.Resource {
@@ -47,7 +42,7 @@ func ResourceEntitlements() common.Resource {
 				return err
 			}
 			d.SetId(getId(d))
-			return waitForEntitlements(ctx, d, newClient)
+			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
@@ -91,11 +86,7 @@ func ResourceEntitlements() common.Resource {
 			if err != nil {
 				return err
 			}
-			err = patchEntitlements(ctx, d, newClient, "replace")
-			if err != nil {
-				return err
-			}
-			return waitForEntitlements(ctx, d, newClient)
+			return patchEntitlements(ctx, d, newClient, "replace")
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
@@ -106,48 +97,6 @@ func ResourceEntitlements() common.Resource {
 		},
 		Schema: entitlementSchema,
 	}
-}
-
-func waitForEntitlements(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	return retry.RetryContext(ctx, entitlementPropagationTimeout, func() *retry.RetryError {
-		current, err := readEntitlements(ctx, d, c)
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-		if !entitlementsMatchData(d, current) {
-			return retry.RetryableError(fmt.Errorf("entitlements for %s have not propagated yet", d.Id()))
-		}
-		return nil
-	})
-}
-
-func readEntitlements(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (entitlements, error) {
-	split := strings.SplitN(d.Id(), "/", 2)
-	if len(split) != 2 {
-		return nil, fmt.Errorf("ID must be two elements: %s", d.Id())
-	}
-	switch strings.ToLower(split[0]) {
-	case "group":
-		group, err := NewGroupsAPI(ctx, c, "").Read(split[1], "entitlements")
-		return group.Entitlements, err
-	case "user":
-		user, err := NewUsersAPI(ctx, c, "").Read(split[1], "entitlements")
-		return user.Entitlements, err
-	case "spn":
-		spn, err := NewServicePrincipalsAPI(ctx, c, "").Read(split[1], "entitlements")
-		return spn.Entitlements, err
-	}
-	return nil, fmt.Errorf("unsupported entitlements ID prefix: %s", split[0])
-}
-
-func entitlementsMatchData(d *schema.ResourceData, current entitlements) bool {
-	for _, entitlement := range possibleEntitlements {
-		fieldName := entitlementMapping[entitlement]
-		if d.Get(fieldName).(bool) != ComplexValues(current).HasValue(entitlement) {
-			return false
-		}
-	}
-	return true
 }
 
 func getId(d *schema.ResourceData) string {

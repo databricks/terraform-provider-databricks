@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -64,6 +65,15 @@ func Read(w *databricks.WorkspaceClient, ctx context.Context, id string) (*pipel
 	return w.Pipelines.Get(ctx, pipelines.GetPipelineRequest{
 		PipelineId: id,
 	})
+}
+
+func preserveOriginalPipelineCatalogAndSchema(d *schema.ResourceData, p *Pipeline) {
+	if catalog, ok := d.GetOk("catalog"); ok && strings.EqualFold(catalog.(string), p.Catalog) {
+		p.Catalog = catalog.(string)
+	}
+	if schema, ok := d.GetOk("schema"); ok && strings.EqualFold(schema.(string), p.Schema) {
+		p.Schema = schema.(string)
+	}
 }
 
 func Update(w *databricks.WorkspaceClient, ctx context.Context, d *schema.ResourceData, timeout time.Duration) error {
@@ -320,6 +330,7 @@ func ResourcePipeline() common.Resource {
 				// Provides the URL to the pipeline in the Databricks UI.
 				URL: c.FormatURL("#joblist/pipelines/", d.Id()),
 			}
+			preserveOriginalPipelineCatalogAndSchema(d, &p)
 			return common.StructToData(p, pipelineSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -18,6 +18,15 @@ func NewPermissionAssignmentAPI(ctx context.Context, m any) PermissionAssignment
 	return PermissionAssignmentAPI{m.(*common.DatabricksClient), ctx}
 }
 
+// globalPermAssignmentCache caches the permission assignments list per workspace host
+// so that N databricks_permission_assignment resources in the same workspace only
+// issue a single API call during a terraform plan/apply cycle.
+var globalPermAssignmentCache = newPermAssignmentCache()
+
+func newPermAssignmentCache() *common.KeyedCache[string, permissionAssignmentResponse] {
+	return common.NewKeyedCache[string, permissionAssignmentResponse]()
+}
+
 type PermissionAssignmentAPI struct {
 	client  *common.DatabricksClient
 	context context.Context
@@ -158,6 +167,7 @@ func ResourcePermissionAssignment() common.Resource {
 			if err != nil {
 				return err
 			}
+			defer globalPermAssignmentCache.Invalidate(c.Config.Host)
 			var assignment permissionAssignmentEntity
 			common.DataToStructPointer(d, s, &assignment)
 			api := NewPermissionAssignmentAPI(ctx, c)
@@ -190,7 +200,9 @@ func ResourcePermissionAssignment() common.Resource {
 			if err != nil {
 				return err
 			}
-			list, err := NewPermissionAssignmentAPI(ctx, c).List()
+			list, err := globalPermAssignmentCache.Get(c.Config.Host, func() (permissionAssignmentResponse, error) {
+				return NewPermissionAssignmentAPI(ctx, c).List()
+			})
 			if err != nil {
 				return err
 			}
@@ -205,6 +217,7 @@ func ResourcePermissionAssignment() common.Resource {
 			if err != nil {
 				return err
 			}
+			defer globalPermAssignmentCache.Invalidate(c.Config.Host)
 			var assignment permissionAssignmentEntity
 			common.DataToStructPointer(d, s, &assignment)
 			api := NewPermissionAssignmentAPI(ctx, c)
@@ -216,6 +229,7 @@ func ResourcePermissionAssignment() common.Resource {
 			if err != nil {
 				return err
 			}
+			defer globalPermAssignmentCache.Invalidate(c.Config.Host)
 			return NewPermissionAssignmentAPI(ctx, c).Remove(d.Id())
 		},
 	}

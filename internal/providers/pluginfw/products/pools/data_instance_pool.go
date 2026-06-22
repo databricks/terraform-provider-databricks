@@ -42,13 +42,15 @@ func (InstancePoolInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["pool_info"] = attrs["pool_info"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 
 	return attrs
 }
 
 func (InstancePoolInfo) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"pool_info": reflect.TypeOf(compute_tf.InstancePoolAndStats{}),
+		"pool_info":       reflect.TypeOf(compute_tf.InstancePoolAndStats{}),
+		"provider_config": reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
 
@@ -65,21 +67,28 @@ func (d *InstancePoolDataSource) Schema(ctx context.Context, req datasource.Sche
 }
 
 func (d *InstancePoolDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if d.Client == nil {
+	if d.Client == nil && req.ProviderData != nil {
 		d.Client = pluginfwcommon.ConfigureDataSource(req, resp)
 	}
 }
 
 func (d *InstancePoolDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
-	w, diags := d.Client.GetWorkspaceClient()
+
+	var poolInfo InstancePoolInfo
+	resp.Diagnostics.Append(req.Config.Get(ctx, &poolInfo)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	workspaceID, diags := tfschema.GetWorkspaceIDDataSource(ctx, poolInfo.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var poolInfo InstancePoolInfo
-	resp.Diagnostics.Append(req.Config.Get(ctx, &poolInfo)...)
+	w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -97,10 +106,15 @@ func (d *InstancePoolDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	poolInfo.Id = types.StringValue(pool.InstancePoolId)
-	poolInfo.Name = types.StringValue(pool.InstancePoolName)
-	poolInfo.PoolInfo = tfPool.ToObjectValue(ctx)
-	resp.Diagnostics.Append(resp.State.Set(ctx, poolInfo)...)
+	newPoolInfo := InstancePoolInfo{
+		Id:       types.StringValue(pool.InstancePoolId),
+		Name:     types.StringValue(pool.InstancePoolName),
+		PoolInfo: tfPool.ToObjectValue(ctx),
+		Namespace: tfschema.Namespace{
+			ProviderConfig: poolInfo.ProviderConfig,
+		},
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, newPoolInfo)...)
 }
 
 func (d *InstancePoolDataSource) getInstancePoolByName(ctx context.Context, w *databricks.WorkspaceClient, poolName string) (*compute.InstancePoolAndStats, error) {

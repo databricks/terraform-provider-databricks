@@ -347,6 +347,45 @@ func TestResourcePipelineRead(t *testing.T) {
 	})
 }
 
+func TestResourcePipelineReadPreservesCatalogAndSchemaCase(t *testing.T) {
+	spec := basicPipelineSpec
+	spec.Catalog = "my_catalog"
+	spec.Schema = "my_schema"
+
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Spec:       &spec,
+			}, nil)
+		},
+		Resource: ResourcePipeline(),
+		Read:     true,
+		ID:       "abcd",
+		HCL: `
+		name = "test-pipeline"
+		catalog = "My_Catalog"
+		schema = "My_Schema"
+		library {
+			notebook {
+				path = "/Test"
+			}
+		}
+		`,
+		InstanceState: map[string]string{
+			"name":    "test-pipeline",
+			"catalog": "My_Catalog",
+			"schema":  "My_Schema",
+		},
+	}.ApplyAndExpectData(t, map[string]any{
+		"catalog": "My_Catalog",
+		"schema":  "My_Schema",
+	})
+}
+
 func TestResourcePipelineRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

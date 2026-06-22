@@ -10,6 +10,8 @@
 
 ### Documentation
 
+* Document that read-only workspace bindings aren't applicable for non-catalog objects ([#5611](https://github.com/databricks/terraform-provider-databricks/pull/5611))
+
 ### Exporter
 
 ### Internal Changes

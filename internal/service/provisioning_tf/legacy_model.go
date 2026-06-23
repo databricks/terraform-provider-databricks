@@ -521,6 +521,129 @@ func (m CreateAwsKeyInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type CreateAzureKeyInfo_SdkV2 struct {
+	// The Disk Encryption Set id that is used to represent the key info used
+	// for Managed Disk BYOK use case
+	DiskEncryptionSetId types.String `tfsdk:"disk_encryption_set_id"`
+	// The structure to store key access credential This is set if the Managed
+	// Identity is being used to access the Azure Key Vault key.
+	KeyAccessConfiguration types.List `tfsdk:"key_access_configuration"`
+	// The name of the key in KeyVault.
+	KeyName types.String `tfsdk:"key_name"`
+	// The base URI of the KeyVault.
+	KeyVaultUri types.String `tfsdk:"key_vault_uri"`
+	// The tenant id where the KeyVault lives.
+	TenantId types.String `tfsdk:"tenant_id"`
+	// The current key version.
+	Version types.String `tfsdk:"version"`
+}
+
+func (to *CreateAzureKeyInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateAzureKeyInfo_SdkV2) {
+	if !from.KeyAccessConfiguration.IsNull() && !from.KeyAccessConfiguration.IsUnknown() {
+		if toKeyAccessConfiguration, ok := to.GetKeyAccessConfiguration(ctx); ok {
+			if fromKeyAccessConfiguration, ok := from.GetKeyAccessConfiguration(ctx); ok {
+				// Recursively sync the fields of KeyAccessConfiguration
+				toKeyAccessConfiguration.SyncFieldsDuringCreateOrUpdate(ctx, fromKeyAccessConfiguration)
+				to.SetKeyAccessConfiguration(ctx, toKeyAccessConfiguration)
+			}
+		}
+	}
+}
+
+func (to *CreateAzureKeyInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateAzureKeyInfo_SdkV2) {
+	if !from.KeyAccessConfiguration.IsNull() && !from.KeyAccessConfiguration.IsUnknown() {
+		if toKeyAccessConfiguration, ok := to.GetKeyAccessConfiguration(ctx); ok {
+			if fromKeyAccessConfiguration, ok := from.GetKeyAccessConfiguration(ctx); ok {
+				toKeyAccessConfiguration.SyncFieldsDuringRead(ctx, fromKeyAccessConfiguration)
+				to.SetKeyAccessConfiguration(ctx, toKeyAccessConfiguration)
+			}
+		}
+	}
+}
+
+func (m CreateAzureKeyInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["disk_encryption_set_id"] = attrs["disk_encryption_set_id"].SetOptional()
+	attrs["key_access_configuration"] = attrs["key_access_configuration"].SetOptional()
+	attrs["key_access_configuration"] = attrs["key_access_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["key_name"] = attrs["key_name"].SetOptional()
+	attrs["key_vault_uri"] = attrs["key_vault_uri"].SetOptional()
+	attrs["tenant_id"] = attrs["tenant_id"].SetOptional()
+	attrs["version"] = attrs["version"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAzureKeyInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateAzureKeyInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"key_access_configuration": reflect.TypeOf(KeyAccessConfiguration_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateAzureKeyInfo_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CreateAzureKeyInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"disk_encryption_set_id":   m.DiskEncryptionSetId,
+			"key_access_configuration": m.KeyAccessConfiguration,
+			"key_name":                 m.KeyName,
+			"key_vault_uri":            m.KeyVaultUri,
+			"tenant_id":                m.TenantId,
+			"version":                  m.Version,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateAzureKeyInfo_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"disk_encryption_set_id": types.StringType,
+			"key_access_configuration": basetypes.ListType{
+				ElemType: KeyAccessConfiguration_SdkV2{}.Type(ctx),
+			},
+			"key_name":      types.StringType,
+			"key_vault_uri": types.StringType,
+			"tenant_id":     types.StringType,
+			"version":       types.StringType,
+		},
+	}
+}
+
+// GetKeyAccessConfiguration returns the value of the KeyAccessConfiguration field in CreateAzureKeyInfo_SdkV2 as
+// a KeyAccessConfiguration_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateAzureKeyInfo_SdkV2) GetKeyAccessConfiguration(ctx context.Context) (KeyAccessConfiguration_SdkV2, bool) {
+	var e KeyAccessConfiguration_SdkV2
+	if m.KeyAccessConfiguration.IsNull() || m.KeyAccessConfiguration.IsUnknown() {
+		return e, false
+	}
+	var v []KeyAccessConfiguration_SdkV2
+	d := m.KeyAccessConfiguration.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetKeyAccessConfiguration sets the value of the KeyAccessConfiguration field in CreateAzureKeyInfo_SdkV2.
+func (m *CreateAzureKeyInfo_SdkV2) SetKeyAccessConfiguration(ctx context.Context, v KeyAccessConfiguration_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["key_access_configuration"]
+	m.KeyAccessConfiguration = types.ListValueMust(t, vs)
+}
+
 type CreateCredentialAwsCredentials_SdkV2 struct {
 	StsRole types.List `tfsdk:"sts_role"`
 }
@@ -768,6 +891,8 @@ func (m CreateCredentialStsRole_SdkV2) Type(ctx context.Context) attr.Type {
 type CreateCustomerManagedKeyRequest_SdkV2 struct {
 	AwsKeyInfo types.List `tfsdk:"aws_key_info"`
 
+	AzureKeyInfo types.List `tfsdk:"azure_key_info"`
+
 	GcpKeyInfo types.List `tfsdk:"gcp_key_info"`
 	// The cases that the key can be used for.
 	UseCases types.List `tfsdk:"use_cases"`
@@ -780,6 +905,15 @@ func (to *CreateCustomerManagedKeyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(
 				// Recursively sync the fields of AwsKeyInfo
 				toAwsKeyInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromAwsKeyInfo)
 				to.SetAwsKeyInfo(ctx, toAwsKeyInfo)
+			}
+		}
+	}
+	if !from.AzureKeyInfo.IsNull() && !from.AzureKeyInfo.IsUnknown() {
+		if toAzureKeyInfo, ok := to.GetAzureKeyInfo(ctx); ok {
+			if fromAzureKeyInfo, ok := from.GetAzureKeyInfo(ctx); ok {
+				// Recursively sync the fields of AzureKeyInfo
+				toAzureKeyInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromAzureKeyInfo)
+				to.SetAzureKeyInfo(ctx, toAzureKeyInfo)
 			}
 		}
 	}
@@ -803,6 +937,14 @@ func (to *CreateCustomerManagedKeyRequest_SdkV2) SyncFieldsDuringRead(ctx contex
 			}
 		}
 	}
+	if !from.AzureKeyInfo.IsNull() && !from.AzureKeyInfo.IsUnknown() {
+		if toAzureKeyInfo, ok := to.GetAzureKeyInfo(ctx); ok {
+			if fromAzureKeyInfo, ok := from.GetAzureKeyInfo(ctx); ok {
+				toAzureKeyInfo.SyncFieldsDuringRead(ctx, fromAzureKeyInfo)
+				to.SetAzureKeyInfo(ctx, toAzureKeyInfo)
+			}
+		}
+	}
 	if !from.GcpKeyInfo.IsNull() && !from.GcpKeyInfo.IsUnknown() {
 		if toGcpKeyInfo, ok := to.GetGcpKeyInfo(ctx); ok {
 			if fromGcpKeyInfo, ok := from.GetGcpKeyInfo(ctx); ok {
@@ -816,6 +958,8 @@ func (to *CreateCustomerManagedKeyRequest_SdkV2) SyncFieldsDuringRead(ctx contex
 func (m CreateCustomerManagedKeyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["aws_key_info"] = attrs["aws_key_info"].SetOptional()
 	attrs["aws_key_info"] = attrs["aws_key_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["azure_key_info"] = attrs["azure_key_info"].SetOptional()
+	attrs["azure_key_info"] = attrs["azure_key_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["gcp_key_info"] = attrs["gcp_key_info"].SetOptional()
 	attrs["gcp_key_info"] = attrs["gcp_key_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["use_cases"] = attrs["use_cases"].SetRequired()
@@ -833,9 +977,10 @@ func (m CreateCustomerManagedKeyRequest_SdkV2) ApplySchemaCustomizations(attrs m
 // SDK values.
 func (m CreateCustomerManagedKeyRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"aws_key_info": reflect.TypeOf(CreateAwsKeyInfo_SdkV2{}),
-		"gcp_key_info": reflect.TypeOf(CreateGcpKeyInfo_SdkV2{}),
-		"use_cases":    reflect.TypeOf(types.String{}),
+		"aws_key_info":   reflect.TypeOf(CreateAwsKeyInfo_SdkV2{}),
+		"azure_key_info": reflect.TypeOf(CreateAzureKeyInfo_SdkV2{}),
+		"gcp_key_info":   reflect.TypeOf(CreateGcpKeyInfo_SdkV2{}),
+		"use_cases":      reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -846,9 +991,10 @@ func (m CreateCustomerManagedKeyRequest_SdkV2) ToObjectValue(ctx context.Context
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"aws_key_info": m.AwsKeyInfo,
-			"gcp_key_info": m.GcpKeyInfo,
-			"use_cases":    m.UseCases,
+			"aws_key_info":   m.AwsKeyInfo,
+			"azure_key_info": m.AzureKeyInfo,
+			"gcp_key_info":   m.GcpKeyInfo,
+			"use_cases":      m.UseCases,
 		})
 }
 
@@ -858,6 +1004,9 @@ func (m CreateCustomerManagedKeyRequest_SdkV2) Type(ctx context.Context) attr.Ty
 		AttrTypes: map[string]attr.Type{
 			"aws_key_info": basetypes.ListType{
 				ElemType: CreateAwsKeyInfo_SdkV2{}.Type(ctx),
+			},
+			"azure_key_info": basetypes.ListType{
+				ElemType: CreateAzureKeyInfo_SdkV2{}.Type(ctx),
 			},
 			"gcp_key_info": basetypes.ListType{
 				ElemType: CreateGcpKeyInfo_SdkV2{}.Type(ctx),
@@ -893,6 +1042,32 @@ func (m *CreateCustomerManagedKeyRequest_SdkV2) SetAwsKeyInfo(ctx context.Contex
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_key_info"]
 	m.AwsKeyInfo = types.ListValueMust(t, vs)
+}
+
+// GetAzureKeyInfo returns the value of the AzureKeyInfo field in CreateCustomerManagedKeyRequest_SdkV2 as
+// a CreateAzureKeyInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateCustomerManagedKeyRequest_SdkV2) GetAzureKeyInfo(ctx context.Context) (CreateAzureKeyInfo_SdkV2, bool) {
+	var e CreateAzureKeyInfo_SdkV2
+	if m.AzureKeyInfo.IsNull() || m.AzureKeyInfo.IsUnknown() {
+		return e, false
+	}
+	var v []CreateAzureKeyInfo_SdkV2
+	d := m.AzureKeyInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureKeyInfo sets the value of the AzureKeyInfo field in CreateCustomerManagedKeyRequest_SdkV2.
+func (m *CreateCustomerManagedKeyRequest_SdkV2) SetAzureKeyInfo(ctx context.Context, v CreateAzureKeyInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_key_info"]
+	m.AzureKeyInfo = types.ListValueMust(t, vs)
 }
 
 // GetGcpKeyInfo returns the value of the GcpKeyInfo field in CreateCustomerManagedKeyRequest_SdkV2 as
@@ -5132,9 +5307,7 @@ func (m *UpdateWorkspaceRequest_SdkV2) SetCustomerFacingWorkspace(ctx context.Co
 
 // *
 type VpcEndpoint_SdkV2 struct {
-	// The Databricks account ID that hosts the VPC endpoint configuration. TODO
-	// - This may signal an OpenAPI diff; it does not show up in the generated
-	// spec
+	// The Databricks account ID that hosts the VPC endpoint configuration.
 	AccountId types.String `tfsdk:"account_id"`
 	// The AWS Account in which the VPC endpoint object exists.
 	AwsAccountId types.String `tfsdk:"aws_account_id"`
@@ -5761,8 +5934,7 @@ type WorkspaceNetwork_SdkV2 struct {
 	// The mutually exclusive network deployment modes. The option decides which
 	// network mode the workspace will use. The network config for GCP workspace
 	// with Databricks managed network. This object is input-only and will not
-	// be provided when listing workspaces. See go/gcp-byovpc-alpha-design for
-	// interface decisions.
+	// be provided when listing workspaces.
 	GcpManagedNetworkConfig types.List `tfsdk:"gcp_managed_network_config"`
 	// The ID of the network object, if the workspace is a BYOVPC workspace.
 	// This should apply to workspaces on all clouds in internal services. In

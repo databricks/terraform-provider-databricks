@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+* Add `databricks_connection` data source to look up connections by name ([#5692](https://github.com/databricks/terraform-provider-databricks/pull/5692)).
+
 ### Bug Fixes
 
 ### Documentation

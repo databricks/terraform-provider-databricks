@@ -122,6 +122,7 @@ func DatabricksProvider(opts ...SdkV2ProviderOption) *schema.Provider {
 		"databricks_cluster_policy":                       policies.DataSourceClusterPolicy().ToResource(),
 		"databricks_catalog":                              catalog.DataSourceCatalog().ToResource(),
 		"databricks_catalogs":                             catalog.DataSourceCatalogs().ToResource(),
+		"databricks_connection":                           catalog.DataSourceConnection().ToResource(),
 		"databricks_current_config":                       mws.DataSourceCurrentConfiguration().ToResource(),
 		"databricks_current_metastore":                    catalog.DataSourceCurrentMetastore().ToResource(),
 		"databricks_current_user":                         scim.DataSourceCurrentUser().ToResource(),

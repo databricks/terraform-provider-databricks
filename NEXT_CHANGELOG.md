@@ -17,4 +17,4 @@
 ### Exporter
 
 ### Internal Changes
-* Run unit tests for fork PRs offline from a pre-warmed Go module cache, populated by the new "Warm Go Cache" workflow.
+* Run unit tests offline from a pre-warmed Go module cache for PRs that cannot authenticate to the internal Go module proxy (fork and Dependabot PRs), populated by the new "Warm Go Cache" workflow.

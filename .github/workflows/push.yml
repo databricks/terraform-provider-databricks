@@ -23,32 +23,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      # Fork PRs cannot authenticate to JFrog (GitHub does not issue OIDC
-      # tokens to fork runs); they resolve modules offline from the cache
-      # pre-warmed by the "Warm Go Cache" workflow instead.
-      - name: Detect fork PR
-        id: fork-check
+      # The runner injects ACTIONS_ID_TOKEN_REQUEST_URL only when id-token:write
+      # is effectively granted, which GitHub denies to fork and Dependabot PRs.
+      # Without it a run can't authenticate to JFrog, so it resolves modules
+      # offline from the cache pre-warmed by the "Warm Go Cache" workflow.
+      - name: Detect Go module proxy access
+        id: proxy-check
         shell: bash
         run: |
-          if [ "${{ github.event.pull_request.head.repo.full_name }}" != "" ] && \
-             [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
-            echo "is_fork=true" >> "$GITHUB_OUTPUT"
+          if [ -n "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+            echo "use_cache=false" >> "$GITHUB_OUTPUT"
           else
-            echo "is_fork=false" >> "$GITHUB_OUTPUT"
+            echo "use_cache=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Setup Go build environment
         uses: ./.github/actions/setup-go-build-environment
         with:
           go-version-file: go.mod
-          is-fork: ${{ steps.fork-check.outputs.is_fork }}
+          use-cache: ${{ steps.proxy-check.outputs.use_cache }}
 
       - name: Pull external libraries
         shell: bash
         env:
-          IS_FORK: ${{ steps.fork-check.outputs.is_fork }}
+          USE_CACHE: ${{ steps.proxy-check.outputs.use_cache }}
         run: |
-          if [ "$IS_FORK" = "true" ]; then
+          if [ "$USE_CACHE" = "true" ]; then
             # Resolve modules offline from the pre-warmed cache. If this fails
             # after a go.mod/go.sum change, a maintainer must run the
             # "Warm Go Cache" workflow with this PR's number first.
@@ -75,8 +75,8 @@ jobs:
           make test
 
       - name: Publish test coverage
-        # Fork PRs have no access to CODECOV_TOKEN; skip the upload.
-        if: steps.fork-check.outputs.is_fork != 'true'
+        # No CODECOV_TOKEN on fork/Dependabot runs; skip the upload.
+        if: steps.proxy-check.outputs.use_cache != 'true'
         uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

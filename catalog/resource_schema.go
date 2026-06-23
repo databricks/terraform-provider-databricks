@@ -92,6 +92,12 @@ func ResourceSchema() common.Resource {
 			if err != nil {
 				return err
 			}
+			// Preserve the configured storage_root when the only difference is a trailing slash.
+			// This prevents "inconsistent final plan" errors on first apply.
+			configuredStorageRoot := d.Get("storage_root").(string)
+			if configuredStorageRoot != "" && ucDirectoryPathSlashOnlySuppressDiff("", configuredStorageRoot, schema.StorageRoot, d) {
+				schema.StorageRoot = configuredStorageRoot
+			}
 			return common.StructToData(schema, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

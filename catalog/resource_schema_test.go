@@ -44,6 +44,37 @@ func TestCreateSchema(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestCreateSchema_StorageRootTrailingSlashPreserved(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockSchemasAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateSchema{
+				Name:        "a",
+				CatalogName: "b",
+				StorageRoot: "s3://my-bucket/schemas",
+			}).Return(&catalog.SchemaInfo{
+				FullName:    "b.a",
+				StorageRoot: "s3://my-bucket/schemas/",
+				Owner:       "testers",
+			}, nil)
+			e.GetByFullName(mock.Anything, "b.a").Return(&catalog.SchemaInfo{
+				MetastoreId: "d",
+				StorageRoot: "s3://my-bucket/schemas/",
+				Owner:       "testers",
+			}, nil)
+		},
+		Resource: ResourceSchema(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		catalog_name = "b"
+		storage_root = "s3://my-bucket/schemas"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"storage_root": "s3://my-bucket/schemas",
+	})
+}
+
 func TestCreateSchemaWithOwner(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

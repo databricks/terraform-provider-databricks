@@ -166,7 +166,9 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 			// or returned zero. Either way, workspace_id is required but missing.
 			return fmt.Errorf("resource has provider_config.workspace_id = %q in state, "+
 				"but managing workspace-level resources requires a workspace_id and "+
-				"none was found in the resource's provider_config block or the provider's workspace_id attribute", oldEffective)
+				"none was found in any of the following sources (checked in order): the resource's "+
+				"provider_config block, the provider's workspace_id attribute, the workspace_id in the "+
+				"configured profile, or the DATABRICKS_WORKSPACE_ID environment variable", oldEffective)
 		}
 		newEffective = strconv.FormatInt(resolvedID, 10)
 	}

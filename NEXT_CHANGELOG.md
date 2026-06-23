@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+* Add implicit CAN_MANAGE permission for users on their home directories to prevent Terraform from removing Databricks-assigned permissions
+
 ### Documentation
 
 * Document that read-only workspace bindings aren't applicable for non-catalog objects ([#5611](https://github.com/databricks/terraform-provider-databricks/pull/5611))

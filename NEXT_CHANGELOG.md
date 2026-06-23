@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+* Fix `databricks_catalog` name update using NewName field ([#5205](https://github.com/databricks/terraform-provider-databricks/pull/5205))
+
 ### Documentation
 
 * Document that read-only workspace bindings aren't applicable for non-catalog objects ([#5611](https://github.com/databricks/terraform-provider-databricks/pull/5611))

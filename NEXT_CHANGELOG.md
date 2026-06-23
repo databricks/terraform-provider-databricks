@@ -15,3 +15,5 @@
 ### Exporter
 
 ### Internal Changes
+
+* Use Go SDK for `databricks_mws_log_delivery` ([#5807](https://github.com/databricks/terraform-provider-databricks/pull/5807)).

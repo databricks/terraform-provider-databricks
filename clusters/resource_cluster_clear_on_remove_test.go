@@ -17,12 +17,12 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// These tests cover the ES-1927346 behavior and the clear_cloud_attributes_on_remove
-// fix for databricks_cluster cloud-attribute blocks. The platform echoes default
-// cloud attributes the user never set; removing a block was silently suppressed,
-// so a value could not be cleared through Terraform.
+// These tests cover the clear_cloud_attributes_on_remove fix for the
+// databricks_cluster cloud-attribute blocks. The platform echoes default cloud
+// attributes the user never set; removing a block was silently suppressed, so a
+// value could not be cleared through Terraform.
 //
-// Coverage maps to the behavior tables in the design doc, at three altitudes:
+// Coverage is at three altitudes:
 //   - TestClusterAwsAttributesClearBehavior: the diff altitude (given state +
 //     config, what does plan produce) across both flag values, plus the
 //     explicit-empty and empty-block edges.
@@ -151,11 +151,10 @@ func assertAttrChange(t *testing.T, diff *terraform.InstanceDiff, key string, wa
 	}
 }
 
-// TestClusterAwsAttributesClearBehavior covers the diff-altitude rows of the
-// behavior tables in the design doc, across both flag values, plus the
-// explicit-empty and empty-block edges. Each case asserts the expected change
-// (or its absence) on the user-set field (instance_profile_arn) and on a
-// server-default sibling (availability).
+// TestClusterAwsAttributesClearBehavior covers the diff-altitude behavior across
+// both flag values, plus the explicit-empty and empty-block edges. Each case
+// asserts the expected change (or its absence) on the user-set field
+// (instance_profile_arn) and on a server-default sibling (availability).
 func TestClusterAwsAttributesClearBehavior(t *testing.T) {
 	r := ResourceCluster().ToResource()
 	withArn := func(v string) []any { return []any{map[string]any{"instance_profile_arn": v}} }
@@ -178,10 +177,11 @@ func TestClusterAwsAttributesClearBehavior(t *testing.T) {
 		{"F3 remove block keeps value (the bug)", false, removed, testInstanceProfileArn, "", nil, nil},
 		{"F4 server default suppressed", false, withArn(testInstanceProfileArn), testInstanceProfileArn, spot, nil, nil},
 		// clear_cloud_attributes_on_remove = true
-		{"T1 change value", true, withArn(otherInstanceProfileArn), testInstanceProfileArn, "", &attrChange{testInstanceProfileArn, otherInstanceProfileArn}, nil},
-		{"T2 remove block clears block", true, removed, testInstanceProfileArn, spot, &attrChange{testInstanceProfileArn, ""}, &attrChange{spot, ""}},
-		{"T3 kept block, server default not cleared", true, withArn(testInstanceProfileArn), testInstanceProfileArn, spot, nil, nil},
-		// edges not in the doc tables
+		{"T1 unchanged kept block", true, withArn(testInstanceProfileArn), testInstanceProfileArn, "", nil, nil},
+		{"T2 change value", true, withArn(otherInstanceProfileArn), testInstanceProfileArn, "", &attrChange{testInstanceProfileArn, otherInstanceProfileArn}, nil},
+		{"T3 remove block clears block", true, removed, testInstanceProfileArn, spot, &attrChange{testInstanceProfileArn, ""}, &attrChange{spot, ""}},
+		{"T4 kept block, server default not cleared", true, withArn(testInstanceProfileArn), testInstanceProfileArn, spot, nil, nil},
+		// additional edge cases
 		{"E1 explicit empty clears without flag", false, withArn(""), testInstanceProfileArn, "", &attrChange{testInstanceProfileArn, ""}, nil},
 		{"E2 empty block is kept, not deleted", true, emptyBlock, testInstanceProfileArn, "", nil, nil},
 	} {
@@ -198,10 +198,10 @@ func TestClusterAwsAttributesClearBehavior(t *testing.T) {
 }
 
 // TestClusterReadDropsUnconfiguredServerDefaults covers the "default never stored"
-// rows (the availability-only rows under both flag values): on read of an
-// existing cluster, server defaults for a block the user never configured are
-// discarded and never enter state, so they cannot produce a diff. This is
-// StructToData read behavior, independent of clear_cloud_attributes_on_remove.
+// behavior: on read of an existing cluster, server defaults for a block the user
+// never configured are discarded and never enter state, so they cannot produce a
+// diff. This is StructToData read behavior, independent of
+// clear_cloud_attributes_on_remove.
 func TestClusterReadDropsUnconfiguredServerDefaults(t *testing.T) {
 	is := &terraform.InstanceState{
 		ID: "abc-123",

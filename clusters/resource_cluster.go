@@ -129,7 +129,7 @@ func DataSecurityModeDiffSuppressFunc(k, old, new string, d *schema.ResourceData
 // predicate keys on block deletion rather than on the flag alone, because the
 // flag cannot distinguish a deleted block from a partial one, and suppressing the
 // partial case avoids a perpetual diff against platform-defaulted siblings
-// (availability, zone_id, ...) the user never set. See ES-1927346.
+// (availability, zone_id, ...) the user never set.
 func suppressUnlessBlockDeleted(block string) common.DiffSuppressorFn {
 	return func(_, _, _ string, d *schema.ResourceData) bool {
 		raw, diags := d.GetRawConfigAt(cty.Path{cty.GetAttrStep{Name: "clear_cloud_attributes_on_remove"}})

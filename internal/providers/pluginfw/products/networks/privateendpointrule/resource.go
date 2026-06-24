@@ -2,6 +2,7 @@ package privateendpointrule
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -71,7 +72,7 @@ func (r *resourcePrivateEndpointRule) Configure(_ context.Context, req resource.
 // createTimeout caps how long Create waits for the rule to leave CREATING.
 // Without it, a stuck server-side provisioning would make `terraform apply`
 // hang. 30 minutes is well above typical transitions (a few minutes).
-var createTimeout = 30 * time.Minute
+const createTimeout = 30 * time.Minute
 
 func (r *resourcePrivateEndpointRule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
@@ -105,7 +106,10 @@ func (r *resourcePrivateEndpointRule) Create(ctx context.Context, req resource.C
 	}
 	pendingRule, err := r.api.CreatePrivateEndpointRule(ctx, *apiReq)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to create private endpoint rule", err.Error())
+		resp.Diagnostics.AddError(
+			"failed to create private endpoint rule",
+			fmt.Sprintf("network connectivity config %s: %s", apiReq.NetworkConnectivityConfigId, err),
+		)
 		return
 	}
 
@@ -135,24 +139,43 @@ func (r *resourcePrivateEndpointRule) Create(ctx context.Context, req resource.C
 		})
 	})
 	if err != nil {
-		resp.Diagnostics.AddError("failed waiting for private endpoint rule provisioning", err.Error())
+		// A deadline here means the rule was created (it is already in state)
+		// but never left CREATING within createTimeout. Say so explicitly: the
+		// bare "context deadline exceeded" gives the operator nothing to act on.
+		if errors.Is(err, context.DeadlineExceeded) {
+			resp.Diagnostics.AddError(
+				"timed out waiting for private endpoint rule to leave CREATING",
+				fmt.Sprintf("rule %s in network connectivity config %s was still CREATING after %s. The rule was created and saved to state; re-run `terraform apply` to resume waiting, or check its status in the cloud console.",
+					pendingRule.RuleId, apiReq.NetworkConnectivityConfigId, createTimeout),
+			)
+			return
+		}
+		resp.Diagnostics.AddError(
+			"failed waiting for private endpoint rule provisioning",
+			fmt.Sprintf("rule %s in network connectivity config %s: %s", pendingRule.RuleId, apiReq.NetworkConnectivityConfigId, err),
+		)
 		return
 	}
 
 	switch rule.ConnectionState {
 	case settings.NccPrivateEndpointRulePrivateLinkConnectionStateCreateFailed:
-		// Failure case: surface the server's error message.
-		resp.Diagnostics.AddError("failed waiting for private endpoint rule provisioning", rule.ErrorMessage)
+		// The server reported a terminal creation failure; surface its own message.
+		resp.Diagnostics.AddError(
+			"private endpoint rule creation failed",
+			fmt.Sprintf("rule %s in network connectivity config %s: %s", rule.RuleId, apiReq.NetworkConnectivityConfigId, rule.ErrorMessage),
+		)
 		return
 	case settings.NccPrivateEndpointRulePrivateLinkConnectionStateRejected,
 		settings.NccPrivateEndpointRulePrivateLinkConnectionStateDisconnected,
 		settings.NccPrivateEndpointRulePrivateLinkConnectionStateExpired:
 		// The rule exists but is not usable. Surface it instead of pretending
-		// the apply succeeded.
-		resp.Diagnostics.AddError(
-			"private endpoint rule reached unexpected state",
-			fmt.Sprintf("expected PENDING or ESTABLISHED, got %q", rule.ConnectionState),
-		)
+		// the apply succeeded, and include the server's reason when present.
+		detail := fmt.Sprintf("rule %s in network connectivity config %s reached connection state %q (not usable); expected PENDING or ESTABLISHED.",
+			rule.RuleId, apiReq.NetworkConnectivityConfigId, rule.ConnectionState)
+		if rule.ErrorMessage != "" {
+			detail += " " + rule.ErrorMessage
+		}
+		resp.Diagnostics.AddError("private endpoint rule reached unusable state", detail)
 		return
 	default:
 		// PENDING and ESTABLISHED are the expected success states (the rule is
@@ -199,7 +222,10 @@ func (r *resourcePrivateEndpointRule) Read(ctx context.Context, req resource.Rea
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError("failed to read private endpoint rule", err.Error())
+		resp.Diagnostics.AddError(
+			"failed to read private endpoint rule",
+			fmt.Sprintf("rule %s in network connectivity config %s: %s", ruleId, nccId, err),
+		)
 		return
 	}
 
@@ -228,7 +254,10 @@ func (r *resourcePrivateEndpointRule) Update(ctx context.Context, req resource.U
 	// Empty update_mask means no updatable field changed; skip the API call.
 	if apiReq.UpdateMask != "" {
 		if _, err := r.api.UpdatePrivateEndpointRule(ctx, *apiReq); err != nil {
-			resp.Diagnostics.AddError("failed to update private endpoint rule", err.Error())
+			resp.Diagnostics.AddError(
+				"failed to update private endpoint rule",
+				fmt.Sprintf("rule %s in network connectivity config %s: %s", apiReq.PrivateEndpointRuleId, apiReq.NetworkConnectivityConfigId, err),
+			)
 			return
 		}
 	}
@@ -262,7 +291,10 @@ func (r *resourcePrivateEndpointRule) Delete(ctx context.Context, req resource.D
 		PrivateEndpointRuleId:       ruleId,
 	})
 	if err != nil && !apierr.IsMissing(err) {
-		resp.Diagnostics.AddError("failed to delete private endpoint rule", err.Error())
+		resp.Diagnostics.AddError(
+			"failed to delete private endpoint rule",
+			fmt.Sprintf("rule %s in network connectivity config %s: %s", ruleId, nccId, err),
+		)
 	}
 }
 

@@ -159,13 +159,9 @@ func (m *model) fromAPI(ctx context.Context, rule *settings.NccPrivateEndpointRu
 	// storing a known "" against it fails Terraform's post-apply consistency
 	// check. An empty string is never a valid value for these fields, so "" and
 	// null denote the same "unset" state; collapsing "" to null keeps state
-	// matching the null plan, mirroring how stringsToList maps empty lists.
-	//
-	// Caveat: an explicit `group_id = ""` in config plans as a known "" yet
-	// still collapses to null here, so it surfaces as a post-apply inconsistency
-	// rather than a clean plan-time error. That value is invalid regardless and
-	// no validator rejects it earlier; this is the accepted edge of treating ""
-	// as null.
+	// matching the null plan, mirroring how stringsToList maps empty lists. An
+	// explicit "" in config is rejected up front by the LengthAtLeast(1)
+	// validators on these attributes, so it never reaches this path.
 	m.EndpointService = stringOrNull(rule.EndpointService)
 	m.GroupId = stringOrNull(rule.GroupId)
 	m.ResourceId = stringOrNull(rule.ResourceId)

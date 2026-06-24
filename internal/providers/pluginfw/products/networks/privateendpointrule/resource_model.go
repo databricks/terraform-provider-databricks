@@ -152,9 +152,23 @@ func (m *model) fromAPI(ctx context.Context, rule *settings.NccPrivateEndpointRu
 	var diags diag.Diagnostics
 	m.RuleId = types.StringValue(rule.RuleId)
 	m.AccountId = types.StringValue(rule.AccountId)
-	m.EndpointService = types.StringValue(rule.EndpointService)
-	m.GroupId = types.StringValue(rule.GroupId)
-	m.ResourceId = types.StringValue(rule.ResourceId)
+	// endpoint_service, group_id, and resource_id are Optional and not Computed,
+	// and each applies to a single cloud (AWS sets endpoint_service; Azure sets
+	// group_id/resource_id), so the others are always unset and the server
+	// returns them as "". The plan for an omitted Optional attribute is null, so
+	// storing a known "" against it fails Terraform's post-apply consistency
+	// check. An empty string is never a valid value for these fields, so "" and
+	// null denote the same "unset" state; collapsing "" to null keeps state
+	// matching the null plan, mirroring how stringsToList maps empty lists.
+	//
+	// Caveat: an explicit `group_id = ""` in config plans as a known "" yet
+	// still collapses to null here, so it surfaces as a post-apply inconsistency
+	// rather than a clean plan-time error. That value is invalid regardless and
+	// no validator rejects it earlier; this is the accepted edge of treating ""
+	// as null.
+	m.EndpointService = stringOrNull(rule.EndpointService)
+	m.GroupId = stringOrNull(rule.GroupId)
+	m.ResourceId = stringOrNull(rule.ResourceId)
 	m.Enabled = types.BoolValue(rule.Enabled)
 	m.EndpointName = types.StringValue(rule.EndpointName)
 	m.VpcEndpointId = types.StringValue(rule.VpcEndpointId)
@@ -174,6 +188,16 @@ func (m *model) fromAPI(ctx context.Context, rule *settings.NccPrivateEndpointRu
 
 	m.GcpEndpoint = gcpEndpointFromAPI(rule.GcpEndpoint)
 	return diags
+}
+
+// stringOrNull maps a server scalar to a Terraform string, collapsing "" to
+// null. Use it only for attributes where the empty string is not a meaningful
+// value, so that "" and null denote the same "unset" state.
+func stringOrNull(s string) types.String {
+	if s == "" {
+		return types.StringNull()
+	}
+	return types.StringValue(s)
 }
 
 // stringsToList converts a server-returned string slice into a Terraform list,

@@ -163,7 +163,16 @@ func resourceSchema() schema.Schema {
 								stringplanmodifier.UseStateForUnknown(),
 							},
 						},
-						"service_attachment": schema.StringAttribute{Optional: true},
+						// service_attachment is create-only: toUpdateRequest never
+						// adds gcp_endpoint to the update mask, so an edit would be
+						// silently dropped and leave a perpetual diff. RequiresReplace
+						// matches its create-only siblings (endpoint_service, etc.).
+						"service_attachment": schema.StringAttribute{
+							Optional: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
 					},
 				},
 			},

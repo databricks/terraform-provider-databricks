@@ -279,6 +279,43 @@ func TestCreate_SendsGcpEndpoint(t *testing.T) {
 	}
 }
 
+// TestCreate_PreservesConfiguredEnabled guards the consistency check for the
+// Optional+Computed enabled attribute. The create request has no enabled
+// field, so the server creates with its default (here true); a config that
+// set enabled = false must keep that planned value in state rather than
+// adopting the server's value, which would fail Terraform's post-apply
+// consistency check. The next Update reconciles the server side.
+func TestCreate_PreservesConfiguredEnabled(t *testing.T) {
+	ctx := context.Background()
+	api := &fakeAPI{
+		create: func(_ context.Context, req settings.CreatePrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
+			return &settings.NccPrivateEndpointRule{
+				RuleId:                      "rule-1",
+				NetworkConnectivityConfigId: req.NetworkConnectivityConfigId,
+				Enabled:                     true,
+				ConnectionState:             "PENDING",
+			}, nil
+		},
+		get: func(context.Context, settings.GetPrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
+			return &settings.NccPrivateEndpointRule{RuleId: "rule-1", Enabled: true, ConnectionState: "PENDING"}, nil
+		},
+	}
+	r := &resourcePrivateEndpointRule{api: api, backoff: tightBackoff}
+
+	req := resource.CreateRequest{Plan: rawPlan(t, ctx, model{
+		NetworkConnectivityConfigId: types.StringValue("ncc-1"),
+		Enabled:                     types.BoolValue(false),
+	})}
+	resp := resource.CreateResponse{State: emptyState()}
+	r.Create(ctx, req, &resp)
+
+	fatalIfDiag(t, resp.Diagnostics)
+	final := readModel(t, ctx, resp.State)
+	if final.Enabled.ValueBool() != false {
+		t.Errorf("state.enabled: got %v, want false (configured value must survive the server default)", final.Enabled.ValueBool())
+	}
+}
+
 func TestRead_404RemovesFromState(t *testing.T) {
 	ctx := context.Background()
 	api := &fakeAPI{

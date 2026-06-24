@@ -33,7 +33,7 @@ type apiClient interface {
 type resourcePrivateEndpointRule struct {
 	api apiClient
 
-	// backoff controls the Create polling loop. It is wxposed as a field
+	// backoff controls the Create polling loop. It is exposed as a field
 	// so in-package tests can override it.
 	backoff retrier.BackoffPolicy
 }
@@ -85,6 +85,19 @@ func (r *resourcePrivateEndpointRule) Create(ctx context.Context, req resource.C
 		return
 	}
 
+	// enabled is Optional+Computed, but CreatePrivateEndpointRule has no enabled
+	// field, so the server always creates with its own default. fromAPI would
+	// then overwrite a known planned value (e.g. enabled = false) with that
+	// default and fail Terraform's post-apply consistency check. Preserve the
+	// configured value here; the next Update reconciles the server side. A
+	// null/unknown plan (enabled omitted) takes the server value as-is.
+	configuredEnabled := plan.Enabled
+	applyConfiguredEnabled := func() {
+		if !configuredEnabled.IsNull() && !configuredEnabled.IsUnknown() {
+			plan.Enabled = configuredEnabled
+		}
+	}
+
 	apiReq, d := plan.toCreateRequest(ctx)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
@@ -101,6 +114,7 @@ func (r *resourcePrivateEndpointRule) Create(ctx context.Context, req resource.C
 	plan.NetworkConnectivityConfigId = types.StringValue(apiReq.NetworkConnectivityConfigId)
 	plan.ID = types.StringValue(packID(apiReq.NetworkConnectivityConfigId, pendingRule.RuleId))
 	resp.Diagnostics.Append(plan.fromAPI(ctx, pendingRule)...)
+	applyConfiguredEnabled()
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -148,6 +162,7 @@ func (r *resourcePrivateEndpointRule) Create(ctx context.Context, req resource.C
 		// predates. Treat unknown future states as success rather than failing
 		// the apply on a value we cannot classify; a later read surfaces it.
 		resp.Diagnostics.Append(plan.fromAPI(ctx, rule)...)
+		applyConfiguredEnabled()
 		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 		return
 	}

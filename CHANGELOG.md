@@ -1,5 +1,15 @@
 # Version changelog
 
+## Release v1.119.0 (2026-06-24)
+
+### Documentation
+
+* Document that read-only workspace bindings aren't applicable for non-catalog objects ([#5611](https://github.com/databricks/terraform-provider-databricks/pull/5611))
+
+### Internal Changes
+* Run unit tests offline from a pre-warmed Go module cache for PRs that cannot authenticate to the internal Go module proxy (fork and Dependabot PRs), populated by the new "Warm Go Cache" workflow.
+
+
 ## Release v1.118.0 (2026-06-17)
 
 ### New Features and Improvements

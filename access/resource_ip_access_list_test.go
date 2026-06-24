@@ -87,6 +87,120 @@ func TestIPACLCreate(t *testing.T) {
 	assert.Equal(t, 2, d.Get("ip_addresses.#"))
 }
 
+func TestIPACLCreate_Disabled(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/ip-access-lists",
+				ExpectedRequest: settings.CreateIpAccessList{
+					Label:       TestingLabel,
+					ListType:    TestingListType,
+					IpAddresses: TestingIpAddresses,
+				},
+				Response: settings.CreateIpAccessListResponse{
+					IpAccessList: &settings.IpAccessListInfo{
+						ListId:      TestingId,
+						Label:       TestingLabel,
+						ListType:    TestingListType,
+						IpAddresses: TestingIpAddresses,
+						Enabled:     true,
+					},
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/ip-access-lists/" + TestingId,
+				ExpectedRequest: map[string]any{
+					"label":        TestingLabel,
+					"list_type":    TestingListTypeString,
+					"ip_addresses": TestingIpAddresses,
+					"enabled":      false,
+				},
+				Response: settings.CreateIpAccessListResponse{
+					IpAccessList: &settings.IpAccessListInfo{
+						ListId:      TestingId,
+						Label:       TestingLabel,
+						ListType:    TestingListType,
+						IpAddresses: TestingIpAddresses,
+						Enabled:     false,
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/ip-access-lists/" + TestingId + "?",
+				Response: settings.CreateIpAccessListResponse{
+					IpAccessList: &settings.IpAccessListInfo{
+						ListId:      TestingId,
+						Label:       TestingLabel,
+						ListType:    TestingListType,
+						IpAddresses: TestingIpAddresses,
+						Enabled:     false,
+					},
+				},
+			},
+		},
+		Resource: ResourceIPAccessList(),
+		State: map[string]any{
+			"label":        TestingLabel,
+			"list_type":    TestingListTypeString,
+			"ip_addresses": TestingIpAddressesState,
+			"enabled":      false,
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, TestingId, d.Id())
+	assert.Equal(t, false, d.Get("enabled"))
+}
+
+func TestIPACLCreate_Disabled_UpdateError(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/ip-access-lists",
+				ExpectedRequest: settings.CreateIpAccessList{
+					Label:       TestingLabel,
+					ListType:    TestingListType,
+					IpAddresses: TestingIpAddresses,
+				},
+				Response: settings.CreateIpAccessListResponse{
+					IpAccessList: &settings.IpAccessListInfo{
+						ListId:      TestingId,
+						Label:       TestingLabel,
+						ListType:    TestingListType,
+						IpAddresses: TestingIpAddresses,
+						Enabled:     true,
+					},
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/ip-access-lists/" + TestingId,
+				Response: apierr.APIError{
+					ErrorCode: "SERVER_ERROR",
+					Message:   "Something unexpected happened",
+				},
+				Status: 500,
+			},
+		},
+		Resource: ResourceIPAccessList(),
+		State: map[string]any{
+			"label":        TestingLabel,
+			"list_type":    TestingListTypeString,
+			"ip_addresses": TestingIpAddressesState,
+			"enabled":      false,
+		},
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "IP access list "+TestingId+" created but could not be disabled")
+	// The list exists on the backend, so its ID is retained for the next apply
+	// to reconcile rather than orphaning it with a duplicate create.
+	assert.Equal(t, TestingId, d.Id())
+}
+
 func TestAPIACLCreate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -174,6 +288,57 @@ func TestIPACLUpdate(t *testing.T) {
 	assert.Equal(t, TestingListTypeString, d.Get("list_type"))
 	assert.Equal(t, TestingEnabled, d.Get("enabled"))
 	assert.Equal(t, 2, d.Get("ip_addresses.#"))
+}
+
+func TestIPACLUpdate_Disabled(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/ip-access-lists/" + TestingId,
+				ExpectedRequest: map[string]any{
+					"label":        TestingLabel,
+					"list_type":    TestingListTypeString,
+					"ip_addresses": TestingIpAddresses,
+					"enabled":      false,
+				},
+				Response: settings.CreateIpAccessListResponse{
+					IpAccessList: &settings.IpAccessListInfo{
+						ListId:      TestingId,
+						Label:       TestingLabel,
+						ListType:    TestingListType,
+						IpAddresses: TestingIpAddresses,
+						Enabled:     false,
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/ip-access-lists/" + TestingId + "?",
+				Response: settings.CreateIpAccessListResponse{
+					IpAccessList: &settings.IpAccessListInfo{
+						ListId:      TestingId,
+						Label:       TestingLabel,
+						ListType:    TestingListType,
+						IpAddresses: TestingIpAddresses,
+						Enabled:     false,
+					},
+				},
+			},
+		},
+		Resource: ResourceIPAccessList(),
+		State: map[string]any{
+			"label":        TestingLabel,
+			"list_type":    TestingListTypeString,
+			"ip_addresses": TestingIpAddressesState,
+			"enabled":      false,
+		},
+		Update: true,
+		ID:     TestingId,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, TestingId, d.Id())
+	assert.Equal(t, false, d.Get("enabled"))
 }
 
 func TestIPACLUpdate_Error(t *testing.T) {

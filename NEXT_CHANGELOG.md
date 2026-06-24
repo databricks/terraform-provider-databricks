@@ -1,6 +1,6 @@
 # NEXT CHANGELOG
 
-## Release v1.119.0
+## Release v1.120.0
 
 ### Breaking Changes
 

@@ -36,7 +36,7 @@ The following arguments are required:
 * `workspace_id` - ID of the workspace. Change forces creation of a new resource.
 * `securable_name` - Name of securable. Change forces creation of a new resource.
 * `securable_type` - Type of securable. Can be `catalog`, `external_location`, `storage_credential` or `credential`. Default to `catalog`. Change forces creation of a new resource.
-* `binding_type` - (Optional) Binding mode. Default to `BINDING_TYPE_READ_WRITE`. Possible values are `BINDING_TYPE_READ_ONLY`, `BINDING_TYPE_READ_WRITE`.
+* `binding_type` - (Optional) Binding mode. Default to `BINDING_TYPE_READ_WRITE`. Possible values are `BINDING_TYPE_READ_ONLY`, `BINDING_TYPE_READ_WRITE`. Note: `BINDING_TYPE_READ_ONLY` is only supported when `securable_type` is `catalog`. For `storage_credential`, `external_location`, and `credential`, only `BINDING_TYPE_READ_WRITE` is supported.
 * `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
   * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 

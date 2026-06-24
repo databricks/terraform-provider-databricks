@@ -14,6 +14,8 @@
 
 * A Plugin Framework implementation of `databricks_mws_ncc_private_endpoint_rule` is now available behind `DATABRICKS_TF_ENABLED_PF_RESOURCES=databricks_mws_ncc_private_endpoint_rule` ([#5819](https://github.com/databricks/terraform-provider-databricks/pull/5819)). The default remains the SDKv2 implementation; no HCL or state changes when opting in. Once opted in, `terraform apply` waits for the rule to leave `CREATING` before returning: `PENDING` and `ESTABLISHED` succeed, while a `CREATE_FAILED`, `REJECTED`, `DISCONNECTED`, or `EXPIRED` connection state surfaces as an apply-time error instead of on the next plan. This differs from the SDKv2 implementation, which returns immediately without polling.
 
+  The create API does not accept `enabled` (rules are always created disabled), so a configuration that sets `enabled = true` reconciles the value through a follow-up update and may need a second `terraform apply` to converge. The backend rejects updates to `enabled` for Azure rules outright. Both behaviors also apply to the SDKv2 implementation.
+
 ### Bug Fixes
 
 ### Documentation

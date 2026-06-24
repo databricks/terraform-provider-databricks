@@ -15,8 +15,14 @@ import (
 
 // resourceSchema returns the Plugin Framework schema for
 // databricks_mws_ncc_private_endpoint_rule. The attribute set matches the
-// SDKv2 implementation in mws/resource_mws_ncc_private_endpoint_rule.go
-// one-to-one; parity is enforced by `make diff-schema`.
+// SDKv2 implementation in mws/resource_mws_ncc_private_endpoint_rule.go so
+// opting in needs no config or state change. `make diff-schema` does NOT
+// guard this parity: it dumps the default (SDKv2) provider, and this resource
+// is opt-in, so the PF schema below is never introspected by that gate.
+// TestSchema_MatchesSDKv2 asserts the parity instead. The one intentional
+// divergence is gcp_endpoint.service_attachment: SDKv2 leaves it updatable
+// (ForceNew=false), but the Update path never sends gcp_endpoint, so an edit
+// is silently dropped into a perpetual diff; PF marks it RequiresReplace.
 func resourceSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -50,6 +56,13 @@ func resourceSchema() schema.Schema {
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				// fromAPI collapses a server "" to null, so an explicit "" would
+				// fail the post-apply consistency check. Reject it at plan time;
+				// "" is never a valid value for these create-only inputs. This is
+				// the scalar twin of the domain_names/resource_names SizeAtLeast.
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"group_id": schema.StringAttribute{
 				Optional: true,
@@ -61,12 +74,16 @@ func resourceSchema() schema.Schema {
 						path.MatchRoot("domain_names"),
 						path.MatchRoot("resource_names"),
 					),
+					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"resource_id": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"domain_names": schema.ListAttribute{
@@ -77,6 +94,12 @@ func resourceSchema() schema.Schema {
 						path.MatchRoot("group_id"),
 						path.MatchRoot("resource_names"),
 					),
+					// fromAPI collapses an empty server list to null, so an
+					// explicit `domain_names = []` (a known empty list) would
+					// fail Terraform's post-apply consistency check (plan []
+					// vs state null). An empty list is not a meaningful value
+					// for this attribute; reject it at plan time instead.
+					listvalidator.SizeAtLeast(1),
 				},
 			},
 			"resource_names": schema.ListAttribute{
@@ -87,6 +110,7 @@ func resourceSchema() schema.Schema {
 						path.MatchRoot("group_id"),
 						path.MatchRoot("domain_names"),
 					),
+					listvalidator.SizeAtLeast(1),
 				},
 			},
 			"enabled": schema.BoolAttribute{

@@ -3,6 +3,7 @@ package privateendpointrule
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -10,11 +11,16 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/internal/retrier"
+	"github.com/databricks/terraform-provider-databricks/mws"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkschema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // tightBackoff keeps the retrier's sleep between polling attempts negligible.
@@ -671,6 +677,344 @@ func TestFromAPI_EmptyServerListsBecomeNull(t *testing.T) {
 				t.Errorf("ResourceNames: got %v, want null", m.ResourceNames)
 			}
 		})
+	}
+}
+
+// TestFromAPI_UnsetScalarsBecomeNull guards the cross-cloud consistency fix.
+// endpoint_service is unset on Azure, group_id/resource_id are unset on AWS,
+// and the server returns each unset field as "". These attributes are Optional
+// and not Computed, so an omitted one plans as null; writing a known "" against
+// it fails Terraform's post-apply consistency check. fromAPI must collapse ""
+// to null. The list version of this guard is TestFromAPI_EmptyServerListsBecomeNull.
+func TestFromAPI_UnsetScalarsBecomeNull(t *testing.T) {
+	ctx := context.Background()
+	tests := []struct {
+		name                                 string
+		endpointService, groupId, resourceId string
+		wantEndpointNull, wantGroupNull      bool
+		wantResourceNull                     bool
+	}{
+		{"aws shape: endpoint_service set, group/resource unset", "com.amazonaws.us-east-1.s3", "", "", false, true, true},
+		{"azure shape: group/resource set, endpoint_service unset", "", "blob", "/subscriptions/x/sa", true, false, false},
+		{"all unset", "", "", "", true, true, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := emptyModel()
+			fatalIfDiag(t, m.fromAPI(ctx, &settings.NccPrivateEndpointRule{
+				EndpointService: tt.endpointService,
+				GroupId:         tt.groupId,
+				ResourceId:      tt.resourceId,
+			}))
+			if m.EndpointService.IsNull() != tt.wantEndpointNull {
+				t.Errorf("EndpointService.IsNull()=%v, want %v (server returned %q)", m.EndpointService.IsNull(), tt.wantEndpointNull, tt.endpointService)
+			}
+			if m.GroupId.IsNull() != tt.wantGroupNull {
+				t.Errorf("GroupId.IsNull()=%v, want %v (server returned %q)", m.GroupId.IsNull(), tt.wantGroupNull, tt.groupId)
+			}
+			if m.ResourceId.IsNull() != tt.wantResourceNull {
+				t.Errorf("ResourceId.IsNull()=%v, want %v (server returned %q)", m.ResourceId.IsNull(), tt.wantResourceNull, tt.resourceId)
+			}
+		})
+	}
+}
+
+// TestSchema_CreateOnlyFieldsRequireReplace locks the contract that the
+// create-only inputs carry a plan modifier (RequiresReplace) and stay
+// Optional-not-Computed. toUpdateRequest never masks these, so without
+// RequiresReplace an edit would be silently dropped and churn the plan forever
+// (the gcp_endpoint.service_attachment bug). group_id additionally carries its
+// ConflictsWith validator, so it has two modifiers/validators; assert presence,
+// not count.
+func TestSchema_CreateOnlyFieldsRequireReplace(t *testing.T) {
+	s := resourceSchema()
+	for _, name := range []string{"endpoint_service", "group_id", "resource_id"} {
+		attr, ok := s.Attributes[name].(schema.StringAttribute)
+		if !ok {
+			t.Errorf("%s missing or not a StringAttribute", name)
+			continue
+		}
+		if !attr.Optional || attr.Computed {
+			t.Errorf("%s must be Optional and not Computed; got Optional=%v Computed=%v", name, attr.Optional, attr.Computed)
+		}
+		if len(attr.PlanModifiers) == 0 {
+			t.Errorf("%s must carry a RequiresReplace plan modifier; got none", name)
+		}
+	}
+	gcp, ok := s.Blocks["gcp_endpoint"].(schema.ListNestedBlock)
+	if !ok {
+		t.Fatal("gcp_endpoint missing or not a ListNestedBlock")
+	}
+	sa, ok := gcp.NestedObject.Attributes["service_attachment"].(schema.StringAttribute)
+	if !ok {
+		t.Fatal("gcp_endpoint.service_attachment missing or not a StringAttribute")
+	}
+	if !sa.Optional || sa.Computed {
+		t.Errorf("service_attachment must be Optional and not Computed; got Optional=%v Computed=%v", sa.Optional, sa.Computed)
+	}
+	if len(sa.PlanModifiers) == 0 {
+		t.Error("service_attachment must carry a RequiresReplace plan modifier; got none")
+	}
+}
+
+// TestSchema_MatchesSDKv2 is the parity guard that `make diff-schema` cannot
+// provide for an opt-in PF resource (the gate dumps the default SDKv2 provider
+// only). It compares the Optional/Computed/Required flag of every SDKv2
+// attribute against the PF attribute of the same name, so a future drift
+// (e.g. a Computed flip, or a new field added to one side only) fails here.
+// ForceNew/RequiresReplace, ConflictsWith, and cardinality are covered by the
+// dedicated schema-invariant tests above.
+func TestSchema_MatchesSDKv2(t *testing.T) {
+	sdk := mws.ResourceMwsNccPrivateEndpointRule().Schema
+	pf := resourceSchema()
+
+	flags := func(a schema.Attribute) string {
+		return fmt.Sprintf("Optional=%v Computed=%v Required=%v", a.IsOptional(), a.IsComputed(), a.IsRequired())
+	}
+	sdkFlags := func(s *sdkschema.Schema) string {
+		return fmt.Sprintf("Optional=%v Computed=%v Required=%v", s.Optional, s.Computed, s.Required)
+	}
+
+	for name, s := range sdk {
+		if name == "gcp_endpoint" {
+			// gcp_endpoint is a list-of-objects: SDKv2 models it as a TypeList
+			// attribute, PF as a nested block. Compare the nested fields, which
+			// is where flag drift would actually bite.
+			block, ok := pf.Blocks["gcp_endpoint"].(schema.ListNestedBlock)
+			if !ok {
+				t.Errorf("gcp_endpoint missing from PF blocks")
+				continue
+			}
+			nested := s.Elem.(*sdkschema.Resource).Schema
+			for sub, subSchema := range nested {
+				pfSub, ok := block.NestedObject.Attributes[sub]
+				if !ok {
+					t.Errorf("gcp_endpoint.%s present in SDKv2 but missing from PF", sub)
+					continue
+				}
+				if got, want := flags(pfSub), sdkFlags(subSchema); got != want {
+					t.Errorf("gcp_endpoint.%s flags: PF %s, SDKv2 %s", sub, got, want)
+				}
+			}
+			continue
+		}
+		pfAttr, ok := pf.Attributes[name]
+		if !ok {
+			t.Errorf("attribute %q present in SDKv2 but missing from PF", name)
+			continue
+		}
+		if got, want := flags(pfAttr), sdkFlags(s); got != want {
+			t.Errorf("attribute %q flags: PF %s, SDKv2 %s", name, got, want)
+		}
+	}
+
+	// Every PF attribute except the framework-synthesized "id" must exist in
+	// SDKv2, so neither side carries an extra field.
+	for name := range pf.Attributes {
+		if name == "id" {
+			continue
+		}
+		if _, ok := sdk[name]; !ok {
+			t.Errorf("attribute %q present in PF but missing from SDKv2", name)
+		}
+	}
+}
+
+// TestEnabledReconcilesAcrossCreateReadUpdate locks the deferred-convergence
+// contract behind the Create enabled-preservation fix. enabled is
+// Optional+Computed and the create body has no enabled field, so a configured
+// enabled=false is written to state at Create while the server stays at its
+// default (true). Convergence is intentionally deferred to the next plan/apply:
+// Read must refresh state.enabled to the server value (so a diff is detected),
+// and the subsequent Update must carry enabled=false in the mask. If any link
+// regresses, the resource would silently never converge.
+func TestEnabledReconcilesAcrossCreateReadUpdate(t *testing.T) {
+	ctx := context.Background()
+	api := &fakeAPI{
+		create: func(_ context.Context, req settings.CreatePrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
+			return &settings.NccPrivateEndpointRule{RuleId: "rule-1", NetworkConnectivityConfigId: req.NetworkConnectivityConfigId, Enabled: true, ConnectionState: "PENDING"}, nil
+		},
+		get: func(context.Context, settings.GetPrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
+			return &settings.NccPrivateEndpointRule{RuleId: "rule-1", Enabled: true, ConnectionState: "PENDING"}, nil
+		},
+	}
+	r := &resourcePrivateEndpointRule{api: api, backoff: tightBackoff}
+
+	// Create with enabled=false: the planned value is preserved in state.
+	createResp := resource.CreateResponse{State: emptyState()}
+	r.Create(ctx, resource.CreateRequest{Plan: rawPlan(t, ctx, model{
+		NetworkConnectivityConfigId: types.StringValue("ncc-1"),
+		Enabled:                     types.BoolValue(false),
+	})}, &createResp)
+	fatalIfDiag(t, createResp.Diagnostics)
+	afterCreate := readModel(t, ctx, createResp.State)
+	if afterCreate.Enabled.ValueBool() != false {
+		t.Fatalf("after Create, state.enabled = %v, want false (planned value preserved)", afterCreate.Enabled.ValueBool())
+	}
+
+	// Read refreshes state from the server, so enabled must flip to the server
+	// value (true) to expose the pending diff.
+	readState := rawState(t, ctx, afterCreate)
+	readResp := resource.ReadResponse{State: readState}
+	r.Read(ctx, resource.ReadRequest{State: readState}, &readResp)
+	fatalIfDiag(t, readResp.Diagnostics)
+	if afterRead := readModel(t, ctx, readResp.State); afterRead.Enabled.ValueBool() != true {
+		t.Fatalf("after Read, state.enabled = %v, want true (server value); deferred convergence would never trigger otherwise", afterRead.Enabled.ValueBool())
+	}
+
+	// The reconciling Update (plan false vs refreshed state true) must mask enabled.
+	var sentReq *settings.UpdateNccPrivateEndpointRuleRequest
+	api.update = func(_ context.Context, req settings.UpdateNccPrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
+		sentReq = &req
+		return &settings.NccPrivateEndpointRule{RuleId: "rule-1", Enabled: false, ConnectionState: "PENDING"}, nil
+	}
+	refreshed := readModel(t, ctx, readResp.State)
+	plan := refreshed
+	plan.Enabled = types.BoolValue(false)
+	updState := rawState(t, ctx, refreshed)
+	updResp := resource.UpdateResponse{State: updState}
+	r.Update(ctx, resource.UpdateRequest{Plan: rawPlan(t, ctx, plan), State: updState}, &updResp)
+	fatalIfDiag(t, updResp.Diagnostics)
+	if sentReq == nil {
+		t.Fatal("reconciling Update never reached the API")
+	}
+	if sentReq.UpdateMask != "enabled" {
+		t.Errorf("UpdateMask: got %q, want %q", sentReq.UpdateMask, "enabled")
+	}
+	if sentReq.PrivateEndpointRule.Enabled != false {
+		t.Errorf("Update sent enabled=%v, want false", sentReq.PrivateEndpointRule.Enabled)
+	}
+}
+
+// TestUpdate_EnabledFalseRequestBody documents and locks a subtle wire-level
+// dependency: settings.UpdatePrivateEndpointRule.Enabled is `omitempty` with no
+// ForceSendFields, so a disable marshals to an empty body. That is correct only
+// because the request also carries update_mask=enabled, and field-mask
+// semantics make the server apply the zero value (false) for a masked-but-absent
+// field. SDKv2 relies on the identical behavior, so this is parity-preserving.
+// If someone "fixes" the empty body by adding ForceSendFields, this test makes
+// that a conscious change rather than a silent one.
+func TestUpdate_EnabledFalseRequestBody(t *testing.T) {
+	ctx := context.Background()
+	// Use typed-null lists (what the framework produces) so the only field that
+	// differs between state and plan is enabled; otherwise bare zero-value lists
+	// would compare unequal and pollute the mask.
+	prev := model{
+		ID:            types.StringValue(packID("ncc-1", "rule-1")),
+		Enabled:       types.BoolValue(true),
+		DomainNames:   types.ListNull(types.StringType),
+		ResourceNames: types.ListNull(types.StringType),
+	}
+	plan := prev
+	plan.Enabled = types.BoolValue(false)
+
+	req, diags := plan.toUpdateRequest(ctx, prev)
+	fatalIfDiag(t, diags)
+	if req.UpdateMask != "enabled" {
+		t.Fatalf("UpdateMask: got %q, want %q", req.UpdateMask, "enabled")
+	}
+	body, err := req.PrivateEndpointRule.MarshalJSON()
+	if err != nil {
+		t.Fatalf("MarshalJSON: %v", err)
+	}
+	if got := string(body); got != "{}" {
+		t.Errorf("disable request body: got %q, want %q (enabled=false is conveyed via update_mask, not the body; see test doc)", got, "{}")
+	}
+}
+
+// TestSchema_EmptyListsRejectedAtPlanTime locks the SizeAtLeast(1) validators
+// on domain_names/resource_names. fromAPI collapses an empty server list to
+// null, so an explicit `domain_names = []` (a known empty list) would otherwise
+// fail Terraform's post-apply consistency check (plan [] vs state null). The
+// validator rejects it at plan time instead. The match on "at least" pins the
+// rejection to the size validator, not the ConflictsWith one.
+func TestSchema_EmptyListsRejectedAtPlanTime(t *testing.T) {
+	ctx := context.Background()
+	attrs := resourceSchema().Attributes
+	empty := types.ListValueMust(types.StringType, []attr.Value{})
+	for _, name := range []string{"domain_names", "resource_names"} {
+		la, ok := attrs[name].(schema.ListAttribute)
+		if !ok {
+			t.Errorf("%s missing or not a ListAttribute", name)
+			continue
+		}
+		// Build a real config with only this attribute set to []; the other
+		// list null. ConflictsWith dereferences req.Config, so a zero-value
+		// Config would panic; a populated one lets both validators run and
+		// finds no conflict (the sibling fields are null).
+		cfgModel := emptyModel()
+		switch name {
+		case "domain_names":
+			cfgModel.DomainNames = empty
+		case "resource_names":
+			cfgModel.ResourceNames = empty
+		}
+		cfg := tfsdk.Config(rawState(t, ctx, cfgModel))
+
+		var rejectedForSize bool
+		for _, v := range la.Validators {
+			resp := &validator.ListResponse{}
+			v.ValidateList(ctx, validator.ListRequest{
+				Path:        path.Root(name),
+				ConfigValue: empty,
+				Config:      cfg,
+			}, resp)
+			for _, d := range resp.Diagnostics.Errors() {
+				if strings.Contains(d.Detail(), "at least") {
+					rejectedForSize = true
+				}
+			}
+		}
+		if !rejectedForSize {
+			t.Errorf("%s: an explicit empty list must be rejected at plan time by a size validator", name)
+		}
+	}
+}
+
+// TestSchema_EmptyStringScalarsRejectedAtPlanTime locks the LengthAtLeast(1)
+// validators on the create-only scalars. fromAPI collapses a server "" to null,
+// so an explicit `group_id = ""` (a known "") would fail the post-apply
+// consistency check; the validator rejects it at plan time. Scalar twin of
+// TestSchema_EmptyListsRejectedAtPlanTime.
+func TestSchema_EmptyStringScalarsRejectedAtPlanTime(t *testing.T) {
+	ctx := context.Background()
+	attrs := resourceSchema().Attributes
+	for _, name := range []string{"endpoint_service", "group_id", "resource_id"} {
+		sa, ok := attrs[name].(schema.StringAttribute)
+		if !ok {
+			t.Errorf("%s missing or not a StringAttribute", name)
+			continue
+		}
+		// group_id carries a ConflictsWith validator that dereferences
+		// req.Config, so build a real config with only this scalar set to "".
+		cfgModel := emptyModel()
+		switch name {
+		case "endpoint_service":
+			cfgModel.EndpointService = types.StringValue("")
+		case "group_id":
+			cfgModel.GroupId = types.StringValue("")
+		case "resource_id":
+			cfgModel.ResourceId = types.StringValue("")
+		}
+		cfg := tfsdk.Config(rawState(t, ctx, cfgModel))
+
+		var rejectedForLength bool
+		for _, v := range sa.Validators {
+			resp := &validator.StringResponse{}
+			v.ValidateString(ctx, validator.StringRequest{
+				Path:        path.Root(name),
+				ConfigValue: types.StringValue(""),
+				Config:      cfg,
+			}, resp)
+			for _, d := range resp.Diagnostics.Errors() {
+				if strings.Contains(d.Detail(), "at least") {
+					rejectedForLength = true
+				}
+			}
+		}
+		if !rejectedForLength {
+			t.Errorf("%s: an explicit empty string must be rejected at plan time by a length validator", name)
+		}
 	}
 }
 

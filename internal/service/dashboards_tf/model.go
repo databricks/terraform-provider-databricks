@@ -5237,6 +5237,8 @@ type GenieUpdateSpaceRequest struct {
 	// if the space has been modified since. Omit to apply the update
 	// unconditionally.
 	Etag types.String `tfsdk:"etag"`
+	// Parent workspace folder path to move this Genie space under.
+	ParentPath types.String `tfsdk:"parent_path"`
 	// The contents of the Genie Space in serialized string form (full
 	// replacement). Use the [Get Genie Space](:method:genie/getspace) API to
 	// retrieve an example response, which includes the `serialized_space`
@@ -5260,6 +5262,7 @@ func (to *GenieUpdateSpaceRequest) SyncFieldsDuringRead(ctx context.Context, fro
 func (m GenieUpdateSpaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["serialized_space"] = attrs["serialized_space"].SetOptional()
 	attrs["title"] = attrs["title"].SetOptional()
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
@@ -5288,6 +5291,7 @@ func (m GenieUpdateSpaceRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 		map[string]attr.Value{
 			"description":      m.Description,
 			"etag":             m.Etag,
+			"parent_path":      m.ParentPath,
 			"serialized_space": m.SerializedSpace,
 			"space_id":         m.SpaceId,
 			"title":            m.Title,
@@ -5301,6 +5305,7 @@ func (m GenieUpdateSpaceRequest) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"description":      types.StringType,
 			"etag":             types.StringType,
+			"parent_path":      types.StringType,
 			"serialized_space": types.StringType,
 			"space_id":         types.StringType,
 			"title":            types.StringType,
@@ -6517,6 +6522,154 @@ func (m Result) Type(ctx context.Context) attr.Type {
 			"statement_id_signature": types.StringType,
 		},
 	}
+}
+
+// Request to revert a dashboard draft to its last published state.
+type RevertDashboardRequest struct {
+	// UUID identifying the dashboard.
+	DashboardId types.String `tfsdk:"-"`
+	// The etag for the dashboard. Optionally, it can be provided to verify that
+	// the dashboard has not been modified from its last retrieval.
+	Etag types.String `tfsdk:"etag"`
+}
+
+func (to *RevertDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RevertDashboardRequest) {
+}
+
+func (to *RevertDashboardRequest) SyncFieldsDuringRead(ctx context.Context, from RevertDashboardRequest) {
+}
+
+func (m RevertDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetComputed()
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RevertDashboardRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RevertDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RevertDashboardRequest
+// only implements ToObjectValue() and Type().
+func (m RevertDashboardRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dashboard_id": m.DashboardId,
+			"etag":         m.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RevertDashboardRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dashboard_id": types.StringType,
+			"etag":         types.StringType,
+		},
+	}
+}
+
+// Response to revert a dashboard draft to its last published state.
+type RevertDashboardResponse struct {
+	// The reverted dashboard.
+	Dashboard types.Object `tfsdk:"dashboard"`
+}
+
+func (to *RevertDashboardResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RevertDashboardResponse) {
+	if !from.Dashboard.IsNull() && !from.Dashboard.IsUnknown() {
+		if toDashboard, ok := to.GetDashboard(ctx); ok {
+			if fromDashboard, ok := from.GetDashboard(ctx); ok {
+				// Recursively sync the fields of Dashboard
+				toDashboard.SyncFieldsDuringCreateOrUpdate(ctx, fromDashboard)
+				to.SetDashboard(ctx, toDashboard)
+			}
+		}
+	}
+}
+
+func (to *RevertDashboardResponse) SyncFieldsDuringRead(ctx context.Context, from RevertDashboardResponse) {
+	if !from.Dashboard.IsNull() && !from.Dashboard.IsUnknown() {
+		if toDashboard, ok := to.GetDashboard(ctx); ok {
+			if fromDashboard, ok := from.GetDashboard(ctx); ok {
+				toDashboard.SyncFieldsDuringRead(ctx, fromDashboard)
+				to.SetDashboard(ctx, toDashboard)
+			}
+		}
+	}
+}
+
+func (m RevertDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard"] = attrs["dashboard"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RevertDashboardResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RevertDashboardResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"dashboard": reflect.TypeOf(Dashboard{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RevertDashboardResponse
+// only implements ToObjectValue() and Type().
+func (m RevertDashboardResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dashboard": m.Dashboard,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RevertDashboardResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dashboard": Dashboard{}.Type(ctx),
+		},
+	}
+}
+
+// GetDashboard returns the value of the Dashboard field in RevertDashboardResponse as
+// a Dashboard value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *RevertDashboardResponse) GetDashboard(ctx context.Context) (Dashboard, bool) {
+	var e Dashboard
+	if m.Dashboard.IsNull() || m.Dashboard.IsUnknown() {
+		return e, false
+	}
+	var v Dashboard
+	d := m.Dashboard.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDashboard sets the value of the Dashboard field in RevertDashboardResponse.
+func (m *RevertDashboardResponse) SetDashboard(ctx context.Context, v Dashboard) {
+	vs := v.ToObjectValue(ctx)
+	m.Dashboard = vs
 }
 
 type Schedule struct {

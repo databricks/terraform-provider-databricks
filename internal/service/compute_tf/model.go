@@ -405,6 +405,22 @@ type AzureAttributes struct {
 	// `first_on_demand` ones. Note: If `first_on_demand` is zero, this
 	// availability type will be used for the entire cluster.
 	Availability types.String `tfsdk:"availability"`
+	// The Azure capacity reservation group resource ID to use for launching
+	// VMs. When specified, VMs will be launched using the provided capacity
+	// reservation.
+	//
+	// Capacity reservations can only be specified when the workspace uses
+	// injected vnet (i.e. customer defined vnet not managed by databricks).
+	// Ensure the databricks-login-prod Enterprise Application is granted the
+	// following four permissions: 1.
+	// Microsoft.Compute/capacityReservationGroups/read 2.
+	// Microsoft.Compute/capacityReservationGroups/deploy/action 3.
+	// Microsoft.Compute/capacityReservationGroups/capacityReservations/read 4.
+	// Microsoft.Compute/capacityReservationGroups/capacityReservations/deploy/action
+	//
+	// Format:
+	// `/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/capacityReservationGroups/{capacityReservationGroupName}`
+	CapacityReservationGroup types.String `tfsdk:"capacity_reservation_group"`
 	// The first `first_on_demand` nodes of the cluster will be placed on
 	// on-demand instances. This value should be greater than 0, to make sure
 	// the cluster driver node is placed on an on-demand instance. If this value
@@ -450,6 +466,7 @@ func (to *AzureAttributes) SyncFieldsDuringRead(ctx context.Context, from AzureA
 
 func (m AzureAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["availability"] = attrs["availability"].SetOptional()
+	attrs["capacity_reservation_group"] = attrs["capacity_reservation_group"].SetOptional()
 	attrs["first_on_demand"] = attrs["first_on_demand"].SetOptional()
 	attrs["log_analytics_info"] = attrs["log_analytics_info"].SetOptional()
 	attrs["spot_bid_max_price"] = attrs["spot_bid_max_price"].SetOptional()
@@ -477,10 +494,11 @@ func (m AzureAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"availability":       m.Availability,
-			"first_on_demand":    m.FirstOnDemand,
-			"log_analytics_info": m.LogAnalyticsInfo,
-			"spot_bid_max_price": m.SpotBidMaxPrice,
+			"availability":               m.Availability,
+			"capacity_reservation_group": m.CapacityReservationGroup,
+			"first_on_demand":            m.FirstOnDemand,
+			"log_analytics_info":         m.LogAnalyticsInfo,
+			"spot_bid_max_price":         m.SpotBidMaxPrice,
 		})
 }
 
@@ -488,10 +506,11 @@ func (m AzureAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m AzureAttributes) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"availability":       types.StringType,
-			"first_on_demand":    types.Int64Type,
-			"log_analytics_info": LogAnalyticsInfo{}.Type(ctx),
-			"spot_bid_max_price": types.Float64Type,
+			"availability":               types.StringType,
+			"capacity_reservation_group": types.StringType,
+			"first_on_demand":            types.Int64Type,
+			"log_analytics_info":         LogAnalyticsInfo{}.Type(ctx),
+			"spot_bid_max_price":         types.Float64Type,
 		},
 	}
 }
@@ -10144,7 +10163,10 @@ type Environment struct {
 	// environment ID (e.g.,
 	// `workspace-base-environments/dbe_b849b66e-b31a-4cb5-b161-1f2b10877fb7`)
 	// is in Beta. Either `environment_version` or `base_environment` can be
-	// provided. For more information, see
+	// provided. For more information about Databricks-provided base
+	// environments, see the [list workspace base
+	// environments](:method:Environments/ListWorkspaceBaseEnvironments) API.
+	// For more information, see
 	BaseEnvironment types.String `tfsdk:"base_environment"`
 	// Use `environment_version` instead.
 	Client types.String `tfsdk:"client"`
@@ -13317,7 +13339,7 @@ func (m *InitScriptEventDetails) SetGlobal(ctx context.Context, v []InitScriptIn
 	m.Global = types.ListValueMust(t, vs)
 }
 
-// Config for an individual init script Next ID: 11
+// Config for an individual init script
 type InitScriptInfo struct {
 	// destination needs to be provided, e.g.
 	// `abfss://<container-name>@<storage-account-name>.dfs.core.windows.net/<directory-name>`
@@ -18296,8 +18318,8 @@ type NodeType struct {
 	// Unique identifier for this node type.
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of CPU cores available for this node type. Note that this can be
-	// fractional, e.g., 2.5 cores, if the the number of cores on a machine
-	// instance is not divisible by the number of Spark nodes on that machine.
+	// fractional, e.g., 2.5 cores, if the number of cores on a machine instance
+	// is not divisible by the number of Spark nodes on that machine.
 	NumCores types.Float64 `tfsdk:"num_cores"`
 	// Number of GPUs available for this node type.
 	NumGpus types.Int64 `tfsdk:"num_gpus"`

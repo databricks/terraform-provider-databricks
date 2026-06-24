@@ -56,6 +56,7 @@ func TestMwsAccEntitlements_AccountProvider_ProviderConfig(t *testing.T) {
 
 		resource "databricks_entitlements" "this" {
 			service_principal_id  = databricks_service_principal.this.id
+			workspace_access      = true
 			databricks_sql_access = true
 
 			provider_config {

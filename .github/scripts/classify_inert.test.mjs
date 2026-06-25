@@ -1,4 +1,5 @@
-// Tests for the shared inert-path classifier. Run with: node --test .github/scripts/
+// Tests for the shared inert-path classifier.
+// Run with: node --test .github/scripts/classify_inert.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
@@ -53,4 +54,26 @@ test("every allowlist glob compiles to a regex", () => {
 
 test("unsupported glob throws", () => {
   assert.throws(() => globToRegExp("src/**/*.go"));
+});
+
+// Renames: the workflows classify both the new and old path of a renamed file
+// (`[f.filename, f.previous_filename]`) through this same `allInert`, so a file
+// renamed OUT OF a code path into docs must still count as non-inert, while a
+// rename that stays entirely within inert paths is inert.
+test("a rename from a non-inert path is not inert", () => {
+  // previous_filename "internal/x.go" -> filename "docs/x.md"
+  assert.equal(allInert(["docs/x.md", "internal/x.go"]), false);
+});
+
+test("a rename within inert paths is inert", () => {
+  // previous_filename "docs/old.md" -> filename "docs/new.md"
+  assert.equal(allInert(["docs/new.md", "docs/old.md"]), true);
+});
+
+// The >300-file cap is a workflow-level fail-open guard (the github-script
+// callers force non-inert above the cap before this module is consulted), not
+// module logic. Below the cap, a large all-inert set still classifies as inert.
+test("a large all-inert file set is inert", () => {
+  const many = Array.from({ length: 250 }, (_, i) => `docs/page-${i}.md`);
+  assert.equal(allInert(many), true);
 });

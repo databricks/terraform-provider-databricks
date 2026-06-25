@@ -15,5 +15,3 @@
 ### Exporter
 
 ### Internal Changes
-
-* Move the integration-test inert-path allowlist into a single shared classifier (`.github/scripts/classify_inert.mjs`) consumed by both the `detect-changes` and `carry-forward` jobs, replacing the duplicated `dorny/paths-filter` definition and inline glob matcher so the two classifiers can no longer drift.

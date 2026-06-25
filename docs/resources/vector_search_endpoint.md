@@ -23,7 +23,9 @@ resource "databricks_vector_search_endpoint" "this" {
 The following arguments are supported:
 
 * `name` - (Required) Name of the Mosaic AI Vector Search Endpoint to create. (Change leads to recreation of the resource).
-* `endpoint_type` (Required) Type of Mosaic AI Vector Search Endpoint.  Currently only accepting single value: `STANDARD` (See [documentation](https://docs.databricks.com/api/workspace/vectorsearchendpoints/createendpoint) for the list of currently supported values). (Change leads to recreation of the resource).
+* `endpoint_type` (Required, change leads to recreation of the resource) Type of Mosaic AI Vector Search Endpoint. See [documentation](https://docs.databricks.com/api/workspace/vectorsearchendpoints/createendpoint) for the list of currently supported values:
+  * `STANDARD`
+  * `STORAGE_OPTIMIZED`
 * `budget_policy_id` - (Optional) The Budget Policy ID set for this resource.
 * `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
   * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.

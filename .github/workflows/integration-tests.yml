@@ -55,6 +55,10 @@ jobs:
       - name: Check out the inert classifier
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
+          # Use the base (trusted) ref, never the PR merge commit: a PR must not
+          # be able to rewrite classify_inert.mjs to skip/carry its own required
+          # check. Absent on the bootstrap PR -> import throws -> fail-open below.
+          ref: ${{ github.event.pull_request.base.sha }}
           sparse-checkout: .github/scripts
           sparse-checkout-cone-mode: false
 
@@ -122,6 +126,10 @@ jobs:
       - name: Check out the inert classifier
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
+          # Use the base (trusted) ref, never the PR merge commit: a PR must not
+          # be able to rewrite classify_inert.mjs to skip/carry its own required
+          # check. Absent on the bootstrap PR -> import throws -> fail-open below.
+          ref: ${{ github.event.pull_request.base.sha }}
           sparse-checkout: .github/scripts
           sparse-checkout-cone-mode: false
 

@@ -4,9 +4,9 @@
 //
 //   1. integration-tests.yml `detect-changes` (this repo, via github-script)
 //   2. integration-tests.yml `carry-forward`  (this repo, via github-script)
-//   3. databricks-eng/eng-dev-ecosystem terraform-isolated-pr.yml, which
-//      sparse-checks this exact file out of `main` and imports it so fork PRs
-//      and manual dispatches share the same allowlist.
+//   3. The internal fork-PR / manual-dispatch integration-test workflow, which
+//      sparse-checks this exact file out of `main` and imports it so those runs
+//      share the same allowlist.
 //
 // Keeping the allowlist and the matching logic here — and nowhere else — stops
 // the call sites from drifting apart. The file is intentionally dependency-free

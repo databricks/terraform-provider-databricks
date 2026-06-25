@@ -38,7 +38,7 @@ jobs:
   # dispatch in favor of posting a synthetic success check. The allowlist and
   # matching logic live in .github/scripts/classify_inert.mjs — the single
   # source of truth shared with the carry-forward job below and with the
-  # eng-dev-ecosystem fork-PR workflow.
+  # internal fork-PR / manual-dispatch integration-test workflow.
   detect-changes:
     name: Detect inert-only changes
     if: github.event_name == 'pull_request'
@@ -193,7 +193,7 @@ jobs:
 
               // Validate the prior head's check by PROVENANCE, not just name.
               // Many actors post a check named "Integration Tests" (the real
-              // eng-dev-ecosystem run, the skip job, a previous carry-forward).
+              // integration-test run, the skip job, a previous carry-forward).
               // Exclude our own synthetic runs (marked via external_id) so a
               // synthetic green can never be laundered forward, then require
               // the most recent *real* run to be a completed success — closing

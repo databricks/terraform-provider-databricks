@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { isInert, allInert, globToRegExp, INERT_GLOBS } from "./classify_inert.mjs";
+import { isInert, allInert, globToRegExp, INERT_GLOBS, classifyPullRequest } from "./classify_inert.mjs";
 
 test("docs-only change is inert", () => {
   assert.equal(allInert(["docs/index.md", "docs/resources/job.md"]), true);
@@ -76,4 +76,48 @@ test("a rename within inert paths is inert", () => {
 test("a large all-inert file set is inert", () => {
   const many = Array.from({ length: 250 }, (_, i) => `docs/page-${i}.md`);
   assert.equal(allInert(many), true);
+});
+
+// classifyPullRequest: a mock octokit whose paginate() ignores the listFiles
+// sentinel and returns a preset file array, so these exercise the pagination +
+// cap + rename glue with no network.
+const mockOctokit = (files) => ({
+  rest: { pulls: { listFiles: "listFiles-sentinel" } },
+  async paginate(fn, params) {
+    assert.equal(fn, "listFiles-sentinel");
+    assert.equal(params.per_page, 100);
+    return files;
+  },
+});
+
+test("classifyPullRequest: all-inert files -> inertOnly, not capped", async () => {
+  const octokit = mockOctokit([{ filename: "docs/a.md" }, { filename: "README.md" }]);
+  const r = await classifyPullRequest(octokit, { owner: "o", repo: "r", pull_number: 1 });
+  assert.deepEqual(r, { inertOnly: true, fileCount: 2, capped: false });
+});
+
+test("classifyPullRequest: one non-inert file -> not inert", async () => {
+  const octokit = mockOctokit([{ filename: "docs/a.md" }, { filename: "internal/x.go" }]);
+  const r = await classifyPullRequest(octokit, { owner: "o", repo: "r", pull_number: 1 });
+  assert.equal(r.inertOnly, false);
+  assert.equal(r.capped, false);
+});
+
+test("classifyPullRequest: rename out of a non-inert path -> not inert", async () => {
+  // filename is inert but previous_filename was code, so the PR is not inert.
+  const octokit = mockOctokit([{ filename: "docs/x.md", previous_filename: "internal/x.go" }]);
+  const r = await classifyPullRequest(octokit, { owner: "o", repo: "r", pull_number: 1 });
+  assert.equal(r.inertOnly, false);
+});
+
+test("classifyPullRequest: above maxFiles -> capped, not inert", async () => {
+  const octokit = mockOctokit([{ filename: "docs/a.md" }, { filename: "docs/b.md" }, { filename: "docs/c.md" }]);
+  const r = await classifyPullRequest(octokit, { owner: "o", repo: "r", pull_number: 1, maxFiles: 2 });
+  assert.deepEqual(r, { inertOnly: false, fileCount: 3, capped: true });
+});
+
+test("classifyPullRequest: empty file list -> not inert (allInert([]) is false)", async () => {
+  const octokit = mockOctokit([]);
+  const r = await classifyPullRequest(octokit, { owner: "o", repo: "r", pull_number: 1 });
+  assert.deepEqual(r, { inertOnly: false, fileCount: 0, capped: false });
 });

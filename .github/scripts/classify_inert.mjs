@@ -35,3 +35,16 @@ export const isInert = (path) => INERT_MATCHERS.some((re) => re.test(path));
 
 // Empty list is non-inert: with nothing to classify we can't prove it's safe to skip.
 export const allInert = (paths) => paths.length > 0 && paths.every(isInert);
+
+// Classify a pull request by its changed file paths. Receives the
+// github-script `github` client. Returns { inertOnly, fileCount, capped }.
+// Above maxFiles we decline to classify (capped) and report non-inert so the
+// caller runs the full suite. Throws on API error — callers fail open.
+export async function classifyPullRequest(octokit, { owner, repo, pull_number, maxFiles = 300 }) {
+  const files = await octokit.paginate(octokit.rest.pulls.listFiles, {
+    owner, repo, pull_number, per_page: 100,
+  });
+  if (files.length > maxFiles) return { inertOnly: false, fileCount: files.length, capped: true };
+  const paths = files.flatMap((f) => [f.filename, f.previous_filename].filter(Boolean));
+  return { inertOnly: allInert(paths), fileCount: files.length, capped: false };
+}

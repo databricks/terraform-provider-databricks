@@ -32,13 +32,9 @@ jobs:
               echo "has_token=true" >> $GITHUB_OUTPUT
             fi
 
-  # Classify the PR diff. `inert_only` is 'true' iff every changed file is in
-  # the inert allowlist (docs, root *.md, issue templates, dependabot.yml,
-  # CODEOWNERS, LICENSE); in that case we skip the long integration-test
-  # dispatch in favor of posting a synthetic success check. The allowlist and
-  # matching logic live in .github/scripts/classify_inert.mjs — the single
-  # source of truth shared with the carry-forward job below and with the
-  # internal fork-PR / manual-dispatch integration-test workflow.
+  # Classify the PR diff via the shared classifier (.github/scripts/classify_inert.mjs).
+  # inert_only == 'true' means every changed file is inert (docs/metadata), so the
+  # integration suite is skipped in favor of a synthetic success check.
   detect-changes:
     name: Detect inert-only changes
     if: github.event_name == 'pull_request'
@@ -55,8 +51,7 @@ jobs:
       inert_only: ${{ steps.classify.outputs.inert_only }}
 
     steps:
-      # github-script imports the classifier from the checkout, so the file
-      # must be present on disk. Sparse-checkout keeps this fast.
+      # github-script imports the classifier from disk, so check it out first.
       - name: Check out the inert classifier
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
@@ -86,8 +81,7 @@ jobs:
                 core.setOutput('inert_only', 'false');
                 return;
               }
-              // Include previous_filename so a rename out of a non-inert path
-              // (e.g. internal/foo.go -> docs/foo.md) is still seen as non-inert.
+              // previous_filename catches a rename out of a non-inert path.
               const paths = files.flatMap((f) => [f.filename, f.previous_filename].filter(Boolean));
               const inert = allInert(paths);
               core.info(`Changed files: ${files.length}; inert_only=${inert}`);
@@ -152,7 +146,6 @@ jobs:
               core.setOutput('carried', 'false');
             };
             try {
-              // Shared inert classifier — the only copy of the allowlist.
               const { pathToFileURL } = require('node:url');
               const path = require('node:path');
               const modPath = path.join(process.env.GITHUB_WORKSPACE, '.github/scripts/classify_inert.mjs');

@@ -1,28 +1,31 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package data_quality_refresh
+package postgres_data_api
 
 import (
 	"context"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/dataquality"
+	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
+	"github.com/databricks/databricks-sdk-go/service/postgres"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/postgres_tf"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -30,16 +33,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-const resourceName = "data_quality_refresh"
+const resourceName = "postgres_data_api"
 
-var _ resource.ResourceWithConfigure = &RefreshResource{}
-var _ resource.ResourceWithModifyPlan = &RefreshResource{}
+var _ resource.ResourceWithConfigure = &DataApiResource{}
+var _ resource.ResourceWithModifyPlan = &DataApiResource{}
 
-func ResourceRefresh() resource.Resource {
-	return &RefreshResource{}
+func ResourceDataApi() resource.Resource {
+	return &DataApiResource{}
 }
 
-type RefreshResource struct {
+type DataApiResource struct {
 	Client *autogen.DatabricksClient
 }
 
@@ -106,51 +109,36 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Refresh extends the main model with additional fields.
-type Refresh struct {
-	// Time when the refresh ended (milliseconds since 1/1/1970 UTC).
-	EndTimeMs types.Int64 `tfsdk:"end_time_ms"`
-	// An optional message to give insight into the current state of the refresh
-	// (e.g. FAILURE messages).
-	Message types.String `tfsdk:"message"`
-	// The UUID of the request object. It is `schema_id` for `schema`, and
-	// `table_id` for `table`.
-	//
-	// Find the `schema_id` from either: 1. The [schema_id] of the `Schemas`
-	// resource. 2. In [Catalog Explorer] > select the `schema` > go to the
-	// `Details` tab > the `Schema ID` field.
-	//
-	// Find the `table_id` from either: 1. The [table_id] of the `Tables`
-	// resource. 2. In [Catalog Explorer] > select the `table` > go to the
-	// `Details` tab > the `Table ID` field.
-	//
-	// [Catalog Explorer]: https://docs.databricks.com/aws/en/catalog-explorer/
-	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
-	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
-	ObjectId types.String `tfsdk:"object_id"`
-	// The type of the monitored object. Can be one of the following: `schema`
-	// or `table`.
-	ObjectType types.String `tfsdk:"object_type"`
-	// Unique id of the refresh operation.
-	RefreshId types.Int64 `tfsdk:"refresh_id"`
-	// Time when the refresh started (milliseconds since 1/1/1970 UTC).
-	StartTimeMs types.Int64 `tfsdk:"start_time_ms"`
-	// The current state of the refresh.
-	State types.String `tfsdk:"state"`
-	// What triggered the refresh.
-	Trigger        types.String `tfsdk:"trigger"`
-	ProviderConfig types.Object `tfsdk:"provider_config"`
+// DataApi extends the main model with additional fields.
+type DataApi struct {
+	// A timestamp indicating when the Data API was first enabled.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// Resource name:
+	// projects/{project_id}/branches/{branch_id}/databases/{database_id}/data-api
+	Name types.String `tfsdk:"name"`
+	// The database containing this Data API configuration. Format:
+	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
+	Parent types.String `tfsdk:"parent"`
+	// The desired Data API configuration.
+	Spec types.Object `tfsdk:"spec"`
+	// The observed Data API state (read-only).
+	Status types.Object `tfsdk:"status"`
+	// A timestamp indicating when the Data API configuration was last updated.
+	UpdateTime     timetypes.RFC3339 `tfsdk:"update_time"`
+	ProviderConfig types.Object      `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// Refresh struct. Container types (types.Map, types.List, types.Set) and
+// DataApi struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m Refresh) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DataApi) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"spec":            reflect.TypeOf(postgres_tf.DataApiDataApiSpec{}),
+		"status":          reflect.TypeOf(postgres_tf.DataApiDataApiStatus{}),
 		"provider_config": reflect.TypeOf(ProviderConfig{}),
 	}
 }
@@ -159,19 +147,17 @@ func (m Refresh) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, Refresh
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DataApi
 // only implements ToObjectValue() and Type().
-func (m Refresh) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DataApi) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{"end_time_ms": m.EndTimeMs,
-			"message":       m.Message,
-			"object_id":     m.ObjectId,
-			"object_type":   m.ObjectType,
-			"refresh_id":    m.RefreshId,
-			"start_time_ms": m.StartTimeMs,
-			"state":         m.State,
-			"trigger":       m.Trigger,
+		map[string]attr.Value{"create_time": m.CreateTime,
+			"name":        m.Name,
+			"parent":      m.Parent,
+			"spec":        m.Spec,
+			"status":      m.Status,
+			"update_time": m.UpdateTime,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -180,16 +166,14 @@ func (m Refresh) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m Refresh) Type(ctx context.Context) attr.Type {
+func (m DataApi) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"end_time_ms": types.Int64Type,
-			"message":       types.StringType,
-			"object_id":     types.StringType,
-			"object_type":   types.StringType,
-			"refresh_id":    types.Int64Type,
-			"start_time_ms": types.Int64Type,
-			"state":         types.StringType,
-			"trigger":       types.StringType,
+		AttrTypes: map[string]attr.Type{"create_time": timetypes.RFC3339{}.Type(ctx),
+			"name":        types.StringType,
+			"parent":      types.StringType,
+			"spec":        postgres_tf.DataApiDataApiSpec{}.Type(ctx),
+			"status":      postgres_tf.DataApiDataApiStatus{}.Type(ctx),
+			"update_time": timetypes.RFC3339{}.Type(ctx),
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -199,7 +183,29 @@ func (m Refresh) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (to *Refresh) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Refresh) {
+func (to *DataApi) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DataApi) {
+	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
+		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Spec = from.Spec
+	}
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				// Recursively sync the fields of Spec
+				toSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
+			}
+		}
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				// Recursively sync the fields of Status
+				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -207,24 +213,43 @@ func (to *Refresh) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Refr
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (to *Refresh) SyncFieldsDuringRead(ctx context.Context, from Refresh) {
+func (to *DataApi) SyncFieldsDuringRead(ctx context.Context, from DataApi) {
+	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
+		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Spec = from.Spec
+	}
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				toSpec.SyncFieldsDuringRead(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
+			}
+		}
+	}
+	if !from.Status.IsNull() && !from.Status.IsUnknown() {
+		if toStatus, ok := to.GetStatus(ctx); ok {
+			if fromStatus, ok := from.GetStatus(ctx); ok {
+				toStatus.SyncFieldsDuringRead(ctx, fromStatus)
+				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
 
-func (m Refresh) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["end_time_ms"] = attrs["end_time_ms"].SetComputed()
-	attrs["message"] = attrs["message"].SetComputed()
-	attrs["object_id"] = attrs["object_id"].SetRequired()
-	attrs["object_type"] = attrs["object_type"].SetRequired()
-	attrs["refresh_id"] = attrs["refresh_id"].SetComputed()
-	attrs["start_time_ms"] = attrs["start_time_ms"].SetComputed()
-	attrs["state"] = attrs["state"].SetComputed()
-	attrs["trigger"] = attrs["trigger"].SetComputed()
+func (m DataApi) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["spec"] = attrs["spec"].SetOptional()
+	attrs["spec"] = attrs["spec"].SetComputed()
+	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["status"] = attrs["status"].SetComputed()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
 
-	attrs["object_type"] = attrs["object_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["object_id"] = attrs["object_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["refresh_id"] = attrs["refresh_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 	attrs["provider_config"] = attrs["provider_config"].SetComputed()
 	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
@@ -232,24 +257,74 @@ func (m Refresh) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	return attrs
 }
 
-func (r *RefreshResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+// GetSpec returns the value of the Spec field in DataApi as
+// a postgres_tf.DataApiDataApiSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataApi) GetSpec(ctx context.Context) (postgres_tf.DataApiDataApiSpec, bool) {
+	var e postgres_tf.DataApiDataApiSpec
+	if m.Spec.IsNull() || m.Spec.IsUnknown() {
+		return e, false
+	}
+	var v postgres_tf.DataApiDataApiSpec
+	d := m.Spec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSpec sets the value of the Spec field in DataApi.
+func (m *DataApi) SetSpec(ctx context.Context, v postgres_tf.DataApiDataApiSpec) {
+	vs := v.ToObjectValue(ctx)
+	m.Spec = vs
+}
+
+// GetStatus returns the value of the Status field in DataApi as
+// a postgres_tf.DataApiDataApiStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataApi) GetStatus(ctx context.Context) (postgres_tf.DataApiDataApiStatus, bool) {
+	var e postgres_tf.DataApiDataApiStatus
+	if m.Status.IsNull() || m.Status.IsUnknown() {
+		return e, false
+	}
+	var v postgres_tf.DataApiDataApiStatus
+	d := m.Status.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStatus sets the value of the Status field in DataApi.
+func (m *DataApi) SetStatus(ctx context.Context, v postgres_tf.DataApiDataApiStatus) {
+	vs := v.ToObjectValue(ctx)
+	m.Status = vs
+}
+
+func (r *DataApiResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
-func (r *RefreshResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, Refresh{}, nil)
+func (r *DataApiResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, DataApi{}, nil)
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks data_quality_refresh",
+		Description: "Terraform schema for Databricks postgres_data_api",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
 }
 
-func (r *RefreshResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *DataApiResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *RefreshResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *DataApiResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	// Skip entirely on destroy (no plan state).
 	if req.Plan.Raw.IsNull() {
 		return
@@ -264,25 +339,24 @@ func (r *RefreshResource) ModifyPlan(ctx context.Context, req resource.ModifyPla
 	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
-func (r *RefreshResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *DataApiResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan Refresh
+	var plan DataApi
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var refresh dataquality.Refresh
+	var data_api postgres.DataApi
 
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &refresh)...)
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &data_api)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	createRequest := dataquality.CreateRefreshRequest{
-		Refresh:    refresh,
-		ObjectId:   plan.ObjectId.ValueString(),
-		ObjectType: plan.ObjectType.ValueString(),
+	createRequest := postgres.CreateDataApiRequest{
+		DataApi: data_api,
+		Parent:  plan.Parent.ValueString(),
 	}
 
 	var namespace ProviderConfig
@@ -300,15 +374,21 @@ func (r *RefreshResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	response, err := client.DataQuality.CreateRefresh(ctx, createRequest)
+	response, err := client.Postgres.CreateDataApi(ctx, createRequest)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to create data_quality_refresh", err.Error())
+		resp.Diagnostics.AddError("failed to create postgres_data_api", err.Error())
 		return
 	}
 
-	var newState Refresh
+	var newState DataApi
 
-	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+	waitResponse, err := response.Wait(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError("error waiting for postgres_data_api to be ready", err.Error())
+		return
+	}
+
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, waitResponse, &newState)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -323,16 +403,16 @@ func (r *RefreshResource) Create(ctx context.Context, req resource.CreateRequest
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
 }
 
-func (r *RefreshResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *DataApiResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var existingState Refresh
+	var existingState DataApi
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var readRequest dataquality.GetRefreshRequest
+	var readRequest postgres.GetDataApiRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -352,17 +432,17 @@ func (r *RefreshResource) Read(ctx context.Context, req resource.ReadRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	response, err := client.DataQuality.GetRefresh(ctx, readRequest)
+	response, err := client.Postgres.GetDataApi(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError("failed to get data_quality_refresh", err.Error())
+		resp.Diagnostics.AddError("failed to get postgres_data_api", err.Error())
 		return
 	}
 
-	var newState Refresh
+	var newState DataApi
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -377,20 +457,18 @@ func (r *RefreshResource) Read(ctx context.Context, req resource.ReadRequest, re
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, existingState.ProviderConfig, &resp.State)...)
 }
 
-func (r *RefreshResource) update(ctx context.Context, plan Refresh, diags *diag.Diagnostics, state *tfsdk.State) {
-	var refresh dataquality.Refresh
+func (r *DataApiResource) update(ctx context.Context, plan DataApi, diags *diag.Diagnostics, state *tfsdk.State) {
+	var data_api postgres.DataApi
 
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &refresh)...)
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &data_api)...)
 	if diags.HasError() {
 		return
 	}
 
-	updateRequest := dataquality.UpdateRefreshRequest{
-		Refresh:    refresh,
-		ObjectId:   plan.ObjectId.ValueString(),
-		ObjectType: plan.ObjectType.ValueString(),
-		RefreshId:  plan.RefreshId.ValueInt64(),
-		UpdateMask: "",
+	updateRequest := postgres.UpdateDataApiRequest{
+		DataApi:    data_api,
+		Name:       plan.Name.ValueString(),
+		UpdateMask: *fieldmask.New(strings.Split("spec", ",")),
 	}
 
 	var namespace ProviderConfig
@@ -407,15 +485,21 @@ func (r *RefreshResource) update(ctx context.Context, plan Refresh, diags *diag.
 	if diags.HasError() {
 		return
 	}
-	response, err := client.DataQuality.UpdateRefresh(ctx, updateRequest)
+	response, err := client.Postgres.UpdateDataApi(ctx, updateRequest)
 	if err != nil {
-		diags.AddError("failed to update data_quality_refresh", err.Error())
+		diags.AddError("failed to update postgres_data_api", err.Error())
 		return
 	}
 
-	var newState Refresh
+	var newState DataApi
 
-	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
+	waitResponse, err := response.Wait(ctx)
+	if err != nil {
+		diags.AddError("error waiting for postgres_data_api update", err.Error())
+		return
+	}
+
+	diags.Append(converters.GoSdkToTfSdkStruct(ctx, waitResponse, &newState)...)
 
 	if diags.HasError() {
 		return
@@ -425,10 +509,10 @@ func (r *RefreshResource) update(ctx context.Context, plan Refresh, diags *diag.
 	diags.Append(state.Set(ctx, newState)...)
 }
 
-func (r *RefreshResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *DataApiResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan Refresh
+	var plan DataApi
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -437,16 +521,16 @@ func (r *RefreshResource) Update(ctx context.Context, req resource.UpdateRequest
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
 }
 
-func (r *RefreshResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *DataApiResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var state Refresh
+	var state DataApi
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var deleteRequest dataquality.DeleteRefreshRequest
+	var deleteRequest postgres.DeleteDataApiRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -467,41 +551,47 @@ func (r *RefreshResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	err := client.DataQuality.DeleteRefresh(ctx, deleteRequest)
+	response, err := client.Postgres.DeleteDataApi(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
+	if err != nil {
+		resp.Diagnostics.AddError("failed to delete postgres_data_api", err.Error())
+		return
+	}
+	if response == nil {
+		// MANAGED_BY_PARENT suppressed the initial Delete: skip Wait
+		// to avoid a nil-deref on response.Wait(ctx).
+		return
+	}
+
+	err = response.Wait(ctx)
 	if !declarative.IsDeleteError(err) {
 		err = nil
 	}
 	if err != nil && !apierr.IsMissing(err) {
-		resp.Diagnostics.AddError("failed to delete data_quality_refresh", err.Error())
+		resp.Diagnostics.AddError("error waiting for postgres_data_api delete", err.Error())
 		return
 	}
 
 }
 
-var _ resource.ResourceWithImportState = &RefreshResource{}
+var _ resource.ResourceWithImportState = &DataApiResource{}
 
-func (r *RefreshResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *DataApiResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
-	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+	if len(parts) != 1 || parts[0] == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
 			fmt.Sprintf(
-				"Expected import identifier with format: object_type,object_id,refresh_id. Got: %q",
+				"Expected import identifier with format: name. Got: %q",
 				req.ID,
 			),
 		)
 		return
 	}
 
-	objectType := parts[0]
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("object_type"), objectType)...)
-	objectId := parts[1]
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("object_id"), objectId)...)
-	refreshId, err := strconv.ParseInt(parts[2], 10, 64)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to parse import identifier", err.Error())
-		return
-	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("refresh_id"), refreshId)...)
+	name := parts[0]
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
 }

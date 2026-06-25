@@ -3,7 +3,7 @@ module github.com/databricks/terraform-provider-databricks
 go 1.25.8
 
 require (
-	github.com/databricks/databricks-sdk-go v0.145.0
+	github.com/databricks/databricks-sdk-go v0.150.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-cty v1.5.0

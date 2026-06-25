@@ -2,11 +2,24 @@
 subcategory: "AI Search"
 ---
 # databricks_ai_search_endpoint Resource
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/aisearch)
+
+# AI Search Endpoint Resource
+
+An AI Search Endpoint represents the compute resources that host AI Search indexes. Endpoints come in different types (for example, `STANDARD` and `STORAGE_OPTIMIZED`) that trade off latency and per-query cost. Indexes are created on an endpoint and served from its compute. This resource is the AIP-conformant replacement for the legacy `databricks_vector_search_endpoint` resource and is functionally equivalent.
 
 
 ## Example Usage
+# Example: AI Search Endpoint Resource
+
+```hcl
+resource "databricks_ai_search_endpoint" "this" {
+  endpoint_id   = "example-ai-search-endpoint"
+  endpoint_type = "STANDARD"
+}
+```
 
 
 ## Arguments

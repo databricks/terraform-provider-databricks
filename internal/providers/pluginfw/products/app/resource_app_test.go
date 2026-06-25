@@ -4,8 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -61,6 +63,39 @@ func TestResourceApp_SchemaPreserved(t *testing.T) {
 	assert.True(t, wsStr.Computed, "workspace_id should be computed")
 	assert.Len(t, wsStr.PlanModifiers, 1, "workspace_id should have RequiresReplaceIf plan modifier")
 	assert.Len(t, wsStr.Validators, 1, "workspace_id should have LengthAtLeast(1) validator only")
+}
+
+func TestReconcileEmptyUserApiScopes(t *testing.T) {
+	empty := types.ListValueMust(types.StringType, []attr.Value{})
+	null := types.ListNull(types.StringType)
+	unknown := types.ListUnknown(types.StringType)
+	sql := types.ListValueMust(types.StringType, []attr.Value{types.StringValue("sql")})
+
+	cases := []struct {
+		name       string
+		configured types.List
+		fromAPI    types.List
+		want       types.List
+	}{
+		// The fix: user configured [] but the API omitted the field (null) -> restore [].
+		{"configured empty, api null -> restore empty", empty, null, empty},
+		// API reports values (e.g. OBO active / out-of-band change) -> trust the API.
+		{"configured empty, api has values -> keep api", empty, sql, sql},
+		{"configured empty, api empty -> keep api empty", empty, empty, empty},
+		// Narrow guard: a non-empty configured value is never restored from null.
+		{"configured non-empty, api null -> keep api null", sql, null, null},
+		// Unset stays unset; we must not invent an empty list.
+		{"configured null, api null -> keep api null", null, null, null},
+		{"configured null, api has values -> keep api", null, sql, sql},
+		// Unknown (e.g. interpolated) is not treated as a known empty list.
+		{"configured unknown, api null -> keep api null", unknown, null, null},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := reconcileEmptyUserApiScopes(tc.configured, tc.fromAPI)
+			assert.True(t, got.Equal(tc.want), "got %v, want %v", got, tc.want)
+		})
+	}
 }
 
 func TestResourceApp_ModifyPlan_SkipsDestroyPlan(t *testing.T) {

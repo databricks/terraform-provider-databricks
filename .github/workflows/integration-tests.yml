@@ -68,24 +68,13 @@ jobs:
               const { pathToFileURL } = require('node:url');
               const path = require('node:path');
               const modPath = path.join(process.env.GITHUB_WORKSPACE, '.github/scripts/classify_inert.mjs');
-              const { allInert } = await import(pathToFileURL(modPath).href);
-
-              const files = await github.paginate(github.rest.pulls.listFiles, {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: context.issue.number,
-                per_page: 100,
+              const { classifyPullRequest } = await import(pathToFileURL(modPath).href);
+              const { inertOnly, fileCount, capped } = await classifyPullRequest(github, {
+                owner: context.repo.owner, repo: context.repo.repo, pull_number: context.issue.number,
               });
-              if (files.length > 300) {
-                core.info(`PR touches ${files.length} files (>300); treating as non-inert.`);
-                core.setOutput('inert_only', 'false');
-                return;
-              }
-              // previous_filename catches a rename out of a non-inert path.
-              const paths = files.flatMap((f) => [f.filename, f.previous_filename].filter(Boolean));
-              const inert = allInert(paths);
-              core.info(`Changed files: ${files.length}; inert_only=${inert}`);
-              core.setOutput('inert_only', String(inert));
+              if (capped) core.info(`PR touches ${fileCount} files (>300); treating as non-inert.`);
+              core.info(`Changed files: ${fileCount}; inert_only=${inertOnly}`);
+              core.setOutput('inert_only', String(inertOnly));
             } catch (e) {
               core.warning(`inert classification failed, running full suite: ${e.message}`);
               core.setOutput('inert_only', 'false');

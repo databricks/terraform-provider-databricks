@@ -12,7 +12,31 @@ Secure a workspace with private connectivity and mitigate data exfiltration risk
 
 To work with Databricks in GCP in an automated way, please create a service account and manually add it in the [Accounts Console](https://accounts.gcp.databricks.com/users) as an account admin. Databricks account-level APIs can only be called by account owners and account admins, and can only be authenticated using Google-issued OIDC tokens. The simplest way to do this would be via [Google Cloud CLI](https://cloud.google.com/sdk/gcloud). For details, please refer to [Provisioning Databricks workspaces on GCP](gcp-workspace.md).
 
--> **Note** When using Private Service Connect, ensure that your service account has the `compute.forwardingRules.get` and `compute.forwardingRules.list` permissions in addition to the base permissions listed in the [gcp-workspace.md](gcp-workspace.md) guide. These permissions are required for managing VPC endpoints.
+-> **Note** When using Private Service Connect, use `databricks_gcp_vpc_policy` with `enable_psc = true` to include the required `compute.forwardingRules.*` permissions. For the full workspace creator role, combine it with `databricks_gcp_crossaccount_policy`:
+
+```hcl
+data "databricks_gcp_crossaccount_policy" "this" {}
+
+data "databricks_gcp_vpc_policy" "this" {
+  enable_byovpc = true
+  enable_psc    = true
+}
+
+resource "google_project_iam_custom_role" "workspace_creator" {
+  role_id = "databricks_workspace_creator"
+  title   = "Databricks Workspace Creator"
+  permissions = tolist(toset(concat(
+    data.databricks_gcp_crossaccount_policy.this.permissions,
+    data.databricks_gcp_vpc_policy.this.permissions,
+  )))
+}
+
+resource "google_project_iam_member" "workspace_creator" {
+  project = var.google_project
+  role    = google_project_iam_custom_role.workspace_creator.id
+  member  = "serviceAccount:${var.databricks_google_service_account}"
+}
+```
 
 ## Creating a VPC network
 

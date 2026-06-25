@@ -17,6 +17,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/catalog"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/cluster"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/dashboards"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/gcp"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/library"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/notificationdestinations"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/qualitymonitor"
@@ -62,6 +63,9 @@ var pluginFwOnlyDataSources = append(
 		app.DataSourceApps,
 		catalog.DataSourceFunctions,
 		dashboards.DataSourceDashboards,
+		gcp.DataSourceGcpCrossaccountPolicy,
+		gcp.DataSourceGcpUnityCatalogPolicy,
+		gcp.DataSourceGcpVpcPolicy,
 		notificationdestinations.DataSourceNotificationDestinations,
 		registered_model.DataSourceRegisteredModel,
 		registered_model.DataSourceRegisteredModelVersions,

@@ -198,6 +198,9 @@ func run(t *testing.T, steps []Step) {
 	if cloudEnv == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
+	// When DATABRICKS_FAKE is set, boot the in-process fakebricks backend and
+	// point the SDK at it via env vars before any provider/client is built.
+	startFakeServerIfEnabled()
 	t.Parallel()
 	protoV6ProviderFactories := map[string]func() (tfprotov6.ProviderServer, error){
 		"databricks": func() (tfprotov6.ProviderServer, error) {

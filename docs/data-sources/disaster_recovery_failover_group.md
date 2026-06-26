@@ -63,7 +63,8 @@ The following attributes are exported:
 
 ### WorkspaceSet
 * `name` (string) - Resource name for this workspace set
-* `replicate_workspace_assets` (boolean) - Whether to enable control plane DR (notebooks, jobs, clusters, etc.) for this set
+* `replicate_workspace_assets` (boolean) - Whether to enable control plane DR (notebooks, jobs, clusters, etc.) for this set.
+  Defaults to false
 * `stable_url_names` (list of string) - Resource names of stable URLs associated with this workspace set.
   Format: accounts/{account_id}/stable-urls/{stable_url_id}.
   The referenced stable URLs must already exist (via CreateStableUrl)

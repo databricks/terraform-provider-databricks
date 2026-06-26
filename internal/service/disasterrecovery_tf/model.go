@@ -1207,7 +1207,7 @@ type StableUrl struct {
 	Name types.String `tfsdk:"name"`
 	// The stable URL endpoint. Generated on creation and immutable thereafter.
 	// For non-Private-Link workspaces this is
-	// `https://<spog_host>/?c=<connection_id>`. For Private-Link workspaces
+	// `https://<spog_host>/?w=<connection_id>`. For Private-Link workspaces
 	// this is the per-connection hostname.
 	Url types.String `tfsdk:"url"`
 }
@@ -1565,7 +1565,7 @@ type WorkspaceSet struct {
 	// Resource name for this workspace set.
 	Name types.String `tfsdk:"name"`
 	// Whether to enable control plane DR (notebooks, jobs, clusters, etc.) for
-	// this set.
+	// this set. Defaults to false.
 	ReplicateWorkspaceAssets types.Bool `tfsdk:"replicate_workspace_assets"`
 	// Resource names of stable URLs associated with this workspace set. Format:
 	// accounts/{account_id}/stable-urls/{stable_url_id}. The referenced stable
@@ -1596,7 +1596,7 @@ func (to *WorkspaceSet) SyncFieldsDuringRead(ctx context.Context, from Workspace
 
 func (m WorkspaceSet) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["replicate_workspace_assets"] = attrs["replicate_workspace_assets"].SetRequired()
+	attrs["replicate_workspace_assets"] = attrs["replicate_workspace_assets"].SetOptional()
 	attrs["stable_url_names"] = attrs["stable_url_names"].SetOptional()
 	attrs["workspace_ids"] = attrs["workspace_ids"].SetRequired()
 

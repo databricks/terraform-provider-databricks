@@ -43,7 +43,7 @@ In addition to the above arguments, the following attributes are exported:
   Format: accounts/{account_id}/stable-urls/{stable_url_id}
 * `url` (string) - The stable URL endpoint. Generated on creation and
   immutable thereafter. For non-Private-Link workspaces this is
-  `https://<spog_host>/?c=<connection_id>`. For Private-Link workspaces
+  `https://<spog_host>/?w=<connection_id>`. For Private-Link workspaces
   this is the per-connection hostname
 
 ## Import

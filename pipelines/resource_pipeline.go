@@ -48,7 +48,7 @@ func Create(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	err = waitForState(w, ctx, id, timeout, pipelines.PipelineStateRunning)
 	if err != nil {
 		log.Printf("[INFO] Pipeline creation failed, attempting to clean up pipeline %s", id)
-		err2 := Delete(w, ctx, id, timeout)
+		err2 := Delete(w, ctx, id, timeout, isUcPipeline(d), false)
 		if err2 != nil {
 			log.Printf("[WARN] Unable to delete pipeline %s; this resource needs to be manually cleaned up", id)
 			return fmt.Errorf("multiple errors occurred when creating pipeline. Error while waiting for creation: \"%v\"; error while attempting to clean up failed pipeline: \"%v\"", err, err2)
@@ -78,10 +78,21 @@ func Update(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	return waitForState(w, ctx, d.Id(), timeout, pipelines.PipelineStateRunning)
 }
 
-func Delete(w *databricks.WorkspaceClient, ctx context.Context, id string, timeout time.Duration) error {
-	err := w.Pipelines.Delete(ctx, pipelines.DeletePipelineRequest{
-		PipelineId: id,
-	})
+// isUcPipeline returns true if the pipeline is Unity Catalog-managed (has `catalog` set).
+// Cascade-related delete options are only valid for UC pipelines; the API rejects them
+// for HMS pipelines with: "Cannot set the cascade parameter to true for HMS pipelines."
+func isUcPipeline(d *schema.ResourceData) bool {
+	c, _ := d.Get("catalog").(string)
+	return c != ""
+}
+
+func Delete(w *databricks.WorkspaceClient, ctx context.Context, id string, timeout time.Duration, isUcPipeline, preserveTablesOnDelete bool) error {
+	req := pipelines.DeletePipelineRequest{PipelineId: id}
+	if isUcPipeline {
+		req.Cascade = !preserveTablesOnDelete
+		req.ForceSendFields = []string{"Cascade"}
+	}
+	err := w.Pipelines.Delete(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -174,6 +185,8 @@ type Pipeline struct {
 	State                pipelines.PipelineState             `json:"state,omitempty"`
 	// Provides the URL to the pipeline in the Databricks UI.
 	URL string `json:"url,omitempty"`
+	// If we should preserve tables on deletion
+	PreserveTablesOnDelete bool `json:"preserve_tables_on_delete,omitempty"`
 }
 
 func (Pipeline) Aliases() map[string]map[string]string {
@@ -318,7 +331,8 @@ func ResourcePipeline() common.Resource {
 				RunAsUserName:   readPipeline.RunAsUserName,
 				State:           readPipeline.State,
 				// Provides the URL to the pipeline in the Databricks UI.
-				URL: c.FormatURL("#joblist/pipelines/", d.Id()),
+				URL:                    c.FormatURL("#joblist/pipelines/", d.Id()),
+				PreserveTablesOnDelete: d.Get("preserve_tables_on_delete").(bool),
 			}
 			return common.StructToData(p, pipelineSchema, d)
 		},
@@ -335,8 +349,7 @@ func ResourcePipeline() common.Resource {
 			if err != nil {
 				return err
 			}
-			return Delete(w, ctx, d.Id(), d.Timeout(schema.TimeoutDelete))
-
+			return Delete(w, ctx, d.Id(), d.Timeout(schema.TimeoutDelete), isUcPipeline(d), d.Get("preserve_tables_on_delete").(bool))
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Default: schema.DefaultTimeout(DefaultTimeout),
@@ -344,6 +357,11 @@ func ResourcePipeline() common.Resource {
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			if err := common.NamespaceCustomizeDiff(ctx, d, c); err != nil {
 				return err
+			}
+			// preserve_tables_on_delete relies on the Cascade delete flag, which the
+			// pipelines API rejects for HMS (non-UC) pipelines.
+			if d.Get("preserve_tables_on_delete").(bool) && d.Get("catalog").(string) == "" {
+				return fmt.Errorf("`preserve_tables_on_delete` can only be used with Unity Catalog-managed pipelines (i.e., when `catalog` is set)")
 			}
 			// Allow changing catalog value in existing pipelines, but force recreation
 			// when switching between storage and catalog (or vice versa).

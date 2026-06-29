@@ -544,6 +544,64 @@ func TestResourcePipelineDelete(t *testing.T) {
 	})
 }
 
+func TestResourcePipelineDelete_PreserveTables(t *testing.T) {
+	state := pipelines.PipelineStateRunning
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Delete(mock.Anything, pipelines.DeletePipelineRequest{
+				PipelineId:      "abcd",
+				Cascade:         false,
+				ForceSendFields: []string{"Cascade"},
+			}).Return(nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Spec:       &basicPipelineSpec,
+				State:      state,
+			}, nil).Once()
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(nil, apierr.ErrNotFound)
+		},
+		Resource: ResourcePipeline(),
+		HCL: `name = "test"
+		catalog = "main"
+		preserve_tables_on_delete = true
+		library {
+			notebook {
+				path = "/Test"
+			}
+		}
+		filters {
+			include = [ "com.databricks.include" ]
+		}`,
+		Delete: true,
+		ID:     "abcd",
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "abcd",
+	})
+}
+
+func TestResourcePipelinePreserveTablesRequiresCatalog(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourcePipeline(),
+		HCL: `name = "test"
+		storage = "/test/storage"
+		preserve_tables_on_delete = true
+		library {
+			notebook {
+				path = "/Test"
+			}
+		}
+		filters {
+			include = [ "com.databricks.include" ]
+		}`,
+		Create: true,
+	}.ExpectError(t, "`preserve_tables_on_delete` can only be used with Unity Catalog-managed pipelines (i.e., when `catalog` is set)")
+}
+
 func TestResourcePipelineDelete_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

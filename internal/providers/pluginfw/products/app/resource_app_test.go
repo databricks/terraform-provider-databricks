@@ -78,17 +78,52 @@ func TestReconcileEmptyUserApiScopes(t *testing.T) {
 		want       types.List
 	}{
 		// The fix: user configured [] but the API omitted the field (null) -> restore [].
-		{"configured empty, api null -> restore empty", empty, null, empty},
+		{
+			name:       "configured empty, api null -> restore empty",
+			configured: empty,
+			fromAPI:    null,
+			want:       empty,
+		},
 		// API reports values (e.g. OBO active / out-of-band change) -> trust the API.
-		{"configured empty, api has values -> keep api", empty, sql, sql},
-		{"configured empty, api empty -> keep api empty", empty, empty, empty},
+		{
+			name:       "configured empty, api has values -> keep api",
+			configured: empty,
+			fromAPI:    sql,
+			want:       sql,
+		},
+		{
+			name:       "configured empty, api empty -> keep api empty",
+			configured: empty,
+			fromAPI:    empty,
+			want:       empty,
+		},
 		// Narrow guard: a non-empty configured value is never restored from null.
-		{"configured non-empty, api null -> keep api null", sql, null, null},
+		{
+			name:       "configured non-empty, api null -> keep api null",
+			configured: sql,
+			fromAPI:    null,
+			want:       null,
+		},
 		// Unset stays unset; we must not invent an empty list.
-		{"configured null, api null -> keep api null", null, null, null},
-		{"configured null, api has values -> keep api", null, sql, sql},
+		{
+			name:       "configured null, api null -> keep api null",
+			configured: null,
+			fromAPI:    null,
+			want:       null,
+		},
+		{
+			name:       "configured null, api has values -> keep api",
+			configured: null,
+			fromAPI:    sql,
+			want:       sql,
+		},
 		// Unknown (e.g. interpolated) is not treated as a known empty list.
-		{"configured unknown, api null -> keep api null", unknown, null, null},
+		{
+			name:       "configured unknown, api null -> keep api null",
+			configured: unknown,
+			fromAPI:    null,
+			want:       null,
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

@@ -18,3 +18,5 @@
 ### Exporter
 
 ### Internal Changes
+
+* Make notification destination acceptance tests robust to the eventual consistency of the notification destinations list API.

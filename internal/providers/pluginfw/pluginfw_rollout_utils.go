@@ -2,16 +2,13 @@ package pluginfw
 
 // This file contains all of the utils for controlling the plugin framework rollout.
 // For migrated resources and data sources, we can add them to the two maps below to have them registered with the plugin framework.
-// Users can manually specify resources and data sources to use SDK V2 instead of the plugin framework by setting the USE_SDK_V2_RESOURCES and USE_SDK_V2_DATA_SOURCES environment variables.
-//
-// Example: USE_SDK_V2_RESOURCES="databricks_library" would force the library resource to use SDK V2 instead of the plugin framework.
+// The acceptance test infrastructure can pin specific names back to SDKv2 via the
+// WithSdkV2ResourceFallbacks / WithSdkV2DataSourceFallbacks options for
+// transition-from-SDKv2 tests; this hook is not exposed to end users.
 
 import (
 	"context"
-	"log"
-	"os"
 	"slices"
-	"strings"
 
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/app"
@@ -31,9 +28,8 @@ import (
 )
 
 // List of resources that have been migrated from SDK V2 to plugin framework.
-// The SDKv2 fallback path (selected via USE_SDK_V2_RESOURCES) is deprecated and
-// will be removed in the next major release; getPluginFrameworkResourcesToRegister
-// logs a [WARN] line whenever a name in this list is steered back to SDKv2.
+// Acceptance tests can pin specific names back to SDKv2 via WithSdkV2ResourceFallbacks
+// to exercise the transition-from-SDKv2 path; production usage always serves these from PF.
 // Keep this list sorted.
 var migratedResources = []func() resource.Resource{
 	library.ResourceLibrary,
@@ -42,8 +38,7 @@ var migratedResources = []func() resource.Resource{
 }
 
 // List of data sources that have been migrated from SDK V2 to plugin framework.
-// The SDKv2 fallback path (selected via USE_SDK_V2_DATA_SOURCES) is deprecated
-// and will be removed in the next major release.
+// See migratedResources for the SDKv2 fallback contract.
 // Keep this list sorted.
 var migratedDataSources = []func() datasource.DataSource{
 	sharing.DataSourceShare,
@@ -130,49 +125,15 @@ func WithConfigCustomizer(customizer func(*config.Config) error) PluginFramework
 	return &configCustomizer{configCustomizer: customizer}
 }
 
-// GetUseSdkV2DataSources is a helper function to get name of resources that should use SDK V2 instead of plugin framework
-func getUseSdkV2Resources() []string {
-	useSdkV2 := os.Getenv("USE_SDK_V2_RESOURCES")
-	if useSdkV2 == "" {
-		return []string{}
-	}
-	return strings.Split(useSdkV2, ",")
-}
-
-// GetUseSdkV2DataSources is a helper function to get name of data sources that should use SDK V2 instead of plugin framework
-func getUseSdkV2DataSources() []string {
-	useSdkV2 := os.Getenv("USE_SDK_V2_DATA_SOURCES")
-	if useSdkV2 == "" {
-		return []string{}
-	}
-	return strings.Split(useSdkV2, ",")
-}
-
-// Helper function to check if a resource should use be in SDK V2 instead of plugin framework
-func shouldUseSdkV2Resource(resourceName string) bool {
-	useSdkV2Resources := getUseSdkV2Resources()
-	return slices.Contains(useSdkV2Resources, resourceName)
-}
-
-// Helper function to check if a data source should use be in SDK V2 instead of plugin framework
-func shouldUseSdkV2DataSource(dataSourceName string) bool {
-	sdkV2DataSources := getUseSdkV2DataSources()
-	return slices.Contains(sdkV2DataSources, dataSourceName)
-}
-
 // getPluginFrameworkResourcesToRegister is a helper function to get the list of resources that are migrated away from sdkv2 to plugin framework
 func getPluginFrameworkResourcesToRegister(resourceFallbacks []string) []func() resource.Resource {
 	var resources []func() resource.Resource
 
-	// Loop through the map and add resources if they're not specifically marked to use the SDK V2
+	// Skip resources pinned to SDKv2 via WithSdkV2ResourceFallbacks (acceptance tests only).
 	for _, resourceFunc := range migratedResources {
 		name := getResourceName(resourceFunc)
-		if !shouldUseSdkV2Resource(name) && !slices.Contains(resourceFallbacks, name) {
+		if !slices.Contains(resourceFallbacks, name) {
 			resources = append(resources, resourceFunc)
-		} else {
-			log.Printf("[WARN] resource %q is using the deprecated SDKv2 implementation; "+
-				"this fallback will be removed in the next major release. Unset "+
-				"USE_SDK_V2_RESOURCES to use the Plugin Framework version.", name)
 		}
 	}
 
@@ -183,15 +144,11 @@ func getPluginFrameworkResourcesToRegister(resourceFallbacks []string) []func() 
 func getPluginFrameworkDataSourcesToRegister(dataSourceFallbacks []string) []func() datasource.DataSource {
 	var dataSources []func() datasource.DataSource
 
-	// Loop through the map and add data sources if they're not specifically marked to use the SDK V2
+	// Skip data sources pinned to SDKv2 via WithSdkV2DataSourceFallbacks (acceptance tests only).
 	for _, dataSourceFunc := range migratedDataSources {
 		name := getDataSourceName(dataSourceFunc)
-		if !shouldUseSdkV2DataSource(name) && !slices.Contains(dataSourceFallbacks, name) {
+		if !slices.Contains(dataSourceFallbacks, name) {
 			dataSources = append(dataSources, dataSourceFunc)
-		} else {
-			log.Printf("[WARN] data source %q is using the deprecated SDKv2 implementation; "+
-				"this fallback will be removed in the next major release. Unset "+
-				"USE_SDK_V2_DATA_SOURCES to use the Plugin Framework version.", name)
 		}
 	}
 
@@ -210,24 +167,27 @@ func getDataSourceName(dataSourceFunc func() datasource.DataSource) string {
 	return resp.TypeName
 }
 
-// GetSdkV2ResourcesToRemove is a helper function to get the list of resources that are migrated away from sdkv2 to plugin framework
+// GetSdkV2ResourcesToRemove returns the list of resource names that the SDKv2
+// provider should drop from its resource map because they are now served by
+// the Plugin Framework. Names listed in resourceFallbacks stay on SDKv2; that
+// hook is for acceptance tests only.
 func GetSdkV2ResourcesToRemove(resourceFallbacks []string) []string {
 	resourcesToRemove := []string{}
 	for _, resourceFunc := range migratedResources {
 		name := getResourceName(resourceFunc)
-		if !shouldUseSdkV2Resource(name) && !slices.Contains(resourceFallbacks, name) {
+		if !slices.Contains(resourceFallbacks, name) {
 			resourcesToRemove = append(resourcesToRemove, name)
 		}
 	}
 	return resourcesToRemove
 }
 
-// GetSdkV2DataSourcesToRemove is a helper function to get the list of data sources that are migrated away from sdkv2 to plugin framework
+// GetSdkV2DataSourcesToRemove is the data-source counterpart to GetSdkV2ResourcesToRemove.
 func GetSdkV2DataSourcesToRemove(dataSourceFallbacks []string) []string {
 	dataSourcesToRemove := []string{}
 	for _, dataSourceFunc := range migratedDataSources {
 		name := getDataSourceName(dataSourceFunc)
-		if !shouldUseSdkV2DataSource(name) && !slices.Contains(dataSourceFallbacks, name) {
+		if !slices.Contains(dataSourceFallbacks, name) {
 			dataSourcesToRemove = append(dataSourcesToRemove, name)
 		}
 	}

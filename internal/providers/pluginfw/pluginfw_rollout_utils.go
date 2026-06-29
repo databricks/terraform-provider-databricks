@@ -8,6 +8,7 @@ package pluginfw
 
 import (
 	"context"
+	"log"
 	"os"
 	"slices"
 	"strings"
@@ -29,7 +30,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
-// List of resources that have been migrated from SDK V2 to plugin framework
+// List of resources that have been migrated from SDK V2 to plugin framework.
+// The SDKv2 fallback path (selected via USE_SDK_V2_RESOURCES) is deprecated and
+// will be removed in the next major release; getPluginFrameworkResourcesToRegister
+// logs a [WARN] line whenever a name in this list is steered back to SDKv2.
 // Keep this list sorted.
 var migratedResources = []func() resource.Resource{
 	library.ResourceLibrary,
@@ -37,7 +41,9 @@ var migratedResources = []func() resource.Resource{
 	sharing.ResourceShare,
 }
 
-// List of data sources that have been migrated from SDK V2 to plugin framework
+// List of data sources that have been migrated from SDK V2 to plugin framework.
+// The SDKv2 fallback path (selected via USE_SDK_V2_DATA_SOURCES) is deprecated
+// and will be removed in the next major release.
 // Keep this list sorted.
 var migratedDataSources = []func() datasource.DataSource{
 	sharing.DataSourceShare,
@@ -163,6 +169,10 @@ func getPluginFrameworkResourcesToRegister(resourceFallbacks []string) []func() 
 		name := getResourceName(resourceFunc)
 		if !shouldUseSdkV2Resource(name) && !slices.Contains(resourceFallbacks, name) {
 			resources = append(resources, resourceFunc)
+		} else {
+			log.Printf("[WARN] resource %q is using the deprecated SDKv2 implementation; "+
+				"this fallback will be removed in the next major release. Unset "+
+				"USE_SDK_V2_RESOURCES to use the Plugin Framework version.", name)
 		}
 	}
 
@@ -178,6 +188,10 @@ func getPluginFrameworkDataSourcesToRegister(dataSourceFallbacks []string) []fun
 		name := getDataSourceName(dataSourceFunc)
 		if !shouldUseSdkV2DataSource(name) && !slices.Contains(dataSourceFallbacks, name) {
 			dataSources = append(dataSources, dataSourceFunc)
+		} else {
+			log.Printf("[WARN] data source %q is using the deprecated SDKv2 implementation; "+
+				"this fallback will be removed in the next major release. Unset "+
+				"USE_SDK_V2_DATA_SOURCES to use the Plugin Framework version.", name)
 		}
 	}
 

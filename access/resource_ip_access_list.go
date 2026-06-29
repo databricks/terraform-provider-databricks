@@ -2,7 +2,9 @@ package access
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
 
@@ -16,6 +18,18 @@ type ipAccessListUpdateRequest struct {
 	IpAddresses []string          `json:"ip_addresses"`
 	Enabled     bool              `json:"enabled,omitempty" tf:"default:true"`
 	common.Namespace
+}
+
+// updateIPAccessList issues the update (PATCH) for an IP access list. `enabled`
+// is force-sent because the SDK marshaler omits zero-valued fields unless they
+// are named in ForceSendFields; without it a configured `enabled = false` is
+// dropped from the request and the list is left enabled.
+func updateIPAccessList(ctx context.Context, w *databricks.WorkspaceClient, d *schema.ResourceData, s map[string]*schema.Schema) error {
+	var iacl settings.UpdateIpAccessList
+	common.DataToStructPointer(d, s, &iacl)
+	iacl.IpAccessListId = d.Id()
+	iacl.ForceSendFields = append(iacl.ForceSendFields, "Enabled")
+	return w.IpAccessLists.Update(ctx, iacl)
 }
 
 // ResourceIPAccessList manages IP access lists
@@ -47,6 +61,16 @@ func ResourceIPAccessList() common.Resource {
 				return err
 			}
 			d.SetId(status.IpAccessList.ListId)
+			// The create API has no `enabled` field, so a new list is always
+			// created enabled. Honor an explicit `enabled = false` with a
+			// follow-up update. The list already exists, so the ID is kept and
+			// the error is wrapped to make clear it was created but not disabled;
+			// a subsequent apply reconciles the state through the update path.
+			if !d.Get("enabled").(bool) {
+				if err := updateIPAccessList(ctx, w, d, s); err != nil {
+					return fmt.Errorf("IP access list %s created but could not be disabled: %w", d.Id(), err)
+				}
+			}
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -66,10 +90,7 @@ func ResourceIPAccessList() common.Resource {
 			if err != nil {
 				return err
 			}
-			var iacl settings.UpdateIpAccessList
-			common.DataToStructPointer(d, s, &iacl)
-			iacl.IpAccessListId = d.Id()
-			return w.IpAccessLists.Update(ctx, iacl)
+			return updateIPAccessList(ctx, w, d, s)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)

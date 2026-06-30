@@ -63,7 +63,7 @@ This data source exports a single attribute, `refreshes`. It is a list of resour
   Find the `table_id` from either:
   1. The [table_id](https://docs.databricks.com/api/workspace/tables/get#table_id) of the `Tables` resource.
   2. In [Catalog Explorer](https://docs.databricks.com/aws/en/catalog-explorer/) > select the `table` > go to the `Details` tab > the `Table ID` field
-* `object_type` (string) - The type of the monitored object. Can be one of the following: `schema`or `table`
+* `object_type` (string) - The type of the monitored object. Can be one of the following: `schema` or `table`
 * `refresh_id` (integer) - Unique id of the refresh operation
 * `start_time_ms` (integer) - Time when the refresh started (milliseconds since 1/1/1970 UTC)
 * `state` (string) - The current state of the refresh. Possible values are: `MONITOR_REFRESH_STATE_CANCELED`, `MONITOR_REFRESH_STATE_FAILED`, `MONITOR_REFRESH_STATE_PENDING`, `MONITOR_REFRESH_STATE_RUNNING`, `MONITOR_REFRESH_STATE_SUCCESS`, `MONITOR_REFRESH_STATE_UNKNOWN`

@@ -3472,6 +3472,8 @@ func (m *CustomerFacingIngressNetworkPolicy) SetPublicAccess(ctx context.Context
 	m.PublicAccess = vs
 }
 
+// Matches account-level Databricks API endpoints for an ingress network policy
+// rule.
 type CustomerFacingIngressNetworkPolicyAccountApiDestination struct {
 	// Qualifies the breadth of API access for the listed scopes. See
 	// ApiScopeQualifier.
@@ -5819,6 +5821,8 @@ func (m *CustomerFacingIngressNetworkPolicyRequestDestination) SetWorkspaceUi(ct
 	m.WorkspaceUi = vs
 }
 
+// Matches workspace-level Databricks API endpoints for an ingress network
+// policy rule.
 type CustomerFacingIngressNetworkPolicyWorkspaceApiDestination struct {
 	// Qualifies the breadth of API access for the listed scopes. See
 	// ApiScopeQualifier.

@@ -294,14 +294,14 @@ var emptyAlertsV2 = qa.HTTPFixture{
 
 var emptyExternalLocations = qa.HTTPFixture{
 	Method:   "GET",
-	Resource: "/api/2.1/unity-catalog/external-locations?",
+	Resource: "/api/2.1/unity-catalog/external-locations?max_results=0",
 	Status:   200,
 	Response: &sdk_uc.ListExternalLocationsResponse{},
 }
 
 var emptyStorageCredentials = qa.HTTPFixture{
 	Method:   "GET",
-	Resource: "/api/2.1/unity-catalog/storage-credentials?",
+	Resource: "/api/2.1/unity-catalog/storage-credentials?max_results=0",
 	Status:   200,
 	Response: &sdk_uc.ListStorageCredentialsResponse{},
 }
@@ -315,7 +315,7 @@ var emptyUcCredentials = qa.HTTPFixture{
 
 var emptyConnections = qa.HTTPFixture{
 	Method:   "GET",
-	Resource: "/api/2.1/unity-catalog/connections?",
+	Resource: "/api/2.1/unity-catalog/connections?max_results=0",
 	Response: sdk_uc.ListConnectionsResponse{},
 }
 
@@ -357,21 +357,21 @@ var emptySupervisorAgents = qa.HTTPFixture{
 var emptyShares = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.1/unity-catalog/shares?",
+	Resource:     "/api/2.1/unity-catalog/shares?max_results=0",
 	Response:     sharing.ListSharesResponse{},
 }
 
 var emptyRecipients = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.1/unity-catalog/recipients?",
+	Resource:     "/api/2.1/unity-catalog/recipients?max_results=0",
 	Response:     sharing.ListRecipientsResponse{},
 }
 
 var emptyProviders = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.1/unity-catalog/providers?",
+	Resource:     "/api/2.1/unity-catalog/providers?max_results=0",
 	Response:     sharing.ListProvidersResponse{},
 }
 

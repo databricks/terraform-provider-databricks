@@ -2,11 +2,23 @@
 subcategory: "AI Search"
 ---
 # databricks_ai_search_indexes Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/aisearch)
+
+# Datasource (Plural) Artifact
+
+This data source can be used to fetch the list of AI Search indexes on an endpoint.
 
 
 ## Example Usage
+# Example: AI Search Index Datasource (Plural)
+
+```hcl
+data "databricks_ai_search_indexes" "all" {
+  endpoint_name = "example-ai-search-endpoint"
+}
+```
 
 
 ## Arguments

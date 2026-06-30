@@ -9,24 +9,6 @@ on:
   merge_group:
 
 
-# Single source of truth for the inert-path allowlist. Consumed BOTH by the
-# `detect-changes` paths-filter (as its YAML filter definition) and by the
-# `carry-forward` job (parsed in github-script). Defining it once here keeps
-# the two classifiers from drifting apart. `non_inert` matches every changed
-# file that is NOT inert, so an empty match means the change is inert-only.
-env:
-  INERT_PATHS_FILTER: |
-    non_inert:
-      - '**'
-      - '!docs/**'
-      - '!*.md'
-      - '!.github/ISSUE_TEMPLATE/**'
-      - '!.github/PULL_REQUEST_TEMPLATE.md'
-      - '!.github/dependabot.yml'
-      - '!CODEOWNERS'
-      - '!LICENSE'
-
-
 jobs:
   check-token:
     name: Check secrets access
@@ -50,10 +32,9 @@ jobs:
               echo "has_token=true" >> $GITHUB_OUTPUT
             fi
 
-  # Classify the PR diff. `inert_only` is 'true' iff every changed file is in
-  # the inert allowlist (docs, root *.md, issue templates, dependabot.yml,
-  # CODEOWNERS, LICENSE); in that case we skip the long integration-test
-  # dispatch in favor of posting a synthetic success check.
+  # Classify the PR diff via the shared classifier (.github/scripts/classify_inert.mjs).
+  # inert_only == 'true' means every changed file is inert (docs/metadata), so the
+  # integration suite is skipped in favor of a synthetic success check.
   detect-changes:
     name: Detect inert-only changes
     if: github.event_name == 'pull_request'
@@ -62,20 +43,46 @@ jobs:
       group: databricks-deco-testing-runner-group
       labels: ubuntu-latest-deco
 
+    permissions:
+      contents: read
+      pull-requests: read
+
     outputs:
-      # non_inert lists changed files that are NOT inert; inert_only is the
-      # inverse. predicate-quantifier 'every' is required: a file is non_inert
-      # only if it matches ALL patterns ('**' AND none of the inert paths).
-      # The default 'some' would match any single pattern, and '**' matches
-      # everything, so non_inert would always be true and the skip never fire.
-      inert_only: ${{ steps.filter.outputs.non_inert == 'false' }}
+      inert_only: ${{ steps.classify.outputs.inert_only }}
 
     steps:
-      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
-        id: filter
+      # github-script imports the classifier from disk, so check it out first.
+      - name: Check out the inert classifier
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          predicate-quantifier: 'every'
-          filters: ${{ env.INERT_PATHS_FILTER }}
+          # Use the base (trusted) ref, never the PR merge commit: a PR must not
+          # be able to rewrite classify_inert.mjs to skip/carry its own required
+          # check. Absent on the bootstrap PR -> import throws -> fail-open below.
+          ref: ${{ github.event.pull_request.base.sha }}
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: false
+
+      - name: Classify changed files
+        id: classify
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            // Fail open: any error here -> inert_only=false -> full suite runs.
+            try {
+              const { pathToFileURL } = require('node:url');
+              const path = require('node:path');
+              const modPath = path.join(process.env.GITHUB_WORKSPACE, '.github/scripts/classify_inert.mjs');
+              const { classifyPullRequest } = await import(pathToFileURL(modPath).href);
+              const { inertOnly, fileCount, capped } = await classifyPullRequest(github, {
+                owner: context.repo.owner, repo: context.repo.repo, pull_number: context.issue.number,
+              });
+              if (capped) core.info(`PR touches ${fileCount} files (>300); treating as non-inert.`);
+              core.info(`Changed files: ${fileCount}; inert_only=${inertOnly}`);
+              core.setOutput('inert_only', String(inertOnly));
+            } catch (e) {
+              core.warning(`inert classification failed, running full suite: ${e.message}`);
+              core.setOutput('inert_only', 'false');
+            }
 
   # For PRs that contain code (inert_only == 'false'), a follow-up push that
   # only touches inert paths (e.g. a NEXT_CHANGELOG.md bump after the code
@@ -92,7 +99,8 @@ jobs:
   #   4. The PR targets main (trigger-level branches filter + base.ref guard).
   # Any error or ambiguity (>=300 files in the compare, empty diff, rename
   # from a non-inert path) falls through to carried=false and the full suite
-  # runs. Fail-open to running tests, never to skipping them.
+  # runs. Fail-open to running tests, never to skipping them. The inert test
+  # uses the shared classifier (.github/scripts/classify_inert.mjs).
   carry-forward:
     name: Carry forward prior Integration Tests success
 
@@ -114,6 +122,17 @@ jobs:
       carried: ${{ steps.carry.outputs.carried }}
 
     steps:
+      # The github-script step imports the shared classifier from disk.
+      - name: Check out the inert classifier
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          # Use the base (trusted) ref, never the PR merge commit: a PR must not
+          # be able to rewrite classify_inert.mjs to skip/carry its own required
+          # check. Absent on the bootstrap PR -> import throws -> fail-open below.
+          ref: ${{ github.event.pull_request.base.sha }}
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: false
+
       - name: Evaluate and carry forward
         id: carry
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
@@ -124,6 +143,11 @@ jobs:
               core.setOutput('carried', 'false');
             };
             try {
+              const { pathToFileURL } = require('node:url');
+              const path = require('node:path');
+              const modPath = path.join(process.env.GITHUB_WORKSPACE, '.github/scripts/classify_inert.mjs');
+              const { isInert } = await import(pathToFileURL(modPath).href);
+
               if (context.payload.action !== 'synchronize') {
                 return fail('not a synchronize push');
               }
@@ -150,26 +174,6 @@ jobs:
                 return fail('too many files in incremental diff to classify confidently');
               }
 
-              // Derive the inert matchers from the SAME allowlist the
-              // detect-changes paths-filter uses (env.INERT_PATHS_FILTER), so
-              // the two classifiers cannot drift. We translate only the small
-              // glob vocabulary that allowlist uses; anything unrecognized
-              // throws and falls through to a full test run (fail-safe).
-              const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-              const globToRegExp = (glob) => {
-                let m = glob.match(/^([^*?{}\[\]]+)\/\*\*$/); // "<dir>/**"
-                if (m) return new RegExp('^' + escapeRegex(m[1]) + '/');
-                m = glob.match(/^\*(\.[A-Za-z0-9.]+)$/);      // root "*.<ext>"
-                if (m) return new RegExp('^[^/]*' + escapeRegex(m[1]) + '$');
-                if (!/[*?{}\[\]]/.test(glob)) return new RegExp('^' + escapeRegex(glob) + '$'); // literal
-                throw new Error(`Unsupported glob in INERT_PATHS_FILTER: ${glob}`);
-              };
-              const inertMatchers = [...(process.env.INERT_PATHS_FILTER || '').matchAll(/^\s*-\s*'!(.+)'\s*$/gm)]
-                .map((m) => globToRegExp(m[1]));
-              if (inertMatchers.length === 0) {
-                return fail('no inert patterns parsed from INERT_PATHS_FILTER');
-              }
-              const isInert = (p) => inertMatchers.some((re) => re.test(p));
               for (const f of files) {
                 const paths = [f.filename, f.previous_filename].filter(Boolean);
                 if (!paths.every(isInert)) {
@@ -179,7 +183,7 @@ jobs:
 
               // Validate the prior head's check by PROVENANCE, not just name.
               // Many actors post a check named "Integration Tests" (the real
-              // eng-dev-ecosystem run, the skip job, a previous carry-forward).
+              // integration-test run, the skip job, a previous carry-forward).
               // Exclude our own synthetic runs (marked via external_id) so a
               // synthetic green can never be laundered forward, then require
               // the most recent *real* run to be a completed success — closing

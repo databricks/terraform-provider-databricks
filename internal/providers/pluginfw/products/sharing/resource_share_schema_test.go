@@ -50,6 +50,15 @@ func TestResourceShare_SchemaPreserved(t *testing.T) {
 	require.True(t, ok, "id must be string")
 	assert.True(t, idStr.Computed, "id should be computed")
 
+	// Verify SDKv2-block compat: ConfigureAsSdkV2Compatible() must keep the
+	// nested "object" list as a block (not an attribute) so that
+	// terraform.tfstate files written by SDKv2-era releases of databricks_share
+	// still decode.
+	_, objectIsBlock := s.Blocks["object"]
+	_, objectIsAttr := s.Attributes["object"]
+	assert.True(t, objectIsBlock, "%q must be a block (SDKv2-state compat)", "object")
+	assert.False(t, objectIsAttr, "%q must NOT be an attribute", "object")
+
 	// Verify provider_config block (SdkV2 compatible)
 	pcBlock, ok := s.Blocks["provider_config"]
 	require.True(t, ok, "provider_config block must exist")

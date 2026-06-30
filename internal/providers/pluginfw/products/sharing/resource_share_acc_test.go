@@ -11,8 +11,6 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
-	"github.com/databricks/terraform-provider-databricks/internal/providers"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -327,105 +325,6 @@ func TestUcAccUpdateShareRemoveAllObjects(t *testing.T) {
 	})
 }
 
-// TestUcAccShareMigrationFromSDKv2 tests the transition from sdkv2 to plugin framework.
-// This test verifies that existing state created by SDK v2 implementation can be
-// successfully managed by the plugin framework implementation without any changes.
-func TestUcAccShareMigrationFromSDKv2(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t,
-		// Step 1: Create share using SDK v2 implementation
-		acceptance.Step{
-			ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-				"databricks": func() (tfprotov6.ProviderServer, error) {
-					sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_share"})
-					return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
-				},
-			},
-			Template: preTestTemplateSchema + `
-				resource "databricks_share" "myshare" {
-					name  = "{var.STICKY_RANDOM}-terraform-migration-share"
-					object {
-						name = databricks_schema.schema1.id
-						comment = "Shared schema object for migration test"
-						data_object_type = "SCHEMA"
-					}
-					object {
-						name = databricks_schema.schema2.id
-						comment = "Second shared schema object"
-						data_object_type = "SCHEMA"
-					}
-				}`,
-		},
-		// Step 2: Update the share using plugin framework implementation (default)
-		// This verifies no changes are needed when switching implementations
-		acceptance.Step{
-			Template: preTestTemplateSchema + `
-				resource "databricks_share" "myshare" {
-					name  = "{var.STICKY_RANDOM}-terraform-migration-share"
-					object {
-						name = databricks_schema.schema1.id
-						comment = "Updated comment for schema object after migration"
-						data_object_type = "SCHEMA"
-					}
-					object {
-						name = databricks_schema.schema2.id
-						comment = "Second shared schema object"
-						data_object_type = "SCHEMA"
-					}
-				}`,
-		},
-	)
-}
-
-// TestUcAccShareMigrationFromPluginFramework tests the transition from plugin framework to sdkv2.
-// This test verifies that existing state created by plugin framework implementation can be
-// successfully managed by the SDK v2 implementation without any changes.
-func TestUcAccShareMigrationFromPluginFramework(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t,
-		// Step 1: Create share using plugin framework implementation
-		acceptance.Step{
-			Template: preTestTemplateSchema + `
-				resource "databricks_share" "myshare" {
-					name  = "{var.STICKY_RANDOM}-terraform-migration-share-rollback"
-					owner = "account users"
-					object {
-						name = databricks_schema.schema1.id
-						comment = "Shared schema object for migration test"
-						data_object_type = "SCHEMA"
-					}
-					object {
-						name = databricks_schema.schema2.id
-						comment = "Second shared schema object"
-						data_object_type = "SCHEMA"
-					}
-				}`,
-		},
-		// Step 2: Update the share using SDK v2 (default)
-		// This verifies no changes are needed when switching implementations
-		acceptance.Step{
-			ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-				"databricks": func() (tfprotov6.ProviderServer, error) {
-					sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_share"})
-					return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
-				},
-			},
-			Template: preTestTemplateSchema + `
-				resource "databricks_share" "myshare" {
-					name  = "{var.STICKY_RANDOM}-terraform-migration-share-rollback"
-					owner = "account users"
-					object {
-						name = databricks_schema.schema1.id
-						comment = "Shared schema object for migration test"
-						data_object_type = "SCHEMA"
-					}
-					object {
-						name = databricks_schema.schema2.id
-						comment = "Second shared schema object"
-						data_object_type = "SCHEMA"
-					}
-				}`,
-		},
-	)
-}
 func shareUpdateWithName(name string) string {
 	return fmt.Sprintf(`resource "databricks_share" "myshare" {
 			name  = "%s"
@@ -788,16 +687,6 @@ resource "databricks_share" "myshare" {
 
 func TestUcAccShareVolume(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		// Step 1: Create share with volume using SDKv2 implementation
-		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"databricks": func() (tfprotov6.ProviderServer, error) {
-				sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_share"})
-				return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
-			},
-		},
-		Template: shareVolumeTemplate,
-	}, acceptance.Step{
-		// Step 2: Apply using plugin framework implementation (default)
 		Template: shareVolumeTemplate,
 	})
 }

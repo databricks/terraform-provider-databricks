@@ -11,22 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetPluginFrameworkResources_FallbackOptionExcludesFromPF(t *testing.T) {
-	got := getPluginFrameworkResourcesToRegister([]string{"databricks_library"})
-	for _, fn := range got {
-		assert.NotEqual(t, "databricks_library", getResourceName(fn),
-			"WithSdkV2ResourceFallbacks must exclude the resource from PF registration")
-	}
-}
-
-func TestGetPluginFrameworkDataSources_FallbackOptionExcludesFromPF(t *testing.T) {
-	got := getPluginFrameworkDataSourcesToRegister([]string{"databricks_volumes"})
-	for _, fn := range got {
-		assert.NotEqual(t, "databricks_volumes", getDataSourceName(fn),
-			"WithSdkV2DataSourceFallbacks must exclude the data source from PF registration")
-	}
-}
-
 func TestConfigure(t *testing.T) {
 	testCases := []struct {
 		name                 string

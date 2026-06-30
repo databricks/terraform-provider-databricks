@@ -31,27 +31,23 @@ func GetDatabricksProviderPluginFramework(opts ...PluginFrameworkOption) provide
 		opt.Apply(providerOptions)
 	}
 	p := &DatabricksProviderPluginFramework{
-		sdkV2ResourceFallbacks:   providerOptions.resourceFallbacks,
-		sdkV2DataSourceFallbacks: providerOptions.dataSourceFallbacks,
-		configCustomizer:         providerOptions.configCustomizer,
+		configCustomizer: providerOptions.configCustomizer,
 	}
 	return p
 }
 
 type DatabricksProviderPluginFramework struct {
-	sdkV2ResourceFallbacks   []string
-	sdkV2DataSourceFallbacks []string
-	configCustomizer         func(*config.Config) error
+	configCustomizer func(*config.Config) error
 }
 
 var _ provider.Provider = (*DatabricksProviderPluginFramework)(nil)
 
 func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []func() resource.Resource {
-	return getPluginFrameworkResourcesToRegister(p.sdkV2ResourceFallbacks)
+	return pluginFwResources
 }
 
 func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return getPluginFrameworkDataSourcesToRegister(p.sdkV2DataSourceFallbacks)
+	return pluginFwDataSources
 }
 
 func (p *DatabricksProviderPluginFramework) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {

@@ -166,19 +166,6 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 	return commands.TrimLeadingWhitespace(template)
 }
 
-// ProvidersWithResourceFallbacks creates test providers, falling back to the SDKv2 provider for the
-// specified resources. This is a convenience constructor that ensures that the resulting mux'ed provider
-// uses the SDKv2 implementation for the specified resources.
-func ProvidersWithResourceFallbacks(resourceFallbacks []string) (*schema.Provider, provider.Provider) {
-	pluginfwOpt := pluginfw.WithSdkV2ResourceFallbacks(resourceFallbacks)
-	pluginFrameworkProvider := PluginFrameworkProviderForTest(pluginfwOpt)
-
-	sdkV2Opt := sdkv2.WithSdkV2ResourceFallbacks(resourceFallbacks)
-	sdkV2Provider := SdkV2ProviderForTest(sdkV2Opt)
-
-	return sdkV2Provider, pluginFrameworkProvider
-}
-
 // SdkV2ProviderForTest creates a test provider with the default config customizer.
 func SdkV2ProviderForTest(sdkV2Options ...sdkv2.SdkV2ProviderOption) *schema.Provider {
 	opts := append(sdkV2Options, sdkv2.WithConfigCustomizer(DefaultConfigCustomizer), sdkv2.WithConfigCustomizer(OidcConfigCustomizer))

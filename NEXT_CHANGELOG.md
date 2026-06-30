@@ -4,7 +4,7 @@
 
 ### Breaking Changes
 
-* Remove the `USE_SDK_V2_RESOURCES` and `USE_SDK_V2_DATA_SOURCES` environment variables. Setting either no longer has any effect; the Plugin Framework is now the only path for `databricks_library`, `databricks_quality_monitor`, and `databricks_share` resources and the `databricks_share`, `databricks_shares`, and `databricks_volumes` data sources. Users who previously relied on these env vars as a fallback should remove them; any existing Terraform state written against the SDKv2 implementations continues to be readable by the Plugin Framework versions.
+* Remove the `USE_SDK_V2_RESOURCES` / `USE_SDK_V2_DATA_SOURCES` environment variables and the corresponding SDKv2 implementations of `databricks_library`, `databricks_share` resources and `databricks_share`, `databricks_shares`, `databricks_volumes` data sources. The Plugin Framework is now the only path for these surfaces; the env vars no longer have any effect. Existing Terraform state written against the SDKv2 implementations continues to be readable by the Plugin Framework versions through the `ConfigureAsSdkV2Compatible()` schema shim, which is now covered by the `TestResource*_SchemaPreserved` unit tests in place of the previous transition acceptance tests. The SDKv2 implementation of `databricks_quality_monitor` is retained as it backs the still-supported (but deprecated) `databricks_lakehouse_monitor` alias.
 
 ### New Features and Improvements
 

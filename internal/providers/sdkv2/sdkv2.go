@@ -24,7 +24,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/client"
 	providercommon "github.com/databricks/terraform-provider-databricks/internal/providers/common"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
 	"github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/databricks/terraform-provider-databricks/settings"
 )
@@ -48,29 +47,11 @@ func init() {
 var terraformVersionOnce sync.Once
 
 type sdkV2ProviderOptions struct {
-	sdkV2ResourceFallbacks   []string
-	sdkV2DataSourceFallbacks []string
-	configCustomizer         func(*config.Config) error
+	configCustomizer func(*config.Config) error
 }
 
 // SdkV2ProviderOption is a functional option for configuring the SDK V2 provider.
 type SdkV2ProviderOption func(*sdkV2ProviderOptions)
-
-// WithSdkV2ResourceFallbacks configures the SDKv2 provider to support the provided resources that
-// are already migrated to the plugin framework. This should only be used for testing.
-func WithSdkV2ResourceFallbacks(resources []string) SdkV2ProviderOption {
-	return func(o *sdkV2ProviderOptions) {
-		o.sdkV2ResourceFallbacks = resources
-	}
-}
-
-// WithSdkV2ResourceFallbacks configures the SDKv2 provider to support the provided data sources that
-// are already migrated to the plugin framework. This should only be used for testing.
-func WithSdkV2DataSourceFallbacks(dataSources []string) SdkV2ProviderOption {
-	return func(o *sdkV2ProviderOptions) {
-		o.sdkV2DataSourceFallbacks = dataSources
-	}
-}
 
 // WithConfigCustomizer allows the caller to customize the SDK config before config resolution,
 // so customizer-set fields (e.g. Host) participate in resolveHostMetadata and auth.
@@ -88,23 +69,7 @@ func DatabricksProvider(opts ...SdkV2ProviderOption) *schema.Provider {
 	}
 
 	dataSourceMap := DataSources()
-
 	resourceMap := Resources()
-
-	// Remove the resources and data sources that are being migrated to plugin framework
-	for _, dataSourceToRemove := range pluginfw.GetSdkV2DataSourcesToRemove(providerOptions.sdkV2DataSourceFallbacks) {
-		if _, ok := dataSourceMap[dataSourceToRemove]; !ok {
-			panic(fmt.Sprintf("data source %s not found", dataSourceToRemove))
-		}
-		delete(dataSourceMap, dataSourceToRemove)
-	}
-
-	for _, resourceToRemove := range pluginfw.GetSdkV2ResourcesToRemove(providerOptions.sdkV2ResourceFallbacks) {
-		if _, ok := resourceMap[resourceToRemove]; !ok {
-			panic(fmt.Sprintf("resource %s not found", resourceToRemove))
-		}
-		delete(resourceMap, resourceToRemove)
-	}
 
 	p := &schema.Provider{
 		DataSourcesMap: dataSourceMap,

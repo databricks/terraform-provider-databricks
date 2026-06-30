@@ -53,6 +53,16 @@ func TestResourceLibrary_SchemaPreserved(t *testing.T) {
 	assert.True(t, idStr.Computed, "id should be computed")
 	assert.True(t, idStr.Optional, "id should be optional")
 
+	// Verify SDKv2-block compat: ConfigureAsSdkV2Compatible() must keep these
+	// nested types as blocks (not attributes) so that terraform.tfstate files
+	// written by SDKv2-era releases of databricks_library still decode.
+	for _, name := range []string{"cran", "maven", "pypi"} {
+		_, isBlock := s.Blocks[name]
+		_, isAttr := s.Attributes[name]
+		assert.True(t, isBlock, "%q must be a block (SDKv2-state compat)", name)
+		assert.False(t, isAttr, "%q must NOT be an attribute", name)
+	}
+
 	// Verify provider_config block exists (SdkV2 compatible = list nested block)
 	pcBlock, ok := s.Blocks["provider_config"]
 	require.True(t, ok, "provider_config block must exist")

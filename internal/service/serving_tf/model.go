@@ -1987,6 +1987,9 @@ type CreateServingEndpoint struct {
 	// Tags to be attached to the serving endpoint and automatically propagated
 	// to billing logs.
 	Tags types.List `tfsdk:"tags"`
+	// Configuration for persisting endpoint telemetry (logs, traces, and
+	// metrics) to Unity Catalog tables.
+	TelemetryConfig types.Object `tfsdk:"telemetry_config"`
 }
 
 func (to *CreateServingEndpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateServingEndpoint) {
@@ -2029,6 +2032,15 @@ func (to *CreateServingEndpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.TelemetryConfig.IsNull() && !from.TelemetryConfig.IsUnknown() {
+		if toTelemetryConfig, ok := to.GetTelemetryConfig(ctx); ok {
+			if fromTelemetryConfig, ok := from.GetTelemetryConfig(ctx); ok {
+				// Recursively sync the fields of TelemetryConfig
+				toTelemetryConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromTelemetryConfig)
+				to.SetTelemetryConfig(ctx, toTelemetryConfig)
+			}
+		}
+	}
 }
 
 func (to *CreateServingEndpoint) SyncFieldsDuringRead(ctx context.Context, from CreateServingEndpoint) {
@@ -2068,6 +2080,14 @@ func (to *CreateServingEndpoint) SyncFieldsDuringRead(ctx context.Context, from 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.TelemetryConfig.IsNull() && !from.TelemetryConfig.IsUnknown() {
+		if toTelemetryConfig, ok := to.GetTelemetryConfig(ctx); ok {
+			if fromTelemetryConfig, ok := from.GetTelemetryConfig(ctx); ok {
+				toTelemetryConfig.SyncFieldsDuringRead(ctx, fromTelemetryConfig)
+				to.SetTelemetryConfig(ctx, toTelemetryConfig)
+			}
+		}
+	}
 }
 
 func (m CreateServingEndpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2080,6 +2100,7 @@ func (m CreateServingEndpoint) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
 	attrs["route_optimized"] = attrs["route_optimized"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["telemetry_config"] = attrs["telemetry_config"].SetOptional()
 
 	return attrs
 }
@@ -2098,6 +2119,7 @@ func (m CreateServingEndpoint) GetComplexFieldTypes(ctx context.Context) map[str
 		"email_notifications": reflect.TypeOf(EmailNotifications{}),
 		"rate_limits":         reflect.TypeOf(RateLimit{}),
 		"tags":                reflect.TypeOf(EndpointTag{}),
+		"telemetry_config":    reflect.TypeOf(TelemetryConfig{}),
 	}
 }
 
@@ -2117,6 +2139,7 @@ func (m CreateServingEndpoint) ToObjectValue(ctx context.Context) basetypes.Obje
 			"rate_limits":         m.RateLimits,
 			"route_optimized":     m.RouteOptimized,
 			"tags":                m.Tags,
+			"telemetry_config":    m.TelemetryConfig,
 		})
 }
 
@@ -2137,6 +2160,7 @@ func (m CreateServingEndpoint) Type(ctx context.Context) attr.Type {
 			"tags": basetypes.ListType{
 				ElemType: EndpointTag{}.Type(ctx),
 			},
+			"telemetry_config": TelemetryConfig{}.Type(ctx),
 		},
 	}
 }
@@ -2266,6 +2290,31 @@ func (m *CreateServingEndpoint) SetTags(ctx context.Context, v []EndpointTag) {
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Tags = types.ListValueMust(t, vs)
+}
+
+// GetTelemetryConfig returns the value of the TelemetryConfig field in CreateServingEndpoint as
+// a TelemetryConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateServingEndpoint) GetTelemetryConfig(ctx context.Context) (TelemetryConfig, bool) {
+	var e TelemetryConfig
+	if m.TelemetryConfig.IsNull() || m.TelemetryConfig.IsUnknown() {
+		return e, false
+	}
+	var v TelemetryConfig
+	d := m.TelemetryConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTelemetryConfig sets the value of the TelemetryConfig field in CreateServingEndpoint.
+func (m *CreateServingEndpoint) SetTelemetryConfig(ctx context.Context, v TelemetryConfig) {
+	vs := v.ToObjectValue(ctx)
+	m.TelemetryConfig = vs
 }
 
 // Configs needed to create a custom provider model route.
@@ -9195,6 +9244,9 @@ type ServingEndpoint struct {
 	Tags types.List `tfsdk:"tags"`
 	// The task type of the serving endpoint.
 	Task types.String `tfsdk:"task"`
+	// Telemetry configuration for the endpoint, including inference-table
+	// payload logging.
+	TelemetryConfig types.Object `tfsdk:"telemetry_config"`
 	// The usage policy associated with serving endpoint.
 	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
@@ -9233,6 +9285,15 @@ func (to *ServingEndpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.TelemetryConfig.IsNull() && !from.TelemetryConfig.IsUnknown() {
+		if toTelemetryConfig, ok := to.GetTelemetryConfig(ctx); ok {
+			if fromTelemetryConfig, ok := from.GetTelemetryConfig(ctx); ok {
+				// Recursively sync the fields of TelemetryConfig
+				toTelemetryConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromTelemetryConfig)
+				to.SetTelemetryConfig(ctx, toTelemetryConfig)
+			}
+		}
+	}
 }
 
 func (to *ServingEndpoint) SyncFieldsDuringRead(ctx context.Context, from ServingEndpoint) {
@@ -9266,6 +9327,14 @@ func (to *ServingEndpoint) SyncFieldsDuringRead(ctx context.Context, from Servin
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.TelemetryConfig.IsNull() && !from.TelemetryConfig.IsUnknown() {
+		if toTelemetryConfig, ok := to.GetTelemetryConfig(ctx); ok {
+			if fromTelemetryConfig, ok := from.GetTelemetryConfig(ctx); ok {
+				toTelemetryConfig.SyncFieldsDuringRead(ctx, fromTelemetryConfig)
+				to.SetTelemetryConfig(ctx, toTelemetryConfig)
+			}
+		}
+	}
 }
 
 func (m ServingEndpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9281,6 +9350,7 @@ func (m ServingEndpoint) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["state"] = attrs["state"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["task"] = attrs["task"].SetOptional()
+	attrs["telemetry_config"] = attrs["telemetry_config"].SetOptional()
 	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 
 	return attrs
@@ -9295,10 +9365,11 @@ func (m ServingEndpoint) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // SDK values.
 func (m ServingEndpoint) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ai_gateway": reflect.TypeOf(AiGatewayConfig{}),
-		"config":     reflect.TypeOf(EndpointCoreConfigSummary{}),
-		"state":      reflect.TypeOf(EndpointState{}),
-		"tags":       reflect.TypeOf(EndpointTag{}),
+		"ai_gateway":       reflect.TypeOf(AiGatewayConfig{}),
+		"config":           reflect.TypeOf(EndpointCoreConfigSummary{}),
+		"state":            reflect.TypeOf(EndpointState{}),
+		"tags":             reflect.TypeOf(EndpointTag{}),
+		"telemetry_config": reflect.TypeOf(TelemetryConfig{}),
 	}
 }
 
@@ -9321,6 +9392,7 @@ func (m ServingEndpoint) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"state":                  m.State,
 			"tags":                   m.Tags,
 			"task":                   m.Task,
+			"telemetry_config":       m.TelemetryConfig,
 			"usage_policy_id":        m.UsagePolicyId,
 		})
 }
@@ -9342,8 +9414,9 @@ func (m ServingEndpoint) Type(ctx context.Context) attr.Type {
 			"tags": basetypes.ListType{
 				ElemType: EndpointTag{}.Type(ctx),
 			},
-			"task":            types.StringType,
-			"usage_policy_id": types.StringType,
+			"task":             types.StringType,
+			"telemetry_config": TelemetryConfig{}.Type(ctx),
+			"usage_policy_id":  types.StringType,
 		},
 	}
 }
@@ -9447,6 +9520,31 @@ func (m *ServingEndpoint) SetTags(ctx context.Context, v []EndpointTag) {
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Tags = types.ListValueMust(t, vs)
+}
+
+// GetTelemetryConfig returns the value of the TelemetryConfig field in ServingEndpoint as
+// a TelemetryConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ServingEndpoint) GetTelemetryConfig(ctx context.Context) (TelemetryConfig, bool) {
+	var e TelemetryConfig
+	if m.TelemetryConfig.IsNull() || m.TelemetryConfig.IsUnknown() {
+		return e, false
+	}
+	var v TelemetryConfig
+	d := m.TelemetryConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTelemetryConfig sets the value of the TelemetryConfig field in ServingEndpoint.
+func (m *ServingEndpoint) SetTelemetryConfig(ctx context.Context, v TelemetryConfig) {
+	vs := v.ToObjectValue(ctx)
+	m.TelemetryConfig = vs
 }
 
 type ServingEndpointAccessControlRequest struct {
@@ -9663,6 +9761,9 @@ type ServingEndpointDetailed struct {
 	Tags types.List `tfsdk:"tags"`
 	// The task type of the serving endpoint.
 	Task types.String `tfsdk:"task"`
+	// Telemetry configuration for the endpoint, including inference-table
+	// payload logging.
+	TelemetryConfig types.Object `tfsdk:"telemetry_config"`
 }
 
 func (to *ServingEndpointDetailed) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ServingEndpointDetailed) {
@@ -9726,6 +9827,15 @@ func (to *ServingEndpointDetailed) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.TelemetryConfig.IsNull() && !from.TelemetryConfig.IsUnknown() {
+		if toTelemetryConfig, ok := to.GetTelemetryConfig(ctx); ok {
+			if fromTelemetryConfig, ok := from.GetTelemetryConfig(ctx); ok {
+				// Recursively sync the fields of TelemetryConfig
+				toTelemetryConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromTelemetryConfig)
+				to.SetTelemetryConfig(ctx, toTelemetryConfig)
+			}
+		}
+	}
 }
 
 func (to *ServingEndpointDetailed) SyncFieldsDuringRead(ctx context.Context, from ServingEndpointDetailed) {
@@ -9783,6 +9893,14 @@ func (to *ServingEndpointDetailed) SyncFieldsDuringRead(ctx context.Context, fro
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.TelemetryConfig.IsNull() && !from.TelemetryConfig.IsUnknown() {
+		if toTelemetryConfig, ok := to.GetTelemetryConfig(ctx); ok {
+			if fromTelemetryConfig, ok := from.GetTelemetryConfig(ctx); ok {
+				toTelemetryConfig.SyncFieldsDuringRead(ctx, fromTelemetryConfig)
+				to.SetTelemetryConfig(ctx, toTelemetryConfig)
+			}
+		}
+	}
 }
 
 func (m ServingEndpointDetailed) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9804,6 +9922,7 @@ func (m ServingEndpointDetailed) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["state"] = attrs["state"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["task"] = attrs["task"].SetOptional()
+	attrs["telemetry_config"] = attrs["telemetry_config"].SetOptional()
 
 	return attrs
 }
@@ -9824,6 +9943,7 @@ func (m ServingEndpointDetailed) GetComplexFieldTypes(ctx context.Context) map[s
 		"pending_config":      reflect.TypeOf(EndpointPendingConfig{}),
 		"state":               reflect.TypeOf(EndpointState{}),
 		"tags":                reflect.TypeOf(EndpointTag{}),
+		"telemetry_config":    reflect.TypeOf(TelemetryConfig{}),
 	}
 }
 
@@ -9852,6 +9972,7 @@ func (m ServingEndpointDetailed) ToObjectValue(ctx context.Context) basetypes.Ob
 			"state":                  m.State,
 			"tags":                   m.Tags,
 			"task":                   m.Task,
+			"telemetry_config":       m.TelemetryConfig,
 		})
 }
 
@@ -9878,7 +9999,8 @@ func (m ServingEndpointDetailed) Type(ctx context.Context) attr.Type {
 			"tags": basetypes.ListType{
 				ElemType: EndpointTag{}.Type(ctx),
 			},
-			"task": types.StringType,
+			"task":             types.StringType,
+			"telemetry_config": TelemetryConfig{}.Type(ctx),
 		},
 	}
 }
@@ -10057,6 +10179,31 @@ func (m *ServingEndpointDetailed) SetTags(ctx context.Context, v []EndpointTag) 
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Tags = types.ListValueMust(t, vs)
+}
+
+// GetTelemetryConfig returns the value of the TelemetryConfig field in ServingEndpointDetailed as
+// a TelemetryConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ServingEndpointDetailed) GetTelemetryConfig(ctx context.Context) (TelemetryConfig, bool) {
+	var e TelemetryConfig
+	if m.TelemetryConfig.IsNull() || m.TelemetryConfig.IsUnknown() {
+		return e, false
+	}
+	var v TelemetryConfig
+	d := m.TelemetryConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTelemetryConfig sets the value of the TelemetryConfig field in ServingEndpointDetailed.
+func (m *ServingEndpointDetailed) SetTelemetryConfig(ctx context.Context, v TelemetryConfig) {
+	vs := v.ToObjectValue(ctx)
+	m.TelemetryConfig = vs
 }
 
 type ServingEndpointPermission struct {
@@ -10401,6 +10548,153 @@ func (m *ServingEndpointPermissionsRequest) SetAccessControlList(ctx context.Con
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.AccessControlList = types.ListValueMust(t, vs)
+}
+
+type TelemetryConfig struct {
+	// Configuration for inference table payload logging, including sampling.
+	InferenceTableConfig types.Object `tfsdk:"inference_table_config"`
+}
+
+func (to *TelemetryConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TelemetryConfig) {
+	if !from.InferenceTableConfig.IsNull() && !from.InferenceTableConfig.IsUnknown() {
+		if toInferenceTableConfig, ok := to.GetInferenceTableConfig(ctx); ok {
+			if fromInferenceTableConfig, ok := from.GetInferenceTableConfig(ctx); ok {
+				// Recursively sync the fields of InferenceTableConfig
+				toInferenceTableConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromInferenceTableConfig)
+				to.SetInferenceTableConfig(ctx, toInferenceTableConfig)
+			}
+		}
+	}
+}
+
+func (to *TelemetryConfig) SyncFieldsDuringRead(ctx context.Context, from TelemetryConfig) {
+	if !from.InferenceTableConfig.IsNull() && !from.InferenceTableConfig.IsUnknown() {
+		if toInferenceTableConfig, ok := to.GetInferenceTableConfig(ctx); ok {
+			if fromInferenceTableConfig, ok := from.GetInferenceTableConfig(ctx); ok {
+				toInferenceTableConfig.SyncFieldsDuringRead(ctx, fromInferenceTableConfig)
+				to.SetInferenceTableConfig(ctx, toInferenceTableConfig)
+			}
+		}
+	}
+}
+
+func (m TelemetryConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inference_table_config"] = attrs["inference_table_config"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TelemetryConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TelemetryConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"inference_table_config": reflect.TypeOf(TelemetryInferenceTableConfig{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TelemetryConfig
+// only implements ToObjectValue() and Type().
+func (m TelemetryConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"inference_table_config": m.InferenceTableConfig,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TelemetryConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"inference_table_config": TelemetryInferenceTableConfig{}.Type(ctx),
+		},
+	}
+}
+
+// GetInferenceTableConfig returns the value of the InferenceTableConfig field in TelemetryConfig as
+// a TelemetryInferenceTableConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TelemetryConfig) GetInferenceTableConfig(ctx context.Context) (TelemetryInferenceTableConfig, bool) {
+	var e TelemetryInferenceTableConfig
+	if m.InferenceTableConfig.IsNull() || m.InferenceTableConfig.IsUnknown() {
+		return e, false
+	}
+	var v TelemetryInferenceTableConfig
+	d := m.InferenceTableConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInferenceTableConfig sets the value of the InferenceTableConfig field in TelemetryConfig.
+func (m *TelemetryConfig) SetInferenceTableConfig(ctx context.Context, v TelemetryInferenceTableConfig) {
+	vs := v.ToObjectValue(ctx)
+	m.InferenceTableConfig = vs
+}
+
+// Inference table payload logging configuration
+type TelemetryInferenceTableConfig struct {
+	// The full name of the inference table created for this endpoint.
+	Name types.String `tfsdk:"name"`
+	// Fraction of requests sampled for payload logging, in the range [0.0,
+	// 1.0], where 1.0 logs all requests.
+	SamplingFraction types.Float64 `tfsdk:"sampling_fraction"`
+}
+
+func (to *TelemetryInferenceTableConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TelemetryInferenceTableConfig) {
+}
+
+func (to *TelemetryInferenceTableConfig) SyncFieldsDuringRead(ctx context.Context, from TelemetryInferenceTableConfig) {
+}
+
+func (m TelemetryInferenceTableConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["sampling_fraction"] = attrs["sampling_fraction"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TelemetryInferenceTableConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TelemetryInferenceTableConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TelemetryInferenceTableConfig
+// only implements ToObjectValue() and Type().
+func (m TelemetryInferenceTableConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":              m.Name,
+			"sampling_fraction": m.SamplingFraction,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TelemetryInferenceTableConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":              types.StringType,
+			"sampling_fraction": types.Float64Type,
+		},
+	}
 }
 
 type TrafficConfig struct {

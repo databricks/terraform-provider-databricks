@@ -1,6 +1,6 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package postgres_project
+package postgres_data_api
 
 import (
 	"context"
@@ -33,16 +33,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-const resourceName = "postgres_project"
+const resourceName = "postgres_data_api"
 
-var _ resource.ResourceWithConfigure = &ProjectResource{}
-var _ resource.ResourceWithModifyPlan = &ProjectResource{}
+var _ resource.ResourceWithConfigure = &DataApiResource{}
+var _ resource.ResourceWithModifyPlan = &DataApiResource{}
 
-func ResourceProject() resource.Resource {
-	return &ProjectResource{}
+func ResourceDataApi() resource.Resource {
+	return &DataApiResource{}
 }
 
-type ProjectResource struct {
+type DataApiResource struct {
 	Client *autogen.DatabricksClient
 }
 
@@ -109,64 +109,37 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Project extends the main model with additional fields.
-type Project struct {
-	// A timestamp indicating when the project was created.
+// DataApi extends the main model with additional fields.
+type DataApi struct {
+	// A timestamp indicating when the Data API was first enabled.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// A timestamp indicating when the project was soft-deleted. Empty if the
-	// project is not deleted, otherwise set to a timestamp in the past.
-	DeleteTime timetypes.RFC3339 `tfsdk:"delete_time"`
-	// Configuration for the initial default branch created as part of project
-	// creation. Allows overriding branch protection. These settings only apply
-	// at creation time and do not affect resources created after project
-	// creation.
-	InitialBranchSpec types.Object `tfsdk:"initial_branch_spec"`
-	// Configuration settings for the initial Read/Write endpoint created inside
-	// the initial branch for a newly created project. If omitted, the initial
-	// endpoint created will have default settings, without high availability
-	// configured. This field does not apply to any endpoints created after
-	// project creation. Use spec.default_endpoint_settings to configure default
-	// settings for endpoints created after project creation.
-	InitialEndpointSpec types.Object `tfsdk:"initial_endpoint_spec"`
-	// Output only. The full resource path of the project. Format:
-	// projects/{project_id}
+	// Resource name:
+	// projects/{project_id}/branches/{branch_id}/databases/{database_id}/data-api
 	Name types.String `tfsdk:"name"`
-	// The part of the name, chosen by the user when the resource was created.
-	ProjectId types.String `tfsdk:"project_id"`
-	// If true, permanently deletes the project (hard delete). If false or
-	// unset, performs a soft delete.
-	PurgeOnDelete types.Bool `tfsdk:"purge_on_delete"`
-	// A timestamp indicating when the project is scheduled for permanent
-	// deletion. Empty if the project is not deleted, otherwise set to a
-	// timestamp in the future.
-	PurgeTime timetypes.RFC3339 `tfsdk:"purge_time"`
-	// The spec contains the project configuration, including display_name,
-	// pg_version (Postgres version), history_retention_duration, and
-	// default_endpoint_settings.
+	// The database containing this Data API configuration. Format:
+	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
+	Parent types.String `tfsdk:"parent"`
+	// The desired Data API configuration.
 	Spec types.Object `tfsdk:"spec"`
-	// The current status of a Project.
+	// The observed Data API state (read-only).
 	Status types.Object `tfsdk:"status"`
-	// System-generated unique ID for the project.
-	Uid types.String `tfsdk:"uid"`
-	// A timestamp indicating when the project was last updated.
+	// A timestamp indicating when the Data API configuration was last updated.
 	UpdateTime     timetypes.RFC3339 `tfsdk:"update_time"`
 	ProviderConfig types.Object      `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// Project struct. Container types (types.Map, types.List, types.Set) and
+// DataApi struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m Project) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m DataApi) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"initial_branch_spec":   reflect.TypeOf(postgres_tf.InitialBranchSpec{}),
-		"initial_endpoint_spec": reflect.TypeOf(postgres_tf.InitialEndpointSpec{}),
-		"spec":                  reflect.TypeOf(postgres_tf.ProjectSpec{}),
-		"status":                reflect.TypeOf(postgres_tf.ProjectStatus{}),
-		"provider_config":       reflect.TypeOf(ProviderConfig{}),
+		"spec":            reflect.TypeOf(postgres_tf.DataApiDataApiSpec{}),
+		"status":          reflect.TypeOf(postgres_tf.DataApiDataApiStatus{}),
+		"provider_config": reflect.TypeOf(ProviderConfig{}),
 	}
 }
 
@@ -174,23 +147,17 @@ func (m Project) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, Project
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DataApi
 // only implements ToObjectValue() and Type().
-func (m Project) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m DataApi) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"create_time": m.CreateTime,
-			"delete_time":           m.DeleteTime,
-			"initial_branch_spec":   m.InitialBranchSpec,
-			"initial_endpoint_spec": m.InitialEndpointSpec,
-			"name":                  m.Name,
-			"project_id":            m.ProjectId,
-			"purge_on_delete":       m.PurgeOnDelete,
-			"purge_time":            m.PurgeTime,
-			"spec":                  m.Spec,
-			"status":                m.Status,
-			"uid":                   m.Uid,
-			"update_time":           m.UpdateTime,
+			"name":        m.Name,
+			"parent":      m.Parent,
+			"spec":        m.Spec,
+			"status":      m.Status,
+			"update_time": m.UpdateTime,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -199,20 +166,14 @@ func (m Project) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m Project) Type(ctx context.Context) attr.Type {
+func (m DataApi) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"create_time": timetypes.RFC3339{}.Type(ctx),
-			"delete_time":           timetypes.RFC3339{}.Type(ctx),
-			"initial_branch_spec":   postgres_tf.InitialBranchSpec{}.Type(ctx),
-			"initial_endpoint_spec": postgres_tf.InitialEndpointSpec{}.Type(ctx),
-			"name":                  types.StringType,
-			"project_id":            types.StringType,
-			"purge_on_delete":       types.BoolType,
-			"purge_time":            timetypes.RFC3339{}.Type(ctx),
-			"spec":                  postgres_tf.ProjectSpec{}.Type(ctx),
-			"status":                postgres_tf.ProjectStatus{}.Type(ctx),
-			"uid":                   types.StringType,
-			"update_time":           timetypes.RFC3339{}.Type(ctx),
+			"name":        types.StringType,
+			"parent":      types.StringType,
+			"spec":        postgres_tf.DataApiDataApiSpec{}.Type(ctx),
+			"status":      postgres_tf.DataApiDataApiStatus{}.Type(ctx),
+			"update_time": timetypes.RFC3339{}.Type(ctx),
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -222,36 +183,7 @@ func (m Project) Type(ctx context.Context) attr.Type {
 // SyncFieldsDuringCreateOrUpdate copies values from the plan into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
-func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Project) {
-	if !from.InitialBranchSpec.IsUnknown() && !from.InitialBranchSpec.IsNull() {
-		// InitialBranchSpec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.InitialBranchSpec = from.InitialBranchSpec
-	}
-	if !from.InitialBranchSpec.IsNull() && !from.InitialBranchSpec.IsUnknown() {
-		if toInitialBranchSpec, ok := to.GetInitialBranchSpec(ctx); ok {
-			if fromInitialBranchSpec, ok := from.GetInitialBranchSpec(ctx); ok {
-				// Recursively sync the fields of InitialBranchSpec
-				toInitialBranchSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromInitialBranchSpec)
-				to.SetInitialBranchSpec(ctx, toInitialBranchSpec)
-			}
-		}
-	}
-	if !from.InitialEndpointSpec.IsUnknown() && !from.InitialEndpointSpec.IsNull() {
-		// InitialEndpointSpec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.InitialEndpointSpec = from.InitialEndpointSpec
-	}
-	if !from.InitialEndpointSpec.IsNull() && !from.InitialEndpointSpec.IsUnknown() {
-		if toInitialEndpointSpec, ok := to.GetInitialEndpointSpec(ctx); ok {
-			if fromInitialEndpointSpec, ok := from.GetInitialEndpointSpec(ctx); ok {
-				// Recursively sync the fields of InitialEndpointSpec
-				toInitialEndpointSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromInitialEndpointSpec)
-				to.SetInitialEndpointSpec(ctx, toInitialEndpointSpec)
-			}
-		}
-	}
-	if !from.PurgeOnDelete.IsUnknown() {
-		to.PurgeOnDelete = from.PurgeOnDelete
-	}
+func (to *DataApi) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DataApi) {
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -281,34 +213,7 @@ func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Proj
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
 // including both embedded model fields and additional fields. This method is called
 // during read.
-func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
-	if !from.InitialBranchSpec.IsUnknown() && !from.InitialBranchSpec.IsNull() {
-		// InitialBranchSpec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.InitialBranchSpec = from.InitialBranchSpec
-	}
-	if !from.InitialBranchSpec.IsNull() && !from.InitialBranchSpec.IsUnknown() {
-		if toInitialBranchSpec, ok := to.GetInitialBranchSpec(ctx); ok {
-			if fromInitialBranchSpec, ok := from.GetInitialBranchSpec(ctx); ok {
-				toInitialBranchSpec.SyncFieldsDuringRead(ctx, fromInitialBranchSpec)
-				to.SetInitialBranchSpec(ctx, toInitialBranchSpec)
-			}
-		}
-	}
-	if !from.InitialEndpointSpec.IsUnknown() && !from.InitialEndpointSpec.IsNull() {
-		// InitialEndpointSpec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.InitialEndpointSpec = from.InitialEndpointSpec
-	}
-	if !from.InitialEndpointSpec.IsNull() && !from.InitialEndpointSpec.IsUnknown() {
-		if toInitialEndpointSpec, ok := to.GetInitialEndpointSpec(ctx); ok {
-			if fromInitialEndpointSpec, ok := from.GetInitialEndpointSpec(ctx); ok {
-				toInitialEndpointSpec.SyncFieldsDuringRead(ctx, fromInitialEndpointSpec)
-				to.SetInitialEndpointSpec(ctx, toInitialEndpointSpec)
-			}
-		}
-	}
-	if !from.PurgeOnDelete.IsUnknown() {
-		to.PurgeOnDelete = from.PurgeOnDelete
-	}
+func (to *DataApi) SyncFieldsDuringRead(ctx context.Context, from DataApi) {
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -333,27 +238,16 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 
 }
 
-func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m DataApi) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
-	attrs["delete_time"] = attrs["delete_time"].SetComputed()
-	attrs["initial_branch_spec"] = attrs["initial_branch_spec"].SetOptional()
-	attrs["initial_branch_spec"] = attrs["initial_branch_spec"].SetComputed()
-	attrs["initial_branch_spec"] = attrs["initial_branch_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetOptional()
-	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
-	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
-	attrs["project_id"] = attrs["project_id"].SetRequired()
-	attrs["project_id"] = attrs["project_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["project_id"] = attrs["project_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
-	attrs["purge_time"] = attrs["purge_time"].SetComputed()
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
-	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["purge_on_delete"] = attrs["purge_on_delete"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -363,65 +257,15 @@ func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	return attrs
 }
 
-// GetInitialBranchSpec returns the value of the InitialBranchSpec field in Project as
-// a postgres_tf.InitialBranchSpec value.
+// GetSpec returns the value of the Spec field in DataApi as
+// a postgres_tf.DataApiDataApiSpec value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *Project) GetInitialBranchSpec(ctx context.Context) (postgres_tf.InitialBranchSpec, bool) {
-	var e postgres_tf.InitialBranchSpec
-	if m.InitialBranchSpec.IsNull() || m.InitialBranchSpec.IsUnknown() {
-		return e, false
-	}
-	var v postgres_tf.InitialBranchSpec
-	d := m.InitialBranchSpec.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetInitialBranchSpec sets the value of the InitialBranchSpec field in Project.
-func (m *Project) SetInitialBranchSpec(ctx context.Context, v postgres_tf.InitialBranchSpec) {
-	vs := v.ToObjectValue(ctx)
-	m.InitialBranchSpec = vs
-}
-
-// GetInitialEndpointSpec returns the value of the InitialEndpointSpec field in Project as
-// a postgres_tf.InitialEndpointSpec value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *Project) GetInitialEndpointSpec(ctx context.Context) (postgres_tf.InitialEndpointSpec, bool) {
-	var e postgres_tf.InitialEndpointSpec
-	if m.InitialEndpointSpec.IsNull() || m.InitialEndpointSpec.IsUnknown() {
-		return e, false
-	}
-	var v postgres_tf.InitialEndpointSpec
-	d := m.InitialEndpointSpec.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetInitialEndpointSpec sets the value of the InitialEndpointSpec field in Project.
-func (m *Project) SetInitialEndpointSpec(ctx context.Context, v postgres_tf.InitialEndpointSpec) {
-	vs := v.ToObjectValue(ctx)
-	m.InitialEndpointSpec = vs
-}
-
-// GetSpec returns the value of the Spec field in Project as
-// a postgres_tf.ProjectSpec value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *Project) GetSpec(ctx context.Context) (postgres_tf.ProjectSpec, bool) {
-	var e postgres_tf.ProjectSpec
+func (m *DataApi) GetSpec(ctx context.Context) (postgres_tf.DataApiDataApiSpec, bool) {
+	var e postgres_tf.DataApiDataApiSpec
 	if m.Spec.IsNull() || m.Spec.IsUnknown() {
 		return e, false
 	}
-	var v postgres_tf.ProjectSpec
+	var v postgres_tf.DataApiDataApiSpec
 	d := m.Spec.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -432,21 +276,21 @@ func (m *Project) GetSpec(ctx context.Context) (postgres_tf.ProjectSpec, bool) {
 	return v, true
 }
 
-// SetSpec sets the value of the Spec field in Project.
-func (m *Project) SetSpec(ctx context.Context, v postgres_tf.ProjectSpec) {
+// SetSpec sets the value of the Spec field in DataApi.
+func (m *DataApi) SetSpec(ctx context.Context, v postgres_tf.DataApiDataApiSpec) {
 	vs := v.ToObjectValue(ctx)
 	m.Spec = vs
 }
 
-// GetStatus returns the value of the Status field in Project as
-// a postgres_tf.ProjectStatus value.
+// GetStatus returns the value of the Status field in DataApi as
+// a postgres_tf.DataApiDataApiStatus value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *Project) GetStatus(ctx context.Context) (postgres_tf.ProjectStatus, bool) {
-	var e postgres_tf.ProjectStatus
+func (m *DataApi) GetStatus(ctx context.Context) (postgres_tf.DataApiDataApiStatus, bool) {
+	var e postgres_tf.DataApiDataApiStatus
 	if m.Status.IsNull() || m.Status.IsUnknown() {
 		return e, false
 	}
-	var v postgres_tf.ProjectStatus
+	var v postgres_tf.DataApiDataApiStatus
 	d := m.Status.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -457,30 +301,30 @@ func (m *Project) GetStatus(ctx context.Context) (postgres_tf.ProjectStatus, boo
 	return v, true
 }
 
-// SetStatus sets the value of the Status field in Project.
-func (m *Project) SetStatus(ctx context.Context, v postgres_tf.ProjectStatus) {
+// SetStatus sets the value of the Status field in DataApi.
+func (m *DataApi) SetStatus(ctx context.Context, v postgres_tf.DataApiDataApiStatus) {
 	vs := v.ToObjectValue(ctx)
 	m.Status = vs
 }
 
-func (r *ProjectResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *DataApiResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
-func (r *ProjectResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, Project{}, nil)
+func (r *DataApiResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, DataApi{}, nil)
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks postgres_project",
+		Description: "Terraform schema for Databricks postgres_data_api",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
 }
 
-func (r *ProjectResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *DataApiResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *ProjectResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *DataApiResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	// Skip entirely on destroy (no plan state).
 	if req.Plan.Raw.IsNull() {
 		return
@@ -495,24 +339,24 @@ func (r *ProjectResource) ModifyPlan(ctx context.Context, req resource.ModifyPla
 	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
-func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *DataApiResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan Project
+	var plan DataApi
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var project postgres.Project
+	var data_api postgres.DataApi
 
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &project)...)
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &data_api)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	createRequest := postgres.CreateProjectRequest{
-		Project:   project,
-		ProjectId: plan.ProjectId.ValueString(),
+	createRequest := postgres.CreateDataApiRequest{
+		DataApi: data_api,
+		Parent:  plan.Parent.ValueString(),
 	}
 
 	var namespace ProviderConfig
@@ -530,17 +374,17 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	response, err := client.Postgres.CreateProject(ctx, createRequest)
+	response, err := client.Postgres.CreateDataApi(ctx, createRequest)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to create postgres_project", err.Error())
+		resp.Diagnostics.AddError("failed to create postgres_data_api", err.Error())
 		return
 	}
 
-	var newState Project
+	var newState DataApi
 
 	waitResponse, err := response.Wait(ctx)
 	if err != nil {
-		resp.Diagnostics.AddError("error waiting for postgres_project to be ready", err.Error())
+		resp.Diagnostics.AddError("error waiting for postgres_data_api to be ready", err.Error())
 		return
 	}
 
@@ -559,16 +403,16 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
 }
 
-func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *DataApiResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var existingState Project
+	var existingState DataApi
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var readRequest postgres.GetProjectRequest
+	var readRequest postgres.GetDataApiRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -588,17 +432,17 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	response, err := client.Postgres.GetProject(ctx, readRequest)
+	response, err := client.Postgres.GetDataApi(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError("failed to get postgres_project", err.Error())
+		resp.Diagnostics.AddError("failed to get postgres_data_api", err.Error())
 		return
 	}
 
-	var newState Project
+	var newState DataApi
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -613,18 +457,18 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, existingState.ProviderConfig, &resp.State)...)
 }
 
-func (r *ProjectResource) update(ctx context.Context, plan Project, diags *diag.Diagnostics, state *tfsdk.State) {
-	var project postgres.Project
+func (r *DataApiResource) update(ctx context.Context, plan DataApi, diags *diag.Diagnostics, state *tfsdk.State) {
+	var data_api postgres.DataApi
 
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &project)...)
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &data_api)...)
 	if diags.HasError() {
 		return
 	}
 
-	updateRequest := postgres.UpdateProjectRequest{
-		Project:    project,
+	updateRequest := postgres.UpdateDataApiRequest{
+		DataApi:    data_api,
 		Name:       plan.Name.ValueString(),
-		UpdateMask: *fieldmask.New(strings.Split("initial_branch_spec,initial_endpoint_spec,spec", ",")),
+		UpdateMask: *fieldmask.New(strings.Split("spec", ",")),
 	}
 
 	var namespace ProviderConfig
@@ -641,17 +485,17 @@ func (r *ProjectResource) update(ctx context.Context, plan Project, diags *diag.
 	if diags.HasError() {
 		return
 	}
-	response, err := client.Postgres.UpdateProject(ctx, updateRequest)
+	response, err := client.Postgres.UpdateDataApi(ctx, updateRequest)
 	if err != nil {
-		diags.AddError("failed to update postgres_project", err.Error())
+		diags.AddError("failed to update postgres_data_api", err.Error())
 		return
 	}
 
-	var newState Project
+	var newState DataApi
 
 	waitResponse, err := response.Wait(ctx)
 	if err != nil {
-		diags.AddError("error waiting for postgres_project update", err.Error())
+		diags.AddError("error waiting for postgres_data_api update", err.Error())
 		return
 	}
 
@@ -665,10 +509,10 @@ func (r *ProjectResource) update(ctx context.Context, plan Project, diags *diag.
 	diags.Append(state.Set(ctx, newState)...)
 }
 
-func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *DataApiResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan Project
+	var plan DataApi
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -677,22 +521,19 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
 }
 
-func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *DataApiResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var state Project
+	var state DataApi
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var deleteRequest postgres.DeleteProjectRequest
+	var deleteRequest postgres.DeleteDataApiRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
-	}
-	if !state.PurgeOnDelete.IsNull() && !state.PurgeOnDelete.IsUnknown() {
-		deleteRequest.Purge = state.PurgeOnDelete.ValueBool()
 	}
 
 	var namespace ProviderConfig
@@ -710,12 +551,12 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	response, err := client.Postgres.DeleteProject(ctx, deleteRequest)
+	response, err := client.Postgres.DeleteDataApi(ctx, deleteRequest)
 	if !declarative.IsDeleteError(err) {
 		err = nil
 	}
 	if err != nil {
-		resp.Diagnostics.AddError("failed to delete postgres_project", err.Error())
+		resp.Diagnostics.AddError("failed to delete postgres_data_api", err.Error())
 		return
 	}
 	if response == nil {
@@ -729,15 +570,15 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 		err = nil
 	}
 	if err != nil && !apierr.IsMissing(err) {
-		resp.Diagnostics.AddError("error waiting for postgres_project delete", err.Error())
+		resp.Diagnostics.AddError("error waiting for postgres_data_api delete", err.Error())
 		return
 	}
 
 }
 
-var _ resource.ResourceWithImportState = &ProjectResource{}
+var _ resource.ResourceWithImportState = &DataApiResource{}
 
-func (r *ProjectResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *DataApiResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 1 || parts[0] == "" {

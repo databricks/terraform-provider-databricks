@@ -11,10 +11,12 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/environments"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/environments_tf"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -127,6 +129,8 @@ type WorkspaceBaseEnvironment struct {
 	// The resource name of the workspace base environment. Format:
 	// workspace-base-environments/{workspace-base-environment}
 	Name types.String `tfsdk:"name"`
+	// The environment specification containing version and dependencies.
+	Spec types.Object `tfsdk:"spec"`
 	// The status of the materialized workspace base environment.
 	Status types.String `tfsdk:"status"`
 	// Timestamp when the environment was last updated.
@@ -147,6 +151,7 @@ type WorkspaceBaseEnvironment struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m WorkspaceBaseEnvironment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"spec":            reflect.TypeOf(environments_tf.EnvironmentSpec{}),
 		"provider_config": reflect.TypeOf(ProviderConfig{}),
 	}
 }
@@ -169,6 +174,7 @@ func (m WorkspaceBaseEnvironment) ToObjectValue(ctx context.Context) basetypes.O
 			"last_updated_user_id":          m.LastUpdatedUserId,
 			"message":                       m.Message,
 			"name":                          m.Name,
+			"spec":                          m.Spec,
 			"status":                        m.Status,
 			"update_time":                   m.UpdateTime,
 			"workspace_base_environment_id": m.WorkspaceBaseEnvironmentId,
@@ -192,6 +198,7 @@ func (m WorkspaceBaseEnvironment) Type(ctx context.Context) attr.Type {
 			"last_updated_user_id":            types.StringType,
 			"message":                         types.StringType,
 			"name":                            types.StringType,
+			"spec":                            environments_tf.EnvironmentSpec{}.Type(ctx),
 			"status":                          types.StringType,
 			"update_time":                     timetypes.RFC3339{}.Type(ctx),
 			"workspace_base_environment_id":   types.StringType,
@@ -207,6 +214,15 @@ func (m WorkspaceBaseEnvironment) Type(ctx context.Context) attr.Type {
 func (to *WorkspaceBaseEnvironment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WorkspaceBaseEnvironment) {
 	to.EffectiveBaseEnvironmentType = to.BaseEnvironmentType
 	to.BaseEnvironmentType = from.BaseEnvironmentType
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				// Recursively sync the fields of Spec
+				toSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
+			}
+		}
+	}
 	if !from.WorkspaceBaseEnvironmentId.IsUnknown() {
 		to.WorkspaceBaseEnvironmentId = from.WorkspaceBaseEnvironmentId
 	}
@@ -221,6 +237,14 @@ func (to *WorkspaceBaseEnvironment) SyncFieldsDuringRead(ctx context.Context, fr
 	to.EffectiveBaseEnvironmentType = from.EffectiveBaseEnvironmentType
 	if from.EffectiveBaseEnvironmentType.ValueString() == to.BaseEnvironmentType.ValueString() {
 		to.BaseEnvironmentType = from.BaseEnvironmentType
+	}
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				toSpec.SyncFieldsDuringRead(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
+			}
+		}
 	}
 	if !from.WorkspaceBaseEnvironmentId.IsUnknown() {
 		to.WorkspaceBaseEnvironmentId = from.WorkspaceBaseEnvironmentId
@@ -240,6 +264,7 @@ func (m WorkspaceBaseEnvironment) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["last_updated_user_id"] = attrs["last_updated_user_id"].SetComputed()
 	attrs["message"] = attrs["message"].SetComputed()
 	attrs["name"] = attrs["name"].SetComputed()
+	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["workspace_base_environment_id"] = attrs["workspace_base_environment_id"].SetComputed()
@@ -253,6 +278,31 @@ func (m WorkspaceBaseEnvironment) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
 
 	return attrs
+}
+
+// GetSpec returns the value of the Spec field in WorkspaceBaseEnvironment as
+// a environments_tf.EnvironmentSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *WorkspaceBaseEnvironment) GetSpec(ctx context.Context) (environments_tf.EnvironmentSpec, bool) {
+	var e environments_tf.EnvironmentSpec
+	if m.Spec.IsNull() || m.Spec.IsUnknown() {
+		return e, false
+	}
+	var v environments_tf.EnvironmentSpec
+	d := m.Spec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSpec sets the value of the Spec field in WorkspaceBaseEnvironment.
+func (m *WorkspaceBaseEnvironment) SetSpec(ctx context.Context, v environments_tf.EnvironmentSpec) {
+	vs := v.ToObjectValue(ctx)
+	m.Spec = vs
 }
 
 func (r *WorkspaceBaseEnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

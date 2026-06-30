@@ -315,10 +315,13 @@ func TestStructToSchemaNamespace(t *testing.T) {
 	data_scm := DataSourceStructToSchema(context.Background(), TestNamespaceDataSourceTfSdk{}, nil)
 	assert.True(t, data_scm.Attributes["provider_config"].IsOptional())
 
-	// Test that workspace_id is a required field (for resources, at ProviderConfig level).
-	// Individual resources like app override this to Optional+Computed in their own ApplySchemaCustomizations.
+	// Test that workspace_id is Optional+Computed (for resources). The unified
+	// provider can populate it from the provider-level workspace_id / host
+	// metadata when the user omits provider_config.
 	scm = ResourceStructToSchema(context.Background(), TestNamespaceResourceTfSdk{}, nil)
-	assert.True(t, scm.Attributes["provider_config"].(resource_schema.SingleNestedAttribute).Attributes["workspace_id"].IsRequired())
+	pcWorkspaceID := scm.Attributes["provider_config"].(resource_schema.SingleNestedAttribute).Attributes["workspace_id"]
+	assert.True(t, pcWorkspaceID.IsOptional())
+	assert.True(t, pcWorkspaceID.IsComputed())
 
 	// Test that workspace_id is optional+computed (for data sources).
 	data_scm = DataSourceStructToSchema(context.Background(), TestNamespaceDataSourceTfSdk{}, nil)

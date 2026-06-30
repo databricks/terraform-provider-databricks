@@ -50,21 +50,40 @@ func TestResourceShare_SchemaPreserved(t *testing.T) {
 	require.True(t, ok, "id must be string")
 	assert.True(t, idStr.Computed, "id should be computed")
 
-	// Verify provider_config block (SdkV2 compatible)
-	pcBlock, ok := s.Blocks["provider_config"]
-	require.True(t, ok, "provider_config block must exist")
-	pcList, ok := pcBlock.(schema.ListNestedBlock)
-	require.True(t, ok, "provider_config must be list nested block")
-	assert.Len(t, pcList.Validators, 1, "provider_config should have SizeAtMost(1) validator")
+	// Verify schema version is 1 (we introduced a v0→v1 upgrader).
+	assert.Equal(t, int64(1), s.Version, "schema version should be 1")
 
-	// Verify workspace_id inside provider_config
-	wsAttr, ok := pcList.NestedObject.Attributes["workspace_id"]
+	// Verify provider_config is a SingleNestedAttribute (types.Object).
+	pcAttr, ok := s.Attributes["provider_config"]
+	require.True(t, ok, "provider_config attribute must exist")
+	pcObj, ok := pcAttr.(schema.SingleNestedAttribute)
+	require.True(t, ok, "provider_config must be a SingleNestedAttribute")
+	assert.True(t, pcObj.Optional, "provider_config should be Optional")
+	assert.True(t, pcObj.Computed, "provider_config should be Computed")
+	assert.Len(t, pcObj.PlanModifiers, 1, "provider_config should have ProviderConfigPlanModifier")
+
+	// Verify workspace_id inside provider_config is Optional+Computed.
+	wsAttr, ok := pcObj.Attributes["workspace_id"]
 	require.True(t, ok, "workspace_id must exist in provider_config")
 	wsStr, ok := wsAttr.(schema.StringAttribute)
 	require.True(t, ok, "workspace_id must be string")
-	assert.True(t, wsStr.Required, "workspace_id should be required")
+	assert.True(t, wsStr.Optional, "workspace_id should be Optional")
+	assert.True(t, wsStr.Computed, "workspace_id should be Computed")
 	assert.Len(t, wsStr.PlanModifiers, 1, "workspace_id should have RequiresReplaceIf plan modifier")
 	assert.Len(t, wsStr.Validators, 1, "workspace_id should have LengthAtLeast(1) validator only")
+}
+
+func TestResourceShare_UpgradeStateV0ToV1(t *testing.T) {
+	r := ResourceShare().(*ShareResource)
+	upgraders := r.UpgradeState(context.Background())
+	require.Contains(t, upgraders, int64(0))
+	v0 := upgraders[0]
+	require.NotNil(t, v0.PriorSchema)
+	require.NotNil(t, v0.StateUpgrader)
+	pcBlock, isBlock := v0.PriorSchema.Blocks["provider_config"]
+	require.True(t, isBlock, "v0 PriorSchema must have provider_config as a block")
+	_, isList := pcBlock.(schema.ListNestedBlock)
+	require.True(t, isList, "v0 provider_config must be a ListNestedBlock")
 }
 
 func TestResourceShare_ModifyPlan_SkipsDestroyAndNilClient(t *testing.T) {

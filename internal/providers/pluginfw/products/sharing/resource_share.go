@@ -27,20 +27,34 @@ const resourceName = "share"
 
 var _ resource.ResourceWithConfigure = &ShareResource{}
 var _ resource.ResourceWithImportState = &ShareResource{}
+var _ resource.ResourceWithModifyPlan = &ShareResource{}
+var _ resource.ResourceWithUpgradeState = &ShareResource{}
 
 func ResourceShare() resource.Resource {
 	return &ShareResource{}
 }
 
+// ShareInfoExtended is the schema v1 model: provider_config is a SingleNestedAttribute.
 type ShareInfoExtended struct {
 	sharing_tf.ShareInfo_SdkV2
-	tfschema.Namespace_SdkV2
+	tfschema.Namespace
 	ID types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
 }
 
 var _ pluginfwcommon.ComplexFieldTypeProvider = ShareInfoExtended{}
 
 func (s ShareInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return tfschema.AddProviderConfigType(s.ShareInfo_SdkV2.GetComplexFieldTypes(ctx))
+}
+
+// ShareInfoExtendedV0 is the schema v0 model: provider_config is a ListNestedBlock.
+type ShareInfoExtendedV0 struct {
+	sharing_tf.ShareInfo_SdkV2
+	tfschema.Namespace_SdkV2
+	ID types.String `tfsdk:"id"`
+}
+
+func (s ShareInfoExtendedV0) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	types := s.ShareInfo_SdkV2.GetComplexFieldTypes(ctx)
 	types["provider_config"] = reflect.TypeOf(tfschema.ProviderConfig{})
 	return types
@@ -149,27 +163,49 @@ func (r *ShareResource) Metadata(ctx context.Context, req resource.MetadataReque
 }
 
 func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, ShareInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, ShareInfoExtended{}, shareCustomizer)
+	resp.Schema = schema.Schema{
+		Version:     1,
+		Description: "Terraform schema for Databricks Share",
+		Attributes:  attrs,
+		Blocks:      blocks,
+	}
+}
+
+func shareCustomizer(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	c.ConfigureAsSdkV2Compatible()
+	c.SetRequired("name")
+	c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name") // ForceNew
+	c.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "created_at")
+	c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "created_by")
+
+	c.SetRequired("object", "data_object_type")
+	c.SetRequired("object", "partition", "value", "op")
+	c.SetRequired("object", "partition", "value", "name")
+
+	c.SetComputed("id")
+	tfschema.ConfigureProviderConfig(&c)
+	return c
+}
+
+// shareSchemaV0 reconstructs the v0 schema (provider_config as ListNestedBlock).
+func shareSchemaV0(ctx context.Context) schema.Schema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, ShareInfoExtendedV0{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.ConfigureAsSdkV2Compatible()
 		c.SetRequired("name")
-
-		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name") // ForceNew
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name")
 		c.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "created_at")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "created_by")
-
 		c.SetRequired("object", "data_object_type")
 		c.SetRequired("object", "partition", "value", "op")
 		c.SetRequired("object", "partition", "value", "name")
-
 		c.SetComputed("id")
-
-		// Ensure provider_config list has at most 1 element
 		c.AddValidator(listvalidator.SizeAtMost(1), "provider_config")
-
 		return c
 	})
-	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks Share",
+	return schema.Schema{
+		Version:     0,
+		Description: "Terraform schema for Databricks Share (v0)",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
@@ -188,18 +224,11 @@ func (r *ShareResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanR
 	if r.Client == nil {
 		return
 	}
-	var plan ShareInfoExtended
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
-	resp.Diagnostics.Append(validateDiags...)
+	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -223,7 +252,7 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, plan.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -271,6 +300,10 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 	newState.ID = newState.Name
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, newState.ProviderConfig, &resp.State)...)
 }
 
 func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -295,7 +328,7 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, existingState.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, existingState.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -333,6 +366,10 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, newState.ProviderConfig, &resp.State)...)
 }
 
 func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -360,7 +397,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	getShareRequest.Name = state.Name.ValueString()
 	getShareRequest.IncludeSharedData = true
 
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, plan.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -446,6 +483,35 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
+// UpgradeState migrates state from v0 (provider_config as ListNestedBlock) to v1
+// (provider_config as SingleNestedAttribute).
+func (r *ShareResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	v0Schema := shareSchemaV0(ctx)
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema: &v0Schema,
+			StateUpgrader: func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+				var prior ShareInfoExtendedV0
+				resp.Diagnostics.Append(req.State.Get(ctx, &prior)...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				pcObject, diags := tfschema.UpgradeProviderConfigListToObject(ctx, prior.ProviderConfig)
+				resp.Diagnostics.Append(diags...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				upgraded := ShareInfoExtended{
+					ShareInfo_SdkV2: prior.ShareInfo_SdkV2,
+					Namespace:       tfschema.Namespace{ProviderConfig: pcObject},
+					ID:              prior.ID,
+				}
+				resp.Diagnostics.Append(resp.State.Set(ctx, &upgraded)...)
+			},
+		},
+	}
+}
+
 func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -461,7 +527,7 @@ func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, state.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, state.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

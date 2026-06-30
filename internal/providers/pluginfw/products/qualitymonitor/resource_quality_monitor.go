@@ -29,6 +29,8 @@ const resourceName = "quality_monitor"
 const qualityMonitorDefaultProvisionTimeout = 15 * time.Minute
 
 var _ resource.ResourceWithConfigure = &QualityMonitorResource{}
+var _ resource.ResourceWithModifyPlan = &QualityMonitorResource{}
+var _ resource.ResourceWithUpgradeState = &QualityMonitorResource{}
 
 func ResourceQualityMonitor() resource.Resource {
 	return &QualityMonitorResource{}
@@ -58,17 +60,31 @@ func waitForMonitor(ctx context.Context, w *databricks.WorkspaceClient, monitor 
 	return nil
 }
 
+// MonitorInfoExtended is the schema v1 model: provider_config is a SingleNestedAttribute.
 type MonitorInfoExtended struct {
 	catalog_tf.MonitorInfo_SdkV2
 	WarehouseId          types.String `tfsdk:"warehouse_id"`
 	SkipBuiltinDashboard types.Bool   `tfsdk:"skip_builtin_dashboard"`
 	ID                   types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
-	tfschema.Namespace_SdkV2
+	tfschema.Namespace
 }
 
 var _ pluginfwcommon.ComplexFieldTypeProvider = MonitorInfoExtended{}
 
 func (m MonitorInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return tfschema.AddProviderConfigType(m.MonitorInfo_SdkV2.GetComplexFieldTypes(ctx))
+}
+
+// MonitorInfoExtendedV0 is the schema v0 model: provider_config is a ListNestedBlock.
+type MonitorInfoExtendedV0 struct {
+	catalog_tf.MonitorInfo_SdkV2
+	WarehouseId          types.String `tfsdk:"warehouse_id"`
+	SkipBuiltinDashboard types.Bool   `tfsdk:"skip_builtin_dashboard"`
+	ID                   types.String `tfsdk:"id"`
+	tfschema.Namespace_SdkV2
+}
+
+func (m MonitorInfoExtendedV0) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	attrs := m.MonitorInfo_SdkV2.GetComplexFieldTypes(ctx)
 	attrs["provider_config"] = reflect.TypeOf(tfschema.ProviderConfig{})
 	return attrs
@@ -83,7 +99,36 @@ func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.Meta
 }
 
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, MonitorInfoExtended{}, qualityMonitorCustomizer)
+	resp.Schema = schema.Schema{
+		Version:     1,
+		Description: "Terraform schema for Databricks Quality Monitor",
+		Attributes:  attrs,
+		Blocks:      blocks,
+	}
+}
+
+func qualityMonitorCustomizer(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	c.ConfigureAsSdkV2Compatible()
+	c.SetRequired("assets_dir")
+	c.SetReadOnly("monitor_version")
+	c.SetReadOnly("drift_metrics_table_name")
+	c.SetReadOnly("profile_metrics_table_name")
+	c.SetReadOnly("status")
+	c.SetReadOnly("dashboard_id")
+	c.SetReadOnly("schedule", "pause_status")
+	c.SetOptional("warehouse_id")
+	c.SetOptional("skip_builtin_dashboard")
+	c.SetComputed("id")
+	c.SetOptional("id")
+	tfschema.ConfigureProviderConfig(&c)
+	return c
+}
+
+// qualityMonitorSchemaV0 reconstructs the v0 schema (provider_config as
+// ListNestedBlock) for the state upgrader.
+func qualityMonitorSchemaV0(ctx context.Context) schema.Schema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, MonitorInfoExtendedV0{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.ConfigureAsSdkV2Compatible()
 		c.SetRequired("assets_dir")
 		c.SetReadOnly("monitor_version")
@@ -99,8 +144,9 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 		c.AddValidator(listvalidator.SizeAtMost(1), "provider_config")
 		return c
 	})
-	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks Quality Monitor",
+	return schema.Schema{
+		Version:     0,
+		Description: "Terraform schema for Databricks Quality Monitor (v0)",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
@@ -123,18 +169,11 @@ func (r *QualityMonitorResource) ModifyPlan(ctx context.Context, req resource.Mo
 	if r.Client == nil {
 		return
 	}
-	var plan MonitorInfoExtended
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
-	resp.Diagnostics.Append(validateDiags...)
+	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *QualityMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -145,7 +184,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, monitorInfoTfSDK.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, monitorInfoTfSDK.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -186,6 +225,10 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 	newMonitorInfoTfSDK.ProviderConfig = monitorInfoTfSDK.ProviderConfig
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, newMonitorInfoTfSDK.ProviderConfig, &resp.State)...)
 }
 
 func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -197,7 +240,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, monitorInfoTfSDK.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, monitorInfoTfSDK.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -236,6 +279,10 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 
 	newMonitorInfoTfSDK.ProviderConfig = monitorInfoTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, newMonitorInfoTfSDK.ProviderConfig, &resp.State)...)
 }
 
 func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -261,7 +308,7 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 		updateMonitorGoSDK.Schedule.PauseStatus = ""
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, monitorInfoTfSDK.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, monitorInfoTfSDK.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -299,6 +346,37 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
 }
 
+// UpgradeState migrates state from v0 (provider_config as ListNestedBlock) to v1
+// (provider_config as SingleNestedAttribute).
+func (r *QualityMonitorResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	v0Schema := qualityMonitorSchemaV0(ctx)
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema: &v0Schema,
+			StateUpgrader: func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+				var prior MonitorInfoExtendedV0
+				resp.Diagnostics.Append(req.State.Get(ctx, &prior)...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				pcObject, diags := tfschema.UpgradeProviderConfigListToObject(ctx, prior.ProviderConfig)
+				resp.Diagnostics.Append(diags...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				upgraded := MonitorInfoExtended{
+					MonitorInfo_SdkV2:    prior.MonitorInfo_SdkV2,
+					WarehouseId:          prior.WarehouseId,
+					SkipBuiltinDashboard: prior.SkipBuiltinDashboard,
+					ID:                   prior.ID,
+					Namespace:            tfschema.Namespace{ProviderConfig: pcObject},
+				}
+				resp.Diagnostics.Append(resp.State.Set(ctx, &upgraded)...)
+			},
+		},
+	}
+}
+
 func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -308,7 +386,7 @@ func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, monitorInfoTfSDK.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, monitorInfoTfSDK.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

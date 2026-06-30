@@ -11,10 +11,19 @@ type Blockable interface {
 
 // convertAttributesToBlocks converts all attributes implementing the Blockable interface to blocks, returning
 // a new NestedBlockObject with the converted attributes and the original blocks.
+//
+// SingleNestedAttributeBuilder (types.Object) is preserved as an attribute even
+// though it implements Blockable, because Object has no SDKv2 block equivalent —
+// calling ToBlock() on it panics. types.Object attributes are kept verbatim so
+// they remain attributes in the final schema.
 func convertAttributesToBlocks(attributes map[string]AttributeBuilder, blocks map[string]BlockBuilder) NestedBlockObject {
 	newAttributes := make(map[string]AttributeBuilder)
 	newBlocks := make(map[string]BlockBuilder)
 	for name, attr := range attributes {
+		if _, isSingle := attr.(SingleNestedAttributeBuilder); isSingle {
+			newAttributes[name] = attr
+			continue
+		}
 		if lnab, ok := attr.(Blockable); ok {
 			newBlocks[name] = lnab.ToBlock()
 		} else {

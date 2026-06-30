@@ -46,8 +46,13 @@ type ProviderConfig struct {
 }
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
+// workspace_id is Optional+Computed so users can either set it explicitly or let
+// the provider populate it from the provider-level workspace_id / host metadata
+// during apply. A RequiresReplaceIf plan modifier forces replacement when the
+// workspace_id changes from one non-empty value to another.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(workspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
@@ -126,6 +131,54 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 			"workspace_id": types.StringType,
 		},
 	}
+}
+
+// AddProviderConfigType returns m with provider_config bound to the ProviderConfig
+// type, so the schema reflection knows the nested object's shape. Call from a
+// resource's GetComplexFieldTypes(ctx) implementation.
+func AddProviderConfigType(m map[string]reflect.Type) map[string]reflect.Type {
+	if m == nil {
+		m = map[string]reflect.Type{}
+	}
+	m["provider_config"] = reflect.TypeOf(ProviderConfig{})
+	return m
+}
+
+// ConfigureProviderConfig marks the provider_config attribute as Optional+Computed
+// and attaches ProviderConfigPlanModifier. Call from a resource's Schema()
+// customizer after the rest of the schema has been built.
+func ConfigureProviderConfig(c *CustomizableSchema) *CustomizableSchema {
+	c.SetOptional("provider_config")
+	c.SetComputed("provider_config")
+	c.AddPlanModifier(ProviderConfigPlanModifier{}, "provider_config")
+	return c
+}
+
+// UpgradeProviderConfigListToObject converts a v0-shape provider_config (a
+// ListNestedBlock encoded as types.List with at most one element) into the
+// v1-shape (a SingleNestedAttribute encoded as types.Object). Use this from a
+// resource's StateUpgrader to migrate state that was written by a release where
+// provider_config was a list.
+//
+//   - empty/null/unknown list -> null Object
+//   - list with one element  -> Object holding that element's workspace_id
+//   - list with more than one element is treated as a single element by taking
+//     the first; v0 schemas enforced MaxItems=1 via a validator so any in-the-wild
+//     state should respect that.
+func UpgradeProviderConfigListToObject(ctx context.Context, listValue types.List) (types.Object, diag.Diagnostics) {
+	pcType := ProviderConfig{}.Type(ctx).(types.ObjectType).AttrTypes
+	if listValue.IsNull() || listValue.IsUnknown() {
+		return types.ObjectNull(pcType), nil
+	}
+	var configs []ProviderConfig
+	diags := listValue.ElementsAs(ctx, &configs, true)
+	if diags.HasError() {
+		return types.ObjectNull(pcType), diags
+	}
+	if len(configs) == 0 {
+		return types.ObjectNull(pcType), diags
+	}
+	return configs[0].ToObjectValue(ctx), diags
 }
 
 // GetWorkspaceID_SdkV2 extracts the workspace ID from a provider_config list (for SdkV2-compatible resources).

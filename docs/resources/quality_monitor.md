@@ -17,7 +17,7 @@ The quality monitor resource has been migrated from sdkv2 to plugin framework. I
 
 ~> **Deprecation**: The SDKv2 fallback implementation, selectable via `USE_SDK_V2_RESOURCES="databricks_quality_monitor"`, is **deprecated** and will be removed in the next major release of the provider. Setting the environment variable now emits a runtime warning; remove the override to use the default Plugin Framework implementation.
 
--> **Upgrading from v1.114.0**: state written by v1.114.0 encodes `provider_config` as a single object instead of a list. After upgrading the provider, edit each `databricks_quality_monitor` instance in your state file to convert `"provider_config": {"workspace_id": "X"}` to `"provider_config": null` (recommended if you didn't set `provider_config` in HCL) or to `"provider_config": [{"workspace_id": "X"}]` (if you did). Without this edit, `terraform plan` fails with `Error decoding ... missing expected [`. Users on v1.113.0 are unaffected.
+-> **Upgrading from earlier versions**: in releases where `provider_config` was a list-shaped block (e.g. v1.113.0 and v1.115.0 through v1.119.x), state files encode it as `"provider_config": [{"workspace_id": "X"}]`. This release ships a v0→v1 state upgrader that converts those entries to the new object shape automatically — no manual edit required. The brief v1.114.0 release shipped an object shape without an upgrader; users still on v1.114.0 state should follow the legacy mitigation (rewrite `"provider_config": {"workspace_id": "X"}` to `"provider_config": [{"workspace_id": "X"}]` before upgrading) so this PR's upgrader can pick the value up.
 
 ## Example Usage
 
@@ -127,8 +127,8 @@ table.
 * `skip_builtin_dashboard` - Whether to skip creating a default dashboard summarizing data quality metrics.  (Can't be updated after creation).
 * `slicing_exprs` - List of column expressions to slice data with for targeted analysis. The data is grouped by each expression independently, resulting in a separate slice for each predicate and its complements. For high-cardinality columns, only the top 100 unique values by frequency will generate slices.
 * `warehouse_id` - Optional argument to specify the warehouse for dashboard creation. If not specified, the first running warehouse will be used.  (Can't be updated after creation)
-* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
-  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `provider_config` - (Optional) Configure the provider for management through the account provider. Consists of:
+  * `workspace_id` - (Optional, Computed) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with. When omitted, the provider populates it from the provider-level `workspace_id` or the host metadata. Changing `workspace_id` to a different non-empty value forces resource replacement.
 
 ## Attribute Reference
 

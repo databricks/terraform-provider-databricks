@@ -53,21 +53,43 @@ func TestResourceLibrary_SchemaPreserved(t *testing.T) {
 	assert.True(t, idStr.Computed, "id should be computed")
 	assert.True(t, idStr.Optional, "id should be optional")
 
-	// Verify provider_config block exists (SdkV2 compatible = list nested block)
-	pcBlock, ok := s.Blocks["provider_config"]
-	require.True(t, ok, "provider_config block must exist")
-	pcList, ok := pcBlock.(schema.ListNestedBlock)
-	require.True(t, ok, "provider_config must be a list nested block (SdkV2 compatible)")
-	assert.Len(t, pcList.Validators, 1, "provider_config should have SizeAtMost(1) validator")
+	// Verify schema version is 1 (we introduced a v0→v1 upgrader).
+	assert.Equal(t, int64(1), s.Version, "schema version should be 1")
 
-	// Verify workspace_id inside provider_config
-	wsAttr, ok := pcList.NestedObject.Attributes["workspace_id"]
+	// Verify provider_config is a SingleNestedAttribute (types.Object). The v0
+	// ListNestedBlock shape is gone in v1 — see UpgradeState for the migration.
+	pcAttr, ok := s.Attributes["provider_config"]
+	require.True(t, ok, "provider_config attribute must exist")
+	pcObj, ok := pcAttr.(schema.SingleNestedAttribute)
+	require.True(t, ok, "provider_config must be a SingleNestedAttribute")
+	assert.True(t, pcObj.Optional, "provider_config should be Optional")
+	assert.True(t, pcObj.Computed, "provider_config should be Computed")
+	assert.Len(t, pcObj.PlanModifiers, 1, "provider_config should have ProviderConfigPlanModifier")
+
+	// Verify workspace_id inside provider_config is Optional+Computed with a plan modifier and length validator.
+	wsAttr, ok := pcObj.Attributes["workspace_id"]
 	require.True(t, ok, "workspace_id must exist in provider_config")
 	wsStr, ok := wsAttr.(schema.StringAttribute)
 	require.True(t, ok, "workspace_id must be a string attribute")
-	assert.True(t, wsStr.Required, "workspace_id should be required")
+	assert.True(t, wsStr.Optional, "workspace_id should be Optional")
+	assert.True(t, wsStr.Computed, "workspace_id should be Computed")
 	assert.Len(t, wsStr.PlanModifiers, 1, "workspace_id should have RequiresReplaceIf plan modifier")
 	assert.Len(t, wsStr.Validators, 1, "workspace_id should have LengthAtLeast(1) validator only")
+}
+
+func TestResourceLibrary_UpgradeStateV0ToV1(t *testing.T) {
+	r := ResourceLibrary().(*LibraryResource)
+	upgraders := r.UpgradeState(context.Background())
+	require.Contains(t, upgraders, int64(0), "must register a v0 upgrader")
+	v0 := upgraders[0]
+	require.NotNil(t, v0.PriorSchema, "v0 upgrader must declare PriorSchema")
+	require.NotNil(t, v0.StateUpgrader, "v0 upgrader must declare a StateUpgrader func")
+	// v0 PriorSchema must have provider_config as a ListNestedBlock so that
+	// state files written when v0 was the active schema can decode against it.
+	pcBlock, isBlock := v0.PriorSchema.Blocks["provider_config"]
+	require.True(t, isBlock, "v0 PriorSchema must have provider_config as a block")
+	_, isList := pcBlock.(schema.ListNestedBlock)
+	require.True(t, isList, "v0 provider_config must be a ListNestedBlock")
 }
 
 func TestResourceLibrary_ModifyPlan_SkipsDestroyAndNilClient(t *testing.T) {

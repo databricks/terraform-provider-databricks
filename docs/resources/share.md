@@ -17,7 +17,7 @@ The share resource has been migrated from sdkv2 to plugin framework. If you enco
 
 ~> **Deprecation**: The SDKv2 fallback implementation, selectable via `USE_SDK_V2_RESOURCES="databricks_share"`, is **deprecated** and will be removed in the next major release of the provider. Setting the environment variable now emits a runtime warning; remove the override to use the default Plugin Framework implementation.
 
--> **Upgrading from v1.114.0**: state written by v1.114.0 encodes `provider_config` as a single object instead of a list. After upgrading the provider, edit each `databricks_share` instance in your state file to convert `"provider_config": {"workspace_id": "X"}` to `"provider_config": null` (recommended if you didn't set `provider_config` in HCL) or to `"provider_config": [{"workspace_id": "X"}]` (if you did). Without this edit, `terraform plan` fails with `Error decoding ... missing expected [`. Users on v1.113.0 are unaffected.
+-> **Upgrading from earlier versions**: in releases where `provider_config` was a list-shaped block (e.g. v1.113.0 and v1.115.0 through v1.119.x), state files encode it as `"provider_config": [{"workspace_id": "X"}]`. This release ships a v0→v1 state upgrader that converts those entries to the new object shape automatically — no manual edit required. The brief v1.114.0 release shipped an object shape without an upgrader; users still on v1.114.0 state should follow the legacy mitigation (rewrite `"provider_config": {"workspace_id": "X"}` to `"provider_config": [{"workspace_id": "X"}]` before upgrading) so this PR's upgrader can pick the value up.
 
 ## Example Usage
 
@@ -124,8 +124,8 @@ The following arguments are required:
 * `name` - (Required) Name of share. Change forces creation of a new resource.
 * `owner` - (Optional) User name/group name/sp application_id of the share owner.
 * `comment` - (Optional) User-supplied free-form text.
-* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
-  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `provider_config` - (Optional) Configure the provider for management through the account provider. Consists of:
+  * `workspace_id` - (Optional, Computed) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with. When omitted, the provider populates it from the provider-level `workspace_id` or the host metadata. Changing `workspace_id` to a different non-empty value forces resource replacement.
 
 ### object Configuration Block
 

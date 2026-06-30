@@ -34,6 +34,8 @@ const resourceName = "library"
 const libraryDefaultInstallationTimeout = 30 * time.Minute
 
 var _ resource.ResourceWithConfigure = &LibraryResource{}
+var _ resource.ResourceWithModifyPlan = &LibraryResource{}
+var _ resource.ResourceWithUpgradeState = &LibraryResource{}
 
 func ResourceLibrary() resource.Resource {
 	return &LibraryResource{}
@@ -80,14 +82,28 @@ func readLibrary(ctx context.Context, w *databricks.WorkspaceClient, waitParams 
 	return nil, d
 }
 
+// LibraryExtended is the schema v1 model: provider_config is a SingleNestedAttribute (types.Object).
 type LibraryExtended struct {
 	compute_tf.Library_SdkV2
 	ClusterId types.String `tfsdk:"cluster_id"`
 	ID        types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
-	tfschema.Namespace_SdkV2
+	tfschema.Namespace
 }
 
 func (l LibraryExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return tfschema.AddProviderConfigType(l.Library_SdkV2.GetComplexFieldTypes(ctx))
+}
+
+// LibraryExtendedV0 is the schema v0 model: provider_config is a ListNestedBlock
+// (types.List, MaxItems=1). Used solely as the PriorSchema for the state upgrader.
+type LibraryExtendedV0 struct {
+	compute_tf.Library_SdkV2
+	ClusterId types.String `tfsdk:"cluster_id"`
+	ID        types.String `tfsdk:"id"`
+	tfschema.Namespace_SdkV2
+}
+
+func (l LibraryExtendedV0) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	attrs := l.Library_SdkV2.GetComplexFieldTypes(ctx)
 	attrs["provider_config"] = reflect.TypeOf(tfschema.ProviderConfig{})
 	return attrs
@@ -102,7 +118,52 @@ func (r *LibraryResource) Metadata(ctx context.Context, req resource.MetadataReq
 }
 
 func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, LibraryExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, LibraryExtended{}, libraryCustomizer)
+	resp.Schema = schema.Schema{
+		Version:     1,
+		Description: "Terraform schema for Databricks Library",
+		Attributes:  attrs,
+		Blocks:      blocks,
+	}
+}
+
+// libraryCustomizer is the schema customizer for the current (v1) schema. It is
+// also reused for the v0 PriorSchema (with the extra listvalidator on
+// provider_config) via libraryCustomizerV0.
+func libraryCustomizer(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	c.ConfigureAsSdkV2Compatible()
+	for field, attribute := range c.ToNestedBlockObject().Attributes {
+		// provider_config is a SingleNestedAttribute, but its plan modifier
+		// is ProviderConfigPlanModifier (set via ConfigureProviderConfig below),
+		// not RequiresReplace.
+		if field == "provider_config" {
+			continue
+		}
+		switch attribute.(type) {
+		case tfschema.StringAttributeBuilder:
+			c.AddPlanModifier(stringplanmodifier.RequiresReplace(), field)
+		case tfschema.SingleNestedAttributeBuilder:
+			c.AddPlanModifier(objectplanmodifier.RequiresReplace(), field)
+		}
+	}
+	for field, block := range c.ToNestedBlockObject().Blocks {
+		switch block.(type) {
+		case tfschema.ListNestedBlockBuilder:
+			c.AddPlanModifier(listplanmodifier.RequiresReplace(), field)
+		}
+	}
+	c.SetRequired("cluster_id")
+	c.SetOptional("id")
+	c.SetComputed("id")
+	c.SetDeprecated(clusters.EggDeprecationWarning, "egg")
+	tfschema.ConfigureProviderConfig(&c)
+	return c
+}
+
+// librarySchemaV0 reconstructs the v0 schema (provider_config as ListNestedBlock)
+// so the state upgrader can decode v0 state.
+func librarySchemaV0(ctx context.Context) schema.Schema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, LibraryExtendedV0{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.ConfigureAsSdkV2Compatible()
 		for field, attribute := range c.ToNestedBlockObject().Attributes {
 			switch attribute.(type) {
@@ -125,8 +186,9 @@ func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest
 		c.AddValidator(listvalidator.SizeAtMost(1), "provider_config")
 		return c
 	})
-	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks Library",
+	return schema.Schema{
+		Version:     0,
+		Description: "Terraform schema for Databricks Library (v0)",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
@@ -145,18 +207,11 @@ func (r *LibraryResource) ModifyPlan(ctx context.Context, req resource.ModifyPla
 	if r.Client == nil {
 		return
 	}
-	var plan LibraryExtended
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
-	resp.Diagnostics.Append(validateDiags...)
+	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -167,7 +222,7 @@ func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, libraryTfSDK.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, libraryTfSDK.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -217,6 +272,10 @@ func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest
 	installedLib.ID = types.StringValue(libGoSDK.String())
 	installedLib.ProviderConfig = libraryTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, installedLib)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, installedLib.ProviderConfig, &resp.State)...)
 }
 
 func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -227,7 +286,7 @@ func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, libraryTfSDK.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, libraryTfSDK.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -264,10 +323,46 @@ func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	installedLib.ProviderConfig = libraryTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, installedLib)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, installedLib.ProviderConfig, &resp.State)...)
 }
 
 func (r *LibraryResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	resp.Diagnostics.AddError("failed to update library", "updating library is not supported")
+}
+
+// UpgradeState migrates state from v0 (provider_config as ListNestedBlock) to v1
+// (provider_config as SingleNestedAttribute). Users who installed databricks_library
+// on a release where provider_config was a list need this for their next plan to
+// decode against the current Object-shaped schema.
+func (r *LibraryResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	v0Schema := librarySchemaV0(ctx)
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema: &v0Schema,
+			StateUpgrader: func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+				var prior LibraryExtendedV0
+				resp.Diagnostics.Append(req.State.Get(ctx, &prior)...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				pcObject, diags := tfschema.UpgradeProviderConfigListToObject(ctx, prior.ProviderConfig)
+				resp.Diagnostics.Append(diags...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				upgraded := LibraryExtended{
+					Library_SdkV2: prior.Library_SdkV2,
+					ClusterId:     prior.ClusterId,
+					ID:            prior.ID,
+					Namespace:     tfschema.Namespace{ProviderConfig: pcObject},
+				}
+				resp.Diagnostics.Append(resp.State.Set(ctx, &upgraded)...)
+			},
+		},
+	}
 }
 
 func (r *LibraryResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -278,7 +373,7 @@ func (r *LibraryResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, libraryTfSDK.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, libraryTfSDK.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

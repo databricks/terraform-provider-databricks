@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -322,6 +323,57 @@ func TestGetWorkspaceIDDataSource(t *testing.T) {
 			assert.Equal(t, tt.expectedWorkspaceID, workspaceID, "Workspace ID mismatch")
 		})
 	}
+}
+
+func TestUpgradeProviderConfigListToObject(t *testing.T) {
+	ctx := context.Background()
+	pcAttrTypes := ProviderConfig{}.Type(ctx).(types.ObjectType).AttrTypes
+
+	t.Run("list with one element keeps workspace_id", func(t *testing.T) {
+		listVal, listDiags := types.ListValue(
+			ProviderConfig{}.Type(ctx),
+			[]attr.Value{
+				ProviderConfig{WorkspaceID: types.StringValue("ws-123")}.ToObjectValue(ctx),
+			},
+		)
+		require.False(t, listDiags.HasError(), "setup failed: %v", listDiags)
+
+		got, diags := UpgradeProviderConfigListToObject(ctx, listVal)
+		require.False(t, diags.HasError(), "unexpected upgrade diagnostics: %v", diags)
+		require.False(t, got.IsNull(), "upgraded object must not be null when input has one element")
+
+		// Decode the upgraded object and verify workspace_id is preserved.
+		var pc ProviderConfig
+		decodeDiags := got.As(ctx, &pc, basetypes.ObjectAsOptions{})
+		require.False(t, decodeDiags.HasError(), "decode failed: %v", decodeDiags)
+		assert.Equal(t, "ws-123", pc.WorkspaceID.ValueString())
+	})
+
+	t.Run("empty list produces null object", func(t *testing.T) {
+		emptyList, listDiags := types.ListValue(ProviderConfig{}.Type(ctx), []attr.Value{})
+		require.False(t, listDiags.HasError(), "setup failed: %v", listDiags)
+
+		got, diags := UpgradeProviderConfigListToObject(ctx, emptyList)
+		require.False(t, diags.HasError())
+		assert.True(t, got.IsNull(), "empty list must produce a null object")
+		assert.Equal(t, pcAttrTypes, got.AttributeTypes(ctx), "null object must carry the ProviderConfig attr types")
+	})
+
+	t.Run("null list produces null object", func(t *testing.T) {
+		nullList := types.ListNull(ProviderConfig{}.Type(ctx))
+
+		got, diags := UpgradeProviderConfigListToObject(ctx, nullList)
+		require.False(t, diags.HasError())
+		assert.True(t, got.IsNull(), "null list must produce a null object")
+	})
+
+	t.Run("unknown list produces null object", func(t *testing.T) {
+		unknownList := types.ListUnknown(ProviderConfig{}.Type(ctx))
+
+		got, diags := UpgradeProviderConfigListToObject(ctx, unknownList)
+		require.False(t, diags.HasError())
+		assert.True(t, got.IsNull(), "unknown list must produce a null object")
+	})
 }
 
 // TestValidateWorkspaceID_ReadsFromRespPlan simulates the full ModifyPlan flow:

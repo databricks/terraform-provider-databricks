@@ -30,6 +30,7 @@ The following arguments are supported:
 
 * `url` -  (Required) The URL of the Git Repository to clone from. If the value changes, Git folder is re-created.
 * `git_provider` - (Optional, if it's possible to detect Git provider by host name) case insensitive name of the Git provider.  Following values are supported right now (could be a subject for a change, consult [Repos API documentation](https://docs.databricks.com/dev-tools/api/latest/repos.html)): `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`, `awsCodeCommit`.
+* `git_credential_id` - (Optional) The ID of the Git credential (`databricks_git_credential`) to use for this repo.  Required when the workspace has multiple credentials or when automatic credential selection fails (`GIT_CLI_CANNOT_CHOOSE_CREDENTIAL`).  If the value changes, the Git folder is re-created.
 * `path` - (Optional) path to put the checked out Git folder. If not specified, , then the Git folder will be created in the default location.  If the value changes, Git folder is re-created.
 * `branch` - (Optional) name of the branch for initial checkout. If not specified, the default branch of the repository will be used.  Conflicts with `tag`.  If `branch` is removed, and `tag` isn't specified, then the repository will stay at the previously checked out state.
 * `tag` - (Optional) name of the tag for initial checkout.  Conflicts with `branch`.

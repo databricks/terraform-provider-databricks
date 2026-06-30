@@ -128,6 +128,45 @@ func TestResourceRepoCreateNoBranch(t *testing.T) {
 			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
 }
 
+func TestResourceRepoCreateWithGitCredentialID(t *testing.T) {
+	resp := ReposInformation{
+		ID:           121232342,
+		Url:          "https://github.com/user/test.git",
+		Provider:     "gitHub",
+		Branch:       "main",
+		Path:         "/Repos/user@domain/test",
+		HeadCommitID: "1124323423abc23424",
+	}
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/repos",
+				ExpectedRequest: reposCreateRequest{
+					Url:             "https://github.com/user/test.git",
+					Provider:        "gitHub",
+					GitCredentialID: 388825371666399,
+				},
+				Response: resp,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/repos/121232342",
+				Response: resp,
+			},
+		},
+		Resource: ResourceRepo(),
+		State: map[string]any{
+			"url":               "https://github.com/user/test.git",
+			"git_credential_id": 388825371666399,
+		},
+		Create: true,
+	}.ApplyAndExpectData(t,
+		map[string]any{"id": resp.RepoID(), "path": resp.Path, "branch": resp.Branch,
+			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID,
+			"git_credential_id": 388825371666399})
+}
+
 func TestResourceRepoCreateCustomDirectory(t *testing.T) {
 	resp := ReposInformation{
 		ID:           121232342,

@@ -46,10 +46,11 @@ func (r ReposInformation) RepoID() string {
 }
 
 type reposCreateRequest struct {
-	Url            string               `json:"url"`
-	Provider       string               `json:"provider"`
-	Path           string               `json:"path,omitempty"`
-	SparseCheckout *ReposSparseCheckout `json:"sparse_checkout,omitempty"`
+	Url             string               `json:"url"`
+	Provider        string               `json:"provider"`
+	Path            string               `json:"path,omitempty"`
+	SparseCheckout  *ReposSparseCheckout `json:"sparse_checkout,omitempty"`
+	GitCredentialID int64                `json:"git_credential_id,omitempty"`
 }
 
 func (a ReposAPI) Create(r reposCreateRequest) (ReposInformation, error) {
@@ -177,6 +178,11 @@ func ResourceRepo() common.Resource {
 			ConflictsWith: []string{"branch"},
 			ValidateFunc:  validation.StringIsNotWhiteSpace,
 		}
+		s["git_credential_id"] = &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+			ForceNew: true,
+		}
 		s["workspace_path"] = &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,
@@ -204,7 +210,8 @@ func ResourceRepo() common.Resource {
 			common.DataToStructPointer(d, s, &repo)
 
 			req := reposCreateRequest{Path: repo.Path, Provider: repo.Provider,
-				Url: repo.Url, SparseCheckout: repo.SparseCheckout}
+				Url: repo.Url, SparseCheckout: repo.SparseCheckout,
+				GitCredentialID: int64(d.Get("git_credential_id").(int))}
 			resp, err := reposAPI.Create(req)
 			if err != nil {
 				return err

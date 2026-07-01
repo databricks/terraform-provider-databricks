@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/iam"
@@ -28,6 +29,12 @@ type PermissionsAPI struct {
 	client  *common.DatabricksClient
 	context context.Context
 }
+
+const (
+	permissionsReadConsistencyMaxRetries   = 5
+	permissionsReadConsistencyInitialDelay = 100 * time.Millisecond
+	permissionsReadConsistencyMaxDelay     = time.Second
+)
 
 // safePutWithOwner is a workaround for the limitation where warehouse without owners cannot have IS_OWNER set
 func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL []iam.AccessControlRequest, mapping resourcePermissions, ownerOpt string) error {
@@ -157,11 +164,61 @@ func (a PermissionsAPI) readRaw(objectID string, mapping resourcePermissions) (*
 
 // Read gets all relevant permissions for the object, including inherited ones
 func (a PermissionsAPI) Read(objectID string, mapping resourcePermissions, existing entity.PermissionsEntity, me string) (entity.PermissionsEntity, error) {
-	permissions, err := a.readRaw(objectID, mapping)
-	if err != nil {
-		return entity.PermissionsEntity{}, err
+	for attempt := 0; ; attempt++ {
+		permissions, err := a.readRaw(objectID, mapping)
+		if err != nil {
+			return entity.PermissionsEntity{}, err
+		}
+		entity, err := mapping.prepareResponse(objectID, permissions, existing, me)
+		if err != nil {
+			return entity, err
+		}
+		if !permissionsReadMissingExistingAcl(existing, entity) || attempt >= permissionsReadConsistencyMaxRetries {
+			return entity, nil
+		}
+		if err := sleepPermissionsReadRetry(a.context, attempt); err != nil {
+			return entity, err
+		}
 	}
-	return mapping.prepareResponse(objectID, permissions, existing, me)
+}
+
+func permissionsReadMissingExistingAcl(expected, actual entity.PermissionsEntity) bool {
+	if len(expected.AccessControlList) == 0 {
+		return false
+	}
+	for _, expectedAcl := range expected.AccessControlList {
+		if !containsAccessControl(actual.AccessControlList, expectedAcl) {
+			return true
+		}
+	}
+	return false
+}
+
+func containsAccessControl(list []iam.AccessControlRequest, expected iam.AccessControlRequest) bool {
+	for _, actual := range list {
+		if actual.GroupName == expected.GroupName &&
+			strings.EqualFold(actual.UserName, expected.UserName) &&
+			strings.EqualFold(actual.ServicePrincipalName, expected.ServicePrincipalName) &&
+			actual.PermissionLevel == expected.PermissionLevel {
+			return true
+		}
+	}
+	return false
+}
+
+func sleepPermissionsReadRetry(ctx context.Context, attempt int) error {
+	delay := permissionsReadConsistencyInitialDelay << attempt
+	if delay > permissionsReadConsistencyMaxDelay {
+		delay = permissionsReadConsistencyMaxDelay
+	}
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
 }
 
 // PermissionsSchemaStruct is used to generate schema with provider_config

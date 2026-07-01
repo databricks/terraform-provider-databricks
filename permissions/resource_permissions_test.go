@@ -892,6 +892,101 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 	assert.Equal(t, "CAN_USE", firstElem["permission_level"])
 }
 
+func TestResourcePermissionsCreate_SQLA_Endpoint_RetriesStaleRead(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything, mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Set(mock.Anything, iam.SetObjectPermissions{
+				RequestObjectId:   "abc",
+				RequestObjectType: "sql/warehouses",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						ServicePrincipalName: "sp-application-id",
+						PermissionLevel:      "CAN_USE",
+					},
+					{
+						GroupName:       "users",
+						PermissionLevel: "CAN_USE",
+					},
+					{
+						UserName:        "admin",
+						PermissionLevel: "CAN_MANAGE",
+					},
+					{
+						UserName:        "admin",
+						PermissionLevel: "IS_OWNER",
+					},
+				},
+			}).Return(nil, nil)
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "sql/warehouses",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "warehouses/abc",
+				ObjectType: "warehouses",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						ServicePrincipalName: "sp-application-id",
+						AllPermissions:       []iam.Permission{{PermissionLevel: iam.PermissionLevelCanUse}},
+					},
+					{
+						UserName:       "admin",
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
+					},
+				},
+			}, nil).Once()
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "sql/warehouses",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "warehouses/abc",
+				ObjectType: "warehouses",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						GroupName:      "users",
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanUse}},
+					},
+					{
+						ServicePrincipalName: "sp-application-id",
+						AllPermissions:       []iam.Permission{{PermissionLevel: iam.PermissionLevelCanUse}},
+					},
+					{
+						UserName:       "admin",
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
+					},
+				},
+			}, nil).Once()
+		},
+		Resource: ResourcePermissions(),
+		State: map[string]any{
+			"sql_endpoint_id": "abc",
+			"access_control": []any{
+				map[string]any{
+					"group_name":       "users",
+					"permission_level": "CAN_USE",
+				},
+				map[string]any{
+					"service_principal_name": "sp-application-id",
+					"permission_level":       "CAN_USE",
+				},
+			},
+		},
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"access_control": []any{
+			map[string]any{
+				"group_name":       "users",
+				"permission_level": "CAN_USE",
+			},
+			map[string]any{
+				"service_principal_name": "sp-application-id",
+				"permission_level":       "CAN_USE",
+			},
+		},
+	})
+}
+
 func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwnerError(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {

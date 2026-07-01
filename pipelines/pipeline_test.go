@@ -440,3 +440,86 @@ func TestAccPipelineResourcLastModified(t *testing.T) {
 	})
 
 }
+
+// TestUcAccPipelineIngestionServerlessFalse verifies that an ingestion pipeline
+// (one with an ingestion_definition) can be created on classic compute by
+// setting serverless = false and providing a cluster block.
+//
+// The API defaults ingestion pipelines to serverless compute. If the provider
+// drops an explicit serverless = false (which the SDK does by default, because
+// the field is marshaled with omitempty), the API treats the pipeline as
+// serverless and rejects the cluster block with "You cannot provide cluster
+// settings when using serverless compute". This test guards against that
+// regression: creation succeeds only if serverless = false actually reaches the
+// API, and the Check asserts the created pipeline is not serverless.
+//
+// The connection points at a dummy host on purpose. The serverless/cluster
+// validation runs at pipeline creation, before any source connectivity is
+// checked, so the connection does not need to be reachable for this test.
+func TestUcAccPipelineIngestionServerlessFalse(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: `
+		data "databricks_node_type" "smallest" {
+			local_disk = true
+		}
+
+		resource "databricks_connection" "this" {
+			name            = "conn-{var.STICKY_RANDOM}"
+			connection_type = "MYSQL"
+			options = {
+				host     = "test.mysql.database.azure.com"
+				port     = "3306"
+				user     = "user"
+				password = "password"
+			}
+		}
+
+		resource "databricks_schema" "this" {
+			name         = "sch_{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_pipeline" "this" {
+			name       = "pipeline-acceptance-{var.STICKY_RANDOM}"
+			serverless = false
+			catalog    = "main"
+			schema     = databricks_schema.this.name
+			channel    = "PREVIEW"
+
+			cluster {
+				label        = "default"
+				node_type_id = data.databricks_node_type.smallest.id
+				num_workers  = 1
+			}
+
+			ingestion_definition {
+				connection_name = databricks_connection.this.name
+				objects {
+					table {
+						source_catalog      = "srccat"
+						source_schema       = "srcsch"
+						source_table        = "srctbl"
+						destination_catalog = "main"
+						destination_schema  = databricks_schema.this.name
+					}
+				}
+			}
+		}
+		`,
+		Check: acceptance.ResourceCheck("databricks_pipeline.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			ctx = context.WithValue(ctx, common.Api, common.API_2_1)
+			w, err := client.WorkspaceClient()
+			assert.NoError(t, err)
+			pipeline, err := w.Pipelines.Get(ctx, pipelines.GetPipelineRequest{
+				PipelineId: id,
+			})
+			assert.NoError(t, err)
+			assert.False(t, pipeline.Spec.Serverless, "pipeline should be created on classic compute")
+			return nil
+		}),
+		// Ingestion pipelines report a computed source_type back on the
+		// ingestion_definition, which produces a non-empty plan after apply.
+		// This is unrelated to the serverless behavior under test.
+		ExpectNonEmptyPlan: true,
+	})
+}

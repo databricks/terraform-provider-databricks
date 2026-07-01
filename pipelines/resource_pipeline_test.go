@@ -12,6 +12,9 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -807,6 +810,58 @@ func TestDefault(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abcd", d.Id())
+}
+
+// TestForceSendServerless verifies that forceSendServerless adds "Serverless"
+// to ForceSendFields only when serverless is explicitly set in the raw config.
+//
+// This matters because the SDK marshals the Serverless field with omitempty: an
+// explicit serverless = false would otherwise be dropped, the platform would
+// treat the pipeline as serverless, and it would reject cluster settings on
+// ingestion pipelines with "You cannot provide cluster settings when using
+// serverless compute."
+//
+// The helper reads the raw config (not the resource data) so it does not fire
+// for existing classic-compute pipelines whose prior state merely contains
+// serverless = false. We can't exercise this through qa.ResourceFixture because
+// that harness builds config with terraform.NewResourceConfigRaw, which does
+// not populate the cty RawConfig that GetRawConfigAt reads. So we build a
+// ResourceData with RawConfig set directly, matching the real gRPC plan path.
+func TestForceSendServerless(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		rawConfig cty.Value
+		want      []string
+	}{
+		{
+			name:      "serverless = false is force-sent",
+			rawConfig: cty.ObjectVal(map[string]cty.Value{"serverless": cty.False}),
+			want:      []string{"Serverless"},
+		},
+		{
+			name:      "serverless = true is force-sent",
+			rawConfig: cty.ObjectVal(map[string]cty.Value{"serverless": cty.True}),
+			want:      []string{"Serverless"},
+		},
+		{
+			name:      "serverless unset is not force-sent",
+			rawConfig: cty.ObjectVal(map[string]cty.Value{"serverless": cty.NullVal(cty.Bool)}),
+			want:      nil,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			sm := schema.InternalMap(pipelineSchema)
+			d, err := sm.Data(&terraform.InstanceState{
+				ID:        "abcd",
+				RawConfig: tc.rawConfig,
+			}, nil)
+			require.NoError(t, err)
+
+			var forceSendFields []string
+			forceSendServerless(d, &forceSendFields)
+			assert.Equal(t, tc.want, forceSendFields)
+		})
+	}
 }
 
 func TestUpdatePipelineCatalogInPlace(t *testing.T) {

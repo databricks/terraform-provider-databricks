@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -35,10 +36,30 @@ func adjustForceSendFields(clusterList *[]pipelines.PipelineCluster) {
 	}
 }
 
+// forceSendServerless ensures an explicitly-configured serverless value is sent
+// to the API. The SDK marshals the Serverless field with omitempty, so
+// serverless = false would otherwise be dropped from the request. The platform
+// then treats the pipeline as serverless (the default for ingestion pipelines)
+// and rejects any cluster settings with "You cannot provide cluster settings
+// when using serverless compute."
+//
+// We read the raw config rather than the resource data so this only fires when
+// the user actually set serverless in their configuration, not when the zero
+// value is merely present in prior state (which would make it fire on every
+// apply for existing classic-compute pipelines).
+func forceSendServerless(d *schema.ResourceData, forceSendFields *[]string) {
+	raw, diags := d.GetRawConfigAt(cty.Path{cty.GetAttrStep{Name: "serverless"}})
+	if diags.HasError() || raw.IsNull() || !raw.IsKnown() {
+		return
+	}
+	*forceSendFields = append(*forceSendFields, "Serverless")
+}
+
 func Create(w *databricks.WorkspaceClient, ctx context.Context, d *schema.ResourceData, timeout time.Duration) error {
 	var createPipelineRequest createPipelineRequestStruct
 	common.DataToStructPointer(d, pipelineSchema, &createPipelineRequest)
 	adjustForceSendFields(&createPipelineRequest.Clusters)
+	forceSendServerless(d, &createPipelineRequest.CreatePipeline.ForceSendFields)
 
 	createdPipeline, err := w.Pipelines.Create(ctx, createPipelineRequest.CreatePipeline)
 	if err != nil {
@@ -71,6 +92,7 @@ func Update(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	common.DataToStructPointer(d, pipelineSchema, &updatePipelineRequest)
 	updatePipelineRequest.EditPipeline.PipelineId = d.Id()
 	adjustForceSendFields(&updatePipelineRequest.Clusters)
+	forceSendServerless(d, &updatePipelineRequest.EditPipeline.ForceSendFields)
 	err := w.Pipelines.Update(ctx, updatePipelineRequest.EditPipeline)
 	if err != nil {
 		return err

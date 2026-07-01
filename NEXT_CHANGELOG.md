@@ -17,6 +17,7 @@
   The Apps API omits `user_api_scopes` from its response when OBO is inactive, so a configured empty list previously failed with `Provider produced inconsistent result after apply`. The provider now preserves a configured empty list in state, mirroring the reconciliation used by `databricks_app_space`.
 
 ### Documentation
+* Fixed the formatting of databricks mws_network_connectivity_config terraform resource
 
 ### Exporter
 

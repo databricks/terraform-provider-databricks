@@ -375,6 +375,11 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Populate diff.RawConfig to allow d.GetRawConfigAt() works in tests
+	// In actual runs terraform's gRPC pipeline will populate this
+	if diff != nil {
+		diff.RawConfig = makeResourceRawConfig(resourceConfig, resource)
+	}
 	if f.Update {
 		err = f.requiresNew(diff)
 		if err != nil {

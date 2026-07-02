@@ -14,6 +14,8 @@
 
 ### Exporter
 
+* Generate code in `import.sh` more safely ([#5848](hattps://github.com/databricks/terraform-provider-databricks/issues/5848)).
+
 ### Internal Changes
 
 * Make notification destination acceptance tests robust to the eventual consistency of the notification destinations list API.

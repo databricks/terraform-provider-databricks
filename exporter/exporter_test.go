@@ -2983,8 +2983,8 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 			os.Mkdir(tmpDir, 0700)
 			os.WriteFile(tmpDir+"/import.sh", []byte(
-				`terraform import databricks_pipeline.abc "abc"
-terraform import databricks_pipeline.def "def"
+				`terraform import databricks_pipeline.abc 'abc'
+terraform import databricks_pipeline.def 'def'
 `), 0700)
 
 			os.WriteFile(tmpDir+"/import.tf", []byte(
@@ -3025,8 +3025,8 @@ resource "databricks_pipeline" "def" {
 			content, err := os.ReadFile(tmpDir + "/import.sh")
 			assert.NoError(t, err)
 			contentStr := string(content)
-			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.abc "abc"`))
-			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.def "def"`))
+			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.abc 'abc'`))
+			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.def 'def'`))
 
 			content, err = os.ReadFile(tmpDir + "/import.tf")
 			assert.NoError(t, err)

@@ -27094,7 +27094,6 @@ func (m RunRefreshRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Next ID: 45
 type SchemaInfo struct {
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
@@ -34676,7 +34675,6 @@ func (m *UpdateWorkspaceBindingsResponse) SetBindings(ctx context.Context, v []W
 	m.Bindings = types.ListValueMust(t, vs)
 }
 
-// Next ID: 18
 type ValidateCredentialRequest struct {
 	AwsIamRole types.Object `tfsdk:"aws_iam_role"`
 

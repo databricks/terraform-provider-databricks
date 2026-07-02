@@ -32,9 +32,24 @@ func (ic *importContext) generateVariableName(attrName, name string) string {
 	return fmt.Sprintf("%s_%s", attrName, name)
 }
 
+// maybeAddQuoteCharacter escapes a string so that it is safe to emit as a
+// literal segment inside a double-quoted HCL string when building tokens
+// manually (i.e. not through hclwrite.TokensForValue, which escapes on its
+// own). It handles the four sequences that would otherwise let attacker
+// controlled values break out of the string literal or inject expressions:
+// backslashes, double quotes, `${` interpolations, `%{` template directives
+// and raw control characters (newlines/CR/tab, which are not allowed literally
+// inside a quoted HCL string). Without this, values such as file names derived
+// from workspace or DBFS object paths could inject arbitrary HCL into generated
+// *.tf files.
 func maybeAddQuoteCharacter(s string) string {
 	s = strings.ReplaceAll(s, "\\", "\\\\")
 	s = strings.ReplaceAll(s, "\"", "\\\"")
+	s = strings.ReplaceAll(s, "${", "$${")
+	s = strings.ReplaceAll(s, "%{", "%%{")
+	s = strings.ReplaceAll(s, "\n", "\\n")
+	s = strings.ReplaceAll(s, "\r", "\\r")
+	s = strings.ReplaceAll(s, "\t", "\\t")
 	return s
 }
 
@@ -229,7 +244,10 @@ func (ic *importContext) reference(i importable, path []string, value string, ct
 			continue
 		}
 		if d.File {
-			relativeFile := fmt.Sprintf("${path.module}/%s", value)
+			// `${path.module}/` must stay a real interpolation, but `value` is a
+			// file name derived from an attacker-controlled object path, so it
+			// must be escaped to prevent breaking out of the string literal.
+			relativeFile := "${path.module}/" + maybeAddQuoteCharacter(value)
 			return hclwrite.Tokens{
 				&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}},
 				&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(relativeFile)},

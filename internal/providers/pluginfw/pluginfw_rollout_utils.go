@@ -19,6 +19,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/cluster"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/dashboards"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/library"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/mws_permission_assignments"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/notificationdestinations"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/qualitymonitor"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/registered_model"
@@ -68,6 +69,7 @@ var pluginFwOnlyDataSources = append(
 		app.DataSourceApps,
 		catalog.DataSourceFunctions,
 		dashboards.DataSourceDashboards,
+		mws_permission_assignments.DataSourceMwsPermissionAssignments,
 		notificationdestinations.DataSourceNotificationDestinations,
 		registered_model.DataSourceRegisteredModel,
 		registered_model.DataSourceRegisteredModelVersions,

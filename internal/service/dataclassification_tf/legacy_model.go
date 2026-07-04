@@ -89,8 +89,10 @@ type CatalogConfig_SdkV2 struct {
 	// List of auto-tagging configurations for this catalog. Empty list means no
 	// auto-tagging is enabled.
 	AutoTagConfigs types.List `tfsdk:"auto_tag_configs"`
-	// Schemas to include in the scan. Empty list is not supported as it results
-	// in a no-op scan. If `included_schemas` is not set, all schemas are
+	// Schemas to include in the scan, each named relative to the parent
+	// catalog. If specified, only listed schemas will be scanned. Mutually
+	// exclusive with `excluded_schemas`: only one may be set per request. If
+	// neither `included_schemas` nor `excluded_schemas` is set, all schemas are
 	// scanned.
 	IncludedSchemas types.List `tfsdk:"included_schemas"`
 	// Resource name in the format: catalogs/{catalog_name}/config.
@@ -237,6 +239,7 @@ func (m *CatalogConfig_SdkV2) SetIncludedSchemas(ctx context.Context, v CatalogC
 
 // Wrapper message for a list of schema names.
 type CatalogConfigSchemaNames_SdkV2 struct {
+	// Schema names, each relative to the parent catalog. Must not be empty.
 	Names types.List `tfsdk:"names"`
 }
 

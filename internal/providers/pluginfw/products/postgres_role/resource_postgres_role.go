@@ -118,6 +118,15 @@ type Role struct {
 	// The Branch where this Role exists. Format:
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"parent"`
+	// If true, update the role if it already exists instead of returning an
+	// error.
+	//
+	// When the role already exists, the provided `role` spec fully replaces the
+	// existing one: `membership_roles` is overwritten, not merged. Leaving
+	// `membership_roles` empty clears all of the role's existing memberships,
+	// including `DATABRICKS_SUPERUSER`. Always send the complete desired list
+	// of memberships when using this field.
+	ReplaceExisting types.Bool `tfsdk:"replace_existing"`
 	// The part of the name, chosen by the user when the resource was created.
 	RoleId types.String `tfsdk:"role_id"`
 	// The spec contains the role configuration, including identity type,
@@ -156,12 +165,13 @@ func (m Role) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"create_time": m.CreateTime,
-			"name":        m.Name,
-			"parent":      m.Parent,
-			"role_id":     m.RoleId,
-			"spec":        m.Spec,
-			"status":      m.Status,
-			"update_time": m.UpdateTime,
+			"name":             m.Name,
+			"parent":           m.Parent,
+			"replace_existing": m.ReplaceExisting,
+			"role_id":          m.RoleId,
+			"spec":             m.Spec,
+			"status":           m.Status,
+			"update_time":      m.UpdateTime,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -173,12 +183,13 @@ func (m Role) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Role) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"create_time": timetypes.RFC3339{}.Type(ctx),
-			"name":        types.StringType,
-			"parent":      types.StringType,
-			"role_id":     types.StringType,
-			"spec":        postgres_tf.RoleRoleSpec{}.Type(ctx),
-			"status":      postgres_tf.RoleRoleStatus{}.Type(ctx),
-			"update_time": timetypes.RFC3339{}.Type(ctx),
+			"name":             types.StringType,
+			"parent":           types.StringType,
+			"replace_existing": types.BoolType,
+			"role_id":          types.StringType,
+			"spec":             postgres_tf.RoleRoleSpec{}.Type(ctx),
+			"status":           postgres_tf.RoleRoleStatus{}.Type(ctx),
+			"update_time":      timetypes.RFC3339{}.Type(ctx),
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -189,6 +200,9 @@ func (m Role) Type(ctx context.Context) attr.Type {
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (to *Role) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Role) {
+	if !from.ReplaceExisting.IsUnknown() {
+		to.ReplaceExisting = from.ReplaceExisting
+	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -219,6 +233,9 @@ func (to *Role) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Role) {
 // including both embedded model fields and additional fields. This method is called
 // during read.
 func (to *Role) SyncFieldsDuringRead(ctx context.Context, from Role) {
+	if !from.ReplaceExisting.IsUnknown() {
+		to.ReplaceExisting = from.ReplaceExisting
+	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Spec = from.Spec
@@ -257,6 +274,7 @@ func (m Role) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["replace_existing"] = attrs["replace_existing"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -367,6 +385,9 @@ func (r *RoleResource) Create(ctx context.Context, req resource.CreateRequest, r
 		Role:   role,
 		Parent: plan.Parent.ValueString(),
 		RoleId: plan.RoleId.ValueString(),
+	}
+	if !plan.ReplaceExisting.IsNull() && !plan.ReplaceExisting.IsUnknown() {
+		createRequest.ReplaceExisting = plan.ReplaceExisting.ValueBool()
 	}
 
 	var namespace ProviderConfig

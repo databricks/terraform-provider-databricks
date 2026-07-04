@@ -26,6 +26,190 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+// AiRuntimeTask: multi-node GPU compute task definition for Databricks AI
+// Runtime workloads.
+//
+// Jobs-framework-level concepts (retries, per-task timeout, idempotency token,
+// usage/budget policy, permissions) live on the surrounding TaskSettings /
+// run-submit request and are intentionally NOT duplicated here. Users compose
+// `ai_runtime_task` with the standard Jobs/DABs task wrapper to get those.
+type AiRuntimeTask_SdkV2 struct {
+	// Optional workspace or UC volume path of the uploaded code-source archive.
+	// The CLI packages the user's local code directory into an archive and
+	// populates this. Customers calling the Jobs API directly should upload
+	// their archive to the workspace or a UC volume first and supply the
+	// resulting path here.
+	//
+	// When set, the training node exposes the value via the `$CODE_SOURCE`
+	// environment variable.
+	CodeSourcePath types.String `tfsdk:"code_source_path"`
+	// Deployment specs for this task. Exactly one deployment is currently
+	// supported (a single entry where every node runs the same command); this
+	// is a current-Preview constraint. Role-split workloads (driver + worker,
+	// parameter server, separate eval node, etc.) with multiple entries are the
+	// eventual intent but not yet supported.
+	Deployments types.List `tfsdk:"deployments"`
+	// MLflow experiment name for this run. If an experiment with this name
+	// already exists under the calling user, the run is appended to it;
+	// otherwise a new experiment is created. To target a specific MLflow
+	// storage location (for example, when running as a service principal), set
+	// `mlflow_experiment_directory`.
+	Experiment types.String `tfsdk:"experiment"`
+	// Optional workspace directory under which the MLflow experiment named in
+	// `experiment` is created. Must start with `/Workspace`. Set this when
+	// running as a service principal that has no default user directory; for
+	// regular users the experiment defaults to the user's home directory.
+	MlflowExperimentDirectory types.String `tfsdk:"mlflow_experiment_directory"`
+	// Optional display name for the MLflow run created under `experiment`. If
+	// omitted, MLflow generates a default name.
+	MlflowRun types.String `tfsdk:"mlflow_run"`
+}
+
+func (to *AiRuntimeTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiRuntimeTask_SdkV2) {
+}
+
+func (to *AiRuntimeTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AiRuntimeTask_SdkV2) {
+}
+
+func (m AiRuntimeTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["code_source_path"] = attrs["code_source_path"].SetOptional()
+	attrs["deployments"] = attrs["deployments"].SetRequired()
+	attrs["experiment"] = attrs["experiment"].SetRequired()
+	attrs["mlflow_experiment_directory"] = attrs["mlflow_experiment_directory"].SetOptional()
+	attrs["mlflow_run"] = attrs["mlflow_run"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiRuntimeTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AiRuntimeTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"deployments": reflect.TypeOf(DeploymentSpec_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AiRuntimeTask_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AiRuntimeTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"code_source_path":            m.CodeSourcePath,
+			"deployments":                 m.Deployments,
+			"experiment":                  m.Experiment,
+			"mlflow_experiment_directory": m.MlflowExperimentDirectory,
+			"mlflow_run":                  m.MlflowRun,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AiRuntimeTask_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"code_source_path": types.StringType,
+			"deployments": basetypes.ListType{
+				ElemType: DeploymentSpec_SdkV2{}.Type(ctx),
+			},
+			"experiment":                  types.StringType,
+			"mlflow_experiment_directory": types.StringType,
+			"mlflow_run":                  types.StringType,
+		},
+	}
+}
+
+// GetDeployments returns the value of the Deployments field in AiRuntimeTask_SdkV2 as
+// a slice of DeploymentSpec_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AiRuntimeTask_SdkV2) GetDeployments(ctx context.Context) ([]DeploymentSpec_SdkV2, bool) {
+	if m.Deployments.IsNull() || m.Deployments.IsUnknown() {
+		return nil, false
+	}
+	var v []DeploymentSpec_SdkV2
+	d := m.Deployments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDeployments sets the value of the Deployments field in AiRuntimeTask_SdkV2.
+func (m *AiRuntimeTask_SdkV2) SetDeployments(ctx context.Context, v []DeploymentSpec_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["deployments"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Deployments = types.ListValueMust(t, vs)
+}
+
+// AiRuntimeTaskOutput: output identifiers for an AiRuntimeTask run — the
+// MLflow experiment and run IDs the task wrote to.
+//
+// Run lifecycle and termination status are not on this message; they live on
+// the surrounding `RunTask.status` field (see `runs.proto:RunTask.status`).
+type AiRuntimeTaskOutput_SdkV2 struct {
+	// MLflow experiment ID the run was logged to. Use it to look up the
+	// experiment in MLflow APIs or the workspace MLflow UI.
+	MlflowExperimentId types.String `tfsdk:"mlflow_experiment_id"`
+	// MLflow run ID for this task execution. Use it to look up the run in
+	// MLflow APIs or the workspace MLflow UI.
+	MlflowRunId types.String `tfsdk:"mlflow_run_id"`
+}
+
+func (to *AiRuntimeTaskOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiRuntimeTaskOutput_SdkV2) {
+}
+
+func (to *AiRuntimeTaskOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AiRuntimeTaskOutput_SdkV2) {
+}
+
+func (m AiRuntimeTaskOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["mlflow_experiment_id"] = attrs["mlflow_experiment_id"].SetComputed()
+	attrs["mlflow_run_id"] = attrs["mlflow_run_id"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiRuntimeTaskOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AiRuntimeTaskOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AiRuntimeTaskOutput_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AiRuntimeTaskOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"mlflow_experiment_id": m.MlflowExperimentId,
+			"mlflow_run_id":        m.MlflowRunId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AiRuntimeTaskOutput_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"mlflow_experiment_id": types.StringType,
+			"mlflow_run_id":        types.StringType,
+		},
+	}
+}
+
 type AlertTask_SdkV2 struct {
 	// The alert_id is the canonical identifier of the alert.
 	AlertId types.String `tfsdk:"alert_id"`
@@ -555,7 +739,7 @@ type BaseRun_SdkV2 struct {
 
 	Status types.List `tfsdk:"status"`
 	// The list of tasks performed by the run. Each task has its own `run_id`
-	// which you can use to call `JobsGetOutput` to retrieve the run resutls. If
+	// which you can use to call `JobsGetOutput` to retrieve the run results. If
 	// more than 100 tasks are available, you can paginate through them using
 	// :method:jobs/getrun. Use the `next_page_token` field at the object root
 	// to determine if more results are available.
@@ -1933,7 +2117,7 @@ func (m *ClusterSpec_SdkV2) SetNewCluster(ctx context.Context, v compute_tf.Clus
 
 type Compute_SdkV2 struct {
 	// Hardware accelerator configuration for Serverless GPU workloads.
-	HardwareAccelerator types.List `tfsdk:"hardware_accelerator"`
+	HardwareAccelerator types.String `tfsdk:"hardware_accelerator"`
 }
 
 func (to *Compute_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Compute_SdkV2) {
@@ -2033,6 +2217,66 @@ func (m ComputeConfig_SdkV2) Type(ctx context.Context) attr.Type {
 			"gpu_node_pool_id": types.StringType,
 			"gpu_type":         types.StringType,
 			"num_gpus":         types.Int64Type,
+		},
+	}
+}
+
+// ComputeSpec: compute configuration — accelerator type and total accelerator
+// count across all nodes.
+type ComputeSpec_SdkV2 struct {
+	// Total number of accelerators across all nodes. Must be a positive
+	// multiple of the per-node accelerator count encoded in `accelerator_type`.
+	// For example, `GPU_8xH100` with `accelerator_count: 16` allocates 2 nodes
+	// (8 GPUs per node).
+	AcceleratorCount types.Int64 `tfsdk:"accelerator_count"`
+	// Hardware accelerator type (for example, `GPU_1xA10` or `GPU_8xH100`). The
+	// number of accelerators per node is encoded in the enum value —
+	// `GPU_8xH100` means 8 H100 GPUs per node.
+	AcceleratorType types.String `tfsdk:"accelerator_type"`
+}
+
+func (to *ComputeSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ComputeSpec_SdkV2) {
+}
+
+func (to *ComputeSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ComputeSpec_SdkV2) {
+}
+
+func (m ComputeSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["accelerator_count"] = attrs["accelerator_count"].SetRequired()
+	attrs["accelerator_type"] = attrs["accelerator_type"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ComputeSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ComputeSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ComputeSpec_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ComputeSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"accelerator_count": m.AcceleratorCount,
+			"accelerator_type":  m.AcceleratorType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ComputeSpec_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"accelerator_count": types.Int64Type,
+			"accelerator_type":  types.StringType,
 		},
 	}
 }
@@ -4373,6 +4617,124 @@ func (m DeleteRun_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// DeploymentSpec: configuration for one deployment within an AiRuntimeTask.
+// Each entry in `AiRuntimeTask.deployments` describes a group of nodes that
+// share the same command and compute. Many single-program training algorithms
+// use a single entry where every node runs the same command; role-split
+// workloads (driver + worker, parameter server, separate eval node, etc.) use
+// multiple entries.
+type DeploymentSpec_SdkV2 struct {
+	// Workspace path of the bash script to execute on each node in this
+	// deployment. The CLI uploads the user's script and populates this.
+	// Customers calling the Jobs API directly should upload their script to the
+	// workspace first and supply the resulting path here.
+	CommandPath types.String `tfsdk:"command_path"`
+	// Compute resources allocated to each node in this deployment.
+	Compute types.List `tfsdk:"compute"`
+	// Optional human-readable name for this deployment (for example, `driver`,
+	// `worker`, `param_server`). Used for log and UI display. Distinct names
+	// are recommended so deployments can be told apart, but uniqueness is not
+	// enforced.
+	Name types.String `tfsdk:"name"`
+}
+
+func (to *DeploymentSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeploymentSpec_SdkV2) {
+	if !from.Compute.IsNull() && !from.Compute.IsUnknown() {
+		if toCompute, ok := to.GetCompute(ctx); ok {
+			if fromCompute, ok := from.GetCompute(ctx); ok {
+				// Recursively sync the fields of Compute
+				toCompute.SyncFieldsDuringCreateOrUpdate(ctx, fromCompute)
+				to.SetCompute(ctx, toCompute)
+			}
+		}
+	}
+}
+
+func (to *DeploymentSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeploymentSpec_SdkV2) {
+	if !from.Compute.IsNull() && !from.Compute.IsUnknown() {
+		if toCompute, ok := to.GetCompute(ctx); ok {
+			if fromCompute, ok := from.GetCompute(ctx); ok {
+				toCompute.SyncFieldsDuringRead(ctx, fromCompute)
+				to.SetCompute(ctx, toCompute)
+			}
+		}
+	}
+}
+
+func (m DeploymentSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["command_path"] = attrs["command_path"].SetRequired()
+	attrs["compute"] = attrs["compute"].SetRequired()
+	attrs["compute"] = attrs["compute"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeploymentSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeploymentSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"compute": reflect.TypeOf(ComputeSpec_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeploymentSpec_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DeploymentSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"command_path": m.CommandPath,
+			"compute":      m.Compute,
+			"name":         m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeploymentSpec_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"command_path": types.StringType,
+			"compute": basetypes.ListType{
+				ElemType: ComputeSpec_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
+		},
+	}
+}
+
+// GetCompute returns the value of the Compute field in DeploymentSpec_SdkV2 as
+// a ComputeSpec_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DeploymentSpec_SdkV2) GetCompute(ctx context.Context) (ComputeSpec_SdkV2, bool) {
+	var e ComputeSpec_SdkV2
+	if m.Compute.IsNull() || m.Compute.IsUnknown() {
+		return e, false
+	}
+	var v []ComputeSpec_SdkV2
+	d := m.Compute.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCompute sets the value of the Compute field in DeploymentSpec_SdkV2.
+func (m *DeploymentSpec_SdkV2) SetCompute(ctx context.Context, v ComputeSpec_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["compute"]
+	m.Compute = types.ListValueMust(t, vs)
+}
+
 // Represents a change to the job cluster's settings that would be required for
 // the job clusters to become compliant with their policies.
 type EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2 struct {
@@ -5163,7 +5525,7 @@ type ForEachTaskErrorMessageStats_SdkV2 struct {
 	// Describes the count of such error message encountered during the
 	// iterations.
 	Count types.Int64 `tfsdk:"count"`
-	// Describes the error message occured during the iterations.
+	// Describes the error message occurred during the iterations.
 	ErrorMessage types.String `tfsdk:"error_message"`
 	// Describes the termination reason for the error message.
 	TerminationCategory types.String `tfsdk:"termination_category"`
@@ -5292,6 +5654,11 @@ func (m ForEachTaskTaskRunStats_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// DEPRECATED — use `AiRuntimeTask` for all new BYOT multi-node GPU workloads
+// (see ai_runtime_task.proto). `AiRuntimeTask` is the only supported BYOT task
+// type for new workloads; this proto is retained only for AIR CLI (fka SGCLI)
+// pywheel backwards compatibility and will be removed once the pywheel →
+// databricks-cli migration completes (post- PuPr).
 type GenAiComputeTask_SdkV2 struct {
 	// Command launcher to run the actual script, e.g. bash, python etc.
 	Command types.String `tfsdk:"command"`
@@ -5625,6 +5992,9 @@ func (m GetJobPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetJobRequest_SdkV2 struct {
+	// Flag that indicates that trigger state should be included in the
+	// response.
+	IncludeTriggerState types.Bool `tfsdk:"-"`
 	// The canonical identifier of the job to retrieve information about. This
 	// field is required.
 	JobId types.Int64 `tfsdk:"-"`
@@ -5641,6 +6011,7 @@ func (to *GetJobRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Ge
 
 func (m GetJobRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["include_trigger_state"] = attrs["include_trigger_state"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 
 	return attrs
@@ -5664,8 +6035,9 @@ func (m GetJobRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"job_id":     m.JobId,
-			"page_token": m.PageToken,
+			"include_trigger_state": m.IncludeTriggerState,
+			"job_id":                m.JobId,
+			"page_token":            m.PageToken,
 		})
 }
 
@@ -5673,8 +6045,9 @@ func (m GetJobRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 func (m GetJobRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"job_id":     types.Int64Type,
-			"page_token": types.StringType,
+			"include_trigger_state": types.BoolType,
+			"job_id":                types.Int64Type,
+			"page_token":            types.StringType,
 		},
 	}
 }
@@ -6798,6 +7171,10 @@ func (m *JobCompliance_SdkV2) SetViolations(ctx context.Context, v map[string]ty
 }
 
 type JobDeployment_SdkV2 struct {
+	// ID of the deployment that manages this job. Only set when `kind` is
+	// `BUNDLE`. Used to look up deployment metadata from the Deployment
+	// Metadata service.
+	DeploymentId types.String `tfsdk:"deployment_id"`
 	// The kind of deployment that manages the job.
 	//
 	// * `BUNDLE`: The job is managed by Databricks Asset Bundle. *
@@ -6805,6 +7182,10 @@ type JobDeployment_SdkV2 struct {
 	Kind types.String `tfsdk:"kind"`
 	// Path of the file that contains deployment metadata.
 	MetadataFilePath types.String `tfsdk:"metadata_file_path"`
+	// ID of the version of the deployment that produced this job. Only set when
+	// `kind` is `BUNDLE`. Identifies a specific snapshot of the deployment in
+	// the Deployment Metadata service.
+	VersionId types.String `tfsdk:"version_id"`
 }
 
 func (to *JobDeployment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobDeployment_SdkV2) {
@@ -6814,8 +7195,10 @@ func (to *JobDeployment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Jo
 }
 
 func (m JobDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["deployment_id"] = attrs["deployment_id"].SetOptional()
 	attrs["kind"] = attrs["kind"].SetRequired()
 	attrs["metadata_file_path"] = attrs["metadata_file_path"].SetOptional()
+	attrs["version_id"] = attrs["version_id"].SetOptional()
 
 	return attrs
 }
@@ -6838,8 +7221,10 @@ func (m JobDeployment_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"deployment_id":      m.DeploymentId,
 			"kind":               m.Kind,
 			"metadata_file_path": m.MetadataFilePath,
+			"version_id":         m.VersionId,
 		})
 }
 
@@ -6847,8 +7232,10 @@ func (m JobDeployment_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 func (m JobDeployment_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"deployment_id":      types.StringType,
 			"kind":               types.StringType,
 			"metadata_file_path": types.StringType,
+			"version_id":         types.StringType,
 		},
 	}
 }
@@ -9976,18 +10363,80 @@ func (m PeriodicTriggerConfiguration_SdkV2) Type(ctx context.Context) attr.Type 
 }
 
 type PipelineParams_SdkV2 struct {
-	// If true, triggers a full refresh on the delta live table.
+	// If true, triggers a full refresh on the spark declarative pipeline.
 	FullRefresh types.Bool `tfsdk:"full_refresh"`
+	// A list of tables to update with fullRefresh.
+	FullRefreshSelection types.List `tfsdk:"full_refresh_selection"`
+	// Flow names to selectively refresh. These are unioned with other selective
+	// refresh options (refresh_selection, full_refresh_selection) to determine
+	// the final set of flows to refresh.
+	RefreshFlowSelection types.List `tfsdk:"refresh_flow_selection"`
+	// A list of tables to update without fullRefresh.
+	RefreshSelection types.List `tfsdk:"refresh_selection"`
+	// A list of streaming flows to reset checkpoints without clearing data.
+	ResetCheckpointSelection types.List `tfsdk:"reset_checkpoint_selection"`
 }
 
 func (to *PipelineParams_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PipelineParams_SdkV2) {
+	if !from.FullRefreshSelection.IsNull() && !from.FullRefreshSelection.IsUnknown() && to.FullRefreshSelection.IsNull() && len(from.FullRefreshSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FullRefreshSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FullRefreshSelection = from.FullRefreshSelection
+	}
+	if !from.RefreshFlowSelection.IsNull() && !from.RefreshFlowSelection.IsUnknown() && to.RefreshFlowSelection.IsNull() && len(from.RefreshFlowSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RefreshFlowSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RefreshFlowSelection = from.RefreshFlowSelection
+	}
+	if !from.RefreshSelection.IsNull() && !from.RefreshSelection.IsUnknown() && to.RefreshSelection.IsNull() && len(from.RefreshSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RefreshSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RefreshSelection = from.RefreshSelection
+	}
+	if !from.ResetCheckpointSelection.IsNull() && !from.ResetCheckpointSelection.IsUnknown() && to.ResetCheckpointSelection.IsNull() && len(from.ResetCheckpointSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ResetCheckpointSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ResetCheckpointSelection = from.ResetCheckpointSelection
+	}
 }
 
 func (to *PipelineParams_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PipelineParams_SdkV2) {
+	if !from.FullRefreshSelection.IsNull() && !from.FullRefreshSelection.IsUnknown() && to.FullRefreshSelection.IsNull() && len(from.FullRefreshSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FullRefreshSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FullRefreshSelection = from.FullRefreshSelection
+	}
+	if !from.RefreshFlowSelection.IsNull() && !from.RefreshFlowSelection.IsUnknown() && to.RefreshFlowSelection.IsNull() && len(from.RefreshFlowSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RefreshFlowSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RefreshFlowSelection = from.RefreshFlowSelection
+	}
+	if !from.RefreshSelection.IsNull() && !from.RefreshSelection.IsUnknown() && to.RefreshSelection.IsNull() && len(from.RefreshSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RefreshSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RefreshSelection = from.RefreshSelection
+	}
+	if !from.ResetCheckpointSelection.IsNull() && !from.ResetCheckpointSelection.IsUnknown() && to.ResetCheckpointSelection.IsNull() && len(from.ResetCheckpointSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ResetCheckpointSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ResetCheckpointSelection = from.ResetCheckpointSelection
+	}
 }
 
 func (m PipelineParams_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
+	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
+	attrs["refresh_flow_selection"] = attrs["refresh_flow_selection"].SetOptional()
+	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
+	attrs["reset_checkpoint_selection"] = attrs["reset_checkpoint_selection"].SetOptional()
 
 	return attrs
 }
@@ -10000,7 +10449,12 @@ func (m PipelineParams_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PipelineParams_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"full_refresh_selection":     reflect.TypeOf(types.String{}),
+		"refresh_flow_selection":     reflect.TypeOf(types.String{}),
+		"refresh_selection":          reflect.TypeOf(types.String{}),
+		"reset_checkpoint_selection": reflect.TypeOf(types.String{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -10010,7 +10464,11 @@ func (m PipelineParams_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"full_refresh": m.FullRefresh,
+			"full_refresh":               m.FullRefresh,
+			"full_refresh_selection":     m.FullRefreshSelection,
+			"refresh_flow_selection":     m.RefreshFlowSelection,
+			"refresh_selection":          m.RefreshSelection,
+			"reset_checkpoint_selection": m.ResetCheckpointSelection,
 		})
 }
 
@@ -10019,26 +10477,208 @@ func (m PipelineParams_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"full_refresh": types.BoolType,
+			"full_refresh_selection": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"refresh_flow_selection": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"refresh_selection": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"reset_checkpoint_selection": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
 
+// GetFullRefreshSelection returns the value of the FullRefreshSelection field in PipelineParams_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PipelineParams_SdkV2) GetFullRefreshSelection(ctx context.Context) ([]types.String, bool) {
+	if m.FullRefreshSelection.IsNull() || m.FullRefreshSelection.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.FullRefreshSelection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFullRefreshSelection sets the value of the FullRefreshSelection field in PipelineParams_SdkV2.
+func (m *PipelineParams_SdkV2) SetFullRefreshSelection(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["full_refresh_selection"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.FullRefreshSelection = types.ListValueMust(t, vs)
+}
+
+// GetRefreshFlowSelection returns the value of the RefreshFlowSelection field in PipelineParams_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PipelineParams_SdkV2) GetRefreshFlowSelection(ctx context.Context) ([]types.String, bool) {
+	if m.RefreshFlowSelection.IsNull() || m.RefreshFlowSelection.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.RefreshFlowSelection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRefreshFlowSelection sets the value of the RefreshFlowSelection field in PipelineParams_SdkV2.
+func (m *PipelineParams_SdkV2) SetRefreshFlowSelection(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["refresh_flow_selection"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.RefreshFlowSelection = types.ListValueMust(t, vs)
+}
+
+// GetRefreshSelection returns the value of the RefreshSelection field in PipelineParams_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PipelineParams_SdkV2) GetRefreshSelection(ctx context.Context) ([]types.String, bool) {
+	if m.RefreshSelection.IsNull() || m.RefreshSelection.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.RefreshSelection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRefreshSelection sets the value of the RefreshSelection field in PipelineParams_SdkV2.
+func (m *PipelineParams_SdkV2) SetRefreshSelection(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["refresh_selection"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.RefreshSelection = types.ListValueMust(t, vs)
+}
+
+// GetResetCheckpointSelection returns the value of the ResetCheckpointSelection field in PipelineParams_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PipelineParams_SdkV2) GetResetCheckpointSelection(ctx context.Context) ([]types.String, bool) {
+	if m.ResetCheckpointSelection.IsNull() || m.ResetCheckpointSelection.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.ResetCheckpointSelection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResetCheckpointSelection sets the value of the ResetCheckpointSelection field in PipelineParams_SdkV2.
+func (m *PipelineParams_SdkV2) SetResetCheckpointSelection(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["reset_checkpoint_selection"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ResetCheckpointSelection = types.ListValueMust(t, vs)
+}
+
 type PipelineTask_SdkV2 struct {
-	// If true, triggers a full refresh on the delta live table.
+	// If true, triggers a full refresh on the spark declarative pipeline.
 	FullRefresh types.Bool `tfsdk:"full_refresh"`
+	// A list of tables to update with fullRefresh.
+	FullRefreshSelection types.List `tfsdk:"full_refresh_selection"`
+	// Key/value-map of parameters passed to the pipeline execution. Limited to
+	// 10k characters in total.
+	Parameters types.Map `tfsdk:"parameters"`
 	// The full name of the pipeline task to execute.
 	PipelineId types.String `tfsdk:"pipeline_id"`
+	// Flow names to selectively refresh. These are unioned with other selective
+	// refresh options (refresh_selection, full_refresh_selection) to determine
+	// the final set of flows to refresh.
+	RefreshFlowSelection types.List `tfsdk:"refresh_flow_selection"`
+	// A list of tables to update without fullRefresh.
+	RefreshSelection types.List `tfsdk:"refresh_selection"`
+	// A list of streaming flows to reset checkpoints without clearing data.
+	ResetCheckpointSelection types.List `tfsdk:"reset_checkpoint_selection"`
 }
 
 func (to *PipelineTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PipelineTask_SdkV2) {
+	if !from.FullRefreshSelection.IsNull() && !from.FullRefreshSelection.IsUnknown() && to.FullRefreshSelection.IsNull() && len(from.FullRefreshSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FullRefreshSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FullRefreshSelection = from.FullRefreshSelection
+	}
+	if !from.RefreshFlowSelection.IsNull() && !from.RefreshFlowSelection.IsUnknown() && to.RefreshFlowSelection.IsNull() && len(from.RefreshFlowSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RefreshFlowSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RefreshFlowSelection = from.RefreshFlowSelection
+	}
+	if !from.RefreshSelection.IsNull() && !from.RefreshSelection.IsUnknown() && to.RefreshSelection.IsNull() && len(from.RefreshSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RefreshSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RefreshSelection = from.RefreshSelection
+	}
+	if !from.ResetCheckpointSelection.IsNull() && !from.ResetCheckpointSelection.IsUnknown() && to.ResetCheckpointSelection.IsNull() && len(from.ResetCheckpointSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ResetCheckpointSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ResetCheckpointSelection = from.ResetCheckpointSelection
+	}
 }
 
 func (to *PipelineTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PipelineTask_SdkV2) {
+	if !from.FullRefreshSelection.IsNull() && !from.FullRefreshSelection.IsUnknown() && to.FullRefreshSelection.IsNull() && len(from.FullRefreshSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FullRefreshSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FullRefreshSelection = from.FullRefreshSelection
+	}
+	if !from.RefreshFlowSelection.IsNull() && !from.RefreshFlowSelection.IsUnknown() && to.RefreshFlowSelection.IsNull() && len(from.RefreshFlowSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RefreshFlowSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RefreshFlowSelection = from.RefreshFlowSelection
+	}
+	if !from.RefreshSelection.IsNull() && !from.RefreshSelection.IsUnknown() && to.RefreshSelection.IsNull() && len(from.RefreshSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RefreshSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RefreshSelection = from.RefreshSelection
+	}
+	if !from.ResetCheckpointSelection.IsNull() && !from.ResetCheckpointSelection.IsUnknown() && to.ResetCheckpointSelection.IsNull() && len(from.ResetCheckpointSelection.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ResetCheckpointSelection, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ResetCheckpointSelection = from.ResetCheckpointSelection
+	}
 }
 
 func (m PipelineTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
+	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+	attrs["refresh_flow_selection"] = attrs["refresh_flow_selection"].SetOptional()
+	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
+	attrs["reset_checkpoint_selection"] = attrs["reset_checkpoint_selection"].SetOptional()
 
 	return attrs
 }
@@ -10051,7 +10691,13 @@ func (m PipelineTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PipelineTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"full_refresh_selection":     reflect.TypeOf(types.String{}),
+		"parameters":                 reflect.TypeOf(types.String{}),
+		"refresh_flow_selection":     reflect.TypeOf(types.String{}),
+		"refresh_selection":          reflect.TypeOf(types.String{}),
+		"reset_checkpoint_selection": reflect.TypeOf(types.String{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -10061,8 +10707,13 @@ func (m PipelineTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"full_refresh": m.FullRefresh,
-			"pipeline_id":  m.PipelineId,
+			"full_refresh":               m.FullRefresh,
+			"full_refresh_selection":     m.FullRefreshSelection,
+			"parameters":                 m.Parameters,
+			"pipeline_id":                m.PipelineId,
+			"refresh_flow_selection":     m.RefreshFlowSelection,
+			"refresh_selection":          m.RefreshSelection,
+			"reset_checkpoint_selection": m.ResetCheckpointSelection,
 		})
 }
 
@@ -10071,9 +10722,154 @@ func (m PipelineTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"full_refresh": types.BoolType,
-			"pipeline_id":  types.StringType,
+			"full_refresh_selection": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"pipeline_id": types.StringType,
+			"refresh_flow_selection": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"refresh_selection": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"reset_checkpoint_selection": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
+}
+
+// GetFullRefreshSelection returns the value of the FullRefreshSelection field in PipelineTask_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PipelineTask_SdkV2) GetFullRefreshSelection(ctx context.Context) ([]types.String, bool) {
+	if m.FullRefreshSelection.IsNull() || m.FullRefreshSelection.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.FullRefreshSelection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFullRefreshSelection sets the value of the FullRefreshSelection field in PipelineTask_SdkV2.
+func (m *PipelineTask_SdkV2) SetFullRefreshSelection(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["full_refresh_selection"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.FullRefreshSelection = types.ListValueMust(t, vs)
+}
+
+// GetParameters returns the value of the Parameters field in PipelineTask_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PipelineTask_SdkV2) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in PipelineTask_SdkV2.
+func (m *PipelineTask_SdkV2) SetParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Parameters = types.MapValueMust(t, vs)
+}
+
+// GetRefreshFlowSelection returns the value of the RefreshFlowSelection field in PipelineTask_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PipelineTask_SdkV2) GetRefreshFlowSelection(ctx context.Context) ([]types.String, bool) {
+	if m.RefreshFlowSelection.IsNull() || m.RefreshFlowSelection.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.RefreshFlowSelection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRefreshFlowSelection sets the value of the RefreshFlowSelection field in PipelineTask_SdkV2.
+func (m *PipelineTask_SdkV2) SetRefreshFlowSelection(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["refresh_flow_selection"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.RefreshFlowSelection = types.ListValueMust(t, vs)
+}
+
+// GetRefreshSelection returns the value of the RefreshSelection field in PipelineTask_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PipelineTask_SdkV2) GetRefreshSelection(ctx context.Context) ([]types.String, bool) {
+	if m.RefreshSelection.IsNull() || m.RefreshSelection.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.RefreshSelection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRefreshSelection sets the value of the RefreshSelection field in PipelineTask_SdkV2.
+func (m *PipelineTask_SdkV2) SetRefreshSelection(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["refresh_selection"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.RefreshSelection = types.ListValueMust(t, vs)
+}
+
+// GetResetCheckpointSelection returns the value of the ResetCheckpointSelection field in PipelineTask_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PipelineTask_SdkV2) GetResetCheckpointSelection(ctx context.Context) ([]types.String, bool) {
+	if m.ResetCheckpointSelection.IsNull() || m.ResetCheckpointSelection.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.ResetCheckpointSelection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResetCheckpointSelection sets the value of the ResetCheckpointSelection field in PipelineTask_SdkV2.
+func (m *PipelineTask_SdkV2) SetResetCheckpointSelection(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["reset_checkpoint_selection"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ResetCheckpointSelection = types.ListValueMust(t, vs)
 }
 
 type PowerBiModel_SdkV2 struct {
@@ -10363,6 +11159,155 @@ func (m *PowerBiTask_SdkV2) SetTables(ctx context.Context, v []PowerBiTable_SdkV
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tables"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Tables = types.ListValueMust(t, vs)
+}
+
+type PythonOperatorTask_SdkV2 struct {
+	// Fully qualified name of the main class or function. For example,
+	// `my_project.my_function` or `my_project.MyOperator`.
+	Main types.String `tfsdk:"main"`
+	// An ordered list of task parameters. TODO(JOBS-30885): Add limits for
+	// parameters.
+	Parameters types.List `tfsdk:"parameters"`
+}
+
+func (to *PythonOperatorTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PythonOperatorTask_SdkV2) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
+}
+
+func (to *PythonOperatorTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PythonOperatorTask_SdkV2) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
+}
+
+func (m PythonOperatorTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["main"] = attrs["main"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PythonOperatorTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m PythonOperatorTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"parameters": reflect.TypeOf(PythonOperatorTaskParameter_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PythonOperatorTask_SdkV2
+// only implements ToObjectValue() and Type().
+func (m PythonOperatorTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"main":       m.Main,
+			"parameters": m.Parameters,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m PythonOperatorTask_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"main": types.StringType,
+			"parameters": basetypes.ListType{
+				ElemType: PythonOperatorTaskParameter_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetParameters returns the value of the Parameters field in PythonOperatorTask_SdkV2 as
+// a slice of PythonOperatorTaskParameter_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PythonOperatorTask_SdkV2) GetParameters(ctx context.Context) ([]PythonOperatorTaskParameter_SdkV2, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []PythonOperatorTaskParameter_SdkV2
+	d := m.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in PythonOperatorTask_SdkV2.
+func (m *PythonOperatorTask_SdkV2) SetParameters(ctx context.Context, v []PythonOperatorTaskParameter_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Parameters = types.ListValueMust(t, vs)
+}
+
+type PythonOperatorTaskParameter_SdkV2 struct {
+	Name types.String `tfsdk:"name"`
+
+	Value types.String `tfsdk:"value"`
+}
+
+func (to *PythonOperatorTaskParameter_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PythonOperatorTaskParameter_SdkV2) {
+}
+
+func (to *PythonOperatorTaskParameter_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PythonOperatorTaskParameter_SdkV2) {
+}
+
+func (m PythonOperatorTaskParameter_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PythonOperatorTaskParameter.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m PythonOperatorTaskParameter_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PythonOperatorTaskParameter_SdkV2
+// only implements ToObjectValue() and Type().
+func (m PythonOperatorTaskParameter_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":  m.Name,
+			"value": m.Value,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m PythonOperatorTaskParameter_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":  types.StringType,
+			"value": types.StringType,
+		},
+	}
 }
 
 type PythonWheelTask_SdkV2 struct {
@@ -11860,6 +12805,85 @@ func (m *ResolvedParamPairValues_SdkV2) SetParameters(ctx context.Context, v map
 	m.Parameters = types.MapValueMust(t, vs)
 }
 
+type ResolvedPipelineTaskValues_SdkV2 struct {
+	// Key/value-map of parameters passed to the pipeline execution. Limited to
+	// 10k characters in total.
+	Parameters types.Map `tfsdk:"parameters"`
+}
+
+func (to *ResolvedPipelineTaskValues_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResolvedPipelineTaskValues_SdkV2) {
+}
+
+func (to *ResolvedPipelineTaskValues_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ResolvedPipelineTaskValues_SdkV2) {
+}
+
+func (m ResolvedPipelineTaskValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parameters"] = attrs["parameters"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedPipelineTaskValues.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ResolvedPipelineTaskValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"parameters": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedPipelineTaskValues_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ResolvedPipelineTaskValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"parameters": m.Parameters,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ResolvedPipelineTaskValues_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetParameters returns the value of the Parameters field in ResolvedPipelineTaskValues_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ResolvedPipelineTaskValues_SdkV2) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in ResolvedPipelineTaskValues_SdkV2.
+func (m *ResolvedPipelineTaskValues_SdkV2) SetParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Parameters = types.MapValueMust(t, vs)
+}
+
 type ResolvedPythonWheelTaskValues_SdkV2 struct {
 	NamedParameters types.Map `tfsdk:"named_parameters"`
 
@@ -12184,11 +13208,18 @@ func (m *ResolvedStringParamsValues_SdkV2) SetParameters(ctx context.Context, v 
 }
 
 type ResolvedValues_SdkV2 struct {
+	// Resolved values for an AI Runtime task — env_vars with
+	// `{{tasks.<key>.values.<name>}}` references substituted to concrete values
+	// before submission to the training service.
+	AiRuntimeTask types.List `tfsdk:"ai_runtime_task"`
+
 	ConditionTask types.List `tfsdk:"condition_task"`
 
 	DbtTask types.List `tfsdk:"dbt_task"`
 
 	NotebookTask types.List `tfsdk:"notebook_task"`
+
+	PipelineTask types.List `tfsdk:"pipeline_task"`
 
 	PythonWheelTask types.List `tfsdk:"python_wheel_task"`
 
@@ -12206,6 +13237,15 @@ type ResolvedValues_SdkV2 struct {
 }
 
 func (to *ResolvedValues_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResolvedValues_SdkV2) {
+	if !from.AiRuntimeTask.IsNull() && !from.AiRuntimeTask.IsUnknown() {
+		if toAiRuntimeTask, ok := to.GetAiRuntimeTask(ctx); ok {
+			if fromAiRuntimeTask, ok := from.GetAiRuntimeTask(ctx); ok {
+				// Recursively sync the fields of AiRuntimeTask
+				toAiRuntimeTask.SyncFieldsDuringCreateOrUpdate(ctx, fromAiRuntimeTask)
+				to.SetAiRuntimeTask(ctx, toAiRuntimeTask)
+			}
+		}
+	}
 	if !from.ConditionTask.IsNull() && !from.ConditionTask.IsUnknown() {
 		if toConditionTask, ok := to.GetConditionTask(ctx); ok {
 			if fromConditionTask, ok := from.GetConditionTask(ctx); ok {
@@ -12230,6 +13270,15 @@ func (to *ResolvedValues_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 				// Recursively sync the fields of NotebookTask
 				toNotebookTask.SyncFieldsDuringCreateOrUpdate(ctx, fromNotebookTask)
 				to.SetNotebookTask(ctx, toNotebookTask)
+			}
+		}
+	}
+	if !from.PipelineTask.IsNull() && !from.PipelineTask.IsUnknown() {
+		if toPipelineTask, ok := to.GetPipelineTask(ctx); ok {
+			if fromPipelineTask, ok := from.GetPipelineTask(ctx); ok {
+				// Recursively sync the fields of PipelineTask
+				toPipelineTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPipelineTask)
+				to.SetPipelineTask(ctx, toPipelineTask)
 			}
 		}
 	}
@@ -12299,6 +13348,14 @@ func (to *ResolvedValues_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 }
 
 func (to *ResolvedValues_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ResolvedValues_SdkV2) {
+	if !from.AiRuntimeTask.IsNull() && !from.AiRuntimeTask.IsUnknown() {
+		if toAiRuntimeTask, ok := to.GetAiRuntimeTask(ctx); ok {
+			if fromAiRuntimeTask, ok := from.GetAiRuntimeTask(ctx); ok {
+				toAiRuntimeTask.SyncFieldsDuringRead(ctx, fromAiRuntimeTask)
+				to.SetAiRuntimeTask(ctx, toAiRuntimeTask)
+			}
+		}
+	}
 	if !from.ConditionTask.IsNull() && !from.ConditionTask.IsUnknown() {
 		if toConditionTask, ok := to.GetConditionTask(ctx); ok {
 			if fromConditionTask, ok := from.GetConditionTask(ctx); ok {
@@ -12320,6 +13377,14 @@ func (to *ResolvedValues_SdkV2) SyncFieldsDuringRead(ctx context.Context, from R
 			if fromNotebookTask, ok := from.GetNotebookTask(ctx); ok {
 				toNotebookTask.SyncFieldsDuringRead(ctx, fromNotebookTask)
 				to.SetNotebookTask(ctx, toNotebookTask)
+			}
+		}
+	}
+	if !from.PipelineTask.IsNull() && !from.PipelineTask.IsUnknown() {
+		if toPipelineTask, ok := to.GetPipelineTask(ctx); ok {
+			if fromPipelineTask, ok := from.GetPipelineTask(ctx); ok {
+				toPipelineTask.SyncFieldsDuringRead(ctx, fromPipelineTask)
+				to.SetPipelineTask(ctx, toPipelineTask)
 			}
 		}
 	}
@@ -12382,12 +13447,16 @@ func (to *ResolvedValues_SdkV2) SyncFieldsDuringRead(ctx context.Context, from R
 }
 
 func (m ResolvedValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_runtime_task"] = attrs["ai_runtime_task"].SetOptional()
+	attrs["ai_runtime_task"] = attrs["ai_runtime_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["condition_task"] = attrs["condition_task"].SetOptional()
 	attrs["condition_task"] = attrs["condition_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
 	attrs["dbt_task"] = attrs["dbt_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["notebook_task"] = attrs["notebook_task"].SetOptional()
 	attrs["notebook_task"] = attrs["notebook_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["pipeline_task"] = attrs["pipeline_task"].SetOptional()
+	attrs["pipeline_task"] = attrs["pipeline_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["python_wheel_task"] = attrs["python_wheel_task"].SetOptional()
 	attrs["python_wheel_task"] = attrs["python_wheel_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["run_job_task"] = attrs["run_job_task"].SetOptional()
@@ -12415,9 +13484,11 @@ func (m ResolvedValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // SDK values.
 func (m ResolvedValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"ai_runtime_task":   reflect.TypeOf(ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2{}),
 		"condition_task":    reflect.TypeOf(ResolvedConditionTaskValues_SdkV2{}),
 		"dbt_task":          reflect.TypeOf(ResolvedDbtTaskValues_SdkV2{}),
 		"notebook_task":     reflect.TypeOf(ResolvedNotebookTaskValues_SdkV2{}),
+		"pipeline_task":     reflect.TypeOf(ResolvedPipelineTaskValues_SdkV2{}),
 		"python_wheel_task": reflect.TypeOf(ResolvedPythonWheelTaskValues_SdkV2{}),
 		"run_job_task":      reflect.TypeOf(ResolvedRunJobTaskValues_SdkV2{}),
 		"simulation_task":   reflect.TypeOf(ResolvedParamPairValues_SdkV2{}),
@@ -12435,9 +13506,11 @@ func (m ResolvedValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"ai_runtime_task":   m.AiRuntimeTask,
 			"condition_task":    m.ConditionTask,
 			"dbt_task":          m.DbtTask,
 			"notebook_task":     m.NotebookTask,
+			"pipeline_task":     m.PipelineTask,
 			"python_wheel_task": m.PythonWheelTask,
 			"run_job_task":      m.RunJobTask,
 			"simulation_task":   m.SimulationTask,
@@ -12452,6 +13525,9 @@ func (m ResolvedValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m ResolvedValues_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"ai_runtime_task": basetypes.ListType{
+				ElemType: ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2{}.Type(ctx),
+			},
 			"condition_task": basetypes.ListType{
 				ElemType: ResolvedConditionTaskValues_SdkV2{}.Type(ctx),
 			},
@@ -12460,6 +13536,9 @@ func (m ResolvedValues_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"notebook_task": basetypes.ListType{
 				ElemType: ResolvedNotebookTaskValues_SdkV2{}.Type(ctx),
+			},
+			"pipeline_task": basetypes.ListType{
+				ElemType: ResolvedPipelineTaskValues_SdkV2{}.Type(ctx),
 			},
 			"python_wheel_task": basetypes.ListType{
 				ElemType: ResolvedPythonWheelTaskValues_SdkV2{}.Type(ctx),
@@ -12484,6 +13563,32 @@ func (m ResolvedValues_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAiRuntimeTask returns the value of the AiRuntimeTask field in ResolvedValues_SdkV2 as
+// a ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ResolvedValues_SdkV2) GetAiRuntimeTask(ctx context.Context) (ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2, bool) {
+	var e ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2
+	if m.AiRuntimeTask.IsNull() || m.AiRuntimeTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2
+	d := m.AiRuntimeTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAiRuntimeTask sets the value of the AiRuntimeTask field in ResolvedValues_SdkV2.
+func (m *ResolvedValues_SdkV2) SetAiRuntimeTask(ctx context.Context, v ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["ai_runtime_task"]
+	m.AiRuntimeTask = types.ListValueMust(t, vs)
 }
 
 // GetConditionTask returns the value of the ConditionTask field in ResolvedValues_SdkV2 as
@@ -12562,6 +13667,32 @@ func (m *ResolvedValues_SdkV2) SetNotebookTask(ctx context.Context, v ResolvedNo
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
 	m.NotebookTask = types.ListValueMust(t, vs)
+}
+
+// GetPipelineTask returns the value of the PipelineTask field in ResolvedValues_SdkV2 as
+// a ResolvedPipelineTaskValues_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ResolvedValues_SdkV2) GetPipelineTask(ctx context.Context) (ResolvedPipelineTaskValues_SdkV2, bool) {
+	var e ResolvedPipelineTaskValues_SdkV2
+	if m.PipelineTask.IsNull() || m.PipelineTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedPipelineTaskValues_SdkV2
+	d := m.PipelineTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPipelineTask sets the value of the PipelineTask field in ResolvedValues_SdkV2.
+func (m *ResolvedValues_SdkV2) SetPipelineTask(ctx context.Context, v ResolvedPipelineTaskValues_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_task"]
+	m.PipelineTask = types.ListValueMust(t, vs)
 }
 
 // GetPythonWheelTask returns the value of the PythonWheelTask field in ResolvedValues_SdkV2 as
@@ -12746,6 +13877,50 @@ func (m *ResolvedValues_SdkV2) SetSqlTask(ctx context.Context, v ResolvedParamPa
 	m.SqlTask = types.ListValueMust(t, vs)
 }
 
+// Resolved env_vars for an AiRuntimeTask after dynamic-value substitution.
+// Mirrors the task's `resolved_parameters_field` (env_vars) so Jobs can expand
+// `{{tasks.<key>.values.<name>}}` references before submission.
+type ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2 struct {
+}
+
+func (to *ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2) {
+}
+
+func (to *ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2) {
+}
+
+func (m ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedValuesAiRuntimeTaskResolvedValues.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ResolvedValuesAiRuntimeTaskResolvedValues_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 // Run was retrieved successfully
 type Run_SdkV2 struct {
 	// The sequence number of this run attempt for a triggered job run. The
@@ -12879,7 +14054,7 @@ type Run_SdkV2 struct {
 
 	Status types.List `tfsdk:"status"`
 	// The list of tasks performed by the run. Each task has its own `run_id`
-	// which you can use to call `JobsGetOutput` to retrieve the run resutls. If
+	// which you can use to call `JobsGetOutput` to retrieve the run results. If
 	// more than 100 tasks are available, you can paginate through them using
 	// :method:jobs/getrun. Use the `next_page_token` field at the object root
 	// to determine if more results are available.
@@ -13704,7 +14879,7 @@ type RunForEachTask_SdkV2 struct {
 	// an array parameter.
 	Inputs types.String `tfsdk:"inputs"`
 	// Read only field. Populated for GetRun and ListRuns RPC calls and stores
-	// the execution stats of an For each task
+	// the execution stats of a `For each` task.
 	Stats types.List `tfsdk:"stats"`
 	// Configuration for the task that will be run for each element in the array
 	Task types.List `tfsdk:"task"`
@@ -15086,6 +16261,12 @@ func (m RunNowResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Run output was retrieved successfully.
 type RunOutput_SdkV2 struct {
+	// The output of an AiRuntimeTask, if available — MLflow identifiers,
+	// artifact paths, and per-replica allocated compute. Run lifecycle /
+	// termination status lives on the surrounding framework `RunTask.status`
+	// (`runs.proto:RunTask.status` of type `RunStatus`), not on this output.
+	// See `tasks/genai/ai_runtime_task.proto:AiRuntimeTaskOutput`.
+	AiRuntimeTaskOutput types.List `tfsdk:"ai_runtime_task_output"`
 	// The output of an alert task, if available
 	AlertOutput types.List `tfsdk:"alert_output"`
 	// The output of a clean rooms notebook task, if available
@@ -15135,6 +16316,15 @@ type RunOutput_SdkV2 struct {
 }
 
 func (to *RunOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunOutput_SdkV2) {
+	if !from.AiRuntimeTaskOutput.IsNull() && !from.AiRuntimeTaskOutput.IsUnknown() {
+		if toAiRuntimeTaskOutput, ok := to.GetAiRuntimeTaskOutput(ctx); ok {
+			if fromAiRuntimeTaskOutput, ok := from.GetAiRuntimeTaskOutput(ctx); ok {
+				// Recursively sync the fields of AiRuntimeTaskOutput
+				toAiRuntimeTaskOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromAiRuntimeTaskOutput)
+				to.SetAiRuntimeTaskOutput(ctx, toAiRuntimeTaskOutput)
+			}
+		}
+	}
 	if !from.AlertOutput.IsNull() && !from.AlertOutput.IsUnknown() {
 		if toAlertOutput, ok := to.GetAlertOutput(ctx); ok {
 			if fromAlertOutput, ok := from.GetAlertOutput(ctx); ok {
@@ -15228,6 +16418,14 @@ func (to *RunOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 }
 
 func (to *RunOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunOutput_SdkV2) {
+	if !from.AiRuntimeTaskOutput.IsNull() && !from.AiRuntimeTaskOutput.IsUnknown() {
+		if toAiRuntimeTaskOutput, ok := to.GetAiRuntimeTaskOutput(ctx); ok {
+			if fromAiRuntimeTaskOutput, ok := from.GetAiRuntimeTaskOutput(ctx); ok {
+				toAiRuntimeTaskOutput.SyncFieldsDuringRead(ctx, fromAiRuntimeTaskOutput)
+				to.SetAiRuntimeTaskOutput(ctx, toAiRuntimeTaskOutput)
+			}
+		}
+	}
 	if !from.AlertOutput.IsNull() && !from.AlertOutput.IsUnknown() {
 		if toAlertOutput, ok := to.GetAlertOutput(ctx); ok {
 			if fromAlertOutput, ok := from.GetAlertOutput(ctx); ok {
@@ -15311,6 +16509,8 @@ func (to *RunOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunOut
 }
 
 func (m RunOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_runtime_task_output"] = attrs["ai_runtime_task_output"].SetOptional()
+	attrs["ai_runtime_task_output"] = attrs["ai_runtime_task_output"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["alert_output"] = attrs["alert_output"].SetOptional()
 	attrs["alert_output"] = attrs["alert_output"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["clean_rooms_notebook_output"] = attrs["clean_rooms_notebook_output"].SetOptional()
@@ -15349,6 +16549,7 @@ func (m RunOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // SDK values.
 func (m RunOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"ai_runtime_task_output":      reflect.TypeOf(AiRuntimeTaskOutput_SdkV2{}),
 		"alert_output":                reflect.TypeOf(AlertTaskOutput_SdkV2{}),
 		"clean_rooms_notebook_output": reflect.TypeOf(CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2{}),
 		"dashboard_output":            reflect.TypeOf(DashboardTaskOutput_SdkV2{}),
@@ -15369,6 +16570,7 @@ func (m RunOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"ai_runtime_task_output":      m.AiRuntimeTaskOutput,
 			"alert_output":                m.AlertOutput,
 			"clean_rooms_notebook_output": m.CleanRoomsNotebookOutput,
 			"dashboard_output":            m.DashboardOutput,
@@ -15391,6 +16593,9 @@ func (m RunOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m RunOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"ai_runtime_task_output": basetypes.ListType{
+				ElemType: AiRuntimeTaskOutput_SdkV2{}.Type(ctx),
+			},
 			"alert_output": basetypes.ListType{
 				ElemType: AlertTaskOutput_SdkV2{}.Type(ctx),
 			},
@@ -15428,6 +16633,32 @@ func (m RunOutput_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAiRuntimeTaskOutput returns the value of the AiRuntimeTaskOutput field in RunOutput_SdkV2 as
+// a AiRuntimeTaskOutput_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *RunOutput_SdkV2) GetAiRuntimeTaskOutput(ctx context.Context) (AiRuntimeTaskOutput_SdkV2, bool) {
+	var e AiRuntimeTaskOutput_SdkV2
+	if m.AiRuntimeTaskOutput.IsNull() || m.AiRuntimeTaskOutput.IsUnknown() {
+		return e, false
+	}
+	var v []AiRuntimeTaskOutput_SdkV2
+	d := m.AiRuntimeTaskOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAiRuntimeTaskOutput sets the value of the AiRuntimeTaskOutput field in RunOutput_SdkV2.
+func (m *RunOutput_SdkV2) SetAiRuntimeTaskOutput(ctx context.Context, v AiRuntimeTaskOutput_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["ai_runtime_task_output"]
+	m.AiRuntimeTaskOutput = types.ListValueMust(t, vs)
 }
 
 // GetAlertOutput returns the value of the AlertOutput field in RunOutput_SdkV2 as
@@ -16380,6 +17611,9 @@ func (m *RunStatus_SdkV2) SetTerminationDetails(ctx context.Context, v Terminati
 
 // Used when outputting a child run, in GetRun or ListRuns.
 type RunTask_SdkV2 struct {
+	// The task runs a multi-node GPU compute workload on Databricks AI Runtime.
+	// External-facing surface; mirrors the AIR CLI (fka SGCLI) v2 YAML schema.
+	AiRuntimeTask types.List `tfsdk:"ai_runtime_task"`
 	// The task evaluates a Databricks alert and sends notifications to
 	// subscribers when the `alert_task` field is present.
 	AlertTask types.List `tfsdk:"alert_task"`
@@ -16433,6 +17667,9 @@ type RunTask_SdkV2 struct {
 	Description types.String `tfsdk:"description"`
 	// An option to disable auto optimization in serverless
 	DisableAutoOptimization types.Bool `tfsdk:"disable_auto_optimization"`
+	// An optional flag to disable the task. If set to true, the task will not
+	// run even if it is part of a job.
+	Disabled types.Bool `tfsdk:"disabled"`
 	// The actual performance target used by the serverless run during
 	// execution. This can differ from the client-set performance target on the
 	// request depending on whether the performance mode is supported by the job
@@ -16509,6 +17746,8 @@ type RunTask_SdkV2 struct {
 	// The task triggers a Power BI semantic model update when the
 	// `power_bi_task` field is present.
 	PowerBiTask types.List `tfsdk:"power_bi_task"`
+	// The task runs a Python operator task.
+	PythonOperatorTask types.List `tfsdk:"python_operator_task"`
 	// The task runs a Python wheel when the `python_wheel_task` field is
 	// present.
 	PythonWheelTask types.List `tfsdk:"python_wheel_task"`
@@ -16577,6 +17816,15 @@ type RunTask_SdkV2 struct {
 }
 
 func (to *RunTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunTask_SdkV2) {
+	if !from.AiRuntimeTask.IsNull() && !from.AiRuntimeTask.IsUnknown() {
+		if toAiRuntimeTask, ok := to.GetAiRuntimeTask(ctx); ok {
+			if fromAiRuntimeTask, ok := from.GetAiRuntimeTask(ctx); ok {
+				// Recursively sync the fields of AiRuntimeTask
+				toAiRuntimeTask.SyncFieldsDuringCreateOrUpdate(ctx, fromAiRuntimeTask)
+				to.SetAiRuntimeTask(ctx, toAiRuntimeTask)
+			}
+		}
+	}
 	if !from.AlertTask.IsNull() && !from.AlertTask.IsUnknown() {
 		if toAlertTask, ok := to.GetAlertTask(ctx); ok {
 			if fromAlertTask, ok := from.GetAlertTask(ctx); ok {
@@ -16755,6 +18003,15 @@ func (to *RunTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 			}
 		}
 	}
+	if !from.PythonOperatorTask.IsNull() && !from.PythonOperatorTask.IsUnknown() {
+		if toPythonOperatorTask, ok := to.GetPythonOperatorTask(ctx); ok {
+			if fromPythonOperatorTask, ok := from.GetPythonOperatorTask(ctx); ok {
+				// Recursively sync the fields of PythonOperatorTask
+				toPythonOperatorTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPythonOperatorTask)
+				to.SetPythonOperatorTask(ctx, toPythonOperatorTask)
+			}
+		}
+	}
 	if !from.PythonWheelTask.IsNull() && !from.PythonWheelTask.IsUnknown() {
 		if toPythonWheelTask, ok := to.GetPythonWheelTask(ctx); ok {
 			if fromPythonWheelTask, ok := from.GetPythonWheelTask(ctx); ok {
@@ -16848,6 +18105,14 @@ func (to *RunTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 }
 
 func (to *RunTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunTask_SdkV2) {
+	if !from.AiRuntimeTask.IsNull() && !from.AiRuntimeTask.IsUnknown() {
+		if toAiRuntimeTask, ok := to.GetAiRuntimeTask(ctx); ok {
+			if fromAiRuntimeTask, ok := from.GetAiRuntimeTask(ctx); ok {
+				toAiRuntimeTask.SyncFieldsDuringRead(ctx, fromAiRuntimeTask)
+				to.SetAiRuntimeTask(ctx, toAiRuntimeTask)
+			}
+		}
+	}
 	if !from.AlertTask.IsNull() && !from.AlertTask.IsUnknown() {
 		if toAlertTask, ok := to.GetAlertTask(ctx); ok {
 			if fromAlertTask, ok := from.GetAlertTask(ctx); ok {
@@ -17008,6 +18273,14 @@ func (to *RunTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunTask_
 			}
 		}
 	}
+	if !from.PythonOperatorTask.IsNull() && !from.PythonOperatorTask.IsUnknown() {
+		if toPythonOperatorTask, ok := to.GetPythonOperatorTask(ctx); ok {
+			if fromPythonOperatorTask, ok := from.GetPythonOperatorTask(ctx); ok {
+				toPythonOperatorTask.SyncFieldsDuringRead(ctx, fromPythonOperatorTask)
+				to.SetPythonOperatorTask(ctx, toPythonOperatorTask)
+			}
+		}
+	}
 	if !from.PythonWheelTask.IsNull() && !from.PythonWheelTask.IsUnknown() {
 		if toPythonWheelTask, ok := to.GetPythonWheelTask(ctx); ok {
 			if fromPythonWheelTask, ok := from.GetPythonWheelTask(ctx); ok {
@@ -17091,6 +18364,8 @@ func (to *RunTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunTask_
 }
 
 func (m RunTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_runtime_task"] = attrs["ai_runtime_task"].SetOptional()
+	attrs["ai_runtime_task"] = attrs["ai_runtime_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["alert_task"] = attrs["alert_task"].SetOptional()
 	attrs["alert_task"] = attrs["alert_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["attempt_number"] = attrs["attempt_number"].SetOptional()
@@ -17116,6 +18391,7 @@ func (m RunTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["disable_auto_optimization"] = attrs["disable_auto_optimization"].SetOptional()
+	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetComputed()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -17143,6 +18419,8 @@ func (m RunTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["pipeline_task"] = attrs["pipeline_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["power_bi_task"] = attrs["power_bi_task"].SetOptional()
 	attrs["power_bi_task"] = attrs["power_bi_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["python_operator_task"] = attrs["python_operator_task"].SetOptional()
+	attrs["python_operator_task"] = attrs["python_operator_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["python_wheel_task"] = attrs["python_wheel_task"].SetOptional()
 	attrs["python_wheel_task"] = attrs["python_wheel_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["queue_duration"] = attrs["queue_duration"].SetOptional()
@@ -17186,6 +18464,7 @@ func (m RunTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 // SDK values.
 func (m RunTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"ai_runtime_task":           reflect.TypeOf(AiRuntimeTask_SdkV2{}),
 		"alert_task":                reflect.TypeOf(AlertTask_SdkV2{}),
 		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask_SdkV2{}),
 		"cluster_instance":          reflect.TypeOf(ClusterInstance_SdkV2{}),
@@ -17206,6 +18485,7 @@ func (m RunTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]refl
 		"notification_settings":     reflect.TypeOf(TaskNotificationSettings_SdkV2{}),
 		"pipeline_task":             reflect.TypeOf(PipelineTask_SdkV2{}),
 		"power_bi_task":             reflect.TypeOf(PowerBiTask_SdkV2{}),
+		"python_operator_task":      reflect.TypeOf(PythonOperatorTask_SdkV2{}),
 		"python_wheel_task":         reflect.TypeOf(PythonWheelTask_SdkV2{}),
 		"resolved_values":           reflect.TypeOf(ResolvedValues_SdkV2{}),
 		"run_job_task":              reflect.TypeOf(RunJobTask_SdkV2{}),
@@ -17226,6 +18506,7 @@ func (m RunTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"ai_runtime_task":              m.AiRuntimeTask,
 			"alert_task":                   m.AlertTask,
 			"attempt_number":               m.AttemptNumber,
 			"clean_rooms_notebook_task":    m.CleanRoomsNotebookTask,
@@ -17240,6 +18521,7 @@ func (m RunTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"depends_on":                   m.DependsOn,
 			"description":                  m.Description,
 			"disable_auto_optimization":    m.DisableAutoOptimization,
+			"disabled":                     m.Disabled,
 			"effective_performance_target": m.EffectivePerformanceTarget,
 			"email_notifications":          m.EmailNotifications,
 			"end_time":                     m.EndTime,
@@ -17258,6 +18540,7 @@ func (m RunTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"notification_settings":        m.NotificationSettings,
 			"pipeline_task":                m.PipelineTask,
 			"power_bi_task":                m.PowerBiTask,
+			"python_operator_task":         m.PythonOperatorTask,
 			"python_wheel_task":            m.PythonWheelTask,
 			"queue_duration":               m.QueueDuration,
 			"resolved_values":              m.ResolvedValues,
@@ -17285,6 +18568,9 @@ func (m RunTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m RunTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"ai_runtime_task": basetypes.ListType{
+				ElemType: AiRuntimeTask_SdkV2{}.Type(ctx),
+			},
 			"alert_task": basetypes.ListType{
 				ElemType: AlertTask_SdkV2{}.Type(ctx),
 			},
@@ -17319,6 +18605,7 @@ func (m RunTask_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"description":                  types.StringType,
 			"disable_auto_optimization":    types.BoolType,
+			"disabled":                     types.BoolType,
 			"effective_performance_target": types.StringType,
 			"email_notifications": basetypes.ListType{
 				ElemType: JobEmailNotifications_SdkV2{}.Type(ctx),
@@ -17356,6 +18643,9 @@ func (m RunTask_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"power_bi_task": basetypes.ListType{
 				ElemType: PowerBiTask_SdkV2{}.Type(ctx),
+			},
+			"python_operator_task": basetypes.ListType{
+				ElemType: PythonOperatorTask_SdkV2{}.Type(ctx),
 			},
 			"python_wheel_task": basetypes.ListType{
 				ElemType: PythonWheelTask_SdkV2{}.Type(ctx),
@@ -17399,6 +18689,32 @@ func (m RunTask_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAiRuntimeTask returns the value of the AiRuntimeTask field in RunTask_SdkV2 as
+// a AiRuntimeTask_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *RunTask_SdkV2) GetAiRuntimeTask(ctx context.Context) (AiRuntimeTask_SdkV2, bool) {
+	var e AiRuntimeTask_SdkV2
+	if m.AiRuntimeTask.IsNull() || m.AiRuntimeTask.IsUnknown() {
+		return e, false
+	}
+	var v []AiRuntimeTask_SdkV2
+	d := m.AiRuntimeTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAiRuntimeTask sets the value of the AiRuntimeTask field in RunTask_SdkV2.
+func (m *RunTask_SdkV2) SetAiRuntimeTask(ctx context.Context, v AiRuntimeTask_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["ai_runtime_task"]
+	m.AiRuntimeTask = types.ListValueMust(t, vs)
 }
 
 // GetAlertTask returns the value of the AlertTask field in RunTask_SdkV2 as
@@ -17919,6 +19235,32 @@ func (m *RunTask_SdkV2) SetPowerBiTask(ctx context.Context, v PowerBiTask_SdkV2)
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["power_bi_task"]
 	m.PowerBiTask = types.ListValueMust(t, vs)
+}
+
+// GetPythonOperatorTask returns the value of the PythonOperatorTask field in RunTask_SdkV2 as
+// a PythonOperatorTask_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *RunTask_SdkV2) GetPythonOperatorTask(ctx context.Context) (PythonOperatorTask_SdkV2, bool) {
+	var e PythonOperatorTask_SdkV2
+	if m.PythonOperatorTask.IsNull() || m.PythonOperatorTask.IsUnknown() {
+		return e, false
+	}
+	var v []PythonOperatorTask_SdkV2
+	d := m.PythonOperatorTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPythonOperatorTask sets the value of the PythonOperatorTask field in RunTask_SdkV2.
+func (m *RunTask_SdkV2) SetPythonOperatorTask(ctx context.Context, v PythonOperatorTask_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["python_operator_task"]
+	m.PythonOperatorTask = types.ListValueMust(t, vs)
 }
 
 // GetPythonWheelTask returns the value of the PythonWheelTask field in RunTask_SdkV2 as
@@ -20682,6 +22024,9 @@ func (m SubmitRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type SubmitTask_SdkV2 struct {
+	// The task runs a multi-node GPU compute workload on Databricks AI Runtime.
+	// External-facing surface; mirrors the AIR CLI (fka SGCLI) v2 YAML schema.
+	AiRuntimeTask types.List `tfsdk:"ai_runtime_task"`
 	// The task evaluates a Databricks alert and sends notifications to
 	// subscribers when the `alert_task` field is present.
 	AlertTask types.List `tfsdk:"alert_task"`
@@ -20717,6 +22062,9 @@ type SubmitTask_SdkV2 struct {
 	Description types.String `tfsdk:"description"`
 	// An option to disable auto optimization in serverless
 	DisableAutoOptimization types.Bool `tfsdk:"disable_auto_optimization"`
+	// An optional flag to disable the task. If set to true, the task will not
+	// run even if it is part of a job.
+	Disabled types.Bool `tfsdk:"disabled"`
 	// An optional set of email addresses notified when the task run begins or
 	// completes. The default behavior is to not send any emails.
 	EmailNotifications types.List `tfsdk:"email_notifications"`
@@ -20763,6 +22111,8 @@ type SubmitTask_SdkV2 struct {
 	// The task triggers a Power BI semantic model update when the
 	// `power_bi_task` field is present.
 	PowerBiTask types.List `tfsdk:"power_bi_task"`
+	// The task runs a Python operator task.
+	PythonOperatorTask types.List `tfsdk:"python_operator_task"`
 	// The task runs a Python wheel when the `python_wheel_task` field is
 	// present.
 	PythonWheelTask types.List `tfsdk:"python_wheel_task"`
@@ -20803,6 +22153,15 @@ type SubmitTask_SdkV2 struct {
 }
 
 func (to *SubmitTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SubmitTask_SdkV2) {
+	if !from.AiRuntimeTask.IsNull() && !from.AiRuntimeTask.IsUnknown() {
+		if toAiRuntimeTask, ok := to.GetAiRuntimeTask(ctx); ok {
+			if fromAiRuntimeTask, ok := from.GetAiRuntimeTask(ctx); ok {
+				// Recursively sync the fields of AiRuntimeTask
+				toAiRuntimeTask.SyncFieldsDuringCreateOrUpdate(ctx, fromAiRuntimeTask)
+				to.SetAiRuntimeTask(ctx, toAiRuntimeTask)
+			}
+		}
+	}
 	if !from.AlertTask.IsNull() && !from.AlertTask.IsUnknown() {
 		if toAlertTask, ok := to.GetAlertTask(ctx); ok {
 			if fromAlertTask, ok := from.GetAlertTask(ctx); ok {
@@ -20972,6 +22331,15 @@ func (to *SubmitTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 			}
 		}
 	}
+	if !from.PythonOperatorTask.IsNull() && !from.PythonOperatorTask.IsUnknown() {
+		if toPythonOperatorTask, ok := to.GetPythonOperatorTask(ctx); ok {
+			if fromPythonOperatorTask, ok := from.GetPythonOperatorTask(ctx); ok {
+				// Recursively sync the fields of PythonOperatorTask
+				toPythonOperatorTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPythonOperatorTask)
+				to.SetPythonOperatorTask(ctx, toPythonOperatorTask)
+			}
+		}
+	}
 	if !from.PythonWheelTask.IsNull() && !from.PythonWheelTask.IsUnknown() {
 		if toPythonWheelTask, ok := to.GetPythonWheelTask(ctx); ok {
 			if fromPythonWheelTask, ok := from.GetPythonWheelTask(ctx); ok {
@@ -21038,6 +22406,14 @@ func (to *SubmitTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 }
 
 func (to *SubmitTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SubmitTask_SdkV2) {
+	if !from.AiRuntimeTask.IsNull() && !from.AiRuntimeTask.IsUnknown() {
+		if toAiRuntimeTask, ok := to.GetAiRuntimeTask(ctx); ok {
+			if fromAiRuntimeTask, ok := from.GetAiRuntimeTask(ctx); ok {
+				toAiRuntimeTask.SyncFieldsDuringRead(ctx, fromAiRuntimeTask)
+				to.SetAiRuntimeTask(ctx, toAiRuntimeTask)
+			}
+		}
+	}
 	if !from.AlertTask.IsNull() && !from.AlertTask.IsUnknown() {
 		if toAlertTask, ok := to.GetAlertTask(ctx); ok {
 			if fromAlertTask, ok := from.GetAlertTask(ctx); ok {
@@ -21190,6 +22566,14 @@ func (to *SubmitTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Submi
 			}
 		}
 	}
+	if !from.PythonOperatorTask.IsNull() && !from.PythonOperatorTask.IsUnknown() {
+		if toPythonOperatorTask, ok := to.GetPythonOperatorTask(ctx); ok {
+			if fromPythonOperatorTask, ok := from.GetPythonOperatorTask(ctx); ok {
+				toPythonOperatorTask.SyncFieldsDuringRead(ctx, fromPythonOperatorTask)
+				to.SetPythonOperatorTask(ctx, toPythonOperatorTask)
+			}
+		}
+	}
 	if !from.PythonWheelTask.IsNull() && !from.PythonWheelTask.IsUnknown() {
 		if toPythonWheelTask, ok := to.GetPythonWheelTask(ctx); ok {
 			if fromPythonWheelTask, ok := from.GetPythonWheelTask(ctx); ok {
@@ -21249,6 +22633,8 @@ func (to *SubmitTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Submi
 }
 
 func (m SubmitTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_runtime_task"] = attrs["ai_runtime_task"].SetOptional()
+	attrs["ai_runtime_task"] = attrs["ai_runtime_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["alert_task"] = attrs["alert_task"].SetOptional()
 	attrs["alert_task"] = attrs["alert_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].SetOptional()
@@ -21270,6 +22656,7 @@ func (m SubmitTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["disable_auto_optimization"] = attrs["disable_auto_optimization"].SetOptional()
+	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["environment_key"] = attrs["environment_key"].SetOptional()
@@ -21293,6 +22680,8 @@ func (m SubmitTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["pipeline_task"] = attrs["pipeline_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["power_bi_task"] = attrs["power_bi_task"].SetOptional()
 	attrs["power_bi_task"] = attrs["power_bi_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["python_operator_task"] = attrs["python_operator_task"].SetOptional()
+	attrs["python_operator_task"] = attrs["python_operator_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["python_wheel_task"] = attrs["python_wheel_task"].SetOptional()
 	attrs["python_wheel_task"] = attrs["python_wheel_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["retry_on_timeout"] = attrs["retry_on_timeout"].SetOptional()
@@ -21324,6 +22713,7 @@ func (m SubmitTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (m SubmitTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"ai_runtime_task":           reflect.TypeOf(AiRuntimeTask_SdkV2{}),
 		"alert_task":                reflect.TypeOf(AlertTask_SdkV2{}),
 		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask_SdkV2{}),
 		"compute":                   reflect.TypeOf(Compute_SdkV2{}),
@@ -21343,6 +22733,7 @@ func (m SubmitTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]r
 		"notification_settings":     reflect.TypeOf(TaskNotificationSettings_SdkV2{}),
 		"pipeline_task":             reflect.TypeOf(PipelineTask_SdkV2{}),
 		"power_bi_task":             reflect.TypeOf(PowerBiTask_SdkV2{}),
+		"python_operator_task":      reflect.TypeOf(PythonOperatorTask_SdkV2{}),
 		"python_wheel_task":         reflect.TypeOf(PythonWheelTask_SdkV2{}),
 		"run_job_task":              reflect.TypeOf(RunJobTask_SdkV2{}),
 		"spark_jar_task":            reflect.TypeOf(SparkJarTask_SdkV2{}),
@@ -21360,6 +22751,7 @@ func (m SubmitTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"ai_runtime_task":           m.AiRuntimeTask,
 			"alert_task":                m.AlertTask,
 			"clean_rooms_notebook_task": m.CleanRoomsNotebookTask,
 			"compute":                   m.Compute,
@@ -21371,6 +22763,7 @@ func (m SubmitTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"depends_on":                m.DependsOn,
 			"description":               m.Description,
 			"disable_auto_optimization": m.DisableAutoOptimization,
+			"disabled":                  m.Disabled,
 			"email_notifications":       m.EmailNotifications,
 			"environment_key":           m.EnvironmentKey,
 			"existing_cluster_id":       m.ExistingClusterId,
@@ -21385,6 +22778,7 @@ func (m SubmitTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"notification_settings":     m.NotificationSettings,
 			"pipeline_task":             m.PipelineTask,
 			"power_bi_task":             m.PowerBiTask,
+			"python_operator_task":      m.PythonOperatorTask,
 			"python_wheel_task":         m.PythonWheelTask,
 			"retry_on_timeout":          m.RetryOnTimeout,
 			"run_if":                    m.RunIf,
@@ -21403,6 +22797,9 @@ func (m SubmitTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m SubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"ai_runtime_task": basetypes.ListType{
+				ElemType: AiRuntimeTask_SdkV2{}.Type(ctx),
+			},
 			"alert_task": basetypes.ListType{
 				ElemType: AlertTask_SdkV2{}.Type(ctx),
 			},
@@ -21432,6 +22829,7 @@ func (m SubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"description":               types.StringType,
 			"disable_auto_optimization": types.BoolType,
+			"disabled":                  types.BoolType,
 			"email_notifications": basetypes.ListType{
 				ElemType: JobEmailNotifications_SdkV2{}.Type(ctx),
 			},
@@ -21466,6 +22864,9 @@ func (m SubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
 			"power_bi_task": basetypes.ListType{
 				ElemType: PowerBiTask_SdkV2{}.Type(ctx),
 			},
+			"python_operator_task": basetypes.ListType{
+				ElemType: PythonOperatorTask_SdkV2{}.Type(ctx),
+			},
 			"python_wheel_task": basetypes.ListType{
 				ElemType: PythonWheelTask_SdkV2{}.Type(ctx),
 			},
@@ -21493,6 +22894,32 @@ func (m SubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAiRuntimeTask returns the value of the AiRuntimeTask field in SubmitTask_SdkV2 as
+// a AiRuntimeTask_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SubmitTask_SdkV2) GetAiRuntimeTask(ctx context.Context) (AiRuntimeTask_SdkV2, bool) {
+	var e AiRuntimeTask_SdkV2
+	if m.AiRuntimeTask.IsNull() || m.AiRuntimeTask.IsUnknown() {
+		return e, false
+	}
+	var v []AiRuntimeTask_SdkV2
+	d := m.AiRuntimeTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAiRuntimeTask sets the value of the AiRuntimeTask field in SubmitTask_SdkV2.
+func (m *SubmitTask_SdkV2) SetAiRuntimeTask(ctx context.Context, v AiRuntimeTask_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["ai_runtime_task"]
+	m.AiRuntimeTask = types.ListValueMust(t, vs)
 }
 
 // GetAlertTask returns the value of the AlertTask field in SubmitTask_SdkV2 as
@@ -21987,6 +23414,32 @@ func (m *SubmitTask_SdkV2) SetPowerBiTask(ctx context.Context, v PowerBiTask_Sdk
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["power_bi_task"]
 	m.PowerBiTask = types.ListValueMust(t, vs)
+}
+
+// GetPythonOperatorTask returns the value of the PythonOperatorTask field in SubmitTask_SdkV2 as
+// a PythonOperatorTask_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SubmitTask_SdkV2) GetPythonOperatorTask(ctx context.Context) (PythonOperatorTask_SdkV2, bool) {
+	var e PythonOperatorTask_SdkV2
+	if m.PythonOperatorTask.IsNull() || m.PythonOperatorTask.IsUnknown() {
+		return e, false
+	}
+	var v []PythonOperatorTask_SdkV2
+	d := m.PythonOperatorTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPythonOperatorTask sets the value of the PythonOperatorTask field in SubmitTask_SdkV2.
+func (m *SubmitTask_SdkV2) SetPythonOperatorTask(ctx context.Context, v PythonOperatorTask_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["python_operator_task"]
+	m.PythonOperatorTask = types.ListValueMust(t, vs)
 }
 
 // GetPythonWheelTask returns the value of the PythonWheelTask field in SubmitTask_SdkV2 as
@@ -22576,6 +24029,9 @@ func (m *TableUpdateTriggerConfiguration_SdkV2) SetTableNames(ctx context.Contex
 }
 
 type Task_SdkV2 struct {
+	// The task runs a multi-node GPU compute workload on Databricks AI Runtime.
+	// External-facing surface; mirrors the AIR CLI (fka SGCLI) v2 YAML schema.
+	AiRuntimeTask types.List `tfsdk:"ai_runtime_task"`
 	// The task evaluates a Databricks alert and sends notifications to
 	// subscribers when the `alert_task` field is present.
 	AlertTask types.List `tfsdk:"alert_task"`
@@ -22664,6 +24120,8 @@ type Task_SdkV2 struct {
 	// The task triggers a Power BI semantic model update when the
 	// `power_bi_task` field is present.
 	PowerBiTask types.List `tfsdk:"power_bi_task"`
+	// The task runs a Python operator task.
+	PythonOperatorTask types.List `tfsdk:"python_operator_task"`
 	// The task runs a Python wheel when the `python_wheel_task` field is
 	// present.
 	PythonWheelTask types.List `tfsdk:"python_wheel_task"`
@@ -22709,6 +24167,15 @@ type Task_SdkV2 struct {
 }
 
 func (to *Task_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Task_SdkV2) {
+	if !from.AiRuntimeTask.IsNull() && !from.AiRuntimeTask.IsUnknown() {
+		if toAiRuntimeTask, ok := to.GetAiRuntimeTask(ctx); ok {
+			if fromAiRuntimeTask, ok := from.GetAiRuntimeTask(ctx); ok {
+				// Recursively sync the fields of AiRuntimeTask
+				toAiRuntimeTask.SyncFieldsDuringCreateOrUpdate(ctx, fromAiRuntimeTask)
+				to.SetAiRuntimeTask(ctx, toAiRuntimeTask)
+			}
+		}
+	}
 	if !from.AlertTask.IsNull() && !from.AlertTask.IsUnknown() {
 		if toAlertTask, ok := to.GetAlertTask(ctx); ok {
 			if fromAlertTask, ok := from.GetAlertTask(ctx); ok {
@@ -22874,6 +24341,15 @@ func (to *Task_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from T
 			}
 		}
 	}
+	if !from.PythonOperatorTask.IsNull() && !from.PythonOperatorTask.IsUnknown() {
+		if toPythonOperatorTask, ok := to.GetPythonOperatorTask(ctx); ok {
+			if fromPythonOperatorTask, ok := from.GetPythonOperatorTask(ctx); ok {
+				// Recursively sync the fields of PythonOperatorTask
+				toPythonOperatorTask.SyncFieldsDuringCreateOrUpdate(ctx, fromPythonOperatorTask)
+				to.SetPythonOperatorTask(ctx, toPythonOperatorTask)
+			}
+		}
+	}
 	if !from.PythonWheelTask.IsNull() && !from.PythonWheelTask.IsUnknown() {
 		if toPythonWheelTask, ok := to.GetPythonWheelTask(ctx); ok {
 			if fromPythonWheelTask, ok := from.GetPythonWheelTask(ctx); ok {
@@ -22940,6 +24416,14 @@ func (to *Task_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from T
 }
 
 func (to *Task_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Task_SdkV2) {
+	if !from.AiRuntimeTask.IsNull() && !from.AiRuntimeTask.IsUnknown() {
+		if toAiRuntimeTask, ok := to.GetAiRuntimeTask(ctx); ok {
+			if fromAiRuntimeTask, ok := from.GetAiRuntimeTask(ctx); ok {
+				toAiRuntimeTask.SyncFieldsDuringRead(ctx, fromAiRuntimeTask)
+				to.SetAiRuntimeTask(ctx, toAiRuntimeTask)
+			}
+		}
+	}
 	if !from.AlertTask.IsNull() && !from.AlertTask.IsUnknown() {
 		if toAlertTask, ok := to.GetAlertTask(ctx); ok {
 			if fromAlertTask, ok := from.GetAlertTask(ctx); ok {
@@ -23088,6 +24572,14 @@ func (to *Task_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Task_SdkV2)
 			}
 		}
 	}
+	if !from.PythonOperatorTask.IsNull() && !from.PythonOperatorTask.IsUnknown() {
+		if toPythonOperatorTask, ok := to.GetPythonOperatorTask(ctx); ok {
+			if fromPythonOperatorTask, ok := from.GetPythonOperatorTask(ctx); ok {
+				toPythonOperatorTask.SyncFieldsDuringRead(ctx, fromPythonOperatorTask)
+				to.SetPythonOperatorTask(ctx, toPythonOperatorTask)
+			}
+		}
+	}
 	if !from.PythonWheelTask.IsNull() && !from.PythonWheelTask.IsUnknown() {
 		if toPythonWheelTask, ok := to.GetPythonWheelTask(ctx); ok {
 			if fromPythonWheelTask, ok := from.GetPythonWheelTask(ctx); ok {
@@ -23147,6 +24639,8 @@ func (to *Task_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Task_SdkV2)
 }
 
 func (m Task_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_runtime_task"] = attrs["ai_runtime_task"].SetOptional()
+	attrs["ai_runtime_task"] = attrs["ai_runtime_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["alert_task"] = attrs["alert_task"].SetOptional()
 	attrs["alert_task"] = attrs["alert_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].SetOptional()
@@ -23191,6 +24685,8 @@ func (m Task_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["pipeline_task"] = attrs["pipeline_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["power_bi_task"] = attrs["power_bi_task"].SetOptional()
 	attrs["power_bi_task"] = attrs["power_bi_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["python_operator_task"] = attrs["python_operator_task"].SetOptional()
+	attrs["python_operator_task"] = attrs["python_operator_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["python_wheel_task"] = attrs["python_wheel_task"].SetOptional()
 	attrs["python_wheel_task"] = attrs["python_wheel_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["retry_on_timeout"] = attrs["retry_on_timeout"].SetOptional()
@@ -23222,6 +24718,7 @@ func (m Task_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 // SDK values.
 func (m Task_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"ai_runtime_task":           reflect.TypeOf(AiRuntimeTask_SdkV2{}),
 		"alert_task":                reflect.TypeOf(AlertTask_SdkV2{}),
 		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask_SdkV2{}),
 		"compute":                   reflect.TypeOf(Compute_SdkV2{}),
@@ -23241,6 +24738,7 @@ func (m Task_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 		"notification_settings":     reflect.TypeOf(TaskNotificationSettings_SdkV2{}),
 		"pipeline_task":             reflect.TypeOf(PipelineTask_SdkV2{}),
 		"power_bi_task":             reflect.TypeOf(PowerBiTask_SdkV2{}),
+		"python_operator_task":      reflect.TypeOf(PythonOperatorTask_SdkV2{}),
 		"python_wheel_task":         reflect.TypeOf(PythonWheelTask_SdkV2{}),
 		"run_job_task":              reflect.TypeOf(RunJobTask_SdkV2{}),
 		"spark_jar_task":            reflect.TypeOf(SparkJarTask_SdkV2{}),
@@ -23258,6 +24756,7 @@ func (m Task_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"ai_runtime_task":           m.AiRuntimeTask,
 			"alert_task":                m.AlertTask,
 			"clean_rooms_notebook_task": m.CleanRoomsNotebookTask,
 			"compute":                   m.Compute,
@@ -23285,6 +24784,7 @@ func (m Task_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"notification_settings":     m.NotificationSettings,
 			"pipeline_task":             m.PipelineTask,
 			"power_bi_task":             m.PowerBiTask,
+			"python_operator_task":      m.PythonOperatorTask,
 			"python_wheel_task":         m.PythonWheelTask,
 			"retry_on_timeout":          m.RetryOnTimeout,
 			"run_if":                    m.RunIf,
@@ -23303,6 +24803,9 @@ func (m Task_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Task_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"ai_runtime_task": basetypes.ListType{
+				ElemType: AiRuntimeTask_SdkV2{}.Type(ctx),
+			},
 			"alert_task": basetypes.ListType{
 				ElemType: AlertTask_SdkV2{}.Type(ctx),
 			},
@@ -23368,6 +24871,9 @@ func (m Task_SdkV2) Type(ctx context.Context) attr.Type {
 			"power_bi_task": basetypes.ListType{
 				ElemType: PowerBiTask_SdkV2{}.Type(ctx),
 			},
+			"python_operator_task": basetypes.ListType{
+				ElemType: PythonOperatorTask_SdkV2{}.Type(ctx),
+			},
 			"python_wheel_task": basetypes.ListType{
 				ElemType: PythonWheelTask_SdkV2{}.Type(ctx),
 			},
@@ -23395,6 +24901,32 @@ func (m Task_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAiRuntimeTask returns the value of the AiRuntimeTask field in Task_SdkV2 as
+// a AiRuntimeTask_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Task_SdkV2) GetAiRuntimeTask(ctx context.Context) (AiRuntimeTask_SdkV2, bool) {
+	var e AiRuntimeTask_SdkV2
+	if m.AiRuntimeTask.IsNull() || m.AiRuntimeTask.IsUnknown() {
+		return e, false
+	}
+	var v []AiRuntimeTask_SdkV2
+	d := m.AiRuntimeTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAiRuntimeTask sets the value of the AiRuntimeTask field in Task_SdkV2.
+func (m *Task_SdkV2) SetAiRuntimeTask(ctx context.Context, v AiRuntimeTask_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["ai_runtime_task"]
+	m.AiRuntimeTask = types.ListValueMust(t, vs)
 }
 
 // GetAlertTask returns the value of the AlertTask field in Task_SdkV2 as
@@ -23889,6 +25421,32 @@ func (m *Task_SdkV2) SetPowerBiTask(ctx context.Context, v PowerBiTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["power_bi_task"]
 	m.PowerBiTask = types.ListValueMust(t, vs)
+}
+
+// GetPythonOperatorTask returns the value of the PythonOperatorTask field in Task_SdkV2 as
+// a PythonOperatorTask_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Task_SdkV2) GetPythonOperatorTask(ctx context.Context) (PythonOperatorTask_SdkV2, bool) {
+	var e PythonOperatorTask_SdkV2
+	if m.PythonOperatorTask.IsNull() || m.PythonOperatorTask.IsUnknown() {
+		return e, false
+	}
+	var v []PythonOperatorTask_SdkV2
+	d := m.PythonOperatorTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPythonOperatorTask sets the value of the PythonOperatorTask field in Task_SdkV2.
+func (m *Task_SdkV2) SetPythonOperatorTask(ctx context.Context, v PythonOperatorTask_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["python_operator_task"]
+	m.PythonOperatorTask = types.ListValueMust(t, vs)
 }
 
 // GetPythonWheelTask returns the value of the PythonWheelTask field in Task_SdkV2 as

@@ -40,8 +40,6 @@ The following arguments are supported:
 * `parent` (string, required) - The parent resource. Format: accounts/{account_id}
 * `regions` (list of string, required) - List of all regions participating in this failover group
 * `workspace_sets` (list of WorkspaceSet, required) - Workspace sets, each containing workspaces that replicate to each other
-* `etag` (string, optional) - Opaque version string for optimistic locking. Server-generated, returned in responses.
-  Must be provided on Update requests to prevent concurrent modifications
 * `unity_catalog_assets` (UcReplicationConfig, optional) - Unity Catalog replication configuration
 
 ### LocationMapping
@@ -63,9 +61,10 @@ The following arguments are supported:
 
 ### WorkspaceSet
 * `name` (string, required) - Resource name for this workspace set
-* `replicate_workspace_assets` (boolean, required) - Whether to enable control plane DR (notebooks, jobs, clusters, etc.) for this set
 * `workspace_ids` (list of string, required) - Workspace IDs in this set. The system derives and validates regions.
   All workspaces must be in the Mission Critical tier
+* `replicate_workspace_assets` (boolean, optional) - Whether to enable control plane DR (notebooks, jobs, clusters, etc.) for this set.
+  Defaults to false
 * `stable_url_names` (list of string, optional) - Resource names of stable URLs associated with this workspace set.
   Format: accounts/{account_id}/stable-urls/{stable_url_id}.
   The referenced stable URLs must already exist (via CreateStableUrl)
@@ -75,6 +74,7 @@ In addition to the above arguments, the following attributes are exported:
 * `create_time` (string) - Time at which this failover group was created
 * `effective_primary_region` (string) - Current effective primary region. Replication flows FROM workspaces in this region.
   Changes after a successful failover
+* `etag` (string) - Opaque version string for optimistic locking. Server-generated and returned in responses
 * `name` (string) - Fully qualified resource name in the format
   accounts/{account_id}/failover-groups/{failover_group_id}
 * `replication_point` (string) - The latest point in time to which data has been replicated

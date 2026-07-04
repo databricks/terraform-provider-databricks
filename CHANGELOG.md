@@ -1,5 +1,55 @@
 # Version changelog
 
+## Release v1.120.0 (2026-07-01)
+
+### New Features and Improvements
+* Add resource and data source for `databricks_postgres_data_api`.
+
+* Deprecate the SDKv2 fallback implementations of `databricks_library`, `databricks_quality_monitor`, and `databricks_share` resources, and the `databricks_share`, `databricks_shares`, and `databricks_volumes` data sources. These resources have been served by the Plugin Framework by default since their migration; the SDKv2 implementations remain only as opt-in fallbacks via the `USE_SDK_V2_RESOURCES` / `USE_SDK_V2_DATA_SOURCES` environment variables. Setting either environment variable for any of these names now emits a runtime warning (visible with `TF_LOG=WARN` or higher), and the SDKv2 implementations will be removed in the next major release of the provider.
+
+### Bug Fixes
+
+* Fix permanent permissions drift when `user_name` casing in `databricks_permissions` `access_control` blocks differs from the API response ([#5757](hattps://github.com/databricks/terraform-provider-databricks/issues/5757)).
+* Allow setting `user_api_scopes = []` on `databricks_app` to disable OBO (On-Behalf-Of) user authorization ([#5834](https://github.com/databricks/terraform-provider-databricks/pull/5834)).
+
+  The Apps API omits `user_api_scopes` from its response when OBO is inactive, so a configured empty list previously failed with `Provider produced inconsistent result after apply`. The provider now preserves a configured empty list in state, mirroring the reconciliation used by `databricks_app_space`.
+
+### Internal Changes
+
+* Make notification destination acceptance tests robust to the eventual consistency of the notification destinations list API.
+
+
+## Release v1.119.0 (2026-06-24)
+
+### Documentation
+
+* Document that read-only workspace bindings aren't applicable for non-catalog objects ([#5611](https://github.com/databricks/terraform-provider-databricks/pull/5611))
+
+### Internal Changes
+* Run unit tests offline from a pre-warmed Go module cache for PRs that cannot authenticate to the internal Go module proxy (fork and Dependabot PRs), populated by the new "Warm Go Cache" workflow.
+
+
+## Release v1.118.0 (2026-06-17)
+
+### New Features and Improvements
+* Add resource and data sources for `databricks_ai_search_endpoint`.
+* Add resource and data sources for `databricks_ai_search_index`.
+
+### Bug Fixes
+* Fixed `databricks_instance_pool` ignoring `enable_elastic_disk = false` due to `omitempty` JSON tag, which caused an infinite plan/replace cycle ([#5802](https://github.com/databricks/terraform-provider-databricks/pull/5802)).
+
+* Fix `databricks_entitlements` to honor `provider_config { workspace_id }` when used with an account-level provider ([#5680](https://github.com/databricks/terraform-provider-databricks/issues/5680)).
+* Fix spurious `account_id` drift on `databricks_mws_ncc_private_endpoint_rule` ([#5347](https://github.com/databricks/terraform-provider-databricks/issues/5347)). The backend echoes `account_id` on read; the schema previously marked it as a plain `Optional` attribute, so once it landed in state (for example via `terraform import`) the next plan reported `account_id = "..." -> null` and a subsequent apply failed with `cannot update mws ncc private endpoint rule: Update mask must be specified.`. Marking `account_id` as `Computed` (matching the sibling `databricks_mws_network_connectivity_config` resource) preserves the server-provided value across refreshes and eliminates the spurious in-place update.
+* Fixed `databricks_mws_workspaces` failing to update `private_access_settings_id` and other fields on GCP workspaces ([#5430](https://github.com/databricks/terraform-provider-databricks/issues/5430)).
+
+### Documentation
+* Added `disabled` field to `task` block in `databricks_job` resource, allowing individual tasks to be disabled ([#5767](https://github.com/databricks/terraform-provider-databricks/pull/5767)).
+
+### Exporter
+
+* Rewrote Exporter logging so it works with Databricks Go SDK logging ([#5805](https://github.com/databricks/terraform-provider-databricks/pull/5805)).
+
+
 ## Release v1.117.0 (2026-06-03)
 
 ### Bug Fixes

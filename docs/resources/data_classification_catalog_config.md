@@ -51,8 +51,10 @@ The following arguments are supported:
 * `parent` (string, required) - Parent resource in the format: catalogs/{catalog_name}
 * `auto_tag_configs` (list of AutoTaggingConfig, optional) - List of auto-tagging configurations for this catalog.
   Empty list means no auto-tagging is enabled
-* `included_schemas` (CatalogConfigSchemaNames, optional) - Schemas to include in the scan. Empty list is not supported as it results in a no-op
-  scan. If `included_schemas` is not set, all schemas are scanned
+* `included_schemas` (CatalogConfigSchemaNames, optional) - Schemas to include in the scan, each named relative to the parent catalog.
+  If specified, only listed schemas will be scanned.
+  Mutually exclusive with `excluded_schemas`: only one may be set per request.
+  If neither `included_schemas` nor `excluded_schemas` is set, all schemas are scanned
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -64,7 +66,7 @@ The following arguments are supported:
   "class.location"); for custom classes it is a user-defined governance tag key
 
 ### CatalogConfigSchemaNames
-* `names` (list of string, required)
+* `names` (list of string, required) - Schema names, each relative to the parent catalog. Must not be empty
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

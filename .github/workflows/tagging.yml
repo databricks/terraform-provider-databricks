@@ -66,7 +66,7 @@ jobs:
           git config user.email "DECO-SDK-Tagging[bot]@users.noreply.github.com"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4.2.0
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
 
       - name: Run script
         env:
@@ -82,7 +82,7 @@ jobs:
 
       - name: Upload created tags artifact
         if: always()
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: created-tags
           path: created_tags.json

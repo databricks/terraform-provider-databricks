@@ -167,6 +167,14 @@ Note: in a real setup, the `application` role would also need `GRANT` privileges
 The following arguments are supported:
 * `parent` (string, required) - The Branch where this Role exists.
   Format: projects/{project_id}/branches/{branch_id}
+* `replace_existing` (boolean, optional) - If true, update the role if it already exists instead of returning an
+  error.
+  
+  When the role already exists, the provided `role` spec fully replaces the
+  existing one: `membership_roles` is overwritten, not merged. Leaving
+  `membership_roles` empty clears all of the role's existing memberships,
+  including `DATABRICKS_SUPERUSER`. Always send the complete desired list of
+  memberships when using this field
 * `spec` (RoleRoleSpec, optional) - The spec contains the role configuration, including identity type, authentication method, and role attributes
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 

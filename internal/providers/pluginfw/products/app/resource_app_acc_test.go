@@ -200,6 +200,53 @@ func TestAccAppResource_NoCompute(t *testing.T) {
 	})
 }
 
+// TestAccAppResource_EmptyUserApiScopes is a regression test for ES-1857512 / #4760:
+// setting user_api_scopes = [] (to disable OBO authorization) must not produce
+// "inconsistent result after apply" or a perpetual diff, even though the Apps API omits
+// user_api_scopes from its response when OBO is inactive.
+func TestAccAppResource_EmptyUserApiScopes(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("not available on GCP")
+	}
+	template := `
+	resource "databricks_secret_scope" "this" {
+		name = "tf-{var.STICKY_RANDOM}"
+	}
+
+	resource "databricks_secret" "this" {
+	    scope = databricks_secret_scope.this.name
+		key = "tf-{var.STICKY_RANDOM}"
+		string_value = "secret"
+	}
+	resource "databricks_app" "this" {
+		no_compute      = true
+		name            = "tf-{var.STICKY_RANDOM}"
+		description     = "empty user_api_scopes"
+		user_api_scopes = []
+		resources = [{
+			name = "secret"
+			description = "secret for app"
+			secret = {
+				scope = databricks_secret_scope.this.name
+				key = databricks_secret.this.key
+				permission = "MANAGE"
+			}
+		}]
+	}`
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: template,
+		Check: func(s *terraform.State) error {
+			// State must hold a known empty list (count "0"), not null/absent.
+			assert.Equal(t, "0", s.RootModule().Resources["databricks_app.this"].Primary.Attributes["user_api_scopes.#"])
+			return nil
+		},
+	}, acceptance.Step{
+		// Re-applying the same config must be a no-op (no perpetual diff).
+		Template: template,
+	})
+}
+
 var deletedOutsideTemplate = `
 	resource "databricks_secret_scope" "this" {
 		name = "tf-{var.STICKY_RANDOM}"

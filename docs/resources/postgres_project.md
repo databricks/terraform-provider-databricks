@@ -140,6 +140,9 @@ resource "databricks_postgres_branch" "dev" {
 ## Arguments
 The following arguments are supported:
 * `project_id` (string, required) - The part of the name, chosen by the user when the resource was created
+* `initial_branch_spec` (InitialBranchSpec, optional) - Configuration for the initial default branch created as part of project creation.
+  Allows overriding branch protection. These settings only apply at creation time
+  and do not affect resources created after project creation
 * `initial_endpoint_spec` (InitialEndpointSpec, optional) - Configuration settings for the initial Read/Write endpoint created inside the initial branch for a newly
   created project. If omitted, the initial endpoint created will have default settings, without high availability
   configured. This field does not apply to any endpoints created after project creation. Use
@@ -161,8 +164,19 @@ The following arguments are supported:
 * `enable_readable_secondaries` (boolean, optional) - Whether to allow read-only connections to read-write endpoints. Only relevant for read-write endpoints where
   size.max > 1
 
+### InitialBranchSpec
+* `is_protected` (boolean, optional) - Whether the initial default branch should be protected from deletion
+
 ### InitialEndpointSpec
+* `autoscaling_limit_max_cu` (number, optional) - The maximum number of Compute Units for the initial endpoint
+* `autoscaling_limit_min_cu` (number, optional) - The minimum number of Compute Units for the initial endpoint
 * `group` (EndpointGroupSpec, optional) - Settings for HA configuration of the endpoint
+* `no_suspension` (boolean, optional) - When set to true, explicitly disables automatic suspension (never suspend).
+  Should be set to true when provided.
+  Mutually exclusive with `suspend_timeout_duration`
+* `suspend_timeout_duration` (string, optional) - Duration of inactivity after which the initial endpoint is automatically suspended.
+  If specified, should be between 60s and 604800s (1 minute to 1 week).
+  Mutually exclusive with `no_suspension`
 
 ### ProjectCustomTag
 * `key` (string, optional) - The key of the custom tag
@@ -210,6 +224,7 @@ In addition to the above arguments, the following attributes are exported:
 ### ProjectStatus
 * `branch_logical_size_limit_bytes` (integer) - The logical size limit for a branch
 * `budget_policy_id` (string) - The budget policy that is applied to the project
+* `compute_last_active_time` (string) - The most recent time when any endpoint of this project was active
 * `custom_tags` (list of ProjectCustomTag) - The effective custom tags associated with the project
 * `default_branch` (string) - The full resource path of the default branch of the project
 * `default_endpoint_settings` (ProjectDefaultEndpointSettings) - The effective default endpoint settings

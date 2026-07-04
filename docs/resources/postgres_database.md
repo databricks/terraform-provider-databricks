@@ -124,6 +124,8 @@ resource "databricks_postgres_database" "application2" {
 The following arguments are supported:
 * `parent` (string, required) - The branch containing this database.
   Format: projects/{project_id}/branches/{branch_id}
+* `replace_existing` (boolean, optional) - If true, update the database if it already exists instead of returning an
+  error
 * `spec` (DatabaseDatabaseSpec, optional) - The desired state of the Database
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 

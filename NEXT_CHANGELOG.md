@@ -1,6 +1,6 @@
 # NEXT CHANGELOG
 
-## Release v1.119.0
+## Release v1.121.0
 
 ### Breaking Changes
 
@@ -12,6 +12,10 @@
 
 ### Documentation
 
+* Added an example to `databricks_budget` for creating budgets to control Genie usage costs ([#5817](https://github.com/databricks/terraform-provider-databricks/pull/5817)).
+
 ### Exporter
+
+* Generate code in `import.sh` more safely ([#5848](hattps://github.com/databricks/terraform-provider-databricks/issues/5848)).
 
 ### Internal Changes

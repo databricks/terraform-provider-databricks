@@ -5,6 +5,7 @@ import (
 	"log"
 	"regexp"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -290,12 +291,26 @@ func (r *resource) String() string {
 	return fmt.Sprintf("%s[%s] (%s: %s)", r.Resource, n, k, v)
 }
 
+// shellQuote wraps s in POSIX single quotes so that a shell treats it as a
+// literal string. This prevents command substitution ($(...), backticks),
+// variable expansion (${...}) and interpretation of any other metacharacters
+// when the generated import.sh is executed. Embedded single quotes are escaped
+// as '\”. Attacker-controlled values (e.g. workspace object paths) end up in
+// r.ID, so the ID must always be quoted before it is written to import.sh.
+func shellQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
 func (r *resource) ImportCommand(ic *importContext) string {
 	m := ""
 	if ic.Module != "" {
 		m = ic.Module + "."
 	}
-	return fmt.Sprintf(`terraform import %s%s.%s "%s"`, m, r.Resource, r.Name, r.ID)
+	// r.Resource and r.Name are normalized identifiers (see nameNormalizationRegex),
+	// so only r.ID is attacker-controlled and needs shell escaping. Keeping the
+	// resource address unquoted also preserves the whitespace-split parsing in
+	// writeShellImports used for incremental/deleted-resource handling.
+	return fmt.Sprintf("terraform import %s%s.%s %s", m, r.Resource, r.Name, shellQuote(r.ID))
 }
 
 func (r *resource) ImportResource(ic *importContext) {

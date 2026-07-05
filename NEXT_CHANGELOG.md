@@ -23,3 +23,5 @@
 * Generate code in `import.sh` more safely ([#5848](hattps://github.com/databricks/terraform-provider-databricks/issues/5848)).
 
 ### Internal Changes
+
+* Deprecate `instance_profiles` attribute, and replace it with `roles` in `databricks_group` data source ([#5086](https://github.com/databricks/terraform-provider-databricks/pull/5086))

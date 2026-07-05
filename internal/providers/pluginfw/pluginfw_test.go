@@ -33,7 +33,7 @@ func TestGetPluginFrameworkResources_EnvVarFallbackEmitsWarning(t *testing.T) {
 	buf := captureFallbackWarnings(t)
 	t.Setenv("USE_SDK_V2_RESOURCES", "databricks_library")
 
-	got := getPluginFrameworkResourcesToRegister(nil)
+	got := getPluginFrameworkResourcesToRegister(nil, nil)
 
 	for _, fn := range got {
 		assert.NotEqual(t, "databricks_library", getResourceName(fn),
@@ -47,7 +47,7 @@ func TestGetPluginFrameworkResources_EnvVarFallbackEmitsWarning(t *testing.T) {
 func TestGetPluginFrameworkDataSources_FallbackOptionEmitsWarning(t *testing.T) {
 	buf := captureFallbackWarnings(t)
 
-	got := getPluginFrameworkDataSourcesToRegister([]string{"databricks_volumes"})
+	got := getPluginFrameworkDataSourcesToRegister([]string{"databricks_volumes"}, nil)
 
 	for _, fn := range got {
 		assert.NotEqual(t, "databricks_volumes", getDataSourceName(fn),
@@ -60,7 +60,7 @@ func TestGetPluginFrameworkDataSources_FallbackOptionEmitsWarning(t *testing.T) 
 func TestGetPluginFrameworkResources_NoFallbackNoWarning(t *testing.T) {
 	buf := captureFallbackWarnings(t)
 
-	_ = getPluginFrameworkResourcesToRegister(nil)
+	_ = getPluginFrameworkResourcesToRegister(nil, nil)
 
 	assert.Empty(t, buf.String(), "no warning should be emitted when no fallback is configured")
 }

@@ -1,11 +1,12 @@
 package jobs
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"log"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -173,8 +174,8 @@ func sortWebhookNotifications(wn *jobs.WebhookNotifications) {
 	notifs := [][]jobs.Webhook{wn.OnStart, wn.OnFailure, wn.OnSuccess,
 		wn.OnDurationWarningThresholdExceeded, wn.OnStreamingBacklogExceeded}
 	for _, ns := range notifs {
-		sort.Slice(ns, func(i, j int) bool {
-			return ns[i].Id < ns[j].Id
+		slices.SortFunc(ns, func(a, b jobs.Webhook) int {
+			return cmp.Compare(a.Id, b.Id)
 		})
 	}
 }
@@ -335,16 +336,16 @@ type JobSettings struct {
 }
 
 func (js *JobSettings) sortTasksByKey() {
-	sort.Slice(js.Tasks, func(i, j int) bool {
-		return js.Tasks[i].TaskKey < js.Tasks[j].TaskKey
+	slices.SortFunc(js.Tasks, func(a, b JobTaskSettings) int {
+		return cmp.Compare(a.TaskKey, b.TaskKey)
 	})
 }
 
 func (js *JobSettings) adjustTasks() {
 	js.sortTasksByKey()
 	for _, task := range js.Tasks {
-		sort.Slice(task.DependsOn, func(i, j int) bool {
-			return task.DependsOn[i].TaskKey < task.DependsOn[j].TaskKey
+		slices.SortFunc(task.DependsOn, func(a, b jobs.TaskDependency) int {
+			return cmp.Compare(a.TaskKey, b.TaskKey)
 		})
 		sortWebhookNotifications(task.WebhookNotifications)
 	}

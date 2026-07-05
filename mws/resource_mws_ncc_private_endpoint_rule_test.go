@@ -332,6 +332,11 @@ func TestResourceNccPrivateEndpointRule_NoDriftWhenBackendReturnsAccountId(t *te
 			"updated_time":                   "0",
 			"vpc_endpoint_id":                "",
 			"enabled":                        "false",
+			// Server-populated read-only fields a prior Read writes into state.
+			// Present here so the now-Computed attributes do not show as a diff.
+			"deactivated":    "false",
+			"deactivated_at": "0",
+			"error_message":  "",
 		},
 		HCL: `
 		network_connectivity_config_id = "ncc_id"

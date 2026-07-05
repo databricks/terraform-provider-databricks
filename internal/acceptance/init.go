@@ -179,6 +179,22 @@ func ProvidersWithResourceFallbacks(resourceFallbacks []string) (*schema.Provide
 	return sdkV2Provider, pluginFrameworkProvider
 }
 
+// ProvidersWithPluginFrameworkOverrides is the mirror of
+// ProvidersWithResourceFallbacks for opt-in plugin framework resources: it
+// forces the named resources through the plugin framework implementation
+// (registering them with the PF provider and dropping them from the SDKv2
+// map), without relying on the DATABRICKS_TF_ENABLED_PF_RESOURCES env var
+// (which would race across parallel acceptance tests).
+func ProvidersWithPluginFrameworkOverrides(resourceOptIns []string) (*schema.Provider, provider.Provider) {
+	pluginfwOpt := pluginfw.WithPluginFrameworkResources(resourceOptIns)
+	pluginFrameworkProvider := PluginFrameworkProviderForTest(pluginfwOpt)
+
+	sdkV2Opt := sdkv2.WithPluginFrameworkResources(resourceOptIns)
+	sdkV2Provider := SdkV2ProviderForTest(sdkV2Opt)
+
+	return sdkV2Provider, pluginFrameworkProvider
+}
+
 // SdkV2ProviderForTest creates a test provider with the default config customizer.
 func SdkV2ProviderForTest(sdkV2Options ...sdkv2.SdkV2ProviderOption) *schema.Provider {
 	opts := append(sdkV2Options, sdkv2.WithConfigCustomizer(DefaultConfigCustomizer), sdkv2.WithConfigCustomizer(OidcConfigCustomizer))

@@ -25,6 +25,10 @@ import (
 
 const resourceName = "share"
 
+// maxSharedDataObjectUpdatesPerCall is the maximum number of data object updates
+// that the UpdateShare API accepts in a single call.
+const maxSharedDataObjectUpdatesPerCall = 100
+
 var _ resource.ResourceWithConfigure = &ShareResource{}
 var _ resource.ResourceWithImportState = &ShareResource{}
 
@@ -140,6 +144,30 @@ func shareChanges(si sharing.ShareInfo, action string) sharing.UpdateShare {
 	}
 }
 
+// updateShareInBatches issues one or more Shares.Update calls, splitting
+// update.Updates into batches of at most maxSharedDataObjectUpdatesPerCall to
+// stay within the UpdateShare API limit. Non-update fields (Name, Owner,
+// Comment) accompany every batch. It returns the ShareInfo from the last call.
+func updateShareInBatches(ctx context.Context, update sharing.UpdateShare,
+	updateFn func(context.Context, sharing.UpdateShare) (*sharing.ShareInfo, error),
+) (*sharing.ShareInfo, error) {
+	updates := update.Updates
+	if len(updates) <= maxSharedDataObjectUpdatesPerCall {
+		// A single call also covers owner- or comment-only changes with no object updates.
+		return updateFn(ctx, update)
+	}
+	var info *sharing.ShareInfo
+	for start := 0; start < len(updates); start += maxSharedDataObjectUpdatesPerCall {
+		batch := update
+		batch.Updates = updates[start:min(start+maxSharedDataObjectUpdatesPerCall, len(updates))]
+		var err error
+		if info, err = updateFn(ctx, batch); err != nil {
+			return info, err
+		}
+	}
+	return info, nil
+}
+
 type ShareResource struct {
 	Client *common.DatabricksClient
 }
@@ -243,7 +271,7 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	shareChanges := shareChanges(planGoSDK, string(sharing.SharedDataObjectUpdateActionAdd))
 
-	updatedShareInfo, err := w.Shares.Update(ctx, shareChanges)
+	updatedShareInfo, err := updateShareInBatches(ctx, shareChanges, w.Shares.Update)
 	if err != nil {
 		// delete orphaned share if update fails
 		if d_err := w.Shares.DeleteByName(ctx, shareInfo.Name); d_err != nil {
@@ -409,7 +437,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		if !plan.Comment.IsNull() {
 			update.Comment = plan.Comment.ValueString()
 		}
-		upToDateShareInfo, err = w.Shares.Update(ctx, update)
+		upToDateShareInfo, err = updateShareInBatches(ctx, update, w.Shares.Update)
 
 		if err != nil {
 			resp.Diagnostics.AddError("failed to update share", err.Error())

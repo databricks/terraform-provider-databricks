@@ -3730,6 +3730,14 @@ type EndpointHosts struct {
 	// if the enclosing endpoint is a group with greater than 1 computes
 	// configured, and has readable secondaries enabled.
 	ReadOnlyHost types.String `tfsdk:"read_only_host"`
+	// The read-only hostname of the compute endpoint, with pooling. This
+	// attribute is always defined for read-only endpoints, and may be defined
+	// for read-write endpoints if configured with read replicas and allow
+	// read-only connections.
+	ReadOnlyPooledHost types.String `tfsdk:"read_only_pooled_host"`
+	// The read-write hostname of the compute endpoint, with pooling. This
+	// attribute is only defined for read-write endpoints.
+	ReadWritePooledHost types.String `tfsdk:"read_write_pooled_host"`
 }
 
 func (to *EndpointHosts) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointHosts) {
@@ -3741,6 +3749,8 @@ func (to *EndpointHosts) SyncFieldsDuringRead(ctx context.Context, from Endpoint
 func (m EndpointHosts) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["host"] = attrs["host"].SetComputed()
 	attrs["read_only_host"] = attrs["read_only_host"].SetComputed()
+	attrs["read_only_pooled_host"] = attrs["read_only_pooled_host"].SetComputed()
+	attrs["read_write_pooled_host"] = attrs["read_write_pooled_host"].SetComputed()
 
 	return attrs
 }
@@ -3763,8 +3773,10 @@ func (m EndpointHosts) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"host":           m.Host,
-			"read_only_host": m.ReadOnlyHost,
+			"host":                   m.Host,
+			"read_only_host":         m.ReadOnlyHost,
+			"read_only_pooled_host":  m.ReadOnlyPooledHost,
+			"read_write_pooled_host": m.ReadWritePooledHost,
 		})
 }
 
@@ -3772,8 +3784,10 @@ func (m EndpointHosts) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m EndpointHosts) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"host":           types.StringType,
-			"read_only_host": types.StringType,
+			"host":                   types.StringType,
+			"read_only_host":         types.StringType,
+			"read_only_pooled_host":  types.StringType,
+			"read_write_pooled_host": types.StringType,
 		},
 	}
 }
@@ -4102,6 +4116,8 @@ type EndpointStatus struct {
 	Group types.Object `tfsdk:"group"`
 	// Contains host information for connecting to the endpoint.
 	Hosts types.Object `tfsdk:"hosts"`
+	// A timestamp indicating when the compute endpoint was last active.
+	LastActiveTime timetypes.RFC3339 `tfsdk:"last_active_time"`
 
 	PendingState types.String `tfsdk:"pending_state"`
 
@@ -4177,6 +4193,7 @@ func (m EndpointStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["endpoint_type"] = attrs["endpoint_type"].SetComputed()
 	attrs["group"] = attrs["group"].SetComputed()
 	attrs["hosts"] = attrs["hosts"].SetComputed()
+	attrs["last_active_time"] = attrs["last_active_time"].SetComputed()
 	attrs["pending_state"] = attrs["pending_state"].SetComputed()
 	attrs["settings"] = attrs["settings"].SetComputed()
 	attrs["suspend_timeout_duration"] = attrs["suspend_timeout_duration"].SetComputed()
@@ -4214,6 +4231,7 @@ func (m EndpointStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"endpoint_type":            m.EndpointType,
 			"group":                    m.Group,
 			"hosts":                    m.Hosts,
+			"last_active_time":         m.LastActiveTime,
 			"pending_state":            m.PendingState,
 			"settings":                 m.Settings,
 			"suspend_timeout_duration": m.SuspendTimeoutDuration,
@@ -4232,6 +4250,7 @@ func (m EndpointStatus) Type(ctx context.Context) attr.Type {
 			"endpoint_type":            types.StringType,
 			"group":                    EndpointGroupStatus{}.Type(ctx),
 			"hosts":                    EndpointHosts{}.Type(ctx),
+			"last_active_time":         timetypes.RFC3339{}.Type(ctx),
 			"pending_state":            types.StringType,
 			"settings":                 EndpointSettings{}.Type(ctx),
 			"suspend_timeout_duration": timetypes.GoDuration{}.Type(ctx),
@@ -4322,6 +4341,12 @@ type GenerateDatabaseCredentialRequest struct {
 	// Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Endpoint types.String `tfsdk:"endpoint"`
+	// Timestamp in UTC of when this credential should expire. Must be at least
+	// 300 seconds (5 minutes) and at most 1 hour from the current time.
+	ExpireTime timetypes.RFC3339 `tfsdk:"expire_time"`
+	// The requested time-to-live for the generated credential token. Must be at
+	// least 300 seconds (5 minutes) and at most 3600 seconds (1 hour).
+	Ttl timetypes.GoDuration `tfsdk:"ttl"`
 }
 
 func (to *GenerateDatabaseCredentialRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenerateDatabaseCredentialRequest) {
@@ -4345,6 +4370,8 @@ func (to *GenerateDatabaseCredentialRequest) SyncFieldsDuringRead(ctx context.Co
 func (m GenerateDatabaseCredentialRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["claims"] = attrs["claims"].SetOptional()
 	attrs["endpoint"] = attrs["endpoint"].SetRequired()
+	attrs["expire_time"] = attrs["expire_time"].SetOptional()
+	attrs["ttl"] = attrs["ttl"].SetOptional()
 
 	return attrs
 }
@@ -4369,8 +4396,10 @@ func (m GenerateDatabaseCredentialRequest) ToObjectValue(ctx context.Context) ba
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"claims":   m.Claims,
-			"endpoint": m.Endpoint,
+			"claims":      m.Claims,
+			"endpoint":    m.Endpoint,
+			"expire_time": m.ExpireTime,
+			"ttl":         m.Ttl,
 		})
 }
 
@@ -4381,7 +4410,9 @@ func (m GenerateDatabaseCredentialRequest) Type(ctx context.Context) attr.Type {
 			"claims": basetypes.ListType{
 				ElemType: RequestedClaims{}.Type(ctx),
 			},
-			"endpoint": types.StringType,
+			"endpoint":    types.StringType,
+			"expire_time": timetypes.RFC3339{}.Type(ctx),
+			"ttl":         timetypes.GoDuration{}.Type(ctx),
 		},
 	}
 }
@@ -8310,7 +8341,8 @@ type SyncedTableSyncedTableSpecTypeOverride struct {
 	// PostgreSQL-specific target type to use for the column.
 	PgType types.String `tfsdk:"pg_type"`
 	// Size parameter for the target type. Required when pg_type is
-	// PG_SPECIFIC_TYPE_VECTOR (specifies the vector dimension, e.g., 1024).
+	// PG_SPECIFIC_TYPE_VECTOR or PG_SPECIFIC_TYPE_HALFVEC (specifies the vector
+	// dimension, e.g., 1024).
 	Size types.Int64 `tfsdk:"size"`
 }
 

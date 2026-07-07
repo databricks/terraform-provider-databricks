@@ -2,11 +2,27 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_secret_uc Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/secretsuc)
+
+The Secret data source allows you to read a single secret in Unity Catalog by its three-level fully qualified name (`catalog_name.schema_name.secret_name`).
+
+This returns the secret's metadata. The secret value is only returned to principals with the `READ_SECRET` privilege.
+
+### Permissions
+- The calling principal must have the appropriate privileges to read the secret in the target schema.
 
 
 ## Example Usage
+### Basic Example
+This example reads a secret in Unity Catalog by its fully qualified name:
+
+```hcl
+data "databricks_secret_uc" "example" {
+  full_name = "my_catalog.my_schema.my_secret"
+}
+```
 
 
 ## Arguments
@@ -19,8 +35,6 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `browse_only` (boolean) - Indicates whether the principal is limited to retrieving metadata for the associated object
-  through the **BROWSE** privilege when **include_browse** is enabled in the request
 * `catalog_name` (string) - The name of the catalog where the schema and the secret reside
 * `comment` (string) - User-provided free-form text description of the secret
 * `create_time` (string) - The time at which this secret was created
@@ -32,7 +46,6 @@ The following attributes are exported:
 * `expire_time` (string) - User-provided expiration time of the secret. This field indicates when the secret should no
   longer be used and may be displayed as a warning in the UI. It is purely informational and
   does not trigger any automatic actions or affect the secret's lifecycle
-* `external_secret_id` (string)
 * `full_name` (string) - The three-level (fully qualified) name of the secret, in the form of **catalog_name.schema_name.secret_name**
 * `metastore_id` (string) - Unique identifier of the metastore hosting the secret
 * `name` (string) - The name of the secret, relative to its parent schema

@@ -112,6 +112,12 @@ type CatalogConfig struct {
 	// List of auto-tagging configurations for this catalog. Empty list means no
 	// auto-tagging is enabled.
 	AutoTagConfigs types.List `tfsdk:"auto_tag_configs"`
+	// Schemas to exclude from the scan, each named relative to the parent
+	// catalog. If specified, all schemas except the specified ones will be
+	// scanned. Mutually exclusive with `included_schemas`: only one may be set
+	// per request. If neither `included_schemas` nor `excluded_schemas` is set,
+	// all schemas are scanned.
+	ExcludedSchemas types.Object `tfsdk:"excluded_schemas"`
 	// Schemas to include in the scan, each named relative to the parent
 	// catalog. If specified, only listed schemas will be scanned. Mutually
 	// exclusive with `excluded_schemas`: only one may be set per request. If
@@ -135,6 +141,7 @@ type CatalogConfig struct {
 func (m CatalogConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"auto_tag_configs": reflect.TypeOf(dataclassification_tf.AutoTaggingConfig{}),
+		"excluded_schemas": reflect.TypeOf(dataclassification_tf.CatalogConfigSchemaNames{}),
 		"included_schemas": reflect.TypeOf(dataclassification_tf.CatalogConfigSchemaNames{}),
 		"provider_config":  reflect.TypeOf(ProviderConfig{}),
 	}
@@ -150,6 +157,7 @@ func (m CatalogConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"auto_tag_configs": m.AutoTagConfigs,
+			"excluded_schemas": m.ExcludedSchemas,
 			"included_schemas": m.IncludedSchemas,
 			"name":             m.Name,
 			"parent":           m.Parent,
@@ -166,6 +174,7 @@ func (m CatalogConfig) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{"auto_tag_configs": basetypes.ListType{
 			ElemType: dataclassification_tf.AutoTaggingConfig{}.Type(ctx),
 		},
+			"excluded_schemas": dataclassification_tf.CatalogConfigSchemaNames{}.Type(ctx),
 			"included_schemas": dataclassification_tf.CatalogConfigSchemaNames{}.Type(ctx),
 			"name":             types.StringType,
 			"parent":           types.StringType,
@@ -184,6 +193,15 @@ func (to *CatalogConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 		// If a user specified a non-Null, empty list for AutoTagConfigs, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AutoTagConfigs = from.AutoTagConfigs
+	}
+	if !from.ExcludedSchemas.IsNull() && !from.ExcludedSchemas.IsUnknown() {
+		if toExcludedSchemas, ok := to.GetExcludedSchemas(ctx); ok {
+			if fromExcludedSchemas, ok := from.GetExcludedSchemas(ctx); ok {
+				// Recursively sync the fields of ExcludedSchemas
+				toExcludedSchemas.SyncFieldsDuringCreateOrUpdate(ctx, fromExcludedSchemas)
+				to.SetExcludedSchemas(ctx, toExcludedSchemas)
+			}
+		}
 	}
 	if !from.IncludedSchemas.IsNull() && !from.IncludedSchemas.IsUnknown() {
 		if toIncludedSchemas, ok := to.GetIncludedSchemas(ctx); ok {
@@ -211,6 +229,14 @@ func (to *CatalogConfig) SyncFieldsDuringRead(ctx context.Context, from CatalogC
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AutoTagConfigs = from.AutoTagConfigs
 	}
+	if !from.ExcludedSchemas.IsNull() && !from.ExcludedSchemas.IsUnknown() {
+		if toExcludedSchemas, ok := to.GetExcludedSchemas(ctx); ok {
+			if fromExcludedSchemas, ok := from.GetExcludedSchemas(ctx); ok {
+				toExcludedSchemas.SyncFieldsDuringRead(ctx, fromExcludedSchemas)
+				to.SetExcludedSchemas(ctx, toExcludedSchemas)
+			}
+		}
+	}
 	if !from.IncludedSchemas.IsNull() && !from.IncludedSchemas.IsUnknown() {
 		if toIncludedSchemas, ok := to.GetIncludedSchemas(ctx); ok {
 			if fromIncludedSchemas, ok := from.GetIncludedSchemas(ctx); ok {
@@ -228,6 +254,7 @@ func (to *CatalogConfig) SyncFieldsDuringRead(ctx context.Context, from CatalogC
 
 func (m CatalogConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["auto_tag_configs"] = attrs["auto_tag_configs"].SetOptional()
+	attrs["excluded_schemas"] = attrs["excluded_schemas"].SetOptional()
 	attrs["included_schemas"] = attrs["included_schemas"].SetOptional()
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["parent"] = attrs["parent"].SetRequired()
@@ -265,6 +292,31 @@ func (m *CatalogConfig) SetAutoTagConfigs(ctx context.Context, v []dataclassific
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["auto_tag_configs"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.AutoTagConfigs = types.ListValueMust(t, vs)
+}
+
+// GetExcludedSchemas returns the value of the ExcludedSchemas field in CatalogConfig as
+// a dataclassification_tf.CatalogConfigSchemaNames value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CatalogConfig) GetExcludedSchemas(ctx context.Context) (dataclassification_tf.CatalogConfigSchemaNames, bool) {
+	var e dataclassification_tf.CatalogConfigSchemaNames
+	if m.ExcludedSchemas.IsNull() || m.ExcludedSchemas.IsUnknown() {
+		return e, false
+	}
+	var v dataclassification_tf.CatalogConfigSchemaNames
+	d := m.ExcludedSchemas.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExcludedSchemas sets the value of the ExcludedSchemas field in CatalogConfig.
+func (m *CatalogConfig) SetExcludedSchemas(ctx context.Context, v dataclassification_tf.CatalogConfigSchemaNames) {
+	vs := v.ToObjectValue(ctx)
+	m.ExcludedSchemas = vs
 }
 
 // GetIncludedSchemas returns the value of the IncludedSchemas field in CatalogConfig as
@@ -447,7 +499,7 @@ func (r *CatalogConfigResource) update(ctx context.Context, plan CatalogConfig, 
 	updateRequest := dataclassification.UpdateCatalogConfigRequest{
 		CatalogConfig: catalog_config,
 		Name:          plan.Name.ValueString(),
-		UpdateMask:    *fieldmask.New(strings.Split("auto_tag_configs,included_schemas", ",")),
+		UpdateMask:    *fieldmask.New(strings.Split("auto_tag_configs,excluded_schemas,included_schemas", ",")),
 	}
 
 	var namespace ProviderConfig

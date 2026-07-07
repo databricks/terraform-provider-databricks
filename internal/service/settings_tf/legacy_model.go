@@ -3385,13 +3385,11 @@ func (m *CspEnablementAccountSetting_SdkV2) SetCspEnablementAccount(ctx context.
 	m.CspEnablementAccount = types.ListValueMust(t, vs)
 }
 
-// This proto is under development. The network policies applying for ingress
-// traffic. Any changes here should also be synced to
-// estore/namespaces/lakehousenetworkmanager/latest.proto.
+// The network policies applying for ingress traffic.
 type CustomerFacingIngressNetworkPolicy_SdkV2 struct {
 	CrossWorkspaceAccess types.List `tfsdk:"cross_workspace_access"`
-	// The network policy restrictions for private access to the workspace.
-	// Configures how registered private endpoints are allowed or denied access.
+	// The network policy restrictions for private access. Configures how
+	// requests arriving over private connectivity are governed.
 	PrivateAccess types.List `tfsdk:"private_access"`
 	// The network policy restrictions for public access to the workspace.
 	// Configures how public internet traffic is allowed or denied access.
@@ -3595,7 +3593,7 @@ type CustomerFacingIngressNetworkPolicyAccountApiDestination_SdkV2 struct {
 	// Qualifies the breadth of API access for the listed scopes. See
 	// ApiScopeQualifier.
 	ScopeQualifier types.String `tfsdk:"scope_qualifier"`
-
+	// The API scopes to match. Use "all-apis" to match any account-level API.
 	Scopes types.List `tfsdk:"scopes"`
 }
 
@@ -3735,6 +3733,7 @@ func (m CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination_SdkV2)
 	}
 }
 
+// The account console UI destination.
 type CustomerFacingIngressNetworkPolicyAccountUiDestination_SdkV2 struct {
 	// Must be set to true.
 	AllDestinations types.Bool `tfsdk:"all_destinations"`
@@ -4423,7 +4422,10 @@ func (m *CustomerFacingIngressNetworkPolicyCrossWorkspaceRequestOrigin_SdkV2) Se
 	m.SelectedWorkspaces = types.ListValueMust(t, vs)
 }
 
+// A set of registered endpoints, identified by their endpoint IDs.
 type CustomerFacingIngressNetworkPolicyEndpoints_SdkV2 struct {
+	// The IDs of the registered endpoints. Must contain at least one endpoint
+	// ID.
 	EndpointIds types.List `tfsdk:"endpoint_ids"`
 }
 
@@ -4650,11 +4652,18 @@ func (m CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination_SdkV2) Type
 	}
 }
 
+// Configures how requests arriving over private connectivity, such as
+// registered endpoints, are allowed or denied access.
 type CustomerFacingIngressNetworkPolicyPrivateAccess_SdkV2 struct {
+	// Allow rules are evaluated after deny rules. A request matching any allow
+	// rule is allowed; a request matching no rule is denied by default. Only
+	// applies when restriction_mode is RESTRICTED_ACCESS.
 	AllowRules types.List `tfsdk:"allow_rules"`
-
+	// Deny rules are evaluated first. A request matching any deny rule is
+	// denied, regardless of allow rules. Only applies when restriction_mode is
+	// RESTRICTED_ACCESS.
 	DenyRules types.List `tfsdk:"deny_rules"`
-
+	// The restriction mode for private access.
 	RestrictionMode types.String `tfsdk:"restriction_mode"`
 }
 
@@ -4790,13 +4799,25 @@ func (m *CustomerFacingIngressNetworkPolicyPrivateAccess_SdkV2) SetDenyRules(ctx
 	m.DenyRules = types.ListValueMust(t, vs)
 }
 
+// An ingress rule is enforced when a request satisfies all specified attributes
+// — including request origin, destination, and authentication.
 type CustomerFacingIngressNetworkPolicyPrivateIngressRule_SdkV2 struct {
+	// The authenticated identity the request must match. When unset, the rule
+	// matches all users and service principals. On the account-level network
+	// policy, scoping to specific identities is not currently supported, so
+	// this field must be unset (the rule matches all users and service
+	// principals).
 	Authentication types.List `tfsdk:"authentication"`
-
+	// The destination the request must match — the resource being accessed,
+	// for example the workspace UI, workspace APIs, or account-level APIs. See
+	// RequestDestination.
 	Destination types.List `tfsdk:"destination"`
 	// The label for this ingress rule.
 	Label types.String `tfsdk:"label"`
-
+	// The origin the request must match — the private connectivity the
+	// request arrives through, for example a specific set of registered
+	// endpoints or any endpoint registered to the account. See
+	// PrivateRequestOrigin.
 	Origin types.List `tfsdk:"origin"`
 }
 
@@ -4994,13 +5015,23 @@ func (m *CustomerFacingIngressNetworkPolicyPrivateIngressRule_SdkV2) SetOrigin(c
 	m.Origin = types.ListValueMust(t, vs)
 }
 
+// The origin of a private access request, identified by the endpoint through
+// which the request arrives.
 type CustomerFacingIngressNetworkPolicyPrivateRequestOrigin_SdkV2 struct {
+	// Matches requests arriving over any private connectivity, including
+	// registered endpoints and the workspace's Azure Private Link (ui-api)
+	// endpoints. Can only be used in deny rules of workspace-level network
+	// policies. Must be set to true when specified.
 	AllPrivateAccess types.Bool `tfsdk:"all_private_access"`
-
+	// Matches requests arriving through any endpoint registered to the account.
+	// Must be set to true when specified.
 	AllRegisteredEndpoints types.Bool `tfsdk:"all_registered_endpoints"`
-
+	// Matches requests arriving through the workspace's Azure Private Link
+	// (ui-api) endpoints. Can only be used in deny rules of workspace-level
+	// network policies. Must be set to true when specified.
 	AzureWorkspacePrivateLink types.Bool `tfsdk:"azure_workspace_private_link"`
-
+	// Matches requests arriving through any of the specified registered
+	// endpoints.
 	Endpoints types.List `tfsdk:"endpoints"`
 }
 
@@ -5604,11 +5635,13 @@ func (m *CustomerFacingIngressNetworkPolicyPublicRequestOrigin_SdkV2) SetInclude
 }
 
 type CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2 struct {
+	// Matches requests to account-level APIs. Can only be used in the
+	// account-level network policy.
 	AccountApi types.List `tfsdk:"account_api"`
-	// Account DatabricksOne destination is not supported. DO NOT change the
-	// stage of this destination past PRIVATE_PREVIEW.
+	// Account DatabricksOne destination is not supported.
 	AccountDatabricksOne types.List `tfsdk:"account_databricks_one"`
-
+	// Matches requests to the account console UI. Can only be used in the
+	// account-level network policy.
 	AccountUi types.List `tfsdk:"account_ui"`
 	// When true, match all destinations, no other destination fields can be
 	// set. When not set or false, at least one specific destination must be

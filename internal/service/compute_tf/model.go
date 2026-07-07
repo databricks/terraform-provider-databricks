@@ -1278,7 +1278,9 @@ type ClusterAttributes struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id"`
@@ -1318,7 +1320,9 @@ type ClusterAttributes struct {
 	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	SparkVersion types.String `tfsdk:"spark_version"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
@@ -2257,7 +2261,9 @@ type ClusterDetails struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
@@ -2312,7 +2318,9 @@ type ClusterDetails struct {
 	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	SparkVersion types.String `tfsdk:"spark_version"`
 	// The spec contains a snapshot of the latest user specified settings that
 	// were used to create/edit the cluster. Note: not included in the response
@@ -4918,7 +4926,9 @@ type ClusterSpec struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
@@ -4969,7 +4979,9 @@ type ClusterSpec struct {
 	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	SparkVersion types.String `tfsdk:"spark_version"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
@@ -6154,7 +6166,9 @@ type CreateCluster struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
@@ -6205,7 +6219,9 @@ type CreateCluster struct {
 	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	SparkVersion types.String `tfsdk:"spark_version"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
@@ -7119,14 +7135,18 @@ type CreateInstancePool struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Custom Docker Image BYOC
 	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
 	// If set, what the configurable throughput (in Mb/s) for the remote disk
 	// is. Currently only supported for GCP HYPERDISK_BALANCED types.
@@ -8928,7 +8948,9 @@ type EditCluster struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
@@ -8979,7 +9001,9 @@ type EditCluster struct {
 	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	SparkVersion types.String `tfsdk:"spark_version"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
@@ -9773,7 +9797,9 @@ type EditInstancePool struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// If set, what the configurable throughput (in Mb/s) for the remote disk
 	// is. Currently only supported for GCP HYPERDISK_BALANCED types.
@@ -10405,7 +10431,9 @@ type EnforcePolicyComplianceForClusterResponseClusterSettings struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
@@ -10456,7 +10484,9 @@ type EnforcePolicyComplianceForClusterResponseClusterSettings struct {
 	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	SparkVersion types.String `tfsdk:"spark_version"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
@@ -12991,14 +13021,18 @@ type GetInstancePool struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Custom Docker Image BYOC
 	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
 	// If set, what the configurable throughput (in Mb/s) for the remote disk
 	// is. Currently only supported for GCP HYPERDISK_BALANCED types.
@@ -15574,14 +15608,18 @@ type InstancePoolAndStats struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Custom Docker Image BYOC
 	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
 	// If set, what the configurable throughput (in Mb/s) for the remote disk
 	// is. Currently only supported for GCP HYPERDISK_BALANCED types.
@@ -21903,7 +21941,9 @@ type UpdateClusterResource struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
@@ -21954,7 +21994,9 @@ type UpdateClusterResource struct {
 	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	SparkVersion types.String `tfsdk:"spark_version"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the

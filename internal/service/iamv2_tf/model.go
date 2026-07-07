@@ -1695,32 +1695,32 @@ type User struct {
 	AccountUserStatus types.String `tfsdk:"account_user_status"`
 	// ExternalId of the user in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
+
+	FullName types.Object `tfsdk:"full_name"`
 	// Internal userId of the user in Databricks.
 	InternalId types.Int64 `tfsdk:"internal_id"`
-
-	Name types.Object `tfsdk:"name"`
 	// Username/email of the user.
 	Username types.String `tfsdk:"username"`
 }
 
 func (to *User) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from User) {
-	if !from.Name.IsNull() && !from.Name.IsUnknown() {
-		if toName, ok := to.GetName(ctx); ok {
-			if fromName, ok := from.GetName(ctx); ok {
-				// Recursively sync the fields of Name
-				toName.SyncFieldsDuringCreateOrUpdate(ctx, fromName)
-				to.SetName(ctx, toName)
+	if !from.FullName.IsNull() && !from.FullName.IsUnknown() {
+		if toFullName, ok := to.GetFullName(ctx); ok {
+			if fromFullName, ok := from.GetFullName(ctx); ok {
+				// Recursively sync the fields of FullName
+				toFullName.SyncFieldsDuringCreateOrUpdate(ctx, fromFullName)
+				to.SetFullName(ctx, toFullName)
 			}
 		}
 	}
 }
 
 func (to *User) SyncFieldsDuringRead(ctx context.Context, from User) {
-	if !from.Name.IsNull() && !from.Name.IsUnknown() {
-		if toName, ok := to.GetName(ctx); ok {
-			if fromName, ok := from.GetName(ctx); ok {
-				toName.SyncFieldsDuringRead(ctx, fromName)
-				to.SetName(ctx, toName)
+	if !from.FullName.IsNull() && !from.FullName.IsUnknown() {
+		if toFullName, ok := to.GetFullName(ctx); ok {
+			if fromFullName, ok := from.GetFullName(ctx); ok {
+				toFullName.SyncFieldsDuringRead(ctx, fromFullName)
+				to.SetFullName(ctx, toFullName)
 			}
 		}
 	}
@@ -1730,8 +1730,8 @@ func (m User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["account_user_status"] = attrs["account_user_status"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
+	attrs["full_name"] = attrs["full_name"].SetOptional()
 	attrs["internal_id"] = attrs["internal_id"].SetComputed()
-	attrs["name"] = attrs["name"].SetOptional()
 	attrs["username"] = attrs["username"].SetOptional()
 	attrs["username"] = attrs["username"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
@@ -1747,7 +1747,7 @@ func (m User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 // SDK values.
 func (m User) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"name": reflect.TypeOf(UserName{}),
+		"full_name": reflect.TypeOf(UserFullName{}),
 	}
 }
 
@@ -1761,8 +1761,8 @@ func (m User) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"account_id":          m.AccountId,
 			"account_user_status": m.AccountUserStatus,
 			"external_id":         m.ExternalId,
+			"full_name":           m.FullName,
 			"internal_id":         m.InternalId,
-			"name":                m.Name,
 			"username":            m.Username,
 		})
 }
@@ -1774,23 +1774,23 @@ func (m User) Type(ctx context.Context) attr.Type {
 			"account_id":          types.StringType,
 			"account_user_status": types.StringType,
 			"external_id":         types.StringType,
+			"full_name":           UserFullName{}.Type(ctx),
 			"internal_id":         types.Int64Type,
-			"name":                UserName{}.Type(ctx),
 			"username":            types.StringType,
 		},
 	}
 }
 
-// GetName returns the value of the Name field in User as
-// a UserName value.
+// GetFullName returns the value of the FullName field in User as
+// a UserFullName value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *User) GetName(ctx context.Context) (UserName, bool) {
-	var e UserName
-	if m.Name.IsNull() || m.Name.IsUnknown() {
+func (m *User) GetFullName(ctx context.Context) (UserFullName, bool) {
+	var e UserFullName
+	if m.FullName.IsNull() || m.FullName.IsUnknown() {
 		return e, false
 	}
-	var v UserName
-	d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
+	var v UserFullName
+	d := m.FullName.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -1800,46 +1800,46 @@ func (m *User) GetName(ctx context.Context) (UserName, bool) {
 	return v, true
 }
 
-// SetName sets the value of the Name field in User.
-func (m *User) SetName(ctx context.Context, v UserName) {
+// SetFullName sets the value of the FullName field in User.
+func (m *User) SetFullName(ctx context.Context, v UserFullName) {
 	vs := v.ToObjectValue(ctx)
-	m.Name = vs
+	m.FullName = vs
 }
 
-type UserName struct {
+type UserFullName struct {
 	FamilyName types.String `tfsdk:"family_name"`
 
 	GivenName types.String `tfsdk:"given_name"`
 }
 
-func (to *UserName) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UserName) {
+func (to *UserFullName) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UserFullName) {
 }
 
-func (to *UserName) SyncFieldsDuringRead(ctx context.Context, from UserName) {
+func (to *UserFullName) SyncFieldsDuringRead(ctx context.Context, from UserFullName) {
 }
 
-func (m UserName) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UserFullName) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["family_name"] = attrs["family_name"].SetOptional()
 	attrs["given_name"] = attrs["given_name"].SetOptional()
 
 	return attrs
 }
 
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UserName.
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UserFullName.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
 // retrieve the type information of the elements in complex fields at runtime. The values of the map
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (m UserName) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UserFullName) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UserName
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UserFullName
 // only implements ToObjectValue() and Type().
-func (m UserName) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UserFullName) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1849,7 +1849,7 @@ func (m UserName) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 }
 
 // Type implements basetypes.ObjectValuable.
-func (m UserName) Type(ctx context.Context) attr.Type {
+func (m UserFullName) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"family_name": types.StringType,

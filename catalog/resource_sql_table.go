@@ -94,6 +94,12 @@ func (ti SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Cus
 	s.SchemaPath("column", "type").SetCustomSuppressDiff(func(k, old, new string, d *schema.ResourceData) bool {
 		return getColumnType(old) == getColumnType(new)
 	})
+	s.SchemaPath("column", "nullable").SetCustomSuppressDiff(func(k, old, new string, d *schema.ResourceData) bool {
+		// A view column's nullability is derived from the view query and can't be
+		// set independently, so ignore diffs on it for views (the server-reported
+		// value would otherwise produce a permanent diff).
+		return d.Get("table_type") == "VIEW"
+	})
 	common.NamespaceCustomizeSchema(s)
 	return s
 }
@@ -232,7 +238,10 @@ func (ti *SqlTableInfo) serializeColumnInfo(col SqlColumnInfo) string {
 	var colType = col.getColumnType()
 
 	notNull := ""
-	if !col.Nullable {
+	// Views don't support NOT NULL column constraints; a view column's
+	// nullability is derived from the view query, so CREATE VIEW ... (col NOT NULL)
+	// is rejected by Databricks.
+	if !col.Nullable && ti.TableType != "VIEW" {
 		notNull = " NOT NULL"
 	}
 
@@ -416,7 +425,10 @@ func (ti *SqlTableInfo) alterExistingColumnStatements(oldti *SqlTableInfo, state
 		if ci.Comment != oldCi.Comment {
 			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s COMMENT '%s'", typestring, ti.SQLFullName(), ci.getWrappedColumnName(), parseComment(ci.Comment)))
 		}
-		if ci.Nullable != oldCi.Nullable {
+		// A view column's nullability is derived from the view query and cannot be
+		// changed with ALTER VIEW ... ALTER COLUMN ... (Databricks rejects it with a
+		// PARSE_SYNTAX_ERROR), so only emit the statement for tables.
+		if ci.Nullable != oldCi.Nullable && ti.TableType != "VIEW" {
 			var keyWord string
 			if ci.Nullable {
 				keyWord = "DROP"

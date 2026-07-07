@@ -114,11 +114,45 @@ func TestResourceSqlTableCreateStatement_ViewWithComments(t *testing.T) {
 	}
 	stmt := ti.buildTableCreateStatement()
 	assert.Contains(t, stmt, "CREATE VIEW `main`.`foo`.`bar`")
-	assert.Contains(t, stmt, "(`id`  NOT NULL, `name`  NOT NULL COMMENT 'a comment')")
+	// Views don't support NOT NULL column constraints, so it must not be emitted.
+	assert.Contains(t, stmt, "(`id` , `name`  COMMENT 'a comment')")
+	assert.NotContains(t, stmt, "NOT NULL")
 	assert.NotContains(t, stmt, "USING DELTA")
 	assert.NotContains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH CREDENTIAL somecred")
 	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
 	assert.Contains(t, stmt, "'one'='two'")
+}
+
+func TestResourceSqlTableView_NullableColumnHandling(t *testing.T) {
+	view := &SqlTableInfo{
+		Name:           "v",
+		CatalogName:    "main",
+		SchemaName:     "foo",
+		TableType:      "VIEW",
+		ViewDefinition: "SELECT 1 AS id",
+		ColumnInfos:    []SqlColumnInfo{{Name: "id", Nullable: false}},
+	}
+	// CREATE VIEW must not emit a NOT NULL constraint, which views don't support.
+	create := view.buildTableCreateStatement()
+	assert.Contains(t, create, "CREATE VIEW `main`.`foo`.`v`")
+	assert.NotContains(t, create, "NOT NULL")
+
+	// A change in a view column's nullability must not emit
+	// ALTER VIEW ... ALTER COLUMN ... (Databricks rejects it); nullability is
+	// derived from the view query.
+	old := &SqlTableInfo{
+		Name:           "v",
+		CatalogName:    "main",
+		SchemaName:     "foo",
+		TableType:      "VIEW",
+		ViewDefinition: "SELECT 1 AS id",
+		ColumnInfos:    []SqlColumnInfo{{Name: "id", Nullable: true}},
+	}
+	stmts, err := view.diff(old)
+	assert.NoError(t, err)
+	for _, s := range stmts {
+		assert.NotContains(t, s, "ALTER COLUMN")
+	}
 }
 
 func TestResourceSqlTableCreateStatement_Partition(t *testing.T) {

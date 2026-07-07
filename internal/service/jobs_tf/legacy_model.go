@@ -162,6 +162,10 @@ type AiRuntimeTaskOutput_SdkV2 struct {
 	// MLflow run ID for this task execution. Use it to look up the run in
 	// MLflow APIs or the workspace MLflow UI.
 	MlflowRunId types.String `tfsdk:"mlflow_run_id"`
+	// Human-readable status message for this run, suitable for display to the
+	// user (for example, that the run is still waiting for GPU compute). Set by
+	// the server only when there is something to surface; empty otherwise.
+	StatusMessage types.String `tfsdk:"status_message"`
 }
 
 func (to *AiRuntimeTaskOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiRuntimeTaskOutput_SdkV2) {
@@ -173,6 +177,7 @@ func (to *AiRuntimeTaskOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 func (m AiRuntimeTaskOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["mlflow_experiment_id"] = attrs["mlflow_experiment_id"].SetComputed()
 	attrs["mlflow_run_id"] = attrs["mlflow_run_id"].SetComputed()
+	attrs["status_message"] = attrs["status_message"].SetComputed()
 
 	return attrs
 }
@@ -197,6 +202,7 @@ func (m AiRuntimeTaskOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 		map[string]attr.Value{
 			"mlflow_experiment_id": m.MlflowExperimentId,
 			"mlflow_run_id":        m.MlflowRunId,
+			"status_message":       m.StatusMessage,
 		})
 }
 
@@ -206,6 +212,7 @@ func (m AiRuntimeTaskOutput_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"mlflow_experiment_id": types.StringType,
 			"mlflow_run_id":        types.StringType,
+			"status_message":       types.StringType,
 		},
 	}
 }
@@ -3456,6 +3463,10 @@ type CronSchedule_SdkV2 struct {
 	//
 	// [Cron Trigger]: http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html
 	QuartzCronExpression types.String `tfsdk:"quartz_cron_expression"`
+	// SQL condition that must be satisfied before a scheduled run is triggered.
+	// The condition is evaluated after the cron expression fires and must
+	// return a truthy result for the run to proceed.
+	SqlCondition types.List `tfsdk:"sql_condition"`
 	// A Java timezone ID. The schedule for a job is resolved with respect to
 	// this timezone. See [Java TimeZone] for details. This field is required.
 	//
@@ -3464,14 +3475,33 @@ type CronSchedule_SdkV2 struct {
 }
 
 func (to *CronSchedule_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CronSchedule_SdkV2) {
+	if !from.SqlCondition.IsNull() && !from.SqlCondition.IsUnknown() {
+		if toSqlCondition, ok := to.GetSqlCondition(ctx); ok {
+			if fromSqlCondition, ok := from.GetSqlCondition(ctx); ok {
+				// Recursively sync the fields of SqlCondition
+				toSqlCondition.SyncFieldsDuringCreateOrUpdate(ctx, fromSqlCondition)
+				to.SetSqlCondition(ctx, toSqlCondition)
+			}
+		}
+	}
 }
 
 func (to *CronSchedule_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CronSchedule_SdkV2) {
+	if !from.SqlCondition.IsNull() && !from.SqlCondition.IsUnknown() {
+		if toSqlCondition, ok := to.GetSqlCondition(ctx); ok {
+			if fromSqlCondition, ok := from.GetSqlCondition(ctx); ok {
+				toSqlCondition.SyncFieldsDuringRead(ctx, fromSqlCondition)
+				to.SetSqlCondition(ctx, toSqlCondition)
+			}
+		}
+	}
 }
 
 func (m CronSchedule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["quartz_cron_expression"] = attrs["quartz_cron_expression"].SetRequired()
+	attrs["sql_condition"] = attrs["sql_condition"].SetOptional()
+	attrs["sql_condition"] = attrs["sql_condition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["timezone_id"] = attrs["timezone_id"].SetRequired()
 
 	return attrs
@@ -3485,7 +3515,9 @@ func (m CronSchedule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m CronSchedule_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"sql_condition": reflect.TypeOf(SqlConditionConfiguration_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3497,6 +3529,7 @@ func (m CronSchedule_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 		map[string]attr.Value{
 			"pause_status":           m.PauseStatus,
 			"quartz_cron_expression": m.QuartzCronExpression,
+			"sql_condition":          m.SqlCondition,
 			"timezone_id":            m.TimezoneId,
 		})
 }
@@ -3507,9 +3540,38 @@ func (m CronSchedule_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"pause_status":           types.StringType,
 			"quartz_cron_expression": types.StringType,
-			"timezone_id":            types.StringType,
+			"sql_condition": basetypes.ListType{
+				ElemType: SqlConditionConfiguration_SdkV2{}.Type(ctx),
+			},
+			"timezone_id": types.StringType,
 		},
 	}
+}
+
+// GetSqlCondition returns the value of the SqlCondition field in CronSchedule_SdkV2 as
+// a SqlConditionConfiguration_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CronSchedule_SdkV2) GetSqlCondition(ctx context.Context) (SqlConditionConfiguration_SdkV2, bool) {
+	var e SqlConditionConfiguration_SdkV2
+	if m.SqlCondition.IsNull() || m.SqlCondition.IsUnknown() {
+		return e, false
+	}
+	var v []SqlConditionConfiguration_SdkV2
+	d := m.SqlCondition.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlCondition sets the value of the SqlCondition field in CronSchedule_SdkV2.
+func (m *CronSchedule_SdkV2) SetSqlCondition(ctx context.Context, v SqlConditionConfiguration_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_condition"]
+	m.SqlCondition = types.ListValueMust(t, vs)
 }
 
 type DashboardPageSnapshot_SdkV2 struct {
@@ -15642,6 +15704,12 @@ type RunNow_SdkV2 struct {
 	NotebookParams types.Map `tfsdk:"notebook_params"`
 	// A list of task keys to run inside of the job. If this field is not
 	// provided, all tasks in the job will be run.
+	//
+	// Prefix a task key with `+` to also run its upstream tasks, or suffix it
+	// with `+` to also run its downstream tasks. For example, `+my_task` runs
+	// `my_task` and everything upstream of it, `my_task+` runs `my_task` and
+	// everything downstream of it, and `+my_task+` runs both. A task key with
+	// no `+` runs only that task.
 	Only types.List `tfsdk:"only"`
 	// The performance mode on a serverless job. The performance target
 	// determines the level of compute performance or cost-efficiency for the
@@ -20052,6 +20120,195 @@ func (m *SqlAlertOutput_SdkV2) SetSqlStatements(ctx context.Context, v []SqlStat
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_statements"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.SqlStatements = types.ListValueMust(t, vs)
+}
+
+type SqlConditionConfiguration_SdkV2 struct {
+	// The ID of the SQL query to evaluate as the trigger condition.
+	SqlQueryId types.String `tfsdk:"sql_query_id"`
+	// Determines how the SQL query result is interpreted to decide whether the
+	// condition fires. Must be set to a recognized value when provided. When
+	// unset on an existing serialized configuration, the server preserves the
+	// original semantics by interpreting it as `QUERY_RETURNS_ROWS`. New
+	// configurations should set this explicitly — explicit
+	// `SQL_CONDITION_TRIGGER_MODE_UNSPECIFIED` is rejected at validation.
+	TriggerMode types.String `tfsdk:"trigger_mode"`
+	// The canonical identifier of the SQL warehouse to run the condition query
+	// against.
+	WarehouseId types.String `tfsdk:"warehouse_id"`
+}
+
+func (to *SqlConditionConfiguration_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlConditionConfiguration_SdkV2) {
+}
+
+func (to *SqlConditionConfiguration_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SqlConditionConfiguration_SdkV2) {
+}
+
+func (m SqlConditionConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["sql_query_id"] = attrs["sql_query_id"].SetRequired()
+	attrs["trigger_mode"] = attrs["trigger_mode"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlConditionConfiguration.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SqlConditionConfiguration_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlConditionConfiguration_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SqlConditionConfiguration_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"sql_query_id": m.SqlQueryId,
+			"trigger_mode": m.TriggerMode,
+			"warehouse_id": m.WarehouseId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SqlConditionConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"sql_query_id": types.StringType,
+			"trigger_mode": types.StringType,
+			"warehouse_id": types.StringType,
+		},
+	}
+}
+
+// SQL condition evaluation details captured at the time the run was triggered
+type SqlConditionRunInfoDetails_SdkV2 struct {
+	// Whether the last condition evaluation was satisfied (query returned
+	// truthy result).
+	ConditionEvaluationSatisfied types.Bool `tfsdk:"condition_evaluation_satisfied"`
+	// The ID of the SQL session, used by the UI to track session context. Set
+	// for the QUERY_RETURNS_ROWS trigger mode.
+	ConditionEvaluationSqlSessionId types.String `tfsdk:"condition_evaluation_sql_session_id"`
+	// The SQL statement ID of the condition evaluation, set when the condition
+	// is evaluated by running a single SQL statement (the RESULT_VALUE_CHANGES
+	// trigger mode). The UI uses it to link to the query execution details.
+	ConditionEvaluationSqlStatementId types.String `tfsdk:"condition_evaluation_sql_statement_id"`
+}
+
+func (to *SqlConditionRunInfoDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlConditionRunInfoDetails_SdkV2) {
+}
+
+func (to *SqlConditionRunInfoDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SqlConditionRunInfoDetails_SdkV2) {
+}
+
+func (m SqlConditionRunInfoDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["condition_evaluation_satisfied"] = attrs["condition_evaluation_satisfied"].SetOptional()
+	attrs["condition_evaluation_sql_session_id"] = attrs["condition_evaluation_sql_session_id"].SetOptional()
+	attrs["condition_evaluation_sql_statement_id"] = attrs["condition_evaluation_sql_statement_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlConditionRunInfoDetails.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SqlConditionRunInfoDetails_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlConditionRunInfoDetails_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SqlConditionRunInfoDetails_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"condition_evaluation_satisfied":        m.ConditionEvaluationSatisfied,
+			"condition_evaluation_sql_session_id":   m.ConditionEvaluationSqlSessionId,
+			"condition_evaluation_sql_statement_id": m.ConditionEvaluationSqlStatementId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SqlConditionRunInfoDetails_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"condition_evaluation_satisfied":        types.BoolType,
+			"condition_evaluation_sql_session_id":   types.StringType,
+			"condition_evaluation_sql_statement_id": types.StringType,
+		},
+	}
+}
+
+type SqlConditionState_SdkV2 struct {
+	// Whether the last condition evaluation was satisfied (query returned
+	// truthy result).
+	LatestConditionEvaluationSatisfied types.Bool `tfsdk:"latest_condition_evaluation_satisfied"`
+	// The ID of the SQL session, used by UI to track session context. Populated
+	// for QUERY_RETURNS_ROWS, which executes the query through Redash.
+	LatestConditionEvaluationSqlSessionId types.String `tfsdk:"latest_condition_evaluation_sql_session_id"`
+	// The SEA statement ID of the SQL statement executed for the latest
+	// condition evaluation. Populated for RESULT_VALUE_CHANGES, which executes
+	// the query through the SQL execution API.
+	LatestConditionEvaluationSqlStatementId types.String `tfsdk:"latest_condition_evaluation_sql_statement_id"`
+}
+
+func (to *SqlConditionState_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlConditionState_SdkV2) {
+}
+
+func (to *SqlConditionState_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SqlConditionState_SdkV2) {
+}
+
+func (m SqlConditionState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["latest_condition_evaluation_satisfied"] = attrs["latest_condition_evaluation_satisfied"].SetOptional()
+	attrs["latest_condition_evaluation_sql_session_id"] = attrs["latest_condition_evaluation_sql_session_id"].SetOptional()
+	attrs["latest_condition_evaluation_sql_statement_id"] = attrs["latest_condition_evaluation_sql_statement_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlConditionState.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SqlConditionState_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlConditionState_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SqlConditionState_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"latest_condition_evaluation_satisfied":        m.LatestConditionEvaluationSatisfied,
+			"latest_condition_evaluation_sql_session_id":   m.LatestConditionEvaluationSqlSessionId,
+			"latest_condition_evaluation_sql_statement_id": m.LatestConditionEvaluationSqlStatementId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SqlConditionState_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"latest_condition_evaluation_satisfied":        types.BoolType,
+			"latest_condition_evaluation_sql_session_id":   types.StringType,
+			"latest_condition_evaluation_sql_statement_id": types.StringType,
+		},
+	}
 }
 
 type SqlDashboardOutput_SdkV2 struct {
@@ -26109,16 +26366,37 @@ func (m TerminationDetails_SdkV2) Type(ctx context.Context) attr.Type {
 type TriggerInfo_SdkV2 struct {
 	// The run id of the Run Job task run
 	RunId types.Int64 `tfsdk:"run_id"`
+	// SQL condition evaluation details for this run
+	SqlCondition types.List `tfsdk:"sql_condition"`
 }
 
 func (to *TriggerInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TriggerInfo_SdkV2) {
+	if !from.SqlCondition.IsNull() && !from.SqlCondition.IsUnknown() {
+		if toSqlCondition, ok := to.GetSqlCondition(ctx); ok {
+			if fromSqlCondition, ok := from.GetSqlCondition(ctx); ok {
+				// Recursively sync the fields of SqlCondition
+				toSqlCondition.SyncFieldsDuringCreateOrUpdate(ctx, fromSqlCondition)
+				to.SetSqlCondition(ctx, toSqlCondition)
+			}
+		}
+	}
 }
 
 func (to *TriggerInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TriggerInfo_SdkV2) {
+	if !from.SqlCondition.IsNull() && !from.SqlCondition.IsUnknown() {
+		if toSqlCondition, ok := to.GetSqlCondition(ctx); ok {
+			if fromSqlCondition, ok := from.GetSqlCondition(ctx); ok {
+				toSqlCondition.SyncFieldsDuringRead(ctx, fromSqlCondition)
+				to.SetSqlCondition(ctx, toSqlCondition)
+			}
+		}
+	}
 }
 
 func (m TriggerInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["sql_condition"] = attrs["sql_condition"].SetOptional()
+	attrs["sql_condition"] = attrs["sql_condition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -26131,7 +26409,9 @@ func (m TriggerInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m TriggerInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"sql_condition": reflect.TypeOf(SqlConditionRunInfoDetails_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -26141,7 +26421,8 @@ func (m TriggerInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"run_id": m.RunId,
+			"run_id":        m.RunId,
+			"sql_condition": m.SqlCondition,
 		})
 }
 
@@ -26150,8 +26431,37 @@ func (m TriggerInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"run_id": types.Int64Type,
+			"sql_condition": basetypes.ListType{
+				ElemType: SqlConditionRunInfoDetails_SdkV2{}.Type(ctx),
+			},
 		},
 	}
+}
+
+// GetSqlCondition returns the value of the SqlCondition field in TriggerInfo_SdkV2 as
+// a SqlConditionRunInfoDetails_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TriggerInfo_SdkV2) GetSqlCondition(ctx context.Context) (SqlConditionRunInfoDetails_SdkV2, bool) {
+	var e SqlConditionRunInfoDetails_SdkV2
+	if m.SqlCondition.IsNull() || m.SqlCondition.IsUnknown() {
+		return e, false
+	}
+	var v []SqlConditionRunInfoDetails_SdkV2
+	d := m.SqlCondition.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlCondition sets the value of the SqlCondition field in TriggerInfo_SdkV2.
+func (m *TriggerInfo_SdkV2) SetSqlCondition(ctx context.Context, v SqlConditionRunInfoDetails_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_condition"]
+	m.SqlCondition = types.ListValueMust(t, vs)
 }
 
 type TriggerSettings_SdkV2 struct {
@@ -26163,6 +26473,10 @@ type TriggerSettings_SdkV2 struct {
 	PauseStatus types.String `tfsdk:"pause_status"`
 	// Periodic trigger settings.
 	Periodic types.List `tfsdk:"periodic"`
+	// SQL condition that must be satisfied for the trigger to fire. Can be used
+	// in combination with other trigger types and runs *after* other trigger
+	// types conditions are evaluated.
+	SqlCondition types.List `tfsdk:"sql_condition"`
 
 	TableUpdate types.List `tfsdk:"table_update"`
 }
@@ -26192,6 +26506,15 @@ func (to *TriggerSettings_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 				// Recursively sync the fields of Periodic
 				toPeriodic.SyncFieldsDuringCreateOrUpdate(ctx, fromPeriodic)
 				to.SetPeriodic(ctx, toPeriodic)
+			}
+		}
+	}
+	if !from.SqlCondition.IsNull() && !from.SqlCondition.IsUnknown() {
+		if toSqlCondition, ok := to.GetSqlCondition(ctx); ok {
+			if fromSqlCondition, ok := from.GetSqlCondition(ctx); ok {
+				// Recursively sync the fields of SqlCondition
+				toSqlCondition.SyncFieldsDuringCreateOrUpdate(ctx, fromSqlCondition)
+				to.SetSqlCondition(ctx, toSqlCondition)
 			}
 		}
 	}
@@ -26231,6 +26554,14 @@ func (to *TriggerSettings_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 			}
 		}
 	}
+	if !from.SqlCondition.IsNull() && !from.SqlCondition.IsUnknown() {
+		if toSqlCondition, ok := to.GetSqlCondition(ctx); ok {
+			if fromSqlCondition, ok := from.GetSqlCondition(ctx); ok {
+				toSqlCondition.SyncFieldsDuringRead(ctx, fromSqlCondition)
+				to.SetSqlCondition(ctx, toSqlCondition)
+			}
+		}
+	}
 	if !from.TableUpdate.IsNull() && !from.TableUpdate.IsUnknown() {
 		if toTableUpdate, ok := to.GetTableUpdate(ctx); ok {
 			if fromTableUpdate, ok := from.GetTableUpdate(ctx); ok {
@@ -26249,6 +26580,8 @@ func (m TriggerSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["sql_condition"] = attrs["sql_condition"].SetOptional()
+	attrs["sql_condition"] = attrs["sql_condition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["table_update"] = attrs["table_update"].SetOptional()
 	attrs["table_update"] = attrs["table_update"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -26264,10 +26597,11 @@ func (m TriggerSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 // SDK values.
 func (m TriggerSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"file_arrival": reflect.TypeOf(FileArrivalTriggerConfiguration_SdkV2{}),
-		"model":        reflect.TypeOf(ModelTriggerConfiguration_SdkV2{}),
-		"periodic":     reflect.TypeOf(PeriodicTriggerConfiguration_SdkV2{}),
-		"table_update": reflect.TypeOf(TableUpdateTriggerConfiguration_SdkV2{}),
+		"file_arrival":  reflect.TypeOf(FileArrivalTriggerConfiguration_SdkV2{}),
+		"model":         reflect.TypeOf(ModelTriggerConfiguration_SdkV2{}),
+		"periodic":      reflect.TypeOf(PeriodicTriggerConfiguration_SdkV2{}),
+		"sql_condition": reflect.TypeOf(SqlConditionConfiguration_SdkV2{}),
+		"table_update":  reflect.TypeOf(TableUpdateTriggerConfiguration_SdkV2{}),
 	}
 }
 
@@ -26278,11 +26612,12 @@ func (m TriggerSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"file_arrival": m.FileArrival,
-			"model":        m.Model,
-			"pause_status": m.PauseStatus,
-			"periodic":     m.Periodic,
-			"table_update": m.TableUpdate,
+			"file_arrival":  m.FileArrival,
+			"model":         m.Model,
+			"pause_status":  m.PauseStatus,
+			"periodic":      m.Periodic,
+			"sql_condition": m.SqlCondition,
+			"table_update":  m.TableUpdate,
 		})
 }
 
@@ -26299,6 +26634,9 @@ func (m TriggerSettings_SdkV2) Type(ctx context.Context) attr.Type {
 			"pause_status": types.StringType,
 			"periodic": basetypes.ListType{
 				ElemType: PeriodicTriggerConfiguration_SdkV2{}.Type(ctx),
+			},
+			"sql_condition": basetypes.ListType{
+				ElemType: SqlConditionConfiguration_SdkV2{}.Type(ctx),
 			},
 			"table_update": basetypes.ListType{
 				ElemType: TableUpdateTriggerConfiguration_SdkV2{}.Type(ctx),
@@ -26385,6 +26723,32 @@ func (m *TriggerSettings_SdkV2) SetPeriodic(ctx context.Context, v PeriodicTrigg
 	m.Periodic = types.ListValueMust(t, vs)
 }
 
+// GetSqlCondition returns the value of the SqlCondition field in TriggerSettings_SdkV2 as
+// a SqlConditionConfiguration_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TriggerSettings_SdkV2) GetSqlCondition(ctx context.Context) (SqlConditionConfiguration_SdkV2, bool) {
+	var e SqlConditionConfiguration_SdkV2
+	if m.SqlCondition.IsNull() || m.SqlCondition.IsUnknown() {
+		return e, false
+	}
+	var v []SqlConditionConfiguration_SdkV2
+	d := m.SqlCondition.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlCondition sets the value of the SqlCondition field in TriggerSettings_SdkV2.
+func (m *TriggerSettings_SdkV2) SetSqlCondition(ctx context.Context, v SqlConditionConfiguration_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_condition"]
+	m.SqlCondition = types.ListValueMust(t, vs)
+}
+
 // GetTableUpdate returns the value of the TableUpdate field in TriggerSettings_SdkV2 as
 // a TableUpdateTriggerConfiguration_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -26413,6 +26777,9 @@ func (m *TriggerSettings_SdkV2) SetTableUpdate(ctx context.Context, v TableUpdat
 
 type TriggerStateProto_SdkV2 struct {
 	FileArrival types.List `tfsdk:"file_arrival"`
+	// State for SQL condition evaluation, can coexist with other trigger
+	// states.
+	SqlCondition types.List `tfsdk:"sql_condition"`
 
 	Table types.List `tfsdk:"table"`
 }
@@ -26424,6 +26791,15 @@ func (to *TriggerStateProto_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 				// Recursively sync the fields of FileArrival
 				toFileArrival.SyncFieldsDuringCreateOrUpdate(ctx, fromFileArrival)
 				to.SetFileArrival(ctx, toFileArrival)
+			}
+		}
+	}
+	if !from.SqlCondition.IsNull() && !from.SqlCondition.IsUnknown() {
+		if toSqlCondition, ok := to.GetSqlCondition(ctx); ok {
+			if fromSqlCondition, ok := from.GetSqlCondition(ctx); ok {
+				// Recursively sync the fields of SqlCondition
+				toSqlCondition.SyncFieldsDuringCreateOrUpdate(ctx, fromSqlCondition)
+				to.SetSqlCondition(ctx, toSqlCondition)
 			}
 		}
 	}
@@ -26447,6 +26823,14 @@ func (to *TriggerStateProto_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 			}
 		}
 	}
+	if !from.SqlCondition.IsNull() && !from.SqlCondition.IsUnknown() {
+		if toSqlCondition, ok := to.GetSqlCondition(ctx); ok {
+			if fromSqlCondition, ok := from.GetSqlCondition(ctx); ok {
+				toSqlCondition.SyncFieldsDuringRead(ctx, fromSqlCondition)
+				to.SetSqlCondition(ctx, toSqlCondition)
+			}
+		}
+	}
 	if !from.Table.IsNull() && !from.Table.IsUnknown() {
 		if toTable, ok := to.GetTable(ctx); ok {
 			if fromTable, ok := from.GetTable(ctx); ok {
@@ -26460,6 +26844,8 @@ func (to *TriggerStateProto_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 func (m TriggerStateProto_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
 	attrs["file_arrival"] = attrs["file_arrival"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["sql_condition"] = attrs["sql_condition"].SetOptional()
+	attrs["sql_condition"] = attrs["sql_condition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["table"] = attrs["table"].SetOptional()
 	attrs["table"] = attrs["table"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -26475,8 +26861,9 @@ func (m TriggerStateProto_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 // SDK values.
 func (m TriggerStateProto_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"file_arrival": reflect.TypeOf(FileArrivalTriggerState_SdkV2{}),
-		"table":        reflect.TypeOf(TableTriggerState_SdkV2{}),
+		"file_arrival":  reflect.TypeOf(FileArrivalTriggerState_SdkV2{}),
+		"sql_condition": reflect.TypeOf(SqlConditionState_SdkV2{}),
+		"table":         reflect.TypeOf(TableTriggerState_SdkV2{}),
 	}
 }
 
@@ -26487,8 +26874,9 @@ func (m TriggerStateProto_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"file_arrival": m.FileArrival,
-			"table":        m.Table,
+			"file_arrival":  m.FileArrival,
+			"sql_condition": m.SqlCondition,
+			"table":         m.Table,
 		})
 }
 
@@ -26498,6 +26886,9 @@ func (m TriggerStateProto_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"file_arrival": basetypes.ListType{
 				ElemType: FileArrivalTriggerState_SdkV2{}.Type(ctx),
+			},
+			"sql_condition": basetypes.ListType{
+				ElemType: SqlConditionState_SdkV2{}.Type(ctx),
 			},
 			"table": basetypes.ListType{
 				ElemType: TableTriggerState_SdkV2{}.Type(ctx),
@@ -26530,6 +26921,32 @@ func (m *TriggerStateProto_SdkV2) SetFileArrival(ctx context.Context, v FileArri
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["file_arrival"]
 	m.FileArrival = types.ListValueMust(t, vs)
+}
+
+// GetSqlCondition returns the value of the SqlCondition field in TriggerStateProto_SdkV2 as
+// a SqlConditionState_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TriggerStateProto_SdkV2) GetSqlCondition(ctx context.Context) (SqlConditionState_SdkV2, bool) {
+	var e SqlConditionState_SdkV2
+	if m.SqlCondition.IsNull() || m.SqlCondition.IsUnknown() {
+		return e, false
+	}
+	var v []SqlConditionState_SdkV2
+	d := m.SqlCondition.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlCondition sets the value of the SqlCondition field in TriggerStateProto_SdkV2.
+func (m *TriggerStateProto_SdkV2) SetSqlCondition(ctx context.Context, v SqlConditionState_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_condition"]
+	m.SqlCondition = types.ListValueMust(t, vs)
 }
 
 // GetTable returns the value of the Table field in TriggerStateProto_SdkV2 as

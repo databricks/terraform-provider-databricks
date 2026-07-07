@@ -101,6 +101,12 @@ type CatalogConfigData struct {
 	// List of auto-tagging configurations for this catalog. Empty list means no
 	// auto-tagging is enabled.
 	AutoTagConfigs types.List `tfsdk:"auto_tag_configs"`
+	// Schemas to exclude from the scan, each named relative to the parent
+	// catalog. If specified, all schemas except the specified ones will be
+	// scanned. Mutually exclusive with `included_schemas`: only one may be set
+	// per request. If neither `included_schemas` nor `excluded_schemas` is set,
+	// all schemas are scanned.
+	ExcludedSchemas types.Object `tfsdk:"excluded_schemas"`
 	// Schemas to include in the scan, each named relative to the parent
 	// catalog. If specified, only listed schemas will be scanned. Mutually
 	// exclusive with `excluded_schemas`: only one may be set per request. If
@@ -122,6 +128,7 @@ type CatalogConfigData struct {
 func (m CatalogConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"auto_tag_configs": reflect.TypeOf(dataclassification_tf.AutoTaggingConfig{}),
+		"excluded_schemas": reflect.TypeOf(dataclassification_tf.CatalogConfigSchemaNames{}),
 		"included_schemas": reflect.TypeOf(dataclassification_tf.CatalogConfigSchemaNames{}),
 		"provider_config":  reflect.TypeOf(ProviderConfigData{}),
 	}
@@ -138,6 +145,7 @@ func (m CatalogConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"auto_tag_configs": m.AutoTagConfigs,
+			"excluded_schemas": m.ExcludedSchemas,
 			"included_schemas": m.IncludedSchemas,
 			"name":             m.Name,
 
@@ -154,6 +162,7 @@ func (m CatalogConfigData) Type(ctx context.Context) attr.Type {
 			"auto_tag_configs": basetypes.ListType{
 				ElemType: dataclassification_tf.AutoTaggingConfig{}.Type(ctx),
 			},
+			"excluded_schemas": dataclassification_tf.CatalogConfigSchemaNames{}.Type(ctx),
 			"included_schemas": dataclassification_tf.CatalogConfigSchemaNames{}.Type(ctx),
 			"name":             types.StringType,
 
@@ -164,6 +173,7 @@ func (m CatalogConfigData) Type(ctx context.Context) attr.Type {
 
 func (m CatalogConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["auto_tag_configs"] = attrs["auto_tag_configs"].SetComputed()
+	attrs["excluded_schemas"] = attrs["excluded_schemas"].SetComputed()
 	attrs["included_schemas"] = attrs["included_schemas"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 

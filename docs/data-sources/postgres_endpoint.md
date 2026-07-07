@@ -69,6 +69,9 @@ The following attributes are exported:
 * `read_only_host` (string) - An optionally defined read-only host for the endpoint, without pooling. For read-only endpoints,
   this attribute is always defined and is equivalent to host. For read-write endpoints, this attribute is defined
   if the enclosing endpoint is a group with greater than 1 computes configured, and has readable secondaries enabled
+* `read_only_pooled_host` (string) - The read-only hostname of the compute endpoint, with pooling. This attribute is always defined for read-only endpoints,
+  and may be defined for read-write endpoints if configured with read replicas and allow read-only connections
+* `read_write_pooled_host` (string) - The read-write hostname of the compute endpoint, with pooling. This attribute is only defined for read-write endpoints
 
 ### EndpointSettings
 * `pg_settings` (object) - A raw representation of Postgres settings
@@ -106,6 +109,7 @@ The following attributes are exported:
 * `endpoint_type` (string) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `ENDPOINT_TYPE_READ_ONLY`, `ENDPOINT_TYPE_READ_WRITE`
 * `group` (EndpointGroupStatus) - Details on the HA configuration of the endpoint
 * `hosts` (EndpointHosts) - Contains host information for connecting to the endpoint
+* `last_active_time` (string) - A timestamp indicating when the compute endpoint was last active
 * `pending_state` (string) - Possible values are: `ACTIVE`, `DEGRADED`, `IDLE`, `INIT`
 * `settings` (EndpointSettings)
 * `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended

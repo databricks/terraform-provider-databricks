@@ -61,6 +61,85 @@ See the [Postgres `CREATE ROLE` documentation](https://www.postgresql.org/docs/1
 
 
 ## Example Usage
+### Managing Implicitly Created Owner Role
+
+An owner role is implicitly created on every branch, starting with `DATABRICKS_SUPERUSER` membership. Its `role_id` is derived from the identity that created the branch:
+
+- **User:** the part of the email before `@`, lowercased, with dots, underscores, and any other non-alphanumeric characters replaced by hyphens. For example, `Jane.Doe@databricks.com` becomes `jane-doe`.
+- **Service principal:** `sp-` followed by the application ID (for example, `sp-00000000-0000-0000-0000-000000000000`).
+
+If you're unsure of the exact value, find the role in the Lakebase UI (or list the branch's roles with the Postgres API) and read its `role_id` rather than deriving it by hand. Since Terraform is declarative, managing an already-existing resource requires `replace_existing = true`: it lets Terraform represent the implicitly created role in Terraform state and immediately apply the provided configuration to it.
+
+`replace_existing = true` only affects the initial adoption. Once the role is in Terraform state, it is managed like any other resource: removing it from your configuration and applying **deletes the actual role**, not just the state entry. This is unlike `databricks_postgres_branch`, whose deletion is instead controlled by its parent project. To stop managing the role without deleting it, remove it from state with `terraform state rm` before removing it from your configuration — this is also required for the implicit owner role, which cannot be deleted while it still owns objects on the branch.
+
+`spec.membership_roles` overwrites the role's memberships on every apply. The list you provide fully replaces the previous one, it isn't merged. Keep `DATABRICKS_SUPERUSER` in the list; leaving it out removes all of the role's memberships.
+
+```hcl
+resource "databricks_postgres_project" "this" {
+  project_id = "my-project"
+  spec = {
+    pg_version   = 17
+    display_name = "My Project"
+  }
+}
+
+resource "databricks_postgres_branch" "production" {
+  branch_id = "production"
+  parent    = databricks_postgres_project.this.name
+  spec = {
+    no_expiry = true
+  }
+  replace_existing = true
+}
+
+resource "databricks_postgres_role" "owner" {
+  role_id = "jane-doe"                      # normalized login of the creating identity
+  parent  = databricks_postgres_branch.production.name
+  spec = {
+    postgres_role    = "jane.doe@databricks.com"  # the raw login
+    membership_roles = ["DATABRICKS_SUPERUSER"]   # mutable; leaving it empty wipes memberships
+    attributes = {
+      createdb   = true
+      createrole = true
+      bypassrls  = true
+    }
+  }
+  replace_existing = true
+}
+```
+
+### Managing a Role Inherited by a Child Branch
+
+A child branch created from a source branch (via `spec.source_branch`) shares the source's storage through copy-on-write, so every role on the source branch — including the implicit owner role — already exists on the child at the branch point. These inherited roles are not created by Terraform, so managing one requires `replace_existing = true`, exactly as for the implicitly created owner role above.
+
+You typically adopt an inherited role when you want to manage its configuration (for example, its `membership_roles` or `attributes`) on the child branch independently of the source.
+
+```hcl
+resource "databricks_postgres_branch" "child" {
+  branch_id = "feature-x"
+  parent    = databricks_postgres_project.this.name
+  spec = {
+    source_branch = databricks_postgres_branch.production.name
+    no_expiry     = true
+  }
+}
+
+resource "databricks_postgres_role" "inherited_owner" {
+  role_id = "jane-doe"                      # same role_id as on the source branch
+  parent  = databricks_postgres_branch.child.name
+  spec = {
+    postgres_role    = "jane.doe@databricks.com"
+    membership_roles = ["DATABRICKS_SUPERUSER"]   # mutable; leaving it empty wipes memberships
+    attributes = {
+      createdb   = true
+      createrole = true
+      bypassrls  = true
+    }
+  }
+  replace_existing = true
+}
+```
+
 ### Role Backed by a Databricks User Identity
 
 Create a role that is authenticated as a specific Databricks workspace user via OAuth. `auth_method` is left unset and defaults to `LAKEBASE_OAUTH_V1` for managed identities.

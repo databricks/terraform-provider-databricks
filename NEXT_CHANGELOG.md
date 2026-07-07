@@ -21,6 +21,7 @@
 ### Bug Fixes
 
 * Fix import for jobs with >100 tasks ([#5417](https://github.com/databricks/terraform-provider-databricks/pull/5417)).
+* Fix updating a column comment on a `VIEW` in `databricks_sql_table` ([#4250](https://github.com/databricks/terraform-provider-databricks/issues/4250)). The provider emitted `ALTER VIEW ... ALTER COLUMN ... COMMENT`, which Databricks rejects with a `PARSE_SYNTAX_ERROR`, leaving the change stuck as a perpetual, un-appliable diff. Column comment changes on views are now applied in place via `COMMENT ON COLUMN`, matching how column comments on tables are updated.
 
 ### Documentation
 

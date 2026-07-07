@@ -21,6 +21,7 @@
 ### Bug Fixes
 
 * Fix import for jobs with >100 tasks ([#5417](https://github.com/databricks/terraform-provider-databricks/pull/5417)).
+* Fix handling of column nullability on a `VIEW` in `databricks_sql_table` (#PLACEHOLDER). A view column's nullability is derived from the view query and can't be set independently. The provider previously emitted `NOT NULL` in `CREATE VIEW` (which Databricks rejects) and `ALTER VIEW ... ALTER COLUMN ... SET/DROP NOT NULL` on update (which fails with `PARSE_SYNTAX_ERROR`), and it reported a permanent diff when the server-derived nullability differed from the configured value. The `NOT NULL` constraint and the `ALTER` are no longer emitted for views, and nullability diffs are suppressed for view columns.
 
 ### Documentation
 

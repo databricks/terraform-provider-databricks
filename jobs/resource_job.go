@@ -1,11 +1,12 @@
 package jobs
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"log"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -173,8 +174,8 @@ func sortWebhookNotifications(wn *jobs.WebhookNotifications) {
 	notifs := [][]jobs.Webhook{wn.OnStart, wn.OnFailure, wn.OnSuccess,
 		wn.OnDurationWarningThresholdExceeded, wn.OnStreamingBacklogExceeded}
 	for _, ns := range notifs {
-		sort.Slice(ns, func(i, j int) bool {
-			return ns[i].Id < ns[j].Id
+		slices.SortFunc(ns, func(a, b jobs.Webhook) int {
+			return cmp.Compare(a.Id, b.Id)
 		})
 	}
 }
@@ -335,16 +336,16 @@ type JobSettings struct {
 }
 
 func (js *JobSettings) sortTasksByKey() {
-	sort.Slice(js.Tasks, func(i, j int) bool {
-		return js.Tasks[i].TaskKey < js.Tasks[j].TaskKey
+	slices.SortFunc(js.Tasks, func(a, b JobTaskSettings) int {
+		return cmp.Compare(a.TaskKey, b.TaskKey)
 	})
 }
 
 func (js *JobSettings) adjustTasks() {
 	js.sortTasksByKey()
 	for _, task := range js.Tasks {
-		sort.Slice(task.DependsOn, func(i, j int) bool {
-			return task.DependsOn[i].TaskKey < task.DependsOn[j].TaskKey
+		slices.SortFunc(task.DependsOn, func(a, b jobs.TaskDependency) int {
+			return cmp.Compare(a.TaskKey, b.TaskKey)
 		})
 		sortWebhookNotifications(task.WebhookNotifications)
 	}
@@ -1065,6 +1066,26 @@ func prepareJobSettingsForUpdate(d *schema.ResourceData, js JobSettings) {
 
 var jobsGoSdkSchema = common.StructToSchema(JobSettingsResource{}, nil)
 
+// readJobGoSdk fetches the job via Go SDK (API 2.2) and populates d.
+// Used by both the Read function's Go SDK branch and the custom Importer.
+func readJobGoSdk(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+	if err != nil {
+		return err
+	}
+	jobID, err := parseJobId(d.Id())
+	if err != nil {
+		return err
+	}
+	job, err := Read(jobID, w, ctx)
+	if err != nil {
+		return err
+	}
+	d.Set("url", c.FormatURL("#job/", d.Id()))
+	res := JobSettingsResource{JobSettings: *job.Settings}
+	return common.StructToData(res, jobsGoSdkSchema, d)
+}
+
 func ResourceJob() common.Resource {
 	getReadCtx := func(ctx context.Context, d *schema.ResourceData) context.Context {
 		var jsr JobSettingsResource
@@ -1103,7 +1124,7 @@ func ResourceJob() common.Resource {
 			var jsr JobSettingsResource
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
 			if jsr.isMultiTask() {
-				// Api 2.1
+				// Api 2.2 (via Go SDK)
 				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 				if err != nil {
 					return err
@@ -1139,25 +1160,8 @@ func ResourceJob() common.Resource {
 			var jsr JobSettingsResource
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
 			if jsr.isMultiTask() || ctx.Value(common.Api) == common.API_2_1 {
-				// Api 2.1
-				w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
-				if err != nil {
-					return err
-				}
-				jobID, err := parseJobId(d.Id())
-				if err != nil {
-					return err
-				}
-				job, err := Read(jobID, w, ctx)
-				if err != nil {
-					return err
-				}
-				d.Set("url", c.FormatURL("#job/", d.Id()))
-
-				res := JobSettingsResource{
-					JobSettings: *job.Settings,
-				}
-				return common.StructToData(res, jobsGoSdkSchema, d)
+				// Api 2.2 (via Go SDK)
+				return readJobGoSdk(ctx, d, c)
 			} else {
 				// Api 2.0
 				// TODO: Deprecate and remove this code path
@@ -1173,7 +1177,7 @@ func ResourceJob() common.Resource {
 			var jsr JobSettingsResource
 			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
 			if jsr.isMultiTask() {
-				// Api 2.1
+				// Api 2.2 (via Go SDK)
 				err := prepareJobSettingsForUpdateGoSdk(d, &jsr)
 				if err != nil {
 					return err
@@ -1218,6 +1222,20 @@ func ResourceJob() common.Resource {
 				return err
 			}
 			return w.Jobs.DeleteByJobId(ctx, jobID)
+		},
+		// Custom importer that always uses Go SDK (API 2.2) so that import works
+		// for jobs with >100 tasks. The legacy API 2.0 path used by the regular
+		// Read function cannot handle those jobs, and during import the state is
+		// empty so isMultiTask() returns false even for multi-task jobs.
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, m any) ([]*schema.ResourceData, error) {
+				d.MarkNewResource()
+				c := m.(*common.DatabricksClient)
+				if err := readJobGoSdk(ctx, d, c); err != nil {
+					return nil, err
+				}
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 	}
 }

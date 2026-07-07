@@ -58,6 +58,8 @@ This data source exports a single attribute, `materialized_features`. It is a li
   The materialized feature will be stored in a Lakebase table with this prefix and a generated postfix
 
 ### StreamingMode
+* `freshness_target` (string) - The desired data freshness for feature materialization, expressed as a
+  duration string (e.g. "1 minute")
 * `mode` (string) - The type of streaming mode used by the materialization pipeline. Possible values are: `STREAMING_MODE_TYPE_MBM`, `STREAMING_MODE_TYPE_RTM`
 
 ### TableTrigger

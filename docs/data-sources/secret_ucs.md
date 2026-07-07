@@ -2,24 +2,39 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_secret_ucs Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/secretsuc)
+
+The Secrets data source allows you to list secrets in Unity Catalog within a given catalog and schema.
+
+This returns the metadata of the secrets the calling principal is allowed to see. Secret values are not returned when listing.
+
+### Permissions
+- The calling principal must have the appropriate privileges to list secrets in the target schema.
 
 
 ## Example Usage
+### Basic Example
+This example lists the secrets in a given catalog and schema:
+
+```hcl
+data "databricks_secret_ucs" "all" {
+  catalog_name = "my_catalog"
+  schema_name  = "my_schema"
+}
+```
 
 
 ## Arguments
 The following arguments are supported:
 * `catalog_name` (string, optional) - The name of the catalog under which to list secrets. Both **catalog_name** and
   **schema_name** must be specified together
-* `include_browse` (boolean, optional) - Whether to include secrets in the response for which you only have the **BROWSE** privilege,
-  which limits access to metadata
 * `page_size` (integer, optional) - Maximum number of secrets to return.
   
-  - If not specified, at most 10000 secrets are returned.
-  - If set to a value greater than 0, the page length is the minimum of this value and 10000.
-  - If set to 0, the page length is set to 10000.
+  - If not specified, at most 1000 secrets are returned.
+  - If set to a value greater than 0, the page length is the minimum of this value and 1000.
+  - If set to 0, the page length is set to 1000.
   - If set to a value less than 0, an invalid parameter error is returned
 * `schema_name` (string, optional) - The name of the schema under which to list secrets. Both **catalog_name** and
   **schema_name** must be specified together
@@ -31,8 +46,6 @@ The following arguments are supported:
 
 ## Attributes
 This data source exports a single attribute, `secrets`. It is a list of resources, each with the following attributes:
-* `browse_only` (boolean) - Indicates whether the principal is limited to retrieving metadata for the associated object
-  through the **BROWSE** privilege when **include_browse** is enabled in the request
 * `catalog_name` (string) - The name of the catalog where the schema and the secret reside
 * `comment` (string) - User-provided free-form text description of the secret
 * `create_time` (string) - The time at which this secret was created
@@ -44,7 +57,6 @@ This data source exports a single attribute, `secrets`. It is a list of resource
 * `expire_time` (string) - User-provided expiration time of the secret. This field indicates when the secret should no
   longer be used and may be displayed as a warning in the UI. It is purely informational and
   does not trigger any automatic actions or affect the secret's lifecycle
-* `external_secret_id` (string)
 * `full_name` (string) - The three-level (fully qualified) name of the secret, in the form of **catalog_name.schema_name.secret_name**
 * `metastore_id` (string) - Unique identifier of the metastore hosting the secret
 * `name` (string) - The name of the secret, relative to its parent schema

@@ -41,7 +41,11 @@ The following arguments are supported:
 * `avg` (AvgFunction, optional)
 * `count_function` (CountFunction, optional)
 * `first` (FirstFunction, optional)
+* `first_distinct` (FirstDistinctFunction, optional)
+* `first_n` (FirstNFunction, optional)
 * `last` (LastFunction, optional)
+* `last_distinct` (LastDistinctFunction, optional)
+* `last_n` (LastNFunction, optional)
 * `max` (MaxFunction, optional)
 * `min` (MinFunction, optional)
 * `stddev_pop` (StddevPopFunction, optional)
@@ -115,8 +119,16 @@ The following arguments are supported:
 * `data_type` (string, required) - The scalar data type of the field. Possible values are: `BINARY`, `BOOLEAN`, `DATE`, `DECIMAL`, `DOUBLE`, `FLOAT`, `INTEGER`, `LONG`, `SHORT`, `STRING`, `TIMESTAMP`
 * `name` (string, required) - The name of the field
 
+### FirstDistinctFunction
+* `input` (string, required) - The input column from which the first N distinct values are returned
+* `n` (integer, required) - The number of distinct values to return
+
 ### FirstFunction
 * `input` (string, required) - The input column from which the first value is returned
+
+### FirstNFunction
+* `input` (string, required) - The input column from which the first N values are returned
+* `n` (integer, required) - The number of values to return
 
 ### FlatSchema
 * `fields` (list of FieldDefinition, required) - The list of fields in this schema
@@ -145,12 +157,27 @@ The following arguments are supported:
 * `timeseries_column_identifier` (ColumnIdentifier, optional, deprecated) - Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility.
   The timeseries column identifier of the Kafka source
 
+### LastDistinctFunction
+* `input` (string, required) - The input column from which the last N distinct values are returned
+* `n` (integer, required) - The number of distinct values to return
+
 ### LastFunction
 * `input` (string, required) - The input column from which the last value is returned
+
+### LastNFunction
+* `input` (string, required) - The input column from which the last N values are returned
+* `n` (integer, required) - The number of values to return
 
 ### LineageContext
 * `job_context` (JobContext, optional) - Job context information including job ID and run ID
 * `notebook_id` (integer, optional) - The notebook ID where this API was invoked
+
+### LongRollingWindow
+* `window_duration` (string, required) - The duration of the rolling window. Must be positive and span more than two days, so that both
+  the batch (N-1 day) and stale-path (N-2 day) partial aggregates are well defined. The duration
+  need not be a whole number of days (e.g. 3 days 15 minutes is allowed)
+* `delay` (string, optional) - The delay applied to the end of the rolling window (must be non-negative).
+  For example, delay=1d shifts the window end 1 day before the evaluation time
 
 ### MaxFunction
 * `input` (string, required) - The input column from which the maximum is computed
@@ -191,6 +218,7 @@ The following arguments are supported:
 
 ### TimeWindow
 * `continuous` (ContinuousWindow, optional, deprecated)
+* `long_rolling` (LongRollingWindow, optional) - A long (multi-day) rolling window served via the hybrid batch + streaming path
 * `rolling` (RollingWindow, optional)
 * `sliding` (SlidingWindow, optional)
 * `tumbling` (TumblingWindow, optional)

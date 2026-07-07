@@ -18975,9 +18975,6 @@ type GetSecretRequest_SdkV2 struct {
 	// The three-level (fully qualified) name of the secret (for example,
 	// **catalog_name.schema_name.secret_name**).
 	FullName types.String `tfsdk:"-"`
-	// Whether to include secrets in the response for which you only have the
-	// **BROWSE** privilege, which limits access to metadata.
-	IncludeBrowse types.Bool `tfsdk:"-"`
 }
 
 func (to *GetSecretRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetSecretRequest_SdkV2) {
@@ -18988,7 +18985,6 @@ func (to *GetSecretRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 
 func (m GetSecretRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["full_name"] = attrs["full_name"].SetRequired()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 
 	return attrs
 }
@@ -19011,8 +19007,7 @@ func (m GetSecretRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"full_name":      m.FullName,
-			"include_browse": m.IncludeBrowse,
+			"full_name": m.FullName,
 		})
 }
 
@@ -19020,8 +19015,7 @@ func (m GetSecretRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m GetSecretRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"full_name":      types.StringType,
-			"include_browse": types.BoolType,
+			"full_name": types.StringType,
 		},
 	}
 }
@@ -20092,6 +20086,184 @@ func (m *ListCredentialsResponse_SdkV2) SetCredentials(ctx context.Context, v []
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["credentials"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Credentials = types.ListValueMust(t, vs)
+}
+
+type ListEffectivePrivilegeAssignmentsRequest_SdkV2 struct {
+	// Full name of securable.
+	FullName types.String `tfsdk:"-"`
+	// Specifies the maximum number of privilege assignments to return (page
+	// length). Every EffectivePrivilegeAssignment present in a single page
+	// response is guaranteed to contain all the effective privileges granted on
+	// (or inherited by) the requested Securable for the respective principal.
+	//
+	// If not set, a server-configured default is used. If set to - lesser than
+	// 0: invalid parameter error - 0: page length is set to a server configured
+	// value - lesser than 150 but greater than 0: invalid parameter error (this
+	// is to ensure that server is able to return at least one complete
+	// EffectivePrivilegeAssignment in a single page response) - greater than
+	// (or equal to) 150: page length is the minimum of this value and a server
+	// configured value
+	PageSize types.Int64 `tfsdk:"-"`
+	// Opaque pagination token to go to next page based on previous query.
+	PageToken types.String `tfsdk:"-"`
+	// If provided, only the effective permissions for the specified principal
+	// (user or group) are returned.
+	Principal types.String `tfsdk:"-"`
+	// Type of securable.
+	SecurableType types.String `tfsdk:"-"`
+}
+
+func (to *ListEffectivePrivilegeAssignmentsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListEffectivePrivilegeAssignmentsRequest_SdkV2) {
+}
+
+func (to *ListEffectivePrivilegeAssignmentsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListEffectivePrivilegeAssignmentsRequest_SdkV2) {
+}
+
+func (m ListEffectivePrivilegeAssignmentsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["securable_type"] = attrs["securable_type"].SetRequired()
+	attrs["full_name"] = attrs["full_name"].SetRequired()
+	attrs["principal"] = attrs["principal"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListEffectivePrivilegeAssignmentsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListEffectivePrivilegeAssignmentsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListEffectivePrivilegeAssignmentsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListEffectivePrivilegeAssignmentsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"full_name":      m.FullName,
+			"page_size":      m.PageSize,
+			"page_token":     m.PageToken,
+			"principal":      m.Principal,
+			"securable_type": m.SecurableType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListEffectivePrivilegeAssignmentsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"full_name":      types.StringType,
+			"page_size":      types.Int64Type,
+			"page_token":     types.StringType,
+			"principal":      types.StringType,
+			"securable_type": types.StringType,
+		},
+	}
+}
+
+type ListEffectivePrivilegeAssignmentsResponse_SdkV2 struct {
+	// The effective privilege assignments for the securable (and optional
+	// principal).
+	EffectivePrivilegeAssignments types.List `tfsdk:"effective_privilege_assignments"`
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. __page_token__ should be set to this value for the next
+	// request (for the next page of results).
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListEffectivePrivilegeAssignmentsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListEffectivePrivilegeAssignmentsResponse_SdkV2) {
+	if !from.EffectivePrivilegeAssignments.IsNull() && !from.EffectivePrivilegeAssignments.IsUnknown() && to.EffectivePrivilegeAssignments.IsNull() && len(from.EffectivePrivilegeAssignments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EffectivePrivilegeAssignments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EffectivePrivilegeAssignments = from.EffectivePrivilegeAssignments
+	}
+}
+
+func (to *ListEffectivePrivilegeAssignmentsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListEffectivePrivilegeAssignmentsResponse_SdkV2) {
+	if !from.EffectivePrivilegeAssignments.IsNull() && !from.EffectivePrivilegeAssignments.IsUnknown() && to.EffectivePrivilegeAssignments.IsNull() && len(from.EffectivePrivilegeAssignments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EffectivePrivilegeAssignments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EffectivePrivilegeAssignments = from.EffectivePrivilegeAssignments
+	}
+}
+
+func (m ListEffectivePrivilegeAssignmentsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["effective_privilege_assignments"] = attrs["effective_privilege_assignments"].SetComputed()
+	attrs["next_page_token"] = attrs["next_page_token"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListEffectivePrivilegeAssignmentsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListEffectivePrivilegeAssignmentsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"effective_privilege_assignments": reflect.TypeOf(EffectivePrivilegeAssignment_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListEffectivePrivilegeAssignmentsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListEffectivePrivilegeAssignmentsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"effective_privilege_assignments": m.EffectivePrivilegeAssignments,
+			"next_page_token":                 m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListEffectivePrivilegeAssignmentsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"effective_privilege_assignments": basetypes.ListType{
+				ElemType: EffectivePrivilegeAssignment_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetEffectivePrivilegeAssignments returns the value of the EffectivePrivilegeAssignments field in ListEffectivePrivilegeAssignmentsResponse_SdkV2 as
+// a slice of EffectivePrivilegeAssignment_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListEffectivePrivilegeAssignmentsResponse_SdkV2) GetEffectivePrivilegeAssignments(ctx context.Context) ([]EffectivePrivilegeAssignment_SdkV2, bool) {
+	if m.EffectivePrivilegeAssignments.IsNull() || m.EffectivePrivilegeAssignments.IsUnknown() {
+		return nil, false
+	}
+	var v []EffectivePrivilegeAssignment_SdkV2
+	d := m.EffectivePrivilegeAssignments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectivePrivilegeAssignments sets the value of the EffectivePrivilegeAssignments field in ListEffectivePrivilegeAssignmentsResponse_SdkV2.
+func (m *ListEffectivePrivilegeAssignmentsResponse_SdkV2) SetEffectivePrivilegeAssignments(ctx context.Context, v []EffectivePrivilegeAssignment_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_privilege_assignments"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EffectivePrivilegeAssignments = types.ListValueMust(t, vs)
 }
 
 type ListEntityTagAssignmentsRequest_SdkV2 struct {
@@ -21443,6 +21615,183 @@ func (m *ListPoliciesResponse_SdkV2) SetPolicies(ctx context.Context, v []Policy
 	m.Policies = types.ListValueMust(t, vs)
 }
 
+type ListPrivilegeAssignmentsRequest_SdkV2 struct {
+	// Full name of securable.
+	FullName types.String `tfsdk:"-"`
+	// Specifies the maximum number of privilege assignments to return (page
+	// length). Every PrivilegeAssignment present in a single page response is
+	// guaranteed to contain all the privileges granted on the requested
+	// Securable for the respective principal.
+	//
+	// If not set, page length is the server configured value. If set to -
+	// lesser than 0: invalid parameter error - 0: page length is set to a
+	// server configured value - lesser than 150 but greater than 0: invalid
+	// parameter error (this is to ensure that server is able to return at least
+	// one complete PrivilegeAssignment in a single page response) - greater
+	// than (or equal to) 150: page length is the minimum of this value and a
+	// server configured value
+	PageSize types.Int64 `tfsdk:"-"`
+	// Opaque pagination token to go to next page based on previous query.
+	PageToken types.String `tfsdk:"-"`
+	// If provided, only the permissions for the specified principal (user or
+	// group) are returned.
+	Principal types.String `tfsdk:"-"`
+	// Type of securable.
+	SecurableType types.String `tfsdk:"-"`
+}
+
+func (to *ListPrivilegeAssignmentsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListPrivilegeAssignmentsRequest_SdkV2) {
+}
+
+func (to *ListPrivilegeAssignmentsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListPrivilegeAssignmentsRequest_SdkV2) {
+}
+
+func (m ListPrivilegeAssignmentsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["securable_type"] = attrs["securable_type"].SetRequired()
+	attrs["full_name"] = attrs["full_name"].SetRequired()
+	attrs["principal"] = attrs["principal"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPrivilegeAssignmentsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListPrivilegeAssignmentsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListPrivilegeAssignmentsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListPrivilegeAssignmentsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"full_name":      m.FullName,
+			"page_size":      m.PageSize,
+			"page_token":     m.PageToken,
+			"principal":      m.Principal,
+			"securable_type": m.SecurableType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListPrivilegeAssignmentsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"full_name":      types.StringType,
+			"page_size":      types.Int64Type,
+			"page_token":     types.StringType,
+			"principal":      types.StringType,
+			"securable_type": types.StringType,
+		},
+	}
+}
+
+type ListPrivilegeAssignmentsResponse_SdkV2 struct {
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. __page_token__ should be set to this value for the next
+	// request (for the next page of results).
+	NextPageToken types.String `tfsdk:"next_page_token"`
+
+	PrivilegeAssignments types.List `tfsdk:"privilege_assignments"`
+}
+
+func (to *ListPrivilegeAssignmentsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListPrivilegeAssignmentsResponse_SdkV2) {
+	if !from.PrivilegeAssignments.IsNull() && !from.PrivilegeAssignments.IsUnknown() && to.PrivilegeAssignments.IsNull() && len(from.PrivilegeAssignments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PrivilegeAssignments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PrivilegeAssignments = from.PrivilegeAssignments
+	}
+}
+
+func (to *ListPrivilegeAssignmentsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListPrivilegeAssignmentsResponse_SdkV2) {
+	if !from.PrivilegeAssignments.IsNull() && !from.PrivilegeAssignments.IsUnknown() && to.PrivilegeAssignments.IsNull() && len(from.PrivilegeAssignments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PrivilegeAssignments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PrivilegeAssignments = from.PrivilegeAssignments
+	}
+}
+
+func (m ListPrivilegeAssignmentsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetComputed()
+	attrs["privilege_assignments"] = attrs["privilege_assignments"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPrivilegeAssignmentsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListPrivilegeAssignmentsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"privilege_assignments": reflect.TypeOf(PrivilegeAssignment_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListPrivilegeAssignmentsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListPrivilegeAssignmentsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token":       m.NextPageToken,
+			"privilege_assignments": m.PrivilegeAssignments,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListPrivilegeAssignmentsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"privilege_assignments": basetypes.ListType{
+				ElemType: PrivilegeAssignment_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetPrivilegeAssignments returns the value of the PrivilegeAssignments field in ListPrivilegeAssignmentsResponse_SdkV2 as
+// a slice of PrivilegeAssignment_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListPrivilegeAssignmentsResponse_SdkV2) GetPrivilegeAssignments(ctx context.Context) ([]PrivilegeAssignment_SdkV2, bool) {
+	if m.PrivilegeAssignments.IsNull() || m.PrivilegeAssignments.IsUnknown() {
+		return nil, false
+	}
+	var v []PrivilegeAssignment_SdkV2
+	d := m.PrivilegeAssignments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrivilegeAssignments sets the value of the PrivilegeAssignments field in ListPrivilegeAssignmentsResponse_SdkV2.
+func (m *ListPrivilegeAssignmentsResponse_SdkV2) SetPrivilegeAssignments(ctx context.Context, v []PrivilegeAssignment_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["privilege_assignments"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.PrivilegeAssignments = types.ListValueMust(t, vs)
+}
+
 type ListQuotasRequest_SdkV2 struct {
 	// The number of quotas to return.
 	MaxResults types.Int64 `tfsdk:"-"`
@@ -21995,15 +22344,12 @@ type ListSecretsRequest_SdkV2 struct {
 	// The name of the catalog under which to list secrets. Both
 	// **catalog_name** and **schema_name** must be specified together.
 	CatalogName types.String `tfsdk:"-"`
-	// Whether to include secrets in the response for which you only have the
-	// **BROWSE** privilege, which limits access to metadata.
-	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Maximum number of secrets to return.
 	//
-	// - If not specified, at most 10000 secrets are returned. - If set to a
+	// - If not specified, at most 1000 secrets are returned. - If set to a
 	// value greater than 0, the page length is the minimum of this value and
-	// 10000. - If set to 0, the page length is set to 10000. - If set to a
-	// value less than 0, an invalid parameter error is returned.
+	// 1000. - If set to 0, the page length is set to 1000. - If set to a value
+	// less than 0, an invalid parameter error is returned.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token to go to the next page based on previous query.
 	// The maximum page length is determined by a server configured value.
@@ -22022,7 +22368,6 @@ func (to *ListSecretsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 func (m ListSecretsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
 	attrs["schema_name"] = attrs["schema_name"].SetOptional()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
@@ -22047,11 +22392,10 @@ func (m ListSecretsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"catalog_name":   m.CatalogName,
-			"include_browse": m.IncludeBrowse,
-			"page_size":      m.PageSize,
-			"page_token":     m.PageToken,
-			"schema_name":    m.SchemaName,
+			"catalog_name": m.CatalogName,
+			"page_size":    m.PageSize,
+			"page_token":   m.PageToken,
+			"schema_name":  m.SchemaName,
 		})
 }
 
@@ -22059,11 +22403,10 @@ func (m ListSecretsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 func (m ListSecretsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"catalog_name":   types.StringType,
-			"include_browse": types.BoolType,
-			"page_size":      types.Int64Type,
-			"page_token":     types.StringType,
-			"schema_name":    types.StringType,
+			"catalog_name": types.StringType,
+			"page_size":    types.Int64Type,
+			"page_token":   types.StringType,
+			"schema_name":  types.StringType,
 		},
 	}
 }
@@ -27651,7 +27994,6 @@ func (m RunRefreshRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Next ID: 45
 type SchemaInfo_SdkV2 struct {
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
@@ -27874,10 +28216,6 @@ func (m *SchemaInfo_SdkV2) SetProperties(ctx context.Context, v map[string]types
 // (catalog.schema.secret) that securely store sensitive credential data such as
 // passwords, tokens, and keys.
 type Secret_SdkV2 struct {
-	// Indicates whether the principal is limited to retrieving metadata for the
-	// associated object through the **BROWSE** privilege when
-	// **include_browse** is enabled in the request.
-	BrowseOnly types.Bool `tfsdk:"browse_only"`
 	// The name of the catalog where the schema and the secret reside.
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// User-provided free-form text description of the secret.
@@ -27898,8 +28236,6 @@ type Secret_SdkV2 struct {
 	// the UI. It is purely informational and does not trigger any automatic
 	// actions or affect the secret's lifecycle.
 	ExpireTime timetypes.RFC3339 `tfsdk:"expire_time"`
-
-	ExternalSecretId types.String `tfsdk:"external_secret_id"`
 	// The three-level (fully qualified) name of the secret, in the form of
 	// **catalog_name.schema_name.secret_name**.
 	FullName types.String `tfsdk:"full_name"`
@@ -27947,7 +28283,6 @@ func (to *Secret_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Secret_Sd
 }
 
 func (m Secret_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
 	attrs["catalog_name"] = attrs["catalog_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["comment"] = attrs["comment"].SetOptional()
@@ -27956,7 +28291,6 @@ func (m Secret_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["effective_owner"] = attrs["effective_owner"].SetComputed()
 	attrs["effective_value"] = attrs["effective_value"].SetComputed()
 	attrs["expire_time"] = attrs["expire_time"].SetOptional()
-	attrs["external_secret_id"] = attrs["external_secret_id"].SetComputed()
 	attrs["full_name"] = attrs["full_name"].SetComputed()
 	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
@@ -27991,23 +28325,21 @@ func (m Secret_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"browse_only":        m.BrowseOnly,
-			"catalog_name":       m.CatalogName,
-			"comment":            m.Comment,
-			"create_time":        m.CreateTime,
-			"created_by":         m.CreatedBy,
-			"effective_owner":    m.EffectiveOwner,
-			"effective_value":    m.EffectiveValue,
-			"expire_time":        m.ExpireTime,
-			"external_secret_id": m.ExternalSecretId,
-			"full_name":          m.FullName,
-			"metastore_id":       m.MetastoreId,
-			"name":               m.Name,
-			"owner":              m.Owner,
-			"schema_name":        m.SchemaName,
-			"update_time":        m.UpdateTime,
-			"updated_by":         m.UpdatedBy,
-			"value":              m.Value,
+			"catalog_name":    m.CatalogName,
+			"comment":         m.Comment,
+			"create_time":     m.CreateTime,
+			"created_by":      m.CreatedBy,
+			"effective_owner": m.EffectiveOwner,
+			"effective_value": m.EffectiveValue,
+			"expire_time":     m.ExpireTime,
+			"full_name":       m.FullName,
+			"metastore_id":    m.MetastoreId,
+			"name":            m.Name,
+			"owner":           m.Owner,
+			"schema_name":     m.SchemaName,
+			"update_time":     m.UpdateTime,
+			"updated_by":      m.UpdatedBy,
+			"value":           m.Value,
 		})
 }
 
@@ -28015,23 +28347,21 @@ func (m Secret_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Secret_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"browse_only":        types.BoolType,
-			"catalog_name":       types.StringType,
-			"comment":            types.StringType,
-			"create_time":        timetypes.RFC3339{}.Type(ctx),
-			"created_by":         types.StringType,
-			"effective_owner":    types.StringType,
-			"effective_value":    types.StringType,
-			"expire_time":        timetypes.RFC3339{}.Type(ctx),
-			"external_secret_id": types.StringType,
-			"full_name":          types.StringType,
-			"metastore_id":       types.StringType,
-			"name":               types.StringType,
-			"owner":              types.StringType,
-			"schema_name":        types.StringType,
-			"update_time":        timetypes.RFC3339{}.Type(ctx),
-			"updated_by":         types.StringType,
-			"value":              types.StringType,
+			"catalog_name":    types.StringType,
+			"comment":         types.StringType,
+			"create_time":     timetypes.RFC3339{}.Type(ctx),
+			"created_by":      types.StringType,
+			"effective_owner": types.StringType,
+			"effective_value": types.StringType,
+			"expire_time":     timetypes.RFC3339{}.Type(ctx),
+			"full_name":       types.StringType,
+			"metastore_id":    types.StringType,
+			"name":            types.StringType,
+			"owner":           types.StringType,
+			"schema_name":     types.StringType,
+			"update_time":     timetypes.RFC3339{}.Type(ctx),
+			"updated_by":      types.StringType,
+			"value":           types.StringType,
 		},
 	}
 }
@@ -33644,6 +33974,9 @@ type UpdatePermissions_SdkV2 struct {
 	Changes types.List `tfsdk:"changes"`
 	// Full name of securable.
 	FullName types.String `tfsdk:"-"`
+	// Optional, default false. Specifies whether all the permissions should be
+	// returned in the response.
+	OmitPermissionsInResponse types.Bool `tfsdk:"omit_permissions_in_response"`
 	// Type of securable.
 	SecurableType types.String `tfsdk:"-"`
 }
@@ -33668,6 +34001,7 @@ func (to *UpdatePermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 
 func (m UpdatePermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["changes"] = attrs["changes"].SetOptional()
+	attrs["omit_permissions_in_response"] = attrs["omit_permissions_in_response"].SetOptional()
 	attrs["securable_type"] = attrs["securable_type"].SetRequired()
 	attrs["full_name"] = attrs["full_name"].SetRequired()
 
@@ -33694,9 +34028,10 @@ func (m UpdatePermissions_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"changes":        m.Changes,
-			"full_name":      m.FullName,
-			"securable_type": m.SecurableType,
+			"changes":                      m.Changes,
+			"full_name":                    m.FullName,
+			"omit_permissions_in_response": m.OmitPermissionsInResponse,
+			"securable_type":               m.SecurableType,
 		})
 }
 
@@ -33707,8 +34042,9 @@ func (m UpdatePermissions_SdkV2) Type(ctx context.Context) attr.Type {
 			"changes": basetypes.ListType{
 				ElemType: PermissionsChange_SdkV2{}.Type(ctx),
 			},
-			"full_name":      types.StringType,
-			"securable_type": types.StringType,
+			"full_name":                    types.StringType,
+			"omit_permissions_in_response": types.BoolType,
+			"securable_type":               types.StringType,
 		},
 	}
 }
@@ -34509,8 +34845,12 @@ type UpdateSecretRequest_SdkV2 struct {
 	// The secret object containing the fields to update. Only fields specified
 	// in **update_mask** will be updated.
 	Secret types.List `tfsdk:"secret"`
-	// The field mask specifying which fields of the secret to update. Supported
-	// fields: **value**, **comment**, **owner**, **expire_time**.
+	// The field mask specifying which fields of the secret to update. - If
+	// **update_mask** is **"*"**, all fields specified in **secret** are
+	// updated. - If **update_mask** specifies one or more fields, only those
+	// fields are updated. Each specified field must be set in **secret**.
+	// Supported fields: **value**, **comment**, **owner**, **expire_time**. To
+	// change the secret name, delete and recreate the secret.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -35457,7 +35797,6 @@ func (m *UpdateWorkspaceBindingsResponse_SdkV2) SetBindings(ctx context.Context,
 	m.Bindings = types.ListValueMust(t, vs)
 }
 
-// Next ID: 18
 type ValidateCredentialRequest_SdkV2 struct {
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
 

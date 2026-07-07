@@ -11,6 +11,7 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/environments_tf"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -118,6 +119,8 @@ type WorkspaceBaseEnvironmentData struct {
 	// The resource name of the workspace base environment. Format:
 	// workspace-base-environments/{workspace-base-environment}
 	Name types.String `tfsdk:"name"`
+	// The environment specification containing version and dependencies.
+	Spec types.Object `tfsdk:"spec"`
 	// The status of the materialized workspace base environment.
 	Status types.String `tfsdk:"status"`
 	// Timestamp when the environment was last updated.
@@ -134,6 +137,7 @@ type WorkspaceBaseEnvironmentData struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m WorkspaceBaseEnvironmentData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"spec":            reflect.TypeOf(environments_tf.EnvironmentSpec{}),
 		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
 }
@@ -157,6 +161,7 @@ func (m WorkspaceBaseEnvironmentData) ToObjectValue(ctx context.Context) basetyp
 			"last_updated_user_id": m.LastUpdatedUserId,
 			"message":              m.Message,
 			"name":                 m.Name,
+			"spec":                 m.Spec,
 			"status":               m.Status,
 			"update_time":          m.UpdateTime,
 
@@ -180,6 +185,7 @@ func (m WorkspaceBaseEnvironmentData) Type(ctx context.Context) attr.Type {
 			"last_updated_user_id":            types.StringType,
 			"message":                         types.StringType,
 			"name":                            types.StringType,
+			"spec":                            environments_tf.EnvironmentSpec{}.Type(ctx),
 			"status":                          types.StringType,
 			"update_time":                     timetypes.RFC3339{}.Type(ctx),
 
@@ -199,6 +205,7 @@ func (m WorkspaceBaseEnvironmentData) ApplySchemaCustomizations(attrs map[string
 	attrs["last_updated_user_id"] = attrs["last_updated_user_id"].SetComputed()
 	attrs["message"] = attrs["message"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 

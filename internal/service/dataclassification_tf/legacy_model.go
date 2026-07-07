@@ -89,8 +89,16 @@ type CatalogConfig_SdkV2 struct {
 	// List of auto-tagging configurations for this catalog. Empty list means no
 	// auto-tagging is enabled.
 	AutoTagConfigs types.List `tfsdk:"auto_tag_configs"`
-	// Schemas to include in the scan. Empty list is not supported as it results
-	// in a no-op scan. If `included_schemas` is not set, all schemas are
+	// Schemas to exclude from the scan, each named relative to the parent
+	// catalog. If specified, all schemas except the specified ones will be
+	// scanned. Mutually exclusive with `included_schemas`: only one may be set
+	// per request. If neither `included_schemas` nor `excluded_schemas` is set,
+	// all schemas are scanned.
+	ExcludedSchemas types.List `tfsdk:"excluded_schemas"`
+	// Schemas to include in the scan, each named relative to the parent
+	// catalog. If specified, only listed schemas will be scanned. Mutually
+	// exclusive with `excluded_schemas`: only one may be set per request. If
+	// neither `included_schemas` nor `excluded_schemas` is set, all schemas are
 	// scanned.
 	IncludedSchemas types.List `tfsdk:"included_schemas"`
 	// Resource name in the format: catalogs/{catalog_name}/config.
@@ -103,6 +111,15 @@ func (to *CatalogConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 		// If a user specified a non-Null, empty list for AutoTagConfigs, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AutoTagConfigs = from.AutoTagConfigs
+	}
+	if !from.ExcludedSchemas.IsNull() && !from.ExcludedSchemas.IsUnknown() {
+		if toExcludedSchemas, ok := to.GetExcludedSchemas(ctx); ok {
+			if fromExcludedSchemas, ok := from.GetExcludedSchemas(ctx); ok {
+				// Recursively sync the fields of ExcludedSchemas
+				toExcludedSchemas.SyncFieldsDuringCreateOrUpdate(ctx, fromExcludedSchemas)
+				to.SetExcludedSchemas(ctx, toExcludedSchemas)
+			}
+		}
 	}
 	if !from.IncludedSchemas.IsNull() && !from.IncludedSchemas.IsUnknown() {
 		if toIncludedSchemas, ok := to.GetIncludedSchemas(ctx); ok {
@@ -122,6 +139,14 @@ func (to *CatalogConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Ca
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AutoTagConfigs = from.AutoTagConfigs
 	}
+	if !from.ExcludedSchemas.IsNull() && !from.ExcludedSchemas.IsUnknown() {
+		if toExcludedSchemas, ok := to.GetExcludedSchemas(ctx); ok {
+			if fromExcludedSchemas, ok := from.GetExcludedSchemas(ctx); ok {
+				toExcludedSchemas.SyncFieldsDuringRead(ctx, fromExcludedSchemas)
+				to.SetExcludedSchemas(ctx, toExcludedSchemas)
+			}
+		}
+	}
 	if !from.IncludedSchemas.IsNull() && !from.IncludedSchemas.IsUnknown() {
 		if toIncludedSchemas, ok := to.GetIncludedSchemas(ctx); ok {
 			if fromIncludedSchemas, ok := from.GetIncludedSchemas(ctx); ok {
@@ -134,6 +159,8 @@ func (to *CatalogConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Ca
 
 func (m CatalogConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["auto_tag_configs"] = attrs["auto_tag_configs"].SetOptional()
+	attrs["excluded_schemas"] = attrs["excluded_schemas"].SetOptional()
+	attrs["excluded_schemas"] = attrs["excluded_schemas"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["included_schemas"] = attrs["included_schemas"].SetOptional()
 	attrs["included_schemas"] = attrs["included_schemas"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
@@ -151,6 +178,7 @@ func (m CatalogConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 func (m CatalogConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"auto_tag_configs": reflect.TypeOf(AutoTaggingConfig_SdkV2{}),
+		"excluded_schemas": reflect.TypeOf(CatalogConfigSchemaNames_SdkV2{}),
 		"included_schemas": reflect.TypeOf(CatalogConfigSchemaNames_SdkV2{}),
 	}
 }
@@ -163,6 +191,7 @@ func (m CatalogConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"auto_tag_configs": m.AutoTagConfigs,
+			"excluded_schemas": m.ExcludedSchemas,
 			"included_schemas": m.IncludedSchemas,
 			"name":             m.Name,
 		})
@@ -174,6 +203,9 @@ func (m CatalogConfig_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"auto_tag_configs": basetypes.ListType{
 				ElemType: AutoTaggingConfig_SdkV2{}.Type(ctx),
+			},
+			"excluded_schemas": basetypes.ListType{
+				ElemType: CatalogConfigSchemaNames_SdkV2{}.Type(ctx),
 			},
 			"included_schemas": basetypes.ListType{
 				ElemType: CatalogConfigSchemaNames_SdkV2{}.Type(ctx),
@@ -209,6 +241,32 @@ func (m *CatalogConfig_SdkV2) SetAutoTagConfigs(ctx context.Context, v []AutoTag
 	m.AutoTagConfigs = types.ListValueMust(t, vs)
 }
 
+// GetExcludedSchemas returns the value of the ExcludedSchemas field in CatalogConfig_SdkV2 as
+// a CatalogConfigSchemaNames_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CatalogConfig_SdkV2) GetExcludedSchemas(ctx context.Context) (CatalogConfigSchemaNames_SdkV2, bool) {
+	var e CatalogConfigSchemaNames_SdkV2
+	if m.ExcludedSchemas.IsNull() || m.ExcludedSchemas.IsUnknown() {
+		return e, false
+	}
+	var v []CatalogConfigSchemaNames_SdkV2
+	d := m.ExcludedSchemas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExcludedSchemas sets the value of the ExcludedSchemas field in CatalogConfig_SdkV2.
+func (m *CatalogConfig_SdkV2) SetExcludedSchemas(ctx context.Context, v CatalogConfigSchemaNames_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["excluded_schemas"]
+	m.ExcludedSchemas = types.ListValueMust(t, vs)
+}
+
 // GetIncludedSchemas returns the value of the IncludedSchemas field in CatalogConfig_SdkV2 as
 // a CatalogConfigSchemaNames_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -237,6 +295,7 @@ func (m *CatalogConfig_SdkV2) SetIncludedSchemas(ctx context.Context, v CatalogC
 
 // Wrapper message for a list of schema names.
 type CatalogConfigSchemaNames_SdkV2 struct {
+	// Schema names, each relative to the parent catalog. Must not be empty.
 	Names types.List `tfsdk:"names"`
 }
 

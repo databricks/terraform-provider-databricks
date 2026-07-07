@@ -3,7 +3,7 @@ package permissions
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -85,7 +85,7 @@ func (p resourcePermissions) getAllowedPermissionLevels(includeNonManagementPerm
 			levels = append(levels, level)
 		}
 	}
-	sort.Strings(levels)
+	slices.Sort(levels)
 	return levels
 }
 
@@ -324,7 +324,7 @@ func getResourcePermissionsFromState(d interface{ GetOk(string) (any, bool) }) (
 		seen[mapping.field] = struct{}{}
 		allFields = append(allFields, mapping.field)
 	}
-	sort.Strings(allFields)
+	slices.Sort(allFields)
 	return resourcePermissions{}, "", fmt.Errorf("at least one type of resource identifier must be set; allowed fields: %s", strings.Join(allFields, ", "))
 }
 

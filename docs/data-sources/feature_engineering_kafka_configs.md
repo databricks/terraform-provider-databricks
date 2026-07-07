@@ -97,8 +97,18 @@ This data source exports a single attribute, `kafka_configs`. It is a list of re
   e.g. "/Volumes/<catalog>/<schema>/<volume>/truststore.jks"
 * `truststore_password_ref` (SecretScopeReference) - Secret-scope reference for the JKS truststore password
 
+### ProtoSchemaSpec
+* `message_name` (string) - The fully-qualified name of the message within schema_text that describes the Kafka payload
+  (e.g. "Event" or "com.example.Event" if schema_text declares a package). Identifies which
+  message is used to decode each Kafka record — a .proto file may declare multiple messages
+  but only one represents the payload. Must not be empty
+* `schema_text` (string) - The raw .proto file text (proto2 and proto3 syntax supported, see
+  https://protobuf.dev/programming-guides/proto3/ and https://protobuf.dev/programming-guides/proto2/)
+
 ### SchemaConfig
+* `avro_schema` (string) - Avro schema in JSON format (https://avro.apache.org/docs/current/specification/)
 * `json_schema` (string) - Schema of the JSON object in standard IETF JSON schema format (https://json-schema.org/)
+* `proto_schema` (ProtoSchemaSpec) - Protocol Buffer schema with its payload message name
 
 ### SecretScopeReference
 * `key` (string) - The key within the scope

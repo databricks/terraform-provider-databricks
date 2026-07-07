@@ -122,7 +122,7 @@ The following attributes are exported:
 * `column_name` (string) - Name of the source column whose target PostgreSQL type should be overridden
 * `pg_type` (string) - PostgreSQL-specific target type to use for the column. Possible values are: `PG_SPECIFIC_TYPE_VECTOR`
 * `size` (integer) - Size parameter for the target type. Required when pg_type is PG_SPECIFIC_TYPE_VECTOR
-  (specifies the vector dimension, e.g., 1024)
+  or PG_SPECIFIC_TYPE_HALFVEC (specifies the vector dimension, e.g., 1024)
 
 ### SyncedTableSyncedTableStatus
 * `detailed_state` (string) - The state of the synced table. Possible values are: `SYNCED_TABLE_OFFLINE`, `SYNCED_TABLE_OFFLINE_FAILED`, `SYNCED_TABLE_ONLINE`, `SYNCED_TABLE_ONLINE_CONTINUOUS_UPDATE`, `SYNCED_TABLE_ONLINE_NO_PENDING_UPDATE`, `SYNCED_TABLE_ONLINE_PIPELINE_FAILED`, `SYNCED_TABLE_ONLINE_TRIGGERED_UPDATE`, `SYNCED_TABLE_ONLINE_UPDATING_PIPELINE_RESOURCES`, `SYNCED_TABLE_PROVISIONING`, `SYNCED_TABLE_PROVISIONING_INITIAL_SNAPSHOT`, `SYNCED_TABLE_PROVISIONING_PIPELINE_RESOURCES`

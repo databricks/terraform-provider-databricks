@@ -4116,7 +4116,8 @@ type SyncedTableSpecTypeOverride_SdkV2 struct {
 	// PostgreSQL-specific target type to use for the column.
 	PgType types.String `tfsdk:"pg_type"`
 	// Size parameter for the target type. Required when pg_type is
-	// PG_SPECIFIC_TYPE_VECTOR (specifies the vector dimension, e.g., 1024).
+	// PG_SPECIFIC_TYPE_VECTOR or PG_SPECIFIC_TYPE_HALFVEC (specifies the vector
+	// dimension, e.g., 1024).
 	Size types.Int64 `tfsdk:"size"`
 }
 

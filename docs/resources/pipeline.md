@@ -99,6 +99,7 @@ The following arguments are supported:
 * `channel` - optional name of the release channel for Spark version used by Lakeflow Declarative Pipeline.  Supported values are: `CURRENT` (default) and `PREVIEW`.
 * `budget_policy_id` - optional string specifying ID of the budget policy for this Lakeflow Declarative Pipeline.
 * `allow_duplicate_names` - Optional boolean flag. If false, deployment will fail if name conflicts with that of another pipeline. default is `false`.
+* `cascade` - Optional boolean flag that controls whether pipeline deletion cascades to datasets. Defaults to `true`. Set to `false` to keep datasets on pipeline deletion.
 * `deployment` - Deployment type of this pipeline. Supports following attributes:
   * `kind` - The deployment method that manages the pipeline.
   * `metadata_file_path` - The path to the file containing metadata about the deployment.

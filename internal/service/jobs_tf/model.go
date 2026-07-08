@@ -2430,6 +2430,9 @@ type CreateJob struct {
 	NotificationSettings types.Object `tfsdk:"notification_settings"`
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
+	// Path of the job parent folder in workspace file tree. If absent, the job
+	// doesn't have a workspace object.
+	ParentPath types.String `tfsdk:"parent_path"`
 	// The performance mode on a serverless job. This field determines the level
 	// of compute performance or cost-efficiency for the run. The performance
 	// target does not apply to tasks that run on Serverless GPU compute.
@@ -2749,6 +2752,7 @@ func (m CreateJob) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
 	attrs["parameter"] = attrs["parameter"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["performance_target"] = attrs["performance_target"].SetOptional()
 	attrs["queue"] = attrs["queue"].SetOptional()
 	attrs["run_as"] = attrs["run_as"].SetOptional()
@@ -2815,6 +2819,7 @@ func (m CreateJob) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"name":                  m.Name,
 			"notification_settings": m.NotificationSettings,
 			"parameter":             m.Parameters,
+			"parent_path":           m.ParentPath,
 			"performance_target":    m.PerformanceTarget,
 			"queue":                 m.Queue,
 			"run_as":                m.RunAs,
@@ -2856,6 +2861,7 @@ func (m CreateJob) Type(ctx context.Context) attr.Type {
 			"parameter": basetypes.ListType{
 				ElemType: JobParameterDefinition{}.Type(ctx),
 			},
+			"parent_path":        types.StringType,
 			"performance_target": types.StringType,
 			"queue":              QueueSettings{}.Type(ctx),
 			"run_as":             JobRunAs{}.Type(ctx),
@@ -8196,6 +8202,9 @@ type JobSettings struct {
 	NotificationSettings types.Object `tfsdk:"notification_settings"`
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
+	// Path of the job parent folder in workspace file tree. If absent, the job
+	// doesn't have a workspace object.
+	ParentPath types.String `tfsdk:"parent_path"`
 	// The performance mode on a serverless job. This field determines the level
 	// of compute performance or cost-efficiency for the run. The performance
 	// target does not apply to tasks that run on Serverless GPU compute.
@@ -8502,6 +8511,7 @@ func (m JobSettings) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
 	attrs["parameter"] = attrs["parameter"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["performance_target"] = attrs["performance_target"].SetOptional()
 	attrs["queue"] = attrs["queue"].SetOptional()
 	attrs["run_as"] = attrs["run_as"].SetOptional()
@@ -8566,6 +8576,7 @@ func (m JobSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"name":                  m.Name,
 			"notification_settings": m.NotificationSettings,
 			"parameter":             m.Parameters,
+			"parent_path":           m.ParentPath,
 			"performance_target":    m.PerformanceTarget,
 			"queue":                 m.Queue,
 			"run_as":                m.RunAs,
@@ -8604,6 +8615,7 @@ func (m JobSettings) Type(ctx context.Context) attr.Type {
 			"parameter": basetypes.ListType{
 				ElemType: JobParameterDefinition{}.Type(ctx),
 			},
+			"parent_path":        types.StringType,
 			"performance_target": types.StringType,
 			"queue":              QueueSettings{}.Type(ctx),
 			"run_as":             JobRunAs{}.Type(ctx),

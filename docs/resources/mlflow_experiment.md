@@ -29,6 +29,21 @@ resource "databricks_mlflow_experiment" "this" {
 }
 ```
 
+```hcl
+# Store this experiment's traces in a Unity Catalog schema
+resource "databricks_mlflow_experiment" "with_uc_traces" {
+  name = "${data.databricks_current_user.me.home}/uc-traces-experiment"
+
+  trace_location {
+    uc_trace_location {
+      catalog      = "my_catalog"
+      schema       = "my_schema"
+      table_prefix = "my_experiment"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -36,6 +51,12 @@ The following arguments are supported:
 * `name` - (Required) Name of MLflow experiment. It must be an absolute path within the Databricks workspace, e.g. `/Users/<some-username>/my-experiment`. For more information about changes to experiment naming conventions, see [mlflow docs](https://docs.databricks.com/applications/mlflow/experiments.html#experiment-migration).
 * `artifact_location` - Path to artifact location of the MLflow experiment.
 * `tags` - Tags for the MLflow experiment.
+* `trace_location` - (Optional, Computed, Immutable) Unity Catalog location where the experiment's traces are stored. Cannot be changed after the experiment is created; changing it forces replacement of the experiment. Omitting the block for an experiment that already has a location leaves the existing location in place (it is read back from the server) rather than forcing replacement. This block consists of the following fields:
+  * `uc_trace_location` - (Required) The Unity Catalog storage location. This block consists of the following fields:
+    * `catalog` - (Required) Name of the Unity Catalog catalog.
+    * `schema` - (Required) Name of the Unity Catalog schema within `catalog`.
+    * `table_prefix` - (Optional) Prefix for the generated trace tables (named `{catalog}.{schema}.{table_prefix}_otel_*`). If omitted, the server generates a default prefix derived from the experiment ID; the field then stays empty and the resolved value is available in `effective_table_prefix`.
+    * `effective_table_prefix` - (Computed) The trace-table prefix actually in effect: `table_prefix` if it was set on creation, otherwise the server-generated default.
 * `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
   * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 

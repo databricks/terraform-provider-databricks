@@ -9,6 +9,7 @@
 ### New Features and Improvements
 
 * Add `databricks_recipients` data source to list Delta Sharing recipient names.
+* Add `trace_location` to `databricks_mlflow_experiment` for storing experiment traces in a Unity Catalog schema ([#5869](https://github.com/databricks/terraform-provider-databricks/pull/5869)). The block is immutable (`ForceNew`); `table_prefix` is optional and, when omitted, server-defaulted, with the resolved value exposed on the read-only `effective_table_prefix`.
 
 ### Bug Fixes
 

@@ -33,6 +33,21 @@ func ResourceMlflowExperiment() common.Resource {
 			}
 			common.CustomizeSchemaPath(m, "artifact_location").SetForceNew().SetSuppressDiff()
 			common.CustomizeSchemaPath(m, "name").SetRequired().SetCustomSuppressDiff(experimentNameSuppressDiff)
+			// Immutable server-side, so a change must replace. Computed so an
+			// experiment adopted without the block keeps its server value instead of
+			// diffing to zero and forcing replacement.
+			common.CustomizeSchemaPath(m, "trace_location").SetForceNew().SetComputed()
+			common.CustomizeSchemaPath(m, "trace_location", "uc_trace_location").SetForceNew().SetComputed()
+			// Case-insensitive identifiers: suppress case-only diffs so a normalized
+			// server echo does not force replacement.
+			common.CustomizeSchemaPath(m, "trace_location", "uc_trace_location", "catalog").
+				SetForceNew().SetRequired().SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			common.CustomizeSchemaPath(m, "trace_location", "uc_trace_location", "schema").
+				SetForceNew().SetRequired().SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			// Echoed on read only when the user set it, so plain Optional round-trips
+			// without drift; the resolved value is read from effective_table_prefix.
+			common.CustomizeSchemaPath(m, "trace_location", "uc_trace_location", "table_prefix").SetForceNew().SetOptional()
+			common.CustomizeSchemaPath(m, "trace_location", "uc_trace_location", "effective_table_prefix").SetComputed()
 			// the API never accepts description, but we need to keep this for backwards compatibility
 			m["description"] = &schema.Schema{
 				Optional:   true,

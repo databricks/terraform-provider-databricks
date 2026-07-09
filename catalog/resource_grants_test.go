@@ -38,12 +38,23 @@ func TestGrantCreate(t *testing.T) {
 					Changes: []catalog.PermissionsChange{
 						{
 							Principal: "me",
-							Add:       []catalog.Privilege{"MODIFY"},
 							Remove:    []catalog.Privilege{"SELECT"},
 						},
 						{
 							Principal: "someone-else",
 							Remove:    []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
+						{
+							Principal: "me",
+							Add:       []catalog.Privilege{"MODIFY"},
 						},
 					},
 				},
@@ -118,12 +129,23 @@ func TestGrantCreateMetastoreId(t *testing.T) {
 					Changes: []catalog.PermissionsChange{
 						{
 							Principal: "me",
-							Add:       []catalog.Privilege{"USE_SHARE"},
 							Remove:    []catalog.Privilege{"SELECT"},
 						},
 						{
 							Principal: "someone-else",
 							Remove:    []catalog.Privilege{"SELECT", "USE_SHARE"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/metastore/metastore_id",
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
+						{
+							Principal: "me",
+							Add:       []catalog.Privilege{"USE_SHARE"},
 						},
 					},
 				},
@@ -215,12 +237,23 @@ func TestWaitUntilReady(t *testing.T) {
 					Changes: []catalog.PermissionsChange{
 						{
 							Principal: "me",
-							Add:       []catalog.Privilege{"MODIFY"},
 							Remove:    []catalog.Privilege{"SELECT"},
 						},
 						{
 							Principal: "someone-else",
 							Remove:    []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
+						{
+							Principal: "me",
+							Add:       []catalog.Privilege{"MODIFY"},
 						},
 					},
 				},

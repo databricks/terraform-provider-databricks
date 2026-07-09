@@ -2487,6 +2487,9 @@ type CreateJob_SdkV2 struct {
 	NotificationSettings types.List `tfsdk:"notification_settings"`
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
+	// Path of the job parent folder in workspace file tree. If absent, the job
+	// doesn't have a workspace object.
+	ParentPath types.String `tfsdk:"parent_path"`
 	// The performance mode on a serverless job. This field determines the level
 	// of compute performance or cost-efficiency for the run. The performance
 	// target does not apply to tasks that run on Serverless GPU compute.
@@ -2812,6 +2815,7 @@ func (m CreateJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
 	attrs["notification_settings"] = attrs["notification_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["parameter"] = attrs["parameter"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["performance_target"] = attrs["performance_target"].SetOptional()
 	attrs["queue"] = attrs["queue"].SetOptional()
 	attrs["queue"] = attrs["queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -2883,6 +2887,7 @@ func (m CreateJob_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"name":                  m.Name,
 			"notification_settings": m.NotificationSettings,
 			"parameter":             m.Parameters,
+			"parent_path":           m.ParentPath,
 			"performance_target":    m.PerformanceTarget,
 			"queue":                 m.Queue,
 			"run_as":                m.RunAs,
@@ -2936,6 +2941,7 @@ func (m CreateJob_SdkV2) Type(ctx context.Context) attr.Type {
 			"parameter": basetypes.ListType{
 				ElemType: JobParameterDefinition_SdkV2{}.Type(ctx),
 			},
+			"parent_path":        types.StringType,
 			"performance_target": types.StringType,
 			"queue": basetypes.ListType{
 				ElemType: QueueSettings_SdkV2{}.Type(ctx),
@@ -8353,6 +8359,9 @@ type JobSettings_SdkV2 struct {
 	NotificationSettings types.List `tfsdk:"notification_settings"`
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
+	// Path of the job parent folder in workspace file tree. If absent, the job
+	// doesn't have a workspace object.
+	ParentPath types.String `tfsdk:"parent_path"`
 	// The performance mode on a serverless job. This field determines the level
 	// of compute performance or cost-efficiency for the run. The performance
 	// target does not apply to tasks that run on Serverless GPU compute.
@@ -8665,6 +8674,7 @@ func (m JobSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
 	attrs["notification_settings"] = attrs["notification_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["parameter"] = attrs["parameter"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["performance_target"] = attrs["performance_target"].SetOptional()
 	attrs["queue"] = attrs["queue"].SetOptional()
 	attrs["queue"] = attrs["queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -8734,6 +8744,7 @@ func (m JobSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"name":                  m.Name,
 			"notification_settings": m.NotificationSettings,
 			"parameter":             m.Parameters,
+			"parent_path":           m.ParentPath,
 			"performance_target":    m.PerformanceTarget,
 			"queue":                 m.Queue,
 			"run_as":                m.RunAs,
@@ -8784,6 +8795,7 @@ func (m JobSettings_SdkV2) Type(ctx context.Context) attr.Type {
 			"parameter": basetypes.ListType{
 				ElemType: JobParameterDefinition_SdkV2{}.Type(ctx),
 			},
+			"parent_path":        types.StringType,
 			"performance_target": types.StringType,
 			"queue": basetypes.ListType{
 				ElemType: QueueSettings_SdkV2{}.Type(ctx),

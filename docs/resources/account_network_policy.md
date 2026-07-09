@@ -46,6 +46,30 @@ resource "databricks_account_network_policy" "example_network_policy" {
 }
 ```
 
+Restrict ingress to private connectivity by only allowing requests from registered private endpoints:
+
+```hcl
+resource "databricks_account_network_policy" "example_private_access_policy" {
+  network_policy_id = "example-private-access-policy"
+  ingress = {
+    private_access = {
+      # "ALLOW_ALL_REGISTERED_ENDPOINTS" allows every registered private endpoint.
+      # "RESTRICTED_ACCESS" only allows the endpoints listed in allow_rules.
+      restriction_mode = "RESTRICTED_ACCESS"
+      allow_rules = [
+        {
+          origin = {
+            endpoints = {
+              endpoint_ids = ["example-private-endpoint-id"]
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
 ## Arguments
 The following arguments are supported:
 * `egress` (NetworkPolicyEgress, optional) - The network policies applying for egress traffic

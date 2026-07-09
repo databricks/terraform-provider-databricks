@@ -8,6 +8,8 @@
 
 ### New Features and Improvements
 
+* Add `databricks_recipients` data source to list Delta Sharing recipient names.
+
 ### Bug Fixes
 
 ### Documentation

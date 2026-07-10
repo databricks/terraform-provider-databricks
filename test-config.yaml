@@ -150,3 +150,6 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/scim
       test_name: TestMwsAccServicePrincipalWithApiField
       comment: Failure due to API stopped returning the Display Name for the Service Principal. https://databricks.atlassian.net/browse/ES-1834234
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestMwsAccEntitlements_AccountProvider_ProviderConfig
+      comment: Failure due to read-after-write inconsistency in the entitlements/SCIM API; the workspace entitlement set on a freshly-federated service principal does not round-trip immediately, producing a non-empty plan. Fails on master independently of any PR.

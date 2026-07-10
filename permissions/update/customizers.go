@@ -1,6 +1,8 @@
 package update
 
 import (
+	"strings"
+
 	"github.com/databricks/databricks-sdk-go/service/iam"
 )
 
@@ -71,7 +73,7 @@ func AddCurrentUserAsManage(ctx ACLCustomizerContext, acl []iam.AccessControlReq
 	// them with CAN_MANAGE permissions.
 	found := false
 	for _, acl := range acl {
-		if acl.UserName == currentUser || acl.ServicePrincipalName == currentUser {
+		if strings.EqualFold(acl.UserName, currentUser) || strings.EqualFold(acl.ServicePrincipalName, currentUser) {
 			found = true
 			break
 		}

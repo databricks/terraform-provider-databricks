@@ -53,7 +53,11 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `avg` (AvgFunction)
 * `count_function` (CountFunction)
 * `first` (FirstFunction)
+* `first_distinct` (FirstDistinctFunction)
+* `first_n` (FirstNFunction)
 * `last` (LastFunction)
+* `last_distinct` (LastDistinctFunction)
+* `last_n` (LastNFunction)
 * `max` (MaxFunction)
 * `min` (MinFunction)
 * `stddev_pop` (StddevPopFunction)
@@ -127,8 +131,16 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `data_type` (string) - The scalar data type of the field. Possible values are: `BINARY`, `BOOLEAN`, `DATE`, `DECIMAL`, `DOUBLE`, `FLOAT`, `INTEGER`, `LONG`, `SHORT`, `STRING`, `TIMESTAMP`
 * `name` (string) - The name of the field
 
+### FirstDistinctFunction
+* `input` (string) - The input column from which the first N distinct values are returned
+* `n` (integer) - The number of distinct values to return
+
 ### FirstFunction
 * `input` (string) - The input column from which the first value is returned
+
+### FirstNFunction
+* `input` (string) - The input column from which the first N values are returned
+* `n` (integer) - The number of values to return
 
 ### FlatSchema
 * `fields` (list of FieldDefinition) - The list of fields in this schema
@@ -157,12 +169,27 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `timeseries_column_identifier` (ColumnIdentifier, deprecated) - Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility.
   The timeseries column identifier of the Kafka source
 
+### LastDistinctFunction
+* `input` (string) - The input column from which the last N distinct values are returned
+* `n` (integer) - The number of distinct values to return
+
 ### LastFunction
 * `input` (string) - The input column from which the last value is returned
+
+### LastNFunction
+* `input` (string) - The input column from which the last N values are returned
+* `n` (integer) - The number of values to return
 
 ### LineageContext
 * `job_context` (JobContext) - Job context information including job ID and run ID
 * `notebook_id` (integer) - The notebook ID where this API was invoked
+
+### LongRollingWindow
+* `delay` (string) - The delay applied to the end of the rolling window (must be non-negative).
+  For example, delay=1d shifts the window end 1 day before the evaluation time
+* `window_duration` (string) - The duration of the rolling window. Must be positive and span more than two days, so that both
+  the batch (N-1 day) and stale-path (N-2 day) partial aggregates are well defined. The duration
+  need not be a whole number of days (e.g. 3 days 15 minutes is allowed)
 
 ### MaxFunction
 * `input` (string) - The input column from which the maximum is computed
@@ -203,6 +230,7 @@ This data source exports a single attribute, `features`. It is a list of resourc
 
 ### TimeWindow
 * `continuous` (ContinuousWindow, deprecated)
+* `long_rolling` (LongRollingWindow) - A long (multi-day) rolling window served via the hybrid batch + streaming path
 * `rolling` (RollingWindow)
 * `sliding` (SlidingWindow)
 * `tumbling` (TumblingWindow)

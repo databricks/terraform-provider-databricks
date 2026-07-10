@@ -422,9 +422,8 @@ type FailoverGroup struct {
 	// Current effective primary region. Replication flows FROM workspaces in
 	// this region. Changes after a successful failover.
 	EffectivePrimaryRegion types.String `tfsdk:"effective_primary_region"`
-	// Opaque version string for optimistic locking. Server-generated, returned
-	// in responses. Must be provided on Update requests to prevent concurrent
-	// modifications.
+	// Opaque version string for optimistic locking. Server-generated and
+	// returned in responses.
 	Etag types.String `tfsdk:"etag"`
 	// Initial primary region. Used only in Create requests to set the starting
 	// primary region. Not returned in responses.
@@ -480,7 +479,7 @@ func (to *FailoverGroup) SyncFieldsDuringRead(ctx context.Context, from Failover
 func (m FailoverGroup) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["effective_primary_region"] = attrs["effective_primary_region"].SetComputed()
-	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["initial_primary_region"] = attrs["initial_primary_region"].SetRequired()
 	attrs["initial_primary_region"] = attrs["initial_primary_region"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
@@ -1207,7 +1206,7 @@ type StableUrl struct {
 	Name types.String `tfsdk:"name"`
 	// The stable URL endpoint. Generated on creation and immutable thereafter.
 	// For non-Private-Link workspaces this is
-	// `https://<spog_host>/?c=<connection_id>`. For Private-Link workspaces
+	// `https://<spog_host>/?w=<connection_id>`. For Private-Link workspaces
 	// this is the per-connection hostname.
 	Url types.String `tfsdk:"url"`
 }
@@ -1456,6 +1455,11 @@ func (m *UcReplicationConfig) SetLocationMappings(ctx context.Context, v []Locat
 }
 
 type UpdateFailoverGroupRequest struct {
+	// Optional opaque version string for optimistic locking, obtained from a
+	// prior read of the failover group. If provided, the update is rejected
+	// unless it matches the failover group's current etag. If omitted, the
+	// update proceeds without an optimistic-lock check.
+	Etag types.String `tfsdk:"-"`
 	// The failover group with updated fields. The name field identifies the
 	// resource and is populated from the URL path.
 	FailoverGroup types.Object `tfsdk:"failover_group"`
@@ -1494,6 +1498,7 @@ func (m UpdateFailoverGroupRequest) ApplySchemaCustomizations(attrs map[string]t
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+	attrs["etag"] = attrs["etag"].SetOptional()
 
 	return attrs
 }
@@ -1518,6 +1523,7 @@ func (m UpdateFailoverGroupRequest) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"etag":           m.Etag,
 			"failover_group": m.FailoverGroup,
 			"name":           m.Name,
 			"update_mask":    m.UpdateMask,
@@ -1528,6 +1534,7 @@ func (m UpdateFailoverGroupRequest) ToObjectValue(ctx context.Context) basetypes
 func (m UpdateFailoverGroupRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"etag":           types.StringType,
 			"failover_group": FailoverGroup{}.Type(ctx),
 			"name":           types.StringType,
 			"update_mask":    types.StringType,
@@ -1565,7 +1572,7 @@ type WorkspaceSet struct {
 	// Resource name for this workspace set.
 	Name types.String `tfsdk:"name"`
 	// Whether to enable control plane DR (notebooks, jobs, clusters, etc.) for
-	// this set.
+	// this set. Defaults to false.
 	ReplicateWorkspaceAssets types.Bool `tfsdk:"replicate_workspace_assets"`
 	// Resource names of stable URLs associated with this workspace set. Format:
 	// accounts/{account_id}/stable-urls/{stable_url_id}. The referenced stable
@@ -1596,7 +1603,7 @@ func (to *WorkspaceSet) SyncFieldsDuringRead(ctx context.Context, from Workspace
 
 func (m WorkspaceSet) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["replicate_workspace_assets"] = attrs["replicate_workspace_assets"].SetRequired()
+	attrs["replicate_workspace_assets"] = attrs["replicate_workspace_assets"].SetOptional()
 	attrs["stable_url_names"] = attrs["stable_url_names"].SetOptional()
 	attrs["workspace_ids"] = attrs["workspace_ids"].SetRequired()
 

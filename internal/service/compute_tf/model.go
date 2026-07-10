@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -405,6 +406,22 @@ type AzureAttributes struct {
 	// `first_on_demand` ones. Note: If `first_on_demand` is zero, this
 	// availability type will be used for the entire cluster.
 	Availability types.String `tfsdk:"availability"`
+	// The Azure capacity reservation group resource ID to use for launching
+	// VMs. When specified, VMs will be launched using the provided capacity
+	// reservation.
+	//
+	// Capacity reservations can only be specified when the workspace uses
+	// injected vnet (i.e. customer defined vnet not managed by databricks).
+	// Ensure the databricks-login-prod Enterprise Application is granted the
+	// following four permissions: 1.
+	// Microsoft.Compute/capacityReservationGroups/read 2.
+	// Microsoft.Compute/capacityReservationGroups/deploy/action 3.
+	// Microsoft.Compute/capacityReservationGroups/capacityReservations/read 4.
+	// Microsoft.Compute/capacityReservationGroups/capacityReservations/deploy/action
+	//
+	// Format:
+	// `/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/capacityReservationGroups/{capacityReservationGroupName}`
+	CapacityReservationGroup types.String `tfsdk:"capacity_reservation_group"`
 	// The first `first_on_demand` nodes of the cluster will be placed on
 	// on-demand instances. This value should be greater than 0, to make sure
 	// the cluster driver node is placed on an on-demand instance. If this value
@@ -450,6 +467,7 @@ func (to *AzureAttributes) SyncFieldsDuringRead(ctx context.Context, from AzureA
 
 func (m AzureAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["availability"] = attrs["availability"].SetOptional()
+	attrs["capacity_reservation_group"] = attrs["capacity_reservation_group"].SetOptional()
 	attrs["first_on_demand"] = attrs["first_on_demand"].SetOptional()
 	attrs["log_analytics_info"] = attrs["log_analytics_info"].SetOptional()
 	attrs["spot_bid_max_price"] = attrs["spot_bid_max_price"].SetOptional()
@@ -477,10 +495,11 @@ func (m AzureAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"availability":       m.Availability,
-			"first_on_demand":    m.FirstOnDemand,
-			"log_analytics_info": m.LogAnalyticsInfo,
-			"spot_bid_max_price": m.SpotBidMaxPrice,
+			"availability":               m.Availability,
+			"capacity_reservation_group": m.CapacityReservationGroup,
+			"first_on_demand":            m.FirstOnDemand,
+			"log_analytics_info":         m.LogAnalyticsInfo,
+			"spot_bid_max_price":         m.SpotBidMaxPrice,
 		})
 }
 
@@ -488,10 +507,11 @@ func (m AzureAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m AzureAttributes) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"availability":       types.StringType,
-			"first_on_demand":    types.Int64Type,
-			"log_analytics_info": LogAnalyticsInfo{}.Type(ctx),
-			"spot_bid_max_price": types.Float64Type,
+			"availability":               types.StringType,
+			"capacity_reservation_group": types.StringType,
+			"first_on_demand":            types.Int64Type,
+			"log_analytics_info":         LogAnalyticsInfo{}.Type(ctx),
+			"spot_bid_max_price":         types.Float64Type,
 		},
 	}
 }
@@ -575,6 +595,105 @@ func (m CancelCommand) Type(ctx context.Context) attr.Type {
 			"command_id": types.StringType,
 			"context_id": types.StringType,
 		},
+	}
+}
+
+// Request to cancel the pending enforcement for a cluster.
+type CancelPendingClusterEnforcementRequest struct {
+	// If true and no pending enforcement exists, the request will succeed but
+	// no action will be taken.
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
+	// The ID of the cluster to cancel the pending enforcement for.
+	ClusterId types.String `tfsdk:"cluster_id"`
+}
+
+func (to *CancelPendingClusterEnforcementRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CancelPendingClusterEnforcementRequest) {
+}
+
+func (to *CancelPendingClusterEnforcementRequest) SyncFieldsDuringRead(ctx context.Context, from CancelPendingClusterEnforcementRequest) {
+}
+
+func (m CancelPendingClusterEnforcementRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetOptional()
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelPendingClusterEnforcementRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CancelPendingClusterEnforcementRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelPendingClusterEnforcementRequest
+// only implements ToObjectValue() and Type().
+func (m CancelPendingClusterEnforcementRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allow_missing": m.AllowMissing,
+			"cluster_id":    m.ClusterId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CancelPendingClusterEnforcementRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allow_missing": types.BoolType,
+			"cluster_id":    types.StringType,
+		},
+	}
+}
+
+// Response for canceling the pending enforcement for a cluster. If the cancel
+// request succeeds, an empty response object is returned. Otherwise, an error
+// response is returned.
+type CancelPendingClusterEnforcementResponse struct {
+}
+
+func (to *CancelPendingClusterEnforcementResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CancelPendingClusterEnforcementResponse) {
+}
+
+func (to *CancelPendingClusterEnforcementResponse) SyncFieldsDuringRead(ctx context.Context, from CancelPendingClusterEnforcementResponse) {
+}
+
+func (m CancelPendingClusterEnforcementResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelPendingClusterEnforcementResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CancelPendingClusterEnforcementResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelPendingClusterEnforcementResponse
+// only implements ToObjectValue() and Type().
+func (m CancelPendingClusterEnforcementResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CancelPendingClusterEnforcementResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -1159,7 +1278,9 @@ type ClusterAttributes struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id"`
@@ -1199,7 +1320,9 @@ type ClusterAttributes struct {
 	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	SparkVersion types.String `tfsdk:"spark_version"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
@@ -1873,6 +1996,9 @@ type ClusterCompliance struct {
 	// Whether this cluster is in compliance with the latest version of its
 	// policy.
 	IsCompliant types.Bool `tfsdk:"is_compliant"`
+	// Information about the pending enforcement for the cluster. Only present
+	// if a pending enforcement is scheduled for the cluster.
+	PendingEnforcement types.Object `tfsdk:"pending_enforcement"`
 	// An object containing key-value mappings representing the first 200 policy
 	// validation errors. The keys indicate the path where the policy validation
 	// error is occurring. The values indicate an error message describing the
@@ -1881,14 +2007,32 @@ type ClusterCompliance struct {
 }
 
 func (to *ClusterCompliance) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ClusterCompliance) {
+	if !from.PendingEnforcement.IsNull() && !from.PendingEnforcement.IsUnknown() {
+		if toPendingEnforcement, ok := to.GetPendingEnforcement(ctx); ok {
+			if fromPendingEnforcement, ok := from.GetPendingEnforcement(ctx); ok {
+				// Recursively sync the fields of PendingEnforcement
+				toPendingEnforcement.SyncFieldsDuringCreateOrUpdate(ctx, fromPendingEnforcement)
+				to.SetPendingEnforcement(ctx, toPendingEnforcement)
+			}
+		}
+	}
 }
 
 func (to *ClusterCompliance) SyncFieldsDuringRead(ctx context.Context, from ClusterCompliance) {
+	if !from.PendingEnforcement.IsNull() && !from.PendingEnforcement.IsUnknown() {
+		if toPendingEnforcement, ok := to.GetPendingEnforcement(ctx); ok {
+			if fromPendingEnforcement, ok := from.GetPendingEnforcement(ctx); ok {
+				toPendingEnforcement.SyncFieldsDuringRead(ctx, fromPendingEnforcement)
+				to.SetPendingEnforcement(ctx, toPendingEnforcement)
+			}
+		}
+	}
 }
 
 func (m ClusterCompliance) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
 	attrs["is_compliant"] = attrs["is_compliant"].SetOptional()
+	attrs["pending_enforcement"] = attrs["pending_enforcement"].SetOptional()
 	attrs["violations"] = attrs["violations"].SetOptional()
 
 	return attrs
@@ -1903,7 +2047,8 @@ func (m ClusterCompliance) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // SDK values.
 func (m ClusterCompliance) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"violations": reflect.TypeOf(types.String{}),
+		"pending_enforcement": reflect.TypeOf(PendingEnforcement{}),
+		"violations":          reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1914,9 +2059,10 @@ func (m ClusterCompliance) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"cluster_id":   m.ClusterId,
-			"is_compliant": m.IsCompliant,
-			"violations":   m.Violations,
+			"cluster_id":          m.ClusterId,
+			"is_compliant":        m.IsCompliant,
+			"pending_enforcement": m.PendingEnforcement,
+			"violations":          m.Violations,
 		})
 }
 
@@ -1924,13 +2070,39 @@ func (m ClusterCompliance) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (m ClusterCompliance) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cluster_id":   types.StringType,
-			"is_compliant": types.BoolType,
+			"cluster_id":          types.StringType,
+			"is_compliant":        types.BoolType,
+			"pending_enforcement": PendingEnforcement{}.Type(ctx),
 			"violations": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
 	}
+}
+
+// GetPendingEnforcement returns the value of the PendingEnforcement field in ClusterCompliance as
+// a PendingEnforcement value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ClusterCompliance) GetPendingEnforcement(ctx context.Context) (PendingEnforcement, bool) {
+	var e PendingEnforcement
+	if m.PendingEnforcement.IsNull() || m.PendingEnforcement.IsUnknown() {
+		return e, false
+	}
+	var v PendingEnforcement
+	d := m.PendingEnforcement.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPendingEnforcement sets the value of the PendingEnforcement field in ClusterCompliance.
+func (m *ClusterCompliance) SetPendingEnforcement(ctx context.Context, v PendingEnforcement) {
+	vs := v.ToObjectValue(ctx)
+	m.PendingEnforcement = vs
 }
 
 // GetViolations returns the value of the Violations field in ClusterCompliance as
@@ -2089,7 +2261,9 @@ type ClusterDetails struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
@@ -2144,7 +2318,9 @@ type ClusterDetails struct {
 	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	SparkVersion types.String `tfsdk:"spark_version"`
 	// The spec contains a snapshot of the latest user specified settings that
 	// were used to create/edit the cluster. Note: not included in the response
@@ -4750,7 +4926,9 @@ type ClusterSpec struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
@@ -4801,7 +4979,9 @@ type ClusterSpec struct {
 	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	SparkVersion types.String `tfsdk:"spark_version"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
@@ -5986,7 +6166,9 @@ type CreateCluster struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
@@ -6037,7 +6219,9 @@ type CreateCluster struct {
 	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	SparkVersion types.String `tfsdk:"spark_version"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
@@ -6951,14 +7135,18 @@ type CreateInstancePool struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Custom Docker Image BYOC
 	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
 	// If set, what the configurable throughput (in Mb/s) for the remote disk
 	// is. Currently only supported for GCP HYPERDISK_BALANCED types.
@@ -8760,7 +8948,9 @@ type EditCluster struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
@@ -8811,7 +9001,9 @@ type EditCluster struct {
 	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	SparkVersion types.String `tfsdk:"spark_version"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
@@ -9605,7 +9797,9 @@ type EditInstancePool struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// If set, what the configurable throughput (in Mb/s) for the remote disk
 	// is. Currently only supported for GCP HYPERDISK_BALANCED types.
@@ -9982,6 +10176,20 @@ func (m EditResponse) Type(ctx context.Context) attr.Type {
 type EnforceClusterComplianceRequest struct {
 	// The ID of the cluster you want to enforce policy compliance on.
 	ClusterId types.String `tfsdk:"cluster_id"`
+	// Determines how changes should be made to clusters that are not in
+	// `TERMINATED` state.
+	//
+	// - `ENFORCE_IMMEDIATELY`: If the cluster is in a `RUNNING` state, it will
+	// be restarted so that the new attributes can take effect. For other states
+	// aside from `TERMINATED` state, the request will be rejected. -
+	// `WAIT_FOR_TERMINATION`: The cluster is not immediately edited. Instead, a
+	// pending enforcement is scheduled to update the cluster when it terminates
+	// or restarts. When this occurs, `enforce_result` will contain `DEFERRED`.
+	// Only workspace admins can use this mode.
+	//
+	// Regardless of the enforce mode, clusters in `TERMINATED` state are
+	// immediately edited.
+	EnforceMode types.String `tfsdk:"enforce_mode"`
 	// If set, previews the changes that would be made to a cluster to enforce
 	// compliance but does not update the cluster.
 	ValidateOnly types.Bool `tfsdk:"validate_only"`
@@ -9995,6 +10203,7 @@ func (to *EnforceClusterComplianceRequest) SyncFieldsDuringRead(ctx context.Cont
 
 func (m EnforceClusterComplianceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+	attrs["enforce_mode"] = attrs["enforce_mode"].SetOptional()
 	attrs["validate_only"] = attrs["validate_only"].SetOptional()
 
 	return attrs
@@ -10019,6 +10228,7 @@ func (m EnforceClusterComplianceRequest) ToObjectValue(ctx context.Context) base
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"cluster_id":    m.ClusterId,
+			"enforce_mode":  m.EnforceMode,
 			"validate_only": m.ValidateOnly,
 		})
 }
@@ -10028,6 +10238,7 @@ func (m EnforceClusterComplianceRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cluster_id":    types.StringType,
+			"enforce_mode":  types.StringType,
 			"validate_only": types.BoolType,
 		},
 	}
@@ -10037,6 +10248,8 @@ type EnforceClusterComplianceResponse struct {
 	// A list of changes that have been made to the cluster settings for the
 	// cluster to become compliant with its policy.
 	Changes types.List `tfsdk:"changes"`
+	// Describes whether changes have been applied to the cluster.
+	EnforceResult types.String `tfsdk:"enforce_result"`
 	// Whether any changes have been made to the cluster settings for the
 	// cluster to become compliant with its policy.
 	HasChanges types.Bool `tfsdk:"has_changes"`
@@ -10062,6 +10275,7 @@ func (to *EnforceClusterComplianceResponse) SyncFieldsDuringRead(ctx context.Con
 
 func (m EnforceClusterComplianceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["changes"] = attrs["changes"].SetOptional()
+	attrs["enforce_result"] = attrs["enforce_result"].SetOptional()
 	attrs["has_changes"] = attrs["has_changes"].SetOptional()
 
 	return attrs
@@ -10087,8 +10301,9 @@ func (m EnforceClusterComplianceResponse) ToObjectValue(ctx context.Context) bas
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"changes":     m.Changes,
-			"has_changes": m.HasChanges,
+			"changes":        m.Changes,
+			"enforce_result": m.EnforceResult,
+			"has_changes":    m.HasChanges,
 		})
 }
 
@@ -10099,7 +10314,8 @@ func (m EnforceClusterComplianceResponse) Type(ctx context.Context) attr.Type {
 			"changes": basetypes.ListType{
 				ElemType: ClusterSettingsChange{}.Type(ctx),
 			},
-			"has_changes": types.BoolType,
+			"enforce_result": types.StringType,
+			"has_changes":    types.BoolType,
 		},
 	}
 }
@@ -10130,6 +10346,863 @@ func (m *EnforceClusterComplianceResponse) SetChanges(ctx context.Context, v []C
 	m.Changes = types.ListValueMust(t, vs)
 }
 
+type EnforcePolicyComplianceForClusterResponseClusterSettings struct {
+	// Parameters needed in order to automatically scale clusters up and down
+	// based on load. Note: autoscaling works best with DB runtime versions 3.0
+	// or later.
+	Autoscale types.Object `tfsdk:"autoscale"`
+	// Automatically terminates the cluster after it is inactive for this time
+	// in minutes. If not set, this cluster will not be automatically
+	// terminated. If specified, the threshold must be between 10 and 10000
+	// minutes. Users can also set this value to 0 to explicitly disable
+	// automatic termination.
+	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes"`
+	// Attributes related to clusters running on Amazon Web Services. If not
+	// specified at cluster creation, a set of default values will be used.
+	AwsAttributes types.Object `tfsdk:"aws_attributes"`
+	// Attributes related to clusters running on Microsoft Azure. If not
+	// specified at cluster creation, a set of default values will be used.
+	AzureAttributes types.Object `tfsdk:"azure_attributes"`
+	// The configuration for delivering spark logs to a long-term storage
+	// destination. Three kinds of destinations (DBFS, S3 and Unity Catalog
+	// volumes) are supported. Only one destination can be specified for one
+	// cluster. If the conf is given, the logs will be delivered to the
+	// destination every `5 mins`. The destination of driver logs is
+	// `$destination/$clusterId/driver`, while the destination of executor logs
+	// is `$destination/$clusterId/executor`.
+	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
+	// Cluster name requested by the user. This doesn't have to be unique. If
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
+	ClusterName types.String `tfsdk:"cluster_name"`
+	// Additional tags for cluster resources. Databricks will tag all cluster
+	// resources (e.g., AWS instances and EBS volumes) with these tags in
+	// addition to `default_tags`. Notes:
+	//
+	// - Currently, Databricks allows at most 45 custom tags
+	//
+	// - Clusters can only reuse cloud resources if the resources' tags are a
+	// subset of the cluster tags
+	CustomTags types.Map `tfsdk:"custom_tags"`
+
+	DataSecurityMode types.String `tfsdk:"data_security_mode"`
+	// Custom docker image BYOC
+	DockerImage types.Object `tfsdk:"docker_image"`
+	// The optional ID of the instance pool for the driver of the cluster
+	// belongs. The pool cluster uses the instance pool with id
+	// (instance_pool_id) if the driver pool is not assigned.
+	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id"`
+	// Flexible node type configuration for the driver node.
+	DriverNodeTypeFlexibility types.Object `tfsdk:"driver_node_type_flexibility"`
+	// The node type of the Spark driver. Note that this field is optional; if
+	// unset, the driver node type will be set as the same value as
+	// `node_type_id` defined above.
+	//
+	// This field, along with node_type_id, should not be set if
+	// virtual_cluster_size is set. If both driver_node_type_id, node_type_id,
+	// and virtual_cluster_size are specified, driver_node_type_id and
+	// node_type_id take precedence.
+	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
+	// Autoscaling Local Storage: when enabled, this cluster will dynamically
+	// acquire additional disk space when its Spark workers are running low on
+	// disk space.
+	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
+	// Whether to enable LUKS on cluster VMs' local disks
+	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
+	// Attributes related to clusters running on Google Cloud Platform. If not
+	// specified at cluster creation, a set of default values will be used.
+	GcpAttributes types.Object `tfsdk:"gcp_attributes"`
+	// The configuration for storing init scripts. Any number of destinations
+	// can be specified. The scripts are executed sequentially in the order
+	// provided. If `cluster_log_conf` is specified, init script logs are sent
+	// to `<destination>/<cluster-ID>/init_scripts`.
+	InitScripts types.List `tfsdk:"init_scripts"`
+	// The optional ID of the instance pool to which the cluster belongs.
+	InstancePoolId types.String `tfsdk:"instance_pool_id"`
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
+	//
+	// When set to true, Databricks will automatically set single node related
+	// `custom_tags`, `spark_conf`, and `num_workers`
+	IsSingleNode types.Bool `tfsdk:"is_single_node"`
+
+	Kind types.String `tfsdk:"kind"`
+	// This field encodes, through a single value, the resources available to
+	// each of the Spark nodes in this cluster. For example, the Spark nodes can
+	// be provisioned and optimized for memory or compute intensive workloads. A
+	// list of available node types can be retrieved by using the
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
+	NodeTypeId types.String `tfsdk:"node_type_id"`
+	// Number of worker nodes that this cluster should have. A cluster has one
+	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
+	// Spark nodes.
+	//
+	// Note: When reading the properties of a cluster, this field reflects the
+	// desired number of workers rather than the actual current number of
+	// workers. For instance, if a cluster is resized from 5 to 10 workers, this
+	// field will immediately be updated to reflect the target size of 10
+	// workers, whereas the workers listed in `spark_info` will gradually
+	// increase from 5 to 10 as the new nodes are provisioned.
+	NumWorkers types.Int64 `tfsdk:"num_workers"`
+	// The ID of the cluster policy used to create the cluster if applicable.
+	PolicyId types.String `tfsdk:"policy_id"`
+	// If set, what the configurable throughput (in Mb/s) for the remote disk
+	// is. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	RemoteDiskThroughput types.Int64 `tfsdk:"remote_disk_throughput"`
+	// Determines the cluster's runtime engine, either standard or Photon.
+	//
+	// This field is not compatible with legacy `spark_version` values that
+	// contain `-photon-`. Remove `-photon-` from the `spark_version` and set
+	// `runtime_engine` to `PHOTON`.
+	//
+	// If left unspecified, the runtime engine defaults to standard unless the
+	// spark_version contains -photon-, in which case Photon will be used.
+	RuntimeEngine types.String `tfsdk:"runtime_engine"`
+	// Single user name if data_security_mode is `SINGLE_USER`
+	SingleUserName types.String `tfsdk:"single_user_name"`
+	// An object containing a set of optional, user-specified Spark
+	// configuration key-value pairs. Users can also pass in a string of extra
+	// JVM options to the driver and the executors via
+	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
+	// respectively.
+	SparkConf types.Map `tfsdk:"spark_conf"`
+	// An object containing a set of optional, user-specified environment
+	// variable key-value pairs. Please note that key-value pair of the form
+	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
+	// driver and workers.
+	//
+	// In order to specify an additional set of `SPARK_DAEMON_JAVA_OPTS`, we
+	// recommend appending them to `$SPARK_DAEMON_JAVA_OPTS` as shown in the
+	// example below. This ensures that all default databricks managed
+	// environmental variables are included as well.
+	//
+	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
+	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
+	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
+	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
+	// available Spark versions can be retrieved by using the
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
+	SparkVersion types.String `tfsdk:"spark_version"`
+	// SSH public key contents that will be added to each Spark node in this
+	// cluster. The corresponding private keys can be used to login with the
+	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
+	// If set, what the total initial volume size (in GB) of the remote disks
+	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
+	//
+	// `effective_spark_version` is determined by `spark_version` (DBR release),
+	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
+	// not.
+	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
+	// Flexible node type configuration for worker nodes.
+	WorkerNodeTypeFlexibility types.Object `tfsdk:"worker_node_type_flexibility"`
+
+	WorkloadType types.Object `tfsdk:"workload_type"`
+}
+
+func (to *EnforcePolicyComplianceForClusterResponseClusterSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EnforcePolicyComplianceForClusterResponseClusterSettings) {
+	if !from.Autoscale.IsNull() && !from.Autoscale.IsUnknown() {
+		if toAutoscale, ok := to.GetAutoscale(ctx); ok {
+			if fromAutoscale, ok := from.GetAutoscale(ctx); ok {
+				// Recursively sync the fields of Autoscale
+				toAutoscale.SyncFieldsDuringCreateOrUpdate(ctx, fromAutoscale)
+				to.SetAutoscale(ctx, toAutoscale)
+			}
+		}
+	}
+	if !from.AwsAttributes.IsNull() && !from.AwsAttributes.IsUnknown() {
+		if toAwsAttributes, ok := to.GetAwsAttributes(ctx); ok {
+			if fromAwsAttributes, ok := from.GetAwsAttributes(ctx); ok {
+				// Recursively sync the fields of AwsAttributes
+				toAwsAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromAwsAttributes)
+				to.SetAwsAttributes(ctx, toAwsAttributes)
+			}
+		}
+	}
+	if !from.AzureAttributes.IsNull() && !from.AzureAttributes.IsUnknown() {
+		if toAzureAttributes, ok := to.GetAzureAttributes(ctx); ok {
+			if fromAzureAttributes, ok := from.GetAzureAttributes(ctx); ok {
+				// Recursively sync the fields of AzureAttributes
+				toAzureAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromAzureAttributes)
+				to.SetAzureAttributes(ctx, toAzureAttributes)
+			}
+		}
+	}
+	if !from.ClusterLogConf.IsNull() && !from.ClusterLogConf.IsUnknown() {
+		if toClusterLogConf, ok := to.GetClusterLogConf(ctx); ok {
+			if fromClusterLogConf, ok := from.GetClusterLogConf(ctx); ok {
+				// Recursively sync the fields of ClusterLogConf
+				toClusterLogConf.SyncFieldsDuringCreateOrUpdate(ctx, fromClusterLogConf)
+				to.SetClusterLogConf(ctx, toClusterLogConf)
+			}
+		}
+	}
+	if !from.DockerImage.IsNull() && !from.DockerImage.IsUnknown() {
+		if toDockerImage, ok := to.GetDockerImage(ctx); ok {
+			if fromDockerImage, ok := from.GetDockerImage(ctx); ok {
+				// Recursively sync the fields of DockerImage
+				toDockerImage.SyncFieldsDuringCreateOrUpdate(ctx, fromDockerImage)
+				to.SetDockerImage(ctx, toDockerImage)
+			}
+		}
+	}
+	if !from.DriverNodeTypeFlexibility.IsNull() && !from.DriverNodeTypeFlexibility.IsUnknown() {
+		if toDriverNodeTypeFlexibility, ok := to.GetDriverNodeTypeFlexibility(ctx); ok {
+			if fromDriverNodeTypeFlexibility, ok := from.GetDriverNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of DriverNodeTypeFlexibility
+				toDriverNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromDriverNodeTypeFlexibility)
+				to.SetDriverNodeTypeFlexibility(ctx, toDriverNodeTypeFlexibility)
+			}
+		}
+	}
+	if !from.GcpAttributes.IsNull() && !from.GcpAttributes.IsUnknown() {
+		if toGcpAttributes, ok := to.GetGcpAttributes(ctx); ok {
+			if fromGcpAttributes, ok := from.GetGcpAttributes(ctx); ok {
+				// Recursively sync the fields of GcpAttributes
+				toGcpAttributes.SyncFieldsDuringCreateOrUpdate(ctx, fromGcpAttributes)
+				to.SetGcpAttributes(ctx, toGcpAttributes)
+			}
+		}
+	}
+	if !from.InitScripts.IsNull() && !from.InitScripts.IsUnknown() && to.InitScripts.IsNull() && len(from.InitScripts.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InitScripts, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InitScripts = from.InitScripts
+	}
+	if !from.SshPublicKeys.IsNull() && !from.SshPublicKeys.IsUnknown() && to.SshPublicKeys.IsNull() && len(from.SshPublicKeys.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SshPublicKeys, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SshPublicKeys = from.SshPublicKeys
+	}
+	if !from.WorkerNodeTypeFlexibility.IsNull() && !from.WorkerNodeTypeFlexibility.IsUnknown() {
+		if toWorkerNodeTypeFlexibility, ok := to.GetWorkerNodeTypeFlexibility(ctx); ok {
+			if fromWorkerNodeTypeFlexibility, ok := from.GetWorkerNodeTypeFlexibility(ctx); ok {
+				// Recursively sync the fields of WorkerNodeTypeFlexibility
+				toWorkerNodeTypeFlexibility.SyncFieldsDuringCreateOrUpdate(ctx, fromWorkerNodeTypeFlexibility)
+				to.SetWorkerNodeTypeFlexibility(ctx, toWorkerNodeTypeFlexibility)
+			}
+		}
+	}
+	if !from.WorkloadType.IsNull() && !from.WorkloadType.IsUnknown() {
+		if toWorkloadType, ok := to.GetWorkloadType(ctx); ok {
+			if fromWorkloadType, ok := from.GetWorkloadType(ctx); ok {
+				// Recursively sync the fields of WorkloadType
+				toWorkloadType.SyncFieldsDuringCreateOrUpdate(ctx, fromWorkloadType)
+				to.SetWorkloadType(ctx, toWorkloadType)
+			}
+		}
+	}
+}
+
+func (to *EnforcePolicyComplianceForClusterResponseClusterSettings) SyncFieldsDuringRead(ctx context.Context, from EnforcePolicyComplianceForClusterResponseClusterSettings) {
+	if !from.Autoscale.IsNull() && !from.Autoscale.IsUnknown() {
+		if toAutoscale, ok := to.GetAutoscale(ctx); ok {
+			if fromAutoscale, ok := from.GetAutoscale(ctx); ok {
+				toAutoscale.SyncFieldsDuringRead(ctx, fromAutoscale)
+				to.SetAutoscale(ctx, toAutoscale)
+			}
+		}
+	}
+	if !from.AwsAttributes.IsNull() && !from.AwsAttributes.IsUnknown() {
+		if toAwsAttributes, ok := to.GetAwsAttributes(ctx); ok {
+			if fromAwsAttributes, ok := from.GetAwsAttributes(ctx); ok {
+				toAwsAttributes.SyncFieldsDuringRead(ctx, fromAwsAttributes)
+				to.SetAwsAttributes(ctx, toAwsAttributes)
+			}
+		}
+	}
+	if !from.AzureAttributes.IsNull() && !from.AzureAttributes.IsUnknown() {
+		if toAzureAttributes, ok := to.GetAzureAttributes(ctx); ok {
+			if fromAzureAttributes, ok := from.GetAzureAttributes(ctx); ok {
+				toAzureAttributes.SyncFieldsDuringRead(ctx, fromAzureAttributes)
+				to.SetAzureAttributes(ctx, toAzureAttributes)
+			}
+		}
+	}
+	if !from.ClusterLogConf.IsNull() && !from.ClusterLogConf.IsUnknown() {
+		if toClusterLogConf, ok := to.GetClusterLogConf(ctx); ok {
+			if fromClusterLogConf, ok := from.GetClusterLogConf(ctx); ok {
+				toClusterLogConf.SyncFieldsDuringRead(ctx, fromClusterLogConf)
+				to.SetClusterLogConf(ctx, toClusterLogConf)
+			}
+		}
+	}
+	if !from.DockerImage.IsNull() && !from.DockerImage.IsUnknown() {
+		if toDockerImage, ok := to.GetDockerImage(ctx); ok {
+			if fromDockerImage, ok := from.GetDockerImage(ctx); ok {
+				toDockerImage.SyncFieldsDuringRead(ctx, fromDockerImage)
+				to.SetDockerImage(ctx, toDockerImage)
+			}
+		}
+	}
+	if !from.DriverNodeTypeFlexibility.IsNull() && !from.DriverNodeTypeFlexibility.IsUnknown() {
+		if toDriverNodeTypeFlexibility, ok := to.GetDriverNodeTypeFlexibility(ctx); ok {
+			if fromDriverNodeTypeFlexibility, ok := from.GetDriverNodeTypeFlexibility(ctx); ok {
+				toDriverNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromDriverNodeTypeFlexibility)
+				to.SetDriverNodeTypeFlexibility(ctx, toDriverNodeTypeFlexibility)
+			}
+		}
+	}
+	if !from.GcpAttributes.IsNull() && !from.GcpAttributes.IsUnknown() {
+		if toGcpAttributes, ok := to.GetGcpAttributes(ctx); ok {
+			if fromGcpAttributes, ok := from.GetGcpAttributes(ctx); ok {
+				toGcpAttributes.SyncFieldsDuringRead(ctx, fromGcpAttributes)
+				to.SetGcpAttributes(ctx, toGcpAttributes)
+			}
+		}
+	}
+	if !from.InitScripts.IsNull() && !from.InitScripts.IsUnknown() && to.InitScripts.IsNull() && len(from.InitScripts.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InitScripts, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InitScripts = from.InitScripts
+	}
+	if !from.SshPublicKeys.IsNull() && !from.SshPublicKeys.IsUnknown() && to.SshPublicKeys.IsNull() && len(from.SshPublicKeys.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SshPublicKeys, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SshPublicKeys = from.SshPublicKeys
+	}
+	if !from.WorkerNodeTypeFlexibility.IsNull() && !from.WorkerNodeTypeFlexibility.IsUnknown() {
+		if toWorkerNodeTypeFlexibility, ok := to.GetWorkerNodeTypeFlexibility(ctx); ok {
+			if fromWorkerNodeTypeFlexibility, ok := from.GetWorkerNodeTypeFlexibility(ctx); ok {
+				toWorkerNodeTypeFlexibility.SyncFieldsDuringRead(ctx, fromWorkerNodeTypeFlexibility)
+				to.SetWorkerNodeTypeFlexibility(ctx, toWorkerNodeTypeFlexibility)
+			}
+		}
+	}
+	if !from.WorkloadType.IsNull() && !from.WorkloadType.IsUnknown() {
+		if toWorkloadType, ok := to.GetWorkloadType(ctx); ok {
+			if fromWorkloadType, ok := from.GetWorkloadType(ctx); ok {
+				toWorkloadType.SyncFieldsDuringRead(ctx, fromWorkloadType)
+				to.SetWorkloadType(ctx, toWorkloadType)
+			}
+		}
+	}
+}
+
+func (m EnforcePolicyComplianceForClusterResponseClusterSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["autoscale"] = attrs["autoscale"].SetOptional()
+	attrs["autotermination_minutes"] = attrs["autotermination_minutes"].SetOptional()
+	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
+	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
+	attrs["cluster_log_conf"] = attrs["cluster_log_conf"].SetOptional()
+	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
+	attrs["docker_image"] = attrs["docker_image"].SetOptional()
+	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
+	attrs["driver_node_type_flexibility"] = attrs["driver_node_type_flexibility"].SetOptional()
+	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
+	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
+	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
+	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
+	attrs["init_scripts"] = attrs["init_scripts"].SetOptional()
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
+	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
+	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
+	attrs["num_workers"] = attrs["num_workers"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+	attrs["remote_disk_throughput"] = attrs["remote_disk_throughput"].SetOptional()
+	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
+	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
+	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
+	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
+	attrs["spark_version"] = attrs["spark_version"].SetOptional()
+	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
+	attrs["total_initial_remote_disk_size"] = attrs["total_initial_remote_disk_size"].SetOptional()
+	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
+	attrs["worker_node_type_flexibility"] = attrs["worker_node_type_flexibility"].SetOptional()
+	attrs["workload_type"] = attrs["workload_type"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EnforcePolicyComplianceForClusterResponseClusterSettings.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m EnforcePolicyComplianceForClusterResponseClusterSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"autoscale":                    reflect.TypeOf(AutoScale{}),
+		"aws_attributes":               reflect.TypeOf(AwsAttributes{}),
+		"azure_attributes":             reflect.TypeOf(AzureAttributes{}),
+		"cluster_log_conf":             reflect.TypeOf(ClusterLogConf{}),
+		"custom_tags":                  reflect.TypeOf(types.String{}),
+		"docker_image":                 reflect.TypeOf(DockerImage{}),
+		"driver_node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"gcp_attributes":               reflect.TypeOf(GcpAttributes{}),
+		"init_scripts":                 reflect.TypeOf(InitScriptInfo{}),
+		"spark_conf":                   reflect.TypeOf(types.String{}),
+		"spark_env_vars":               reflect.TypeOf(types.String{}),
+		"ssh_public_keys":              reflect.TypeOf(types.String{}),
+		"worker_node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"workload_type":                reflect.TypeOf(WorkloadType{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EnforcePolicyComplianceForClusterResponseClusterSettings
+// only implements ToObjectValue() and Type().
+func (m EnforcePolicyComplianceForClusterResponseClusterSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"autoscale":                      m.Autoscale,
+			"autotermination_minutes":        m.AutoterminationMinutes,
+			"aws_attributes":                 m.AwsAttributes,
+			"azure_attributes":               m.AzureAttributes,
+			"cluster_log_conf":               m.ClusterLogConf,
+			"cluster_name":                   m.ClusterName,
+			"custom_tags":                    m.CustomTags,
+			"data_security_mode":             m.DataSecurityMode,
+			"docker_image":                   m.DockerImage,
+			"driver_instance_pool_id":        m.DriverInstancePoolId,
+			"driver_node_type_flexibility":   m.DriverNodeTypeFlexibility,
+			"driver_node_type_id":            m.DriverNodeTypeId,
+			"enable_elastic_disk":            m.EnableElasticDisk,
+			"enable_local_disk_encryption":   m.EnableLocalDiskEncryption,
+			"gcp_attributes":                 m.GcpAttributes,
+			"init_scripts":                   m.InitScripts,
+			"instance_pool_id":               m.InstancePoolId,
+			"is_single_node":                 m.IsSingleNode,
+			"kind":                           m.Kind,
+			"node_type_id":                   m.NodeTypeId,
+			"num_workers":                    m.NumWorkers,
+			"policy_id":                      m.PolicyId,
+			"remote_disk_throughput":         m.RemoteDiskThroughput,
+			"runtime_engine":                 m.RuntimeEngine,
+			"single_user_name":               m.SingleUserName,
+			"spark_conf":                     m.SparkConf,
+			"spark_env_vars":                 m.SparkEnvVars,
+			"spark_version":                  m.SparkVersion,
+			"ssh_public_keys":                m.SshPublicKeys,
+			"total_initial_remote_disk_size": m.TotalInitialRemoteDiskSize,
+			"use_ml_runtime":                 m.UseMlRuntime,
+			"worker_node_type_flexibility":   m.WorkerNodeTypeFlexibility,
+			"workload_type":                  m.WorkloadType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m EnforcePolicyComplianceForClusterResponseClusterSettings) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"autoscale":               AutoScale{}.Type(ctx),
+			"autotermination_minutes": types.Int64Type,
+			"aws_attributes":          AwsAttributes{}.Type(ctx),
+			"azure_attributes":        AzureAttributes{}.Type(ctx),
+			"cluster_log_conf":        ClusterLogConf{}.Type(ctx),
+			"cluster_name":            types.StringType,
+			"custom_tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"data_security_mode":           types.StringType,
+			"docker_image":                 DockerImage{}.Type(ctx),
+			"driver_instance_pool_id":      types.StringType,
+			"driver_node_type_flexibility": NodeTypeFlexibility{}.Type(ctx),
+			"driver_node_type_id":          types.StringType,
+			"enable_elastic_disk":          types.BoolType,
+			"enable_local_disk_encryption": types.BoolType,
+			"gcp_attributes":               GcpAttributes{}.Type(ctx),
+			"init_scripts": basetypes.ListType{
+				ElemType: InitScriptInfo{}.Type(ctx),
+			},
+			"instance_pool_id":       types.StringType,
+			"is_single_node":         types.BoolType,
+			"kind":                   types.StringType,
+			"node_type_id":           types.StringType,
+			"num_workers":            types.Int64Type,
+			"policy_id":              types.StringType,
+			"remote_disk_throughput": types.Int64Type,
+			"runtime_engine":         types.StringType,
+			"single_user_name":       types.StringType,
+			"spark_conf": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"spark_env_vars": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"spark_version": types.StringType,
+			"ssh_public_keys": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"total_initial_remote_disk_size": types.Int64Type,
+			"use_ml_runtime":                 types.BoolType,
+			"worker_node_type_flexibility":   NodeTypeFlexibility{}.Type(ctx),
+			"workload_type":                  WorkloadType{}.Type(ctx),
+		},
+	}
+}
+
+// GetAutoscale returns the value of the Autoscale field in EnforcePolicyComplianceForClusterResponseClusterSettings as
+// a AutoScale value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) GetAutoscale(ctx context.Context) (AutoScale, bool) {
+	var e AutoScale
+	if m.Autoscale.IsNull() || m.Autoscale.IsUnknown() {
+		return e, false
+	}
+	var v AutoScale
+	d := m.Autoscale.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAutoscale sets the value of the Autoscale field in EnforcePolicyComplianceForClusterResponseClusterSettings.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) SetAutoscale(ctx context.Context, v AutoScale) {
+	vs := v.ToObjectValue(ctx)
+	m.Autoscale = vs
+}
+
+// GetAwsAttributes returns the value of the AwsAttributes field in EnforcePolicyComplianceForClusterResponseClusterSettings as
+// a AwsAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) GetAwsAttributes(ctx context.Context) (AwsAttributes, bool) {
+	var e AwsAttributes
+	if m.AwsAttributes.IsNull() || m.AwsAttributes.IsUnknown() {
+		return e, false
+	}
+	var v AwsAttributes
+	d := m.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAwsAttributes sets the value of the AwsAttributes field in EnforcePolicyComplianceForClusterResponseClusterSettings.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) SetAwsAttributes(ctx context.Context, v AwsAttributes) {
+	vs := v.ToObjectValue(ctx)
+	m.AwsAttributes = vs
+}
+
+// GetAzureAttributes returns the value of the AzureAttributes field in EnforcePolicyComplianceForClusterResponseClusterSettings as
+// a AzureAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) GetAzureAttributes(ctx context.Context) (AzureAttributes, bool) {
+	var e AzureAttributes
+	if m.AzureAttributes.IsNull() || m.AzureAttributes.IsUnknown() {
+		return e, false
+	}
+	var v AzureAttributes
+	d := m.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAzureAttributes sets the value of the AzureAttributes field in EnforcePolicyComplianceForClusterResponseClusterSettings.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) SetAzureAttributes(ctx context.Context, v AzureAttributes) {
+	vs := v.ToObjectValue(ctx)
+	m.AzureAttributes = vs
+}
+
+// GetClusterLogConf returns the value of the ClusterLogConf field in EnforcePolicyComplianceForClusterResponseClusterSettings as
+// a ClusterLogConf value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) GetClusterLogConf(ctx context.Context) (ClusterLogConf, bool) {
+	var e ClusterLogConf
+	if m.ClusterLogConf.IsNull() || m.ClusterLogConf.IsUnknown() {
+		return e, false
+	}
+	var v ClusterLogConf
+	d := m.ClusterLogConf.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetClusterLogConf sets the value of the ClusterLogConf field in EnforcePolicyComplianceForClusterResponseClusterSettings.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) SetClusterLogConf(ctx context.Context, v ClusterLogConf) {
+	vs := v.ToObjectValue(ctx)
+	m.ClusterLogConf = vs
+}
+
+// GetCustomTags returns the value of the CustomTags field in EnforcePolicyComplianceForClusterResponseClusterSettings as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if m.CustomTags.IsNull() || m.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in EnforcePolicyComplianceForClusterResponseClusterSettings.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetDockerImage returns the value of the DockerImage field in EnforcePolicyComplianceForClusterResponseClusterSettings as
+// a DockerImage value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) GetDockerImage(ctx context.Context) (DockerImage, bool) {
+	var e DockerImage
+	if m.DockerImage.IsNull() || m.DockerImage.IsUnknown() {
+		return e, false
+	}
+	var v DockerImage
+	d := m.DockerImage.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDockerImage sets the value of the DockerImage field in EnforcePolicyComplianceForClusterResponseClusterSettings.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) SetDockerImage(ctx context.Context, v DockerImage) {
+	vs := v.ToObjectValue(ctx)
+	m.DockerImage = vs
+}
+
+// GetDriverNodeTypeFlexibility returns the value of the DriverNodeTypeFlexibility field in EnforcePolicyComplianceForClusterResponseClusterSettings as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) GetDriverNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.DriverNodeTypeFlexibility.IsNull() || m.DriverNodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.DriverNodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDriverNodeTypeFlexibility sets the value of the DriverNodeTypeFlexibility field in EnforcePolicyComplianceForClusterResponseClusterSettings.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) SetDriverNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.DriverNodeTypeFlexibility = vs
+}
+
+// GetGcpAttributes returns the value of the GcpAttributes field in EnforcePolicyComplianceForClusterResponseClusterSettings as
+// a GcpAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) GetGcpAttributes(ctx context.Context) (GcpAttributes, bool) {
+	var e GcpAttributes
+	if m.GcpAttributes.IsNull() || m.GcpAttributes.IsUnknown() {
+		return e, false
+	}
+	var v GcpAttributes
+	d := m.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGcpAttributes sets the value of the GcpAttributes field in EnforcePolicyComplianceForClusterResponseClusterSettings.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) SetGcpAttributes(ctx context.Context, v GcpAttributes) {
+	vs := v.ToObjectValue(ctx)
+	m.GcpAttributes = vs
+}
+
+// GetInitScripts returns the value of the InitScripts field in EnforcePolicyComplianceForClusterResponseClusterSettings as
+// a slice of InitScriptInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) GetInitScripts(ctx context.Context) ([]InitScriptInfo, bool) {
+	if m.InitScripts.IsNull() || m.InitScripts.IsUnknown() {
+		return nil, false
+	}
+	var v []InitScriptInfo
+	d := m.InitScripts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInitScripts sets the value of the InitScripts field in EnforcePolicyComplianceForClusterResponseClusterSettings.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) SetInitScripts(ctx context.Context, v []InitScriptInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.InitScripts = types.ListValueMust(t, vs)
+}
+
+// GetSparkConf returns the value of the SparkConf field in EnforcePolicyComplianceForClusterResponseClusterSettings as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) GetSparkConf(ctx context.Context) (map[string]types.String, bool) {
+	if m.SparkConf.IsNull() || m.SparkConf.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.SparkConf.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkConf sets the value of the SparkConf field in EnforcePolicyComplianceForClusterResponseClusterSettings.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) SetSparkConf(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_conf"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.SparkConf = types.MapValueMust(t, vs)
+}
+
+// GetSparkEnvVars returns the value of the SparkEnvVars field in EnforcePolicyComplianceForClusterResponseClusterSettings as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) GetSparkEnvVars(ctx context.Context) (map[string]types.String, bool) {
+	if m.SparkEnvVars.IsNull() || m.SparkEnvVars.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.SparkEnvVars.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkEnvVars sets the value of the SparkEnvVars field in EnforcePolicyComplianceForClusterResponseClusterSettings.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) SetSparkEnvVars(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_env_vars"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.SparkEnvVars = types.MapValueMust(t, vs)
+}
+
+// GetSshPublicKeys returns the value of the SshPublicKeys field in EnforcePolicyComplianceForClusterResponseClusterSettings as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) GetSshPublicKeys(ctx context.Context) ([]types.String, bool) {
+	if m.SshPublicKeys.IsNull() || m.SshPublicKeys.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.SshPublicKeys.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSshPublicKeys sets the value of the SshPublicKeys field in EnforcePolicyComplianceForClusterResponseClusterSettings.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) SetSshPublicKeys(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.SshPublicKeys = types.ListValueMust(t, vs)
+}
+
+// GetWorkerNodeTypeFlexibility returns the value of the WorkerNodeTypeFlexibility field in EnforcePolicyComplianceForClusterResponseClusterSettings as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) GetWorkerNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if m.WorkerNodeTypeFlexibility.IsNull() || m.WorkerNodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v NodeTypeFlexibility
+	d := m.WorkerNodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkerNodeTypeFlexibility sets the value of the WorkerNodeTypeFlexibility field in EnforcePolicyComplianceForClusterResponseClusterSettings.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) SetWorkerNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	m.WorkerNodeTypeFlexibility = vs
+}
+
+// GetWorkloadType returns the value of the WorkloadType field in EnforcePolicyComplianceForClusterResponseClusterSettings as
+// a WorkloadType value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) GetWorkloadType(ctx context.Context) (WorkloadType, bool) {
+	var e WorkloadType
+	if m.WorkloadType.IsNull() || m.WorkloadType.IsUnknown() {
+		return e, false
+	}
+	var v WorkloadType
+	d := m.WorkloadType.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkloadType sets the value of the WorkloadType field in EnforcePolicyComplianceForClusterResponseClusterSettings.
+func (m *EnforcePolicyComplianceForClusterResponseClusterSettings) SetWorkloadType(ctx context.Context, v WorkloadType) {
+	vs := v.ToObjectValue(ctx)
+	m.WorkloadType = vs
+}
+
 // The environment entity used to preserve serverless environment side panel,
 // jobs' environment for non-notebook task, and SDP's environment for classic
 // and serverless pipelines. In this minimal environment spec, only pip and java
@@ -10144,7 +11217,10 @@ type Environment struct {
 	// environment ID (e.g.,
 	// `workspace-base-environments/dbe_b849b66e-b31a-4cb5-b161-1f2b10877fb7`)
 	// is in Beta. Either `environment_version` or `base_environment` can be
-	// provided. For more information, see
+	// provided. For more information about Databricks-provided base
+	// environments, see the [list workspace base
+	// environments](:method:Environments/ListWorkspaceBaseEnvironments) API.
+	// For more information, see
 	BaseEnvironment types.String `tfsdk:"base_environment"`
 	// Use `environment_version` instead.
 	Client types.String `tfsdk:"client"`
@@ -10928,6 +12004,9 @@ type GetClusterComplianceResponse struct {
 	// be out of compliance if the policy was updated after the cluster was last
 	// edited.
 	IsCompliant types.Bool `tfsdk:"is_compliant"`
+	// Information about the pending enforcement for the cluster. Only present
+	// if a pending enforcement is scheduled for the cluster.
+	PendingEnforcement types.Object `tfsdk:"pending_enforcement"`
 	// An object containing key-value mappings representing the first 200 policy
 	// validation errors. The keys indicate the path where the policy validation
 	// error is occurring. The values indicate an error message describing the
@@ -10936,13 +12015,31 @@ type GetClusterComplianceResponse struct {
 }
 
 func (to *GetClusterComplianceResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetClusterComplianceResponse) {
+	if !from.PendingEnforcement.IsNull() && !from.PendingEnforcement.IsUnknown() {
+		if toPendingEnforcement, ok := to.GetPendingEnforcement(ctx); ok {
+			if fromPendingEnforcement, ok := from.GetPendingEnforcement(ctx); ok {
+				// Recursively sync the fields of PendingEnforcement
+				toPendingEnforcement.SyncFieldsDuringCreateOrUpdate(ctx, fromPendingEnforcement)
+				to.SetPendingEnforcement(ctx, toPendingEnforcement)
+			}
+		}
+	}
 }
 
 func (to *GetClusterComplianceResponse) SyncFieldsDuringRead(ctx context.Context, from GetClusterComplianceResponse) {
+	if !from.PendingEnforcement.IsNull() && !from.PendingEnforcement.IsUnknown() {
+		if toPendingEnforcement, ok := to.GetPendingEnforcement(ctx); ok {
+			if fromPendingEnforcement, ok := from.GetPendingEnforcement(ctx); ok {
+				toPendingEnforcement.SyncFieldsDuringRead(ctx, fromPendingEnforcement)
+				to.SetPendingEnforcement(ctx, toPendingEnforcement)
+			}
+		}
+	}
 }
 
 func (m GetClusterComplianceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["is_compliant"] = attrs["is_compliant"].SetOptional()
+	attrs["pending_enforcement"] = attrs["pending_enforcement"].SetOptional()
 	attrs["violations"] = attrs["violations"].SetOptional()
 
 	return attrs
@@ -10957,7 +12054,8 @@ func (m GetClusterComplianceResponse) ApplySchemaCustomizations(attrs map[string
 // SDK values.
 func (m GetClusterComplianceResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"violations": reflect.TypeOf(types.String{}),
+		"pending_enforcement": reflect.TypeOf(PendingEnforcement{}),
+		"violations":          reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -10968,8 +12066,9 @@ func (m GetClusterComplianceResponse) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"is_compliant": m.IsCompliant,
-			"violations":   m.Violations,
+			"is_compliant":        m.IsCompliant,
+			"pending_enforcement": m.PendingEnforcement,
+			"violations":          m.Violations,
 		})
 }
 
@@ -10977,12 +12076,38 @@ func (m GetClusterComplianceResponse) ToObjectValue(ctx context.Context) basetyp
 func (m GetClusterComplianceResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"is_compliant": types.BoolType,
+			"is_compliant":        types.BoolType,
+			"pending_enforcement": PendingEnforcement{}.Type(ctx),
 			"violations": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
 	}
+}
+
+// GetPendingEnforcement returns the value of the PendingEnforcement field in GetClusterComplianceResponse as
+// a PendingEnforcement value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GetClusterComplianceResponse) GetPendingEnforcement(ctx context.Context) (PendingEnforcement, bool) {
+	var e PendingEnforcement
+	if m.PendingEnforcement.IsNull() || m.PendingEnforcement.IsUnknown() {
+		return e, false
+	}
+	var v PendingEnforcement
+	d := m.PendingEnforcement.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPendingEnforcement sets the value of the PendingEnforcement field in GetClusterComplianceResponse.
+func (m *GetClusterComplianceResponse) SetPendingEnforcement(ctx context.Context, v PendingEnforcement) {
+	vs := v.ToObjectValue(ctx)
+	m.PendingEnforcement = vs
 }
 
 // GetViolations returns the value of the Violations field in GetClusterComplianceResponse as
@@ -11896,14 +13021,18 @@ type GetInstancePool struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Custom Docker Image BYOC
 	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
 	// If set, what the configurable throughput (in Mb/s) for the remote disk
 	// is. Currently only supported for GCP HYPERDISK_BALANCED types.
@@ -13317,7 +14446,7 @@ func (m *InitScriptEventDetails) SetGlobal(ctx context.Context, v []InitScriptIn
 	m.Global = types.ListValueMust(t, vs)
 }
 
-// Config for an individual init script Next ID: 11
+// Config for an individual init script
 type InitScriptInfo struct {
 	// destination needs to be provided, e.g.
 	// `abfss://<container-name>@<storage-account-name>.dfs.core.windows.net/<directory-name>`
@@ -14479,14 +15608,18 @@ type InstancePoolAndStats struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Custom Docker Image BYOC
 	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
 	// If set, what the configurable throughput (in Mb/s) for the remote disk
 	// is. Currently only supported for GCP HYPERDISK_BALANCED types.
@@ -18296,8 +19429,8 @@ type NodeType struct {
 	// Unique identifier for this node type.
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of CPU cores available for this node type. Note that this can be
-	// fractional, e.g., 2.5 cores, if the the number of cores on a machine
-	// instance is not divisible by the number of Spark nodes on that machine.
+	// fractional, e.g., 2.5 cores, if the number of cores on a machine instance
+	// is not divisible by the number of Spark nodes on that machine.
 	NumCores types.Float64 `tfsdk:"num_cores"`
 	// Number of GPUs available for this node type.
 	NumGpus types.Int64 `tfsdk:"num_gpus"`
@@ -18593,6 +19726,166 @@ func (m *NodeTypeFlexibility) SetAlternateNodeTypeIds(ctx context.Context, v []t
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["alternate_node_type_ids"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.AlternateNodeTypeIds = types.ListValueMust(t, vs)
+}
+
+// Represents a pending enforcement on a cluster, which contains the changes to
+// make to the cluster configuration when the cluster is next terminated or
+// restarted.
+type PendingEnforcement struct {
+	// Whether the pending enforcement will be applied. A pending enforcement
+	// begins in `ACTIVE` state. If the enforcement fails to apply too many
+	// times, the state transitions to `INACTIVE`. Afterwards, the enforcement
+	// must be re-scheduled to become `ACTIVE` again.
+	EnforcementStatus types.String `tfsdk:"enforcement_status"`
+	// The time the pending enforcement was initiated.
+	InitiateTime timetypes.RFC3339 `tfsdk:"initiate_time"`
+	// The user who initiated the pending enforcement.
+	InitiatorUser types.String `tfsdk:"initiator_user"`
+	// A list of changes that will be made to the cluster configuration when the
+	// pending enforcement is applied.
+	TargetChanges types.List `tfsdk:"target_changes"`
+	// The new configuration to apply upon cluster termination or restart.
+	TargetSpec types.Object `tfsdk:"target_spec"`
+}
+
+func (to *PendingEnforcement) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PendingEnforcement) {
+	if !from.TargetChanges.IsNull() && !from.TargetChanges.IsUnknown() && to.TargetChanges.IsNull() && len(from.TargetChanges.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TargetChanges, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TargetChanges = from.TargetChanges
+	}
+	if !from.TargetSpec.IsNull() && !from.TargetSpec.IsUnknown() {
+		if toTargetSpec, ok := to.GetTargetSpec(ctx); ok {
+			if fromTargetSpec, ok := from.GetTargetSpec(ctx); ok {
+				// Recursively sync the fields of TargetSpec
+				toTargetSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromTargetSpec)
+				to.SetTargetSpec(ctx, toTargetSpec)
+			}
+		}
+	}
+}
+
+func (to *PendingEnforcement) SyncFieldsDuringRead(ctx context.Context, from PendingEnforcement) {
+	if !from.TargetChanges.IsNull() && !from.TargetChanges.IsUnknown() && to.TargetChanges.IsNull() && len(from.TargetChanges.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TargetChanges, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TargetChanges = from.TargetChanges
+	}
+	if !from.TargetSpec.IsNull() && !from.TargetSpec.IsUnknown() {
+		if toTargetSpec, ok := to.GetTargetSpec(ctx); ok {
+			if fromTargetSpec, ok := from.GetTargetSpec(ctx); ok {
+				toTargetSpec.SyncFieldsDuringRead(ctx, fromTargetSpec)
+				to.SetTargetSpec(ctx, toTargetSpec)
+			}
+		}
+	}
+}
+
+func (m PendingEnforcement) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enforcement_status"] = attrs["enforcement_status"].SetOptional()
+	attrs["initiate_time"] = attrs["initiate_time"].SetOptional()
+	attrs["initiator_user"] = attrs["initiator_user"].SetOptional()
+	attrs["target_changes"] = attrs["target_changes"].SetOptional()
+	attrs["target_spec"] = attrs["target_spec"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PendingEnforcement.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m PendingEnforcement) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"target_changes": reflect.TypeOf(ClusterSettingsChange{}),
+		"target_spec":    reflect.TypeOf(EnforcePolicyComplianceForClusterResponseClusterSettings{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PendingEnforcement
+// only implements ToObjectValue() and Type().
+func (m PendingEnforcement) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"enforcement_status": m.EnforcementStatus,
+			"initiate_time":      m.InitiateTime,
+			"initiator_user":     m.InitiatorUser,
+			"target_changes":     m.TargetChanges,
+			"target_spec":        m.TargetSpec,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m PendingEnforcement) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"enforcement_status": types.StringType,
+			"initiate_time":      timetypes.RFC3339{}.Type(ctx),
+			"initiator_user":     types.StringType,
+			"target_changes": basetypes.ListType{
+				ElemType: ClusterSettingsChange{}.Type(ctx),
+			},
+			"target_spec": EnforcePolicyComplianceForClusterResponseClusterSettings{}.Type(ctx),
+		},
+	}
+}
+
+// GetTargetChanges returns the value of the TargetChanges field in PendingEnforcement as
+// a slice of ClusterSettingsChange values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PendingEnforcement) GetTargetChanges(ctx context.Context) ([]ClusterSettingsChange, bool) {
+	if m.TargetChanges.IsNull() || m.TargetChanges.IsUnknown() {
+		return nil, false
+	}
+	var v []ClusterSettingsChange
+	d := m.TargetChanges.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTargetChanges sets the value of the TargetChanges field in PendingEnforcement.
+func (m *PendingEnforcement) SetTargetChanges(ctx context.Context, v []ClusterSettingsChange) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["target_changes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.TargetChanges = types.ListValueMust(t, vs)
+}
+
+// GetTargetSpec returns the value of the TargetSpec field in PendingEnforcement as
+// a EnforcePolicyComplianceForClusterResponseClusterSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PendingEnforcement) GetTargetSpec(ctx context.Context) (EnforcePolicyComplianceForClusterResponseClusterSettings, bool) {
+	var e EnforcePolicyComplianceForClusterResponseClusterSettings
+	if m.TargetSpec.IsNull() || m.TargetSpec.IsUnknown() {
+		return e, false
+	}
+	var v EnforcePolicyComplianceForClusterResponseClusterSettings
+	d := m.TargetSpec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTargetSpec sets the value of the TargetSpec field in PendingEnforcement.
+func (m *PendingEnforcement) SetTargetSpec(ctx context.Context, v EnforcePolicyComplianceForClusterResponseClusterSettings) {
+	vs := v.ToObjectValue(ctx)
+	m.TargetSpec = vs
 }
 
 // Error message of a failed pending instances
@@ -20648,7 +21941,9 @@ type UpdateClusterResource struct {
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
-	// :method:clusters/listNodeTypes API call.
+	// [clusters/listNodeTypes] API call.
+	//
+	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
@@ -20699,7 +21994,9 @@ type UpdateClusterResource struct {
 	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
-	// :method:clusters/sparkVersions API call.
+	// [clusters/sparkVersions] API call.
+	//
+	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	SparkVersion types.String `tfsdk:"spark_version"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the

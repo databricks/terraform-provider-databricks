@@ -116,6 +116,11 @@ type Project struct {
 	// A timestamp indicating when the project was soft-deleted. Empty if the
 	// project is not deleted, otherwise set to a timestamp in the past.
 	DeleteTime timetypes.RFC3339 `tfsdk:"delete_time"`
+	// Configuration for the initial default branch created as part of project
+	// creation. Allows overriding branch protection. These settings only apply
+	// at creation time and do not affect resources created after project
+	// creation.
+	InitialBranchSpec types.Object `tfsdk:"initial_branch_spec"`
 	// Configuration settings for the initial Read/Write endpoint created inside
 	// the initial branch for a newly created project. If omitted, the initial
 	// endpoint created will have default settings, without high availability
@@ -157,6 +162,7 @@ type Project struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m Project) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"initial_branch_spec":   reflect.TypeOf(postgres_tf.InitialBranchSpec{}),
 		"initial_endpoint_spec": reflect.TypeOf(postgres_tf.InitialEndpointSpec{}),
 		"spec":                  reflect.TypeOf(postgres_tf.ProjectSpec{}),
 		"status":                reflect.TypeOf(postgres_tf.ProjectStatus{}),
@@ -175,6 +181,7 @@ func (m Project) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"create_time": m.CreateTime,
 			"delete_time":           m.DeleteTime,
+			"initial_branch_spec":   m.InitialBranchSpec,
 			"initial_endpoint_spec": m.InitialEndpointSpec,
 			"name":                  m.Name,
 			"project_id":            m.ProjectId,
@@ -196,6 +203,7 @@ func (m Project) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"create_time": timetypes.RFC3339{}.Type(ctx),
 			"delete_time":           timetypes.RFC3339{}.Type(ctx),
+			"initial_branch_spec":   postgres_tf.InitialBranchSpec{}.Type(ctx),
 			"initial_endpoint_spec": postgres_tf.InitialEndpointSpec{}.Type(ctx),
 			"name":                  types.StringType,
 			"project_id":            types.StringType,
@@ -215,6 +223,19 @@ func (m Project) Type(ctx context.Context) attr.Type {
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Project) {
+	if !from.InitialBranchSpec.IsUnknown() && !from.InitialBranchSpec.IsNull() {
+		// InitialBranchSpec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.InitialBranchSpec = from.InitialBranchSpec
+	}
+	if !from.InitialBranchSpec.IsNull() && !from.InitialBranchSpec.IsUnknown() {
+		if toInitialBranchSpec, ok := to.GetInitialBranchSpec(ctx); ok {
+			if fromInitialBranchSpec, ok := from.GetInitialBranchSpec(ctx); ok {
+				// Recursively sync the fields of InitialBranchSpec
+				toInitialBranchSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromInitialBranchSpec)
+				to.SetInitialBranchSpec(ctx, toInitialBranchSpec)
+			}
+		}
+	}
 	if !from.InitialEndpointSpec.IsUnknown() && !from.InitialEndpointSpec.IsNull() {
 		// InitialEndpointSpec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.InitialEndpointSpec = from.InitialEndpointSpec
@@ -261,6 +282,18 @@ func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Proj
 // including both embedded model fields and additional fields. This method is called
 // during read.
 func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
+	if !from.InitialBranchSpec.IsUnknown() && !from.InitialBranchSpec.IsNull() {
+		// InitialBranchSpec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.InitialBranchSpec = from.InitialBranchSpec
+	}
+	if !from.InitialBranchSpec.IsNull() && !from.InitialBranchSpec.IsUnknown() {
+		if toInitialBranchSpec, ok := to.GetInitialBranchSpec(ctx); ok {
+			if fromInitialBranchSpec, ok := from.GetInitialBranchSpec(ctx); ok {
+				toInitialBranchSpec.SyncFieldsDuringRead(ctx, fromInitialBranchSpec)
+				to.SetInitialBranchSpec(ctx, toInitialBranchSpec)
+			}
+		}
+	}
 	if !from.InitialEndpointSpec.IsUnknown() && !from.InitialEndpointSpec.IsNull() {
 		// InitialEndpointSpec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.InitialEndpointSpec = from.InitialEndpointSpec
@@ -303,6 +336,9 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["delete_time"] = attrs["delete_time"].SetComputed()
+	attrs["initial_branch_spec"] = attrs["initial_branch_spec"].SetOptional()
+	attrs["initial_branch_spec"] = attrs["initial_branch_spec"].SetComputed()
+	attrs["initial_branch_spec"] = attrs["initial_branch_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetOptional()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -325,6 +361,31 @@ func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
 
 	return attrs
+}
+
+// GetInitialBranchSpec returns the value of the InitialBranchSpec field in Project as
+// a postgres_tf.InitialBranchSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Project) GetInitialBranchSpec(ctx context.Context) (postgres_tf.InitialBranchSpec, bool) {
+	var e postgres_tf.InitialBranchSpec
+	if m.InitialBranchSpec.IsNull() || m.InitialBranchSpec.IsUnknown() {
+		return e, false
+	}
+	var v postgres_tf.InitialBranchSpec
+	d := m.InitialBranchSpec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInitialBranchSpec sets the value of the InitialBranchSpec field in Project.
+func (m *Project) SetInitialBranchSpec(ctx context.Context, v postgres_tf.InitialBranchSpec) {
+	vs := v.ToObjectValue(ctx)
+	m.InitialBranchSpec = vs
 }
 
 // GetInitialEndpointSpec returns the value of the InitialEndpointSpec field in Project as
@@ -563,7 +624,7 @@ func (r *ProjectResource) update(ctx context.Context, plan Project, diags *diag.
 	updateRequest := postgres.UpdateProjectRequest{
 		Project:    project,
 		Name:       plan.Name.ValueString(),
-		UpdateMask: *fieldmask.New(strings.Split("initial_endpoint_spec,spec", ",")),
+		UpdateMask: *fieldmask.New(strings.Split("initial_branch_spec,initial_endpoint_spec,spec", ",")),
 	}
 
 	var namespace ProviderConfig

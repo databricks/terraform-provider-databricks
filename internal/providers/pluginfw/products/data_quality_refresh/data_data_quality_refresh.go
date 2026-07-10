@@ -117,8 +117,8 @@ type RefreshData struct {
 	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
 	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"object_id"`
-	// The type of the monitored object. Can be one of the following: `schema`or
-	// `table`.
+	// The type of the monitored object. Can be one of the following: `schema`
+	// or `table`.
 	ObjectType types.String `tfsdk:"object_type"`
 	// Unique id of the refresh operation.
 	RefreshId types.Int64 `tfsdk:"refresh_id"`

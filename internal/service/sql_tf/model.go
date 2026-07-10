@@ -3728,7 +3728,7 @@ type CreateWidget struct {
 	// field is ignored if the widget contains a visualization in the
 	// `visualization` field.
 	Text types.String `tfsdk:"text"`
-	// Query Vizualization ID returned by :method:queryvisualizations/create.
+	// Query Visualization ID returned by :method:queryvisualizations/create.
 	VisualizationId types.String `tfsdk:"visualization_id"`
 	// Width of a widget
 	Width types.Int64 `tfsdk:"width"`
@@ -17272,7 +17272,7 @@ type UpdateWidgetRequest struct {
 	// field is ignored if the widget contains a visualization in the
 	// `visualization` field.
 	Text types.String `tfsdk:"text"`
-	// Query Vizualization ID returned by :method:queryvisualizations/create.
+	// Query Visualization ID returned by :method:queryvisualizations/create.
 	VisualizationId types.String `tfsdk:"visualization_id"`
 	// Width of a widget
 	Width types.Int64 `tfsdk:"width"`

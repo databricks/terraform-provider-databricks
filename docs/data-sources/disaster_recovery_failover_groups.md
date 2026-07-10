@@ -36,8 +36,7 @@ This data source exports a single attribute, `failover_groups`. It is a list of 
 * `create_time` (string) - Time at which this failover group was created
 * `effective_primary_region` (string) - Current effective primary region. Replication flows FROM workspaces in this region.
   Changes after a successful failover
-* `etag` (string) - Opaque version string for optimistic locking. Server-generated, returned in responses.
-  Must be provided on Update requests to prevent concurrent modifications
+* `etag` (string) - Opaque version string for optimistic locking. Server-generated and returned in responses
 * `initial_primary_region` (string) - Initial primary region. Used only in Create requests to set the starting
   primary region. Not returned in responses
 * `name` (string) - Fully qualified resource name in the format
@@ -68,7 +67,8 @@ This data source exports a single attribute, `failover_groups`. It is a list of 
 
 ### WorkspaceSet
 * `name` (string) - Resource name for this workspace set
-* `replicate_workspace_assets` (boolean) - Whether to enable control plane DR (notebooks, jobs, clusters, etc.) for this set
+* `replicate_workspace_assets` (boolean) - Whether to enable control plane DR (notebooks, jobs, clusters, etc.) for this set.
+  Defaults to false
 * `stable_url_names` (list of string) - Resource names of stable URLs associated with this workspace set.
   Format: accounts/{account_id}/stable-urls/{stable_url_id}.
   The referenced stable URLs must already exist (via CreateStableUrl)

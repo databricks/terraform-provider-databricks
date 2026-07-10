@@ -58,6 +58,15 @@ func ParseUserAgentExtra(env string) ([]UserAgentExtra, error) {
 // process-global and deduplicated by the SDK, so applying the same product
 // string from multiple sources (environment variable, provider attribute,
 // muxed provider instances) is safe.
+//
+// Although the registry is process-global, Terraform runs a separate plugin
+// process per provider configuration and the plugin protocol sends a single
+// Configure call per process, so extras registered at configure time are
+// effectively scoped to that provider configuration: aliased providers with
+// different user_agent_extra values do not observe each other's products.
+// Only in-process embeddings that configure multiple provider instances in
+// one process (e.g. acceptance tests using provider factories) share the
+// registry.
 func ApplyUserAgentExtra(products string) error {
 	extras, err := ParseUserAgentExtra(products)
 	if err != nil {

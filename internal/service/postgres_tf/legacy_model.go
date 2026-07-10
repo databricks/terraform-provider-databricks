@@ -2761,7 +2761,7 @@ func (to *DatabaseDatabaseSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 
 func (m DatabaseDatabaseSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["postgres_database"] = attrs["postgres_database"].SetOptional()
-	attrs["role"] = attrs["role"].SetOptional()
+	attrs["role"] = attrs["role"].SetRequired()
 
 	return attrs
 }

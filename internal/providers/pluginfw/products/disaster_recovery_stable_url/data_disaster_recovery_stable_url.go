@@ -44,6 +44,11 @@ type StableUrlData struct {
 	// Fully qualified resource name. Format:
 	// accounts/{account_id}/stable-urls/{stable_url_id}.
 	Name types.String `tfsdk:"name"`
+	// The stable workspace ID for this stable URL. Generated on creation and
+	// immutable thereafter; identifies the URL across failovers and is the same
+	// value embedded in the `url` (as the `w=` query parameter for SPOG URLs,
+	// or in the `conn-<id>` hostname for Private-Link URLs).
+	StableWorkspaceId types.String `tfsdk:"stable_workspace_id"`
 	// The stable URL endpoint. Generated on creation and immutable thereafter.
 	// For non-Private-Link workspaces this is
 	// `https://<spog_host>/?w=<connection_id>`. For Private-Link workspaces
@@ -75,6 +80,7 @@ func (m StableUrlData) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"failover_group_name":  m.FailoverGroupName,
 			"initial_workspace_id": m.InitialWorkspaceId,
 			"name":                 m.Name,
+			"stable_workspace_id":  m.StableWorkspaceId,
 			"url":                  m.Url,
 		},
 	)
@@ -88,6 +94,7 @@ func (m StableUrlData) Type(ctx context.Context) attr.Type {
 			"failover_group_name":  types.StringType,
 			"initial_workspace_id": types.StringType,
 			"name":                 types.StringType,
+			"stable_workspace_id":  types.StringType,
 			"url":                  types.StringType,
 		},
 	}
@@ -97,6 +104,7 @@ func (m StableUrlData) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["failover_group_name"] = attrs["failover_group_name"].SetComputed()
 	attrs["initial_workspace_id"] = attrs["initial_workspace_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["stable_workspace_id"] = attrs["stable_workspace_id"].SetComputed()
 	attrs["url"] = attrs["url"].SetComputed()
 
 	return attrs

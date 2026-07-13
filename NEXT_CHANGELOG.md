@@ -7,6 +7,7 @@
 ### New Features and Improvements
 
 * Added `no_wait` option for `databricks_sql_endpoint` to skip waiting to start on warehouse creation ([#5014](https://github.com/databricks/terraform-provider-databricks/pull/5014))
+* Add optional `git_credential_id` attribute to `databricks_repo` resource to allow explicit credential selection.
 
 ### Bug Fixes
 

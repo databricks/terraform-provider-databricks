@@ -1795,6 +1795,10 @@ type Resource_SdkV2 struct {
 	ResourceType types.String `tfsdk:"resource_type"`
 	// Serialized local config state (what the CLI deployed).
 	State jsontypes.Normalized `tfsdk:"state"`
+	// When the last operation that updated this resource's recorded state was
+	// applied. Pairs with last_action_type and last_version_id (all three
+	// advance together on that write).
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 }
 
 func (to *Resource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Resource_SdkV2) {
@@ -1813,6 +1817,7 @@ func (m Resource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["resource_type"] = attrs["resource_type"].SetRequired()
 	attrs["resource_type"] = attrs["resource_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
 
 	return attrs
 }
@@ -1842,6 +1847,7 @@ func (m Resource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"resource_key":     m.ResourceKey,
 			"resource_type":    m.ResourceType,
 			"state":            m.State,
+			"update_time":      m.UpdateTime,
 		})
 }
 
@@ -1856,6 +1862,7 @@ func (m Resource_SdkV2) Type(ctx context.Context) attr.Type {
 			"resource_key":     types.StringType,
 			"resource_type":    types.StringType,
 			"state":            jsontypes.NormalizedType{},
+			"update_time":      timetypes.RFC3339{}.Type(ctx),
 		},
 	}
 }

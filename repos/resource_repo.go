@@ -6,125 +6,55 @@ import (
 	"net/url"
 	"path"
 	"regexp"
+	"strconv"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// ReposAPI exposes the Repos API
-type ReposAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
+// repoInfo wraps the Go SDK workspace.RepoInfo so the databricks_repo schema can be
+// generated directly from the SDK struct. The Terraform-specific attribute names
+// (git_provider, commit_hash) are supplied via Aliases() rather than a parallel
+// hand-maintained struct.
+type repoInfo struct {
+	workspace.RepoInfo
+	common.Namespace
 }
 
-// NewReposAPI creates ReposAPI instance from provider meta
-func NewReposAPI(ctx context.Context, m any) ReposAPI {
-	return ReposAPI{m.(*common.DatabricksClient), ctx}
-}
-
-type ReposSparseCheckout struct {
-	Patterns []string `json:"patterns"`
-}
-
-// ReposInformation provides information about given repository
-type ReposInformation struct {
-	ID             int64                `json:"id"`
-	Url            string               `json:"url" tf:"force_new"`
-	Provider       string               `json:"provider,omitempty" tf:"computed,alias:git_provider,force_new"`
-	SparseCheckout *ReposSparseCheckout `json:"sparse_checkout,omitempty" tf:"force_new"`
-	Path           string               `json:"path,omitempty" tf:"computed,force_new"` // TODO: remove force_new after the Update API will support changing the path
-	Branch         string               `json:"branch,omitempty" tf:"computed"`
-	HeadCommitID   string               `json:"head_commit_id,omitempty" tf:"computed,alias:commit_hash"`
-}
-
-// RepoID returns job id as string
-func (r ReposInformation) RepoID() string {
-	return fmt.Sprintf("%d", r.ID)
-}
-
-type reposCreateRequest struct {
-	Url            string               `json:"url"`
-	Provider       string               `json:"provider"`
-	Path           string               `json:"path,omitempty"`
-	SparseCheckout *ReposSparseCheckout `json:"sparse_checkout,omitempty"`
-}
-
-func (a ReposAPI) Create(r reposCreateRequest) (ReposInformation, error) {
-	var resp ReposInformation
-	if r.Provider == "" { // trying to infer Git Provider from the URL
-		r.Provider = GetGitProviderFromUrl(r.Url)
+func (repoInfo) Aliases() map[string]map[string]string {
+	return map[string]map[string]string{
+		"repos.repoInfo": {
+			"provider":       "git_provider",
+			"head_commit_id": "commit_hash",
+		},
 	}
-	if r.Provider == "" {
-		return resp, fmt.Errorf("git_provider isn't specified and we can't detect provider from URL")
-	}
-	if r.Path != "" {
-		p := path.Dir(strings.TrimSuffix(r.Path, "/"))
-		if err := workspace.NewNotebooksAPI(a.context, a.client).Mkdirs(p); err != nil {
-			return resp, err
-		}
-	}
-
-	err := a.client.Post(a.context, "/repos", r, &resp, a.client.AddWorkspaceIdHeader)
-	return resp, err
 }
 
-func (a ReposAPI) Delete(id string) error {
-	return a.client.Delete(a.context, fmt.Sprintf("/repos/%s", id), nil, a.client.AddWorkspaceIdHeader)
-}
+func (repoInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	s.SchemaPath("url").SetForceNew().SetValidateFunc(validation.IsURLWithScheme([]string{"https", "http"}))
+	s.SchemaPath("git_provider").SetComputed().SetForceNew().SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+	s.SchemaPath("sparse_checkout").SetForceNew()
+	s.SchemaPath("path").SetComputed().SetForceNew().SetValidateFunc(validatePath)
+	s.SchemaPath("branch").SetComputed().SetConflictsWith([]string{"tag"}).SetValidateFunc(validation.StringIsNotWhiteSpace)
+	s.SchemaPath("commit_hash").SetComputed()
 
-func (a ReposAPI) Update(id string, r map[string]any) error {
-	if len(r) == 0 {
-		return nil
-	}
-	// TODO: update may change ONE OF (url AND provider (optional)), (path), or (branch OR tag).
-	// for URL/provider force re-create as there are limits on what could be done for changing URL/provider
-	if path, ok := r["path"]; ok {
-		err := a.client.Patch(a.context, fmt.Sprintf("/repos/%s", id), map[string]any{"path": path}, a.client.AddWorkspaceIdHeader)
-		if err != nil {
-			return err
-		}
-		delete(r, "path")
-	}
-	return a.client.Patch(a.context, fmt.Sprintf("/repos/%s", id), r, a.client.AddWorkspaceIdHeader)
-}
+	s.AddNewField("tag", &schema.Schema{
+		Type:          schema.TypeString,
+		Optional:      true,
+		ConflictsWith: []string{"branch"},
+		ValidateFunc:  validation.StringIsNotWhiteSpace,
+	})
+	s.AddNewField("workspace_path", &schema.Schema{
+		Type:     schema.TypeString,
+		Computed: true,
+	})
 
-func (a ReposAPI) Read(id string) (ReposInformation, error) {
-	var resp ReposInformation
-	err := a.client.Get(a.context, fmt.Sprintf("/repos/%s", id), nil, &resp, a.client.AddWorkspaceIdHeader)
-	return resp, err
-}
-
-type ReposListResponse struct {
-	NextPageToken string             `json:"next_page_token,omitempty"`
-	Repos         []ReposInformation `json:"repos"`
-}
-
-func (a ReposAPI) List(prefix string) ([]ReposInformation, error) {
-	req := map[string]string{}
-	if prefix != "" {
-		req["path_prefix"] = prefix
-	}
-	reposList := []ReposInformation{}
-	for {
-		var resp ReposListResponse
-		err := a.client.Get(a.context, "/repos", req, &resp, a.client.AddWorkspaceIdHeader)
-		if err != nil {
-			return nil, err
-		}
-		reposList = append(reposList, resp.Repos...)
-		if resp.NextPageToken == "" {
-			break
-		}
-		req["next_page_token"] = resp.NextPageToken
-	}
-	return reposList, nil
-}
-
-func (a ReposAPI) ListAll() ([]ReposInformation, error) {
-	return a.List("")
+	s.RemoveField("id")
+	common.NamespaceCustomizeSchema(s)
+	return s
 }
 
 var (
@@ -164,29 +94,7 @@ func validatePath(i interface{}, k string) (_ []string, errors []error) {
 }
 
 func ResourceRepo() common.Resource {
-	s := common.StructToSchema(ReposInformation{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		s["url"].ValidateFunc = validation.IsURLWithScheme([]string{"https", "http"})
-		s["git_provider"].DiffSuppressFunc = common.EqualFoldDiffSuppress
-		s["branch"].ConflictsWith = []string{"tag"}
-		s["branch"].ValidateFunc = validation.StringIsNotWhiteSpace
-		s["path"].ValidateFunc = validatePath
-
-		s["tag"] = &schema.Schema{
-			Type:          schema.TypeString,
-			Optional:      true,
-			ConflictsWith: []string{"branch"},
-			ValidateFunc:  validation.StringIsNotWhiteSpace,
-		}
-		s["workspace_path"] = &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		}
-
-		delete(s, "id")
-		common.AddNamespaceInSchema(s)
-		common.NamespaceCustomizeSchemaMap(s)
-		return s
-	})
+	s := common.StructToSchema(repoInfo{}, nil)
 
 	return common.Resource{
 		Schema:        s,
@@ -195,86 +103,131 @@ func ResourceRepo() common.Resource {
 			return common.NamespaceCustomizeDiff(ctx, d, c)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
-			reposAPI := NewReposAPI(ctx, newClient)
-			var repo ReposInformation
+			var repo repoInfo
 			common.DataToStructPointer(d, s, &repo)
 
-			req := reposCreateRequest{Path: repo.Path, Provider: repo.Provider,
-				Url: repo.Url, SparseCheckout: repo.SparseCheckout}
-			resp, err := reposAPI.Create(req)
+			provider := repo.Provider
+			if provider == "" { // trying to infer Git Provider from the URL
+				provider = GetGitProviderFromUrl(repo.Url)
+			}
+			if provider == "" {
+				return fmt.Errorf("git_provider isn't specified and we can't detect provider from URL")
+			}
+			if repo.Path != "" {
+				p := path.Dir(strings.TrimSuffix(repo.Path, "/"))
+				if err := w.Workspace.MkdirsByPath(ctx, p); err != nil {
+					return err
+				}
+			}
+
+			createReq := workspace.CreateRepoRequest{
+				Url:      repo.Url,
+				Provider: provider,
+				Path:     repo.Path,
+			}
+			if repo.SparseCheckout != nil {
+				createReq.SparseCheckout = &workspace.SparseCheckout{Patterns: repo.SparseCheckout.Patterns}
+			}
+			resp, err := w.Repos.Create(ctx, createReq)
 			if err != nil {
 				return err
 			}
-			d.SetId(resp.RepoID())
+			d.SetId(strconv.FormatInt(resp.Id, 10))
+
 			branch := d.Get("branch").(string)
 			tag := d.Get("tag").(string)
-			updateReq := map[string]any{}
+			updateReq := workspace.UpdateRepoRequest{RepoId: resp.Id}
+			needsUpdate := false
 			if tag != "" {
-				updateReq["tag"] = tag
+				updateReq.Tag = tag
+				needsUpdate = true
 			} else if branch != "" && branch != resp.Branch {
-				updateReq["branch"] = branch
+				updateReq.Branch = branch
+				needsUpdate = true
 			}
-			return reposAPI.Update(d.Id(), updateReq)
+			if !needsUpdate {
+				return nil
+			}
+			return w.Repos.Update(ctx, updateReq)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
-			reposAPI := NewReposAPI(ctx, newClient)
-			resp, err := reposAPI.Read(d.Id())
+			id, err := strconv.ParseInt(d.Id(), 10, 64)
 			if err != nil {
 				return err
 			}
-			err = common.StructToData(resp, s, d)
+			resp, err := w.Repos.GetByRepoId(ctx, id)
 			if err != nil {
+				return err
+			}
+			// GetByRepoId returns a GetRepoResponse; the schema is built from RepoInfo.
+			// The two are structurally identical, so copy across into the schema struct.
+			repo := repoInfo{RepoInfo: workspace.RepoInfo{
+				Id:              resp.Id,
+				Url:             resp.Url,
+				Provider:        resp.Provider,
+				Path:            resp.Path,
+				Branch:          resp.Branch,
+				HeadCommitId:    resp.HeadCommitId,
+				SparseCheckout:  resp.SparseCheckout,
+				ForceSendFields: resp.ForceSendFields,
+			}}
+			if err = common.StructToData(repo, s, d); err != nil {
 				return err
 			}
 			d.Set("workspace_path", "/Workspace"+resp.Path)
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
-			var repo ReposInformation
+			var repo repoInfo
 			common.DataToStructPointer(d, s, &repo)
 
-			reposAPI := NewReposAPI(ctx, newClient)
-			req := map[string]any{}
-			// Not working yet, wait until API is ready
-			// if d.HasChange("path") {
-			// 	req["path"] = d.Get("path").(string)
-			// }
+			id, err := strconv.ParseInt(d.Id(), 10, 64)
+			if err != nil {
+				return err
+			}
+			req := workspace.UpdateRepoRequest{RepoId: id}
+			// Not working yet, wait until API is ready:
+			// path updates are gated on the Update API supporting them.
 			if d.HasChange("tag") {
-				req["tag"] = d.Get("tag").(string)
+				req.Tag = d.Get("tag").(string)
 				d.Set("branch", "")
 			} else if d.HasChange("branch") {
-				req["branch"] = repo.Branch
+				req.Branch = repo.Branch
 				d.Set("tag", "")
 			} else {
 				if repo.Branch != "" {
-					req["branch"] = repo.Branch
+					req.Branch = repo.Branch
 				} else if v := d.Get("tag").(string); v != "" {
-					req["tag"] = v
+					req.Tag = v
 				}
 			}
 			if repo.SparseCheckout != nil {
-				req["sparse_checkout"] = map[string]any{"patterns": repo.SparseCheckout.Patterns}
+				req.SparseCheckout = &workspace.SparseCheckoutUpdate{Patterns: repo.SparseCheckout.Patterns}
 			}
-			return reposAPI.Update(d.Id(), req)
+			return w.Repos.Update(ctx, req)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
-			return NewReposAPI(ctx, newClient).Delete(d.Id())
+			id, err := strconv.ParseInt(d.Id(), 10, 64)
+			if err != nil {
+				return err
+			}
+			return w.Repos.DeleteByRepoId(ctx, id)
 		},
 	}
 }

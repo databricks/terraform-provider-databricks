@@ -51,6 +51,10 @@ The following arguments are supported:
 * `parent` (string, required) - Parent resource in the format: catalogs/{catalog_name}
 * `auto_tag_configs` (list of AutoTaggingConfig, optional) - List of auto-tagging configurations for this catalog.
   Empty list means no auto-tagging is enabled
+* `excluded_schemas` (CatalogConfigSchemaNames, optional) - Schemas to exclude from the scan, each named relative to the parent catalog.
+  If specified, all schemas except the specified ones will be scanned.
+  Mutually exclusive with `included_schemas`: only one may be set per request.
+  If neither `included_schemas` nor `excluded_schemas` is set, all schemas are scanned
 * `included_schemas` (CatalogConfigSchemaNames, optional) - Schemas to include in the scan, each named relative to the parent catalog.
   If specified, only listed schemas will be scanned.
   Mutually exclusive with `excluded_schemas`: only one may be set per request.

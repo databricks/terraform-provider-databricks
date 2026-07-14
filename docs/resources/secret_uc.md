@@ -2,7 +2,9 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_secret_uc Resource
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/secretsuc)
 
 The Secret resource allows you to manage secrets in Unity Catalog. Secrets provide a secure way to store and access sensitive information such as credentials, API keys, and tokens within Unity Catalog.
 
@@ -51,15 +53,12 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `browse_only` (boolean) - Indicates whether the principal is limited to retrieving metadata for the associated object
-  through the **BROWSE** privilege when **include_browse** is enabled in the request
 * `create_time` (string) - The time at which this secret was created
 * `created_by` (string) - The principal that created the secret
 * `effective_owner` (string) - The effective owner of the secret, which may differ from the directly-set **owner** due to
   inheritance
 * `effective_value` (string) - The secret value. Only populated in responses when you have the **READ_SECRET**
   privilege and **include_value** is set to true in the request. The maximum size is 60 KiB
-* `external_secret_id` (string)
 * `full_name` (string) - The three-level (fully qualified) name of the secret, in the form of **catalog_name.schema_name.secret_name**
 * `metastore_id` (string) - Unique identifier of the metastore hosting the secret
 * `update_time` (string) - The time at which this secret was last updated

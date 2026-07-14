@@ -46,6 +46,30 @@ resource "databricks_account_network_policy" "example_network_policy" {
 }
 ```
 
+Restrict ingress to private connectivity by only allowing requests from registered private endpoints:
+
+```hcl
+resource "databricks_account_network_policy" "example_private_access_policy" {
+  network_policy_id = "example-private-access-policy"
+  ingress = {
+    private_access = {
+      # "ALLOW_ALL_REGISTERED_ENDPOINTS" allows every registered private endpoint.
+      # "RESTRICTED_ACCESS" only allows the endpoints listed in allow_rules.
+      restriction_mode = "RESTRICTED_ACCESS"
+      allow_rules = [
+        {
+          origin = {
+            endpoints = {
+              endpoint_ids = ["example-private-endpoint-id"]
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
 ## Arguments
 The following arguments are supported:
 * `egress` (NetworkPolicyEgress, optional) - The network policies applying for egress traffic
@@ -57,14 +81,14 @@ The following arguments are supported:
 
 ### CustomerFacingIngressNetworkPolicy
 * `cross_workspace_access` (CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess, optional)
-* `private_access` (CustomerFacingIngressNetworkPolicyPrivateAccess, optional) - The network policy restrictions for private access to the workspace.
-  Configures how registered private endpoints are allowed or denied access
+* `private_access` (CustomerFacingIngressNetworkPolicyPrivateAccess, optional) - The network policy restrictions for private access.
+  Configures how requests arriving over private connectivity are governed
 * `public_access` (CustomerFacingIngressNetworkPolicyPublicAccess, optional) - The network policy restrictions for public access to the workspace.
   Configures how public internet traffic is allowed or denied access
 
 ### CustomerFacingIngressNetworkPolicyAccountApiDestination
 * `scope_qualifier` (string, optional) - Qualifies the breadth of API access for the listed scopes. See ApiScopeQualifier. Possible values are: `API_SCOPE_QUALIFIER_ALL`, `API_SCOPE_QUALIFIER_READ`
-* `scopes` (list of string, optional)
+* `scopes` (list of string, optional) - The API scopes to match. Use "all-apis" to match any account-level API
 
 ### CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination
 * `all_destinations` (boolean, optional) - Must be set to true
@@ -99,7 +123,7 @@ The following arguments are supported:
 * `selected_workspaces` (CustomerFacingIngressNetworkPolicyWorkspaceIdList, optional) - Specific source workspace IDs to match
 
 ### CustomerFacingIngressNetworkPolicyEndpoints
-* `endpoint_ids` (list of string, optional)
+* `endpoint_ids` (list of string, optional) - The IDs of the registered endpoints. Must contain at least one endpoint ID
 
 ### CustomerFacingIngressNetworkPolicyIpRanges
 * `ip_ranges` (list of string, optional) - We only support IPv4 and IPv4 CIDR notation for now
@@ -108,21 +132,37 @@ The following arguments are supported:
 * `all_destinations` (boolean, optional) - Must be set to true
 
 ### CustomerFacingIngressNetworkPolicyPrivateAccess
-* `restriction_mode` (string, required) - Possible values are: `ALLOW_ALL_REGISTERED_ENDPOINTS`, `RESTRICTED_ACCESS`
-* `allow_rules` (list of CustomerFacingIngressNetworkPolicyPrivateIngressRule, optional)
-* `deny_rules` (list of CustomerFacingIngressNetworkPolicyPrivateIngressRule, optional)
+* `restriction_mode` (string, required) - The restriction mode for private access. Possible values are: `ALLOW_ALL_REGISTERED_ENDPOINTS`, `RESTRICTED_ACCESS`
+* `allow_rules` (list of CustomerFacingIngressNetworkPolicyPrivateIngressRule, optional) - Allow rules are evaluated after deny rules. A request matching any allow rule is
+  allowed; a request matching no rule is denied by default. Only applies when
+  restriction_mode is RESTRICTED_ACCESS
+* `deny_rules` (list of CustomerFacingIngressNetworkPolicyPrivateIngressRule, optional) - Deny rules are evaluated first. A request matching any deny rule is denied,
+  regardless of allow rules. Only applies when restriction_mode is RESTRICTED_ACCESS
 
 ### CustomerFacingIngressNetworkPolicyPrivateIngressRule
-* `authentication` (CustomerFacingIngressNetworkPolicyAuthentication, optional)
-* `destination` (CustomerFacingIngressNetworkPolicyRequestDestination, optional)
+* `authentication` (CustomerFacingIngressNetworkPolicyAuthentication, optional) - The authenticated identity the request must match. When unset, the rule matches
+  all users and service principals.
+  On the account-level network policy, scoping to specific identities is not
+  currently supported, so this field must be unset (the rule matches all users
+  and service principals)
+* `destination` (CustomerFacingIngressNetworkPolicyRequestDestination, optional) - The destination the request must match — the resource being accessed, for example
+  the workspace UI, workspace APIs, or account-level APIs. See RequestDestination
 * `label` (string, optional) - The label for this ingress rule
-* `origin` (CustomerFacingIngressNetworkPolicyPrivateRequestOrigin, optional)
+* `origin` (CustomerFacingIngressNetworkPolicyPrivateRequestOrigin, optional) - The origin the request must match — the private connectivity the request arrives
+  through, for example a specific set of registered endpoints or any endpoint
+  registered to the account. See PrivateRequestOrigin
 
 ### CustomerFacingIngressNetworkPolicyPrivateRequestOrigin
-* `all_private_access` (boolean, optional)
-* `all_registered_endpoints` (boolean, optional)
-* `azure_workspace_private_link` (boolean, optional)
-* `endpoints` (CustomerFacingIngressNetworkPolicyEndpoints, optional)
+* `all_private_access` (boolean, optional) - Matches requests arriving over any private connectivity, including registered
+  endpoints and the workspace's Azure Private Link (ui-api) endpoints.
+  Can only be used in deny rules of workspace-level network policies.
+  Must be set to true when specified
+* `all_registered_endpoints` (boolean, optional) - Matches requests arriving through any endpoint registered to the account.
+  Must be set to true when specified
+* `azure_workspace_private_link` (boolean, optional) - Matches requests arriving through the workspace's Azure Private Link (ui-api)
+  endpoints. Can only be used in deny rules of workspace-level network policies.
+  Must be set to true when specified
+* `endpoints` (CustomerFacingIngressNetworkPolicyEndpoints, optional) - Matches requests arriving through any of the specified registered endpoints
 
 ### CustomerFacingIngressNetworkPolicyPublicAccess
 * `restriction_mode` (string, required) - Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
@@ -141,10 +181,11 @@ The following arguments are supported:
 * `included_ip_ranges` (CustomerFacingIngressNetworkPolicyIpRanges, optional) - Will not allow IP ranges with private IPs
 
 ### CustomerFacingIngressNetworkPolicyRequestDestination
-* `account_api` (CustomerFacingIngressNetworkPolicyAccountApiDestination, optional)
-* `account_databricks_one` (CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination, optional) - Account DatabricksOne destination is not supported.
-  DO NOT change the stage of this destination past PRIVATE_PREVIEW
-* `account_ui` (CustomerFacingIngressNetworkPolicyAccountUiDestination, optional)
+* `account_api` (CustomerFacingIngressNetworkPolicyAccountApiDestination, optional) - Matches requests to account-level APIs.
+  Can only be used in the account-level network policy
+* `account_databricks_one` (CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination, optional) - Account DatabricksOne destination is not supported
+* `account_ui` (CustomerFacingIngressNetworkPolicyAccountUiDestination, optional) - Matches requests to the account console UI.
+  Can only be used in the account-level network policy
 * `all_destinations` (boolean, optional) - When true, match all destinations, no other destination fields can be set.
   When not set or false, at least one specific destination must be provided
 * `apps_runtime` (CustomerFacingIngressNetworkPolicyAppsRuntimeDestination, optional)

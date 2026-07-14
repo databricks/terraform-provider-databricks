@@ -314,6 +314,9 @@ func (m CreateCredentialsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CreateRepoRequest_SdkV2 struct {
+	// Git credential ID to use when cloning the repository. The Git credential
+	// must be configured for the current user.
+	GitCredentialId types.Int64 `tfsdk:"git_credential_id"`
 	// Desired path for the repo in the workspace. Almost any path in the
 	// workspace can be chosen. If repo is created in `/Repos`, path must be in
 	// the format `/Repos/{folder}/{repo-name}`.
@@ -356,6 +359,7 @@ func (to *CreateRepoRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 }
 
 func (m CreateRepoRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["git_credential_id"] = attrs["git_credential_id"].SetOptional()
 	attrs["path"] = attrs["path"].SetOptional()
 	attrs["provider"] = attrs["provider"].SetRequired()
 	attrs["sparse_checkout"] = attrs["sparse_checkout"].SetOptional()
@@ -385,10 +389,11 @@ func (m CreateRepoRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"path":            m.Path,
-			"provider":        m.Provider,
-			"sparse_checkout": m.SparseCheckout,
-			"url":             m.Url,
+			"git_credential_id": m.GitCredentialId,
+			"path":              m.Path,
+			"provider":          m.Provider,
+			"sparse_checkout":   m.SparseCheckout,
+			"url":               m.Url,
 		})
 }
 
@@ -396,8 +401,9 @@ func (m CreateRepoRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 func (m CreateRepoRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"path":     types.StringType,
-			"provider": types.StringType,
+			"git_credential_id": types.Int64Type,
+			"path":              types.StringType,
+			"provider":          types.StringType,
 			"sparse_checkout": basetypes.ListType{
 				ElemType: SparseCheckout_SdkV2{}.Type(ctx),
 			},
@@ -4698,6 +4704,9 @@ type UpdateRepoRequest_SdkV2 struct {
 	// Local commits that have been made but not yet pushed to the remote are
 	// preserved.
 	DangerouslyForceDiscardAll types.Bool `tfsdk:"dangerously_force_discard_all"`
+	// Git credential ID to use for this update operation. The Git credential
+	// must be configured for the current user.
+	GitCredentialId types.Int64 `tfsdk:"git_credential_id"`
 	// ID of the Git folder (repo) object in the workspace.
 	RepoId types.Int64 `tfsdk:"-"`
 	// If specified, update the sparse checkout settings. The update will fail
@@ -4736,6 +4745,7 @@ func (to *UpdateRepoRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 func (m UpdateRepoRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["branch"] = attrs["branch"].SetOptional()
 	attrs["dangerously_force_discard_all"] = attrs["dangerously_force_discard_all"].SetOptional()
+	attrs["git_credential_id"] = attrs["git_credential_id"].SetOptional()
 	attrs["sparse_checkout"] = attrs["sparse_checkout"].SetOptional()
 	attrs["sparse_checkout"] = attrs["sparse_checkout"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["tag"] = attrs["tag"].SetOptional()
@@ -4766,6 +4776,7 @@ func (m UpdateRepoRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 		map[string]attr.Value{
 			"branch":                        m.Branch,
 			"dangerously_force_discard_all": m.DangerouslyForceDiscardAll,
+			"git_credential_id":             m.GitCredentialId,
 			"repo_id":                       m.RepoId,
 			"sparse_checkout":               m.SparseCheckout,
 			"tag":                           m.Tag,
@@ -4778,6 +4789,7 @@ func (m UpdateRepoRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"branch":                        types.StringType,
 			"dangerously_force_discard_all": types.BoolType,
+			"git_credential_id":             types.Int64Type,
 			"repo_id":                       types.Int64Type,
 			"sparse_checkout": basetypes.ListType{
 				ElemType: SparseCheckoutUpdate_SdkV2{}.Type(ctx),

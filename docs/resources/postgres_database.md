@@ -29,6 +29,70 @@ Databases exist within the Lakebase Autoscaling resource hierarchy:
 
 
 ## Example Usage
+### Managing Implicitly Created Database
+
+A database named `databricks-postgres` (Postgres name `databricks_postgres`) is implicitly created on every branch. Since Terraform is declarative, managing an already-existing resource requires `replace_existing = true`: it lets Terraform represent the implicitly created database in Terraform state and immediately apply the provided configuration to it.
+
+`replace_existing = true` only affects the initial adoption. Once the database is in Terraform state, it is managed like any other resource: removing it from your configuration and applying **deletes the actual database** (and its data), not just the state entry. This is unlike `databricks_postgres_branch`, whose deletion is instead controlled by its parent project. To stop managing the database without deleting it, remove it from state with `terraform state rm` before removing it from your configuration.
+
+`spec.role` is optional: omit it to keep the database's existing owner (as shown below). When you do set it — to change ownership — it must reference a role in the same branch, written as `<branch-name>/roles/<role_id>`.
+
+```hcl
+resource "databricks_postgres_project" "this" {
+  project_id = "my-project"
+  spec = {
+    pg_version   = 17
+    display_name = "My Project"
+  }
+}
+
+resource "databricks_postgres_branch" "production" {
+  branch_id = "production"
+  parent    = databricks_postgres_project.this.name
+  spec = {
+    no_expiry = true
+  }
+  replace_existing = true
+}
+
+resource "databricks_postgres_database" "databricks_postgres" {
+  database_id = "databricks-postgres"
+  parent      = databricks_postgres_branch.production.name
+  spec = {
+    postgres_database = "databricks_postgres"
+    # spec.role is omitted, so the database keeps its existing owner. Set it only to change ownership.
+  }
+  replace_existing = true
+}
+```
+
+### Managing a Database Inherited by a Child Branch
+
+A child branch created from a source branch (via `spec.source_branch`) shares the source's storage through copy-on-write, so every database on the source branch — including the implicit `databricks-postgres` database — already exists on the child at the branch point. These inherited databases are not created by Terraform, so managing one requires `replace_existing = true`, exactly as for the implicitly created database above.
+
+You typically adopt an inherited database when you want to manage its configuration (for example, transfer ownership via `spec.role`) on the child branch independently of the source.
+
+```hcl
+resource "databricks_postgres_branch" "child" {
+  branch_id = "feature-x"
+  parent    = databricks_postgres_project.this.name
+  spec = {
+    source_branch = databricks_postgres_branch.production.name
+    no_expiry     = true
+  }
+}
+
+resource "databricks_postgres_database" "inherited" {
+  database_id = "databricks-postgres"
+  parent      = databricks_postgres_branch.child.name
+  spec = {
+    postgres_database = "databricks_postgres"
+    # spec.role is omitted, so the database keeps the owner inherited from the source branch.
+  }
+  replace_existing = true
+}
+```
+
 ### Database Owned by a Specific Role
 
 Assign ownership to a role you manage alongside the database. The Postgres database will be created with the specified role as its owner.

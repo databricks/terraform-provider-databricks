@@ -9,6 +9,7 @@ import (
 )
 
 type ShareDetail struct {
+	common.Namespace
 	Name      string                     `json:"name,omitempty" tf:"computed"`
 	Objects   []sharing.SharedDataObject `json:"objects,omitempty" tf:"computed,slice_set,alias:object"`
 	CreatedAt int64                      `json:"created_at,omitempty" tf:"computed"`

@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_registered_model Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/registeredmodels)
+
 This resource allows you to create [Models in Unity Catalog](https://docs.databricks.com/en/mlflow/models-in-uc.html) in Databricks.
 
 -> This resource can only be used with a workspace-level provider!
@@ -26,7 +28,9 @@ The following arguments are supported:
 * `schema_name` - (Required) The name of the schema where the registered model resides. *Change of this parameter forces recreation of the resource.*
 * `owner` - (Optional) Name of the registered model owner.
 * `comment` - (Optional) The comment attached to the registered model.
-* `storage_location` - (Optional) The storage location under which model version data files are stored. *Change of this parameter forces recreation of the resource.*
+* `storage_location` - (Optional) The storage location under which model version data files are stored.  If the URL contains special characters, such as space, `&`, etc., they should be percent-encoded (space -> `%20`, etc.). *Change of this parameter forces recreation of the resource.*
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

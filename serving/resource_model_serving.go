@@ -3,6 +3,8 @@ package serving
 import (
 	"context"
 	"log"
+	"reflect"
+	"slices"
 	"strings"
 	"time"
 
@@ -60,6 +62,105 @@ func suppressRouteModelEntityNameDiff(k, old, new string, d *schema.ResourceData
 	return false
 }
 
+// copySensitiveFields recursively copies sensitive plaintext fields from source to destination.
+// This is needed because the GET API doesn't return sensitive values, causing drift in Terraform state.
+// The function uses reflection to automatically handle all plaintext fields without manual enumeration.
+func copySensitiveFields(src, dst reflect.Value) {
+	// Handle nil pointers
+	if !src.IsValid() || !dst.IsValid() {
+		return
+	}
+
+	// Dereference pointers
+	if src.Kind() == reflect.Ptr {
+		if src.IsNil() {
+			return
+		}
+		src = src.Elem()
+	}
+	if dst.Kind() == reflect.Ptr {
+		if dst.IsNil() {
+			return
+		}
+		dst = dst.Elem()
+	}
+
+	// Only process structs
+	if src.Kind() != reflect.Struct || dst.Kind() != reflect.Struct {
+		return
+	}
+
+	// Ensure types match
+	if src.Type() != dst.Type() {
+		return
+	}
+
+	// Iterate through all fields
+	for i := 0; i < src.NumField(); i++ {
+		srcField := src.Field(i)
+		dstField := dst.Field(i)
+		fieldType := src.Type().Field(i)
+
+		// Skip unexported fields
+		if !dstField.CanSet() {
+			continue
+		}
+
+		fieldName := fieldType.Name
+
+		// Check if this is a sensitive plaintext field (ends with "Plaintext")
+		if strings.HasSuffix(fieldName, "Plaintext") && srcField.Kind() == reflect.String {
+			srcValue := srcField.String()
+			dstValue := dstField.String()
+
+			// Copy from source to destination if source has a value and destination is empty
+			if srcValue != "" && dstValue == "" {
+				dstField.SetString(srcValue)
+				log.Printf("[DEBUG] Copied sensitive field %s from state", fieldName)
+			}
+			continue
+		}
+
+		// Recursively process nested structs, pointers, slices, and maps
+		switch srcField.Kind() {
+		case reflect.Struct:
+			copySensitiveFields(srcField, dstField)
+		case reflect.Ptr:
+			if !srcField.IsNil() && !dstField.IsNil() {
+				copySensitiveFields(srcField, dstField)
+			}
+		case reflect.Slice:
+			// Process slice elements (e.g., served_entities)
+			if srcField.Len() > 0 && dstField.Len() > 0 {
+				minLen := srcField.Len()
+				if dstField.Len() < minLen {
+					minLen = dstField.Len()
+				}
+				for j := 0; j < minLen; j++ {
+					copySensitiveFields(srcField.Index(j), dstField.Index(j))
+				}
+			}
+		case reflect.Map:
+			// Process map values if needed in the future
+			continue
+		}
+	}
+}
+
+// copySensitiveExternalModelFields copies sensitive plaintext credential fields from the source
+// endpoint (from state) to the destination endpoint (from API response).
+func copySensitiveExternalModelFields(src, dst *serving.ServingEndpointDetailed) {
+	if src == nil || dst == nil {
+		return
+	}
+
+	// Use reflection to copy all sensitive fields recursively
+	srcVal := reflect.ValueOf(src)
+	dstVal := reflect.ValueOf(dst)
+
+	copySensitiveFields(srcVal, dstVal)
+}
+
 // updateConfig updates the configuration of the provided serving endpoint to the provided config.
 func updateConfig(ctx context.Context, w *databricks.WorkspaceClient, name string, e *serving.EndpointCoreConfigInput, d *schema.ResourceData) error {
 	e.Name = name
@@ -89,26 +190,16 @@ func updateTags(ctx context.Context, w *databricks.WorkspaceClient, name string,
 		Name: name,
 	}
 	for _, newTag := range newTags {
-		found := false
-		for _, oldTag := range oldTags {
-			if oldTag.Key == newTag.Key && oldTag.Value == newTag.Value {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if !slices.ContainsFunc(oldTags, func(t serving.EndpointTag) bool {
+			return t.Key == newTag.Key && t.Value == newTag.Value
+		}) {
 			req.AddTags = append(req.AddTags, newTag)
 		}
 	}
 	for _, oldTag := range oldTags {
-		found := false
-		for _, newTag := range newTags {
-			if oldTag.Key == newTag.Key {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if !slices.ContainsFunc(newTags, func(t serving.EndpointTag) bool {
+			return t.Key == oldTag.Key
+		}) {
 			req.DeleteTags = append(req.DeleteTags, oldTag.Key)
 		}
 	}
@@ -131,9 +222,131 @@ func updateAiGateway(ctx context.Context, w *databricks.WorkspaceClient, name st
 	return err
 }
 
+// cleanWorkloadSize clears the workload_size field from the config (the API response) if it is not set in the corresponding schema.ResourceData.
+// This is applied to both the ServedModels and ServedEntities fields.
+//
+// If neither workload_size nor min_provisioned_concurrency/max_provisioned_concurrency are provided in API requests, workload_size is set in the
+// API response. This results in a configuration drift for workload_size.
+//
+// The resulting behavior is:
+//
+// - If the workload_size is set in the ResourceData, the provider respects the value specified in the API response.
+// - If the workload_size is not set in the ResourceData, the provider clears the workload_size from the API response.
+func cleanWorkloadSize(s map[string]*schema.Schema, d *schema.ResourceData, apiResponse *serving.EndpointCoreConfigOutput) {
+	var config serving.CreateServingEndpoint
+	common.DataToStructPointer(d, s, &config)
+
+	if config.Config == nil {
+		return
+	}
+	for _, configModel := range config.Config.ServedModels {
+		if configModel.WorkloadSize != "" {
+			continue
+		}
+		for i, apiModel := range apiResponse.ServedModels {
+			if apiModel.Name == configModel.Name {
+				apiResponse.ServedModels[i].WorkloadSize = ""
+				break
+			}
+		}
+	}
+	for _, configEntity := range config.Config.ServedEntities {
+		if configEntity.WorkloadSize != "" {
+			continue
+		}
+		for i, apiEntity := range apiResponse.ServedEntities {
+			if apiEntity.Name == configEntity.Name {
+				apiResponse.ServedEntities[i].WorkloadSize = ""
+				break
+			}
+		}
+	}
+}
+
+// reorderByName is a generic helper that re-orders a slice of items from the API response
+// to match the order of names in the config. Items are matched by name, and any items in
+// the API response that aren't in the config are appended at the end.
+//
+// Parameters:
+//   - configNames: ordered list of names from the user's HCL configuration
+//   - apiItems: slice of items from the API response
+//   - getName: function to extract the name from an API item
+//
+// Returns: re-ordered slice maintaining the same type as apiItems
+func reorderByName[T any](configNames []string, apiItems []T, getName func(T) string) []T {
+	if len(configNames) == 0 || len(apiItems) == 0 {
+		return apiItems
+	}
+
+	reordered := make([]T, 0, len(apiItems))
+
+	// First pass: add items in config order
+	for _, configName := range configNames {
+		for _, apiItem := range apiItems {
+			if getName(apiItem) == configName {
+				reordered = append(reordered, apiItem)
+				break
+			}
+		}
+	}
+
+	// Second pass: append any items from API that weren't in config
+	for _, apiItem := range apiItems {
+		found := false
+		for _, reorderedItem := range reordered {
+			if getName(reorderedItem) == getName(apiItem) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			reordered = append(reordered, apiItem)
+		}
+	}
+
+	return reordered
+}
+
+// preserveConfigOrder re-orders the served_models and served_entities in the API response
+// to match the order specified in the HCL configuration. This prevents spurious diffs when
+// the API returns items in a different order (e.g., alphabetically) than submitted.
+func preserveConfigOrder(s map[string]*schema.Schema, d *schema.ResourceData, apiResponse *serving.EndpointCoreConfigOutput) {
+	var config serving.CreateServingEndpoint
+	common.DataToStructPointer(d, s, &config)
+
+	if config.Config == nil || apiResponse == nil {
+		return
+	}
+
+	// Re-order served_models to match config order
+	if len(config.Config.ServedModels) > 0 && len(apiResponse.ServedModels) > 0 {
+		configNames := make([]string, len(config.Config.ServedModels))
+		for i, model := range config.Config.ServedModels {
+			configNames[i] = model.Name
+		}
+		apiResponse.ServedModels = reorderByName(configNames, apiResponse.ServedModels,
+			func(m serving.ServedModelOutput) string { return m.Name })
+	}
+
+	// Re-order served_entities to match config order
+	if len(config.Config.ServedEntities) > 0 && len(apiResponse.ServedEntities) > 0 {
+		configNames := make([]string, len(config.Config.ServedEntities))
+		for i, entity := range config.Config.ServedEntities {
+			configNames[i] = entity.Name
+		}
+		apiResponse.ServedEntities = reorderByName(configNames, apiResponse.ServedEntities,
+			func(e serving.ServedEntityOutput) string { return e.Name })
+	}
+}
+
+type ModelServingSchemaStruct struct {
+	serving.CreateServingEndpoint
+	common.Namespace
+}
+
 func ResourceModelServing() common.Resource {
 	s := common.StructToSchema(
-		serving.CreateServingEndpoint{},
+		ModelServingSchemaStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			// Use the newer CustomizeSchemaPath approach for better maintainability
 			common.CustomizeSchemaPath(m, "name").SetForceNew()
@@ -159,7 +372,6 @@ func ResourceModelServing() common.Resource {
 			common.CustomizeSchemaPath(m, "rate_limits").SetDeprecated("Please use AI Gateway to manage rate limits.")
 
 			common.CustomizeSchemaPath(m, "config", "served_entities", "name").SetComputed()
-			common.CustomizeSchemaPath(m, "config", "served_entities", "workload_size").SetComputed()
 			common.CustomizeSchemaPath(m, "config", "served_entities", "workload_type").SetComputed()
 
 			// Apply custom suppress diff to traffic config routes for served_model_name and served_entity_name
@@ -171,8 +383,25 @@ func ResourceModelServing() common.Resource {
 			common.MustSchemaPath(m, "ai_gateway", "guardrails", "output", "invalid_keywords").Deprecated = "Please use 'pii' and 'safety' instead."
 			common.MustSchemaPath(m, "ai_gateway", "guardrails", "output", "valid_topics").Deprecated = "Please use 'pii' and 'safety' instead."
 
+			// Mark all plaintext credential fields as sensitive so they are not displayed in plan/apply output
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "ai21labs_config", "ai21labs_api_key_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "amazon_bedrock_config", "aws_access_key_id_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "amazon_bedrock_config", "aws_secret_access_key_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "anthropic_config", "anthropic_api_key_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "cohere_config", "cohere_api_key_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "databricks_model_serving_config", "databricks_api_token_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "google_cloud_vertex_ai_config", "private_key_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "openai_config", "openai_api_key_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "openai_config", "microsoft_entra_client_secret_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "palm_config", "palm_api_key_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "custom_provider_config", "api_key_auth", "value_plaintext").SetSensitive()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "external_model", "custom_provider_config", "bearer_token_auth", "token_plaintext").SetSensitive()
+
 			// route_optimized cannot be updated.
 			common.CustomizeSchemaPath(m, "route_optimized").SetForceNew()
+
+			// Tags should have Set type
+			m["tags"].Type = schema.TypeSet
 
 			m["serving_endpoint_id"] = &schema.Schema{
 				Computed: true,
@@ -182,12 +411,16 @@ func ResourceModelServing() common.Resource {
 				Computed: true,
 				Type:     schema.TypeString,
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -210,7 +443,7 @@ func ResourceModelServing() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			var sOrig serving.ServingEndpointDetailed
 			common.DataToStructPointer(d, s, &sOrig)
 			if err != nil {
@@ -220,6 +453,8 @@ func ResourceModelServing() common.Resource {
 			if err != nil {
 				return err
 			}
+			// Copy sensitive plaintext fields from state to API response to prevent drift
+			copySensitiveExternalModelFields(&sOrig, endpoint)
 			if sOrig.Config == nil {
 				// If it is a new resource, then we only return ServedEntities
 				if endpoint.Config != nil {
@@ -233,6 +468,9 @@ func ResourceModelServing() common.Resource {
 					endpoint.Config.ServedEntities = nil
 				}
 			}
+			cleanWorkloadSize(s, d, endpoint.Config)
+			preserveConfigOrder(s, d, endpoint.Config)
+
 			err = common.StructToData(*endpoint, s, d)
 			if err != nil {
 				return err
@@ -242,7 +480,7 @@ func ResourceModelServing() common.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -266,7 +504,7 @@ func ResourceModelServing() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

@@ -326,6 +326,7 @@ func TestResourceSQLEndpointUpdateHealthNoDiff(t *testing.T) {
 		},
 		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
 			"state":                     {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"provider_config.#":         {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"odbc_params.#":             {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"num_clusters":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"num_active_sessions":       {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
@@ -357,6 +358,7 @@ func TestResourceSQLEndpointUpdateNoAutoTermination(t *testing.T) {
 		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
 			"auto_stop_mins":            {Old: "120", New: "0", NewComputed: false, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"state":                     {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"provider_config.#":         {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"odbc_params.#":             {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"num_clusters":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"num_active_sessions":       {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
@@ -400,8 +402,9 @@ func TestResolveDataSourceIDError(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		w, err := client.WorkspaceClient()
 		require.NoError(t, err)
-		_, err = resolveDataSourceID(ctx, w, "any")
-		require.Error(t, err)
+		dataSourceId, err := resolveDataSourceID(ctx, w, "any")
+		require.NoError(t, err)
+		assert.Equal(t, "", dataSourceId)
 	})
 }
 

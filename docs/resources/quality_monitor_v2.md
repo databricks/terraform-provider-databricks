@@ -2,6 +2,12 @@
 subcategory: "Quality Monitor"
 ---
 # databricks_quality_monitor_v2 Resource
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/qualitymonitorv2)
+
+~> **Deprecated** This resource is deprecated. Please use `databricks_data_quality_monitor` instead.
+
 Users with MANAGE Schema can use quality monitor v2 to set up data quality monitoring checks for UC objects, currently support schema. 
 
 
@@ -9,6 +15,8 @@ Users with MANAGE Schema can use quality monitor v2 to set up data quality monit
 
 
 ## Example Usage
+~> **Deprecated** This resource is deprecated. Please use `databricks_data_quality_monitor` instead.
+
 ```hcl
 resource "databricks_schema" "this" {
   catalog_name = "my_catalog"
@@ -25,7 +33,32 @@ resource "databricks_quality_monitor_v2" "this" {
 The following arguments are supported:
 * `object_id` (string, required) - The uuid of the request object. For example, schema id
 * `object_type` (string, required) - The type of the monitored object. Can be one of the following: schema
-* `workspace_id` (string, optional) - Workspace ID of the resource
+* `validity_check_configurations` (list of ValidityCheckConfiguration, optional) - Validity check configurations for anomaly detection
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
+### AnomalyDetectionConfig
+* `excluded_table_full_names` (list of string, optional) - List of fully qualified table names to exclude from anomaly detection
+
+### PercentNullValidityCheck
+* `column_names` (list of string, optional) - List of column names to check for null percentage
+* `upper_bound` (number, optional) - Optional upper bound; we should use auto determined bounds for now
+
+### RangeValidityCheck
+* `column_names` (list of string, optional) - List of column names to check for range validity
+* `lower_bound` (number, optional) - Lower bound for the range
+* `upper_bound` (number, optional) - Upper bound for the range
+
+### UniquenessValidityCheck
+* `column_names` (list of string, optional) - List of column names to check for uniqueness
+
+### ValidityCheckConfiguration
+* `name` (string, optional) - Can be set by system. Does not need to be user facing
+* `percent_null_validity_check` (PercentNullValidityCheck, optional)
+* `range_validity_check` (RangeValidityCheck, optional)
+* `uniqueness_validity_check` (UniquenessValidityCheck, optional)
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -46,5 +79,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_quality_monitor_v2 "object_type,object_id"
+terraform import databricks_quality_monitor_v2.this "object_type,object_id"
 ```

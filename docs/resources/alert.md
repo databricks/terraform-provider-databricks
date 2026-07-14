@@ -3,6 +3,8 @@ subcategory: "Databricks SQL"
 ---
 # databricks_alert Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/alerts)
+
 This resource allows you to manage [Databricks SQL Alerts](https://docs.databricks.com/en/sql/user/alerts/index.html).  It supersedes [databricks_sql_alert](sql_alert.md) resource - see migration guide below for more details.
 
 -> This resource can only be used with a workspace-level provider!
@@ -65,6 +67,8 @@ The following arguments are available:
 * `seconds_to_retrigger` - (Optional, Integer) Number of seconds an alert must wait after being triggered to rearm itself. After rearming, it can be triggered again. If 0 or not specified, the alert will not be triggered again.
 * `owner_user_name` - (Optional, String) Alert owner's username.
 * `notify_on_ok` - (Optional, Boolean) Whether to notify alert subscribers when alert returns back to normal.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

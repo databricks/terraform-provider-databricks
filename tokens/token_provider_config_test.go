@@ -1,0 +1,30 @@
+package tokens_test
+
+import (
+	"fmt"
+	"regexp"
+	"testing"
+
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+)
+
+func tokenProviderConfigTemplate(providerConfig string) string {
+	return fmt.Sprintf(`
+	resource "databricks_token" "this" {
+		comment = "test-token"
+		%s
+	}
+	`, providerConfig)
+}
+
+func TestAccToken_ProviderConfig_EmptyID(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: tokenProviderConfigTemplate(`
+			provider_config {
+				workspace_id = ""
+			}
+		`),
+		ExpectError: regexp.MustCompile(`expected "provider_config.0.workspace_id" to not be an empty string`),
+		PlanOnly:    true,
+	})
+}

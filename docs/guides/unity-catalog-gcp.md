@@ -153,6 +153,7 @@ resource "google_project_iam_custom_role" "uc_file_events" {
     "pubsub.subscriptions.list",
     "pubsub.subscriptions.update",
     "pubsub.topics.attachSubscription",
+    "pubsub.topics.detachSubscription",
     "pubsub.topics.create",
     "pubsub.topics.delete",
     "pubsub.topics.get",

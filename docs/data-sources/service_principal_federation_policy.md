@@ -2,6 +2,10 @@
 subcategory: "OAuth"
 ---
 # databricks_service_principal_federation_policy Data Source
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/account/serviceprincipalfederationpolicy)
+
 This data source can be used to get a single service principal federation policy.
 
 -> **Note** This data source can only be used with an account-level provider!
@@ -23,8 +27,8 @@ data "databricks_service_principal_federation_policy" "my_policy" {
 
 ## Arguments
 The following arguments are supported:
-* `policy_id` (string, required) - The ID of the federation policy
-* `service_principal_id` (integer, required) - The service principal ID that this federation policy applies to. Only set for service principal federation policies
+* `policy_id` (string, required) - The ID of the federation policy. Output only
+* `service_principal_id` (integer, required) - The service principal ID that this federation policy applies to. Output only. Only set for service principal federation policies
 
 ## Attributes
 The following attributes are exported:
@@ -37,8 +41,8 @@ The following attributes are exported:
   specified in create or update requests. If specified in a request, must match the value in the
   request URL
 * `oidc_policy` (OidcFederationPolicy)
-* `policy_id` (string) - The ID of the federation policy
-* `service_principal_id` (integer) - The service principal ID that this federation policy applies to. Only set for service principal federation policies
+* `policy_id` (string) - The ID of the federation policy. Output only
+* `service_principal_id` (integer) - The service principal ID that this federation policy applies to. Output only. Only set for service principal federation policies
 * `uid` (string) - Unique, immutable id of the federation policy
 * `update_time` (string) - Last update time of the federation policy
 

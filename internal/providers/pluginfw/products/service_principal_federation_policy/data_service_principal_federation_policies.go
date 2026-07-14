@@ -11,7 +11,6 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/oauth2_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -28,14 +27,24 @@ func DataSourceFederationPolicies() datasource.DataSource {
 
 // FederationPoliciesData extends the main model with additional fields.
 type FederationPoliciesData struct {
-	ServicePrincipalFederationPolicy types.List  `tfsdk:"policies"`
-	ServicePrincipalId               types.Int64 `tfsdk:"service_principal_id"`
+	ServicePrincipalFederationPolicy types.List `tfsdk:"policies"`
+
+	PageSize           types.Int64 `tfsdk:"page_size"`
+	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
 }
 
 func (FederationPoliciesData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"policies": reflect.TypeOf(oauth2_tf.FederationPolicy{}),
+		"policies": reflect.TypeOf(FederationPolicyData{}),
 	}
+}
+
+func (m FederationPoliciesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	attrs["policies"] = attrs["policies"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+	return attrs
 }
 
 type FederationPoliciesDataSource struct {
@@ -47,11 +56,7 @@ func (r *FederationPoliciesDataSource) Metadata(ctx context.Context, req datasou
 }
 
 func (r *FederationPoliciesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FederationPoliciesData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("policies")
-		c.SetRequired("service_principal_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, FederationPoliciesData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks FederationPolicy",
 		Attributes:  attrs,
@@ -66,12 +71,6 @@ func (r *FederationPoliciesDataSource) Configure(ctx context.Context, req dataso
 func (r *FederationPoliciesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
-	client, diags := r.Client.GetAccountClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config FederationPoliciesData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -84,6 +83,13 @@ func (r *FederationPoliciesDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
+	client, clientDiags := r.Client.GetAccountClient()
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	response, err := client.ServicePrincipalFederationPolicy.ListAll(ctx, listRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to list service_principal_federation_policies", err.Error())
@@ -92,7 +98,7 @@ func (r *FederationPoliciesDataSource) Read(ctx context.Context, req datasource.
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var federation_policy oauth2_tf.FederationPolicy
+		var federation_policy FederationPolicyData
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &federation_policy)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -100,7 +106,6 @@ func (r *FederationPoliciesDataSource) Read(ctx context.Context, req datasource.
 		results = append(results, federation_policy.ToObjectValue(ctx))
 	}
 
-	var newState FederationPoliciesData
-	newState.ServicePrincipalFederationPolicy = types.ListValueMust(oauth2_tf.FederationPolicy{}.Type(ctx), results)
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.ServicePrincipalFederationPolicy = types.ListValueMust(FederationPolicyData{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
 }

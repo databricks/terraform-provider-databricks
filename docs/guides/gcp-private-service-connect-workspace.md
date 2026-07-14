@@ -12,6 +12,8 @@ Secure a workspace with private connectivity and mitigate data exfiltration risk
 
 To work with Databricks in GCP in an automated way, please create a service account and manually add it in the [Accounts Console](https://accounts.gcp.databricks.com/users) as an account admin. Databricks account-level APIs can only be called by account owners and account admins, and can only be authenticated using Google-issued OIDC tokens. The simplest way to do this would be via [Google Cloud CLI](https://cloud.google.com/sdk/gcloud). For details, please refer to [Provisioning Databricks workspaces on GCP](gcp-workspace.md).
 
+-> **Note** When using Private Service Connect, ensure that your service account has the `compute.forwardingRules.get` and `compute.forwardingRules.list` permissions in addition to the base permissions listed in the [gcp-workspace.md](gcp-workspace.md) guide. These permissions are required for managing VPC endpoints.
+
 ## Creating a VPC network
 
 The very first step is VPC creation with the necessary resources. Please consult [main documentation page](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/customer-managed-vpc.html) for **the most complete and up-to-date details on networking**. A GCP VPC is registered as [databricks_mws_networks](../resources/mws_networks.md) resource.

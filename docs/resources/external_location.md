@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_external_location Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/externallocations)
+
 To work with external tables, Unity Catalog introduces two new objects to access and work with external cloud storage:
 
 - [databricks_storage_credential](storage_credential.md) represent authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
@@ -127,7 +129,7 @@ encryption_details {
 The following arguments are required:
 
 - `name` - Name of External Location, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
-- `url` - Path URL in cloud storage, of the form: `s3://[bucket-host]/[bucket-dir]` (AWS), `abfss://[user]@[host]/[path]` (Azure), `gs://[bucket-host]/[bucket-dir]` (GCP).
+- `url` - Path URL in cloud storage, of the form: `s3://[bucket-host]/[bucket-dir]` (AWS), `abfss://[user]@[host]/[path]` (Azure), `gs://[bucket-host]/[bucket-dir]` (GCP).   If the URL contains special characters, such as space, `&`, etc., they should be percent-encoded (space -> `%20`, etc.).
 - `credential_name` - Name of the [databricks_storage_credential](storage_credential.md) to use with this external location.
 - `owner` - (Optional) Username/groupname/sp application_id of the external location owner.
 - `comment` - (Optional) User-supplied free-form text.
@@ -156,7 +158,7 @@ The `file_event_queue` block supports the following:
   - `managed_resource_id` - (Computed) The ID of the managed resource.
 - `managed_aqs` - (Optional) Configuration for managed Azure Queue Storage queue.
   - `managed_resource_id` - (Computed) The ID of the managed resource.
-  - `resource_group` - (Required) The Azure resource group.
+  - `resource_group` - (Required) The name of the Azure resource group.
   - `subscription_id` - (Required) The Azure subscription ID.
 - `managed_sqs` - (Optional) Configuration for managed Amazon SQS queue.
   - `managed_resource_id` - (Computed) The ID of the managed resource.
@@ -166,6 +168,8 @@ The `file_event_queue` block supports the following:
   - `queue_url` - (Required) The URL of the queue.
 - `provided_sqs` - (Optional) Configuration for provided Amazon SQS queue.
   - `queue_url` - (Required) The URL of the SQS queue.
+- `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  - `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

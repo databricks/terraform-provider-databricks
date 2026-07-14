@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -31,6 +32,9 @@ const (
 
 func ResourceCluster() common.Resource {
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create:        resourceClusterCreate,
 		Read:          resourceClusterRead,
 		Update:        resourceClusterUpdate,
@@ -112,6 +116,40 @@ func DataSecurityModeDiffSuppressFunc(k, old, new string, d *schema.ResourceData
 		return true
 	}
 	return false
+}
+
+// suppressUnlessBlockDeleted is the enable predicate for a cloud-attributes
+// block (aws_attributes, azure_attributes, gcp_attributes). It suppresses diffs
+// by default, which hides the platform echoing cloud attributes the user never
+// set, and stops suppressing only when clear_cloud_attributes_on_remove is true
+// and the block has been removed from configuration entirely; that produces a
+// real diff so the Edit clears the block.
+//
+// A block that is still present, even partially specified, stays suppressed: the
+// predicate keys on block deletion rather than on the flag alone, because the
+// flag cannot distinguish a deleted block from a partial one, and suppressing the
+// partial case avoids a perpetual diff against platform-defaulted siblings
+// (availability, zone_id, ...) the user never set.
+func suppressUnlessBlockDeleted(block string) common.DiffSuppressorFn {
+	return func(_, _, _ string, d *schema.ResourceData) bool {
+		raw, diags := d.GetRawConfigAt(cty.Path{cty.GetAttrStep{Name: "clear_cloud_attributes_on_remove"}})
+		if diags.HasError() || raw.IsNull() || !raw.IsKnown() || raw.Type() != cty.Bool || !raw.True() {
+			return true // clear_cloud_attributes_on_remove not set: suppress as before
+		}
+		// A block removed from configuration is represented in raw config as null
+		// or, for a TypeList block, an empty list. A present block (even an empty
+		// `aws_attributes {}`) is a one-element list, so it is not treated as
+		// deleted and suppression is preserved.
+		b, bdiags := d.GetRawConfigAt(cty.Path{cty.GetAttrStep{Name: block}})
+		if bdiags.HasError() {
+			return true
+		}
+		deleted := b.IsNull() || (b.IsKnown() && b.CanIterateElements() && b.LengthInt() == 0)
+		if !deleted {
+			return true // block still present in config: suppress (no behavior change)
+		}
+		return false // clear_cloud_attributes_on_remove set and block deleted: stop suppressing, clear it
+	}
 }
 
 // This method is a duplicate of ModifyRequestOnInstancePool() in clusters/clusters_api.go that uses Go SDK.
@@ -275,6 +313,7 @@ type LibraryWithAlias struct {
 
 type ClusterSpec struct {
 	compute.ClusterSpec
+	common.Namespace
 	LibraryWithAlias
 }
 
@@ -318,11 +357,22 @@ func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema)
 		Optional: true,
 		Default:  60,
 	})
+	// Opt-in flag: when true, removing a cloud-attributes block
+	// (aws_attributes, azure_attributes, gcp_attributes) from config clears it
+	// instead of the removal being suppressed. Keeping the block, even partially
+	// specified, is unaffected; only removing the whole block clears.
+	// Defaults to false to preserve backward-compatible diff suppression.
+	s.AddNewField("clear_cloud_attributes_on_remove", &schema.Schema{
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+	})
 	s.SchemaPath("spark_version").SetRequired()
 	return s
 }
 
 func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	common.NamespaceCustomizeSchema(s)
 	s.SchemaPath("enable_elastic_disk").SetComputed()
 	s.SchemaPath("enable_local_disk_encryption").SetComputed()
 	s.SchemaPath("node_type_id").SetComputed().SetConflictsWith([]string{"driver_instance_pool_id", "instance_pool_id"})
@@ -353,9 +403,9 @@ func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.Customi
 	s.SchemaPath("docker_image", "basic_auth", "password").SetRequired().SetSensitive()
 	s.SchemaPath("docker_image", "basic_auth", "username").SetRequired()
 	s.SchemaPath("spark_conf").SetCustomSuppressDiff(SparkConfDiffSuppressFunc)
-	s.SchemaPath("aws_attributes").SetSuppressDiff().SetConflictsWith([]string{"azure_attributes", "gcp_attributes"})
-	s.SchemaPath("azure_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "gcp_attributes"})
-	s.SchemaPath("gcp_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "azure_attributes"})
+	s.SchemaPath("aws_attributes").SetConditionalSuppressDiff(suppressUnlessBlockDeleted("aws_attributes")).SetConflictsWith([]string{"azure_attributes", "gcp_attributes"})
+	s.SchemaPath("azure_attributes").SetConditionalSuppressDiff(suppressUnlessBlockDeleted("azure_attributes")).SetConflictsWith([]string{"aws_attributes", "gcp_attributes"})
+	s.SchemaPath("gcp_attributes").SetConditionalSuppressDiff(suppressUnlessBlockDeleted("gcp_attributes")).SetConflictsWith([]string{"aws_attributes", "azure_attributes"})
 	s.SchemaPath("autoscale", "max_workers").SetOptional()
 	s.SchemaPath("autoscale", "min_workers").SetOptional()
 	s.SchemaPath("cluster_log_conf", "dbfs", "destination").SetRequired()
@@ -388,7 +438,7 @@ func resourceClusterSchema() map[string]*schema.Schema {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 	start := time.Now()
 	timeout := d.Timeout(schema.TimeoutCreate)
-	w, err := c.WorkspaceClient()
+	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 	if err != nil {
 		return err
 	}
@@ -480,7 +530,7 @@ func setPinnedStatus(ctx context.Context, d *schema.ResourceData, clusterAPI com
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	w, err := c.WorkspaceClient()
+	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 	if err != nil {
 		return err
 	}
@@ -518,10 +568,16 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 	}, clusterSchema, d)
 }
 
+var clusterConfigFieldsToIgnore = []string{
+	"library",
+	"is_pinned",
+	"no_wait",
+	"clear_cloud_attributes_on_remove",
+}
+
 func hasClusterConfigChanged(d *schema.ResourceData) bool {
 	for k := range clusterSchema {
-		// TODO: create a map if we'll add more non-cluster config parameters in the future
-		if k == "library" || k == "is_pinned" || k == "no_wait" {
+		if slices.Contains(clusterConfigFieldsToIgnore, k) {
 			continue
 		}
 		if d.HasChange(k) {
@@ -532,7 +588,7 @@ func hasClusterConfigChanged(d *schema.ResourceData) bool {
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	w, err := c.WorkspaceClient()
+	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 	if err != nil {
 		return err
 	}
@@ -559,11 +615,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		hasAutoscaleChanged := d.HasChange("autoscale")
 		hasOnlyResizeClusterConfigChanged := true
 		for k := range clusterSchema {
-			if k == "library" ||
-				k == "is_pinned" ||
-				k == "no_wait" ||
-				k == "num_workers" ||
-				k == "autoscale" {
+			// Resizing a running cluster only touches num_workers/autoscale, so
+			// changes to those (and the non-config fields) don't disqualify it.
+			if slices.Contains(clusterConfigFieldsToIgnore, k) || k == "num_workers" || k == "autoscale" {
 				continue
 			}
 			if d.HasChange(k) {
@@ -697,7 +751,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-	w, err := c.WorkspaceClient()
+	w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 	if err != nil {
 		return err
 	}

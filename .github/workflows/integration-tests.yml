@@ -4,6 +4,7 @@ on:
 
   pull_request:
     types: [opened, synchronize]
+    branches: [main]
 
   merge_group:
 
@@ -20,34 +21,235 @@ jobs:
     outputs:
       has_token: ${{ steps.set-token-status.outputs.has_token }}
     steps:
-      - name: Check if DECO_WORKFLOW_TRIGGER_APP_ID is set
+      - name: Check if required secrets are set
         id: set-token-status
         run: |
-            if [ -z "${{ secrets.DECO_WORKFLOW_TRIGGER_APP_ID }}" ]; then
-              echo "DECO_WORKFLOW_TRIGGER_APP_ID is empty. User has no access to secrets."
-              echo "::set-output name=has_token::false"
+            if [ -z "${{ secrets.DECO_WORKFLOW_TRIGGER_APP_ID }}" ] || [ -z "${{ secrets.DECO_TEST_APPROVAL_APP_ID }}" ]; then
+              echo "Required secrets are missing. User has no access to secrets."
+              echo "has_token=false" >> $GITHUB_OUTPUT
             else
-              echo "DECO_WORKFLOW_TRIGGER_APP_ID is set. User has access to secrets."
-              echo "::set-output name=has_token::true"
+              echo "All required secrets are set. User has access to secrets."
+              echo "has_token=true" >> $GITHUB_OUTPUT
             fi
 
-  trigger-tests:
-    name: Trigger Tests
+  # Classify the PR diff via the shared classifier (.github/scripts/classify_inert.mjs).
+  # inert_only == 'true' means every changed file is inert (docs/metadata), so the
+  # integration suite is skipped in favor of a synthetic success check.
+  detect-changes:
+    name: Detect inert-only changes
+    if: github.event_name == 'pull_request'
 
     runs-on:
       group: databricks-deco-testing-runner-group
       labels: ubuntu-latest-deco
 
-    needs: check-token
-    if: github.event_name == 'pull_request'  && needs.check-token.outputs.has_token == 'true'
+    permissions:
+      contents: read
+      pull-requests: read
+
+    outputs:
+      inert_only: ${{ steps.classify.outputs.inert_only }}
+
+    steps:
+      # github-script imports the classifier from disk, so check it out first.
+      - name: Check out the inert classifier
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          # Use the base (trusted) ref, never the PR merge commit: a PR must not
+          # be able to rewrite classify_inert.mjs to skip/carry its own required
+          # check. Absent on the bootstrap PR -> import throws -> fail-open below.
+          ref: ${{ github.event.pull_request.base.sha }}
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: false
+
+      - name: Classify changed files
+        id: classify
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            // Fail open: any error here -> inert_only=false -> full suite runs.
+            try {
+              const { pathToFileURL } = require('node:url');
+              const path = require('node:path');
+              const modPath = path.join(process.env.GITHUB_WORKSPACE, '.github/scripts/classify_inert.mjs');
+              const { classifyPullRequest } = await import(pathToFileURL(modPath).href);
+              const { inertOnly, fileCount, capped } = await classifyPullRequest(github, {
+                owner: context.repo.owner, repo: context.repo.repo, pull_number: context.issue.number,
+              });
+              if (capped) core.info(`PR touches ${fileCount} files (>300); treating as non-inert.`);
+              core.info(`Changed files: ${fileCount}; inert_only=${inertOnly}`);
+              core.setOutput('inert_only', String(inertOnly));
+            } catch (e) {
+              core.warning(`inert classification failed, running full suite: ${e.message}`);
+              core.setOutput('inert_only', 'false');
+            }
+
+  # For PRs that contain code (inert_only == 'false'), a follow-up push that
+  # only touches inert paths (e.g. a NEXT_CHANGELOG.md bump after the code
+  # already passed) does not invalidate the previous test result. Carry the
+  # success forward instead of re-running the 75-minute suite, but ONLY when
+  # ALL of the following hold (each gate closes a known attack):
+  #   1. The event is a `synchronize` push whose incremental diff
+  #      (before...after) touches inert paths only.
+  #   2. The push is fast-forward: compare status is 'ahead'. A force-push or
+  #      rebase ('diverged'/'behind') never carries forward.
+  #   3. The "Integration Tests" check on the PREVIOUS head (`before`) is
+  #      completed with conclusion success. Stacking docs on top of failing
+  #      or unrun code therefore never mints a green check.
+  #   4. The PR targets main (trigger-level branches filter + base.ref guard).
+  # Any error or ambiguity (>=300 files in the compare, empty diff, rename
+  # from a non-inert path) falls through to carried=false and the full suite
+  # runs. Fail-open to running tests, never to skipping them. The inert test
+  # uses the shared classifier (.github/scripts/classify_inert.mjs).
+  carry-forward:
+    name: Carry forward prior Integration Tests success
+
+    runs-on:
+      group: databricks-deco-testing-runner-group
+      labels: ubuntu-latest-deco
+
+    needs: [check-token, detect-changes]
+    if: github.event_name == 'pull_request'
+        && needs.check-token.outputs.has_token == 'true'
+        && needs.detect-changes.outputs.inert_only == 'false'
+        && github.event.pull_request.base.ref == 'main'
+
+    permissions:
+      checks: write
+      contents: read
+
+    outputs:
+      carried: ${{ steps.carry.outputs.carried }}
+
+    steps:
+      # The github-script step imports the shared classifier from disk.
+      - name: Check out the inert classifier
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          # Use the base (trusted) ref, never the PR merge commit: a PR must not
+          # be able to rewrite classify_inert.mjs to skip/carry its own required
+          # check. Absent on the bootstrap PR -> import throws -> fail-open below.
+          ref: ${{ github.event.pull_request.base.sha }}
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: false
+
+      - name: Evaluate and carry forward
+        id: carry
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            const fail = (reason) => {
+              core.info(`No carry-forward: ${reason}`);
+              core.setOutput('carried', 'false');
+            };
+            try {
+              const { pathToFileURL } = require('node:url');
+              const path = require('node:path');
+              const modPath = path.join(process.env.GITHUB_WORKSPACE, '.github/scripts/classify_inert.mjs');
+              const { isInert } = await import(pathToFileURL(modPath).href);
+
+              if (context.payload.action !== 'synchronize') {
+                return fail('not a synchronize push');
+              }
+              const before = context.payload.before;
+              const after = context.payload.after;
+              if (!before || !after) {
+                return fail('missing before/after SHAs in payload');
+              }
+
+              const cmp = await github.rest.repos.compareCommitsWithBasehead({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                basehead: `${before}...${after}`,
+                per_page: 300,
+              });
+              if (cmp.data.status !== 'ahead') {
+                return fail(`compare status is '${cmp.data.status}' (force-push or rebase)`);
+              }
+              const files = cmp.data.files ?? [];
+              if (files.length === 0) {
+                return fail('empty incremental diff');
+              }
+              if (files.length >= 300) {
+                return fail('too many files in incremental diff to classify confidently');
+              }
+
+              for (const f of files) {
+                const paths = [f.filename, f.previous_filename].filter(Boolean);
+                if (!paths.every(isInert)) {
+                  return fail(`non-inert path in pushed commits: ${f.filename}`);
+                }
+              }
+
+              // Validate the prior head's check by PROVENANCE, not just name.
+              // Many actors post a check named "Integration Tests" (the real
+              // integration-test run, the skip job, a previous carry-forward).
+              // Exclude our own synthetic runs (marked via external_id) so a
+              // synthetic green can never be laundered forward, then require
+              // the most recent *real* run to be a completed success — closing
+              // both the .some() over-match and the failed+success co-location.
+              const SYNTHETIC_EXTERNAL_IDS = ['inert-skip', 'inert-carry'];
+              const checks = await github.rest.checks.listForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: before,
+                check_name: 'Integration Tests',
+                filter: 'latest',
+                per_page: 100,
+              });
+              const realRuns = checks.data.check_runs
+                .filter((c) => !SYNTHETIC_EXTERNAL_IDS.includes(c.external_id))
+                .sort((a, b) => new Date(b.started_at || 0) - new Date(a.started_at || 0));
+              if (realRuns.length === 0) {
+                return fail('no real Integration Tests run found on the previous head');
+              }
+              const latestReal = realRuns[0];
+              if (latestReal.status !== 'completed' || latestReal.conclusion !== 'success') {
+                return fail(`latest real Integration Tests run on ${before} is ${latestReal.status}/${latestReal.conclusion}`);
+              }
+
+              await github.rest.checks.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'Integration Tests',
+                head_sha: after,
+                // Marks this as a synthetic run so a later carry-forward will
+                // not treat it as real test evidence (see SYNTHETIC_EXTERNAL_IDS).
+                external_id: 'inert-carry',
+                status: 'completed',
+                conclusion: 'success',
+                output: {
+                  title: 'Integration Tests',
+                  summary: `Carried forward from ${before}: the newly pushed commits touch inert paths only and Integration Tests passed on the previous head.`
+                }
+              });
+              core.info(`Carried forward success from ${before} to ${after}`);
+              core.setOutput('carried', 'true');
+            } catch (e) {
+              core.warning(`carry-forward errored, falling back to full test run: ${e.message}`);
+              core.setOutput('carried', 'false');
+            }
+
+  trigger-tests:
+    name: Trigger Tests
+
+    runs-on:
+      group: databricks-release-runner-group-emu-access
+      labels: linux-ubuntu-latest-emu-access
+
+    needs: [check-token, detect-changes, carry-forward]
+    if: github.event_name == 'pull_request'
+        && needs.check-token.outputs.has_token == 'true'
+        && needs.detect-changes.outputs.inert_only == 'false'
+        && needs.carry-forward.outputs.carried != 'true'
     environment: "test-trigger-is"
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
 
-    - name: Generate GitHub App Token
+    - name: Generate GitHub App Token for Workflow Trigger
       id: generate-token
-      uses: actions/create-github-app-token@v1
+      uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
       with:
         app-id: ${{ secrets.DECO_WORKFLOW_TRIGGER_APP_ID }}
         private-key: ${{ secrets.DECO_WORKFLOW_TRIGGER_PRIVATE_KEY }}
@@ -63,7 +265,48 @@ jobs:
         -f pull_request_number=${{ github.event.pull_request.number }} \
         -f commit_sha=${{ github.event.pull_request.head.sha }}
 
+  # Inert-path PRs (docs only, etc.) do not warrant a 75-minute integration
+  # test run. When detect-changes finds no non-inert files, post a synthetic
+  # success for the required "Integration Tests" check directly, mirroring
+  # the auto-approve pattern used for merge_group below. The base.ref guard
+  # is belt-and-suspenders for the `branches: [main]` filter on the trigger.
+  skip-integration-tests:
+    name: Skip Integration Tests (inert paths only)
 
+    runs-on:
+      group: databricks-deco-testing-runner-group
+      labels: ubuntu-latest-deco
+
+    needs: [check-token, detect-changes]
+    if: github.event_name == 'pull_request'
+        && needs.check-token.outputs.has_token == 'true'
+        && needs.detect-changes.outputs.inert_only == 'true'
+        && github.event.pull_request.base.ref == 'main'
+
+    permissions:
+      checks: write
+      contents: read
+
+    steps:
+      - name: Post synthetic Integration Tests success
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'Integration Tests',
+              head_sha: context.payload.pull_request.head.sha,
+              // Marks this as a synthetic run so carry-forward will not treat
+              // it as real test evidence on a later push (SYNTHETIC_EXTERNAL_IDS).
+              external_id: 'inert-skip',
+              status: 'completed',
+              conclusion: 'success',
+              output: {
+                title: 'Integration Tests',
+                summary: 'Skipped — only inert paths changed (docs/**, root *.md, issue templates, dependabot.yml, CODEOWNERS, LICENSE).'
+              }
+            });
 
   # Statuses and checks apply to specific commits (by hash).
   # Enforcement of required checks is done both at the PR level and the merge queue level.
@@ -79,14 +322,24 @@ jobs:
       group: databricks-deco-testing-runner-group
       labels: ubuntu-latest-deco
 
+    permissions:
+      checks: write
+      contents: read
+
     steps:
-      - name: Mark Check
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-            gh api -X POST -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              /repos/${{ github.repository }}/statuses/${{ github.sha }} \
-              -f 'state=success' \
-              -f 'context=Integration Tests Check'
+      - name: Auto-approve Check for Merge Queue
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'Integration Tests',
+              head_sha: context.sha,
+              status: 'completed',
+              conclusion: 'success',
+              output: {
+                title: 'Integration Tests',
+                summary: 'Auto-approved for merge queue (tests already passed on PR)'
+              }
+            });

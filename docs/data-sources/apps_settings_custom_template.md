@@ -2,6 +2,8 @@
 subcategory: "Apps"
 ---
 # databricks_apps_settings_custom_template Data Source
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 This data source can be used to get a single Custom Template.
 
 
@@ -19,7 +21,10 @@ data "databricks_apps_settings_custom_template" "my_template" {
 The following arguments are supported:
 * `name` (string, required) - The name of the template. It must contain only alphanumeric characters, hyphens, underscores, and whitespaces.
   It must be unique within the workspace
-* `workspace_id` (string, optional) - Workspace ID of the resource
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:
@@ -38,6 +43,9 @@ The following attributes are exported:
 * `resource_specs` (list of AppManifestAppResourceSpec)
 * `version` (integer) - The manifest schema version, for now only 1 is allowed
 
+### AppManifestAppResourceExperimentSpec
+* `permission` (string) - Possible values are: `CAN_EDIT`, `CAN_MANAGE`, `CAN_READ`
+
 ### AppManifestAppResourceJobSpec
 * `permission` (string) - Permissions to grant on the Job. Supported permissions are: "CAN_MANAGE", "IS_OWNER", "CAN_MANAGE_RUN", "CAN_VIEW". Possible values are: `CAN_MANAGE`, `CAN_MANAGE_RUN`, `CAN_VIEW`, `IS_OWNER`
 
@@ -49,6 +57,7 @@ The following attributes are exported:
 
 ### AppManifestAppResourceSpec
 * `description` (string) - Description of the App Resource
+* `experiment_spec` (AppManifestAppResourceExperimentSpec)
 * `job_spec` (AppManifestAppResourceJobSpec)
 * `name` (string) - Name of the App Resource
 * `secret_spec` (AppManifestAppResourceSecretSpec)
@@ -60,5 +69,5 @@ The following attributes are exported:
 * `permission` (string) - Permission to grant on the SQL warehouse. Supported permissions are: "CAN_MANAGE", "CAN_USE", "IS_OWNER". Possible values are: `CAN_MANAGE`, `CAN_USE`, `IS_OWNER`
 
 ### AppManifestAppResourceUcSecurableSpec
-* `permission` (string) - . Possible values are: `MANAGE`, `READ_VOLUME`, `WRITE_VOLUME`
-* `securable_type` (string) - . Possible values are: `VOLUME`
+* `permission` (string) - Possible values are: `EXECUTE`, `MANAGE`, `READ_VOLUME`, `SELECT`, `USE_CONNECTION`, `WRITE_VOLUME`
+* `securable_type` (string) - Possible values are: `CONNECTION`, `FUNCTION`, `TABLE`, `VOLUME`

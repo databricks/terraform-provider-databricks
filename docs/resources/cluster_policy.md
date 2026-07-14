@@ -3,6 +3,8 @@ subcategory: "Compute"
 ---
 # databricks_cluster_policy Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/clusterpolicies)
+
 This resource creates a [cluster](cluster.md) policy, which limits the ability to create clusters based on a set of rules. The policy rules limit the attributes or attribute values available for [cluster](cluster.md) creation. [cluster](cluster.md) policies have ACLs that limit their use to specific users and groups. Only admin users can create, edit, and delete policies. Admin users also have access to all policies.
 
 -> This resource can only be used with a workspace-level provider!
@@ -153,6 +155,9 @@ The following arguments are supported:
 ### libraries Configuration Block (Optional)
 
 One must specify each library in a separate configuration block, that will be installed on the cluster that uses a given cluster policy. See [databricks_cluster](cluster.md#library-configuration-block) for more details about supported library types.
+
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

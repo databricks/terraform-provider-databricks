@@ -51,24 +51,16 @@ func TestDataSourceGroup(t *testing.T) {
 				},
 			},
 			{
+				// Recursive: read child group 1114 to get its members
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,members,roles,entitlements,externalId,groups",
+				Resource: "/api/2.0/preview/scim/v2/Groups/1114?attributes=displayName,members,roles,entitlements,externalId,groups",
 				Response: Group{
-					DisplayName: "product",
-					ID:          "abc",
-					Entitlements: []ComplexValue{
-						{
-							Value: "allow-instance-pool-create",
-						},
-					},
-					Roles: []ComplexValue{
-						{
-							Value: "b",
-						},
-					},
+					DisplayName: "child-group",
+					ID:          "1114",
 					Members: []ComplexValue{
 						{
-							Value: "1113",
+							Ref:   "Users/2001",
+							Value: "2001",
 						},
 					},
 				},
@@ -82,16 +74,85 @@ func TestDataSourceGroup(t *testing.T) {
 			"display_name": "ds",
 		},
 	}.ApplyAndExpectData(t, map[string]any{
-		"acl_principal_id":           "groups/ds",
-		"instance_profiles":          []string{"a", "b"},
-		"members":                    []string{"1112", "1113", "1114"},
-		"groups":                     []string{"abc"},
-		"allow_instance_pool_create": true,
-		"allow_cluster_create":       true,
-		"users":                      []string{"1112"},
-		"service_principals":         []string{"1113"},
-		"child_groups":               []string{"1114"},
-		"id":                         "eerste",
+		"acl_principal_id":     "groups/ds",
+		"roles":                []string{"a"},
+		"instance_profiles":    []string{"a"},
+		"members":              []string{"1112", "1113", "1114", "2001"},
+		"groups":               []string{"abc"},
+		"allow_cluster_create": true,
+		"users":                []string{"1112", "2001"},
+		"service_principals":   []string{"1113"},
+		"child_groups":         []string{"1114"},
+		"id":                   "eerste",
+	})
+}
+
+func TestDataSourceGroup_ApiFieldAccount(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: `/api/2.0/accounts/acc-123/scim/v2/Groups?attributes=id&filter=displayName%20eq%20%22ds%22`,
+				Response: GroupList{
+					Resources: []Group{
+						{
+							DisplayName: "ds",
+							ID:          "eerste",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/acc-123/scim/v2/Groups/eerste?attributes=displayName,members,roles,entitlements,externalId,groups",
+				Response: Group{
+					DisplayName: "ds",
+					ID:          "eerste",
+				},
+			},
+		},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceGroup(),
+		AccountID:   "acc-123",
+		ID:          ".",
+		State: map[string]any{
+			"display_name": "ds",
+			"api":          "account",
+		},
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "eerste",
+	})
+}
+
+func TestDataSourceGroup_ApiFieldWorkspace(t *testing.T) {
+	// api = "workspace" routes to workspace SCIM even with AccountID set
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: `/api/2.0/preview/scim/v2/Groups?filter=displayName%20eq%20%22ds%22`,
+				Response: GroupList{
+					Resources: []Group{
+						{
+							DisplayName: "ds",
+							ID:          "eerste",
+						},
+					},
+				},
+			},
+		},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceGroup(),
+		AccountID:   "acc-123",
+		ID:          ".",
+		State: map[string]any{
+			"display_name": "ds",
+			"api":          "workspace",
+		},
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "eerste",
 	})
 }
 
@@ -138,14 +199,16 @@ func TestDataSourceGroupAccountClient(t *testing.T) {
 				},
 			},
 			{
+				// Recursive: read child group 1114 to get its members
 				Method:   "GET",
-				Resource: "/api/2.0/accounts/1234567890/scim/v2/Groups/abc?attributes=displayName,members,roles,entitlements,externalId,groups",
+				Resource: "/api/2.0/accounts/1234567890/scim/v2/Groups/1114?attributes=displayName,members,roles,entitlements,externalId,groups",
 				Response: Group{
-					DisplayName: "product",
-					ID:          "abc",
+					DisplayName: "child-group",
+					ID:          "1114",
 					Members: []ComplexValue{
 						{
-							Value: "1113",
+							Ref:   "Users/2001",
+							Value: "2001",
 						},
 					},
 				},
@@ -158,12 +221,13 @@ func TestDataSourceGroupAccountClient(t *testing.T) {
 		ID:          ".",
 		State: map[string]any{
 			"display_name": "ds",
+			"api":          "account",
 		},
 	}.ApplyAndExpectData(t, map[string]any{
 		"acl_principal_id":   "groups/ds",
-		"members":            []string{"1112", "1113", "1114"},
+		"members":            []string{"1112", "1113", "1114", "2001"},
 		"groups":             []string{"abc"},
-		"users":              []string{"1112"},
+		"users":              []string{"1112", "2001"},
 		"service_principals": []string{"1113"},
 		"child_groups":       []string{"1114"},
 		"id":                 "eerste",

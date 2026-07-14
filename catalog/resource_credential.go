@@ -11,6 +11,8 @@ import (
 
 var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		common.AddNamespaceInSchema(m)
+		common.NamespaceCustomizeSchemaMap(m)
 		var alofServiceCreds = []string{"aws_iam_role", "azure_managed_identity", "azure_service_principal",
 			"databricks_gcp_service_account"}
 		for _, cred := range alofServiceCreds {
@@ -26,6 +28,7 @@ var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
 			common.CustomizeSchemaPath(m, computed).SetComputed()
 		}
 
+		common.CustomizeSchemaPath(m, "name").SetForceNew()
 		common.CustomizeSchemaPath(m, "databricks_gcp_service_account").SetComputed()
 		common.CustomizeSchemaPath(m, "databricks_gcp_service_account", "email").SetComputed()
 		common.CustomizeSchemaPath(m, "databricks_gcp_service_account", "credential_id").SetComputed()
@@ -61,8 +64,11 @@ var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
 func ResourceCredential() common.Resource {
 	return common.Resource{
 		Schema: credentialSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiffNoForceNew(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -94,7 +100,7 @@ func ResourceCredential() common.Resource {
 			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, cred.Name, bindings.BindingsSecurableTypeCredential)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -115,7 +121,7 @@ func ResourceCredential() common.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_update").(bool)
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -173,7 +179,12 @@ func ResourceCredential() common.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			// If the credential is isolated, re-bind the current workspace so it's accessible for deletion.
+			err = bindings.AddCurrentWorkspaceBindings(ctx, d, w, d.Id(), bindings.BindingsSecurableTypeCredential)
 			if err != nil {
 				return err
 			}

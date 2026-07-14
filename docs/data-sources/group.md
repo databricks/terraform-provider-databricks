@@ -3,7 +3,7 @@ subcategory: "Security"
 ---
 # databricks_group Data Source
 
-Retrieves information about [databricks_group](../resources/group.md) members, entitlements and instance profiles.
+Retrieves information about [databricks_group](../resources/group.md) members, entitlements and roles.
 
 -> This data source can be used with an account or workspace-level provider.
 
@@ -32,6 +32,9 @@ Data source allows you to pick groups by the following attributes
 
 * `display_name` - (Required) Display name of the group. The group must exist before this resource can be planned.
 * `recursive` - (Optional) Collect information for all nested groups. *Defaults to true.*
+* `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 
@@ -43,7 +46,8 @@ Data source exposes the following attributes:
 * `service_principals` - Set of [databricks_service_principal](../resources/service_principal.md) identifiers, that can be modified with [databricks_group_member](../resources/group_member.md) resource.
 * `child_groups` - Set of [databricks_group](../resources/group.md) identifiers, that can be modified with [databricks_group_member](../resources/group_member.md) resource.
 * `groups` - Set of [group](../resources/group.md) identifiers, that can be modified with [databricks_group_member](../resources/group_member.md) resource.
-* `instance_profiles` - Set of [instance profile](../resources/instance_profile.md) ARNs, that can be modified by [databricks_group_instance_profile](../resources/group_instance_profile.md) resource.
+* `roles` - Set of role ARNs (e.g., [instance profile](../resources/instance_profile.md) ARNs), that can be modified by [databricks_group_instance_profile](../resources/group_instance_profile.md) or [databricks_group_role](../resources/group_role.md) resources.
+* `instance_profiles` - (Deprecated) Set of [instance profile](../resources/instance_profile.md) ARNs, that can be modified by [databricks_group_instance_profile](../resources/group_instance_profile.md) resource. Use `roles` instead.
 * `allow_cluster_create` - True if group members can create [clusters](../resources/cluster.md)
 * `allow_instance_pool_create` - True if group members can create [instance pools](../resources/instance_pool.md)
 * `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](../resources/access_control_rule_set.md), e.g. `groups/Some Group`.

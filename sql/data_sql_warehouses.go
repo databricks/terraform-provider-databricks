@@ -12,6 +12,7 @@ import (
 
 func DataSourceWarehouses() common.Resource {
 	type warehousesData struct {
+		common.Namespace
 		WarehouseNameContains string   `json:"warehouse_name_contains,omitempty"`
 		Ids                   []string `json:"ids,omitempty" tf:"computed,slice_set"`
 	}

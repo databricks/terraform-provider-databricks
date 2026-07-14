@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_group_role Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/groups)
+
 This resource allows you to attach a role to [databricks_group](group.md). This role could be a pre-defined role such as account admin, or an instance profile ARN.
 
 -> This resource can be used with an account or workspace-level provider.
@@ -52,6 +54,7 @@ The following arguments are supported:
 
 * `group_id` - (Required) This is the id of the [group](group.md) resource.
 * `role` - (Required) Either a role name or the ARN/ID of the [instance profile](instance_profile.md) resource.
+* `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
 
 ## Attribute Reference
 

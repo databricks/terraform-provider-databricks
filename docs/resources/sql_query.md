@@ -3,6 +3,8 @@ subcategory: "Databricks SQL"
 ---
 # databricks_sql_query Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/querieslegacy)
+
 !> This resource is deprecated! Please switch to [databricks_query](query.md#migrating-from-databricks_sql_query-resource).
 
 To manage [SQLA resources](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
@@ -112,6 +114,9 @@ Parameters can have several different types. Type is specified using one of the 
 For `text`, `number`, `date`, `datetime`, `datetimesec` block
 
 * `value` - The default value for this parameter.
+
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

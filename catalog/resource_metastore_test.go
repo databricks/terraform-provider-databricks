@@ -26,6 +26,12 @@ func TestCreateMetastore(t *testing.T) {
 			}).Return(&catalog.MetastoreInfo{
 				MetastoreId: "abc",
 			}, nil)
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id: "abc",
+				DeltaSharingRecipientTokenLifetimeInSeconds: maxDeltaSharingRecipientTokenLifetimeInSeconds,
+			}).Return(&catalog.MetastoreInfo{
+				Name: "a",
+			}, nil)
 			e.GetById(mock.Anything, "abc").Return(&catalog.MetastoreInfo{
 				StorageRoot: "s3://b/abc",
 				Name:        "a",
@@ -53,6 +59,7 @@ func TestCreateMetastoreWithOwner(t *testing.T) {
 			e.Update(mock.Anything, catalog.UpdateMetastore{
 				Id:    "abc",
 				Owner: "administrators",
+				DeltaSharingRecipientTokenLifetimeInSeconds: maxDeltaSharingRecipientTokenLifetimeInSeconds,
 			}).Return(&catalog.MetastoreInfo{
 				Name:  "a",
 				Owner: "administrators",
@@ -87,14 +94,14 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 				Id:                "abc",
 				Owner:             "administrators",
 				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-				DeltaSharingRecipientTokenLifetimeInSeconds: 0,
+				DeltaSharingRecipientTokenLifetimeInSeconds: 3600,
 				DeltaSharingOrganizationName:                "acme",
 				ForceSendFields:                             []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
 			}).Return(&catalog.MetastoreInfo{
 				Name:              "a",
 				Owner:             "administrators",
 				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-				DeltaSharingRecipientTokenLifetimeInSeconds: 0,
+				DeltaSharingRecipientTokenLifetimeInSeconds: 3600,
 				DeltaSharingOrganizationName:                "acme",
 				ForceSendFields:                             []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
 			}, nil)
@@ -103,7 +110,7 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 				Name:              "a",
 				Owner:             "administrators",
 				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
-				DeltaSharingRecipientTokenLifetimeInSeconds: 0,
+				DeltaSharingRecipientTokenLifetimeInSeconds: 3600,
 				DeltaSharingOrganizationName:                "acme",
 				ForceSendFields:                             []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
 			}, nil)
@@ -115,7 +122,7 @@ func TestCreateMetastore_DeltaSharing(t *testing.T) {
 		storage_root = "s3://b"
 		owner = "administrators"
 		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
-		delta_sharing_recipient_token_lifetime_in_seconds = 0
+		delta_sharing_recipient_token_lifetime_in_seconds = 3600
 		delta_sharing_organization_name = "acme"
 		`,
 	}.ApplyNoError(t)
@@ -362,21 +369,151 @@ func TestUpdateMetastore_DeltaSharingScopeOnly(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestUpdateMetastore_ExternalAccessEnabledDisable(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockMetastoresAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:                    "abc",
+				ExternalAccessEnabled: false,
+				DeltaSharingRecipientTokenLifetimeInSeconds: maxDeltaSharingRecipientTokenLifetimeInSeconds,
+				ForceSendFields: []string{"ExternalAccessEnabled"},
+			}).Return(&catalog.MetastoreInfo{
+				Name:                  "abc",
+				ExternalAccessEnabled: false,
+			}, nil)
+			e.GetById(mock.Anything, "abc").Return(&catalog.MetastoreInfo{
+				Name:                  "abc",
+				ExternalAccessEnabled: false,
+			}, nil)
+		},
+		Resource:    ResourceMetastore(),
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":                    "abc",
+			"storage_root":            "s3:/a",
+			"owner":                   "admin",
+			"external_access_enabled": "true",
+		},
+		HCL: `
+		name = "abc"
+		storage_root = "s3:/a"
+		owner = "admin"
+		external_access_enabled = false
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateMetastore_ExternalAccessEnabledEnable(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockMetastoresAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:                    "abc",
+				ExternalAccessEnabled: true,
+				DeltaSharingRecipientTokenLifetimeInSeconds: maxDeltaSharingRecipientTokenLifetimeInSeconds,
+				ForceSendFields: []string{"ExternalAccessEnabled"},
+			}).Return(&catalog.MetastoreInfo{
+				Name:                  "abc",
+				ExternalAccessEnabled: true,
+			}, nil)
+			e.GetById(mock.Anything, "abc").Return(&catalog.MetastoreInfo{
+				Name:                  "abc",
+				ExternalAccessEnabled: true,
+			}, nil)
+		},
+		Resource:    ResourceMetastore(),
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":                    "abc",
+			"storage_root":            "s3:/a",
+			"owner":                   "admin",
+			"external_access_enabled": "false",
+		},
+		HCL: `
+		name = "abc"
+		storage_root = "s3:/a"
+		owner = "admin"
+		external_access_enabled = true
+		`,
+	}.ApplyNoError(t)
+}
+
+// When the user removes external_access_enabled from HCL while state still
+// records it as true, Terraform should send `false` (the zero value for an
+// Optional-only bool).
+func TestUpdateMetastore_ExternalAccessEnabledRemovedFromHCL(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockMetastoresAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateMetastore{
+				Id:                    "abc",
+				ExternalAccessEnabled: false,
+				DeltaSharingScope:     "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+				ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds", "ExternalAccessEnabled"},
+			}).Return(&catalog.MetastoreInfo{
+				Name:              "abc",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+			}, nil)
+			e.GetById(mock.Anything, "abc").Return(&catalog.MetastoreInfo{
+				Name:              "abc",
+				DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
+				DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
+			}, nil)
+		},
+		Resource:    ResourceMetastore(),
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":                    "abc",
+			"storage_root":            "s3:/a",
+			"owner":                   "admin",
+			"external_access_enabled": "true",
+			"delta_sharing_scope":     "INTERNAL",
+			"delta_sharing_recipient_token_lifetime_in_seconds": "1002",
+		},
+		HCL: `
+		name = "abc"
+		storage_root = "s3:/a"
+		owner = "admin"
+		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
+		delta_sharing_recipient_token_lifetime_in_seconds = 1002
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestCreateAccountMetastore(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockAccountMetastoresAPI().EXPECT()
 			e.Create(mock.Anything, catalog.AccountsCreateMetastore{
-				MetastoreInfo: &catalog.CreateMetastore{
+				MetastoreInfo: &catalog.CreateAccountsMetastore{
 					StorageRoot: "s3://b",
 					Name:        "a",
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsCreateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					MetastoreId: "abc",
 				},
 			}, nil)
-			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
+			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
+				MetastoreId: "abc",
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
+					DeltaSharingRecipientTokenLifetimeInSeconds: maxDeltaSharingRecipientTokenLifetimeInSeconds,
+				},
+			}).Return(&catalog.AccountsUpdateMetastoreResponse{
+				MetastoreInfo: &catalog.MetastoreInfo{
+					Name: "a",
+				},
+			}, nil)
+			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
@@ -385,6 +522,7 @@ func TestCreateAccountMetastore(t *testing.T) {
 		},
 		Resource:  ResourceMetastore(),
 		AccountID: "100",
+		Host:      "https://accounts.cloud.databricks.com",
 		Create:    true,
 		HCL: `
 		name = "a"
@@ -398,27 +536,28 @@ func TestCreateAccountMetastoreWithOwner(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockAccountMetastoresAPI().EXPECT()
 			e.Create(mock.Anything, catalog.AccountsCreateMetastore{
-				MetastoreInfo: &catalog.CreateMetastore{
+				MetastoreInfo: &catalog.CreateAccountsMetastore{
 					StorageRoot: "s3://b",
 					Name:        "a",
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsCreateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					MetastoreId: "abc",
 				},
 			}, nil)
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
 					Owner: "administrators",
+					DeltaSharingRecipientTokenLifetimeInSeconds: maxDeltaSharingRecipientTokenLifetimeInSeconds,
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsUpdateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					Name:  "a",
 					Owner: "administrators",
 				},
 			}, nil)
-			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
+			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
@@ -428,6 +567,7 @@ func TestCreateAccountMetastoreWithOwner(t *testing.T) {
 		},
 		Resource:  ResourceMetastore(),
 		AccountID: "100",
+		Host:      "https://accounts.cloud.databricks.com",
 		Create:    true,
 		HCL: `
 		name = "a"
@@ -442,32 +582,34 @@ func TestCreateAccountMetastore_DeltaSharing(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockAccountMetastoresAPI().EXPECT()
 			e.Create(mock.Anything, catalog.AccountsCreateMetastore{
-				MetastoreInfo: &catalog.CreateMetastore{
+				MetastoreInfo: &catalog.CreateAccountsMetastore{
 					StorageRoot: "s3://b",
 					Name:        "a",
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsCreateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					MetastoreId: "abc",
 				},
 			}, nil)
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
 					Owner:                        "administrators",
 					DeltaSharingOrganizationName: "acme",
 					DeltaSharingScope:            "INTERNAL_AND_EXTERNAL",
-					ForceSendFields:              []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
+					DeltaSharingRecipientTokenLifetimeInSeconds: 3600,
+					ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsUpdateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					Name:                         "a",
 					Owner:                        "administrators",
 					DeltaSharingOrganizationName: "acme",
 					DeltaSharingScope:            "INTERNAL_AND_EXTERNAL",
+					DeltaSharingRecipientTokenLifetimeInSeconds: 3600,
 				},
 			}, nil)
-			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
+			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
@@ -477,13 +619,14 @@ func TestCreateAccountMetastore_DeltaSharing(t *testing.T) {
 		},
 		Resource:  ResourceMetastore(),
 		AccountID: "100",
+		Host:      "https://accounts.cloud.databricks.com",
 		Create:    true,
 		HCL: `
 		name = "a"
 		storage_root = "s3://b"
 		owner = "administrators"
 		delta_sharing_scope = "INTERNAL_AND_EXTERNAL"
-		delta_sharing_recipient_token_lifetime_in_seconds = 0
+		delta_sharing_recipient_token_lifetime_in_seconds = 3600
 		delta_sharing_organization_name = "acme"
 		`,
 	}.ApplyNoError(t)
@@ -494,10 +637,11 @@ func TestDeleteAccountMetastore(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockAccountMetastoresAPI().EXPECT().Delete(mock.Anything, catalog.DeleteAccountMetastoreRequest{
 				MetastoreId: "abc",
-			}).Return(nil)
+			}).Return(&catalog.AccountsDeleteMetastoreResponse{}, nil)
 		},
 		Resource:  ResourceMetastore(),
 		AccountID: "100",
+		Host:      "https://accounts.cloud.databricks.com",
 		Delete:    true,
 		ID:        "abc",
 		HCL: `
@@ -511,7 +655,7 @@ func TestUpdateAccountMetastore_NoChanges(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockAccountMetastoresAPI().EXPECT()
-			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
+			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
@@ -521,6 +665,7 @@ func TestUpdateAccountMetastore_NoChanges(t *testing.T) {
 		},
 		Resource:    ResourceMetastore(),
 		AccountID:   "100",
+		Host:        "https://accounts.cloud.databricks.com",
 		ID:          "abc",
 		Update:      true,
 		RequiresNew: true,
@@ -547,17 +692,16 @@ func TestUpdateAccountMetastore_OwnerChanges(t *testing.T) {
 			e := a.GetMockAccountMetastoresAPI().EXPECT()
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
-					Id:    "abc",
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
 					Owner: "updatedOwner",
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsUpdateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					Name:  "abc",
 					Owner: "updatedOwner",
 				},
 			}, nil)
-			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
+			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
@@ -567,6 +711,7 @@ func TestUpdateAccountMetastore_OwnerChanges(t *testing.T) {
 		},
 		Resource:    ResourceMetastore(),
 		AccountID:   "100",
+		Host:        "https://accounts.cloud.databricks.com",
 		ID:          "abc",
 		Update:      true,
 		RequiresNew: true,
@@ -593,11 +738,10 @@ func TestUpdateAccountMetastore_Rollback(t *testing.T) {
 			e := a.GetMockAccountMetastoresAPI().EXPECT()
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
-					Id:    "abc",
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
 					Owner: "updatedOwner",
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsUpdateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					Name:  "abc",
 					Owner: "updatedOwner",
@@ -605,8 +749,7 @@ func TestUpdateAccountMetastore_Rollback(t *testing.T) {
 			}, nil)
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
-					Id:                "abc",
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 					DeltaSharingRecipientTokenLifetimeInSeconds: 1004,
 					ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
@@ -614,11 +757,10 @@ func TestUpdateAccountMetastore_Rollback(t *testing.T) {
 			}).Return(nil, errors.New("Something unexpected happened"))
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
-					Id:    "abc",
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
 					Owner: "admin",
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsUpdateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					Name:  "abc",
 					Owner: "admin",
@@ -627,6 +769,7 @@ func TestUpdateAccountMetastore_Rollback(t *testing.T) {
 		},
 		Resource:    ResourceMetastore(),
 		AccountID:   "100",
+		Host:        "https://accounts.cloud.databricks.com",
 		ID:          "abc",
 		Update:      true,
 		RequiresNew: true,
@@ -654,20 +797,19 @@ func TestUpdateAccountMetastore_DeltaSharingScopeOnly(t *testing.T) {
 			e := a.GetMockAccountMetastoresAPI().EXPECT()
 			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
 				MetastoreId: "abc",
-				MetastoreInfo: &catalog.UpdateMetastore{
-					Id:                "abc",
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 					ForceSendFields: []string{"DeltaSharingRecipientTokenLifetimeInSeconds"},
 				},
-			}).Return(&catalog.AccountsMetastoreInfo{
+			}).Return(&catalog.AccountsUpdateMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					Name:              "abc",
 					DeltaSharingScope: "INTERNAL_AND_EXTERNAL",
 					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 				},
 			}, nil)
-			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
+			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot:       "s3://b/abc",
 					Name:              "abc",
@@ -679,6 +821,7 @@ func TestUpdateAccountMetastore_DeltaSharingScopeOnly(t *testing.T) {
 		},
 		Resource:    ResourceMetastore(),
 		AccountID:   "100",
+		Host:        "https://accounts.cloud.databricks.com",
 		ID:          "abc",
 		Update:      true,
 		RequiresNew: true,
@@ -699,10 +842,57 @@ func TestUpdateAccountMetastore_DeltaSharingScopeOnly(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+// Regression test for ES-1903219, account-level provider path.
+func TestUpdateAccountMetastore_ExternalAccessEnabledDisable(t *testing.T) {
+	qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			e := a.GetMockAccountMetastoresAPI().EXPECT()
+			e.Update(mock.Anything, catalog.AccountsUpdateMetastore{
+				MetastoreId: "abc",
+				MetastoreInfo: &catalog.UpdateAccountsMetastore{
+					ExternalAccessEnabled:                       false,
+					DeltaSharingRecipientTokenLifetimeInSeconds: maxDeltaSharingRecipientTokenLifetimeInSeconds,
+					ForceSendFields:                             []string{"ExternalAccessEnabled"},
+				},
+			}).Return(&catalog.AccountsUpdateMetastoreResponse{
+				MetastoreInfo: &catalog.MetastoreInfo{
+					Name:                  "abc",
+					ExternalAccessEnabled: false,
+				},
+			}, nil)
+			e.GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
+				MetastoreInfo: &catalog.MetastoreInfo{
+					StorageRoot:           "s3://b/abc",
+					Name:                  "abc",
+					ExternalAccessEnabled: false,
+				},
+			}, nil)
+		},
+		Resource:    ResourceMetastore(),
+		AccountID:   "100",
+		Host:        "https://accounts.cloud.databricks.com",
+		ID:          "abc",
+		Update:      true,
+		RequiresNew: true,
+		InstanceState: map[string]string{
+			"name":                    "abc",
+			"storage_root":            "s3:/a",
+			"owner":                   "admin",
+			"external_access_enabled": "true",
+		},
+		HCL: `
+		name = "abc"
+		storage_root = "s3:/a"
+		owner = "admin"
+		external_access_enabled = false
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestReadAccountMetastore(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockAccountMetastoresAPI().EXPECT().GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsMetastoreInfo{
+			a.GetMockAccountMetastoresAPI().EXPECT().GetByMetastoreId(mock.Anything, "abc").Return(&catalog.AccountsGetMetastoreResponse{
 				MetastoreInfo: &catalog.MetastoreInfo{
 					StorageRoot: "s3://b/abc",
 					Name:        "a",
@@ -712,6 +902,7 @@ func TestReadAccountMetastore(t *testing.T) {
 		},
 		Resource:  ResourceMetastore(),
 		AccountID: "100",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "abc",
 		Read:      true,
 		New:       true,
@@ -733,6 +924,7 @@ func TestReadAccountMetastore_Error(t *testing.T) {
 		},
 		Resource:  ResourceMetastore(),
 		AccountID: "100",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "abc",
 		Read:      true,
 	}.ExpectError(t, "resource is not expected to be removed")

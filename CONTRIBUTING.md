@@ -2,19 +2,28 @@
 
 ---
 
-- [Issues for new contributors](#issues-for-new-contributors)
-- [Contribution Workflow](#contribution-workflow)
-- [Changelog](#changelog)
 - [Contributing to Databricks Terraform Provider](#contributing-to-databricks-terraform-provider)
-- [Installing from source](#installing-from-source)
-- [Contributing documentation](#contributing-documentation)
-- [Developing provider](#developing-provider)
-- [Debugging](#debugging)
-- [Adding a new resource](#adding-a-new-resource)
-- [Testing](#testing)
-- [Code conventions](#code-conventions)
-- [Linting](#linting)
-- [Developing with Visual Studio Code Devcontainers](#developing-with-visual-studio-code-devcontainers)
+  - [Issues for new contributors](#issues-for-new-contributors)
+  - [Contribution Workflow](#contribution-workflow)
+  - [Changelog](#changelog)
+  - [Installing from source](#installing-from-source)
+  - [Contributing documentation](#contributing-documentation)
+  - [Developing provider](#developing-provider)
+  - [Developing Resources or Data Sources using Plugin Framework](#developing-resources-or-data-sources-using-plugin-framework)
+    - [Package organization for Providers](#package-organization-for-providers)
+    - [Adding a new resource](#adding-a-new-resource)
+    - [Adding a new data source](#adding-a-new-data-source)
+    - [Migrating resource to plugin framework](#migrating-resource-to-plugin-framework)
+      - [SDKv2 Compatibility](#sdkv2-compatibility)
+      - [Plugin Framework Compatibility](#plugin-framework-compatibility)
+    - [Code Organization](#code-organization)
+    - [Code Conventions](#code-conventions)
+  - [Debugging](#debugging)
+  - [Adding a new resource](#adding-a-new-resource-1)
+  - [Integration Testing](#integration-testing)
+  - [Code conventions](#code-conventions-1)
+  - [Linting](#linting)
+  - [Developing with Visual Studio Code Devcontainers](#developing-with-visual-studio-code-devcontainers)
 
 We happily welcome contributions to the Databricks Terraform Provider. We use GitHub Issues to track community reported issues and GitHub Pull Requests for accepting changes.
 
@@ -138,6 +147,8 @@ After installing the necessary software for building provider from sources, you 
 
 ## Developing Resources or Data Sources using Plugin Framework
 
+**Update, June 2026**: new resources and data sources are now automatically generated from Databricks API specifcation, so this section isn't applicable.  The bug fixes and improvements to existing, non-generated resources and data sources are still accepted.
+
 ### Package organization for Providers
 We are migrating the resource from SDKv2 to Plugin Framework provider and hence both of them exist in the codebase. For uniform code convention, readability and development, they are organized in the `internal/providers` directory under root as follows:
 - `providers`: Contains the changes that `depends` on both internal/providers/sdkv2 and internal/providers/pluginfw packages, eg: `GetProviderServer`.
@@ -176,6 +187,79 @@ resp.Schema = tfschema.ResourceStructToSchema(ctx, Resource_SdkV2{}, func(c tfsc
     // Add any additional configuration here
     return cs
 })
+```
+
+Make sure that migrated resources are compatible with both SDKv2 and Plugin Framework.
+- The schema struct should have a `types.String` ID field. Example:
+```go
+type ResourceInfoExtended struct {
+	package_tf.ResourceInfo_SdkV2
+	ID types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
+}
+
+```
+
+- Add integration tests to verify that the resource is both SDKv2 and Plugin Framework compatible. Example:
+
+#### SDKv2 Compatibility
+```go
+func TestSDKv2Compatibility(t *testing.T) {
+	acceptance.WorkspaceLevel(t,
+		// Step 1: Create resource using plugin framework implementation
+		acceptance.Step{
+			Template: `
+                resource "databricks_some_resource" "this" {
+                    name = "abc"
+                }
+            `
+		},
+		// Step 2: Update the resource using SDKv2
+		acceptance.Step{
+			ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+				"databricks": func() (tfprotov6.ProviderServer, error) {
+					sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_some_resource"})
+					return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
+				},
+			},
+			Template: `
+                resource "databricks_some_resource" "this" {
+                    name = "abc"
+                }
+            `,
+		},
+	)
+}
+```
+
+#### Plugin Framework Compatibility
+```go
+func TestPluginFrameworkCompatibility(t *testing.T) {
+	acceptance.WorkspaceLevel(t,
+		// Step 1: Create the resource using SDKv2
+		acceptance.Step{
+			ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+				"databricks": func() (tfprotov6.ProviderServer, error) {
+					sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_some_resource"})
+					return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
+				},
+			},
+			Template: `
+                resource "databricks_some_resource" "this" {
+                    name = "abc"
+                }
+            `,
+		},
+		// Step 2: Update the resource using plugin framework implementation
+		acceptance.Step{
+			Template: `
+                resource "databricks_some_resource" "this" {
+                    name = "abc"
+                }
+            `
+		},
+
+	)
+}
 ```
 
 ### Code Organization
@@ -425,6 +509,12 @@ func TestAccSecretAclResource(t *testing.T) {
  })
 }
 ```
+
+## Unit Testing on Forked Pull Requests
+
+Unit tests run in CI on every PR. PRs opened from forks cannot authenticate to the internal Go module proxy, so CI resolves their Go modules offline from a dependency cache that the "Warm Go Cache" workflow pre-warms daily from the `main` branch.
+
+If your PR changes `go.mod` or `go.sum`, the `tests` check will fail until a maintainer re-warms the cache for your PR (Actions -> Warm Go Cache -> Run workflow -> pr_number). Once the warming run completes, re-run the failed check.
 
 ## Integration Testing
 

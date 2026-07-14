@@ -137,13 +137,16 @@ func (ic *importContext) emitGroups(u scim.User) {
 			Resource: "databricks_group",
 			ID:       g.Value,
 		})
-		id := fmt.Sprintf("%s|%s", g.Value, u.ID)
-		ic.Emit(&resource{
-			Resource: "databricks_group_member",
-			ID:       id,
-			Name:     fmt.Sprintf("%s_%s_%s_%s", g.Display, g.Value, u.DisplayName, u.ID),
-			Data:     ic.makeGroupMemberData(id, g.Value, u.ID),
-		})
+		// emit group_member only if it's a workspace-level group or if it's an account level group
+		if ic.accountLevel || isWorkspaceLevelGroup(ic, g.Display) {
+			id := fmt.Sprintf("%s|%s", g.Value, u.ID)
+			ic.Emit(&resource{
+				Resource: "databricks_group_member",
+				ID:       id,
+				Name:     fmt.Sprintf("%s_%s_%s_%s", g.Display, g.Value, u.DisplayName, u.ID),
+				Data:     ic.makeGroupMemberData(id, g.Value, u.ID),
+			})
+		}
 	}
 }
 
@@ -170,6 +173,11 @@ func (ic *importContext) cacheGroups() error {
 	ic.groupsMutex.Lock()
 	defer ic.groupsMutex.Unlock()
 	if ic.allGroups == nil {
+		if !ic.isServiceEnabled("groups") {
+			log.Printf("[INFO] Groups service is not enabled, skipping caching of groups")
+			ic.allGroups = make([]scim.Group, 0)
+			return nil
+		}
 		log.Printf("[INFO] Caching groups in memory ...")
 		var groups *[]iam.Group
 		var err error
@@ -195,7 +203,7 @@ func (ic *importContext) cacheGroups() error {
 			log.Printf("[ERROR] can't fetch list of groups. Error: %v", err)
 			return err
 		}
-		api := scim.NewGroupsAPI(ic.Context, ic.Client)
+		api := scim.NewGroupsAPI(ic.Context, ic.Client, "")
 		groupsCount := len(*groups)
 		ic.allGroups = make([]scim.Group, 0, groupsCount)
 		for i, g := range *groups {
@@ -284,7 +292,7 @@ func (ic *importContext) findUserByName(name string, fastCheck bool) (u *scim.Us
 		if fastCheck {
 			return &scim.User{UserName: name}, nil
 		}
-		a := scim.NewUsersAPI(ic.Context, ic.Client)
+		a := scim.NewUsersAPI(ic.Context, ic.Client, "")
 		err = runWithRetries(func() error {
 			usr, err := a.Read(userId, "id,userName,displayName,active,externalId,entitlements,groups,roles")
 			if err != nil {
@@ -361,7 +369,7 @@ func (ic *importContext) findSpnByAppID(applicationID string, fastCheck bool) (u
 		if fastCheck {
 			return &scim.User{ApplicationID: applicationID}, nil
 		}
-		a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client)
+		a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client, "")
 		err = runWithRetries(func() error {
 			usr, err := a.Read(spId, "userName,displayName,active,externalId,entitlements,groups,roles")
 			if err != nil {

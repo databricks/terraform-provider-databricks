@@ -26,17 +26,17 @@ type TokenManagementAPI struct {
 }
 
 func (a TokenManagementAPI) CreateTokenOnBehalfOfServicePrincipal(request OboToken) (token TokenResponse, err error) {
-	err = a.client.Post(a.context, "/token-management/on-behalf-of/tokens", request, &token)
+	err = a.client.Post(a.context, "/token-management/on-behalf-of/tokens", request, &token, a.client.AddWorkspaceIdHeader)
 	return
 }
 
 func (a TokenManagementAPI) Delete(tokenID string) error {
-	err := a.client.Delete(a.context, fmt.Sprintf("/token-management/tokens/%s", tokenID), map[string]any{})
+	err := a.client.Delete(a.context, fmt.Sprintf("/token-management/tokens/%s", tokenID), map[string]any{}, a.client.AddWorkspaceIdHeader)
 	return common.IgnoreNotFoundError(err) // ignore not found error on delete, as it is idempotent
 }
 
 func (a TokenManagementAPI) Read(tokenID string) (ti TokenResponse, err error) {
-	err = a.client.Get(a.context, fmt.Sprintf("/token-management/tokens/%s", tokenID), nil, &ti)
+	err = a.client.Get(a.context, fmt.Sprintf("/token-management/tokens/%s", tokenID), nil, &ti, a.client.AddWorkspaceIdHeader)
 	return
 }
 
@@ -50,12 +50,21 @@ func ResourceOboToken() common.Resource {
 			}
 			return m
 		})
+	common.AddNamespaceInSchema(oboTokenSchema)
+	common.NamespaceCustomizeSchemaMap(oboTokenSchema)
 	return common.Resource{
 		Schema: oboTokenSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var request OboToken
 			common.DataToStructPointer(d, oboTokenSchema, &request)
-			ot, err := NewTokenManagementAPI(ctx, c).CreateTokenOnBehalfOfServicePrincipal(request)
+			ot, err := NewTokenManagementAPI(ctx, newClient).CreateTokenOnBehalfOfServicePrincipal(request)
 			if err != nil {
 				return err
 			}
@@ -63,7 +72,11 @@ func ResourceOboToken() common.Resource {
 			return d.Set("token_value", ot.TokenValue)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ot, err := NewTokenManagementAPI(ctx, c).Read(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			ot, err := NewTokenManagementAPI(ctx, newClient).Read(d.Id())
 			if err != nil {
 				err = common.IgnoreNotFoundError(err)
 				if err != nil {
@@ -84,7 +97,11 @@ func ResourceOboToken() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewTokenManagementAPI(ctx, c).Delete(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			return NewTokenManagementAPI(ctx, newClient).Delete(d.Id())
 		},
 	}
 }

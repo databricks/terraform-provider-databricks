@@ -2,6 +2,8 @@
 subcategory: "Machine Learning"
 ---
 # databricks_online_store Data Source
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 
 
 ## Example Usage
@@ -10,7 +12,10 @@ subcategory: "Machine Learning"
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - The name of the online store. This is the unique identifier for the online store
-* `workspace_id` (string, optional) - Workspace ID of the resource
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:
@@ -20,3 +25,4 @@ The following attributes are exported:
 * `name` (string) - The name of the online store. This is the unique identifier for the online store
 * `read_replica_count` (integer) - The number of read replicas for the online store. Defaults to 0
 * `state` (string) - The current state of the online store. Possible values are: `AVAILABLE`, `DELETING`, `FAILING_OVER`, `STARTING`, `STOPPED`, `UPDATING`
+* `usage_policy_id` (string) - The usage policy applied to the online store to track billing

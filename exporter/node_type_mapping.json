@@ -1,0 +1,4106 @@
+{
+  "version": "1.0",
+  "mappings": [
+    {
+      "aws": "c-fleet.12xlarge",
+      "azure": "Standard_D48plds_v6",
+      "gcp": "n2-highcpu-48"
+    },
+    {
+      "aws": "c-fleet.24xlarge",
+      "azure": "Standard_D96plds_v6",
+      "gcp": "n1-highcpu-96"
+    },
+    {
+      "aws": "c-fleet.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c-fleet.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "n1-highcpu-16"
+    },
+    {
+      "aws": "c-fleet.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c4.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c4.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "n1-highcpu-16"
+    },
+    {
+      "aws": "c5.12xlarge",
+      "azure": "Standard_D48plds_v6",
+      "gcp": "n2-highcpu-48"
+    },
+    {
+      "aws": "c5.18xlarge",
+      "azure": "Standard_F72s_v2",
+      "gcp": "c4a-standard-72-lssd"
+    },
+    {
+      "aws": "c5.24xlarge",
+      "azure": "Standard_D96plds_v6",
+      "gcp": "n1-highcpu-96"
+    },
+    {
+      "aws": "c5.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c5.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "n1-highcpu-16"
+    },
+    {
+      "aws": "c5.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c5a.12xlarge",
+      "azure": "Standard_D48plds_v6",
+      "gcp": "n2-highcpu-48"
+    },
+    {
+      "aws": "c5a.16xlarge",
+      "azure": "Standard_F64s_v2",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "c5a.24xlarge",
+      "azure": "Standard_D96plds_v6",
+      "gcp": "n1-highcpu-96"
+    },
+    {
+      "aws": "c5a.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c5a.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "n1-highcpu-16"
+    },
+    {
+      "aws": "c5a.8xlarge",
+      "azure": "Standard_F32s_v2",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "c5a.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c5ad.16xlarge",
+      "azure": "Standard_F64s_v2",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "c5ad.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c5ad.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "c2-standard-16"
+    },
+    {
+      "aws": "c5ad.8xlarge",
+      "azure": "Standard_F32s_v2",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "c5ad.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c5d.18xlarge",
+      "azure": "Standard_F72s_v2",
+      "gcp": "c4a-standard-72-lssd"
+    },
+    {
+      "aws": "c5d.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c5d.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "c2-standard-16"
+    },
+    {
+      "aws": "c5d.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c6g.12xlarge",
+      "azure": "Standard_D48plds_v6",
+      "gcp": "n2-highcpu-48"
+    },
+    {
+      "aws": "c6g.16xlarge",
+      "azure": "Standard_F64s_v2",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "c6g.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c6g.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "n1-highcpu-16"
+    },
+    {
+      "aws": "c6g.8xlarge",
+      "azure": "Standard_F32s_v2",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "c6g.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c6gd.16xlarge",
+      "azure": "Standard_F64s_v2",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "c6gd.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c6gd.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "c2-standard-16"
+    },
+    {
+      "aws": "c6gd.8xlarge",
+      "azure": "Standard_F32s_v2",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "c6gd.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c6i.12xlarge",
+      "azure": "Standard_D48plds_v6",
+      "gcp": "n2-highcpu-48"
+    },
+    {
+      "aws": "c6i.16xlarge",
+      "azure": "Standard_F64s_v2",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "c6i.24xlarge",
+      "azure": "Standard_D96plds_v6",
+      "gcp": "n1-highcpu-96"
+    },
+    {
+      "aws": "c6i.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c6i.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "n1-highcpu-16"
+    },
+    {
+      "aws": "c6i.8xlarge",
+      "azure": "Standard_F32s_v2",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "c6i.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c6id.16xlarge",
+      "azure": "Standard_F64s_v2",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "c6id.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c6id.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "c2-standard-16"
+    },
+    {
+      "aws": "c6id.8xlarge",
+      "azure": "Standard_F32s_v2",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "c6id.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c6in.12xlarge",
+      "azure": "Standard_D48plds_v6",
+      "gcp": "n2-highcpu-48"
+    },
+    {
+      "aws": "c6in.16xlarge",
+      "azure": "Standard_F64s_v2",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "c6in.24xlarge",
+      "azure": "Standard_D96plds_v6",
+      "gcp": "n1-highcpu-96"
+    },
+    {
+      "aws": "c6in.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c6in.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "n1-highcpu-16"
+    },
+    {
+      "aws": "c6in.8xlarge",
+      "azure": "Standard_F32s_v2",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "c6in.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c7a.12xlarge",
+      "azure": "Standard_D48plds_v6",
+      "gcp": "n2-highcpu-48"
+    },
+    {
+      "aws": "c7a.16xlarge",
+      "azure": "Standard_F64s_v2",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "c7a.24xlarge",
+      "azure": "Standard_D96plds_v6",
+      "gcp": "n1-highcpu-96"
+    },
+    {
+      "aws": "c7a.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c7a.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "n1-highcpu-16"
+    },
+    {
+      "aws": "c7a.8xlarge",
+      "azure": "Standard_F32s_v2",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "c7a.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c7g.12xlarge",
+      "azure": "Standard_D48plds_v6",
+      "gcp": "n2-highcpu-48"
+    },
+    {
+      "aws": "c7g.16xlarge",
+      "azure": "Standard_F64s_v2",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "c7g.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c7g.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "n1-highcpu-16"
+    },
+    {
+      "aws": "c7g.8xlarge",
+      "azure": "Standard_F32s_v2",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "c7g.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c7gd.16xlarge",
+      "azure": "Standard_F64s_v2",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "c7gd.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c7gd.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "c2-standard-16"
+    },
+    {
+      "aws": "c7gd.8xlarge",
+      "azure": "Standard_F32s_v2",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "c7gd.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c7i.12xlarge",
+      "azure": "Standard_D48plds_v6",
+      "gcp": "n2-highcpu-48"
+    },
+    {
+      "aws": "c7i.16xlarge",
+      "azure": "Standard_F64s_v2",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "c7i.24xlarge",
+      "azure": "Standard_D96plds_v6",
+      "gcp": "n1-highcpu-96"
+    },
+    {
+      "aws": "c7i.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c7i.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "n1-highcpu-16"
+    },
+    {
+      "aws": "c7i.8xlarge",
+      "azure": "Standard_F32s_v2",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "c7i.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c8g.12xlarge",
+      "azure": "Standard_D48plds_v6",
+      "gcp": "n2-highcpu-48"
+    },
+    {
+      "aws": "c8g.16xlarge",
+      "azure": "Standard_F64s_v2",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "c8g.24xlarge",
+      "azure": "Standard_D96plds_v6",
+      "gcp": "n1-highcpu-96"
+    },
+    {
+      "aws": "c8g.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c8g.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "n1-highcpu-16"
+    },
+    {
+      "aws": "c8g.8xlarge",
+      "azure": "Standard_F32s_v2",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "c8g.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c8gd.16xlarge",
+      "azure": "Standard_F64s_v2",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "c8gd.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c8gd.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "c2-standard-16"
+    },
+    {
+      "aws": "c8gd.8xlarge",
+      "azure": "Standard_F32s_v2",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "c8gd.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "cd-fleet.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "cd-fleet.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "c2-standard-16"
+    },
+    {
+      "aws": "cd-fleet.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "cg-fleet.12xlarge",
+      "azure": "Standard_D48plds_v6",
+      "gcp": "n2-highcpu-48"
+    },
+    {
+      "aws": "cg-fleet.16xlarge",
+      "azure": "Standard_F64s_v2",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "cg-fleet.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "cg-fleet.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "n1-highcpu-16"
+    },
+    {
+      "aws": "cg-fleet.8xlarge",
+      "azure": "Standard_F32s_v2",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "cg-fleet.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "cgd-fleet.16xlarge",
+      "azure": "Standard_F64s_v2",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "cgd-fleet.2xlarge",
+      "azure": "Standard_F8",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "cgd-fleet.4xlarge",
+      "azure": "Standard_F16",
+      "gcp": "c2-standard-16"
+    },
+    {
+      "aws": "cgd-fleet.8xlarge",
+      "azure": "Standard_F32s_v2",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "cgd-fleet.xlarge",
+      "azure": "Standard_F4",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "d3.2xlarge",
+      "azure": "Standard_L8s_v2",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "d3.4xlarge",
+      "azure": "Standard_L16s_v2",
+      "gcp": "c4a-highmem-16-lssd"
+    },
+    {
+      "aws": "d3.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "d3en.2xlarge",
+      "azure": "Standard_D8s_v3",
+      "gcp": "c3-standard-8-lssd"
+    },
+    {
+      "aws": "d3en.4xlarge",
+      "azure": "Standard_D16s_v3",
+      "gcp": "c3d-standard-16-lssd"
+    },
+    {
+      "aws": "d3en.xlarge",
+      "azure": "Standard_D4s_v3",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "i2.2xlarge",
+      "azure": "Standard_L8s_v2",
+      "gcp": "c4a-highmem-8-lssd"
+    },
+    {
+      "aws": "i2.4xlarge",
+      "azure": "Standard_L16s_v2",
+      "gcp": "c4a-highmem-16-lssd"
+    },
+    {
+      "aws": "i2.8xlarge",
+      "azure": "Standard_L32s_v2",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "i2.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "i3.16xlarge",
+      "azure": "Standard_L64s_v2",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "i3.2xlarge",
+      "azure": "Standard_L8s_v2",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "i3.4xlarge",
+      "azure": "Standard_L16s_v2",
+      "gcp": "c4a-highmem-16-lssd"
+    },
+    {
+      "aws": "i3.8xlarge",
+      "azure": "Standard_L32s_v2",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "i3.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "i3en.12xlarge",
+      "azure": "Standard_L48s_v3",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "i3en.24xlarge",
+      "gcp": "n2d-highmem-96",
+      "azure": "Standard_E96ds_v6"
+    },
+    {
+      "aws": "i3en.2xlarge",
+      "azure": "Standard_L8s_v2",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "i3en.large",
+      "gcp": "n2-highmem-2",
+      "azure": "Standard_E2ads_v6"
+    },
+    {
+      "aws": "i3en.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "i4g.16xlarge",
+      "azure": "Standard_L64s_v2",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "i4g.2xlarge",
+      "azure": "Standard_L8s_v2",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "i4g.4xlarge",
+      "azure": "Standard_L16s_v2",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "i4g.8xlarge",
+      "azure": "Standard_L32s_v2",
+      "gcp": "n2-highmem-32"
+    },
+    {
+      "aws": "i4g.large",
+      "gcp": "n2-highmem-2",
+      "azure": "Standard_E2ads_v6"
+    },
+    {
+      "aws": "i4g.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "i4i.16xlarge",
+      "azure": "Standard_L64s_v2",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "i4i.2xlarge",
+      "azure": "Standard_L8s_v2",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "i4i.4xlarge",
+      "azure": "Standard_L16s_v2",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "i4i.8xlarge",
+      "azure": "Standard_L32s_v2",
+      "gcp": "n2-highmem-32"
+    },
+    {
+      "aws": "i4i.large",
+      "gcp": "n2-highmem-2",
+      "azure": "Standard_E2ads_v6"
+    },
+    {
+      "aws": "i4i.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "i7i.12xlarge",
+      "azure": "Standard_L48s_v3",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "i7i.16xlarge",
+      "azure": "Standard_L64s_v2",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "i7i.24xlarge",
+      "gcp": "n2d-highmem-96",
+      "azure": "Standard_E96ds_v6"
+    },
+    {
+      "aws": "i7i.2xlarge",
+      "azure": "Standard_L8s_v2",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "i7i.4xlarge",
+      "azure": "Standard_L16s_v2",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "i7i.8xlarge",
+      "azure": "Standard_L32s_v2",
+      "gcp": "n2-highmem-32"
+    },
+    {
+      "aws": "i7i.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "i8g.12xlarge",
+      "azure": "Standard_L48s_v3",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "i8g.16xlarge",
+      "azure": "Standard_L64s_v2",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "i8g.24xlarge",
+      "gcp": "n2d-highmem-96",
+      "azure": "Standard_E96ds_v6"
+    },
+    {
+      "aws": "i8g.2xlarge",
+      "azure": "Standard_L8s_v2",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "i8g.4xlarge",
+      "azure": "Standard_L16s_v2",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "i8g.8xlarge",
+      "azure": "Standard_L32s_v2",
+      "gcp": "n2-highmem-32"
+    },
+    {
+      "aws": "i8g.large",
+      "gcp": "n2-highmem-2",
+      "azure": "Standard_E2ads_v6"
+    },
+    {
+      "aws": "i8g.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "m-fleet.12xlarge",
+      "azure": "Standard_D48s_v5",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m-fleet.16xlarge",
+      "azure": "Standard_D64s_v5",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m-fleet.24xlarge",
+      "azure": "Standard_D96s_v5",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m-fleet.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m-fleet.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m-fleet.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m-fleet.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m4.16xlarge",
+      "azure": "Standard_D64s_v5",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m4.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m4.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m4.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "m4.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m5.12xlarge",
+      "azure": "Standard_D48s_v5",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m5.16xlarge",
+      "azure": "Standard_D64s_v5",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m5.24xlarge",
+      "azure": "Standard_D96s_v5",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m5.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m5.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m5.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m5.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "m5.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m5a.12xlarge",
+      "azure": "Standard_D48s_v5",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m5a.16xlarge",
+      "azure": "Standard_D64s_v5",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m5a.24xlarge",
+      "azure": "Standard_D96s_v5",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m5a.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m5a.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m5a.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m5a.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "m5a.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m5d.12xlarge",
+      "azure": "Standard_D48a_v4",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m5d.16xlarge",
+      "azure": "Standard_D64s_v3",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m5d.24xlarge",
+      "azure": "Standard_D96as_v4",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m5d.2xlarge",
+      "azure": "Standard_D8ds_v4",
+      "gcp": "c3d-standard-8-lssd"
+    },
+    {
+      "aws": "m5d.4xlarge",
+      "azure": "Standard_D16a_v4",
+      "gcp": "c3d-standard-16-lssd"
+    },
+    {
+      "aws": "m5d.8xlarge",
+      "azure": "Standard_D32a_v4",
+      "gcp": "c4a-standard-32-lssd"
+    },
+    {
+      "aws": "m5d.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "n2-highmem-2"
+    },
+    {
+      "aws": "m5d.xlarge",
+      "azure": "Standard_D4ds_v4",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "m5dn.12xlarge",
+      "azure": "Standard_D48a_v4",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m5dn.16xlarge",
+      "azure": "Standard_D64s_v3",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m5dn.24xlarge",
+      "azure": "Standard_D96as_v4",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m5dn.2xlarge",
+      "azure": "Standard_D8ds_v4",
+      "gcp": "c3d-standard-8-lssd"
+    },
+    {
+      "aws": "m5dn.4xlarge",
+      "azure": "Standard_D16a_v4",
+      "gcp": "c3d-standard-16-lssd"
+    },
+    {
+      "aws": "m5dn.8xlarge",
+      "azure": "Standard_D32a_v4",
+      "gcp": "c4a-standard-32-lssd"
+    },
+    {
+      "aws": "m5dn.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "n2-highmem-2"
+    },
+    {
+      "aws": "m5dn.xlarge",
+      "azure": "Standard_D4ds_v4",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "m5n.12xlarge",
+      "azure": "Standard_D48s_v5",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m5n.16xlarge",
+      "azure": "Standard_D64s_v5",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m5n.24xlarge",
+      "azure": "Standard_D96s_v5",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m5n.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m5n.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m5n.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m5n.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "m5n.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m5zn.12xlarge",
+      "azure": "Standard_D48s_v5",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m5zn.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m5zn.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "m5zn.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m6g.12xlarge",
+      "azure": "Standard_D48s_v5",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m6g.16xlarge",
+      "azure": "Standard_D64s_v5",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m6g.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m6g.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m6g.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m6g.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "m6g.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m6gd.12xlarge",
+      "azure": "Standard_D48a_v4",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m6gd.16xlarge",
+      "azure": "Standard_D64a_v4",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m6gd.2xlarge",
+      "azure": "Standard_D8ds_v4",
+      "gcp": "c3d-standard-8-lssd"
+    },
+    {
+      "aws": "m6gd.4xlarge",
+      "azure": "Standard_D16ds_v4",
+      "gcp": "c4a-standard-16-lssd"
+    },
+    {
+      "aws": "m6gd.8xlarge",
+      "azure": "Standard_D32ds_v4",
+      "gcp": "c4a-standard-32-lssd"
+    },
+    {
+      "aws": "m6gd.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "n2-highmem-2"
+    },
+    {
+      "aws": "m6gd.xlarge",
+      "azure": "Standard_D4ds_v4",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "m6i.12xlarge",
+      "azure": "Standard_D48s_v5",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m6i.16xlarge",
+      "azure": "Standard_D64s_v5",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m6i.24xlarge",
+      "azure": "Standard_D96s_v5",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m6i.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m6i.32xlarge",
+      "azure": "Standard_D128ds_v6",
+      "gcp": "n2d-standard-128"
+    },
+    {
+      "aws": "m6i.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m6i.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m6i.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "m6i.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m6id.12xlarge",
+      "azure": "Standard_D48a_v4",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m6id.16xlarge",
+      "azure": "Standard_D64a_v4",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m6id.24xlarge",
+      "azure": "Standard_D96a_v4",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m6id.2xlarge",
+      "azure": "Standard_D8ds_v4",
+      "gcp": "c3d-standard-8-lssd"
+    },
+    {
+      "aws": "m6id.32xlarge",
+      "azure": "Standard_D128ds_v6",
+      "gcp": "n2d-standard-128"
+    },
+    {
+      "aws": "m6id.4xlarge",
+      "azure": "Standard_D16ds_v4",
+      "gcp": "c4a-standard-16-lssd"
+    },
+    {
+      "aws": "m6id.8xlarge",
+      "azure": "Standard_D32ds_v4",
+      "gcp": "c4a-standard-32-lssd"
+    },
+    {
+      "aws": "m6id.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "n2-highmem-2"
+    },
+    {
+      "aws": "m6id.xlarge",
+      "azure": "Standard_D4ds_v4",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "m6idn.12xlarge",
+      "azure": "Standard_D48a_v4",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m6idn.16xlarge",
+      "azure": "Standard_D64a_v4",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m6idn.24xlarge",
+      "azure": "Standard_D96a_v4",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m6idn.2xlarge",
+      "azure": "Standard_D8ds_v4",
+      "gcp": "c3d-standard-8-lssd"
+    },
+    {
+      "aws": "m6idn.32xlarge",
+      "azure": "Standard_D128ds_v6",
+      "gcp": "n2d-standard-128"
+    },
+    {
+      "aws": "m6idn.4xlarge",
+      "azure": "Standard_D16ds_v4",
+      "gcp": "c4a-standard-16-lssd"
+    },
+    {
+      "aws": "m6idn.8xlarge",
+      "azure": "Standard_D32ds_v4",
+      "gcp": "c4a-standard-32-lssd"
+    },
+    {
+      "aws": "m6idn.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "n2-highmem-2"
+    },
+    {
+      "aws": "m6idn.xlarge",
+      "azure": "Standard_D4ds_v4",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "m6in.12xlarge",
+      "azure": "Standard_D48s_v5",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m6in.16xlarge",
+      "azure": "Standard_D64s_v5",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m6in.24xlarge",
+      "azure": "Standard_D96s_v5",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m6in.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m6in.32xlarge",
+      "azure": "Standard_D128ds_v6",
+      "gcp": "n2d-standard-128"
+    },
+    {
+      "aws": "m6in.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m6in.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m6in.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "m6in.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m7a.12xlarge",
+      "azure": "Standard_D48s_v5",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m7a.16xlarge",
+      "azure": "Standard_D64s_v5",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m7a.24xlarge",
+      "azure": "Standard_D96s_v5",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m7a.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m7a.32xlarge",
+      "azure": "Standard_D128ds_v6",
+      "gcp": "n2d-standard-128"
+    },
+    {
+      "aws": "m7a.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m7a.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m7a.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m7g.12xlarge",
+      "azure": "Standard_D48s_v5",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m7g.16xlarge",
+      "azure": "Standard_D64s_v5",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m7g.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m7g.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m7g.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m7g.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "m7g.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m7gd.12xlarge",
+      "azure": "Standard_D48a_v4",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m7gd.16xlarge",
+      "azure": "Standard_D64a_v4",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m7gd.2xlarge",
+      "azure": "Standard_D8ds_v4",
+      "gcp": "c3d-standard-8-lssd"
+    },
+    {
+      "aws": "m7gd.4xlarge",
+      "azure": "Standard_D16ds_v4",
+      "gcp": "c4a-standard-16-lssd"
+    },
+    {
+      "aws": "m7gd.8xlarge",
+      "azure": "Standard_D32ds_v4",
+      "gcp": "c4a-standard-32-lssd"
+    },
+    {
+      "aws": "m7gd.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "n2-highmem-2"
+    },
+    {
+      "aws": "m7gd.xlarge",
+      "azure": "Standard_D4ds_v4",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "m7i.12xlarge",
+      "azure": "Standard_D48s_v5",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m7i.16xlarge",
+      "azure": "Standard_D64s_v5",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m7i.24xlarge",
+      "azure": "Standard_D96s_v5",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m7i.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m7i.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m7i.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m7i.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "m7i.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m8g.12xlarge",
+      "azure": "Standard_D48s_v5",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m8g.16xlarge",
+      "azure": "Standard_D64s_v5",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m8g.24xlarge",
+      "azure": "Standard_D96s_v5",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m8g.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m8g.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m8g.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m8g.large",
+      "azure": "Standard_D2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "m8g.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m8gd.12xlarge",
+      "azure": "Standard_D48a_v4",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m8gd.16xlarge",
+      "azure": "Standard_D64a_v4",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m8gd.24xlarge",
+      "azure": "Standard_D96a_v4",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m8gd.2xlarge",
+      "azure": "Standard_D8ds_v4",
+      "gcp": "c3d-standard-8-lssd"
+    },
+    {
+      "aws": "m8gd.4xlarge",
+      "azure": "Standard_D16ds_v4",
+      "gcp": "c4a-standard-16-lssd"
+    },
+    {
+      "aws": "m8gd.8xlarge",
+      "azure": "Standard_D32ds_v4",
+      "gcp": "c4a-standard-32-lssd"
+    },
+    {
+      "aws": "m8gd.xlarge",
+      "azure": "Standard_D4ds_v4",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "m8i.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m8i.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m8i.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m8i.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "md-fleet.12xlarge",
+      "azure": "Standard_D48a_v4",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "md-fleet.16xlarge",
+      "azure": "Standard_D64s_v3",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "md-fleet.24xlarge",
+      "azure": "Standard_D96as_v4",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "md-fleet.2xlarge",
+      "azure": "Standard_D8ds_v4",
+      "gcp": "c3d-standard-8-lssd"
+    },
+    {
+      "aws": "md-fleet.4xlarge",
+      "azure": "Standard_D16a_v4",
+      "gcp": "c3d-standard-16-lssd"
+    },
+    {
+      "aws": "md-fleet.8xlarge",
+      "azure": "Standard_D32a_v4",
+      "gcp": "c4a-standard-32-lssd"
+    },
+    {
+      "aws": "md-fleet.xlarge",
+      "azure": "Standard_D4ds_v4",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "mg-fleet.12xlarge",
+      "azure": "Standard_D48s_v5",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "mg-fleet.16xlarge",
+      "azure": "Standard_D64s_v5",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "mg-fleet.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "mg-fleet.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "mg-fleet.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "mg-fleet.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "mgd-fleet.12xlarge",
+      "azure": "Standard_D48a_v4",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "mgd-fleet.16xlarge",
+      "azure": "Standard_D64a_v4",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "mgd-fleet.2xlarge",
+      "azure": "Standard_D8ds_v4",
+      "gcp": "c3d-standard-8-lssd"
+    },
+    {
+      "aws": "mgd-fleet.4xlarge",
+      "azure": "Standard_D16ds_v4",
+      "gcp": "c4a-standard-16-lssd"
+    },
+    {
+      "aws": "mgd-fleet.8xlarge",
+      "azure": "Standard_D32ds_v4",
+      "gcp": "c4a-standard-32-lssd"
+    },
+    {
+      "aws": "mgd-fleet.xlarge",
+      "azure": "Standard_D4ds_v4",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "r-fleet.12xlarge",
+      "azure": "Standard_E48s_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r-fleet.16xlarge",
+      "azure": "Standard_E64s_v5",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r-fleet.24xlarge",
+      "azure": "Standard_E96ds_v6",
+      "gcp": "n2d-highmem-96"
+    },
+    {
+      "aws": "r-fleet.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r-fleet.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r-fleet.8xlarge",
+      "azure": "Standard_E32s_v4",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r-fleet.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r4.16xlarge",
+      "azure": "Standard_E64s_v4",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r4.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r4.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r4.8xlarge",
+      "azure": "Standard_E32s_v4",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r4.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r5.12xlarge",
+      "azure": "Standard_E48s_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r5.16xlarge",
+      "azure": "Standard_E64s_v5",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r5.24xlarge",
+      "azure": "Standard_E96ds_v6",
+      "gcp": "n2d-highmem-96"
+    },
+    {
+      "aws": "r5.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r5.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r5.8xlarge",
+      "azure": "Standard_E32s_v4",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r5.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "r5.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r5a.12xlarge",
+      "azure": "Standard_E48s_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r5a.16xlarge",
+      "azure": "Standard_E64s_v5",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r5a.24xlarge",
+      "azure": "Standard_E96ds_v6",
+      "gcp": "n2d-highmem-96"
+    },
+    {
+      "aws": "r5a.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r5a.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r5a.8xlarge",
+      "azure": "Standard_E32s_v4",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r5a.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "r5a.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r5d.12xlarge",
+      "azure": "Standard_E48as_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r5d.16xlarge",
+      "azure": "Standard_E64as_v4",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r5d.24xlarge",
+      "azure": "Standard_E96ds_v6",
+      "gcp": "n2d-highmem-96"
+    },
+    {
+      "aws": "r5d.2xlarge",
+      "azure": "Standard_E8d_v4",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "r5d.4xlarge",
+      "azure": "Standard_E16s_v3",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "r5d.8xlarge",
+      "azure": "Standard_E32s_v3",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "r5d.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "n2-highmem-2"
+    },
+    {
+      "aws": "r5d.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "r5dn.12xlarge",
+      "azure": "Standard_E48as_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r5dn.16xlarge",
+      "azure": "Standard_E64as_v4",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r5dn.24xlarge",
+      "azure": "Standard_E96ds_v6",
+      "gcp": "n2d-highmem-96"
+    },
+    {
+      "aws": "r5dn.2xlarge",
+      "azure": "Standard_E8d_v4",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "r5dn.4xlarge",
+      "azure": "Standard_E16s_v3",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "r5dn.8xlarge",
+      "azure": "Standard_E32s_v3",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "r5dn.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "n2-highmem-2"
+    },
+    {
+      "aws": "r5dn.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "r5n.12xlarge",
+      "azure": "Standard_E48s_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r5n.16xlarge",
+      "azure": "Standard_E64s_v5",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r5n.24xlarge",
+      "azure": "Standard_E96ds_v6",
+      "gcp": "n2d-highmem-96"
+    },
+    {
+      "aws": "r5n.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r5n.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r5n.8xlarge",
+      "azure": "Standard_E32s_v4",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r5n.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "r5n.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r6g.12xlarge",
+      "azure": "Standard_E48s_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r6g.16xlarge",
+      "azure": "Standard_E64s_v5",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r6g.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r6g.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r6g.8xlarge",
+      "azure": "Standard_E32s_v4",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r6g.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "r6g.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r6gd.12xlarge",
+      "azure": "Standard_E48a_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r6gd.16xlarge",
+      "azure": "Standard_E64a_v4",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r6gd.2xlarge",
+      "azure": "Standard_E8d_v4",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "r6gd.4xlarge",
+      "azure": "Standard_E16d_v4",
+      "gcp": "c4a-highmem-16-lssd"
+    },
+    {
+      "aws": "r6gd.8xlarge",
+      "azure": "Standard_E32d_v4",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "r6gd.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "n2-highmem-2"
+    },
+    {
+      "aws": "r6gd.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "r6i.12xlarge",
+      "azure": "Standard_E48s_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r6i.16xlarge",
+      "azure": "Standard_E64s_v5",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r6i.24xlarge",
+      "azure": "Standard_E96ds_v6",
+      "gcp": "n2d-highmem-96"
+    },
+    {
+      "aws": "r6i.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r6i.32xlarge",
+      "azure": "Standard_E128ds_v6",
+      "gcp": "n2d-highcpu-128"
+    },
+    {
+      "aws": "r6i.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r6i.8xlarge",
+      "azure": "Standard_E32s_v4",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r6i.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "r6i.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r6id.12xlarge",
+      "azure": "Standard_E48a_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r6id.16xlarge",
+      "azure": "Standard_E64a_v4",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r6id.24xlarge",
+      "azure": "Standard_E96ds_v6",
+      "gcp": "n2d-highmem-96"
+    },
+    {
+      "aws": "r6id.2xlarge",
+      "azure": "Standard_E8d_v4",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "r6id.32xlarge",
+      "azure": "Standard_E128ds_v6",
+      "gcp": "n2d-standard-128"
+    },
+    {
+      "aws": "r6id.4xlarge",
+      "azure": "Standard_E16d_v4",
+      "gcp": "c4a-highmem-16-lssd"
+    },
+    {
+      "aws": "r6id.8xlarge",
+      "azure": "Standard_E32d_v4",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "r6id.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "n2-highmem-2"
+    },
+    {
+      "aws": "r6id.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "r6idn.12xlarge",
+      "azure": "Standard_E48a_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r6idn.16xlarge",
+      "azure": "Standard_E64a_v4",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r6idn.24xlarge",
+      "azure": "Standard_E96ds_v6",
+      "gcp": "n2d-highmem-96"
+    },
+    {
+      "aws": "r6idn.2xlarge",
+      "azure": "Standard_E8d_v4",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "r6idn.32xlarge",
+      "azure": "Standard_E128ds_v6",
+      "gcp": "n2d-standard-128"
+    },
+    {
+      "aws": "r6idn.4xlarge",
+      "azure": "Standard_E16d_v4",
+      "gcp": "c4a-highmem-16-lssd"
+    },
+    {
+      "aws": "r6idn.8xlarge",
+      "azure": "Standard_E32d_v4",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "r6idn.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "n2-highmem-2"
+    },
+    {
+      "aws": "r6idn.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "r6in.12xlarge",
+      "azure": "Standard_E48s_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r6in.16xlarge",
+      "azure": "Standard_E64s_v5",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r6in.24xlarge",
+      "azure": "Standard_E96ds_v6",
+      "gcp": "n2d-highmem-96"
+    },
+    {
+      "aws": "r6in.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r6in.32xlarge",
+      "azure": "Standard_E128ds_v6",
+      "gcp": "n2d-highcpu-128"
+    },
+    {
+      "aws": "r6in.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r6in.8xlarge",
+      "azure": "Standard_E32s_v4",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r6in.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "r6in.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r7a.12xlarge",
+      "azure": "Standard_E48s_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r7a.16xlarge",
+      "azure": "Standard_E64s_v5",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r7a.24xlarge",
+      "azure": "Standard_E96ds_v6",
+      "gcp": "n2d-highmem-96"
+    },
+    {
+      "aws": "r7a.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r7a.32xlarge",
+      "azure": "Standard_E128ds_v6",
+      "gcp": "n2d-highcpu-128"
+    },
+    {
+      "aws": "r7a.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r7a.8xlarge",
+      "azure": "Standard_E32s_v4",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r7a.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r7g.12xlarge",
+      "azure": "Standard_E48s_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r7g.16xlarge",
+      "azure": "Standard_E64s_v5",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r7g.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r7g.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r7g.8xlarge",
+      "azure": "Standard_E32s_v4",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r7g.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "r7g.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r7gd.12xlarge",
+      "azure": "Standard_E48a_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r7gd.16xlarge",
+      "azure": "Standard_E64a_v4",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r7gd.2xlarge",
+      "azure": "Standard_E8d_v4",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "r7gd.4xlarge",
+      "azure": "Standard_E16d_v4",
+      "gcp": "c4a-highmem-16-lssd"
+    },
+    {
+      "aws": "r7gd.8xlarge",
+      "azure": "Standard_E32d_v4",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "r7gd.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "n2-highmem-2"
+    },
+    {
+      "aws": "r7gd.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "r7i.12xlarge",
+      "azure": "Standard_E48s_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r7i.16xlarge",
+      "azure": "Standard_E64s_v5",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r7i.24xlarge",
+      "azure": "Standard_E96ds_v6",
+      "gcp": "n2d-highmem-96"
+    },
+    {
+      "aws": "r7i.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r7i.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r7i.8xlarge",
+      "azure": "Standard_E32s_v4",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r7i.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "r7i.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r7iz.12xlarge",
+      "azure": "Standard_E48s_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r7iz.16xlarge",
+      "azure": "Standard_E64s_v5",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r7iz.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r7iz.32xlarge",
+      "azure": "Standard_E128ds_v6",
+      "gcp": "n2d-highcpu-128"
+    },
+    {
+      "aws": "r7iz.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r7iz.8xlarge",
+      "azure": "Standard_E32s_v4",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r7iz.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "r7iz.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r8g.12xlarge",
+      "azure": "Standard_E48s_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r8g.16xlarge",
+      "azure": "Standard_E64s_v5",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r8g.24xlarge",
+      "azure": "Standard_E96ds_v6",
+      "gcp": "n2d-highmem-96"
+    },
+    {
+      "aws": "r8g.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r8g.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r8g.8xlarge",
+      "azure": "Standard_E32s_v4",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r8g.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "r8g.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r8gd.12xlarge",
+      "azure": "Standard_E48as_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r8gd.16xlarge",
+      "azure": "Standard_E64a_v4",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r8gd.24xlarge",
+      "azure": "Standard_E96ds_v6",
+      "gcp": "n2d-highmem-96"
+    },
+    {
+      "aws": "r8gd.2xlarge",
+      "azure": "Standard_E8d_v4",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "r8gd.4xlarge",
+      "azure": "Standard_E16d_v4",
+      "gcp": "c4a-highmem-16-lssd"
+    },
+    {
+      "aws": "r8gd.8xlarge",
+      "azure": "Standard_E32d_v4",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "r8gd.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "r8i.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r8i.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r8i.8xlarge",
+      "azure": "Standard_E32s_v4",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r8i.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "rd-fleet.12xlarge",
+      "azure": "Standard_E48as_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "rd-fleet.16xlarge",
+      "azure": "Standard_E64as_v4",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "rd-fleet.24xlarge",
+      "azure": "Standard_E96ds_v6",
+      "gcp": "n2d-highmem-96"
+    },
+    {
+      "aws": "rd-fleet.2xlarge",
+      "azure": "Standard_E8d_v4",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "rd-fleet.4xlarge",
+      "azure": "Standard_E16s_v3",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "rd-fleet.8xlarge",
+      "azure": "Standard_E32s_v3",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "rd-fleet.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "rg-fleet.12xlarge",
+      "azure": "Standard_E48s_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "rg-fleet.16xlarge",
+      "azure": "Standard_E64s_v5",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "rg-fleet.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "rg-fleet.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "rg-fleet.8xlarge",
+      "azure": "Standard_E32s_v4",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "rg-fleet.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "rgd-fleet.12xlarge",
+      "azure": "Standard_E48a_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "rgd-fleet.16xlarge",
+      "azure": "Standard_E64a_v4",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "rgd-fleet.2xlarge",
+      "azure": "Standard_E8d_v4",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "rgd-fleet.4xlarge",
+      "azure": "Standard_E16d_v4",
+      "gcp": "c4a-highmem-16-lssd"
+    },
+    {
+      "aws": "rgd-fleet.8xlarge",
+      "azure": "Standard_E32d_v4",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "rgd-fleet.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "z1d.12xlarge",
+      "azure": "Standard_E48as_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "z1d.2xlarge",
+      "azure": "Standard_E8d_v4",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "z1d.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "n2-highmem-2"
+    },
+    {
+      "aws": "z1d.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "r4.xlarge",
+      "azure": "Standard_D12_v2",
+      "gcp": "n1-highmem-4"
+    },
+    {
+      "aws": "r4.2xlarge",
+      "azure": "Standard_D13_v2",
+      "gcp": "n1-highmem-8"
+    },
+    {
+      "aws": "r4.4xlarge",
+      "azure": "Standard_D14_v2",
+      "gcp": "n1-highmem-16"
+    },
+    {
+      "aws": "m5d.4xlarge",
+      "azure": "Standard_D16_v3",
+      "gcp": "c3d-standard-16-lssd"
+    },
+    {
+      "aws": "m6gd.4xlarge",
+      "azure": "Standard_D16ads_v5",
+      "gcp": "c3d-standard-16-lssd"
+    },
+    {
+      "aws": "m4.4xlarge",
+      "azure": "Standard_D16ads_v6",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m5d.4xlarge",
+      "azure": "Standard_D16as_v4",
+      "gcp": "c3d-standard-16-lssd"
+    },
+    {
+      "aws": "m4.4xlarge",
+      "azure": "Standard_D16as_v5",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m6gd.4xlarge",
+      "azure": "Standard_D16d_v4",
+      "gcp": "c3d-standard-16-lssd"
+    },
+    {
+      "aws": "m6gd.4xlarge",
+      "azure": "Standard_D16ds_v4",
+      "gcp": "c3d-standard-16-lssd"
+    },
+    {
+      "aws": "m6gd.4xlarge",
+      "azure": "Standard_D16ds_v5",
+      "gcp": "c3d-standard-16-lssd"
+    },
+    {
+      "aws": "m4.4xlarge",
+      "azure": "Standard_D16ds_v6",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m4.4xlarge",
+      "azure": "Standard_D16pds_v6",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "c5.4xlarge",
+      "azure": "Standard_D16plds_v6",
+      "gcp": "n1-highcpu-16"
+    },
+    {
+      "aws": "c5.4xlarge",
+      "azure": "Standard_D16pls_v6",
+      "gcp": "n1-highcpu-16"
+    },
+    {
+      "aws": "m4.4xlarge",
+      "azure": "Standard_D16ps_v6",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m5d.4xlarge",
+      "azure": "Standard_D16s_v3",
+      "gcp": "c3d-standard-16-lssd"
+    },
+    {
+      "aws": "m4.4xlarge",
+      "azure": "Standard_D16s_v4",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m4.large",
+      "azure": "Standard_D2ds_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "m5d.8xlarge",
+      "azure": "Standard_D32_v3",
+      "gcp": "c4a-standard-32-lssd"
+    },
+    {
+      "aws": "m6gd.8xlarge",
+      "azure": "Standard_D32ads_v5",
+      "gcp": "c4a-standard-32-lssd"
+    },
+    {
+      "aws": "m5.8xlarge",
+      "azure": "Standard_D32ads_v6",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m5d.8xlarge",
+      "azure": "Standard_D32as_v4",
+      "gcp": "c4a-standard-32-lssd"
+    },
+    {
+      "aws": "m5.8xlarge",
+      "azure": "Standard_D32as_v5",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m6gd.8xlarge",
+      "azure": "Standard_D32d_v4",
+      "gcp": "c4a-standard-32-lssd"
+    },
+    {
+      "aws": "m6gd.8xlarge",
+      "azure": "Standard_D32ds_v5",
+      "gcp": "c4a-standard-32-lssd"
+    },
+    {
+      "aws": "m5.8xlarge",
+      "azure": "Standard_D32ds_v6",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m5.8xlarge",
+      "azure": "Standard_D32pds_v6",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "c6g.8xlarge",
+      "azure": "Standard_D32plds_v6",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "c6g.8xlarge",
+      "azure": "Standard_D32pls_v6",
+      "gcp": "n1-highcpu-32"
+    },
+    {
+      "aws": "m5.8xlarge",
+      "azure": "Standard_D32ps_v6",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m5d.8xlarge",
+      "azure": "Standard_D32s_v3",
+      "gcp": "c4a-standard-32-lssd"
+    },
+    {
+      "aws": "m5.8xlarge",
+      "azure": "Standard_D32s_v4",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "azure": "Standard_D3_v2",
+      "gcp": "n1-standard-4",
+      "aws": "m6gd.xlarge"
+    },
+    {
+      "aws": "m6gd.12xlarge",
+      "azure": "Standard_D48ads_v5",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m5.12xlarge",
+      "azure": "Standard_D48ads_v6",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m5d.12xlarge",
+      "azure": "Standard_D48as_v4",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m5.12xlarge",
+      "azure": "Standard_D48as_v5",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m6gd.12xlarge",
+      "azure": "Standard_D48d_v4",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m6gd.12xlarge",
+      "azure": "Standard_D48ds_v4",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m6gd.12xlarge",
+      "azure": "Standard_D48ds_v5",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m5.12xlarge",
+      "azure": "Standard_D48ds_v6",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m5.12xlarge",
+      "azure": "Standard_D48pds_v6",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "c5.12xlarge",
+      "azure": "Standard_D48pls_v6",
+      "gcp": "n2-highcpu-48"
+    },
+    {
+      "aws": "m5.12xlarge",
+      "azure": "Standard_D48ps_v6",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m5.12xlarge",
+      "azure": "Standard_D48s_v4",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "azure": "Standard_D4_v2",
+      "gcp": "n1-standard-8",
+      "aws": "m6gd.2xlarge"
+    },
+    {
+      "aws": "m5d.xlarge",
+      "azure": "Standard_D4a_v4",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "m5d.xlarge",
+      "azure": "Standard_D4ads_v5",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "m4.xlarge",
+      "azure": "Standard_D4ads_v6",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m4.xlarge",
+      "azure": "Standard_D4as_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m5d.xlarge",
+      "azure": "Standard_D4d_v4",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "m5d.xlarge",
+      "azure": "Standard_D4ds_v5",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "m4.xlarge",
+      "azure": "Standard_D4ds_v6",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m4.xlarge",
+      "azure": "Standard_D4pds_v6",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "c5.xlarge",
+      "azure": "Standard_D4plds_v6",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c5.xlarge",
+      "azure": "Standard_D4pls_v6",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "m4.xlarge",
+      "azure": "Standard_D4ps_v6",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m5d.xlarge",
+      "azure": "Standard_D4s_v3",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "m4.xlarge",
+      "azure": "Standard_D4s_v4",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "azure": "Standard_D5_v2",
+      "gcp": "n1-standard-16",
+      "aws": "m6gd.4xlarge"
+    },
+    {
+      "aws": "m6gd.16xlarge",
+      "azure": "Standard_D64_v3",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m6gd.16xlarge",
+      "azure": "Standard_D64ads_v5",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m4.16xlarge",
+      "azure": "Standard_D64ads_v6",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m5d.16xlarge",
+      "azure": "Standard_D64as_v4",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m4.16xlarge",
+      "azure": "Standard_D64as_v5",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m6gd.16xlarge",
+      "azure": "Standard_D64d_v4",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m6gd.16xlarge",
+      "azure": "Standard_D64ds_v4",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m6gd.16xlarge",
+      "azure": "Standard_D64ds_v5",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m4.16xlarge",
+      "azure": "Standard_D64ds_v6",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m4.16xlarge",
+      "azure": "Standard_D64pds_v6",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "c6g.16xlarge",
+      "azure": "Standard_D64plds_v6",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "c6g.16xlarge",
+      "azure": "Standard_D64pls_v6",
+      "gcp": "n1-highcpu-64"
+    },
+    {
+      "aws": "m4.16xlarge",
+      "azure": "Standard_D64ps_v6",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m4.16xlarge",
+      "azure": "Standard_D64s_v4",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m5d.2xlarge",
+      "azure": "Standard_D8_v3",
+      "gcp": "c3d-standard-8-lssd"
+    },
+    {
+      "aws": "m5d.2xlarge",
+      "azure": "Standard_D8a_v4",
+      "gcp": "c3d-standard-8-lssd"
+    },
+    {
+      "aws": "m5d.2xlarge",
+      "azure": "Standard_D8ads_v5",
+      "gcp": "c3d-standard-8-lssd"
+    },
+    {
+      "aws": "m4.2xlarge",
+      "azure": "Standard_D8ads_v6",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m5d.2xlarge",
+      "azure": "Standard_D8as_v4",
+      "gcp": "c3-standard-8-lssd"
+    },
+    {
+      "aws": "m4.2xlarge",
+      "azure": "Standard_D8as_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m5d.2xlarge",
+      "azure": "Standard_D8d_v4",
+      "gcp": "c3d-standard-8-lssd"
+    },
+    {
+      "aws": "m5d.2xlarge",
+      "azure": "Standard_D8ds_v5",
+      "gcp": "c3d-standard-8-lssd"
+    },
+    {
+      "aws": "m4.2xlarge",
+      "azure": "Standard_D8ds_v6",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m4.2xlarge",
+      "azure": "Standard_D8pds_v6",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "c5.2xlarge",
+      "azure": "Standard_D8plds_v6",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c5.2xlarge",
+      "azure": "Standard_D8pls_v6",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "m4.2xlarge",
+      "azure": "Standard_D8ps_v6",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m5d.2xlarge",
+      "azure": "Standard_D8s_v3",
+      "gcp": "c3-standard-8-lssd"
+    },
+    {
+      "aws": "m4.2xlarge",
+      "azure": "Standard_D8s_v4",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m8gd.24xlarge",
+      "azure": "Standard_D96ads_v5",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m5.24xlarge",
+      "azure": "Standard_D96ads_v6",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m5.24xlarge",
+      "azure": "Standard_D96as_v5",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m8gd.24xlarge",
+      "azure": "Standard_D96ds_v5",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m5.24xlarge",
+      "azure": "Standard_D96ds_v6",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m5.24xlarge",
+      "azure": "Standard_D96pds_v6",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "c5.24xlarge",
+      "azure": "Standard_D96pls_v6",
+      "gcp": "n1-highcpu-96"
+    },
+    {
+      "aws": "m5.24xlarge",
+      "azure": "Standard_D96ps_v6",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m6gd.4xlarge",
+      "azure": "Standard_DC16ads_v6",
+      "gcp": "c3d-standard-16-lssd"
+    },
+    {
+      "aws": "m4.4xlarge",
+      "azure": "Standard_DC16as_v5",
+      "gcp": "c3d-standard-16"
+    },
+    {
+      "aws": "m6gd.8xlarge",
+      "azure": "Standard_DC32ads_v6",
+      "gcp": "c4a-standard-32-lssd"
+    },
+    {
+      "aws": "m5.8xlarge",
+      "azure": "Standard_DC32as_v5",
+      "gcp": "c4a-standard-32"
+    },
+    {
+      "aws": "m6gd.12xlarge",
+      "azure": "Standard_DC48ads_v6",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m5d.xlarge",
+      "azure": "Standard_DC4ads_v6",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "m4.xlarge",
+      "azure": "Standard_DC4as_v5",
+      "gcp": "c3-standard-4"
+    },
+    {
+      "aws": "m6gd.16xlarge",
+      "azure": "Standard_DC64ads_v6",
+      "gcp": "n2-standard-64"
+    },
+    {
+      "aws": "m5d.2xlarge",
+      "azure": "Standard_DC8ads_v6",
+      "gcp": "c3d-standard-8-lssd"
+    },
+    {
+      "aws": "m4.2xlarge",
+      "azure": "Standard_DC8as_v5",
+      "gcp": "c3-standard-8"
+    },
+    {
+      "aws": "m8gd.24xlarge",
+      "azure": "Standard_DC96ads_v6",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "r4.xlarge",
+      "azure": "Standard_DS12_v2",
+      "gcp": "n1-highmem-4"
+    },
+    {
+      "aws": "r4.2xlarge",
+      "azure": "Standard_DS13_v2",
+      "gcp": "n1-highmem-8"
+    },
+    {
+      "aws": "r4.4xlarge",
+      "azure": "Standard_DS14_v2",
+      "gcp": "n1-highmem-16"
+    },
+    {
+      "azure": "Standard_DS3_v2",
+      "gcp": "n1-standard-4",
+      "aws": "m5d.xlarge"
+    },
+    {
+      "azure": "Standard_DS4_v2",
+      "gcp": "n1-standard-8",
+      "aws": "m5d.2xlarge"
+    },
+    {
+      "azure": "Standard_DS5_v2",
+      "gcp": "n1-standard-16",
+      "aws": "m5d.4xlarge"
+    },
+    {
+      "aws": "r5d.4xlarge",
+      "azure": "Standard_E16_v3",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "r5d.4xlarge",
+      "azure": "Standard_E16a_v4",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "r6gd.4xlarge",
+      "azure": "Standard_E16ads_v5",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "r5.4xlarge",
+      "azure": "Standard_E16ads_v6",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r5d.4xlarge",
+      "azure": "Standard_E16as_v4",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "r5.4xlarge",
+      "azure": "Standard_E16as_v5",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r6gd.4xlarge",
+      "azure": "Standard_E16d_v4",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "r6gd.4xlarge",
+      "azure": "Standard_E16ds_v4",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "r6gd.4xlarge",
+      "azure": "Standard_E16ds_v5",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "r5.4xlarge",
+      "azure": "Standard_E16ds_v6",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r5.4xlarge",
+      "azure": "Standard_E16pds_v6",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r5.4xlarge",
+      "azure": "Standard_E16ps_v6",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r5.4xlarge",
+      "azure": "Standard_E16s_v5",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "aws": "r5.large",
+      "azure": "Standard_E2ds_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "r5.large",
+      "azure": "Standard_E2pds_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "r5.large",
+      "azure": "Standard_E2ps_v6",
+      "gcp": "e2-highmem-2"
+    },
+    {
+      "aws": "r5d.8xlarge",
+      "azure": "Standard_E32_v3",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "r5d.8xlarge",
+      "azure": "Standard_E32a_v4",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "r6gd.8xlarge",
+      "azure": "Standard_E32ads_v5",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "r5.8xlarge",
+      "azure": "Standard_E32ads_v6",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r5d.8xlarge",
+      "azure": "Standard_E32as_v4",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "r5.8xlarge",
+      "azure": "Standard_E32as_v5",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r6gd.8xlarge",
+      "azure": "Standard_E32ds_v4",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "r6gd.8xlarge",
+      "azure": "Standard_E32ds_v5",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "r5.8xlarge",
+      "azure": "Standard_E32ds_v6",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r5.8xlarge",
+      "azure": "Standard_E32pds_v6",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r5.8xlarge",
+      "azure": "Standard_E32ps_v6",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r5.8xlarge",
+      "azure": "Standard_E32s_v5",
+      "gcp": "c4a-highmem-32"
+    },
+    {
+      "aws": "r6gd.12xlarge",
+      "azure": "Standard_E48ads_v5",
+      "gcp": "n2-highmem-48"
+    },
+    {
+      "aws": "r5.12xlarge",
+      "azure": "Standard_E48ads_v6",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r5.12xlarge",
+      "azure": "Standard_E48as_v5",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r6gd.12xlarge",
+      "azure": "Standard_E48d_v4",
+      "gcp": "n2-highmem-48"
+    },
+    {
+      "aws": "r6gd.12xlarge",
+      "azure": "Standard_E48ds_v4",
+      "gcp": "n2-highmem-48"
+    },
+    {
+      "aws": "r6gd.12xlarge",
+      "azure": "Standard_E48ds_v5",
+      "gcp": "n2-highmem-48"
+    },
+    {
+      "aws": "r5.12xlarge",
+      "azure": "Standard_E48ds_v6",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r5.12xlarge",
+      "azure": "Standard_E48pds_v6",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r5.12xlarge",
+      "azure": "Standard_E48ps_v6",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r5.12xlarge",
+      "azure": "Standard_E48s_v5",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r5d.xlarge",
+      "azure": "Standard_E4a_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "r5d.xlarge",
+      "azure": "Standard_E4ads_v5",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "r5.xlarge",
+      "azure": "Standard_E4ads_v6",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r5d.xlarge",
+      "azure": "Standard_E4as_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "r5.xlarge",
+      "azure": "Standard_E4as_v5",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r5d.xlarge",
+      "azure": "Standard_E4ds_v4",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "r5d.xlarge",
+      "azure": "Standard_E4ds_v5",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "r5.xlarge",
+      "azure": "Standard_E4ds_v6",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r5.xlarge",
+      "azure": "Standard_E4pds_v6",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r5.xlarge",
+      "azure": "Standard_E4ps_v6",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "aws": "r5.xlarge",
+      "azure": "Standard_E4s_v5",
+      "gcp": "c3-highmem-4"
+    },
+    {
+      "azure": "Standard_E64_v3",
+      "gcp": "n1-highmem-64",
+      "aws": "r6gd.16xlarge"
+    },
+    {
+      "aws": "r6gd.16xlarge",
+      "azure": "Standard_E64ads_v5",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r5.16xlarge",
+      "azure": "Standard_E64ads_v6",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r5.16xlarge",
+      "azure": "Standard_E64as_v5",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r6gd.16xlarge",
+      "azure": "Standard_E64d_v4",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r6gd.16xlarge",
+      "azure": "Standard_E64ds_v4",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r6gd.16xlarge",
+      "azure": "Standard_E64ds_v5",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r5.16xlarge",
+      "azure": "Standard_E64ds_v6",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r5.16xlarge",
+      "azure": "Standard_E64pds_v6",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r5.16xlarge",
+      "azure": "Standard_E64ps_v6",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "azure": "Standard_E64s_v3",
+      "gcp": "n1-highmem-64",
+      "aws": "r5d.16xlarge"
+    },
+    {
+      "aws": "r5.16xlarge",
+      "azure": "Standard_E64s_v4",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r5d.2xlarge",
+      "azure": "Standard_E8_v3",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "r5d.2xlarge",
+      "azure": "Standard_E8a_v4",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "r5d.2xlarge",
+      "azure": "Standard_E8ads_v5",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "r5.2xlarge",
+      "azure": "Standard_E8ads_v6",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r5d.2xlarge",
+      "azure": "Standard_E8as_v4",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "r5.2xlarge",
+      "azure": "Standard_E8as_v5",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r5d.2xlarge",
+      "azure": "Standard_E8ds_v4",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "r5d.2xlarge",
+      "azure": "Standard_E8ds_v5",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "r5.2xlarge",
+      "azure": "Standard_E8ds_v6",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r5.2xlarge",
+      "azure": "Standard_E8pds_v6",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r5.2xlarge",
+      "azure": "Standard_E8ps_v6",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "aws": "r5d.2xlarge",
+      "azure": "Standard_E8s_v3",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "r5.2xlarge",
+      "azure": "Standard_E8s_v5",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "azure": "Standard_E96a_v4",
+      "gcp": "n1-highmem-96",
+      "aws": "r8gd.24xlarge"
+    },
+    {
+      "azure": "Standard_E96ads_v5",
+      "gcp": "n1-highmem-96",
+      "aws": "r8gd.24xlarge"
+    },
+    {
+      "azure": "Standard_E96ads_v6",
+      "gcp": "n1-highmem-96",
+      "aws": "r5.24xlarge"
+    },
+    {
+      "azure": "Standard_E96as_v4",
+      "gcp": "n1-highmem-96",
+      "aws": "r6id.24xlarge"
+    },
+    {
+      "azure": "Standard_E96as_v5",
+      "gcp": "n1-highmem-96",
+      "aws": "r5.24xlarge"
+    },
+    {
+      "azure": "Standard_E96ds_v5",
+      "gcp": "n1-highmem-96",
+      "aws": "r8gd.24xlarge"
+    },
+    {
+      "azure": "Standard_E96pds_v6",
+      "gcp": "n1-highmem-96",
+      "aws": "r5.24xlarge"
+    },
+    {
+      "azure": "Standard_E96ps_v6",
+      "gcp": "n1-highmem-96",
+      "aws": "r5.24xlarge"
+    },
+    {
+      "azure": "Standard_E96s_v5",
+      "gcp": "n1-highmem-96",
+      "aws": "r5.24xlarge"
+    },
+    {
+      "aws": "r6gd.4xlarge",
+      "azure": "Standard_EC16ads_v5",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "r6gd.4xlarge",
+      "azure": "Standard_EC16ads_v6",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "r5.4xlarge",
+      "azure": "Standard_EC16as_v5",
+      "gcp": "c3d-highmem-16"
+    },
+    {
+      "azure": "Standard_EC32ads_v5",
+      "gcp": "n1-highmem-32",
+      "aws": "r6gd.8xlarge"
+    },
+    {
+      "aws": "r6gd.8xlarge",
+      "azure": "Standard_EC32ads_v6",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "azure": "Standard_EC32as_v5",
+      "gcp": "n1-highmem-32",
+      "aws": "r4.8xlarge"
+    },
+    {
+      "aws": "r6gd.12xlarge",
+      "azure": "Standard_EC48ads_v6",
+      "gcp": "n2-highmem-48"
+    },
+    {
+      "aws": "r5d.xlarge",
+      "azure": "Standard_EC4ads_v6",
+      "gcp": "c4a-highmem-4-lssd"
+    },
+    {
+      "aws": "r6gd.16xlarge",
+      "azure": "Standard_EC64ads_v6",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r5d.2xlarge",
+      "azure": "Standard_EC8ads_v5",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "r5d.2xlarge",
+      "azure": "Standard_EC8ads_v6",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "r5.2xlarge",
+      "azure": "Standard_EC8as_v5",
+      "gcp": "c3-highmem-8"
+    },
+    {
+      "azure": "Standard_EC96ads_v6",
+      "gcp": "n1-highmem-96",
+      "aws": "r8gd.24xlarge"
+    },
+    {
+      "aws": "c5d.4xlarge",
+      "azure": "Standard_F16s",
+      "gcp": "c2-standard-16"
+    },
+    {
+      "aws": "c5d.4xlarge",
+      "azure": "Standard_F16s_v2",
+      "gcp": "c2-standard-16"
+    },
+    {
+      "aws": "c5d.xlarge",
+      "azure": "Standard_F4s",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c5d.xlarge",
+      "azure": "Standard_F4s_v2",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "c5d.2xlarge",
+      "azure": "Standard_F8s",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "c5d.2xlarge",
+      "azure": "Standard_F8s_v2",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "i3.4xlarge",
+      "azure": "Standard_H16",
+      "gcp": "n1-highmem-16"
+    },
+    {
+      "aws": "i2.2xlarge",
+      "azure": "Standard_H8",
+      "gcp": "n1-highmem-8"
+    },
+    {
+      "aws": "i4i.4xlarge",
+      "azure": "Standard_L16as_v3",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "i4i.4xlarge",
+      "azure": "Standard_L16s_v3",
+      "gcp": "c3d-highmem-16-lssd"
+    },
+    {
+      "aws": "i4i.8xlarge",
+      "azure": "Standard_L32as_v3",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "i4i.8xlarge",
+      "azure": "Standard_L32s_v2",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "i4i.8xlarge",
+      "azure": "Standard_L32s_v3",
+      "gcp": "c4a-highmem-32-lssd"
+    },
+    {
+      "aws": "i3en.12xlarge",
+      "azure": "Standard_L48as_v3",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "i4i.16xlarge",
+      "azure": "Standard_L64as_v3",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "i4i.16xlarge",
+      "azure": "Standard_L64s_v3",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "azure": "Standard_L80as_v3",
+      "gcp": "n2-highmem-80"
+    },
+    {
+      "azure": "Standard_L80s_v2",
+      "gcp": "n2-highmem-80"
+    },
+    {
+      "azure": "Standard_L80s_v3",
+      "gcp": "n2-highmem-80"
+    },
+    {
+      "aws": "i4i.2xlarge",
+      "azure": "Standard_L8as_v3",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "i4i.2xlarge",
+      "azure": "Standard_L8s_v3",
+      "gcp": "c3d-highmem-8-lssd"
+    },
+    {
+      "aws": "m6gd.4xlarge",
+      "azure": "Standard_D16s_v3",
+      "gcp": "c2-standard-16"
+    },
+    {
+      "aws": "m5d.xlarge",
+      "azure": "Standard_D4s_v3",
+      "gcp": "c2-standard-4"
+    },
+    {
+      "aws": "m6gd.2xlarge",
+      "azure": "Standard_D8s_v3",
+      "gcp": "c2-standard-8"
+    },
+    {
+      "aws": "m6gd.xlarge",
+      "azure": "Standard_D4s_v3",
+      "gcp": "c3-standard-4-lssd"
+    },
+    {
+      "aws": "m6gd.2xlarge",
+      "azure": "Standard_D8s_v3",
+      "gcp": "c3-standard-8-lssd"
+    },
+    {
+      "aws": "r5.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c3d-highmem-4"
+    },
+    {
+      "aws": "r5.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c3d-highmem-8"
+    },
+    {
+      "aws": "m4.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c3d-standard-4"
+    },
+    {
+      "aws": "m4.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c3d-standard-8"
+    },
+    {
+      "aws": "m4.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c4-standard-16"
+    },
+    {
+      "aws": "m5.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "c4-standard-32"
+    },
+    {
+      "aws": "m4.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c4-standard-4"
+    },
+    {
+      "aws": "m4.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c4-standard-8"
+    },
+    {
+      "aws": "r5.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "c4a-highmem-16"
+    },
+    {
+      "aws": "r6gd.4xlarge",
+      "azure": "Standard_E16_v3",
+      "gcp": "c4a-highmem-16-lssd"
+    },
+    {
+      "aws": "r5.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "c4a-highmem-4"
+    },
+    {
+      "aws": "r5d.12xlarge",
+      "azure": "Standard_E48d_v4",
+      "gcp": "c4a-highmem-48-lssd"
+    },
+    {
+      "aws": "r5d.16xlarge",
+      "azure": "Standard_E64a_v4",
+      "gcp": "c4a-highmem-64-lssd"
+    },
+    {
+      "aws": "r5.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "c4a-highmem-8"
+    },
+    {
+      "aws": "r6gd.2xlarge",
+      "azure": "Standard_E8_v3",
+      "gcp": "c4a-highmem-8-lssd"
+    },
+    {
+      "aws": "m4.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c4a-standard-16"
+    },
+    {
+      "aws": "m6gd.4xlarge",
+      "azure": "Standard_D16s_v3",
+      "gcp": "c4a-standard-16-lssd"
+    },
+    {
+      "aws": "m4.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c4a-standard-4"
+    },
+    {
+      "aws": "m6gd.xlarge",
+      "azure": "Standard_D4s_v3",
+      "gcp": "c4a-standard-4-lssd"
+    },
+    {
+      "aws": "m4.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c4a-standard-8"
+    },
+    {
+      "aws": "m6gd.2xlarge",
+      "azure": "Standard_D8s_v3",
+      "gcp": "c4a-standard-8-lssd"
+    },
+    {
+      "aws": "m4.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "c4d-standard-16"
+    },
+    {
+      "aws": "m5.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "c4d-standard-32"
+    },
+    {
+      "aws": "m4.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "c4d-standard-4"
+    },
+    {
+      "aws": "m4.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "c4d-standard-8"
+    },
+    {
+      "aws": "r5.4xlarge",
+      "azure": "Standard_E16s_v4",
+      "gcp": "e2-highmem-16"
+    },
+    {
+      "aws": "r5.xlarge",
+      "azure": "Standard_E4s_v4",
+      "gcp": "e2-highmem-4"
+    },
+    {
+      "aws": "r5.2xlarge",
+      "azure": "Standard_E8s_v4",
+      "gcp": "e2-highmem-8"
+    },
+    {
+      "aws": "m4.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "e2-standard-16"
+    },
+    {
+      "aws": "m5.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "e2-standard-32"
+    },
+    {
+      "aws": "m4.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "e2-standard-4"
+    },
+    {
+      "aws": "m4.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "e2-standard-8"
+    },
+    {
+      "azure": "Standard_D14_v2",
+      "gcp": "n1-highmem-16",
+      "aws": "r4.4xlarge"
+    },
+    {
+      "azure": "Standard_D12_v2",
+      "gcp": "n1-highmem-4",
+      "aws": "r4.xlarge"
+    },
+    {
+      "azure": "Standard_D13_v2",
+      "gcp": "n1-highmem-8",
+      "aws": "r4.2xlarge"
+    },
+    {
+      "aws": "m6gd.4xlarge",
+      "azure": "Standard_D5_v2",
+      "gcp": "n1-standard-16"
+    },
+    {
+      "aws": "m6gd.8xlarge",
+      "azure": "Standard_D32ds_v4",
+      "gcp": "n1-standard-32"
+    },
+    {
+      "aws": "m6gd.xlarge",
+      "azure": "Standard_D3_v2",
+      "gcp": "n1-standard-4"
+    },
+    {
+      "aws": "m5d.16xlarge",
+      "azure": "Standard_D64s_v3",
+      "gcp": "n1-standard-64"
+    },
+    {
+      "aws": "m6gd.2xlarge",
+      "azure": "Standard_D4_v2",
+      "gcp": "n1-standard-8"
+    },
+    {
+      "aws": "m5d.24xlarge",
+      "azure": "Standard_D96ds_v5",
+      "gcp": "n1-standard-96"
+    },
+    {
+      "aws": "r6gd.4xlarge",
+      "azure": "Standard_E16_v3",
+      "gcp": "n2-highmem-16"
+    },
+    {
+      "aws": "r6gd.8xlarge",
+      "azure": "Standard_E32_v3",
+      "gcp": "n2-highmem-32"
+    },
+    {
+      "aws": "r6gd.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "n2-highmem-4"
+    },
+    {
+      "aws": "r5d.12xlarge",
+      "azure": "Standard_E48d_v4",
+      "gcp": "n2-highmem-48"
+    },
+    {
+      "aws": "r5d.16xlarge",
+      "azure": "Standard_E64a_v4",
+      "gcp": "n2-highmem-64"
+    },
+    {
+      "aws": "r6gd.2xlarge",
+      "azure": "Standard_E8_v3",
+      "gcp": "n2-highmem-8"
+    },
+    {
+      "aws": "m6gd.4xlarge",
+      "azure": "Standard_D16s_v3",
+      "gcp": "n2-standard-16"
+    },
+    {
+      "aws": "m6gd.8xlarge",
+      "azure": "Standard_D32s_v3",
+      "gcp": "n2-standard-32"
+    },
+    {
+      "aws": "m6gd.xlarge",
+      "azure": "Standard_D4s_v3",
+      "gcp": "n2-standard-4"
+    },
+    {
+      "aws": "m5d.12xlarge",
+      "azure": "Standard_D48ds_v4",
+      "gcp": "n2-standard-48"
+    },
+    {
+      "aws": "m6gd.2xlarge",
+      "azure": "Standard_D8s_v3",
+      "gcp": "n2-standard-8"
+    },
+    {
+      "aws": "r6gd.4xlarge",
+      "azure": "Standard_E16_v3",
+      "gcp": "n2d-highmem-16"
+    },
+    {
+      "aws": "r5d.large",
+      "azure": "Standard_E2ads_v6",
+      "gcp": "n2d-highmem-2"
+    },
+    {
+      "aws": "r6gd.8xlarge",
+      "azure": "Standard_E32_v3",
+      "gcp": "n2d-highmem-32"
+    },
+    {
+      "aws": "r6gd.xlarge",
+      "azure": "Standard_E4d_v4",
+      "gcp": "n2d-highmem-4"
+    },
+    {
+      "aws": "r5d.12xlarge",
+      "azure": "Standard_E48d_v4",
+      "gcp": "n2d-highmem-48"
+    },
+    {
+      "aws": "r5d.16xlarge",
+      "azure": "Standard_E64a_v4",
+      "gcp": "n2d-highmem-64"
+    },
+    {
+      "aws": "r6gd.2xlarge",
+      "azure": "Standard_E8_v3",
+      "gcp": "n2d-highmem-8"
+    },
+    {
+      "azure": "Standard_L80s_v2",
+      "gcp": "n2d-highmem-80"
+    },
+    {
+      "aws": "m6gd.4xlarge",
+      "azure": "Standard_D16s_v3",
+      "gcp": "n2d-standard-16"
+    },
+    {
+      "aws": "m6gd.8xlarge",
+      "azure": "Standard_D32s_v3",
+      "gcp": "n2d-standard-32"
+    },
+    {
+      "aws": "m6gd.xlarge",
+      "azure": "Standard_D4s_v3",
+      "gcp": "n2d-standard-4"
+    },
+    {
+      "aws": "m5d.12xlarge",
+      "azure": "Standard_D48ds_v4",
+      "gcp": "n2d-standard-48"
+    },
+    {
+      "aws": "m5d.16xlarge",
+      "azure": "Standard_D64s_v3",
+      "gcp": "n2d-standard-64"
+    },
+    {
+      "aws": "m6gd.2xlarge",
+      "azure": "Standard_D8s_v3",
+      "gcp": "n2d-standard-8"
+    },
+    {
+      "aws": "m5d.24xlarge",
+      "azure": "Standard_D96ds_v5",
+      "gcp": "n2d-standard-96"
+    },
+    {
+      "aws": "m4.4xlarge",
+      "azure": "Standard_D16s_v5",
+      "gcp": "n4-standard-16"
+    },
+    {
+      "aws": "m5.8xlarge",
+      "azure": "Standard_D32s_v5",
+      "gcp": "n4-standard-32"
+    },
+    {
+      "aws": "m4.xlarge",
+      "azure": "Standard_D4s_v5",
+      "gcp": "n4-standard-4"
+    },
+    {
+      "aws": "m4.2xlarge",
+      "azure": "Standard_D8s_v5",
+      "gcp": "n4-standard-8"
+    }
+  ]
+}

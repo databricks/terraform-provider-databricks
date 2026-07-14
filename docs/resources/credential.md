@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_credential Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/credentials)
+
 A credential represents an authentication and authorization mechanism for accessing services on your cloud tenant. Each credential is subject to Unity Catalog access-control policies that control which users and groups can access the credential.
 
 -> This resource can only be used with a workspace-level provider!
@@ -79,7 +81,7 @@ resource "databricks_grants" "external_creds" {
 
 The following arguments are required:
 
-- `name` - Name of Credentials, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
+- `name` - Name of Credentials, which must be unique within the [databricks_metastore](metastore.md). Change of the `name` forces creation of a new resource.
 - `purpose` - Indicates the purpose of the credential. Can be `SERVICE` or `STORAGE`.
 - `owner` - (Optional) Username/groupname/sp application_id of the credential owner.
 - `read_only` - (Optional) Indicates whether the credential is only usable for read operations. Only applicable when purpose is `STORAGE`.
@@ -108,6 +110,8 @@ The following arguments are required:
 
 - `email` (output only) - The email of the GCP service account created, to be granted access to relevant buckets.
 
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

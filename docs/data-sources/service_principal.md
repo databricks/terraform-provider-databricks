@@ -34,6 +34,8 @@ Data source allows you to pick service principals by one of the following attrib
 - `application_id` - (Required if neither `display_name` nor `scim_id` is used) Application ID of the service principal. The service principal must exist before this resource can be retrieved.
 - `display_name` - (Required if neither `application_id` nor `scim_id` is  used) Exact display name of the service principal. The service principal must exist before this resource can be retrieved.  In case if there are several service principals with the same name, an error is thrown.
 - `scim_id` - (Required if neither `application_id` nor `display_name` is used) Unique SCIM ID for a service principal in the Databricks workspace. The service principal must exist before this resource can be retrieved.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 
@@ -47,8 +49,7 @@ Data source exposes the following attributes:
 - `home` - Home folder of the [service principal](../resources/service_principal.md), e.g. `/Users/11111111-2222-3333-4444-555666777888`.
 - `repos` - Repos location of the [service principal](../resources/service_principal.md), e.g. `/Repos/11111111-2222-3333-4444-555666777888`.
 - `active` - Whether service principal is active or not.
-
-* `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](../resources/access_control_rule_set.md), e.g. `servicePrincipals/00000000-0000-0000-0000-000000000000`.
+- `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](../resources/access_control_rule_set.md), e.g. `servicePrincipals/00000000-0000-0000-0000-000000000000`.
 
 ## Related Resources
 

@@ -3,6 +3,8 @@ subcategory: "Serving"
 ---
 # databricks_model_serving Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/servingendpoints)
+
 This resource allows you to manage [Model Serving](https://docs.databricks.com/machine-learning/model-serving/index.html) endpoints in Databricks, including custom models, external models, and foundation models. For newer foundation models, including Llama 4, please use the [databricks_model_serving_provisioned_throughput](model_serving_provisioned_throughput.md) resource.
 
 -> This resource can only be used with a workspace-level provider!
@@ -134,6 +136,8 @@ The following arguments are supported:
 * `budget_policy_id` - (Optiona) The Budget Policy ID set for this serving endpoint.
 * `description` - (Optional) The description of the model serving endpoint.
 * `email_notifications` - (Optional) A block with Email notification setting.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### served_entities Configuration Block
 

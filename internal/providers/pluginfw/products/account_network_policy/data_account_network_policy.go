@@ -6,7 +6,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
@@ -34,7 +33,18 @@ type AccountNetworkPolicyDataSource struct {
 
 // AccountNetworkPolicyData extends the main model with additional fields.
 type AccountNetworkPolicyData struct {
-	settings_tf.AccountNetworkPolicy
+	// The associated account ID for this Network Policy object.
+	AccountId types.String `tfsdk:"account_id"`
+	// The network policies applying for egress traffic.
+	Egress types.Object `tfsdk:"egress"`
+	// The network policies applying for ingress traffic.
+	Ingress types.Object `tfsdk:"ingress"`
+	// The ingress policy for dry run mode. Dry run will always run even if the
+	// request is allowed by the ingress policy. When this field is set, the
+	// policy will be evaluated and emit logs only without blocking requests.
+	IngressDryRun types.Object `tfsdk:"ingress_dry_run"`
+	// The unique identifier for the network policy.
+	NetworkPolicyId types.String `tfsdk:"network_policy_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -45,7 +55,11 @@ type AccountNetworkPolicyData struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m AccountNetworkPolicyData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.AccountNetworkPolicy.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"egress":          reflect.TypeOf(settings_tf.NetworkPolicyEgress{}),
+		"ingress":         reflect.TypeOf(settings_tf.CustomerFacingIngressNetworkPolicy{}),
+		"ingress_dry_run": reflect.TypeOf(settings_tf.CustomerFacingIngressNetworkPolicy{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -55,29 +69,40 @@ func (m AccountNetworkPolicyData) GetComplexFieldTypes(ctx context.Context) map[
 // interfere with how the plugin framework retrieves and sets values in state. Thus, AccountNetworkPolicyData
 // only implements ToObjectValue() and Type().
 func (m AccountNetworkPolicyData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.AccountNetworkPolicy.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{
+			"account_id":        m.AccountId,
+			"egress":            m.Egress,
+			"ingress":           m.Ingress,
+			"ingress_dry_run":   m.IngressDryRun,
+			"network_policy_id": m.NetworkPolicyId,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m AccountNetworkPolicyData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.AccountNetworkPolicy.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-
-	return types.ObjectType{AttrTypes: attrTypes}
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"account_id":        types.StringType,
+			"egress":            settings_tf.NetworkPolicyEgress{}.Type(ctx),
+			"ingress":           settings_tf.CustomerFacingIngressNetworkPolicy{}.Type(ctx),
+			"ingress_dry_run":   settings_tf.CustomerFacingIngressNetworkPolicy{}.Type(ctx),
+			"network_policy_id": types.StringType,
+		},
+	}
 }
 
-// SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and additional fields. This method is called
-// during read.
-func (m *AccountNetworkPolicyData) SyncFieldsDuringRead(ctx context.Context, existingState AccountNetworkPolicyData) {
-	m.AccountNetworkPolicy.SyncFieldsDuringRead(ctx, existingState.AccountNetworkPolicy)
+func (m AccountNetworkPolicyData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["egress"] = attrs["egress"].SetComputed()
+	attrs["ingress"] = attrs["ingress"].SetComputed()
+	attrs["ingress_dry_run"] = attrs["ingress_dry_run"].SetComputed()
+	attrs["network_policy_id"] = attrs["network_policy_id"].SetRequired()
+
+	return attrs
 }
 
 func (r *AccountNetworkPolicyDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -85,9 +110,7 @@ func (r *AccountNetworkPolicyDataSource) Metadata(ctx context.Context, req datas
 }
 
 func (r *AccountNetworkPolicyDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AccountNetworkPolicyData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AccountNetworkPolicyData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks AccountNetworkPolicy",
 		Attributes:  attrs,
@@ -102,12 +125,6 @@ func (r *AccountNetworkPolicyDataSource) Configure(ctx context.Context, req data
 func (r *AccountNetworkPolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
-	client, diags := r.Client.GetAccountClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config AccountNetworkPolicyData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -120,13 +137,15 @@ func (r *AccountNetworkPolicyDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
+	client, clientDiags := r.Client.GetAccountClient()
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	response, err := client.NetworkPolicies.GetNetworkPolicyRpc(ctx, readRequest)
 	if err != nil {
-		if apierr.IsMissing(err) {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-
 		resp.Diagnostics.AddError("failed to get account_network_policy", err.Error())
 		return
 	}
@@ -136,8 +155,6 @@ func (r *AccountNetworkPolicyDataSource) Read(ctx context.Context, req datasourc
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	newState.SyncFieldsDuringRead(ctx, config)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

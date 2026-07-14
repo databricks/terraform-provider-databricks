@@ -28,8 +28,13 @@ func ucDirectoryPathSlashAndEmptySuppressDiff(k, old, new string, d *schema.Reso
 	return false
 }
 
+type CatalogSchemaStruct struct {
+	catalog.CatalogInfo
+	common.Namespace
+}
+
 func ResourceCatalog() common.Resource {
-	catalogSchema := common.StructToSchema(catalog.CatalogInfo{},
+	catalogSchema := common.StructToSchema(CatalogSchemaStruct{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			s["force_destroy"] = &schema.Schema{
 				Type:     schema.TypeBool,
@@ -53,17 +58,21 @@ func ResourceCatalog() common.Resource {
 			common.CustomizeSchemaPath(s, "enable_predictive_optimization").SetValidateFunc(
 				validation.StringInSlice([]string{"DISABLE", "ENABLE", "INHERIT"}, false),
 			)
-			for _, v := range []string{"catalog_type", "created_at", "created_by",
-				"updated_at", "updated_by", "securable_type", "full_name"} {
+			for _, v := range []string{
+				"catalog_type", "created_at", "created_by",
+				"updated_at", "updated_by", "securable_type", "full_name", "storage_location",
+			} {
 				common.CustomizeSchemaPath(s, v).SetReadOnly()
 			}
 			common.CustomizeSchemaPath(s, "effective_predictive_optimization_flag").SetComputed().SetSuppressDiff()
+			common.CustomizeSchemaPath(s, "provisioning_info").SetComputed().SetSuppressDiff()
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
 	return common.Resource{
 		Schema: catalogSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -107,7 +116,7 @@ func ResourceCatalog() common.Resource {
 			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, ci.Name, bindings.BindingsSecurableTypeCatalog)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -116,10 +125,18 @@ func ResourceCatalog() common.Resource {
 			if err != nil {
 				return err
 			}
+			var origCatalogData catalog.CatalogInfo
+			common.DataToStructPointer(d, catalogSchema, &origCatalogData)
+			// CatalogType can be empty in imports, so we need to skip this validation.
+			if origCatalogData.CatalogType != "MANAGED_CATALOG" && origCatalogData.CatalogType != "" &&
+				string(origCatalogData.EnablePredictiveOptimization) == "" {
+				ci.EnablePredictiveOptimization = origCatalogData.EnablePredictiveOptimization
+			}
+
 			return common.StructToData(ci, catalogSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -163,8 +180,11 @@ func ResourceCatalog() common.Resource {
 					updateCatalogRequest.Options = nil
 				}
 			}
+			// we shouldn't send PO flag for non-managed catalogs
+			if d.Get("catalog_type").(string) != "MANAGED_CATALOG" && updateCatalogRequest.EnablePredictiveOptimization != "" {
+				updateCatalogRequest.EnablePredictiveOptimization = ""
+			}
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
-
 			if err != nil {
 				if d.HasChange("owner") {
 					// Rollback
@@ -188,7 +208,7 @@ func ResourceCatalog() common.Resource {
 			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, ci.Name, bindings.BindingsSecurableTypeCatalog)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -216,7 +236,14 @@ func ResourceCatalog() common.Resource {
 			}
 			return w.Catalogs.Delete(ctx, catalog.DeleteCatalogRequest{Force: force, Name: d.Id()})
 		},
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			// Catalogs are metastore-scoped: they live in a metastore, not in a
+			// specific workspace. When the effective workspace_id changes, switch
+			// API routing to the new workspace and persist the new value to state
+			// without recreating the catalog.
+			if err := common.NamespaceCustomizeDiffNoForceNew(ctx, d, c); err != nil {
+				return err
+			}
 			// The only scenario in which we can update options is for the `authorized_paths` key. Any
 			// other changes to the options field will result in an error.
 			if d.HasChange("options") {

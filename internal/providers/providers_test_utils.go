@@ -30,11 +30,13 @@ type providerFixture struct {
 	azureTenantID     string
 	azureResourceID   string
 	authType          string
+	scopes            []string
 	env               map[string]string
 	assertError       string
 	assertAuth        string
 	assertHost        string
 	assertAzure       bool
+	assertScopes      []string
 }
 
 const testDataPath = "../../common/testdata"
@@ -83,6 +85,15 @@ func (pf providerFixture) rawConfigSDKv2() map[string]any {
 	for k, v := range rawConfig {
 		rawConfigSDKv2[k] = v
 	}
+	// SDKv2 expects list attributes as []interface{}, not []string.
+	// Go doesn't allow direct conversion between slice types, so we copy element by element.
+	if len(pf.scopes) > 0 {
+		scopesInterface := make([]interface{}, len(pf.scopes))
+		for i, s := range pf.scopes {
+			scopesInterface[i] = s
+		}
+		rawConfigSDKv2["scopes"] = scopesInterface
+	}
 	return rawConfigSDKv2
 }
 
@@ -93,13 +104,25 @@ func (pf providerFixture) rawConfigPluginFramework() tftypes.Value {
 	for k := range rawConfig {
 		rawConfigTypeMap[k] = tftypes.String
 	}
-	rawConfigType := tftypes.Object{
-		AttributeTypes: rawConfigTypeMap,
-	}
 
 	rawConfigValueMap := map[string]tftypes.Value{}
 	for k, v := range rawConfig {
 		rawConfigValueMap[k] = tftypes.NewValue(tftypes.String, v)
+	}
+
+	// Plugin Framework uses tftypes for type-safe config representation.
+	// List attributes require registering the type and wrapping each element as a tftypes.Value.
+	if len(pf.scopes) > 0 {
+		rawConfigTypeMap["scopes"] = tftypes.List{ElementType: tftypes.String}
+		scopeValues := make([]tftypes.Value, len(pf.scopes))
+		for i, s := range pf.scopes {
+			scopeValues[i] = tftypes.NewValue(tftypes.String, s)
+		}
+		rawConfigValueMap["scopes"] = tftypes.NewValue(tftypes.List{ElementType: tftypes.String}, scopeValues)
+	}
+
+	rawConfigType := tftypes.Object{
+		AttributeTypes: rawConfigTypeMap,
 	}
 	rawConfigValue := tftypes.NewValue(rawConfigType, rawConfigValueMap)
 	return rawConfigValue
@@ -129,6 +152,9 @@ func (pf providerFixture) applyAssertions(c *common.DatabricksClient, t *testing
 	assert.Equal(t, pf.assertAzure, c.IsAzure())
 	assert.Equal(t, pf.assertAuth, c.Config.AuthType)
 	assert.Equal(t, pf.assertHost, c.Config.Host)
+	if pf.assertScopes != nil {
+		assert.Equal(t, pf.assertScopes, c.Config.Scopes)
+	}
 	return c
 }
 

@@ -3,6 +3,8 @@ subcategory: "Workspace"
 ---
 # databricks_dashboard Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/lakeview)
+
 This resource allows you to manage Databricks [Dashboards](https://docs.databricks.com/en/dashboards/index.html). To manage [Dashboards](https://docs.databricks.com/en/dashboards/index.html) you must have a warehouse access on your databricks workspace.
 
 -> This resource can only be used with a workspace-level provider!
@@ -52,6 +54,10 @@ The following arguments are supported:
 * `file_path` - (Optional) The path to the dashboard JSON file. Conflicts with `serialized_dashboard`.
 * `embed_credentials` - (Optional) Whether to embed credentials in the dashboard. Default is `true`.
 * `parent_path` - (Required) The workspace path of the folder containing the dashboard. Includes leading slash and no trailing slash.  If folder doesn't exist, it will be created.
+* `dataset_catalog` - (Optional) Sets the default catalog for all datasets in this dashboard. Does not impact table references that use fully qualified catalog names (ex: samples.nyctaxi.trips).
+* `dataset_schema` - (Optional) Sets the default schema for all datasets in this dashboard. Does not impact table references that use fully qualified catalog names (ex: samples.nyctaxi.trips).
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

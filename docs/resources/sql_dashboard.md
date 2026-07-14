@@ -3,6 +3,8 @@ subcategory: "Databricks SQL"
 ---
 # databricks_sql_dashboard Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/dashboards)
+
 !> This resource is deprecated! Please switch to [databricks_dashboard](dashboard.md) to author new AI/BI dashboards using the latest tooling.
 
 This resource is used to manage [Legacy dashboards](https://docs.databricks.com/sql/user/dashboards/index.html). To manage [SQL resources](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
@@ -41,6 +43,11 @@ resource "databricks_permissions" "d1" {
   }
 }
 ```
+
+## Argument Reference
+
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

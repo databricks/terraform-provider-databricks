@@ -42,7 +42,7 @@ func TestDataServicePrincipalsReadByDisplayName(t *testing.T) {
 }
 
 func TestDataServicePrincipalsReadNotFound(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -55,8 +55,11 @@ func TestDataServicePrincipalsReadNotFound(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.Apply(t)
-	require.Error(t, err)
+	}.ApplyAndExpectData(t, map[string]any{
+		"application_ids":       []string{},
+		"service_principals":    []any{},
+		"display_name_contains": "def",
+	})
 }
 
 func TestDataServicePrincipalsReadNoFilter(t *testing.T) {

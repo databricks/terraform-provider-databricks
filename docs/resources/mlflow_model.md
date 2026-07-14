@@ -3,6 +3,8 @@ subcategory: "MLflow"
 ---
 # databricks_mlflow_model Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/modelregistry)
+
 This resource allows you to create [MLflow models](https://docs.databricks.com/applications/mlflow/models.html) in Databricks.
 
 -> This resource can only be used with a workspace-level provider!
@@ -35,6 +37,8 @@ The following arguments are supported:
 * `name` - (Required) Name of MLflow model. Change of name triggers new resource.
 * `description` - The description of the MLflow model.
 * `tags` - Tags for the MLflow model.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

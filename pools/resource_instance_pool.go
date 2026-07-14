@@ -15,6 +15,7 @@ import (
 type InstancePoolAwsAttributes struct {
 	Availability        clusters.Availability `json:"availability,omitempty" tf:"force_new"`
 	ZoneID              string                `json:"zone_id,omitempty" tf:"computed,force_new"`
+	InstanceProfileArn  string                `json:"instance_profile_arn,omitempty" tf:"force_new"`
 	SpotBidPricePercent int32                 `json:"spot_bid_price_percent,omitempty" tf:"force_new"`
 }
 
@@ -71,6 +72,10 @@ type AwsInstancePoolFleetAttributes struct {
 	FleetLaunchTemplateOverride []AwsFleetLaunchTemplateOverride `json:"launch_template_overrides" tf:"suppress_diff,force_new,slice_set,alias:launch_template_override"`
 }
 
+type NodeTypeFlexibility struct {
+	AlternateNodeTypeIds []string `json:"alternate_node_type_ids" tf:"force_new"`
+}
+
 // InstancePool describes the instance pool object on Databricks
 type InstancePool struct {
 	InstancePoolID                     string                          `json:"instance_pool_id,omitempty" tf:"computed"`
@@ -84,10 +89,11 @@ type InstancePool struct {
 	GcpAttributes                      *InstancePoolGcpAttributes      `json:"gcp_attributes,omitempty" tf:"force_new,suppress_diff"`
 	NodeTypeID                         string                          `json:"node_type_id,omitempty" tf:"suppress_diff,force_new,conflicts:instance_pool_fleet_attributes"`
 	CustomTags                         map[string]string               `json:"custom_tags" tf:"optional"`
-	EnableElasticDisk                  bool                            `json:"enable_elastic_disk,omitempty" tf:"force_new,suppress_diff"`
+	EnableElasticDisk                  bool                            `json:"enable_elastic_disk" tf:"optional,force_new,suppress_diff"`
 	DiskSpec                           *InstancePoolDiskSpec           `json:"disk_spec,omitempty" tf:"force_new"`
 	PreloadedSparkVersions             []string                        `json:"preloaded_spark_versions,omitempty" tf:"force_new"`
 	PreloadedDockerImages              []clusters.DockerImage          `json:"preloaded_docker_images,omitempty" tf:"force_new,slice_set,alias:preloaded_docker_image"`
+	NodeTypeFlexibility                *NodeTypeFlexibility            `json:"node_type_flexibility,omitempty" tf:"force_new"`
 }
 
 // InstancePoolStats contains the stats on a given pool
@@ -112,12 +118,13 @@ type InstancePoolAndStats struct {
 	DefaultTags                        map[string]string                `json:"default_tags,omitempty" tf:"computed"`
 	CustomTags                         map[string]string                `json:"custom_tags,omitempty"`
 	IdleInstanceAutoTerminationMinutes int32                            `json:"idle_instance_autotermination_minutes"`
-	EnableElasticDisk                  bool                             `json:"enable_elastic_disk,omitempty"`
+	EnableElasticDisk                  bool                             `json:"enable_elastic_disk" tf:"optional"`
 	DiskSpec                           *InstancePoolDiskSpec            `json:"disk_spec,omitempty"`
 	PreloadedSparkVersions             []string                         `json:"preloaded_spark_versions,omitempty"`
 	State                              string                           `json:"state,omitempty"`
 	Stats                              *InstancePoolStats               `json:"stats,omitempty"`
 	PreloadedDockerImages              []clusters.DockerImage           `json:"preloaded_docker_images,omitempty" tf:"slice_set,alias:preloaded_docker_image"`
+	NodeTypeFlexibility                *NodeTypeFlexibility             `json:"node_type_flexibility,omitempty"`
 }
 
 // InstancePoolList shows list of instance pools
@@ -139,26 +146,26 @@ type InstancePoolsAPI struct {
 // Create creates the instance pool to given the instance pool configuration
 func (a InstancePoolsAPI) Create(instancePool InstancePool) (InstancePoolAndStats, error) {
 	var instancePoolInfo InstancePoolAndStats
-	err := a.client.Post(a.context, "/instance-pools/create", instancePool, &instancePoolInfo)
+	err := a.client.Post(a.context, "/instance-pools/create", instancePool, &instancePoolInfo, a.client.AddWorkspaceIdHeader)
 	return instancePoolInfo, err
 }
 
 // Update edits the configuration of a instance pool to match the provided attributes and size
 func (a InstancePoolsAPI) Update(ip InstancePool) error {
-	return a.client.Post(a.context, "/instance-pools/edit", ip, nil)
+	return a.client.Post(a.context, "/instance-pools/edit", ip, nil, a.client.AddWorkspaceIdHeader)
 }
 
 // Read retrieves the information for a instance pool given its identifier
 func (a InstancePoolsAPI) Read(instancePoolID string) (ip InstancePool, err error) {
 	err = a.client.Get(a.context, "/instance-pools/get", map[string]string{
 		"instance_pool_id": instancePoolID,
-	}, &ip)
+	}, &ip, a.client.AddWorkspaceIdHeader)
 	return
 }
 
 // List retrieves the list of existing instance pools
 func (a InstancePoolsAPI) List() (ipl InstancePoolList, err error) {
-	err = a.client.Get(a.context, "/instance-pools/list", nil, &ipl)
+	err = a.client.Get(a.context, "/instance-pools/list", nil, &ipl, a.client.AddWorkspaceIdHeader)
 	return
 }
 
@@ -166,7 +173,7 @@ func (a InstancePoolsAPI) List() (ipl InstancePoolList, err error) {
 func (a InstancePoolsAPI) Delete(instancePoolID string) error {
 	return a.client.Post(a.context, "/instance-pools/delete", map[string]string{
 		"instance_pool_id": instancePoolID,
-	}, nil)
+	}, nil, a.client.AddWorkspaceIdHeader)
 }
 
 // ResourceInstancePool ...
@@ -246,14 +253,23 @@ func ResourceInstancePool() common.Resource {
 			v.ForceNew = true
 		}
 
+		common.AddNamespaceInSchema(s)
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 	return common.Resource{
 		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var ip InstancePool
 			common.DataToStructPointer(d, s, &ip)
-			instancePoolInfo, err := NewInstancePoolsAPI(ctx, c).Create(ip)
+			instancePoolInfo, err := NewInstancePoolsAPI(ctx, newClient).Create(ip)
 			if err != nil {
 				return err
 			}
@@ -261,20 +277,32 @@ func ResourceInstancePool() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ip, err := NewInstancePoolsAPI(ctx, c).Read(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			ip, err := NewInstancePoolsAPI(ctx, newClient).Read(d.Id())
 			if err != nil {
 				return err
 			}
 			return common.StructToData(ip, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var ip InstancePool
 			common.DataToStructPointer(d, s, &ip)
 			ip.InstancePoolID = d.Id()
-			return NewInstancePoolsAPI(ctx, c).Update(ip)
+			return NewInstancePoolsAPI(ctx, newClient).Update(ip)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewInstancePoolsAPI(ctx, c).Delete(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			return NewInstancePoolsAPI(ctx, newClient).Delete(d.Id())
 		},
 	}
 }

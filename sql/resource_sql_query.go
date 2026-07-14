@@ -466,7 +466,7 @@ type QueryAPI struct {
 
 // Create ...
 func (a QueryAPI) Create(q *api.Query) error {
-	err := a.client.Post(a.context, "/preview/sql/queries", q, &q)
+	err := a.client.Post(a.context, "/preview/sql/queries", q, &q, a.client.AddWorkspaceIdHeader)
 	if err != nil {
 		return err
 	}
@@ -492,7 +492,7 @@ func (a QueryAPI) Create(q *api.Query) error {
 // Read ...
 func (a QueryAPI) Read(queryID string) (*api.Query, error) {
 	var q api.Query
-	err := a.client.Get(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), nil, &q)
+	err := a.client.Get(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), nil, &q, a.client.AddWorkspaceIdHeader)
 	if err != nil {
 		return nil, err
 	}
@@ -502,12 +502,12 @@ func (a QueryAPI) Read(queryID string) (*api.Query, error) {
 
 // Update ...
 func (a QueryAPI) Update(queryID string, q *api.Query) error {
-	return a.client.Post(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), q, nil)
+	return a.client.Post(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), q, nil, a.client.AddWorkspaceIdHeader)
 }
 
 // Delete ...
 func (a QueryAPI) Delete(queryID string) error {
-	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), nil)
+	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/queries/%s", queryID), nil, a.client.AddWorkspaceIdHeader)
 }
 
 func ResourceSqlQuery() common.Resource {
@@ -547,16 +547,25 @@ func ResourceSqlQuery() common.Resource {
 			m["query"].DiffSuppressFunc = common.SuppressDiffWhitespaceChange
 			return m
 		})
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
 			var q QueryEntity
 			aq, err := q.toAPIObject(s, data)
 			if err != nil {
 				return err
 			}
 
-			err = NewQueryAPI(ctx, c).Create(aq)
+			err = NewQueryAPI(ctx, newClient).Create(aq)
 			if err != nil {
 				return err
 			}
@@ -567,7 +576,11 @@ func ResourceSqlQuery() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			aq, err := NewQueryAPI(ctx, c).Read(data.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
+			aq, err := NewQueryAPI(ctx, newClient).Read(data.Id())
 			if err != nil {
 				return err
 			}
@@ -576,16 +589,24 @@ func ResourceSqlQuery() common.Resource {
 			return q.fromAPIObject(aq, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
 			var q QueryEntity
 			aq, err := q.toAPIObject(s, data)
 			if err != nil {
 				return err
 			}
 
-			return NewQueryAPI(ctx, c).Update(data.Id(), aq)
+			return NewQueryAPI(ctx, newClient).Update(data.Id(), aq)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewQueryAPI(ctx, c).Delete(data.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
+			return NewQueryAPI(ctx, newClient).Delete(data.Id())
 		},
 		Schema:             s,
 		DeprecationMessage: "This resource is deprecated and will be removed in the future. Please use the `databricks_query` resource instead.",

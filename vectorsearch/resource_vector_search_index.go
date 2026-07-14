@@ -16,10 +16,11 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
 )
 
-const defaultIndexProvisionTimeout = 15 * time.Minute
+const defaultIndexProvisionTimeout = 75 * time.Minute
+const defaultIndexDeletionTimeout = 15 * time.Minute
 
 func waitForVectorSearchIndexDeletion(w *databricks.WorkspaceClient, ctx context.Context, searchIndexName string) error {
-	return retry.RetryContext(ctx, defaultIndexProvisionTimeout, func() *retry.RetryError {
+	return retry.RetryContext(ctx, defaultIndexDeletionTimeout, func() *retry.RetryError {
 		_, err := w.VectorSearchIndexes.GetIndexByIndexName(ctx, searchIndexName)
 		if err == nil {
 			return retry.RetryableError(fmt.Errorf("vector search index %s is still not deleted", searchIndexName))
@@ -31,8 +32,8 @@ func waitForVectorSearchIndexDeletion(w *databricks.WorkspaceClient, ctx context
 	})
 }
 
-func waitForSearchIndexCreation(w *databricks.WorkspaceClient, ctx context.Context, searchIndexName string) error {
-	return retry.RetryContext(ctx, defaultIndexProvisionTimeout-deleteCallTimeout, func() *retry.RetryError {
+func waitForSearchIndexCreation(w *databricks.WorkspaceClient, ctx context.Context, searchIndexName string, timeout time.Duration) error {
+	return retry.RetryContext(ctx, timeout-deleteCallTimeout, func() *retry.RetryError {
 		index, err := w.VectorSearchIndexes.GetIndexByIndexName(ctx, searchIndexName)
 		if err != nil {
 			return retry.NonRetryableError(err)
@@ -45,9 +46,14 @@ func waitForSearchIndexCreation(w *databricks.WorkspaceClient, ctx context.Conte
 	})
 }
 
+type VectorSearchIndexSchemaStruct struct {
+	vectorsearch.VectorIndex
+	common.Namespace
+}
+
 func ResourceVectorSearchIndex() common.Resource {
 	s := common.StructToSchema(
-		vectorsearch.VectorIndex{},
+		VectorSearchIndexSchemaStruct{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			common.MustSchemaPath(s, "delta_sync_index_spec", "embedding_vector_columns").MinItems = 1
 			exof := []string{"delta_sync_index_spec", "direct_access_index_spec"}
@@ -62,12 +68,16 @@ func ResourceVectorSearchIndex() common.Resource {
 			common.CustomizeSchemaPath(s, "name").SetRequired()
 			common.CustomizeSchemaPath(s, "index_type").SetRequired()
 			common.CustomizeSchemaPath(s, "delta_sync_index_spec", "pipeline_id").SetReadOnly()
+			common.NamespaceCustomizeSchemaMap(s)
 			return s
 		})
 
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -77,7 +87,7 @@ func ResourceVectorSearchIndex() common.Resource {
 			if err != nil {
 				return err
 			}
-			err = waitForSearchIndexCreation(w, ctx, req.Name)
+			err = waitForSearchIndexCreation(w, ctx, req.Name, d.Timeout(schema.TimeoutCreate))
 			if err != nil {
 				nestedErr := w.VectorSearchIndexes.DeleteIndexByIndexName(ctx, req.Name)
 				if nestedErr != nil {
@@ -89,7 +99,7 @@ func ResourceVectorSearchIndex() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -100,7 +110,7 @@ func ResourceVectorSearchIndex() common.Resource {
 			return common.StructToData(*index, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

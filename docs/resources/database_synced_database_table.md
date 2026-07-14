@@ -2,6 +2,10 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_synced_database_table Resource
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/database)
+
 Lakebase Synced Database Tables are Postgres tables automatically synced from a source table inside Unity Catalog.
 They can be used to serve realtime queries without the operational overhead of managing ETL pipelines. 
 
@@ -43,7 +47,7 @@ resource "databricks_database_synced_database_table" "this" {
   # logical_database_name is required for synced tables created in
   # standard catalogs.
   logical_database_name = "databricks_postgres"
-  # database instnace name is required for synced tables created in
+  # database instance name is required for synced tables created in
   # standard catalogs.
   database_instance_name = "my-database-instance"
   spec = {
@@ -76,7 +80,7 @@ resource "databricks_database_synced_database_table" "synced_table_1" {
   # logical_database_name is required for synced tables created in
   # standard catalogs.
   logical_database_name = "databricks_postgres"
-  # database instnace name is required for synced tables created in
+  # database instance name is required for synced tables created in
   # standard catalogs.
   database_instance_name = databricks_database_instance.instance.name
   spec = {
@@ -96,7 +100,7 @@ resource "databricks_database_synced_database_table" "synced_table_2" {
   # logical_database_name is required for synced tables created in
   # standard catalogs.
   logical_database_name = "databricks_postgres"
-  # database instnace name is required for synced tables created in
+  # database instance name is required for synced tables created in
   # standard catalogs.
   database_instance_name = databricks_database_instance.instance.name
   spec = {
@@ -105,6 +109,53 @@ resource "databricks_database_synced_database_table" "synced_table_2" {
     primary_key_columns = ["c_custkey"]
     create_database_objects_if_missing = true
     existing_pipeline_id = databricks_database_synced_database_table.synced_table_1.data_synchronization_status.pipeline_id
+  }
+}
+```
+
+### Creating a Synced Database Table with a custom Jobs schedule
+
+This example creates a Synced Database Table and customizes the pipeline schedule. It assumes you already have 
+
+- A database instance named `"my-database-instance"`
+- A standard catalog named `"my_standard_catalog"`
+- A schema in the standard catalog named `"default"`
+- A source delta table named `"source_delta.schema.customer"` with the primary key `"c_custkey"`
+
+```hcl
+resource "databricks_database_synced_database_table" "synced_table" {
+  name = "my_standard_catalog.default.my_synced_table"
+  # logical_database_name is required for synced tables created in
+  # standard catalogs.
+  logical_database_name = "terraform_test_db"
+  # database instance name is required for synced tables created in
+  # standard catalogs.
+  database_instance_name = "my-database-instance"
+  spec = {
+    scheduling_policy = "SNAPSHOT"
+    source_table_full_name = "source_delta.schema.customer"
+    primary_key_columns = ["c_custkey"]
+    create_database_objects_if_missing = true
+    new_pipeline_spec = {
+      storage_catalog = "source_delta"
+      storage_schema = "schema"
+    }
+  }
+}
+
+resource "databricks_job" "sync_pipeline_schedule_job" {
+  name        = "Synced Pipeline Refresh"
+  description = "Job to schedule synced database table pipeline. "
+
+  task {
+    task_key = "synced-table-pipeline"
+    pipeline_task {
+      pipeline_id = databricks_database_synced_database_table.synced_table.data_synchronization_status.pipeline_id
+    }
+  }
+  schedule {
+    quartz_cron_expression = "0 0 0 * * ?"
+    timezone_id            = "Europe/Helsinki"
   }
 }
 ```
@@ -129,9 +180,13 @@ The following arguments are supported:
   In this scenario, specifying this field will allow targeting an arbitrary postgres database.
   Note that this has implications for the `create_database_objects_is_missing` field in `spec`
 * `spec` (SyncedTableSpec, optional)
-* `workspace_id` (string, optional) - Workspace ID of the resource
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### NewPipelineSpec
+* `budget_policy_id` (string, optional) - Budget policy to set on the newly created pipeline
 * `storage_catalog` (string, optional) - This field needs to be specified if the destination catalog is a managed postgres catalog.
   
   UC catalog for the pipeline to store intermediate files (checkpoints, event logs etc).
@@ -142,6 +197,9 @@ The following arguments are supported:
   This needs to be in the standard catalog where the user has permissions to create Delta tables
 
 ### SyncedTableSpec
+* `accelerated_sync` (boolean, optional) - When true, enables accelerated sync mode for the initial data load.
+  This significantly improves performance for large tables.
+  Requires workspace-level enablement
 * `create_database_objects_if_missing` (boolean, optional) - If true, the synced table's logical database and schema resources in PG
   will be created if they do not already exist
 * `existing_pipeline_id` (string, optional) - At most one of existing_pipeline_id and new_pipeline_spec should be defined.
@@ -159,6 +217,14 @@ The following arguments are supported:
 * `scheduling_policy` (string, optional) - Scheduling policy of the underlying pipeline. Possible values are: `CONTINUOUS`, `SNAPSHOT`, `TRIGGERED`
 * `source_table_full_name` (string, optional) - Three-part (catalog, schema, table) name of the source Delta table
 * `timeseries_key` (string, optional) - Time series key to deduplicate (tie-break) rows with the same primary key
+* `type_overrides` (list of SyncedTableSpecTypeOverride, optional) - Override the default Delta->PG type mapping for specific columns.
+  A TypeOverride with PG_SPECIFIC_TYPE_UNSPECIFIED is rejected; a valid pg_type must be set
+
+### SyncedTableSpecTypeOverride
+* `column_name` (string, required) - Name of the source column whose target PostgreSQL type should be overridden
+* `pg_type` (string, required) - PostgreSQL-specific target type to use for the column. Possible values are: `PG_SPECIFIC_TYPE_VECTOR`
+* `size` (integer, optional) - Size parameter for the target type. Required when pg_type is PG_SPECIFIC_TYPE_VECTOR
+  or PG_SPECIFIC_TYPE_HALFVEC (specifies the vector dimension, e.g., 1024)
 
 ### SyncedTableStatus
 * `continuous_update_status` (SyncedTableContinuousUpdateStatus, optional)
@@ -170,8 +236,12 @@ The following arguments are supported:
 In addition to the above arguments, the following attributes are exported:
 * `data_synchronization_status` (SyncedTableStatus) - Synced Table data synchronization status
 * `effective_database_instance_name` (string) - The name of the database instance that this table is registered to. This field is always returned, and for
-  tables inside database catalogs is inferred database instance associated with the catalog
-* `effective_logical_database_name` (string) - The name of the logical database that this table is registered to
+  tables inside database catalogs is inferred database instance associated with the catalog.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
+* `effective_logical_database_name` (string) - The name of the logical database that this table is registered to.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
 * `unity_catalog_provisioning_state` (string) - The provisioning state of the synced table entity in Unity Catalog. This is distinct from the
   state of the data synchronization pipeline (i.e. the table may be in "ACTIVE" but the pipeline
   may be in "PROVISIONING" as it runs asynchronously). Possible values are: `ACTIVE`, `DEGRADED`, `DELETING`, `FAILED`, `PROVISIONING`, `UPDATING`
@@ -250,5 +320,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_database_synced_database_table "name"
+terraform import databricks_database_synced_database_table.this "name"
 ```

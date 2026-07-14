@@ -3,6 +3,8 @@ subcategory: "Workspace"
 ---
 # databricks_git_credential Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/gitcredentials)
+
 This resource allows you to manage credentials for [Databricks Repos](https://docs.databricks.com/repos.html) using [Git Credentials API](https://docs.databricks.com/dev-tools/api/latest/gitcredentials.html).
 
 -> This resource can only be used with a workspace-level provider!
@@ -31,16 +33,33 @@ resource "databricks_git_credential" "ado" {
 }
 ```
 
+### Git credential for a service principal
+
+You can manage Git credentials on behalf of a service principal by specifying `principal_id`:
+
+```hcl
+resource "databricks_git_credential" "spn" {
+  git_provider          = "gitHub"
+  git_username          = "my-service-principal"
+  personal_access_token = var.github_pat
+  principal_id          = var.databricks_spn_id
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `personal_access_token` - (Optional, required for some Git providers) The personal access token used to authenticate to the corresponding Git provider. If value is not provided, it's sourced from the first environment variable of [`GITHUB_TOKEN`](https://registry.terraform.io/providers/integrations/github/latest/docs#oauth--personal-access-token), [`GITLAB_TOKEN`](https://registry.terraform.io/providers/gitlabhq/gitlab/latest/docs#required), or [`AZDO_PERSONAL_ACCESS_TOKEN`](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs#argument-reference), that has a non-empty value.
-* `git_username` - (Optional, required for some Git providers) user name at Git provider.
+* `git_username` - (Optional, required for some Git providers or when `git_email` is specified) user name at Git provider.  For most Git providers it is only used to set the Git committer & author names for commits, however it may be required for authentication depending on your Git provider / token requirements.
+* `git_email` - (Optional, required for some Git providers) The email associated with your Git provider user account. Used for authentication with the remote repository and also sets the author & committer identity for commits.
 * `git_provider` -  (Required) case insensitive name of the Git provider.  Following values are supported right now (could be a subject for a change, consult [Git Credentials API documentation](https://docs.databricks.com/dev-tools/api/latest/gitcredentials.html)): `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`, `awsCodeCommit`, `azureDevOpsServicesAad`.
 * `is_default_for_provider` - (Optional) boolean flag specifying if the credential is the default for the given provider type.
 * `name` - (Optional) the name of the git credential, used for identification and ease of lookup.
+* `principal_id` - (Optional) The ID of the service principal whose credentials will be managed. Only service principal managers can use this field. When specified, the git credential is created or updated for the given service principal instead of the calling user.
 * `force` - (Optional) specify if settings need to be enforced (i.e., to overwrite previously set credential for service principals).
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

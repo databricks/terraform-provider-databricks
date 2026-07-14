@@ -3,6 +3,8 @@ subcategory: "Compute"
 ---
 # databricks_pipeline Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/pipelines)
+
 Use `databricks_pipeline` to deploy [Lakeflow Declarative Pipelines](https://docs.databricks.com/aws/en/dlt).
 
 -> This resource can only be used with a workspace-level provider!
@@ -81,7 +83,7 @@ resource "databricks_pipeline" "this" {
 The following arguments are supported:
 
 * `name` - A user-friendly name for this pipeline. The name can be used to identify pipeline jobs in the UI.
-* `catalog` - The name of catalog in Unity Catalog. *Change of this parameter forces recreation of the pipeline.* (Conflicts with `storage`).
+* `catalog` - The name of default catalog in Unity Catalog. *Change of this parameter forces recreation of the pipeline if you switch from `storage` to `catalog` or vice versa.  If pipeline was already created with `catalog` set, the value could be changed.* (Conflicts with `storage`).
 * `schema` - (Optional, String, Conflicts with `target`) The default schema (database) where tables are read from or published to. The presence of this attribute implies that the pipeline is in direct publishing mode.
 * `storage` - A location on cloud storage where output data and metadata required for pipeline execution are stored. By default, tables are stored in a subdirectory of this location. *Change of this parameter forces recreation of the pipeline.* (Conflicts with `catalog`).
 * `target` - (Optional, String, Conflicts with `schema`) The name of a database (in either the Hive metastore or in a UC catalog) for persisting pipeline output data. Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.
@@ -104,7 +106,8 @@ The following arguments are supported:
   * `include` - Paths to include.
   * `exclude` - Paths to exclude.
 * `gateway_definition` - The definition of a gateway pipeline to support CDC. Consists of following attributes:
-  * `connection_id` - Immutable. The Unity Catalog connection this gateway pipeline uses to communicate with the source.
+  * `connection_id` - Deprecated, Immutable. The Unity Catalog connection this gateway pipeline uses to communicate with the source. *Use `connection_name` instead!*
+  * `connection_name` - Immutable. The Unity Catalog connection that this gateway pipeline uses to communicate with the source.
   * `gateway_storage_catalog` - Required, Immutable. The name of the catalog for the gateway pipeline's storage location.
   * `gateway_storage_name` - Required. The Unity Catalog-compatible naming for the gateway storage location. This is the destination to use for the data that is extracted by the gateway. Lakeflow Declarative Pipelines system will automatically create the storage location under the catalog and schema.
   * `gateway_storage_schema` - Required, Immutable. The name of the schema for the gateway pipelines's storage location.
@@ -113,6 +116,25 @@ The following arguments are supported:
   * `catalog` - (Optional, default to `catalog` defined on pipeline level) The UC catalog the event log is published under.
   * `schema` - (Optional, default to `schema` defined on pipeline level) The UC schema the event log is published under.
 * `tags` - (Optional, map of strings) A map of tags associated with the pipeline. These are forwarded to the cluster as cluster tags, and are therefore subject to the same limitations. A maximum of 25 tags can be added to the pipeline.
+* `run_as` - (Optional) The user or the service principal the pipeline runs as. See [run_as Configuration Block](#run_as-configuration-block) below.
+
+### run_as Configuration Block
+
+The `run_as` block allows specifying the user or the service principal that the pipeline runs as. If not specified, the pipeline runs as the user or service principal that created the pipeline. Only one of `user_name` or `service_principal_name` can be specified.
+
+* `user_name` - (Optional) The email of an active workspace user. Non-admin users can only set this field to their own email.
+* `service_principal_name` - (Optional) The application ID of an active service principal. Setting this field requires the `servicePrincipal/user` role.
+
+Example:
+
+```hcl
+resource "databricks_pipeline" "this" {
+  # ...
+  run_as {
+    service_principal_name = "8d23ae77-912e-4a19-81e4-b9c3f5cc9349"
+  }
+}
+```
 
 ### library block
 
@@ -167,7 +189,11 @@ The configuration for a managed ingestion pipeline. These settings cannot be use
 * `connection_name` - Immutable. The Unity Catalog connection this ingestion pipeline uses to communicate with the source. Specify either ingestion_gateway_id or connection_name.
 * `ingestion_gateway_id` - Immutable. Identifier for the ingestion gateway used by this ingestion pipeline to communicate with the source. Specify either ingestion_gateway_id or connection_name.
 * `objects` - Required. Settings specifying tables to replicate and the destination for the replicated tables.
+* `source_configurations` - Array of objects describing top-level source configurations. See the [REST API docs](https://docs.databricks.com/api/workspace/pipelines/create#ingestion_definition-source_configurations) for reference.
 * `table_configuration` - Configuration settings to control the ingestion of tables. These settings are applied to all tables in the pipeline.
+
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

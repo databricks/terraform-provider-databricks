@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_secret_acl Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/secrets)
+
 Create or overwrite the ACL associated with the given principal (user or group) on the specified [databricks_secret_scope](secret_scope.md). Please consult [Secrets User Guide](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) for more details.
 
 -> This resource can only be used with a workspace-level provider!
@@ -44,6 +46,8 @@ The following arguments are required:
   * `display_name` attribute of [databricks_group](group.md).  Use `users` to allow access for all workspace users.
   * `application_id` attribute of [databricks_service_principal](service_principal.md).
 * `permission` - (Required) `READ`, `WRITE` or `MANAGE`.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Import
 

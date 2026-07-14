@@ -4,6 +4,8 @@ subcategory: "Workspace"
 
 # databricks_directory Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/workspace)
+
 This resource allows you to manage directories in [Databricks Workpace](https://docs.databricks.com/workspace/workspace-objects.html).
 
 -> This resource can only be used with a workspace-level provider!
@@ -24,6 +26,8 @@ The following arguments are supported:
 
 - `path` - (Required) The absolute path of the directory, beginning with "/", e.g. "/Demo".
 - `delete_recursive` - Whether or not to trigger a recursive delete of this directory and its resources when deleting this on Terraform. Defaults to `false`
+- `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  - `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

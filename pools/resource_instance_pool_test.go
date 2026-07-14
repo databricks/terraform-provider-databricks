@@ -9,7 +9,7 @@ import (
 )
 
 func TestResourceInstancePoolCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -49,9 +49,15 @@ func TestResourceInstancePoolCreate(t *testing.T) {
 			"node_type_id":                          "i3.xlarge",
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":                                    "abc",
+		"idle_instance_autotermination_minutes": 15,
+		"instance_pool_name":                    "Shared Pool",
+		"max_capacity":                          1000,
+		"min_idle_instances":                    10,
+		"node_type_id":                          "i3.xlarge",
+		"enable_elastic_disk":                   true,
+	})
 }
 
 func TestResourceInstancePoolCreate_Error(t *testing.T) {
@@ -82,7 +88,7 @@ func TestResourceInstancePoolCreate_Error(t *testing.T) {
 }
 
 func TestResourceInstancePoolRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -102,14 +108,15 @@ func TestResourceInstancePoolRead(t *testing.T) {
 		Read:     true,
 		New:      true,
 		ID:       "abc",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, 15, d.Get("idle_instance_autotermination_minutes"))
-	assert.Equal(t, "Shared Pool", d.Get("instance_pool_name"))
-	assert.Equal(t, 1000, d.Get("max_capacity"))
-	assert.Equal(t, 10, d.Get("min_idle_instances"))
-	assert.Equal(t, "i3.xlarge", d.Get("node_type_id"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":                                    "abc",
+		"idle_instance_autotermination_minutes": 15,
+		"instance_pool_name":                    "Shared Pool",
+		"max_capacity":                          1000,
+		"min_idle_instances":                    10,
+		"node_type_id":                          "i3.xlarge",
+		"enable_elastic_disk":                   true,
+	})
 }
 
 func TestResourceInstancePoolRead_NotFound(t *testing.T) {
@@ -154,7 +161,7 @@ func TestResourceInstancePoolRead_Error(t *testing.T) {
 }
 
 func TestResourceInstancePoolUpdate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -197,9 +204,15 @@ func TestResourceInstancePoolUpdate(t *testing.T) {
 		},
 		Update: true,
 		ID:     "abc",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":                                    "abc",
+		"idle_instance_autotermination_minutes": 20,
+		"instance_pool_name":                    "Restricted Pool",
+		"max_capacity":                          500,
+		"min_idle_instances":                    5,
+		"node_type_id":                          "i3.xlarge",
+		"enable_elastic_disk":                   true,
+	})
 }
 func TestResourceInstancePoolUpdate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -231,7 +244,7 @@ func TestResourceInstancePoolUpdate_Error(t *testing.T) {
 }
 
 func TestResourceInstancePoolDelete(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -244,9 +257,7 @@ func TestResourceInstancePoolDelete(t *testing.T) {
 		Resource: ResourceInstancePool(),
 		Delete:   true,
 		ID:       "abc",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{"id": "abc"})
 }
 
 func TestResourceInstancePoolDelete_Error(t *testing.T) {
@@ -268,4 +279,57 @@ func TestResourceInstancePoolDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
+}
+
+// Regression test: the Create request body must carry
+// "enable_elastic_disk": false when the user opts out. A map[string]any
+// ExpectedRequest is used so the comparison does not depend on the
+// InstancePool struct's own JSON tags.
+func TestResourceInstancePoolCreate_ElasticDiskDisabled(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/instance-pools/create",
+				ExpectedRequest: map[string]any{
+					"custom_tags":                           nil,
+					"enable_elastic_disk":                   false,
+					"idle_instance_autotermination_minutes": 15,
+					"instance_pool_name":                    "Shared Pool",
+					"max_capacity":                          1000,
+					"min_idle_instances":                    10,
+					"node_type_id":                          "i3.xlarge",
+				},
+				Response: InstancePoolAndStats{
+					InstancePoolID: "abc",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/instance-pools/get?instance_pool_id=abc",
+				Response: InstancePoolAndStats{
+					InstancePoolID:                     "abc",
+					InstancePoolName:                   "Shared Pool",
+					MinIdleInstances:                   10,
+					MaxCapacity:                        1000,
+					NodeTypeID:                         "i3.xlarge",
+					IdleInstanceAutoTerminationMinutes: 15,
+					EnableElasticDisk:                  false,
+				},
+			},
+		},
+		Resource: ResourceInstancePool(),
+		State: map[string]any{
+			"enable_elastic_disk":                   false,
+			"idle_instance_autotermination_minutes": 15,
+			"instance_pool_name":                    "Shared Pool",
+			"max_capacity":                          1000,
+			"min_idle_instances":                    10,
+			"node_type_id":                          "i3.xlarge",
+		},
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":                  "abc",
+		"enable_elastic_disk": false,
+	})
 }

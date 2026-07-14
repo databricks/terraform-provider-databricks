@@ -6,38 +6,42 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 type StringAttributeBuilder struct {
+	Computed           bool
+	CustomType         basetypes.StringTypable
+	DeprecationMessage string
 	Optional           bool
+	PlanModifiers      []planmodifier.String
 	Required           bool
 	Sensitive          bool
-	Computed           bool
-	DeprecationMessage string
 	Validators         []validator.String
-	PlanModifiers      []planmodifier.String
 }
 
 func (a StringAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
 	return dataschema.StringAttribute{
+		Computed:           a.Computed,
+		CustomType:         a.CustomType,
+		DeprecationMessage: a.DeprecationMessage,
 		Optional:           a.Optional,
 		Required:           a.Required,
 		Sensitive:          a.Sensitive,
-		DeprecationMessage: a.DeprecationMessage,
-		Computed:           a.Computed,
 		Validators:         a.Validators,
 	}
 }
 
 func (a StringAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	return schema.StringAttribute{
+		Computed:           a.Computed,
+		CustomType:         a.CustomType,
+		DeprecationMessage: a.DeprecationMessage,
 		Optional:           a.Optional,
+		PlanModifiers:      a.PlanModifiers,
 		Required:           a.Required,
 		Sensitive:          a.Sensitive,
-		DeprecationMessage: a.DeprecationMessage,
-		Computed:           a.Computed,
 		Validators:         a.Validators,
-		PlanModifiers:      a.PlanModifiers,
 	}
 }
 

@@ -2,6 +2,10 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_database_catalog Resource
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/database)
+
 Database Catalogs are databases inside a Lakebase Database Instance which are synced into a Postgres Catalog inside Unity Catalog.
 
 ### Use Cases
@@ -52,10 +56,13 @@ resource "databricks_database_database_catalog" "catalog" {
 ## Arguments
 The following arguments are supported:
 * `database_instance_name` (string, required) - The name of the DatabaseInstance housing the database
-* `database_name` (string, required) - The name of the database (in a instance) associated with the catalog
+* `database_name` (string, required) - The name of the database (in an instance) associated with the catalog
 * `name` (string, required) - The name of the catalog in UC
 * `create_database_if_not_exists` (boolean, optional)
-* `workspace_id` (string, optional) - Workspace ID of the resource
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -72,5 +79,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_database_database_catalog "name"
+terraform import databricks_database_database_catalog.this "name"
 ```

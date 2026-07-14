@@ -4,6 +4,8 @@ subcategory: "Settings"
 
 # databricks_default_namespace_setting Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/defaultnamespace)
+
 The `databricks_default_namespace_setting` resource allows you to operate the setting configuration for the default namespace in the Databricks workspace.
 
 -> This resource can only be used with a workspace-level provider!
@@ -30,6 +32,8 @@ The resource supports the following arguments:
 
 * `namespace` - (Required) The configuration details.
 * `value` - (Required) The value for the setting.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Import
 

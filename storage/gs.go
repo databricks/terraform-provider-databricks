@@ -92,7 +92,10 @@ func createOrValidateClusterForGoogleStorage(ctx context.Context, m any,
 func GetOrCreateMountingClusterWithGcpServiceAccount(
 	clustersAPI clusters.ClustersAPI, serviceAccount string) (i clusters.ClusterInfo, err error) {
 	clusterName := fmt.Sprintf("terraform-mount-gcs-%x", md5.Sum([]byte(serviceAccount)))
-	cluster := getCommonClusterObject(clustersAPI, clusterName)
+	cluster, err := getCommonClusterObject(clustersAPI, clusterName)
+	if err != nil {
+		return
+	}
 	cluster.GcpAttributes = &clusters.GcpAttributes{GoogleServiceAccount: serviceAccount}
 	return clustersAPI.GetOrCreateRunningCluster(clusterName, cluster)
 }

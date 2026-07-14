@@ -155,6 +155,77 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 	})
 }
 
+func TestResourceWorkspaceCreateGcpWithExpectedProvisioning(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				// retreating to raw JSON, as certain fields don't work well together
+				ExpectedRequest: map[string]any{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_container": map[string]any{
+						"gcp": map[string]any{
+							"project_id": "def",
+						},
+					},
+					"location":   "bcd",
+					"network_id": "net_id_a",
+					"gcp_managed_network_config": map[string]any{
+						"subnet_cidr": "a",
+					},
+					"workspace_name":            "labdata",
+					"expected_workspace_status": "PROVISIONING",
+				},
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+					WorkspaceName:  "labdata",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:               "abc",
+					WorkspaceID:             1234,
+					WorkspaceStatus:         WorkspaceStatusProvisioning,
+					ExpectedWorkspaceStatus: WorkspaceStatusProvisioning,
+					DeploymentName:          "900150983cd24fb0",
+					WorkspaceName:           "labdata",
+					Location:                "bcd",
+					Cloud:                   "gcp",
+				},
+			},
+		},
+		Resource: ResourceMwsWorkspaces(),
+		HCL: `
+		account_id      = "abc"
+		workspace_name  = "labdata"
+		deployment_name = "900150983cd24fb0"
+		location        = "bcd"
+		cloud_resource_container {
+			gcp {
+				project_id = "def"
+			}
+		}
+		network_id = "net_id_a"
+		gcp_managed_network_config {
+			subnet_cidr = "a"
+		}
+		expected_workspace_status = "PROVISIONING"
+		`,
+		Gcp:    true,
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"cloud":            "gcp",
+		"gcp_workspace_sa": "db-1234@prod-gcp-bcd.iam.gserviceaccount.com",
+	})
+}
+
 func TestResourceWorkspaceCreate_Error_Custom_tags(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -663,11 +734,12 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234?update_mask=credentials_id,managed_services_customer_managed_key_id,network_id,storage_customer_managed_key_id",
 				ExpectedRequest: map[string]any{
-					"credentials_id":                  "bcd",
-					"network_id":                      "fgh",
-					"storage_customer_managed_key_id": "def",
+					"credentials_id":                           "bcd",
+					"network_id":                               "fgh",
+					"storage_customer_managed_key_id":          "def",
+					"managed_services_customer_managed_key_id": "def",
 				},
 			},
 			{
@@ -824,7 +896,7 @@ func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234?update_mask=credentials_id,managed_services_customer_managed_key_id,network_id,storage_customer_managed_key_id",
 				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -906,7 +978,7 @@ func TestResourceWorkspaceDelete_Error(t *testing.T) {
 	assert.Equal(t, "abc/1234", d.Id())
 }
 
-func TestWaitForRunning(t *testing.T) {
+func TestWaitForExpectedStatus(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{
 			Method:   "POST",
@@ -1089,7 +1161,7 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Me",
+			Resource: "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 			Response: `{}`, // we just need a JSON for this
 		},
 	}, func(ctx context.Context, wsClient *common.DatabricksClient) {
@@ -1108,10 +1180,10 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			a := NewWorkspacesAPI(ctx, client)
-			err := a.WaitForRunning(Workspace{
+			err := a.WaitForExpectedStatus(Workspace{
 				AccountID:   "abc",
 				WorkspaceID: 1234,
-			}, 1*time.Second)
+			}, WorkspaceStatusRunning, 1*time.Second)
 			assert.NoError(t, err)
 		})
 	})
@@ -1128,7 +1200,7 @@ func updateWorkspaceScimFixture(t *testing.T, fixtures []qa.HTTPFixture, state m
 	scimAPI := []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Me",
+			Resource: "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 			Response: `{}`, // we just need a JSON for this
 		},
 	}
@@ -1163,7 +1235,7 @@ func updateWorkspaceScimFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixture
 	accountsAPI := []qa.HTTPFixture{
 		{
 			Method:   "PATCH",
-			Resource: "/api/2.0/accounts/c/workspaces/0",
+			Resource: "/api/2.0/accounts/c/workspaces/0?update_mask=network_id,storage_customer_managed_key_id",
 		},
 		{
 			Method:       "GET",
@@ -1174,7 +1246,7 @@ func updateWorkspaceScimFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixture
 	scimAPI := []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/preview/scim/v2/Me",
+			Resource: "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 			Response: `{}`, // we just need a JSON for this
 		},
 	}
@@ -1432,6 +1504,8 @@ func TestEnsureTokenExists_NoRecreate(t *testing.T) {
 }
 
 func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
+	t.Setenv("PATH", "testdata:/bin")
+	t.Setenv("HOME", t.TempDir())
 	client, err := client.New(&config.Config{})
 	if err != nil {
 		t.Fatal(err)
@@ -1543,12 +1617,13 @@ func TestResourceWorkspaceUpdatePrivateAccessSettings(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
-				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234?update_mask=credentials_id,managed_services_customer_managed_key_id,network_id,private_access_settings_id,storage_customer_managed_key_id",
 				ExpectedRequest: map[string]any{
-					"credentials_id":                  "bcd",
-					"network_id":                      "fgh",
-					"storage_customer_managed_key_id": "def",
-					"private_access_settings_id":      "pas",
+					"credentials_id":                           "bcd",
+					"network_id":                               "fgh",
+					"storage_customer_managed_key_id":          "def",
+					"managed_services_customer_managed_key_id": "def",
+					"private_access_settings_id":               "pas",
 				},
 			},
 			{

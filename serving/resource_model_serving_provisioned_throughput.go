@@ -14,9 +14,36 @@ const (
 	defaultPtProvisionTimeout = 10 * time.Minute
 )
 
+// preserveConfigOrderPt re-orders the served_entities in the API response for provisioned
+// throughput endpoints to match the order specified in the HCL configuration. This prevents
+// spurious diffs when the API returns items in a different order (e.g., alphabetically).
+func preserveConfigOrderPt(s map[string]*schema.Schema, d *schema.ResourceData, apiResponse *serving.EndpointCoreConfigOutput) {
+	var config serving.CreatePtEndpointRequest
+	common.DataToStructPointer(d, s, &config)
+
+	if apiResponse == nil {
+		return
+	}
+
+	// Re-order served_entities to match config order
+	if len(config.Config.ServedEntities) > 0 && len(apiResponse.ServedEntities) > 0 {
+		configNames := make([]string, len(config.Config.ServedEntities))
+		for i, entity := range config.Config.ServedEntities {
+			configNames[i] = entity.Name
+		}
+		apiResponse.ServedEntities = reorderByName(configNames, apiResponse.ServedEntities,
+			func(e serving.ServedEntityOutput) string { return e.Name })
+	}
+}
+
+type ModelServingProvisionedThroughputSchemaStruct struct {
+	serving.CreatePtEndpointRequest
+	common.Namespace
+}
+
 func ResourceModelServingProvisionedThroughput() common.Resource {
 	s := common.StructToSchema(
-		serving.CreatePtEndpointRequest{},
+		ModelServingProvisionedThroughputSchemaStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			common.CustomizeSchemaPath(m, "name").SetForceNew()
 			common.CustomizeSchemaPath(m, "config", "traffic_config").SetComputed()
@@ -30,16 +57,23 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			common.CustomizeSchemaPath(m, "ai_gateway", "guardrails", "input", "pii").SetOptional().SetComputed()
 			common.CustomizeSchemaPath(m, "ai_gateway", "guardrails", "input", "pii", "behavior").SetOptional().SetComputed()
 
+			// Tags should have Set type
+			m["tags"].Type = schema.TypeSet
+
 			m["serving_endpoint_id"] = &schema.Schema{
 				Computed: true,
 				Type:     schema.TypeString,
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 
 	return common.Resource{
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -62,7 +96,7 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			var sOrig serving.ServingEndpointDetailed
 			common.DataToStructPointer(d, s, &sOrig)
 			if err != nil {
@@ -72,6 +106,9 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			if err != nil {
 				return err
 			}
+			// Copy sensitive plaintext fields from state to API response to prevent drift
+			copySensitiveExternalModelFields(&sOrig, endpoint)
+			preserveConfigOrderPt(s, d, endpoint.Config)
 			err = common.StructToData(*endpoint, s, d)
 			if err != nil {
 				return err
@@ -80,7 +117,7 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -113,7 +150,7 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}

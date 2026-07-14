@@ -8,38 +8,49 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type servicePrincipalData struct {
+	ApplicationID  string `json:"application_id,omitempty" tf:"computed"`
+	DisplayName    string `json:"display_name,omitempty" tf:"computed"`
+	SpID           string `json:"sp_id,omitempty" tf:"computed"`
+	ScimID         string `json:"scim_id,omitempty" tf:"computed"`
+	ID             string `json:"id,omitempty" tf:"computed"`
+	Home           string `json:"home,omitempty" tf:"computed"`
+	Repos          string `json:"repos,omitempty" tf:"computed"`
+	Active         bool   `json:"active,omitempty" tf:"computed"`
+	ExternalID     string `json:"external_id,omitempty" tf:"computed"`
+	AclPrincipalID string `json:"acl_principal_id,omitempty" tf:"computed"`
+}
+
 // DataSourceServicePrincipal returns information about the spn specified by the application_id, id, display_name, or scim_id
 func DataSourceServicePrincipal() common.Resource {
-	type spnData struct {
-		ApplicationID  string `json:"application_id,omitempty" tf:"computed"`
-		DisplayName    string `json:"display_name,omitempty" tf:"computed"`
-		SpID           string `json:"sp_id,omitempty" tf:"computed"`
-		ScimID         string `json:"scim_id,omitempty" tf:"computed"`
-		ID             string `json:"id,omitempty" tf:"computed"`
-		Home           string `json:"home,omitempty" tf:"computed"`
-		Repos          string `json:"repos,omitempty" tf:"computed"`
-		Active         bool   `json:"active,omitempty" tf:"computed"`
-		ExternalID     string `json:"external_id,omitempty" tf:"computed"`
-		AclPrincipalID string `json:"acl_principal_id,omitempty" tf:"computed"`
-	}
 
-	s := common.StructToSchema(spnData{}, func(
+	s := common.StructToSchema(servicePrincipalData{}, func(
 		s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["application_id"].ExactlyOneOf = []string{"application_id", "display_name", "scim_id"}
 		s["display_name"].ExactlyOneOf = []string{"application_id", "display_name", "scim_id"}
 		s["scim_id"].ExactlyOneOf = []string{"application_id", "display_name", "scim_id"}
+		common.AddApiField(s)
 		return s
 	})
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
+		IsDual: true,
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
-			var response spnData
+			if err := common.ValidateApiLevelForUnifiedHostFromData(d, m); err != nil {
+				return err
+			}
+			newClient, err := m.DatabricksClientForDualResource(ctx, d)
+			if err != nil {
+				return err
+			}
+			var response servicePrincipalData
 			var spList []User
-			var err error
 
 			common.DataToStructPointer(d, s, &response)
-			spnAPI := NewServicePrincipalsAPI(ctx, m)
+			spnAPI := NewServicePrincipalsAPI(ctx, newClient, common.GetApiLevel(d))
 
 			if response.ApplicationID != "" {
 				spList, err = spnAPI.Filter(fmt.Sprintf(`applicationId eq "%s"`, response.ApplicationID), true)

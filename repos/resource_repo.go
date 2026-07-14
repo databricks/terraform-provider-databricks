@@ -68,12 +68,12 @@ func (a ReposAPI) Create(r reposCreateRequest) (ReposInformation, error) {
 		}
 	}
 
-	err := a.client.Post(a.context, "/repos", r, &resp)
+	err := a.client.Post(a.context, "/repos", r, &resp, a.client.AddWorkspaceIdHeader)
 	return resp, err
 }
 
 func (a ReposAPI) Delete(id string) error {
-	return a.client.Delete(a.context, fmt.Sprintf("/repos/%s", id), nil)
+	return a.client.Delete(a.context, fmt.Sprintf("/repos/%s", id), nil, a.client.AddWorkspaceIdHeader)
 }
 
 func (a ReposAPI) Update(id string, r map[string]any) error {
@@ -83,18 +83,18 @@ func (a ReposAPI) Update(id string, r map[string]any) error {
 	// TODO: update may change ONE OF (url AND provider (optional)), (path), or (branch OR tag).
 	// for URL/provider force re-create as there are limits on what could be done for changing URL/provider
 	if path, ok := r["path"]; ok {
-		err := a.client.Patch(a.context, fmt.Sprintf("/repos/%s", id), map[string]any{"path": path})
+		err := a.client.Patch(a.context, fmt.Sprintf("/repos/%s", id), map[string]any{"path": path}, a.client.AddWorkspaceIdHeader)
 		if err != nil {
 			return err
 		}
 		delete(r, "path")
 	}
-	return a.client.Patch(a.context, fmt.Sprintf("/repos/%s", id), r)
+	return a.client.Patch(a.context, fmt.Sprintf("/repos/%s", id), r, a.client.AddWorkspaceIdHeader)
 }
 
 func (a ReposAPI) Read(id string) (ReposInformation, error) {
 	var resp ReposInformation
-	err := a.client.Get(a.context, fmt.Sprintf("/repos/%s", id), nil, &resp)
+	err := a.client.Get(a.context, fmt.Sprintf("/repos/%s", id), nil, &resp, a.client.AddWorkspaceIdHeader)
 	return resp, err
 }
 
@@ -111,7 +111,7 @@ func (a ReposAPI) List(prefix string) ([]ReposInformation, error) {
 	reposList := []ReposInformation{}
 	for {
 		var resp ReposListResponse
-		err := a.client.Get(a.context, "/repos", req, &resp)
+		err := a.client.Get(a.context, "/repos", req, &resp, a.client.AddWorkspaceIdHeader)
 		if err != nil {
 			return nil, err
 		}
@@ -188,14 +188,23 @@ func ResourceRepo() common.Resource {
 		}
 
 		delete(s, "id")
+		common.AddNamespaceInSchema(s)
+		common.NamespaceCustomizeSchemaMap(s)
 		return s
 	})
 
 	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 1,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			reposAPI := NewReposAPI(ctx, c)
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			reposAPI := NewReposAPI(ctx, newClient)
 			var repo ReposInformation
 			common.DataToStructPointer(d, s, &repo)
 
@@ -218,7 +227,11 @@ func ResourceRepo() common.Resource {
 			return reposAPI.Update(d.Id(), updateReq)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			reposAPI := NewReposAPI(ctx, c)
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			reposAPI := NewReposAPI(ctx, newClient)
 			resp, err := reposAPI.Read(d.Id())
 			if err != nil {
 				return err
@@ -231,10 +244,14 @@ func ResourceRepo() common.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var repo ReposInformation
 			common.DataToStructPointer(d, s, &repo)
 
-			reposAPI := NewReposAPI(ctx, c)
+			reposAPI := NewReposAPI(ctx, newClient)
 			req := map[string]any{}
 			// Not working yet, wait until API is ready
 			// if d.HasChange("path") {
@@ -262,7 +279,11 @@ func ResourceRepo() common.Resource {
 			return reposAPI.Update(d.Id(), req)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewReposAPI(ctx, c).Delete(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			return NewReposAPI(ctx, newClient).Delete(d.Id())
 		},
 	}
 }

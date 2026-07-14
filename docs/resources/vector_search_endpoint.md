@@ -3,6 +3,8 @@ subcategory: "Mosaic AI Vector Search"
 ---
 # databricks_vector_search_endpoint Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/vectorsearchendpoints)
+
 This resource allows you to create [Mosaic AI Vector Search Endpoint](https://docs.databricks.com/en/generative-ai/vector-search.html) in Databricks.  Mosaic AI Vector Search is a serverless similarity search engine that allows you to store a vector representation of your data, including metadata, in a vector database.  The Mosaic AI Vector Search Endpoint is used to create and access vector search indexes.
 
 -> This resource can only be used with a workspace-level provider!
@@ -23,6 +25,8 @@ The following arguments are supported:
 * `name` - (Required) Name of the Mosaic AI Vector Search Endpoint to create. (Change leads to recreation of the resource).
 * `endpoint_type` (Required) Type of Mosaic AI Vector Search Endpoint.  Currently only accepting single value: `STANDARD` (See [documentation](https://docs.databricks.com/api/workspace/vectorsearchendpoints/createendpoint) for the list of currently supported values). (Change leads to recreation of the resource).
 * `budget_policy_id` - (Optional) The Budget Policy ID set for this resource.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

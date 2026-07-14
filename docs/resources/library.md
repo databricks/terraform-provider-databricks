@@ -3,6 +3,8 @@ subcategory: "Compute"
 ---
 # databricks_library resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/libraries)
+
 Installs a [library](https://docs.databricks.com/libraries/index.html) on [databricks_cluster](cluster.md). Each different type of library has a slightly different syntax. It's possible to set only one type of library within one resource. Otherwise, the plan will fail with an error.
 
 -> This resource can only be used with a workspace-level provider!
@@ -11,7 +13,11 @@ Installs a [library](https://docs.databricks.com/libraries/index.html) on [datab
 
 ## Plugin Framework Migration
 
-The library resource has been migrated from sdkv2 to plugin framework。 If you encounter any problem with this resource and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_RESOURCES="databricks_library"`.
+The library resource has been migrated from sdkv2 to plugin framework. If you encounter any problem with this resource and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_RESOURCES="databricks_library"`.
+
+~> **Deprecation**: The SDKv2 fallback implementation, selectable via `USE_SDK_V2_RESOURCES="databricks_library"`, is **deprecated** and will be removed in the next major release of the provider. Setting the environment variable now emits a runtime warning; remove the override to use the default Plugin Framework implementation.
+
+-> **Upgrading from v1.114.0**: state written by v1.114.0 encodes `provider_config` as a single object instead of a list. After upgrading the provider, edit each `databricks_library` instance in your state file to convert `"provider_config": {"workspace_id": "X"}` to `"provider_config": null` (recommended if you didn't set `provider_config` in HCL) or to `"provider_config": [{"workspace_id": "X"}]` (if you did). Without this edit, `terraform plan` fails with `Error decoding ... missing expected [`. Users on v1.113.0 are unaffected.
 
 ## Installing library on all clusters
 
@@ -126,6 +132,38 @@ resource "databricks_library" "rkeops" {
   }
 }
 ```
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `cluster_id` - (Required) ID of the [databricks_cluster](cluster.md) to install the library on.
+
+You must specify exactly **one** of the following library types:
+
+* `jar` - (Optional) Path to the JAR library. Supported URIs include Workspace paths, Unity Catalog Volumes paths, and S3 URIs. For example: `/Workspace/path/to/library.jar`, `/Volumes/path/to/library.jar` or `s3://my-bucket/library.jar`. If S3 is used, make sure the cluster has read access to the library. You may need to launch the cluster with an IAM role to access the S3 URI.
+
+* `egg` - (Optional, Deprecated) Path to the EGG library. Installing Python egg files is deprecated and is not supported in Databricks Runtime 14.0 and above. Use `whl` or `pypi` instead.
+
+* `whl` - (Optional) Path to the wheel library. Supported URIs include Workspace paths, Unity Catalog Volumes paths, and S3 URIs. For example: `/Workspace/path/to/library.whl`, `/Volumes/path/to/library.whl` or `s3://my-bucket/library.whl`. If S3 is used, make sure the cluster has read access to the library. You may need to launch the cluster with an IAM role to access the S3 URI.
+
+* `requirements` - (Optional) Path to the requirements.txt file. Only Workspace paths and Unity Catalog Volumes paths are supported. For example: `/Workspace/path/to/requirements.txt` or `/Volumes/path/to/requirements.txt`. Requires a cluster with DBR 15.0+.
+
+* `maven` - (Optional) Configuration block for a Maven library. The block consists of the following fields:
+  * `coordinates` - (Required) Gradle-style Maven coordinates. For example: `org.jsoup:jsoup:1.7.2`.
+  * `repo` - (Optional) Maven repository to install the Maven package from. If omitted, both Maven Central Repository and Spark Packages are searched.
+  * `exclusions` - (Optional) List of dependencies to exclude. For example: `["slf4j:slf4j", "*:hadoop-client"]`. See [Maven dependency exclusions](https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html) for more information.
+
+* `pypi` - (Optional) Configuration block for a PyPI library. The block consists of the following fields:
+  * `package` - (Required) The name of the PyPI package to install. An optional exact version specification is also supported. For example: `simplejson` or `simplejson==3.8.0`.
+  * `repo` - (Optional) The repository where the package can be found. If not specified, the default pip index is used.
+
+* `cran` - (Optional) Configuration block for a CRAN library. The block consists of the following fields:
+  * `package` - (Required) The name of the CRAN package to install.
+  * `repo` - (Optional) The repository where the package can be found. If not specified, the default CRAN repo is used.
+
+* `provider_config` - (Optional) Configuration block for management through the account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID that the resource belongs to. This workspace must be part of the account that the provider is configured with.
 
 ## Import
 

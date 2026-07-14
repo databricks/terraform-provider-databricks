@@ -6,16 +6,18 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -32,10 +34,121 @@ type PolicyInfoDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
+// ProviderConfigData contains the fields to configure the provider.
+type ProviderConfigData struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+// ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
+func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
+	return attrs
+}
+
+// ProviderConfigDataWorkspaceIDPlanModifier is plan modifier for the workspace_id field.
+// Resource requires replacement if the workspace_id changes from one non-empty value to another.
+func ProviderConfigDataWorkspaceIDPlanModifier(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+	// Require replacement if workspace_id changes from one non-empty value to another
+	oldValue := req.StateValue.ValueString()
+	newValue := req.PlanValue.ValueString()
+
+	if oldValue != "" && newValue != "" && oldValue != newValue {
+		resp.RequiresReplace = true
+	}
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
+// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
+// (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
+func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model and contains additional fields.
+//
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfigData
+// only implements ToObjectValue() and Type().
+func (r ProviderConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+}
+
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and contains additional fields.
+func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
+}
+
 // PolicyInfoData extends the main model with additional fields.
 type PolicyInfoData struct {
-	catalog_tf.PolicyInfo
-	WorkspaceID types.String `tfsdk:"workspace_id"`
+	// Options for column mask policies. Valid only if `policy_type` is
+	// `POLICY_TYPE_COLUMN_MASK`. Required on create and optional on update.
+	// When specified on update, the new options will replace the existing
+	// options as a whole.
+	ColumnMask types.Object `tfsdk:"column_mask"`
+	// Optional description of the policy.
+	Comment types.String `tfsdk:"comment"`
+	// Time at which the policy was created, in epoch milliseconds. Output only.
+	CreatedAt types.Int64 `tfsdk:"created_at"`
+	// Username of the user who created the policy. Output only.
+	CreatedBy types.String `tfsdk:"created_by"`
+	// Optional list of user or group names that should be excluded from the
+	// policy.
+	ExceptPrincipals types.List `tfsdk:"except_principals"`
+	// Type of securables that the policy should take effect on. Only `TABLE` is
+	// supported at this moment. Required on create and optional on update.
+	ForSecurableType types.String `tfsdk:"for_securable_type"`
+	// Unique identifier of the policy. This field is output only and is
+	// generated by the system.
+	Id types.String `tfsdk:"id"`
+	// Optional list of condition expressions used to match table columns. Only
+	// valid when `for_securable_type` is `TABLE`. When specified, the policy
+	// only applies to tables whose columns satisfy all match conditions.
+	MatchColumns types.List `tfsdk:"match_columns"`
+	// Name of the policy. Required on create and optional on update. To rename
+	// the policy, set `name` to a different value on update.
+	Name types.String `tfsdk:"name"`
+	// Full name of the securable on which the policy is defined. Required on
+	// create.
+	OnSecurableFullname types.String `tfsdk:"on_securable_fullname"`
+	// Type of the securable on which the policy is defined. Only `CATALOG`,
+	// `SCHEMA` and `TABLE` are supported at this moment. Required on create.
+	OnSecurableType types.String `tfsdk:"on_securable_type"`
+	// Type of the policy. Required on create.
+	PolicyType types.String `tfsdk:"policy_type"`
+	// Options for row filter policies. Valid only if `policy_type` is
+	// `POLICY_TYPE_ROW_FILTER`. Required on create and optional on update. When
+	// specified on update, the new options will replace the existing options as
+	// a whole.
+	RowFilter types.Object `tfsdk:"row_filter"`
+	// List of user or group names that the policy applies to. Required on
+	// create and optional on update.
+	ToPrincipals types.List `tfsdk:"to_principals"`
+	// Time at which the policy was last modified, in epoch milliseconds. Output
+	// only.
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
+	// Username of the user who last modified the policy. Output only.
+	UpdatedBy types.String `tfsdk:"updated_by"`
+	// Optional condition when the policy should take effect.
+	WhenCondition      types.String `tfsdk:"when_condition"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -46,7 +159,14 @@ type PolicyInfoData struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m PolicyInfoData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.PolicyInfo.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"column_mask":       reflect.TypeOf(catalog_tf.ColumnMaskOptions{}),
+		"except_principals": reflect.TypeOf(types.String{}),
+		"match_columns":     reflect.TypeOf(catalog_tf.MatchColumn{}),
+		"row_filter":        reflect.TypeOf(catalog_tf.RowFilterOptions{}),
+		"to_principals":     reflect.TypeOf(types.String{}),
+		"provider_config":   reflect.TypeOf(ProviderConfigData{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -56,31 +176,88 @@ func (m PolicyInfoData) GetComplexFieldTypes(ctx context.Context) map[string]ref
 // interfere with how the plugin framework retrieves and sets values in state. Thus, PolicyInfoData
 // only implements ToObjectValue() and Type().
 func (m PolicyInfoData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.PolicyInfo.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{
+			"column_mask":           m.ColumnMask,
+			"comment":               m.Comment,
+			"created_at":            m.CreatedAt,
+			"created_by":            m.CreatedBy,
+			"except_principals":     m.ExceptPrincipals,
+			"for_securable_type":    m.ForSecurableType,
+			"id":                    m.Id,
+			"match_columns":         m.MatchColumns,
+			"name":                  m.Name,
+			"on_securable_fullname": m.OnSecurableFullname,
+			"on_securable_type":     m.OnSecurableType,
+			"policy_type":           m.PolicyType,
+			"row_filter":            m.RowFilter,
+			"to_principals":         m.ToPrincipals,
+			"updated_at":            m.UpdatedAt,
+			"updated_by":            m.UpdatedBy,
+			"when_condition":        m.WhenCondition,
+
+			"provider_config": m.ProviderConfigData,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m PolicyInfoData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.PolicyInfo.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"column_mask": catalog_tf.ColumnMaskOptions{}.Type(ctx),
+			"comment":     types.StringType,
+			"created_at":  types.Int64Type,
+			"created_by":  types.StringType,
+			"except_principals": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"for_securable_type": types.StringType,
+			"id":                 types.StringType,
+			"match_columns": basetypes.ListType{
+				ElemType: catalog_tf.MatchColumn{}.Type(ctx),
+			},
+			"name":                  types.StringType,
+			"on_securable_fullname": types.StringType,
+			"on_securable_type":     types.StringType,
+			"policy_type":           types.StringType,
+			"row_filter":            catalog_tf.RowFilterOptions{}.Type(ctx),
+			"to_principals": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"updated_at":     types.Int64Type,
+			"updated_by":     types.StringType,
+			"when_condition": types.StringType,
 
-	return types.ObjectType{AttrTypes: attrTypes}
+			"provider_config": ProviderConfigData{}.Type(ctx),
+		},
+	}
 }
 
-// SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and additional fields. This method is called
-// during read.
-func (m *PolicyInfoData) SyncFieldsDuringRead(ctx context.Context, existingState PolicyInfoData) {
-	m.PolicyInfo.SyncFieldsDuringRead(ctx, existingState.PolicyInfo)
+func (m PolicyInfoData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column_mask"] = attrs["column_mask"].SetComputed()
+	attrs["comment"] = attrs["comment"].SetComputed()
+	attrs["created_at"] = attrs["created_at"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
+	attrs["except_principals"] = attrs["except_principals"].SetComputed()
+	attrs["for_securable_type"] = attrs["for_securable_type"].SetComputed()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["match_columns"] = attrs["match_columns"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["on_securable_fullname"] = attrs["on_securable_fullname"].SetRequired()
+	attrs["on_securable_type"] = attrs["on_securable_type"].SetRequired()
+	attrs["policy_type"] = attrs["policy_type"].SetComputed()
+	attrs["row_filter"] = attrs["row_filter"].SetComputed()
+	attrs["to_principals"] = attrs["to_principals"].SetComputed()
+	attrs["updated_at"] = attrs["updated_at"].SetComputed()
+	attrs["updated_by"] = attrs["updated_by"].SetComputed()
+	attrs["when_condition"] = attrs["when_condition"].SetComputed()
+
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
+	return attrs
 }
 
 func (r *PolicyInfoDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -88,10 +265,7 @@ func (r *PolicyInfoDataSource) Metadata(ctx context.Context, req datasource.Meta
 }
 
 func (r *PolicyInfoDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, PolicyInfoData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, PolicyInfoData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks PolicyInfo",
 		Attributes:  attrs,
@@ -106,12 +280,6 @@ func (r *PolicyInfoDataSource) Configure(ctx context.Context, req datasource.Con
 func (r *PolicyInfoDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config PolicyInfoData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -124,13 +292,23 @@ func (r *PolicyInfoDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	response, err := client.Policies.GetPolicy(ctx, readRequest)
 	if err != nil {
-		if apierr.IsMissing(err) {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-
 		resp.Diagnostics.AddError("failed to get policy_info", err.Error())
 		return
 	}
@@ -140,8 +318,12 @@ func (r *PolicyInfoDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	newState.SyncFieldsDuringRead(ctx, config)
+	// Preserve provider_config from config so state.Set has the correct type info
+	newState.ProviderConfigData = config.ProviderConfigData
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

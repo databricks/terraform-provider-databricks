@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_user_instance_profile Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/users)
+
 -> **Deprecated** Please rewrite with [databricks_user_role](user_role.md). This resource will be removed in v0.5.x
 
 This resource allows you to attach [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_user](user.md).
@@ -30,6 +32,7 @@ The following arguments are supported:
 
 * `user_id` - (Required) This is the id of the [user](user.md) resource.
 * `instance_profile_id` -  (Required) This is the id of the [instance profile](instance_profile.md) resource.
+* `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
 
 ## Attribute Reference
 

@@ -2,6 +2,8 @@
 subcategory: "Apps"
 ---
 # databricks_apps_settings_custom_template Resource
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
 Custom App Templates store the metadata of custom app code hosted in an external Git repository, enabling users to reuse boilerplate code when creating apps.
 
 ### Use Cases
@@ -104,13 +106,19 @@ The following arguments are supported:
   It must be unique within the workspace
 * `path` (string, required) - The path to the template within the Git repository
 * `description` (string, optional) - The description of the template
-* `workspace_id` (string, optional) - Workspace ID of the resource
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### AppManifest
 * `name` (string, required) - Name of the app defined by manifest author / publisher
 * `version` (integer, required) - The manifest schema version, for now only 1 is allowed
 * `description` (string, optional) - Description of the app defined by manifest author / publisher
 * `resource_specs` (list of AppManifestAppResourceSpec, optional)
+
+### AppManifestAppResourceExperimentSpec
+* `permission` (string, required) - Possible values are: `CAN_EDIT`, `CAN_MANAGE`, `CAN_READ`
 
 ### AppManifestAppResourceJobSpec
 * `permission` (string, required) - Permissions to grant on the Job. Supported permissions are: "CAN_MANAGE", "IS_OWNER", "CAN_MANAGE_RUN", "CAN_VIEW". Possible values are: `CAN_MANAGE`, `CAN_MANAGE_RUN`, `CAN_VIEW`, `IS_OWNER`
@@ -124,6 +132,7 @@ The following arguments are supported:
 ### AppManifestAppResourceSpec
 * `name` (string, required) - Name of the App Resource
 * `description` (string, optional) - Description of the App Resource
+* `experiment_spec` (AppManifestAppResourceExperimentSpec, optional)
 * `job_spec` (AppManifestAppResourceJobSpec, optional)
 * `secret_spec` (AppManifestAppResourceSecretSpec, optional)
 * `serving_endpoint_spec` (AppManifestAppResourceServingEndpointSpec, optional)
@@ -134,8 +143,8 @@ The following arguments are supported:
 * `permission` (string, required) - Permission to grant on the SQL warehouse. Supported permissions are: "CAN_MANAGE", "CAN_USE", "IS_OWNER". Possible values are: `CAN_MANAGE`, `CAN_USE`, `IS_OWNER`
 
 ### AppManifestAppResourceUcSecurableSpec
-* `permission` (string, required) - . Possible values are: `MANAGE`, `READ_VOLUME`, `WRITE_VOLUME`
-* `securable_type` (string, required) - . Possible values are: `VOLUME`
+* `permission` (string, required) - Possible values are: `EXECUTE`, `MANAGE`, `READ_VOLUME`, `SELECT`, `USE_CONNECTION`, `WRITE_VOLUME`
+* `securable_type` (string, required) - Possible values are: `CONNECTION`, `FUNCTION`, `TABLE`, `VOLUME`
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -152,5 +161,5 @@ import {
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_apps_settings_custom_template "name"
+terraform import databricks_apps_settings_custom_template.this "name"
 ```

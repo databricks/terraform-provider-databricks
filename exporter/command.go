@@ -8,29 +8,12 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"golang.org/x/exp/maps"
 )
-
-type levelWriter []string
-
-var logLevel = levelWriter{"[INFO]", "[ERROR]", "[WARN]"}
-
-func (lw *levelWriter) Write(p []byte) (n int, err error) {
-	a := string(p)
-	for _, l := range *lw {
-		if strings.HasPrefix(a, l) {
-			timeStr := time.Now().Local().Format(time.RFC3339Nano)
-			logStr := a[0:len(l)] + " " + timeStr + ": " + strings.TrimLeft(a[len(l):len(a)-1], " ") + "\n"
-			return os.Stdout.WriteString(logStr)
-		}
-	}
-	return
-}
 
 func (ic *importContext) interactivePrompts() string {
 	req, _ := http.NewRequest("GET", "/", nil)
@@ -75,15 +58,8 @@ func (ic *importContext) interactivePrompts() string {
 
 // Run import according to flags
 func Run(args ...string) error {
-	log.SetOutput(&logLevel)
-	log.Printf("[WARN] This tooling is experimental and provided as is. It has an evolving interface, which may change or be removed in future versions of the provider.")
-	client, err := client.New(&config.Config{})
-	if err != nil {
-		return err
-	}
-	ic := newImportContext(&common.DatabricksClient{
-		DatabricksClient: client,
-	})
+	databricksClient := &common.DatabricksClient{}
+	ic := newImportContext(databricksClient)
 
 	flags := flag.NewFlagSet("exporter", flag.ExitOnError)
 	flags.StringVar(&ic.Module, "module", "",
@@ -112,8 +88,8 @@ func Run(args ...string) error {
 	flags.BoolVar(&ic.nativeImportSupported, "native-import", false, "Generate native import blocks (requires Terraform 1.5+)")
 	flags.StringVar(&ic.updatedSinceStr, "updated-since", "",
 		"Include only resources updated since a given timestamp (in ISO8601 format, i.e. 2023-07-01T00:00:00Z)")
-	flags.BoolVar(&debug, "debug", false, "Print extra debug information.")
-	flags.BoolVar(&trace, "trace", false, "Print full debug information.")
+	flags.BoolVar(&debug, "debug", false, "Print debug information, including Databricks Go SDK HTTP logs.")
+	flags.BoolVar(&trace, "trace", false, "Print trace information, including debug information and Databricks Go SDK HTTP logs.")
 	flags.BoolVar(&ic.mounts, "mounts", false, "List DBFS mount points.")
 	flags.BoolVar(&ic.generateDeclaration, "generateProviderDeclaration", true,
 		"Generate Databricks provider declaration.")
@@ -141,6 +117,14 @@ func Run(args ...string) error {
 		"all dependencies of just one cluster, specify -listing=compute")
 	prefix := ""
 	flags.StringVar(&prefix, "prefix", "", "Prefix that will be added to the name of all exported resources")
+	var targetCloud string
+	flags.StringVar(&targetCloud, "targetCloud", "",
+		"Target cloud for generated code (aws, azure, gcp). "+
+			"If different from source cloud, will convert cloud-specific attributes.")
+	var nodeTypeMappingFile string
+	flags.StringVar(&nodeTypeMappingFile, "nodeTypeMappingFile", "",
+		"Path to JSON file containing node type mappings between clouds. "+
+			"Can only be used with -targetCloud flag.")
 	newArgs := args
 	if len(args) > 1 && args[1] == "exporter" {
 		newArgs = args[2:]
@@ -149,16 +133,40 @@ func Run(args ...string) error {
 	if err != nil {
 		return err
 	}
+
+	configureExporterLogging(debug, trace)
+	log.Printf("[WARN] This tooling is experimental and provided as is. It has an evolving interface, which may change or be removed in future versions of the provider.")
+
+	client, err := client.New(&config.Config{})
+	if err != nil {
+		return err
+	}
+	databricksClient.DatabricksClient = client
+
 	if !skipInteractive {
 		configuredListing = ic.interactivePrompts()
 	}
 	if len(prefix) > 0 {
 		ic.prefix = prefix + "_"
 	}
-	if trace {
-		logLevel = append(logLevel, "[DEBUG]", "[TRACE]")
-	} else if debug {
-		logLevel = append(logLevel, "[DEBUG]")
+	if !isValidTargetCloud(targetCloud) {
+		return fmt.Errorf("invalid targetCloud value: %s. Must be one of: aws, azure, gcp", targetCloud)
+	}
+	ic.targetCloud = targetCloud
+
+	// Validate nodeTypeMappingFile can only be used with targetCloud
+	if nodeTypeMappingFile != "" && targetCloud == "" {
+		return fmt.Errorf("nodeTypeMappingFile can only be specified together with targetCloud")
+	}
+
+	// Load node type mappings if specified
+	if nodeTypeMappingFile != "" {
+		mappings, err := loadNodeTypeMappings(nodeTypeMappingFile)
+		if err != nil {
+			return fmt.Errorf("failed to load node type mappings: %w", err)
+		}
+		ic.nodeTypeMappings = mappings
+		log.Printf("[INFO] Loaded %d node type mappings from %s", len(mappings.Mappings), nodeTypeMappingFile)
 	}
 	ic.enableServices(configuredServices)
 	ic.enableListing(configuredListing)

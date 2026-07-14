@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_service_principal_secret Resource
 
+[API Documentation](https://docs.databricks.com/api/account/serviceprincipalsecrets)
+
 With this resource you can create a secret for a given [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html).
 
 -> This resource can only be used with an account-level or workspace-level provider!
@@ -43,6 +45,9 @@ The following arguments are available:
 * `service_principal_id` (Required, string) - SCIM ID of the [databricks_service_principal](service_principal.md) (not application ID).
 * `lifetime` (Optional, string) - The lifetime of the secret in seconds formatted as `NNNNs`. If this parameter is not provided, the secret will have a default lifetime of 730 days (`63072000s`).  Expiration of secret will lead to generation of new secret.
 * `time_rotating` - (Optional, string) - Changing this argument forces recreation of the secret.
+* `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

@@ -4,10 +4,12 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -15,6 +17,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"golang.org/x/exp/maps"
 
@@ -107,7 +110,7 @@ func dbsqlListObjects(ic *importContext, path string) (events []map[string]any, 
 	// TODO: create API method & use it also for data resource
 	var listResponse dbsqlListResponse
 	page_size := 100
-	err = ic.Client.Get(ic.Context, path, map[string]any{"page_size": page_size}, &listResponse)
+	err = ic.Client.Get(ic.Context, path, map[string]any{"page_size": page_size}, &listResponse, ic.Client.AddWorkspaceIdHeader)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +124,7 @@ func dbsqlListObjects(ic *importContext, path string) (events []map[string]any, 
 		var listResponse dbsqlListResponse
 		err := ic.Client.Get(ic.Context, path,
 			map[string]any{"page_size": page_size, "page": page},
-			&listResponse)
+			&listResponse, ic.Client.AddWorkspaceIdHeader)
 		if err != nil {
 			return nil, err
 		}
@@ -298,13 +301,26 @@ func (ic *importContext) createFileIn(dir, name string) (*os.File, string, error
 	return local, relativeName, nil
 }
 
-func (ic *importContext) saveFileIn(dir, name string, content []byte) (string, error) {
+func (ic *importContext) saveContentIn(dir, name string, content []byte) (string, error) {
 	local, relativeName, err := ic.createFileIn(dir, name)
 	if err != nil {
 		return "", err
 	}
 	defer local.Close()
 	_, err = local.Write(content)
+	if err != nil {
+		return "", err
+	}
+	return relativeName, nil
+}
+
+func (ic *importContext) saveReaderIn(dir, name string, reader io.Reader) (string, error) {
+	local, relativeName, err := ic.createFileIn(dir, name)
+	if err != nil {
+		return "", err
+	}
+	defer local.Close()
+	_, err = io.Copy(local, reader)
 	if err != nil {
 		return "", err
 	}
@@ -318,6 +334,18 @@ func defaultShouldOmitFieldFunc(_ *importContext, pathString string, as *schema.
 		return true
 	}
 
+	return false
+}
+
+// DefaultShouldOmitFieldFuncWithAbstraction is the abstracted version that works with both SDKv2 and Plugin Framework
+// This will be used when codegen.go is updated to use abstractions
+func DefaultShouldOmitFieldFuncWithAbstraction(_ *importContext, pathString string, fieldSchema FieldSchema, d ResourceDataWrapper, _ *resource) bool {
+	if fieldSchema.IsComputed() {
+		return true
+	}
+	if def := fieldSchema.GetDefault(); def != nil && d.Get(pathString) == def {
+		return true
+	}
 	return false
 }
 
@@ -498,15 +526,25 @@ func appendEndingSlashToDirName(dir string) string {
 	return dir + "/"
 }
 
+// getResourceAttribute retrieves an attribute value from either DataWrapper or Data
+func getResourceAttribute(res *resource, path string) (interface{}, bool) {
+	if res.DataWrapper != nil {
+		return res.DataWrapper.GetOk(path)
+	} else if res.Data != nil {
+		return res.Data.GetOk(path)
+	}
+	return nil, false
+}
+
 func isMatchingShareRecipient(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
-	shareName, ok := res.Data.GetOk("share")
+	shareName, ok := getResourceAttribute(res, "share")
 	return ok && shareName.(string) != ""
 }
 
 func isMatchignShareObject(obj string) isValidAproximationFunc {
 	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
 		objPath := strings.Replace(origPath, ".name", ".data_object_type", 1)
-		objType, ok := res.Data.GetOk(objPath)
+		objType, ok := getResourceAttribute(res, objPath)
 		return ok && objType.(string) == obj
 	}
 }
@@ -546,6 +584,15 @@ func makeNamePlusIdFunc(nm string) func(ic *importContext, d *schema.ResourceDat
 	}
 }
 
+func makeNamePlusIdFuncUnified(nm string) func(ic *importContext, wrapper ResourceDataWrapper) string {
+	return func(ic *importContext, wrapper ResourceDataWrapper) string {
+		if name, ok := wrapper.GetOk(nm); ok && name != "" {
+			return name.(string) + "_" + wrapper.Id()
+		}
+		return wrapper.Id()
+	}
+}
+
 func makeNameOrIdFunc(nm string) func(ic *importContext, d *schema.ResourceData) string {
 	return func(ic *importContext, d *schema.ResourceData) string {
 		name := d.Get(nm).(string)
@@ -554,4 +601,85 @@ func makeNameOrIdFunc(nm string) func(ic *importContext, d *schema.ResourceData)
 		}
 		return name
 	}
+}
+
+func makeNameOrIdFuncUnified(nm string) func(ic *importContext, wrapper ResourceDataWrapper) string {
+	return func(ic *importContext, wrapper ResourceDataWrapper) string {
+		if name, ok := wrapper.GetOk(nm); ok {
+			strVal, isStr := name.(string)
+			if isStr && strVal != "" {
+				return strVal
+			}
+		}
+		return wrapper.Id()
+	}
+}
+
+func (ic *importContext) emitNccBindingAndNcc(workspaceId int64, nccId string) {
+	id := fmt.Sprintf("%d/%s", workspaceId, nccId)
+	data := mws.ResourceMwsNccBinding().ToResource().TestResourceData()
+	data.MarkNewResource()
+	data.SetId(id)
+	data.Set("workspace_id", workspaceId)
+	data.Set("network_connectivity_config_id", nccId)
+	ic.Emit(&resource{
+		Resource: "databricks_mws_ncc_binding",
+		Data:     data,
+		ID:       id,
+		Name:     fmt.Sprintf("ws_%d_%s", workspaceId, nccId),
+	})
+	ic.Emit(&resource{
+		Resource: "databricks_mws_network_connectivity_config",
+		ID:       ic.accountClient.Config.AccountID + "/" + nccId,
+	})
+}
+
+// normalizeWhitespace converts multiple consecutive spaces and tabs into a single space character
+// while preserving newlines. This is useful for comparing generated Terraform code where
+// indentation may vary but line structure should be preserved.
+func normalizeWhitespace(s string) string {
+	re := regexp.MustCompile(`[ \t]+`)
+	return strings.TrimSpace(re.ReplaceAllString(s, " "))
+}
+
+func shouldOmitWithEffectiveFields(ic *importContext, pathString string, fieldSchema FieldSchema, wrapper ResourceDataWrapper, r *resource) bool {
+	if strings.HasPrefix(pathString, "effective_") {
+		return true // Effective fields are not input-only fields, so we omit them
+	}
+	// Allow input-only fields that have effective_* counterparts to pass through
+	// to the zero-value filtering stage in the codegen
+	effectiveFieldName := "effective_" + pathString
+	effectiveFieldSchema := wrapper.GetSchema().GetField(effectiveFieldName)
+	if effectiveFieldSchema != nil {
+		// This is an input field that has an effective_* counterpart
+		// Check if the value is actually a zero value for its type
+		v, ok := wrapper.GetOk(pathString)
+		if !ok {
+			return true // Field not set, omit it
+		}
+
+		// Required fields should never be omitted, even if zero
+		if fieldSchema.IsRequired() {
+			return false
+		}
+
+		// Check if it's a zero value using reflection
+		if v == nil {
+			return true
+		}
+		rv := reflect.ValueOf(v)
+		if rv.IsZero() {
+			return true // Zero value, omit it
+		}
+
+		// Check against default value if one is defined
+		if def := fieldSchema.GetDefault(); def != nil && reflect.DeepEqual(v, def) {
+			return true
+		}
+
+		// Non-zero value, don't omit it
+		return false
+	}
+	// Use default omission logic for other fields (e.g., omit computed-only fields)
+	return DefaultShouldOmitFieldFuncWithAbstraction(ic, pathString, fieldSchema, wrapper, r)
 }

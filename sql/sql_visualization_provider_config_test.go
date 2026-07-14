@@ -1,0 +1,33 @@
+package sql_test
+
+import (
+	"fmt"
+	"regexp"
+	"testing"
+
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+)
+
+func sqlVisualizationProviderConfigTemplate(providerConfig string) string {
+	return fmt.Sprintf(`
+	resource "databricks_sql_visualization" "this" {
+		query_id = "fake-query-id"
+		type = "table"
+		name = "test-viz"
+		options = "{}"
+		%s
+	}
+	`, providerConfig)
+}
+
+func TestAccSqlVisualization_ProviderConfig_EmptyID(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: sqlVisualizationProviderConfigTemplate(`
+			provider_config {
+				workspace_id = ""
+			}
+		`),
+		ExpectError: regexp.MustCompile(`expected "provider_config.0.workspace_id" to not be an empty string`),
+		PlanOnly:    true,
+	})
+}

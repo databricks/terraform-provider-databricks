@@ -88,7 +88,8 @@ func ResourceMwsCredentials() common.Resource {
 			d.Set("credentials_name", credentials.CredentialsName)
 			d.Set("role_arn", credentials.AwsCredentials.StsRole.RoleArn)
 			d.Set("creation_time", credentials.CreationTime)
-			return d.Set("external_id", credentials.AwsCredentials.StsRole.ExternalId)
+			// external_id is always the account ID, but was removed from SDK response in v0.86.0
+			return d.Set("external_id", credentials.AccountId)
 		},
 		// this resource cannot be updated, add this to prevent "doesn't support update" error from TF
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -103,7 +104,8 @@ func ResourceMwsCredentials() common.Resource {
 			if err != nil {
 				return err
 			}
-			return acc.Credentials.DeleteByCredentialsId(ctx, credsId)
+			_, err = acc.Credentials.DeleteByCredentialsId(ctx, credsId)
+			return err
 		},
 		Schema: common.StructToSchema(CredentialInfo{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			// nolint

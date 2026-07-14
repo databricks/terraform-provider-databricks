@@ -52,25 +52,31 @@ func (ti TableInfo) FullName() string {
 }
 
 func (a TablesAPI) createTable(ti *TableInfo) error {
-	return a.client.Post(a.context, "/unity-catalog/tables", ti, ti)
+	return a.client.Post(a.context, "/unity-catalog/tables", ti, ti, a.client.AddWorkspaceIdHeader)
 }
 
 func (a TablesAPI) getTable(name string) (ti TableInfo, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/tables/"+name, nil, &ti)
+	err = a.client.Get(a.context, "/unity-catalog/tables/"+name, nil, &ti, a.client.AddWorkspaceIdHeader)
 	return
 }
 
 func (a TablesAPI) deleteTable(name string) error {
-	return a.client.Delete(a.context, "/unity-catalog/tables/"+name, nil)
+	return a.client.Delete(a.context, "/unity-catalog/tables/"+name, nil, a.client.AddWorkspaceIdHeader)
+}
+
+type TableSchemaStruct struct {
+	TableInfo
+	common.Namespace
 }
 
 func ResourceTable() common.Resource {
-	tableSchema := common.StructToSchema(TableInfo{},
+	tableSchema := common.StructToSchema(TableSchemaStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
 			for _, field := range caseInsensitiveFields {
 				m[field].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 	update := updateFunctionFactory("/unity-catalog/tables", []string{
@@ -78,31 +84,52 @@ func ResourceTable() common.Resource {
 		"view_definition", "comment", "properties"})
 	return common.Resource{
 		Schema: tableSchema,
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			if err := common.NamespaceCustomizeDiffNoForceNew(ctx, d, c); err != nil {
+				return err
+			}
 			if d.Get("table_type") != "EXTERNAL" {
 				return nil
 			}
 			return nil
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var ti TableInfo
 			common.DataToStructPointer(d, tableSchema, &ti)
-			if err := NewTablesAPI(ctx, c).createTable(&ti); err != nil {
+			if err := NewTablesAPI(ctx, newClient).createTable(&ti); err != nil {
 				return err
 			}
 			d.SetId(ti.FullName())
-			return update(ctx, d, c)
+			return update(ctx, d, newClient)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ti, err := NewTablesAPI(ctx, c).getTable(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			ti, err := NewTablesAPI(ctx, newClient).getTable(d.Id())
 			if err != nil {
 				return err
 			}
 			return common.StructToData(ti, tableSchema, d)
 		},
-		Update: update,
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			return update(ctx, d, newClient)
+		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewTablesAPI(ctx, c).deleteTable(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			return NewTablesAPI(ctx, newClient).deleteTable(d.Id())
 		},
 		DeprecationMessage: fmt.Sprintf("databricks_table is deprecated in favor of databricks_sql_table. Please see %s for more information.", docs.DocumentationUrl(docs.DocOptions{Slug: "sql_table"})),
 	}

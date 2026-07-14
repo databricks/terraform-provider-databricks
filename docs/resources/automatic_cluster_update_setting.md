@@ -4,6 +4,8 @@ subcategory: "Settings"
 
 # databricks_automatic_cluster_update_workspace_setting Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/automaticclusterupdate)
+
 The `databricks_automatic_cluster_update_workspace_setting` resource allows you to control whether automatic cluster update is enabled for the current workspace. By default, it is turned off. Enabling this feature on a workspace requires that you add the Enhanced Security and Compliance add-on.
 
 ~> On Azure you need to use [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace#automatic_cluster_update_enabled-1) resource to configure this setting.
@@ -45,6 +47,8 @@ The resource supports the following arguments:
       - `window_start_time` block that defines the time of your maintenance window. The default timezone is UTC and cannot be changed.
         - `hours` - hour to perform update: 0-23
         - `minutes` - minute to perform update: 0-59
+- `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  - `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Import
 

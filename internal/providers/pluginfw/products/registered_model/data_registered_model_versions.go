@@ -29,17 +29,20 @@ type RegisteredModelVersionsDataSource struct {
 type RegisteredModelVersionsData struct {
 	FullName      types.String `tfsdk:"full_name"`
 	ModelVersions types.List   `tfsdk:"model_versions"`
+	tfschema.Namespace
 }
 
 func (RegisteredModelVersionsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["full_name"] = attrs["full_name"].SetRequired()
 	attrs["model_versions"] = attrs["model_versions"].SetOptional().SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 	return attrs
 }
 
 func (RegisteredModelVersionsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"model_versions": reflect.TypeOf(catalog_tf.ModelVersionInfo_SdkV2{}),
+		"model_versions":  reflect.TypeOf(catalog_tf.ModelVersionInfo_SdkV2{}),
+		"provider_config": reflect.TypeOf(tfschema.ProviderConfigData{}),
 	}
 }
 
@@ -62,18 +65,25 @@ func (d *RegisteredModelVersionsDataSource) Configure(_ context.Context, req dat
 }
 
 func (d *RegisteredModelVersionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	w, diags := d.Client.GetWorkspaceClient()
+	var registeredModelVersions RegisteredModelVersionsData
+	diags := req.Config.Get(ctx, &registeredModelVersions)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var registeredModelVersions RegisteredModelVersionsData
-	diags = req.Config.Get(ctx, &registeredModelVersions)
+	workspaceID, diags := tfschema.GetWorkspaceIDDataSource(ctx, registeredModelVersions.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	w, diags := d.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	modelFullName := registeredModelVersions.FullName.ValueString()
 	modelVersions, err := w.ModelVersions.ListByFullName(ctx, modelFullName)
 	if err != nil {

@@ -51,14 +51,20 @@ func DataSourceNotebook() common.Resource {
 			Computed: true,
 		},
 	}
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
-			w, err := m.WorkspaceClient()
+			newClient, err := m.DatabricksClientForUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
-			notebooksAPI := NewNotebooksAPI(ctx, m)
+			w, err := m.WorkspaceClientUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			notebooksAPI := NewNotebooksAPI(ctx, newClient)
 			path := d.Get("path").(string)
 			format := d.Get("format").(string)
 			notebookContent, err := notebooksAPI.Export(path, format)

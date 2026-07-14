@@ -2,9 +2,27 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_policy_info Data Source
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/policies)
+
+Retrieves information about a specific ABAC (Attribute-Based Access Control) policy in Unity Catalog. Use this data source to query details of an existing policy by its securable type, securable name, and policy name.
+
+ABAC policies provide governance for enforcing compliance through data attributes, allowing flexible and comprehensive access control based on conditions rather than specific resources.
+
 
 
 ## Example Usage
+### Get Policy Information
+
+```hcl
+data "databricks_policy_info" "pii_policy" {
+  on_securable_type     = "CATALOG"
+  on_securable_fullname = "main"
+  name                  = "pii_data_policy"
+}
+```
+
 
 
 ## Arguments
@@ -12,11 +30,14 @@ The following arguments are supported:
 * `name` (string, required) - Name of the policy. Required on create and optional on update.
   To rename the policy, set `name` to a different value on update
 * `on_securable_fullname` (string, required) - Full name of the securable on which the policy is defined.
-  Required on create and ignored on update
+  Required on create
 * `on_securable_type` (string, required) - Type of the securable on which the policy is defined.
   Only `CATALOG`, `SCHEMA` and `TABLE` are supported at this moment.
-  Required on create and ignored on update. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `METASTORE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
-* `workspace_id` (string, optional) - Workspace ID of the resource
+  Required on create. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `METASTORE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:
@@ -37,11 +58,11 @@ The following attributes are exported:
 * `name` (string) - Name of the policy. Required on create and optional on update.
   To rename the policy, set `name` to a different value on update
 * `on_securable_fullname` (string) - Full name of the securable on which the policy is defined.
-  Required on create and ignored on update
+  Required on create
 * `on_securable_type` (string) - Type of the securable on which the policy is defined.
   Only `CATALOG`, `SCHEMA` and `TABLE` are supported at this moment.
-  Required on create and ignored on update. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `METASTORE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
-* `policy_type` (string) - Type of the policy. Required on create and ignored on update. Possible values are: `POLICY_TYPE_COLUMN_MASK`, `POLICY_TYPE_ROW_FILTER`
+  Required on create. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `METASTORE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
+* `policy_type` (string) - Type of the policy. Required on create. Possible values are: `POLICY_TYPE_COLUMN_MASK`, `POLICY_TYPE_ROW_FILTER`
 * `row_filter` (RowFilterOptions) - Options for row filter policies. Valid only if `policy_type` is `POLICY_TYPE_ROW_FILTER`.
   Required on create and optional on update. When specified on update,
   the new options will replace the existing options as a whole

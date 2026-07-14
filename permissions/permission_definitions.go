@@ -3,12 +3,13 @@ package permissions
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/permissions/entity"
 	"github.com/databricks/terraform-provider-databricks/permissions/read"
@@ -84,7 +85,7 @@ func (p resourcePermissions) getAllowedPermissionLevels(includeNonManagementPerm
 			levels = append(levels, level)
 		}
 	}
-	sort.Strings(levels)
+	slices.Sort(levels)
 	return levels
 }
 
@@ -126,7 +127,7 @@ func (p resourcePermissions) validate(ctx context.Context, entity entity.Permiss
 		}
 		// Check that the user is preventing themselves from managing the object
 		level := p.allowedPermissionLevels[string(change.PermissionLevel)]
-		if (change.UserName == currentUsername || change.ServicePrincipalName == currentUsername) && !level.isManagementPermission {
+		if (strings.EqualFold(change.UserName, currentUsername) || strings.EqualFold(change.ServicePrincipalName, currentUsername)) && !level.isManagementPermission {
 			allowedLevelsForCurrentUser := p.getAllowedPermissionLevels(false)
 			return fmt.Errorf("cannot remove management permissions for the current user for %s, allowed levels: %s", p.objectType, strings.Join(allowedLevelsForCurrentUser, ", "))
 		}
@@ -227,7 +228,7 @@ func (p resourcePermissions) prepareResponse(objectID string, objectACL *iam.Obj
 		// If the user doesn't include an access_control block for themselves, do not include it in the state.
 		// On create/update, the provider will automatically include the current user in the access_control block
 		// for appropriate resources. Otherwise, it must be included in state to prevent configuration drift.
-		if me == accessControl.UserName || me == accessControl.ServicePrincipalName {
+		if strings.EqualFold(me, accessControl.UserName) || strings.EqualFold(me, accessControl.ServicePrincipalName) {
 			if !existing.ContainsUserOrServicePrincipal(me) {
 				continue
 			}
@@ -243,8 +244,8 @@ func (p resourcePermissions) prepareResponse(objectID string, objectACL *iam.Obj
 			}
 			entity.AccessControlList = append(entity.AccessControlList, iam.AccessControlRequest{
 				GroupName:            accessControl.GroupName,
-				UserName:             accessControl.UserName,
-				ServicePrincipalName: accessControl.ServicePrincipalName,
+				UserName:             strings.ToLower(accessControl.UserName),
+				ServicePrincipalName: strings.ToLower(accessControl.ServicePrincipalName),
 				PermissionLevel:      permission.PermissionLevel,
 			})
 		}
@@ -323,7 +324,7 @@ func getResourcePermissionsFromState(d interface{ GetOk(string) (any, bool) }) (
 		seen[mapping.field] = struct{}{}
 		allFields = append(allFields, mapping.field)
 	}
-	sort.Strings(allFields)
+	slices.Sort(allFields)
 	return resourcePermissions{}, "", fmt.Errorf("at least one type of resource identifier must be set; allowed fields: %s", strings.Join(allFields, ", "))
 }
 
@@ -408,7 +409,9 @@ func allResourcePermissions() []resourcePermissions {
 				if err != nil {
 					return "", err
 				}
-				job, err := w.Jobs.GetByJobId(ctx, jobId)
+				job, err := w.Jobs.Get(ctx, jobs.GetJobRequest{
+					JobId: jobId,
+				})
 				if err != nil {
 					return "", common.IgnoreNotFoundError(err)
 				}
@@ -767,6 +770,17 @@ func allResourcePermissions() []resourcePermissions {
 			deleteAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
 		},
 		{
+			field:             "database_project_name",
+			objectType:        "database-projects",
+			requestObjectType: "database-projects",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_USE":    {isManagementPermission: false},
+				"CAN_MANAGE": {isManagementPermission: true},
+			},
+			updateAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
+			deleteAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
+		},
+		{
 			field:             "alert_v2_id",
 			objectType:        "alertv2",
 			requestObjectType: "alertsv2",
@@ -774,6 +788,28 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_READ":   {isManagementPermission: false},
 				"CAN_RUN":    {isManagementPermission: false},
 				"CAN_EDIT":   {isManagementPermission: false},
+				"CAN_MANAGE": {isManagementPermission: true},
+			},
+			updateAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
+			deleteAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
+		},
+		{
+			field:             "knowledge_assistant_id",
+			objectType:        "knowledge-assistants",
+			requestObjectType: "knowledge-assistants",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_QUERY":  {isManagementPermission: false},
+				"CAN_MANAGE": {isManagementPermission: true},
+			},
+			updateAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
+			deleteAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
+		},
+		{
+			field:             "supervisor_agent_id",
+			objectType:        "supervisor-agents",
+			requestObjectType: "supervisor-agents",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_QUERY":  {isManagementPermission: false},
 				"CAN_MANAGE": {isManagementPermission: true},
 			},
 			updateAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},

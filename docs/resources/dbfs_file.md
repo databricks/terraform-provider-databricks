@@ -3,6 +3,8 @@ subcategory: "Storage"
 ---
 # databricks_dbfs_file Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/dbfs)
+
 -> Please switch to [databricks_file](file.md) or [databricks_workspace_file](workspace_file.md) to manage files. Databricks recommends against storing any production data or sensitive information in the DBFS root.
 
 This is a resource that lets you manage relatively small files on [Databricks File System (DBFS)](https://docs.databricks.com/data/databricks-file-system.html). The best use cases are libraries for [databricks_cluster](cluster.md) or [databricks_job](job.md). You can also use [databricks_dbfs_file](../data-sources/dbfs_file.md) and [databricks_dbfs_file_paths](../data-sources/dbfs_file_paths.md) data sources.
@@ -60,6 +62,8 @@ The following arguments are supported:
 * `source` - The full absolute path to the file. Conflicts with `content_base64`.
 * `content_base64` - Encoded file contents. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances, like creating a data pipeline configuration file.
 * `path` - (Required) The path of the file in which you wish to save.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

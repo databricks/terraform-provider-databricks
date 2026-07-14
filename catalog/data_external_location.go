@@ -10,6 +10,7 @@ import (
 
 func DataSourceExternalLocation() common.Resource {
 	type ExternalLocationByID struct {
+		common.Namespace
 		Id               string                        `json:"id,omitempty" tf:"computed"`
 		Name             string                        `json:"name"`
 		ExternalLocation *catalog.ExternalLocationInfo `json:"external_location_info,omitempty" tf:"computed" `

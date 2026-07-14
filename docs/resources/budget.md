@@ -3,6 +3,8 @@ subcategory: "Billing"
 ---
 # databricks_budget Resource
 
+[API Documentation](https://docs.databricks.com/api/account/budgets)
+
 This resource allows you to manage [Databricks Budgets](https://docs.databricks.com/en/admin/account-settings/budgets.html).
 
 -> This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
@@ -49,6 +51,42 @@ resource "databricks_budget" "this" {
         operator = "IN"
         values   = ["Development"]
       }
+    }
+  }
+}
+```
+
+### Budgets for Genie
+
+Starting July 6, 2026, Genie products move to a pay-as-you-go pricing model with a per-user free monthly allowance. Account admins can begin [configuring budgets and cost controls](https://docs.databricks.com/aws/en/genie/budgets). For details, see [what's coming](https://docs.databricks.com/aws/en/release-notes/whats-coming#genie-paygo-pricing).
+
+```hcl
+// Create a Budget with resource tags matching the Genie AI Gateway resource.
+// Prerequisite: Enable AI Gateway Budget (Public Preview)
+// https://docs.databricks.com/aws/en/genie/budgets#requirements
+resource "databricks_budget" "genie_shared_budget" {
+  display_name = "genie-shared-budget"
+
+  // Apply the filter on databricks-product tag
+  filter {
+    tags {
+      key = "databricks-product"
+      value {
+        operator = "IN"
+        values   = ["genie"]
+      }
+    }
+  }
+
+  alert_configurations {
+    quantity_threshold = "2000"
+    quantity_type      = "LIST_PRICE_DOLLARS_USD"
+    trigger_type       = "CUMULATIVE_SPENDING_EXCEEDED"
+    time_period        = "MONTH"
+
+    action_configurations {
+      action_type = "EMAIL_NOTIFICATION"
+      target      = "abc@gmail.com"
     }
   }
 }

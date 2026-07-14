@@ -1,0 +1,30 @@
+package policies_test
+
+import (
+	"fmt"
+	"regexp"
+	"testing"
+
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+)
+
+func clusterPolicyProviderConfigTemplate(providerConfig string) string {
+	return fmt.Sprintf(`
+	resource "databricks_cluster_policy" "this" {
+		name = "test-policy"
+		%s
+	}
+	`, providerConfig)
+}
+
+func TestAccClusterPolicy_ProviderConfig_EmptyID(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: clusterPolicyProviderConfigTemplate(`
+			provider_config {
+				workspace_id = ""
+			}
+		`),
+		ExpectError: regexp.MustCompile(`expected "provider_config.0.workspace_id" to not be an empty string`),
+		PlanOnly:    true,
+	})
+}

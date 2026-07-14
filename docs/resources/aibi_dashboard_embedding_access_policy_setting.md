@@ -4,6 +4,8 @@ subcategory: "Settings"
 
 # databricks_aibi_dashboard_embedding_access_policy_setting Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/aibidashboardembeddingaccesspolicy)
+
 The `databricks_aibi_dashboard_embedding_access_policy_setting` resource allows you to control [embedding of AI/BI Dashboards](https://learn.microsoft.com/en-us/azure/databricks/dashboards/admin/#manage-dashboard-embedding) into other sites.
 
 -> This resource can only be used with a workspace-level provider!
@@ -24,6 +26,8 @@ The resource supports the following arguments:
 
 - `aibi_dashboard_embedding_access_policy` block with following attributes:
   - `access_policy_type` - (Required) Configured embedding policy. Possible values are `ALLOW_ALL_DOMAINS`, `ALLOW_APPROVED_DOMAINS`, `DENY_ALL_DOMAINS`.
+- `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  - `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Import
 

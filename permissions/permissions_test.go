@@ -9,6 +9,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -321,7 +322,9 @@ func TestAccPermissions_Job(t *testing.T) {
 			assert.NoError(t, err)
 			idInt, err := strconv.Atoi(jobId)
 			assert.NoError(t, err)
-			job, err := w.Jobs.GetByJobId(context.Background(), int64(idInt))
+			job, err := w.Jobs.Get(context.Background(), jobs.GetJobRequest{
+				JobId: int64(idInt),
+			})
 			assert.NoError(t, err)
 			assertContainsPermission(t, permissions, currentPrincipalType(t), job.CreatorUserName, iam.PermissionLevelIsOwner)
 			return nil
@@ -991,9 +994,6 @@ func TestAccPermissions_Query(t *testing.T) {
 
 func TestAccPermissions_App(t *testing.T) {
 	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")
-	if acceptance.IsGcp(t) {
-		acceptance.Skipf(t)("not available on GCP")
-	}
 	queryTemplate := `
 		resource "databricks_app" "this" {
 			name = "{var.RANDOM}"
@@ -1008,6 +1008,30 @@ func TestAccPermissions_App(t *testing.T) {
 		Template: queryTemplate + makePermissionsTestStage("app_name", "databricks_app.this.name",
 			currentPrincipalPermission(t, "CAN_USE"), groupPermissions("CAN_USE", "CAN_MANAGE")),
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for apps, allowed levels: CAN_MANAGE"),
+	})
+}
+
+func TestUcAccPermissions_DatabaseProject(t *testing.T) {
+	acceptance.LoadUcwsEnv(t)
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("not available on GCP")
+	}
+	queryTemplate := `
+		resource "databricks_postgres_project" "this" {
+			project_id = "{var.RANDOM}"
+			spec = {
+				pg_version = 17
+			}
+		}`
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: queryTemplate + makePermissionsTestStage("database_project_name", "databricks_postgres_project.this.project_id", groupPermissions("CAN_USE")),
+	}, acceptance.Step{
+		Template: queryTemplate + makePermissionsTestStage("database_project_name", "databricks_postgres_project.this.project_id",
+			currentPrincipalPermission(t, "CAN_MANAGE"), groupPermissions("CAN_USE", "CAN_MANAGE")),
+	}, acceptance.Step{
+		Template: queryTemplate + makePermissionsTestStage("database_project_name", "databricks_postgres_project.this.project_id",
+			currentPrincipalPermission(t, "CAN_USE"), groupPermissions("CAN_USE", "CAN_MANAGE")),
+		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for database-projects, allowed levels: CAN_MANAGE"),
 	})
 }
 

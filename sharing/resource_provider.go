@@ -29,16 +29,16 @@ type Providers struct {
 }
 
 func (a ProvidersAPI) createProvider(ci *ProviderInfo) error {
-	return a.client.Post(a.context, "/unity-catalog/providers", ci, ci)
+	return a.client.Post(a.context, "/unity-catalog/providers", ci, ci, a.client.AddWorkspaceIdHeader)
 }
 
 func (a ProvidersAPI) getProvider(name string) (ci ProviderInfo, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/providers/"+name, nil, &ci)
+	err = a.client.Get(a.context, "/unity-catalog/providers/"+name, nil, &ci, a.client.AddWorkspaceIdHeader)
 	return
 }
 
 func (a ProvidersAPI) deleteProvider(name string) error {
-	return a.client.Delete(a.context, "/unity-catalog/providers/"+name, nil)
+	return a.client.Delete(a.context, "/unity-catalog/providers/"+name, nil, a.client.AddWorkspaceIdHeader)
 }
 
 func (a ProvidersAPI) updateProvider(ci *ProviderInfo) error {
@@ -47,12 +47,14 @@ func (a ProvidersAPI) updateProvider(ci *ProviderInfo) error {
 	}{
 		Comment: ci.Comment,
 	}
-	return a.client.Patch(a.context, "/unity-catalog/providers/"+ci.Name, patch)
+	return a.client.Patch(a.context, "/unity-catalog/providers/"+ci.Name, patch, a.client.AddWorkspaceIdHeader)
 }
 
 func ResourceProvider() common.Resource {
 	providerSchema := common.StructToSchema(ProviderInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["authentication_type"].ValidateFunc = validation.StringInSlice([]string{"TOKEN"}, false)
+		common.AddNamespaceInSchema(m)
+		common.NamespaceCustomizeSchemaMap(m)
 		return m
 	})
 
@@ -63,29 +65,48 @@ func ResourceProvider() common.Resource {
 	}
 	return common.Resource{
 		Schema: providerSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiffNoForceNew(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var ri ProviderInfo
 			common.DataToStructPointer(d, providerSchema, &ri)
-			if err := NewProvidersAPI(ctx, c).createProvider(&ri); err != nil {
+			if err := NewProvidersAPI(ctx, newClient).createProvider(&ri); err != nil {
 				return err
 			}
 			d.SetId(ri.Name)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ri, err := NewProvidersAPI(ctx, c).getProvider(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			ri, err := NewProvidersAPI(ctx, newClient).getProvider(d.Id())
 			if err != nil {
 				return err
 			}
 			return common.StructToData(ri, providerSchemaForRead, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			var ri ProviderInfo
 			common.DataToStructPointer(d, providerSchema, &ri)
-			return NewProvidersAPI(ctx, c).updateProvider(&ri)
+			return NewProvidersAPI(ctx, newClient).updateProvider(&ri)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewProvidersAPI(ctx, c).deleteProvider(d.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			return NewProvidersAPI(ctx, newClient).deleteProvider(d.Id())
 		},
 	}
 }

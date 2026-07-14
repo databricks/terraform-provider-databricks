@@ -9,11 +9,47 @@ import (
 
 // DataSourceNotebookPaths ...
 func DataSourceNotebookPaths() common.Resource {
+	s := map[string]*schema.Schema{
+		"path": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"recursive": {
+			Type:     schema.TypeBool,
+			Required: true,
+			ForceNew: true,
+		},
+		"notebook_path_list": {
+			Type:     schema.TypeSet,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"language": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+					"path": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+				},
+			},
+			Set: PathListHash,
+		},
+	}
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 	return common.Resource{
+		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
+			newClient, err := m.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
 			path := d.Get("path").(string)
 			recursive := d.Get("recursive").(bool)
-			notebookList, err := NewNotebooksAPI(ctx, m).List(path, recursive, false)
+			notebookList, err := NewNotebooksAPI(ctx, newClient).List(path, recursive, false)
 			if err != nil {
 				return err
 			}
@@ -30,35 +66,6 @@ func DataSourceNotebookPaths() common.Resource {
 			// nolint
 			d.Set("notebook_path_list", notebookPathList)
 			return nil
-		},
-		Schema: map[string]*schema.Schema{
-			"path": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"recursive": {
-				Type:     schema.TypeBool,
-				Required: true,
-				ForceNew: true,
-			},
-			"notebook_path_list": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"language": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"path": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-				Set: PathListHash,
-			},
 		},
 	}
 }

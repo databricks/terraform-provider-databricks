@@ -20,6 +20,8 @@ data "databricks_dbfs_file_paths" "partitions" {
 
 * `path` - (Required) Path on DBFS for the file to perform listing
 * `recursive` - (Required) Either or not recursively list all files
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

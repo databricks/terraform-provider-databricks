@@ -10,7 +10,6 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -21,8 +20,7 @@ type UnityCatalogPermissionsAPI struct {
 	context context.Context
 }
 
-func NewUnityCatalogPermissionsAPI(ctx context.Context, m any) UnityCatalogPermissionsAPI {
-	client, _ := m.(*common.DatabricksClient).WorkspaceClient()
+func NewUnityCatalogPermissionsAPI(ctx context.Context, client *databricks.WorkspaceClient) UnityCatalogPermissionsAPI {
 	return UnityCatalogPermissionsAPI{client, ctx}
 }
 

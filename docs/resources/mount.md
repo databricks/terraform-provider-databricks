@@ -3,6 +3,8 @@ subcategory: "Storage"
 ---
 # databricks_mount Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/dbfs)
+
 -> Please switch to [databricks_volume](volume.md). DBFS mounts are deprecated.
 
 -> This resource can only be used with a workspace-level provider!
@@ -327,6 +329,9 @@ resource "databricks_mount" "marketing" {
   }
 }
 ```
+
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Migration from other mount resources
 

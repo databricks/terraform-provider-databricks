@@ -2,6 +2,10 @@
 subcategory: "Settings"
 ---
 # databricks_account_network_policy Data Source
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/account/networkpolicies)
+
 This data source can be used to get a single network policy.
 
 -> **Note** This data source can only be used with an account-level provider!
@@ -23,13 +27,149 @@ The following arguments are supported:
 The following attributes are exported:
 * `account_id` (string) - The associated account ID for this Network Policy object
 * `egress` (NetworkPolicyEgress) - The network policies applying for egress traffic
+* `ingress` (CustomerFacingIngressNetworkPolicy) - The network policies applying for ingress traffic
+* `ingress_dry_run` (CustomerFacingIngressNetworkPolicy) - The ingress policy for dry run mode. Dry run will always run even if the request
+  is allowed by the ingress policy. When this field is set, the policy will be evaluated
+  and emit logs only without blocking requests
 * `network_policy_id` (string) - The unique identifier for the network policy
 
+### CustomerFacingIngressNetworkPolicy
+* `cross_workspace_access` (CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess)
+* `private_access` (CustomerFacingIngressNetworkPolicyPrivateAccess) - The network policy restrictions for private access.
+  Configures how requests arriving over private connectivity are governed
+* `public_access` (CustomerFacingIngressNetworkPolicyPublicAccess) - The network policy restrictions for public access to the workspace.
+  Configures how public internet traffic is allowed or denied access
+
+### CustomerFacingIngressNetworkPolicyAccountApiDestination
+* `scope_qualifier` (string) - Qualifies the breadth of API access for the listed scopes. See ApiScopeQualifier. Possible values are: `API_SCOPE_QUALIFIER_ALL`, `API_SCOPE_QUALIFIER_READ`
+* `scopes` (list of string) - The API scopes to match. Use "all-apis" to match any account-level API
+
+### CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination
+* `all_destinations` (boolean) - Must be set to true
+
+### CustomerFacingIngressNetworkPolicyAccountUiDestination
+* `all_destinations` (boolean) - Must be set to true
+
+### CustomerFacingIngressNetworkPolicyAppsRuntimeDestination
+* `all_destinations` (boolean) - Must be set to true
+
+### CustomerFacingIngressNetworkPolicyAuthentication
+* `identities` (list of CustomerFacingIngressNetworkPolicyAuthenticationIdentity) - Valid only when IdentityType is IDENTITY_TYPE_SELECTED_IDENTITIES
+* `identity_type` (string) - Possible values are: `IDENTITY_TYPE_ALL_SERVICE_PRINCIPALS`, `IDENTITY_TYPE_ALL_USERS`, `IDENTITY_TYPE_SELECTED_IDENTITIES`
+
+### CustomerFacingIngressNetworkPolicyAuthenticationIdentity
+* `principal_id` (integer)
+* `principal_type` (string) - Possible values are: `PRINCIPAL_TYPE_SERVICE_PRINCIPAL`, `PRINCIPAL_TYPE_USER`
+
+### CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess
+* `allow_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule)
+* `deny_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule)
+* `restriction_mode` (string) - Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
+
+### CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule
+* `authentication` (CustomerFacingIngressNetworkPolicyAuthentication)
+* `destination` (CustomerFacingIngressNetworkPolicyRequestDestination)
+* `label` (string) - The label for this ingress rule
+* `origin` (CustomerFacingIngressNetworkPolicyCrossWorkspaceRequestOrigin)
+
+### CustomerFacingIngressNetworkPolicyCrossWorkspaceRequestOrigin
+* `all_source_workspaces` (boolean) - Matches all source workspaces
+* `selected_workspaces` (CustomerFacingIngressNetworkPolicyWorkspaceIdList) - Specific source workspace IDs to match
+
+### CustomerFacingIngressNetworkPolicyEndpoints
+* `endpoint_ids` (list of string) - The IDs of the registered endpoints. Must contain at least one endpoint ID
+
+### CustomerFacingIngressNetworkPolicyIpRanges
+* `ip_ranges` (list of string) - We only support IPv4 and IPv4 CIDR notation for now
+
+### CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination
+* `all_destinations` (boolean) - Must be set to true
+
+### CustomerFacingIngressNetworkPolicyPrivateAccess
+* `allow_rules` (list of CustomerFacingIngressNetworkPolicyPrivateIngressRule) - Allow rules are evaluated after deny rules. A request matching any allow rule is
+  allowed; a request matching no rule is denied by default. Only applies when
+  restriction_mode is RESTRICTED_ACCESS
+* `deny_rules` (list of CustomerFacingIngressNetworkPolicyPrivateIngressRule) - Deny rules are evaluated first. A request matching any deny rule is denied,
+  regardless of allow rules. Only applies when restriction_mode is RESTRICTED_ACCESS
+* `restriction_mode` (string) - The restriction mode for private access. Possible values are: `ALLOW_ALL_REGISTERED_ENDPOINTS`, `RESTRICTED_ACCESS`
+
+### CustomerFacingIngressNetworkPolicyPrivateIngressRule
+* `authentication` (CustomerFacingIngressNetworkPolicyAuthentication) - The authenticated identity the request must match. When unset, the rule matches
+  all users and service principals.
+  On the account-level network policy, scoping to specific identities is not
+  currently supported, so this field must be unset (the rule matches all users
+  and service principals)
+* `destination` (CustomerFacingIngressNetworkPolicyRequestDestination) - The destination the request must match — the resource being accessed, for example
+  the workspace UI, workspace APIs, or account-level APIs. See RequestDestination
+* `label` (string) - The label for this ingress rule
+* `origin` (CustomerFacingIngressNetworkPolicyPrivateRequestOrigin) - The origin the request must match — the private connectivity the request arrives
+  through, for example a specific set of registered endpoints or any endpoint
+  registered to the account. See PrivateRequestOrigin
+
+### CustomerFacingIngressNetworkPolicyPrivateRequestOrigin
+* `all_private_access` (boolean) - Matches requests arriving over any private connectivity, including registered
+  endpoints and the workspace's Azure Private Link (ui-api) endpoints.
+  Can only be used in deny rules of workspace-level network policies.
+  Must be set to true when specified
+* `all_registered_endpoints` (boolean) - Matches requests arriving through any endpoint registered to the account.
+  Must be set to true when specified
+* `azure_workspace_private_link` (boolean) - Matches requests arriving through the workspace's Azure Private Link (ui-api)
+  endpoints. Can only be used in deny rules of workspace-level network policies.
+  Must be set to true when specified
+* `endpoints` (CustomerFacingIngressNetworkPolicyEndpoints) - Matches requests arriving through any of the specified registered endpoints
+
+### CustomerFacingIngressNetworkPolicyPublicAccess
+* `allow_rules` (list of CustomerFacingIngressNetworkPolicyPublicIngressRule)
+* `deny_rules` (list of CustomerFacingIngressNetworkPolicyPublicIngressRule)
+* `restriction_mode` (string) - Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
+
+### CustomerFacingIngressNetworkPolicyPublicIngressRule
+* `authentication` (CustomerFacingIngressNetworkPolicyAuthentication)
+* `destination` (CustomerFacingIngressNetworkPolicyRequestDestination)
+* `label` (string) - The label for this ingress rule
+* `origin` (CustomerFacingIngressNetworkPolicyPublicRequestOrigin)
+
+### CustomerFacingIngressNetworkPolicyPublicRequestOrigin
+* `all_ip_ranges` (boolean) - Matches all IPv4 and IPv6 ranges (both public and private)
+* `excluded_ip_ranges` (CustomerFacingIngressNetworkPolicyIpRanges) - Excluded means: all public IP ranges except this one
+* `included_ip_ranges` (CustomerFacingIngressNetworkPolicyIpRanges) - Will not allow IP ranges with private IPs
+
+### CustomerFacingIngressNetworkPolicyRequestDestination
+* `account_api` (CustomerFacingIngressNetworkPolicyAccountApiDestination) - Matches requests to account-level APIs.
+  Can only be used in the account-level network policy
+* `account_databricks_one` (CustomerFacingIngressNetworkPolicyAccountDatabricksOneDestination) - Account DatabricksOne destination is not supported
+* `account_ui` (CustomerFacingIngressNetworkPolicyAccountUiDestination) - Matches requests to the account console UI.
+  Can only be used in the account-level network policy
+* `all_destinations` (boolean) - When true, match all destinations, no other destination fields can be set.
+  When not set or false, at least one specific destination must be provided
+* `apps_runtime` (CustomerFacingIngressNetworkPolicyAppsRuntimeDestination)
+* `lakebase_runtime` (CustomerFacingIngressNetworkPolicyLakebaseRuntimeDestination)
+* `workspace_api` (CustomerFacingIngressNetworkPolicyWorkspaceApiDestination)
+* `workspace_ui` (CustomerFacingIngressNetworkPolicyWorkspaceUiDestination)
+
+### CustomerFacingIngressNetworkPolicyWorkspaceApiDestination
+* `scope_qualifier` (string) - Qualifies the breadth of API access for the listed scopes. See ApiScopeQualifier. Possible values are: `API_SCOPE_QUALIFIER_ALL`, `API_SCOPE_QUALIFIER_READ`
+* `scopes` (list of string)
+
+### CustomerFacingIngressNetworkPolicyWorkspaceIdList
+* `workspace_ids` (list of integer)
+
+### CustomerFacingIngressNetworkPolicyWorkspaceUiDestination
+* `all_destinations` (boolean) - Must be set to true
+
 ### EgressNetworkPolicyNetworkAccessPolicy
+* `allowed_databricks_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyDatabricksDestination) - List of Databricks workspace destinations that serverless workloads are
+  allowed to access when in RESTRICTED_ACCESS mode
 * `allowed_internet_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyInternetDestination) - List of internet destinations that serverless workloads are allowed to access when in RESTRICTED_ACCESS mode
 * `allowed_storage_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyStorageDestination) - List of storage destinations that serverless workloads are allowed to access when in RESTRICTED_ACCESS mode
+* `blocked_internet_destinations` (list of EgressNetworkPolicyNetworkAccessPolicyInternetDestination) - List of internet destinations that serverless workloads are blocked from accessing.
+  These destinations are enforced when restriction mode is RESTRICTED_ACCESS or DRY_RUN.
+  Currently supports DNS_NAME type only; IP_RANGE support is planned
 * `policy_enforcement` (EgressNetworkPolicyNetworkAccessPolicyPolicyEnforcement) - Optional. When policy_enforcement is not provided, we default to ENFORCE_MODE_ALL_SERVICES
 * `restriction_mode` (string) - The restriction mode that controls how serverless workloads can access the internet. Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
+
+### EgressNetworkPolicyNetworkAccessPolicyDatabricksDestination
+* `workspace_ids` (list of integer) - The workspace IDs to allow egress traffic to
 
 ### EgressNetworkPolicyNetworkAccessPolicyInternetDestination
 * `destination` (string) - The internet destination to which access will be allowed. Format dependent on the destination type

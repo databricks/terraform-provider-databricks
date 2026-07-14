@@ -1,10 +1,11 @@
 package jobs
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -20,32 +21,32 @@ import (
 func (js *JobSettingsResource) adjustTasks() {
 	js.sortTasksByKey()
 	for _, task := range js.Tasks {
-		sort.Slice(task.DependsOn, func(i, j int) bool {
-			return task.DependsOn[i].TaskKey < task.DependsOn[j].TaskKey
+		slices.SortFunc(task.DependsOn, func(a, b jobs.TaskDependency) int {
+			return cmp.Compare(a.TaskKey, b.TaskKey)
 		})
 		sortWebhookNotifications(task.WebhookNotifications)
 	}
 }
 
 func (js *JobSettingsResource) sortTasksByKey() {
-	sort.Slice(js.Tasks, func(i, j int) bool {
-		return js.Tasks[i].TaskKey < js.Tasks[j].TaskKey
+	slices.SortFunc(js.Tasks, func(a, b jobs.Task) int {
+		return cmp.Compare(a.TaskKey, b.TaskKey)
 	})
 }
 
 func adjustTasks(cj *jobs.CreateJob) {
 	sortTasksByKey(cj)
 	for _, task := range cj.Tasks {
-		sort.Slice(task.DependsOn, func(i, j int) bool {
-			return task.DependsOn[i].TaskKey < task.DependsOn[j].TaskKey
+		slices.SortFunc(task.DependsOn, func(a, b jobs.TaskDependency) int {
+			return cmp.Compare(a.TaskKey, b.TaskKey)
 		})
 		sortWebhookNotifications(task.WebhookNotifications)
 	}
 }
 
 func sortTasksByKey(cj *jobs.CreateJob) {
-	sort.Slice(cj.Tasks, func(i, j int) bool {
-		return cj.Tasks[i].TaskKey < cj.Tasks[j].TaskKey
+	slices.SortFunc(cj.Tasks, func(a, b jobs.Task) int {
+		return cmp.Compare(a.TaskKey, b.TaskKey)
 	})
 }
 
@@ -309,8 +310,13 @@ func Update(jobID int64, js JobSettingsResource, w *databricks.WorkspaceClient, 
 }
 
 func Read(jobID int64, w *databricks.WorkspaceClient, ctx context.Context) (job *jobs.Job, err error) {
-	job, err = w.Jobs.GetByJobId(ctx, jobID)
+	job, err = w.Jobs.Get(ctx, jobs.GetJobRequest{
+		JobId: jobID,
+	})
 	err = wrapMissingJobError(err, fmt.Sprintf("%d", jobID))
+	if err != nil {
+		return
+	}
 	if job.Settings != nil {
 		js := JobSettingsResource{JobSettings: *job.Settings}
 		js.adjustTasks()

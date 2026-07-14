@@ -64,6 +64,7 @@ func TestResourcePASCreateWithoutAccountId(t *testing.T) {
 		},
 		Resource:  ResourceMwsPrivateAccessSettings(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		HCL: `
 		private_access_settings_name = "pas_name"
 		region = "ar"
@@ -97,6 +98,7 @@ func TestResourcePASCreate_PublicAccessDisabled(t *testing.T) {
 		},
 		Resource:  ResourceMwsPrivateAccessSettings(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		HCL: `
 		account_id = "abc"
 		private_access_settings_name = "pas_name"
@@ -190,13 +192,24 @@ func TestResourcePAS_Update(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockPrivateAccessAPI().EXPECT()
 			e.Replace(mock.Anything, provisioning.ReplacePrivateAccessSettingsRequest{
+				PrivateAccessSettingsId: "pas_id",
+				CustomerFacingPrivateAccessSettings: provisioning.PrivateAccessSettings{
+					AccountId:                 "abc",
+					Region:                    "eu-west-1",
+					PublicAccessEnabled:       true,
+					PrivateAccessLevel:        "ENDPOINT",
+					PrivateAccessSettingsId:   "pas_id",
+					PrivateAccessSettingsName: "pas_name",
+					AllowedVpcEndpointIds:     []string{"a", "b"},
+				},
+			}).Return(&provisioning.PrivateAccessSettings{
 				Region:                    "eu-west-1",
 				PublicAccessEnabled:       true,
 				PrivateAccessLevel:        "ENDPOINT",
 				PrivateAccessSettingsId:   "pas_id",
 				PrivateAccessSettingsName: "pas_name",
 				AllowedVpcEndpointIds:     []string{"a", "b"},
-			}).Return(nil)
+			}, nil)
 			e.GetByPrivateAccessSettingsId(mock.Anything, "pas_id").Return(&provisioning.PrivateAccessSettings{
 				Region:                    "eu-west-1",
 				PublicAccessEnabled:       true,
@@ -225,14 +238,25 @@ func TestResourcePAS_Update_PublicAccessDisabled(t *testing.T) {
 		MockAccountClientFunc: func(mac *mocks.MockAccountClient) {
 			e := mac.GetMockPrivateAccessAPI().EXPECT()
 			e.Replace(mock.Anything, provisioning.ReplacePrivateAccessSettingsRequest{
+				PrivateAccessSettingsId: "pas_id",
+				CustomerFacingPrivateAccessSettings: provisioning.PrivateAccessSettings{
+					AccountId:                 "abc",
+					Region:                    "eu-west-1",
+					PublicAccessEnabled:       false,
+					PrivateAccessLevel:        "ENDPOINT",
+					PrivateAccessSettingsId:   "pas_id",
+					PrivateAccessSettingsName: "pas_name",
+					AllowedVpcEndpointIds:     []string{"a", "b"},
+					ForceSendFields:           []string{"PublicAccessEnabled"},
+				},
+			}).Return(&provisioning.PrivateAccessSettings{
 				Region:                    "eu-west-1",
 				PublicAccessEnabled:       false,
 				PrivateAccessLevel:        "ENDPOINT",
 				PrivateAccessSettingsId:   "pas_id",
 				PrivateAccessSettingsName: "pas_name",
 				AllowedVpcEndpointIds:     []string{"a", "b"},
-				ForceSendFields:           []string{"PublicAccessEnabled"},
-			}).Return(nil)
+			}, nil)
 			e.GetByPrivateAccessSettingsId(mock.Anything, "pas_id").Return(&provisioning.PrivateAccessSettings{
 				Region:                    "eu-west-1",
 				PublicAccessEnabled:       false,
@@ -260,7 +284,7 @@ func TestResourcePAS_Update_PublicAccessDisabled(t *testing.T) {
 func TestResourcePASDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockPrivateAccessAPI().EXPECT().DeleteByPrivateAccessSettingsId(mock.Anything, "pas_id").Return(nil)
+			a.GetMockPrivateAccessAPI().EXPECT().DeleteByPrivateAccessSettingsId(mock.Anything, "pas_id").Return(nil, nil)
 		},
 		Resource: ResourceMwsPrivateAccessSettings(),
 		Delete:   true,
@@ -273,7 +297,7 @@ func TestResourcePASDelete(t *testing.T) {
 func TestResourcePASDelete_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockPrivateAccessAPI().EXPECT().DeleteByPrivateAccessSettingsId(mock.Anything, "pas_id").Return(&apierr.APIError{
+			a.GetMockPrivateAccessAPI().EXPECT().DeleteByPrivateAccessSettingsId(mock.Anything, "pas_id").Return(nil, &apierr.APIError{
 				ErrorCode:  "INVALID_REQUEST",
 				Message:    "Internal error happened",
 				StatusCode: 400,

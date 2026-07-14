@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_group_instance_profile Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/groups)
+
 -> **Deprecated** Please migrate to [databricks_group_role](group_role.md).
 
 This resource allows you to attach [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_group](group.md).
@@ -30,6 +32,7 @@ The following arguments are supported:
 
 * `group_id` - (Required) This is the id of the [group](group.md) resource.
 * `instance_profile_id` -  (Required) This is the id of the [instance profile](instance_profile.md) resource.
+* `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
 
 ## Attribute Reference
 

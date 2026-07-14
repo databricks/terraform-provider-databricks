@@ -60,7 +60,9 @@ func TestResourceGitCredentialDelete(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			w.GetMockGitCredentialsAPI().EXPECT().
-				DeleteByCredentialId(mock.Anything, credID).
+				Delete(mock.Anything, workspace.DeleteCredentialsRequest{
+					CredentialId: credID,
+				}).
 				Return(nil)
 		},
 		Resource: ResourceGitCredential(),
@@ -144,6 +146,79 @@ func TestResourceGitCredentialUpdate_Error(t *testing.T) {
 		ID:     "121232342",
 		Update: true,
 	}.ExpectError(t, "Git credential with the given ID could not be found.")
+}
+
+func TestResourceGitCredentialCreateWithPrincipalId(t *testing.T) {
+	provider := "gitHub"
+	user := "test"
+	token := "12345"
+	principalID := 123456789
+	resp := workspace.CreateCredentialsResponse{
+		CredentialId: 121232342,
+		GitProvider:  provider,
+		GitUsername:  user,
+	}
+
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			gmock := w.GetMockGitCredentialsAPI().EXPECT()
+			gmock.Create(mock.Anything, workspace.CreateCredentialsRequest{
+				GitProvider:         provider,
+				GitUsername:         user,
+				PersonalAccessToken: token,
+				PrincipalId:         int64(principalID),
+			}).
+				Return(&resp, nil)
+			gmock.Get(mock.Anything, workspace.GetCredentialsRequest{
+				CredentialId: resp.CredentialId,
+				PrincipalId:  int64(principalID),
+			}).
+				Return(&workspace.GetCredentialsResponse{
+					CredentialId: resp.CredentialId,
+					GitProvider:  provider,
+					GitUsername:  user,
+				}, nil)
+		},
+		Resource: ResourceGitCredential(),
+		State: map[string]any{
+			"git_provider":          provider,
+			"git_username":          user,
+			"personal_access_token": token,
+			"principal_id":          principalID,
+		},
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":           fmt.Sprintf("%d", resp.CredentialId),
+		"git_provider": provider,
+		"git_username": user,
+		"principal_id": principalID,
+	})
+}
+
+func TestResourceGitCredentialDeleteWithPrincipalId(t *testing.T) {
+	credID := int64(48155820875912)
+	credIDStr := fmt.Sprintf("%d", credID)
+	principalID := int64(123456789)
+
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockGitCredentialsAPI().EXPECT().
+				Delete(mock.Anything, workspace.DeleteCredentialsRequest{
+					CredentialId: credID,
+					PrincipalId:  principalID,
+				}).
+				Return(nil)
+		},
+		Resource: ResourceGitCredential(),
+		Delete:   true,
+		ID:       credIDStr,
+		HCL: fmt.Sprintf(`
+		git_provider          = "gitHub"
+		git_username          = "test"
+		personal_access_token = "12345"
+		principal_id          = %d
+		`, principalID),
+	}.ApplyAndExpectData(t, map[string]any{"id": credIDStr})
 }
 
 func TestResourceGitCredentialCreate(t *testing.T) {
@@ -235,7 +310,7 @@ func TestResourceGitCredentialCreateWithForceOld(t *testing.T) {
 					GitProvider:  provider,
 					GitUsername:  user,
 				}, errors.New("Only one Git credential is supported at this time. If you would like to update your credential, please use the PATCH endpoint."))
-			gmock.ListAll(mock.Anything).
+			gmock.ListAll(mock.Anything, workspace.ListCredentialsRequest{}).
 				Return([]workspace.CredentialInfo{{
 					CredentialId: credID,
 					GitProvider:  provider,
@@ -291,7 +366,7 @@ func TestResourceGitCredentialCreateWithForceNew(t *testing.T) {
 					GitProvider:  provider,
 					GitUsername:  user,
 				}, apierr.ErrResourceConflict)
-			gmock.ListAll(mock.Anything).
+			gmock.ListAll(mock.Anything, workspace.ListCredentialsRequest{}).
 				Return([]workspace.CredentialInfo{{
 					CredentialId: credID,
 					GitProvider:  provider,
@@ -336,7 +411,7 @@ func TestResourceGitCredentialCreateWithForce_Error_List(t *testing.T) {
 				PersonalAccessToken: token,
 			}).
 				Return(nil, errors.New("Only one Git credential is supported at this time. If you would like to update your credential, please use the PATCH endpoint."))
-			gmock.ListAll(mock.Anything).
+			gmock.ListAll(mock.Anything, workspace.ListCredentialsRequest{}).
 				Return(nil, errors.New("No such endpoint"))
 		},
 		Resource: ResourceGitCredential(),
@@ -365,7 +440,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorEmptyList(t *testing.T) {
 			}).
 				Return(nil, errors.New("Only one Git credential is supported at this time. If you would like to update your credential, please use the PATCH endpoint."))
 			w.GetMockGitCredentialsAPI().EXPECT().
-				ListAll(mock.Anything).
+				ListAll(mock.Anything, workspace.ListCredentialsRequest{}).
 				Return([]workspace.CredentialInfo{}, nil)
 		},
 		Resource: ResourceGitCredential(),
@@ -398,7 +473,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorUpdate(t *testing.T) {
 				PersonalAccessToken: token,
 			}).
 				Return(nil, errors.New("Only one Git credential is supported at this time. If you would like to update your credential, please use the PATCH endpoint."))
-			gmock.ListAll(mock.Anything).
+			gmock.ListAll(mock.Anything, workspace.ListCredentialsRequest{}).
 				Return([]workspace.CredentialInfo{resp}, nil)
 			gmock.Update(mock.Anything, workspace.UpdateCredentialsRequest{
 				CredentialId:        resp.CredentialId,
@@ -417,6 +492,14 @@ func TestResourceGitCredentialCreateWithForce_ErrorUpdate(t *testing.T) {
 		},
 		Create: true,
 	}.ExpectError(t, "Git credential with the given ID could not be found.")
+}
+
+func TestResourceGitCredentialPATIsSensitive(t *testing.T) {
+	resource := ResourceGitCredential()
+	s := resource.Schema["personal_access_token"]
+	if !s.Sensitive {
+		t.Error("personal_access_token should be marked as Sensitive")
+	}
 }
 
 func TestGitCredentialCornerCases(t *testing.T) {

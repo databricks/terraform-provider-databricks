@@ -1,9 +1,11 @@
 ---
-subcategory: "Unity Catalog"
+subcategory: "Quality Monitor"
 ---
 # databricks_quality_monitor Resource
 
-This resource allows you to manage [Lakehouse Monitors](https://docs.databricks.com/en/lakehouse-monitoring/index.html) in Databricks. 
+[API Documentation](https://docs.databricks.com/api/workspace/qualitymonitors)
+
+This resource allows you to manage [Lakehouse Monitors](https://docs.databricks.com/en/lakehouse-monitoring/index.html) in Databricks.
 
 -> This resource can only be used with a workspace-level provider!
 
@@ -11,7 +13,11 @@ A `databricks_quality_monitor` is attached to a [databricks_sql_table](sql_table
 
 ## Plugin Framework Migration
 
-The quality monitor resource has been migrated from sdkv2 to plugin framework。 If you encounter any problem with this resource and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_RESOURCES="databricks_quality_monitor"`.
+The quality monitor resource has been migrated from sdkv2 to plugin framework. If you encounter any problem with this resource and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_RESOURCES="databricks_quality_monitor"`.
+
+~> **Deprecation**: The SDKv2 fallback implementation, selectable via `USE_SDK_V2_RESOURCES="databricks_quality_monitor"`, is **deprecated** and will be removed in the next major release of the provider. Setting the environment variable now emits a runtime warning; remove the override to use the default Plugin Framework implementation.
+
+-> **Upgrading from v1.114.0**: state written by v1.114.0 encodes `provider_config` as a single object instead of a list. After upgrading the provider, edit each `databricks_quality_monitor` instance in your state file to convert `"provider_config": {"workspace_id": "X"}` to `"provider_config": null` (recommended if you didn't set `provider_config` in HCL) or to `"provider_config": [{"workspace_id": "X"}]` (if you did). Without this edit, `terraform plan` fails with `Error decoding ... missing expected [`. Users on v1.113.0 are unaffected.
 
 ## Example Usage
 
@@ -99,6 +105,7 @@ table.
     * `output_data_type` - The output type of the custom metric.
     * `type` - The type of the custom metric.
 * `data_classification_config` - The data classification config for the monitor
+    * `enabled` - Whether to enable data classification
 * `inference_log` - Configuration for the inference log monitor
     * `granularities` -  List of granularities to use when aggregating data into time windows based on their timestamp.
     * `label_col` - Column of the model label
@@ -120,6 +127,8 @@ table.
 * `skip_builtin_dashboard` - Whether to skip creating a default dashboard summarizing data quality metrics.  (Can't be updated after creation).
 * `slicing_exprs` - List of column expressions to slice data with for targeted analysis. The data is grouped by each expression independently, resulting in a separate slice for each predicate and its complements. For high-cardinality columns, only the top 100 unique values by frequency will generate slices.
 * `warehouse_id` - Optional argument to specify the warehouse for dashboard creation. If not specified, the first running warehouse will be used.  (Can't be updated after creation)
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 
@@ -129,7 +138,7 @@ In addition to all arguments above, the following attributes are exported:
 * `monitor_version` - The version of the monitor config (e.g. 1,2,3). If negative, the monitor may be corrupted
 * `drift_metrics_table_name` - The full name of the drift metrics table. Format: __catalog_name__.__schema_name__.__table_name__.
 * `profile_metrics_table_name` - The full name of the profile metrics table. Format: __catalog_name__.__schema_name__.__table_name__.
-* `status` - Status of the Monitor 
+* `status` - Status of the Monitor
 * `dashboard_id` - The ID of the generated dashboard.
 
 ## Related Resources

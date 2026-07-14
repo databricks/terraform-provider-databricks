@@ -4,6 +4,8 @@ subcategory: "Compute"
 
 # databricks_job Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/jobs)
+
 The `databricks_job` resource allows you to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](cluster.md).
 
 -> This resource can only be used with a workspace-level provider!
@@ -114,6 +116,8 @@ The resource supports the following arguments:
 * `performance_target` - (Optional) The performance mode on a serverless job. The performance target determines the level of compute performance or cost-efficiency for the run.  Supported values are:
   * `PERFORMANCE_OPTIMIZED`: (default value) Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance.
   * `STANDARD`: Enables cost-efficient execution of serverless workloads.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### task Configuration Block
 
@@ -140,6 +144,7 @@ This block describes individual tasks:
 * `disable_auto_optimization` - (Optional) A flag to disable auto optimization in serverless tasks.
 * `email_notifications` - (Optional) An optional block to specify a set of email addresses notified when this task begins, completes or fails. The default behavior is to not send any emails. This block is [documented below](#email_notifications-configuration-block).
 * `environment_key` - (Optional) identifier of an `environment` block that is used to specify libraries.  Required for some tasks (`spark_python_task`, `python_wheel_task`, ...) running on serverless compute.
+* `disabled` - (Optional) (Bool) An optional flag to disable the task. If set to `true`, the task will not run even if it is part of a job.
 * `existing_cluster_id` - (Optional) Identifier of the [interactive cluster](cluster.md) to run job on.  *Note: running tasks on interactive clusters may lead to increased costs!*
 * `health` - (Optional) block described below that specifies health conditions for a given task.
 * `job_cluster_key` - (Optional) Identifier of the Job cluster specified in the `job_cluster` block.
@@ -151,6 +156,7 @@ This block describes individual tasks:
 * `run_if` - (Optional) An optional value indicating the condition that determines whether the task should be run once its dependencies have been completed. One of `ALL_SUCCESS`, `AT_LEAST_ONE_SUCCESS`, `NONE_FAILED`, `ALL_DONE`, `AT_LEAST_ONE_FAILED` or `ALL_FAILED`. When omitted, defaults to `ALL_SUCCESS`.
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
 * `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this task begins, completes or fails. The default behavior is to not send any notifications. This field is a block and is documented below.
+* `compute` - (Optional) Task level compute configuration. This block is [documented below](#compute-configuration-block).
 
 -> If no `job_cluster_key`, `existing_cluster_id`, or `new_cluster` were specified in task definition, then task will executed using serverless compute.
 
@@ -430,12 +436,17 @@ This block describes the queue settings of the job:
 
 * `pause_status` - (Optional) Indicate whether this trigger is paused or not. Either `PAUSED` or `UNPAUSED`. When the `pause_status` field is omitted in the block, the server will default to using `UNPAUSED` as a value for `pause_status`.
 * `periodic` - (Optional) configuration block to define a trigger for Periodic Triggers consisting of the following attributes:
-  * `interval` - (Required) Specifies the interval at which the job should run. This value is required.
-  * `unit` - (Required) Options are {"DAYS", "HOURS", "WEEKS"}.
+  * `interval` - (Required, integer) Specifies the interval at which the job should run.
+  * `unit` - (Required, string) The unit of time for the interval.  Possible values are: `DAYS`, `HOURS`, `WEEKS`.
 * `file_arrival` - (Optional) configuration block to define a trigger for [File Arrival events](https://learn.microsoft.com/en-us/azure/databricks/workflows/jobs/file-arrival-triggers) consisting of following attributes:
   * `url` - (Required) URL to be monitored for file arrivals. The path must point to the root or a subpath of the external location. Please note that the URL must have a trailing slash character (`/`).
-  * `min_time_between_triggers_seconds` - (Optional) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
-  * `wait_after_last_change_seconds` - (Optional) If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds.
+  * `min_time_between_triggers_seconds` - (Optional, integer) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
+  * `wait_after_last_change_seconds` - (Optional, integer) If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds.
+* `table_update` - (Optional) configuration block to define a trigger for [Table Updates](https://docs.databricks.com/aws/en/jobs/trigger-table-update) consisting of following attributes:
+  * `table_names` - (Required) A non-empty list of tables to monitor for changes. The table name must be in the format `catalog_name.schema_name.table_name`.
+  * `condition` - (Required, string) The table(s) condition based on which to trigger a job run.  Possible values are `ANY_UPDATED`, `ALL_UPDATED`.
+  * `min_time_between_triggers_seconds` - (Optional, integer) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
+  * `wait_after_last_change_seconds` - (Optional, integer) If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds.
 
 ### git_source Configuration Block
 
@@ -534,6 +545,14 @@ resource "databricks_job" "this" {
   }
 }
 ```
+
+### compute Configuration Block
+
+This block describes task level compute configuration.
+
+* `hardware_accelerator` - (Optional) Hardware accelerator configuration for Serverless GPU workloads. Supported values are:
+  * `GPU_1xA10`: GPU_1xA10: Single A10 GPU configuration.
+  * `GPU_8xH100`: GPU_8xH100: 8x H100 GPU configuration.
 
 ## Attribute Reference
 

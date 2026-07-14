@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_service_principal_role Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/serviceprincipals)
+
 This resource allows you to attach a role or [databricks_instance_profile](instance_profile.md) (AWS) to a [databricks_service_principal](service_principal.md).
 
 -> This resource can be used with an account or workspace-level provider.
@@ -47,6 +49,7 @@ The following arguments are supported:
 
 * `service_principal_id` - (Required) This is the id of the [service principal](service_principal.md) resource.
 * `role` -  (Required) This is the role name, role id, or [instance profile](instance_profile.md) resource.
+* `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
 
 ## Attribute Reference
 

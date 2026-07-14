@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_storage_credential Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/storagecredentials)
+
 To work with external tables, Unity Catalog introduces two new objects to access and work with external cloud storage:
 
 - `databricks_storage_credential` represents authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal/managed identity for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
@@ -83,10 +85,11 @@ The following arguments are required:
 - `force_destroy` - (Optional) Delete storage credential regardless of its dependencies.
 - `force_update` - (Optional) Update storage credential regardless of its dependents.
 - `isolation_mode` - (Optional) Whether the storage credential is accessible from all workspaces or a specific set of workspaces. Can be `ISOLATION_MODE_ISOLATED` or `ISOLATION_MODE_OPEN`. Setting the credential to `ISOLATION_MODE_ISOLATED` will automatically allow access from the current workspace.
+- `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
 
 `aws_iam_role` optional configuration block for credential details for AWS:
 
-- `role_arn` - The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access, of the form `arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF`
+- `role_arn` - The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access, of the form `arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF`.
 
 `azure_managed_identity` optional configuration block for using managed identity as credential details for Azure (recommended over service principal):
 
@@ -110,12 +113,19 @@ The following arguments are required:
 - `application_id` - The application ID of the application registration within the referenced AAD tenant
 - `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**
 
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 - `id` - ID of this storage credential - same as the `name`.
 - `storage_credential_id` - Unique ID of storage credential.
+- `aws_iam_role` exposes two additional attributes:
+
+  - `external_id` - The external ID used in role assumption to prevent the confused deputy problem.
+  - `unity_catalog_iam_arn` - The Amazon Resource Name (ARN) of the AWS IAM user managed by Databricks. This is the identity that is going to assume the AWS IAM role.
 
 ## Import
 
@@ -144,5 +154,5 @@ Alternatively, when using `terraform` version 1.4 or earlier, import using the `
 terraform import databricks_storage_credential.this <storage_credential_name>
 
 # When using an account-level provider
-terraform import databricks_storage_credential.this <metastore_id>|<storage_credential_name>
+terraform import databricks_storage_credential.this '<metastore_id>|<storage_credential_name>'
 ```

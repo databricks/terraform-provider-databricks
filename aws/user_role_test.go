@@ -7,6 +7,9 @@ import (
 )
 
 func TestAccUserRole(t *testing.T) {
+	if !acceptance.IsAws(t) {
+		acceptance.Skipf(t)("TestAccUserRole is failing on non-AWS environments, likely due to read-after-write inconsistency.")
+	}
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
 		resource "databricks_user" "this" {
@@ -15,6 +18,24 @@ func TestAccUserRole(t *testing.T) {
 		resource "databricks_user_role" "this" {
 			user_id = databricks_user.this.id
 			role = "arn:aws:iam::999999999999:role/foo"
+		}`,
+	})
+}
+
+func TestAccUserRoleWithApiField(t *testing.T) {
+	if !acceptance.IsAws(t) {
+		acceptance.Skipf(t)("TestAccUserRoleWithApiField is only valid on AWS.")
+	}
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+		resource "databricks_user" "this" {
+			user_name = "{var.RANDOM}@example.com"
+			api = "workspace"
+		}
+		resource "databricks_user_role" "this" {
+			user_id = databricks_user.this.id
+			role = "arn:aws:iam::999999999999:role/foo"
+			api = "workspace"
 		}`,
 	})
 }

@@ -3,11 +3,21 @@ subcategory: "Delta Sharing"
 ---
 # databricks_share Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/shares)
+
 In Delta Sharing, a share is a read-only collection of tables and table partitions that a provider wants to share with one or more recipients. If your recipient uses a Unity Catalog-enabled Databricks workspace, you can also include notebook files, views (including dynamic views that restrict access at the row and column level), Unity Catalog volumes, and Unity Catalog models in a share.
 
 -> This resource can only be used with a workspace-level provider!
 
 In a Unity Catalog-enabled Databricks workspace, a share is a securable object registered in Unity Catalog. A `databricks_share` is contained within a [databricks_metastore](metastore.md). If you remove a share from your Unity Catalog metastore, all recipients of that share lose the ability to access it.
+
+## Plugin Framework Migration
+
+The share resource has been migrated from sdkv2 to plugin framework. If you encounter any problem with this resource and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_RESOURCES="databricks_share"`.
+
+~> **Deprecation**: The SDKv2 fallback implementation, selectable via `USE_SDK_V2_RESOURCES="databricks_share"`, is **deprecated** and will be removed in the next major release of the provider. Setting the environment variable now emits a runtime warning; remove the override to use the default Plugin Framework implementation.
+
+-> **Upgrading from v1.114.0**: state written by v1.114.0 encodes `provider_config` as a single object instead of a list. After upgrading the provider, edit each `databricks_share` instance in your state file to convert `"provider_config": {"workspace_id": "X"}` to `"provider_config": null` (recommended if you didn't set `provider_config` in HCL) or to `"provider_config": [{"workspace_id": "X"}]` (if you did). Without this edit, `terraform plan` fails with `Error decoding ... missing expected [`. Users on v1.113.0 are unaffected.
 
 ## Example Usage
 
@@ -29,6 +39,35 @@ resource "databricks_share" "some" {
       name             = object.value
       data_object_type = "TABLE"
     }
+  }
+}
+```
+
+Creating a Delta Sharing share with mixed object types (tables and volumes)
+
+```hcl
+resource "databricks_share" "mixed" {
+  name = "mixed_share"
+
+  # Table - uses shared_as
+  object {
+    name             = "my_catalog.my_schema.sales_table"
+    data_object_type = "TABLE"
+    shared_as        = "my_schema.sales_table"
+  }
+
+  # Materialized View - uses shared_as
+  object {
+    name             = "my_catalog.my_schema.sales_mv"
+    data_object_type = "MATERIALIZED_VIEW"
+    shared_as        = "my_schema.sales_mv"
+  }
+
+  # Volume - uses string_shared_as
+  object {
+    name             = "my_catalog.my_schema.training_data"
+    data_object_type = "VOLUME"
+    string_shared_as = "my_schema.training_data"
   }
 }
 ```
@@ -85,13 +124,18 @@ The following arguments are required:
 * `name` - (Required) Name of share. Change forces creation of a new resource.
 * `owner` - (Optional) User name/group name/sp application_id of the share owner.
 * `comment` - (Optional) User-supplied free-form text.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### object Configuration Block
 
 * `name` - (Required) Full name of the object, e.g. `catalog.schema.name` for a tables, views, volumes and models, or `catalog.schema` for schemas.
-* `data_object_type` - (Required) Type of the data object, currently `TABLE`, `VIEW`, `SCHEMA`, `VOLUME`, and `MODEL` are supported.
+* `data_object_type` - (Required) Type of the data object. Supported types: `TABLE`, `FOREIGN_TABLE`, `SCHEMA`, `VIEW`, `MATERIALIZED_VIEW`, `STREAMING_TABLE`, `MODEL`, `NOTEBOOK_FILE`, `FUNCTION`, `FEATURE_SPEC`, and `VOLUME`.
 * `comment` - (Optional) Description about the object.
-* `shared_as` - (Optional) A user-provided new name for the data object within the share. If this new name is not provided, the object's original name will be used as the `shared_as` name. The `shared_as` name must be unique within a Share. Change forces creation of a new resource.
+* `content` - (Optional) The content of the notebook file when the data object type is NOTEBOOK_FILE. This should be base64 encoded. Required for adding a NOTEBOOK_FILE, optional for updating, ignored for other types.
+* `partition` - (Optional) Array of partitions for the shared data.
+* `shared_as` - (Optional) A user-provided alias name for **table-like data objects** within the share. Use this field for: `TABLE`, `VIEW`, `MATERIALIZED_VIEW`, `STREAMING_TABLE`, `FOREIGN_TABLE`. **Do not use this field for volumes, models, notebooks, or functions** (use `string_shared_as` instead). If not provided, the object's original name will be used. Must be a 2-part name `<schema>.<table>` containing only alphanumeric characters and underscores. The `shared_as` name must be unique within a share. Change forces creation of a new resource.
+* `string_shared_as` - (Optional) A user-provided alias name for **non-table data objects** within the share. Use this field for: `VOLUME`, `MODEL`, `NOTEBOOK_FILE`, `FUNCTION`. **Do not use this field for tables, views, or streaming tables** (use `shared_as` instead). Format varies by type: For volumes, models, and functions use `<schema>.<name>` (2-part name); for notebooks use the file name. Names must contain only alphanumeric characters and underscores. The `string_shared_as` name must be unique for objects of the same type within a share. Change forces creation of a new resource.
 * `cdf_enabled` - (Optional) Whether to enable Change Data Feed (cdf) on the shared object. When this field is set, field `history_data_sharing_status` can not be set.
 * `start_version` - (Optional) The start version associated with the object for cdf. This allows data providers to control the lowest object version that is accessible by clients.
 * `history_data_sharing_status` - (Optional) Whether to enable history sharing, one of: `ENABLED`, `DISABLED`. When a table has history sharing enabled, recipients can query table data by version, starting from the current table version. If not specified, clients can only query starting from the version of the object at the time it was added to the share. *NOTE*: The start_version should be less than or equal the current version of the object. When this field is set, field `cdf_enabled` can not be set.

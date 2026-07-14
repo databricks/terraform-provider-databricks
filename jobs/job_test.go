@@ -3,6 +3,8 @@ package jobs_test
 import (
 	"context"
 	"errors"
+	"fmt"
+	"regexp"
 	"strconv"
 	"testing"
 	"time"
@@ -12,8 +14,183 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func jobClusterTemplate(provider_config string) string {
+	return fmt.Sprintf(`
+	data "databricks_current_user" "me" {}
+	data "databricks_spark_version" "latest" {}
+	data "databricks_node_type" "smallest" {
+		local_disk = true
+	}
+
+	resource "databricks_notebook" "this" {
+		path     = "${data.databricks_current_user.me.home}/Terraform{var.STICKY_RANDOM}"
+		language = "PYTHON"
+		content_base64 = base64encode(<<-EOT
+			# created from ${abspath(path.module)}
+			display(spark.range(10))
+			EOT
+		)
+	}
+
+	resource "databricks_job" "this" {
+		name = "{var.STICKY_RANDOM}"
+
+		%s
+
+		job_cluster {
+			job_cluster_key = "j"
+			new_cluster {
+				num_workers   = 0  // Setting it to zero intentionally to cover edge case.
+				spark_version = data.databricks_spark_version.latest.id
+				node_type_id  = data.databricks_node_type.smallest.id
+				custom_tags = {
+					"ResourceClass" = "SingleNode"
+				}
+				spark_conf = {
+					"spark.databricks.cluster.profile" : "singleNode"
+					"spark.master" : "local[*,4]"
+				}
+			}
+		}
+
+		task {
+			task_key = "a"
+
+			new_cluster {
+				num_workers   = 1
+				spark_version = data.databricks_spark_version.latest.id
+				node_type_id  = data.databricks_node_type.smallest.id
+			}
+
+			notebook_task {
+				notebook_path = databricks_notebook.this.path
+			}
+		}
+
+		task {
+			task_key = "b"
+
+			depends_on {
+				task_key = "a"
+			}
+
+			new_cluster {
+				num_workers   = 8
+				spark_version = data.databricks_spark_version.latest.id
+				node_type_id  = data.databricks_node_type.smallest.id
+			}
+
+			notebook_task {
+				notebook_path = databricks_notebook.this.path
+			}
+		}
+	}
+`, provider_config)
+}
+
+func TestAccJobCluster_ProviderConfig_Mismatched(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: jobClusterTemplate(`
+			provider_config {
+				workspace_id = "123"
+			}
+		`),
+		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+		PlanOnly:    true,
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_EmptyID(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: jobClusterTemplate(`
+			provider_config {
+				workspace_id = ""
+			}
+		`),
+		ExpectError: regexp.MustCompile(`expected "provider_config.0.workspace_id" to not be an empty string`),
+		PlanOnly:    true,
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_Match(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: jobClusterTemplate(""),
+	}, acceptance.Step{
+		Template: jobClusterTemplate(fmt.Sprintf(`
+			provider_config {
+				workspace_id = "%s"
+			}
+		`, workspaceIDStr)),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				plancheck.ExpectResourceAction("databricks_job.this", plancheck.ResourceActionNoop),
+			},
+		},
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_Recreate(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: jobClusterTemplate(""),
+	}, acceptance.Step{
+		Template: jobClusterTemplate(fmt.Sprintf(`
+			provider_config {
+				workspace_id = "%s"
+			}
+		`, workspaceIDStr)),
+	}, acceptance.Step{
+		Template: jobClusterTemplate(`
+			provider_config {
+				workspace_id = "123"
+			}
+		`),
+		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+		PlanOnly:    true,
+	})
+}
+
+func TestAccJobCluster_ProviderConfig_Remove(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: jobClusterTemplate(""),
+	}, acceptance.Step{
+		Template: jobClusterTemplate(fmt.Sprintf(`
+			provider_config {
+				workspace_id = "%s"
+			}
+		`, workspaceIDStr)),
+	}, acceptance.Step{
+		Template: jobClusterTemplate(""),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				plancheck.ExpectResourceAction("databricks_job.this", plancheck.ResourceActionNoop),
+			},
+		},
+	})
+}
 
 func TestAccJobTasks(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
@@ -115,6 +292,87 @@ func TestAccJobTasks(t *testing.T) {
 				default = "non_empty"
 			}
 		}`,
+	})
+}
+
+func TestAccJobDisabledTask(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+		data "databricks_current_user" "me" {}
+		data "databricks_spark_version" "latest" {}
+		data "databricks_node_type" "smallest" {
+			local_disk = true
+		}
+
+		resource "databricks_notebook" "this" {
+			path     = "${data.databricks_current_user.me.home}/Terraform{var.RANDOM}"
+			language = "PYTHON"
+			content_base64 = base64encode(<<-EOT
+				# created from ${abspath(path.module)}
+				display(spark.range(10))
+				EOT
+			)
+		}
+
+		resource "databricks_job" "this" {
+			name = "{var.RANDOM}"
+
+			task {
+				task_key = "a"
+
+				new_cluster {
+					num_workers   = 1
+					spark_version = data.databricks_spark_version.latest.id
+					node_type_id  = data.databricks_node_type.smallest.id
+				}
+
+				notebook_task {
+					notebook_path = databricks_notebook.this.path
+				}
+			}
+
+			task {
+				task_key = "b"
+				disabled = true
+
+				depends_on {
+					task_key = "a"
+				}
+
+				new_cluster {
+					num_workers   = 1
+					spark_version = data.databricks_spark_version.latest.id
+					node_type_id  = data.databricks_node_type.smallest.id
+				}
+
+				notebook_task {
+					notebook_path = databricks_notebook.this.path
+				}
+			}
+		}`,
+		Check: acceptance.ResourceCheck("databricks_job.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			assert.NoError(t, err)
+
+			jobID, err := strconv.ParseInt(id, 10, 64)
+			assert.NoError(t, err)
+
+			res, err := w.Jobs.Get(ctx, jobs.GetJobRequest{
+				JobId: jobID,
+			})
+			assert.NoError(t, err)
+
+			for _, task := range res.Settings.Tasks {
+				if task.TaskKey == "b" {
+					assert.True(t, task.Disabled, "expected task 'b' to have Disabled=true")
+				}
+				if task.TaskKey == "a" {
+					assert.False(t, task.Disabled, "expected task 'a' to have Disabled=false")
+				}
+			}
+
+			return nil
+		}),
 	})
 }
 
@@ -426,7 +684,9 @@ func TestAccPeriodicTrigger(t *testing.T) {
 			jobID, err := strconv.ParseInt(id, 10, 64)
 			assert.NoError(t, err)
 
-			res, err := w.Jobs.GetByJobId(ctx, jobID)
+			res, err := w.Jobs.Get(ctx, jobs.GetJobRequest{
+				JobId: jobID,
+			})
 			assert.NoError(t, err)
 
 			assert.Equal(t, jobs.PauseStatus("UNPAUSED"), res.Settings.Trigger.PauseStatus)

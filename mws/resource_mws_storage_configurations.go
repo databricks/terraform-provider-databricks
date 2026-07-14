@@ -21,15 +21,15 @@ type StorageConfigurationsAPI struct {
 }
 
 // Create creates a configuration for the root s3 bucket
-func (a StorageConfigurationsAPI) Create(mwsAcctID, storageConfigurationName string, bucketName string) (StorageConfiguration, error) {
+func (a StorageConfigurationsAPI) Create(mwsAcctID, storageConfigurationName string, bucketName string, roleArn string) (StorageConfiguration, error) {
 	var mwsStorageConfigurations StorageConfiguration
 	storageConfigurationAPIPath := fmt.Sprintf("/accounts/%s/storage-configurations", mwsAcctID)
-	err := a.client.Post(a.context, storageConfigurationAPIPath, StorageConfiguration{
+	storageConfig := StorageConfiguration{
 		StorageConfigurationName: storageConfigurationName,
-		RootBucketInfo: &RootBucketInfo{
-			BucketName: bucketName,
-		},
-	}, &mwsStorageConfigurations)
+		RoleArn:                  roleArn,
+		RootBucketInfo:           &RootBucketInfo{BucketName: bucketName},
+	}
+	err := a.client.Post(a.context, storageConfigurationAPIPath, storageConfig, &mwsStorageConfigurations)
 	return mwsStorageConfigurations, err
 }
 
@@ -62,7 +62,8 @@ func ResourceMwsStorageConfigurations() common.Resource {
 			name := d.Get("storage_configuration_name").(string)
 			bucketName := d.Get("bucket_name").(string)
 			accountID := d.Get("account_id").(string)
-			storageConfiguration, err := NewStorageConfigurationsAPI(ctx, c).Create(accountID, name, bucketName)
+			roleArn := d.Get("role_arn").(string)
+			storageConfiguration, err := NewStorageConfigurationsAPI(ctx, c).Create(accountID, name, bucketName, roleArn)
 			if err != nil {
 				return err
 			}
@@ -81,6 +82,7 @@ func ResourceMwsStorageConfigurations() common.Resource {
 			}
 			d.Set("storage_configuration_name", storageConifiguration.StorageConfigurationName)
 			d.Set("bucket_name", storageConifiguration.RootBucketInfo.BucketName)
+			d.Set("role_arn", storageConifiguration.RoleArn)
 			return d.Set("creation_time", storageConifiguration.CreationTime)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -103,6 +105,11 @@ func ResourceMwsStorageConfigurations() common.Resource {
 			"bucket_name": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"creation_time": {
 				Type:     schema.TypeInt,

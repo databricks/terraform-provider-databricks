@@ -3,6 +3,8 @@ subcategory: "Databricks SQL"
 ---
 # databricks_sql_widget Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/dashboards)
+
 !> This resource is deprecated and will be removed in future.
 
 -> Please switch to [databricks_dashboard](dashboard.md) to author new AI/BI dashboards using the latest tooling
@@ -40,6 +42,11 @@ resource "databricks_sql_widget" "d1w2" {
   }
 }
 ```
+
+## Argument Reference
+
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Import
 

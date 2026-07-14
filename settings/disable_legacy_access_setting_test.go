@@ -2,10 +2,8 @@ package settings_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
@@ -48,8 +46,8 @@ func TestAccDisableLegacyAccessSetting(t *testing.T) {
 				w, err := client.WorkspaceClient()
 				require.NoError(t, err)
 				// Terraform Check returns the latest resource status before it is destroyed, which has an outdated eTag.
-				// We are making an update call to get the correct eTag in the response error.
-				_, err = w.Settings.DisableLegacyAccess().Update(ctx, settings.UpdateDisableLegacyAccessRequest{
+				// We are making an update call to get the current eTag in the response.
+				updateResp, err := w.Settings.DisableLegacyAccess().Update(ctx, settings.UpdateDisableLegacyAccessRequest{
 					AllowMissing: true,
 					Setting: settings.DisableLegacyAccess{
 						DisableLegacyAccess: settings.BooleanMessage{
@@ -58,14 +56,9 @@ func TestAccDisableLegacyAccessSetting(t *testing.T) {
 					},
 					FieldMask: "disable_legacy_access.value",
 				})
-				assert.Error(t, err)
-				var aerr *apierr.APIError
-				if !errors.As(err, &aerr) {
-					assert.FailNow(t, "cannot parse error message %v", err)
-				}
-				etag := aerr.Details[0].Metadata["etag"]
+				require.NoError(t, err)
 				res, err := w.Settings.DisableLegacyAccess().Get(ctx, settings.GetDisableLegacyAccessRequest{
-					Etag: etag,
+					Etag: updateResp.Etag,
 				})
 				// we should not be getting any error
 				assert.NoError(t, err)

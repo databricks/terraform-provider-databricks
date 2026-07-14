@@ -72,13 +72,13 @@ type DashboardAPI struct {
 
 // Create ...
 func (a DashboardAPI) Create(d *api.Dashboard) error {
-	return a.client.Post(a.context, "/preview/sql/dashboards", d, &d)
+	return a.client.Post(a.context, "/preview/sql/dashboards", d, &d, a.client.AddWorkspaceIdHeader)
 }
 
 // Read ...
 func (a DashboardAPI) Read(dashboardID string) (*api.Dashboard, error) {
 	var d api.Dashboard
-	err := a.client.Get(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), nil, &d)
+	err := a.client.Get(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), nil, &d, a.client.AddWorkspaceIdHeader)
 	if err != nil {
 		return nil, err
 	}
@@ -88,29 +88,38 @@ func (a DashboardAPI) Read(dashboardID string) (*api.Dashboard, error) {
 
 // Update ...
 func (a DashboardAPI) Update(dashboardID string, d *api.Dashboard) error {
-	return a.client.Post(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), d, nil)
+	return a.client.Post(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), d, nil, a.client.AddWorkspaceIdHeader)
 }
 
 // Delete ...
 func (a DashboardAPI) Delete(dashboardID string) error {
-	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), nil)
+	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/dashboards/%s", dashboardID), nil, a.client.AddWorkspaceIdHeader)
 }
 
 func ResourceSqlDashboard() common.Resource {
 	s := common.StructToSchema(
 		DashboardEntity{},
 		common.NoCustomize)
+	common.AddNamespaceInSchema(s)
+	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
 		DeprecationMessage: "This resource is deprecated and will be removed in the future. Please use the `databricks_dashboard` resource.",
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.NamespaceCustomizeDiff(ctx, d, c)
+		},
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
 			var d DashboardEntity
 			ad, err := d.toAPIObject(s, data)
 			if err != nil {
 				return err
 			}
 
-			err = NewDashboardAPI(ctx, c).Create(ad)
+			err = NewDashboardAPI(ctx, newClient).Create(ad)
 			if err != nil {
 				return err
 			}
@@ -121,7 +130,11 @@ func ResourceSqlDashboard() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			ad, err := NewDashboardAPI(ctx, c).Read(data.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
+			ad, err := NewDashboardAPI(ctx, newClient).Read(data.Id())
 			if err != nil {
 				return err
 			}
@@ -130,16 +143,24 @@ func ResourceSqlDashboard() common.Resource {
 			return d.fromAPIObject(ad, s, data)
 		},
 		Update: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
 			var d DashboardEntity
 			ad, err := d.toAPIObject(s, data)
 			if err != nil {
 				return err
 			}
 
-			return NewDashboardAPI(ctx, c).Update(data.Id(), ad)
+			return NewDashboardAPI(ctx, newClient).Update(data.Id(), ad)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewDashboardAPI(ctx, c).Delete(data.Id())
+			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, data)
+			if err != nil {
+				return err
+			}
+			return NewDashboardAPI(ctx, newClient).Delete(data.Id())
 		},
 		Schema: s,
 	}

@@ -21,6 +21,7 @@ func DataSourceJobs() common.Resource {
 		Ids        map[string]string `json:"ids,omitempty" tf:"computed"`
 		NameFilter string            `json:"job_name_contains,omitempty"`
 		Key        string            `json:"key,omitempty" tf:"default:name"`
+		common.Namespace
 	}, w *databricks.WorkspaceClient) error {
 		iter := w.Jobs.List(ctx, jobs.ListJobsRequest{ExpandTasks: false, Limit: 100})
 		data.Ids = map[string]string{}

@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_workspace_binding Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/workspacebindings)
+
 If you use workspaces to isolate user data access, you may want to limit access to catalog, external locations or storage credentials from specific workspaces in your account, also known as workspace binding
 
 -> This resource can only be used with a workspace-level provider!
@@ -34,7 +36,56 @@ The following arguments are required:
 * `workspace_id` - ID of the workspace. Change forces creation of a new resource.
 * `securable_name` - Name of securable. Change forces creation of a new resource.
 * `securable_type` - Type of securable. Can be `catalog`, `external_location`, `storage_credential` or `credential`. Default to `catalog`. Change forces creation of a new resource.
-* `binding_type` - (Optional) Binding mode. Default to `BINDING_TYPE_READ_WRITE`. Possible values are `BINDING_TYPE_READ_ONLY`, `BINDING_TYPE_READ_WRITE`.
+* `binding_type` - (Optional) Binding mode. Default to `BINDING_TYPE_READ_WRITE`. Possible values are `BINDING_TYPE_READ_ONLY`, `BINDING_TYPE_READ_WRITE`. Note: `BINDING_TYPE_READ_ONLY` is only supported when `securable_type` is `catalog`. For `storage_credential`, `external_location`, and `credential`, only `BINDING_TYPE_READ_WRITE` is supported.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
+## Migration from databricks_catalog_workspace_binding
+
+You can migrate from the deprecated `databricks_catalog_workspace_binding` to `databricks_workspace_binding` without re-binding catalog.
+
+### For Terraform version >= 1.7.0
+
+Terraform 1.7 introduced the [removed](https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources) block in addition to the [import](https://developer.hashicorp.com/terraform/language/import) block introduced in Terraform 1.5. Together they make import and removal of resources easier, avoiding manual execution of `terraform import` and `terraform state rm` commands.
+
+So with Terraform 1.7+, the migration looks as the following:
+
+* Remove the `databricks_catalog_workspace_binding` resource and replace it with the `databricks_workspace_binding`.
+* Add `import` and `removed` blocks like this:
+
+```hcl
+locals {
+  workspace_id = 1234567890
+}
+
+removed {
+  from = databricks_catalog_workspace_binding.sandbox
+  lifecycle {
+    destroy = false
+  }
+}
+
+resource "databricks_workspace_binding" "sandbox" {
+  securable_name = databricks_catalog.sandbox.name
+  workspace_id   = local.workspace_id
+}
+
+import {
+  to = databricks_workspace_binding.sandbox
+  id = "${local.workspace_id}|catalog|${databricks_catalog.sandbox.name}"
+}
+```
+
+* Run the `terraform plan` command to check possible changes, such as value type change, etc.
+* Run the `terraform apply` command to apply changes.
+* Remove the `import` and `removed` blocks from the code.
+
+### For Terraform version < 1.7.0
+
+* Remove the `databricks_catalog_workspace_binding` resource and and replace it with the `databricks_workspace_binding`.
+* Remove the old resource from the state with the `terraform state rm databricks_catalog_workspace_binding.sandbox` command.
+* Import new resource with the `terraform import databricks_workspace_binding.sandbox "<workspace_id>|<securable_type>|<securable_name>"` command.
+* Run the `terraform plan` command to check possible changes, such as value type change, etc.
 
 ## Import
 

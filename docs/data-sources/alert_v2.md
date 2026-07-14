@@ -2,6 +2,10 @@
 subcategory: "Databricks SQL"
 ---
 # databricks_alert_v2 Data Source
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/alertsv2)
+
 The SQL Alert v2 data source allows you to retrieve detailed information about a specific alert in Databricks SQL. This data source provides access to all alert properties, including its configuration, evaluation criteria, notification settings, and schedule.
 
 You can use this data source to:
@@ -24,7 +28,10 @@ data "databricks_alert_v2" "this" {
 ## Arguments
 The following arguments are supported:
 * `id` (string, required) - UUID identifying the alert
-* `workspace_id` (string, optional) - Workspace ID of the resource
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:
@@ -37,7 +44,7 @@ The following attributes are exported:
   permissions and defaults
 * `evaluation` (AlertV2Evaluation)
 * `id` (string) - UUID identifying the alert
-* `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: `ACTIVE`, `TRASHED`
+* `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: `ACTIVE`, `DELETED`
 * `owner_user_name` (string) - The owner's username. This field is set to "Unavailable" if the user has been deleted
 * `parent_path` (string) - The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated
 * `query_text` (string) - Text of the query to be run
@@ -55,7 +62,7 @@ The following attributes are exported:
 
 ### AlertV2Evaluation
 * `comparison_operator` (string) - Operator used for comparison in alert evaluation. Possible values are: `EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `IS_NOT_NULL`, `IS_NULL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`
-* `empty_result_state` (string) - Alert state if result is empty. Possible values are: `ERROR`, `OK`, `TRIGGERED`, `UNKNOWN`
+* `empty_result_state` (string) - Alert state if result is empty. Please avoid setting this field to be `UNKNOWN` because `UNKNOWN` state is planned to be deprecated. Possible values are: `ERROR`, `OK`, `TRIGGERED`, `UNKNOWN`
 * `last_evaluated_at` (string) - Timestamp of the last evaluation
 * `notification` (AlertV2Notification) - User or Notification Destination to notify when alert is triggered
 * `source` (AlertV2OperandColumn) - Source column from result to use to evaluate alert
@@ -64,7 +71,9 @@ The following attributes are exported:
 
 ### AlertV2Notification
 * `notify_on_ok` (boolean) - Whether to notify alert subscribers when alert returns back to normal
-* `retrigger_seconds` (integer) - Number of seconds an alert must wait after being triggered to rearm itself. After rearming, it can be triggered again. If 0 or not specified, the alert will not be triggered again
+* `retrigger_seconds` (integer) - Number of seconds an alert waits after being triggered before it is allowed to send another notification.
+  If set to 0 or omitted, the alert will not send any further notifications after the first trigger
+  Setting this value to 1 allows the alert to send a notification on every evaluation where the condition is met, effectively making it always retrigger for notification purposes
 * `subscriptions` (list of AlertV2Subscription)
 
 ### AlertV2Operand
@@ -72,7 +81,7 @@ The following attributes are exported:
 * `value` (AlertV2OperandValue)
 
 ### AlertV2OperandColumn
-* `aggregation` (string) - . Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
+* `aggregation` (string) - If not set, the behavior is equivalent to using `First row` in the UI. Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
 * `display` (string)
 * `name` (string)
 

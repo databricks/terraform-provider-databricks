@@ -3,6 +3,8 @@ subcategory: "Deployment"
 ---
 # databricks_instance_profile Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/instanceprofiles)
+
 This resource allows you to manage AWS EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_mount](mount.md). The following example demonstrates how to create an instance profile and create a cluster with it. When creating a new `databricks_instance_profile`, Databricks validates that it has sufficient permissions to launch instances with the instance profile. This validation uses AWS dry-run mode for the [AWS EC2 RunInstances API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html).
 
 -> This resource can only be used with a workspace-level provider!
@@ -158,6 +160,8 @@ The following arguments are supported:
 * `iam_role_arn` - (Optional) The AWS IAM role ARN of the role associated with the instance profile. It must have the form `arn:aws:iam::<account-id>:role/<name>`. This field is required if your role name and instance profile name do not match and you want to use the instance profile with Databricks SQL Serverless.
 * `is_meta_instance_profile` - (Optional) Whether the instance profile is a meta instance profile. Used only in [IAM credential passthrough](https://docs.databricks.com/security/credential-passthrough/iam-passthrough.html).
 * `skip_validation` - (Optional) **For advanced usage only.** If validation fails with an error message that does not indicate an IAM related permission issue, (e.g. "Your requested instance type is not supported in your requested availability zone"), you can pass this flag to skip the validation and forcibly add the instance profile.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

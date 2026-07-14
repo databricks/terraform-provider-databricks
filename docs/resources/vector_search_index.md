@@ -3,6 +3,8 @@ subcategory: "Mosaic AI Vector Search"
 ---
 # databricks_vector_search_index Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/vectorsearchindexes)
+
 This resource allows you to create [Mosaic AI Vector Search Index](https://docs.databricks.com/en/generative-ai/create-query-vector-search.html) in Databricks.  Mosaic AI Vector Search is a serverless similarity search engine that allows you to store a vector representation of your data, including metadata, in a vector database.  The Mosaic AI Vector Search Index provides the ability to search data in the linked Delta Table.
 
 -> This resource can only be used with a workspace-level provider!
@@ -42,7 +44,6 @@ The following arguments are supported (change of any parameter leads to recreati
 ### delta_sync_index_spec Configuration Block
 
 * `source_table` (required) The name of the source table.
-* `columns_to_sync` - (optional) list of columns to sync. If not specified, all columns are syncronized.
 * `embedding_source_columns` - (required if `embedding_vector_columns` isn't provided) array of objects representing columns that contain the embedding source.  Each entry consists of:
   * `name` - The name of the column
   * `embedding_model_endpoint_name` - The name of the embedding model endpoint, used by default for both ingestion and querying.
@@ -65,6 +66,8 @@ The following arguments are supported (change of any parameter leads to recreati
 * `embedding_vector_columns`  - (required if `embedding_source_columns` isn't provided)  array of objects representing columns that contain the embedding vectors. Each entry consists of:
   * `name` - The name of the column.
   * `embedding_dimension` - Dimension of the embedding vector.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

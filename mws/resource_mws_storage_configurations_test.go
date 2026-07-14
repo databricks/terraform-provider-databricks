@@ -177,3 +177,76 @@ func TestResourceStorageConfigurationDelete_Error(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc/scid", d.Id())
 }
+
+func TestResourceStorageConfigurationCreateWithArn(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/storage-configurations",
+				ExpectedRequest: StorageConfiguration{
+					StorageConfigurationName: "Main Storage",
+					RootBucketInfo: &RootBucketInfo{
+						BucketName: "bucket",
+					},
+					RoleArn: "arn:aws:iam::123456789012:role/my-role",
+				},
+				Response: StorageConfiguration{
+					StorageConfigurationID: "scid",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/storage-configurations/scid",
+				Response: StorageConfiguration{
+					StorageConfigurationID:   "scid",
+					StorageConfigurationName: "Main Storage",
+					RootBucketInfo: &RootBucketInfo{
+						BucketName: "bucket",
+					},
+					RoleArn: "arn:aws:iam::123456789012:role/my-role",
+				},
+			},
+		},
+		Resource: ResourceMwsStorageConfigurations(),
+		State: map[string]any{
+			"account_id":                 "abc",
+			"bucket_name":                "bucket",
+			"storage_configuration_name": "Main Storage",
+			"role_arn":                   "arn:aws:iam::123456789012:role/my-role",
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc/scid", d.Id())
+	assert.Equal(t, "arn:aws:iam::123456789012:role/my-role", d.Get("role_arn"))
+}
+
+func TestResourceStorageConfigurationReadWithArn(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/storage-configurations/scid",
+				Response: StorageConfiguration{
+					StorageConfigurationID:   "scid",
+					StorageConfigurationName: "Main Storage",
+					RootBucketInfo: &RootBucketInfo{
+						BucketName: "bucket",
+					},
+					RoleArn: "arn:aws:iam::123456789012:role/my-role",
+				},
+			},
+		},
+		Resource: ResourceMwsStorageConfigurations(),
+		Read:     true,
+		ID:       "abc/scid",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc/scid", d.Id(), "Id should not be empty")
+	assert.Equal(t, "bucket", d.Get("bucket_name"))
+	assert.Equal(t, "arn:aws:iam::123456789012:role/my-role", d.Get("role_arn"))
+	assert.Equal(t, 0, d.Get("creation_time"))
+	assert.Equal(t, "scid", d.Get("storage_configuration_id"))
+	assert.Equal(t, "Main Storage", d.Get("storage_configuration_name"))
+}

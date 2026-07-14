@@ -4,6 +4,8 @@ subcategory: "Settings"
 
 # databricks_aibi_dashboard_embedding_approved_domains_setting Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/aibidashboardembeddingapproveddomains)
+
 The `databricks_aibi_dashboard_embedding_approved_domains_setting` resource allows you to specify the list of domains allowed for  [embedding of AI/BI Dashboards](https://learn.microsoft.com/en-us/azure/databricks/dashboards/admin/#manage-dashboard-embedding) into other sites.
 
 -> This resource can only be used with a workspace-level provider!
@@ -31,6 +33,8 @@ The resource supports the following arguments:
 
 - `aibi_dashboard_embedding_approved_domains` block with following attributes:
   - `approved_domains` - (Required) the list of approved domains. To allow all subdomains for a given domain, use a wildcard symbol (`*`) before the domain name, i.e., `*.databricks.com` will allow to embed into any site under the `databricks.com`.
+- `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  - `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Import
 

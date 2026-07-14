@@ -3,6 +3,8 @@ subcategory: "Serving"
 ---
 # databricks_model_serving_provisioned_throughput Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/servingendpoints)
+
 This resource allows you to manage [Foundation Model provisioned throughput](https://docs.databricks.com/aws/en/machine-learning/foundation-model-apis/deploy-prov-throughput-foundation-model-apis) endpoints in Databricks.
 
 ~> This resource is currently in private preview, and only available for enrolled customers.
@@ -42,6 +44,8 @@ The following arguments are supported:
 * `ai_gateway` - (Optional) A block with AI Gateway configuration for the serving endpoint. *Note: only external model endpoints are supported as of now.*
 * `budget_policy_id` - (Optiona) The Budget Policy ID set for this serving endpoint.
 * `email_notifications` - (Optional) A block with Email notification setting.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### served_entities Configuration Block
 

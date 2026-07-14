@@ -6,16 +6,18 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/database"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/database_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -32,10 +34,162 @@ type DatabaseInstanceDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
+// ProviderConfigData contains the fields to configure the provider.
+type ProviderConfigData struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+// ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
+func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
+	return attrs
+}
+
+// ProviderConfigDataWorkspaceIDPlanModifier is plan modifier for the workspace_id field.
+// Resource requires replacement if the workspace_id changes from one non-empty value to another.
+func ProviderConfigDataWorkspaceIDPlanModifier(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+	// Require replacement if workspace_id changes from one non-empty value to another
+	oldValue := req.StateValue.ValueString()
+	newValue := req.PlanValue.ValueString()
+
+	if oldValue != "" && newValue != "" && oldValue != newValue {
+		resp.RequiresReplace = true
+	}
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
+// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
+// (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
+func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model and contains additional fields.
+//
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfigData
+// only implements ToObjectValue() and Type().
+func (r ProviderConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+}
+
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and contains additional fields.
+func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
+}
+
 // DatabaseInstanceData extends the main model with additional fields.
 type DatabaseInstanceData struct {
-	database_tf.DatabaseInstance
-	WorkspaceID types.String `tfsdk:"workspace_id"`
+	// The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4", "CU_8".
+	Capacity types.String `tfsdk:"capacity"`
+	// The refs of the child instances. This is only available if the instance
+	// is parent instance.
+	ChildInstanceRefs types.List `tfsdk:"child_instance_refs"`
+	// The timestamp when the instance was created.
+	CreationTime types.String `tfsdk:"creation_time"`
+	// The email of the creator of the instance.
+	Creator types.String `tfsdk:"creator"`
+	// Custom tags associated with the instance. This field is only included on
+	// create and update responses.
+	CustomTags types.List `tfsdk:"custom_tags"`
+	// Deprecated. The sku of the instance; this field will always match the
+	// value of capacity. This is an output only field that contains the value
+	// computed from the input field combined with server side defaults. Use the
+	// field without the effective_ prefix to set the value.
+	EffectiveCapacity types.String `tfsdk:"effective_capacity"`
+	// The recorded custom tags associated with the instance. This is an output
+	// only field that contains the value computed from the input field combined
+	// with server side defaults. Use the field without the effective_ prefix to
+	// set the value.
+	EffectiveCustomTags types.List `tfsdk:"effective_custom_tags"`
+	// Whether the instance has PG native password login enabled. This is an
+	// output only field that contains the value computed from the input field
+	// combined with server side defaults. Use the field without the effective_
+	// prefix to set the value.
+	EffectiveEnablePgNativeLogin types.Bool `tfsdk:"effective_enable_pg_native_login"`
+	// Whether secondaries serving read-only traffic are enabled. Defaults to
+	// false. This is an output only field that contains the value computed from
+	// the input field combined with server side defaults. Use the field without
+	// the effective_ prefix to set the value.
+	EffectiveEnableReadableSecondaries types.Bool `tfsdk:"effective_enable_readable_secondaries"`
+	// The number of nodes in the instance, composed of 1 primary and 0 or more
+	// secondaries. Defaults to 1 primary and 0 secondaries. This is an output
+	// only field that contains the value computed from the input field combined
+	// with server side defaults. Use the field without the effective_ prefix to
+	// set the value.
+	EffectiveNodeCount types.Int64 `tfsdk:"effective_node_count"`
+	// The retention window for the instance. This is the time window in days
+	// for which the historical data is retained. This is an output only field
+	// that contains the value computed from the input field combined with
+	// server side defaults. Use the field without the effective_ prefix to set
+	// the value.
+	EffectiveRetentionWindowInDays types.Int64 `tfsdk:"effective_retention_window_in_days"`
+	// Whether the instance is stopped. This is an output only field that
+	// contains the value computed from the input field combined with server
+	// side defaults. Use the field without the effective_ prefix to set the
+	// value.
+	EffectiveStopped types.Bool `tfsdk:"effective_stopped"`
+	// The policy that is applied to the instance. This is an output only field
+	// that contains the value computed from the input field combined with
+	// server side defaults. Use the field without the effective_ prefix to set
+	// the value.
+	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
+	// Whether to enable PG native password login on the instance. Defaults to
+	// false.
+	EnablePgNativeLogin types.Bool `tfsdk:"enable_pg_native_login"`
+	// Whether to enable secondaries to serve read-only traffic. Defaults to
+	// false.
+	EnableReadableSecondaries types.Bool `tfsdk:"enable_readable_secondaries"`
+	// The name of the instance. This is the unique identifier for the instance.
+	Name types.String `tfsdk:"name"`
+	// The number of nodes in the instance, composed of 1 primary and 0 or more
+	// secondaries. Defaults to 1 primary and 0 secondaries. This field is input
+	// only, see effective_node_count for the output.
+	NodeCount types.Int64 `tfsdk:"node_count"`
+	// The ref of the parent instance. This is only available if the instance is
+	// child instance. Input: For specifying the parent instance to create a
+	// child instance. Optional. Output: Only populated if provided as input to
+	// create a child instance.
+	ParentInstanceRef types.Object `tfsdk:"parent_instance_ref"`
+	// The version of Postgres running on the instance.
+	PgVersion types.String `tfsdk:"pg_version"`
+	// The DNS endpoint to connect to the instance for read only access. This is
+	// only available if enable_readable_secondaries is true.
+	ReadOnlyDns types.String `tfsdk:"read_only_dns"`
+	// The DNS endpoint to connect to the instance for read+write access.
+	ReadWriteDns types.String `tfsdk:"read_write_dns"`
+	// The retention window for the instance. This is the time window in days
+	// for which the historical data is retained. The default value is 7 days.
+	// Valid values are 2 to 35 days.
+	RetentionWindowInDays types.Int64 `tfsdk:"retention_window_in_days"`
+	// The current state of the instance.
+	State types.String `tfsdk:"state"`
+	// Whether to stop the instance. An input only param, see effective_stopped
+	// for the output.
+	Stopped types.Bool `tfsdk:"stopped"`
+	// An immutable UUID identifier for the instance.
+	Uid types.String `tfsdk:"uid"`
+	// The desired usage policy to associate with the instance.
+	UsagePolicyId      types.String `tfsdk:"usage_policy_id"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -46,7 +200,13 @@ type DatabaseInstanceData struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m DatabaseInstanceData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.DatabaseInstance.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"child_instance_refs":   reflect.TypeOf(database_tf.DatabaseInstanceRef{}),
+		"custom_tags":           reflect.TypeOf(database_tf.CustomTag{}),
+		"effective_custom_tags": reflect.TypeOf(database_tf.CustomTag{}),
+		"parent_instance_ref":   reflect.TypeOf(database_tf.DatabaseInstanceRef{}),
+		"provider_config":       reflect.TypeOf(ProviderConfigData{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -56,31 +216,115 @@ func (m DatabaseInstanceData) GetComplexFieldTypes(ctx context.Context) map[stri
 // interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseInstanceData
 // only implements ToObjectValue() and Type().
 func (m DatabaseInstanceData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.DatabaseInstance.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{
+			"capacity":                              m.Capacity,
+			"child_instance_refs":                   m.ChildInstanceRefs,
+			"creation_time":                         m.CreationTime,
+			"creator":                               m.Creator,
+			"custom_tags":                           m.CustomTags,
+			"effective_capacity":                    m.EffectiveCapacity,
+			"effective_custom_tags":                 m.EffectiveCustomTags,
+			"effective_enable_pg_native_login":      m.EffectiveEnablePgNativeLogin,
+			"effective_enable_readable_secondaries": m.EffectiveEnableReadableSecondaries,
+			"effective_node_count":                  m.EffectiveNodeCount,
+			"effective_retention_window_in_days":    m.EffectiveRetentionWindowInDays,
+			"effective_stopped":                     m.EffectiveStopped,
+			"effective_usage_policy_id":             m.EffectiveUsagePolicyId,
+			"enable_pg_native_login":                m.EnablePgNativeLogin,
+			"enable_readable_secondaries":           m.EnableReadableSecondaries,
+			"name":                                  m.Name,
+			"node_count":                            m.NodeCount,
+			"parent_instance_ref":                   m.ParentInstanceRef,
+			"pg_version":                            m.PgVersion,
+			"read_only_dns":                         m.ReadOnlyDns,
+			"read_write_dns":                        m.ReadWriteDns,
+			"retention_window_in_days":              m.RetentionWindowInDays,
+			"state":                                 m.State,
+			"stopped":                               m.Stopped,
+			"uid":                                   m.Uid,
+			"usage_policy_id":                       m.UsagePolicyId,
+
+			"provider_config": m.ProviderConfigData,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m DatabaseInstanceData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.DatabaseInstance.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"capacity": types.StringType,
+			"child_instance_refs": basetypes.ListType{
+				ElemType: database_tf.DatabaseInstanceRef{}.Type(ctx),
+			},
+			"creation_time": types.StringType,
+			"creator":       types.StringType,
+			"custom_tags": basetypes.ListType{
+				ElemType: database_tf.CustomTag{}.Type(ctx),
+			},
+			"effective_capacity": types.StringType,
+			"effective_custom_tags": basetypes.ListType{
+				ElemType: database_tf.CustomTag{}.Type(ctx),
+			},
+			"effective_enable_pg_native_login":      types.BoolType,
+			"effective_enable_readable_secondaries": types.BoolType,
+			"effective_node_count":                  types.Int64Type,
+			"effective_retention_window_in_days":    types.Int64Type,
+			"effective_stopped":                     types.BoolType,
+			"effective_usage_policy_id":             types.StringType,
+			"enable_pg_native_login":                types.BoolType,
+			"enable_readable_secondaries":           types.BoolType,
+			"name":                                  types.StringType,
+			"node_count":                            types.Int64Type,
+			"parent_instance_ref":                   database_tf.DatabaseInstanceRef{}.Type(ctx),
+			"pg_version":                            types.StringType,
+			"read_only_dns":                         types.StringType,
+			"read_write_dns":                        types.StringType,
+			"retention_window_in_days":              types.Int64Type,
+			"state":                                 types.StringType,
+			"stopped":                               types.BoolType,
+			"uid":                                   types.StringType,
+			"usage_policy_id":                       types.StringType,
 
-	return types.ObjectType{AttrTypes: attrTypes}
+			"provider_config": ProviderConfigData{}.Type(ctx),
+		},
+	}
 }
 
-// SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and additional fields. This method is called
-// during read.
-func (m *DatabaseInstanceData) SyncFieldsDuringRead(ctx context.Context, existingState DatabaseInstanceData) {
-	m.DatabaseInstance.SyncFieldsDuringRead(ctx, existingState.DatabaseInstance)
+func (m DatabaseInstanceData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["capacity"] = attrs["capacity"].SetComputed()
+	attrs["child_instance_refs"] = attrs["child_instance_refs"].SetComputed()
+	attrs["creation_time"] = attrs["creation_time"].SetComputed()
+	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["custom_tags"] = attrs["custom_tags"].SetComputed()
+	attrs["effective_capacity"] = attrs["effective_capacity"].SetComputed()
+	attrs["effective_custom_tags"] = attrs["effective_custom_tags"].SetComputed()
+	attrs["effective_enable_pg_native_login"] = attrs["effective_enable_pg_native_login"].SetComputed()
+	attrs["effective_enable_readable_secondaries"] = attrs["effective_enable_readable_secondaries"].SetComputed()
+	attrs["effective_node_count"] = attrs["effective_node_count"].SetComputed()
+	attrs["effective_retention_window_in_days"] = attrs["effective_retention_window_in_days"].SetComputed()
+	attrs["effective_stopped"] = attrs["effective_stopped"].SetComputed()
+	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
+	attrs["enable_pg_native_login"] = attrs["enable_pg_native_login"].SetComputed()
+	attrs["enable_readable_secondaries"] = attrs["enable_readable_secondaries"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["node_count"] = attrs["node_count"].SetComputed()
+	attrs["parent_instance_ref"] = attrs["parent_instance_ref"].SetComputed()
+	attrs["pg_version"] = attrs["pg_version"].SetComputed()
+	attrs["read_only_dns"] = attrs["read_only_dns"].SetComputed()
+	attrs["read_write_dns"] = attrs["read_write_dns"].SetComputed()
+	attrs["retention_window_in_days"] = attrs["retention_window_in_days"].SetComputed()
+	attrs["state"] = attrs["state"].SetComputed()
+	attrs["stopped"] = attrs["stopped"].SetComputed()
+	attrs["uid"] = attrs["uid"].SetComputed()
+	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetComputed()
+
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
+	return attrs
 }
 
 func (r *DatabaseInstanceDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -88,10 +332,7 @@ func (r *DatabaseInstanceDataSource) Metadata(ctx context.Context, req datasourc
 }
 
 func (r *DatabaseInstanceDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseInstanceData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, DatabaseInstanceData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks DatabaseInstance",
 		Attributes:  attrs,
@@ -106,12 +347,6 @@ func (r *DatabaseInstanceDataSource) Configure(ctx context.Context, req datasour
 func (r *DatabaseInstanceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config DatabaseInstanceData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -124,13 +359,23 @@ func (r *DatabaseInstanceDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	response, err := client.Database.GetDatabaseInstance(ctx, readRequest)
 	if err != nil {
-		if apierr.IsMissing(err) {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-
 		resp.Diagnostics.AddError("failed to get database_instance", err.Error())
 		return
 	}
@@ -140,8 +385,12 @@ func (r *DatabaseInstanceDataSource) Read(ctx context.Context, req datasource.Re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	newState.SyncFieldsDuringRead(ctx, config)
+	// Preserve provider_config from config so state.Set has the correct type info
+	newState.ProviderConfigData = config.ProviderConfigData
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

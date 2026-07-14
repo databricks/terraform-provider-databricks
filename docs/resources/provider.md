@@ -3,6 +3,8 @@ subcategory: "Delta Sharing"
 ---
 # databricks_provider Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/providers)
+
 In Delta Sharing, a provider is an entity that shares data with a recipient. Within a metastore, Unity Catalog provides the ability to create a provider which contains a list of shares that have been shared with you.
 
 -> This resource can only be used with a workspace-level provider!
@@ -37,6 +39,8 @@ The following arguments are required:
 * `comment` - (Optional) Description about the provider.
 * `authentication_type` - (Optional) The delta sharing authentication type. Valid values are `TOKEN`.
 * `recipient_profile_str` - (Optional) This is the json file that is created from a recipient url.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

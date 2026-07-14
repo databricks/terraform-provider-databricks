@@ -3,6 +3,8 @@ subcategory: "Databricks SQL"
 ---
 # databricks_query Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/queries)
+
 This resource allows you to manage [Databricks SQL Queries](https://docs.databricks.com/en/sql/user/queries/index.html).  It supersedes [databricks_sql_query](sql_query.md) resource - see migration guide below for more details.
 
 -> This resource can only be used with a workspace-level provider!
@@ -70,6 +72,8 @@ The following arguments are available:
       * `prefix` - (Optional, String) Character that prefixes each selected parameter value.
       * `separator` - (Optional, String) Character that separates each selected parameter value. Defaults to a comma.
       * `suffix` - (Optional, String) Character that suffixes each selected parameter value.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

@@ -6,7 +6,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/settingsv2"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
@@ -34,7 +33,89 @@ type SettingDataSource struct {
 
 // SettingData extends the main model with additional fields.
 type SettingData struct {
-	settingsv2_tf.Setting
+	// Setting value for aibi_dashboard_embedding_access_policy setting. This is
+	// the setting value set by consumers, check
+	// effective_aibi_dashboard_embedding_access_policy for final setting value.
+	AibiDashboardEmbeddingAccessPolicy types.Object `tfsdk:"aibi_dashboard_embedding_access_policy"`
+	// Setting value for aibi_dashboard_embedding_approved_domains setting. This
+	// is the setting value set by consumers, check
+	// effective_aibi_dashboard_embedding_approved_domains for final setting
+	// value.
+	AibiDashboardEmbeddingApprovedDomains types.Object `tfsdk:"aibi_dashboard_embedding_approved_domains"`
+	// Setting value for allowed_apps_user_api_scopes setting. This is the
+	// setting value set by consumers, check
+	// effective_allowed_apps_user_api_scopes for final setting value.
+	AllowedAppsUserApiScopes types.Object `tfsdk:"allowed_apps_user_api_scopes"`
+	// Setting value for automatic_cluster_update_workspace setting. This is the
+	// setting value set by consumers, check
+	// effective_automatic_cluster_update_workspace for final setting value.
+	AutomaticClusterUpdateWorkspace types.Object `tfsdk:"automatic_cluster_update_workspace"`
+	// Setting value for boolean type setting. This is the setting value set by
+	// consumers, check effective_boolean_val for final setting value.
+	BooleanVal types.Object `tfsdk:"boolean_val"`
+	// Setting value for collaboration_platform_connectivity setting. This is
+	// the setting value set by consumers, check
+	// effective_collaboration_platform_connectivity for final setting value.
+	CollaborationPlatformConnectivity types.Object `tfsdk:"collaboration_platform_connectivity"`
+	// Effective setting value for aibi_dashboard_embedding_access_policy
+	// setting. This is the final effective value of setting. To set a value use
+	// aibi_dashboard_embedding_access_policy.
+	EffectiveAibiDashboardEmbeddingAccessPolicy types.Object `tfsdk:"effective_aibi_dashboard_embedding_access_policy"`
+	// Effective setting value for aibi_dashboard_embedding_approved_domains
+	// setting. This is the final effective value of setting. To set a value use
+	// aibi_dashboard_embedding_approved_domains.
+	EffectiveAibiDashboardEmbeddingApprovedDomains types.Object `tfsdk:"effective_aibi_dashboard_embedding_approved_domains"`
+	// Effective setting value for allowed_apps_user_api_scopes setting. This is
+	// the final effective value of setting. To set a value use
+	// allowed_apps_user_api_scopes.
+	EffectiveAllowedAppsUserApiScopes types.Object `tfsdk:"effective_allowed_apps_user_api_scopes"`
+	// Effective setting value for automatic_cluster_update_workspace setting.
+	// This is the final effective value of setting. To set a value use
+	// automatic_cluster_update_workspace.
+	EffectiveAutomaticClusterUpdateWorkspace types.Object `tfsdk:"effective_automatic_cluster_update_workspace"`
+	// Effective setting value for boolean type setting. This is the final
+	// effective value of setting. To set a value use boolean_val.
+	EffectiveBooleanVal types.Object `tfsdk:"effective_boolean_val"`
+	// Effective setting value for collaboration_platform_connectivity setting.
+	// This is the final effective value of setting. To set a value use
+	// collaboration_platform_connectivity.
+	EffectiveCollaborationPlatformConnectivity types.Object `tfsdk:"effective_collaboration_platform_connectivity"`
+	// Effective setting value for integer type setting. This is the final
+	// effective value of setting. To set a value use integer_val.
+	EffectiveIntegerVal types.Object `tfsdk:"effective_integer_val"`
+	// Effective setting value for operational_email_custom_recipient setting.
+	// This is the final effective value of setting. To set a value use
+	// operational_email_custom_recipient.
+	EffectiveOperationalEmailCustomRecipient types.Object `tfsdk:"effective_operational_email_custom_recipient"`
+	// Effective setting value for personal_compute setting. This is the final
+	// effective value of setting. To set a value use personal_compute.
+	EffectivePersonalCompute types.Object `tfsdk:"effective_personal_compute"`
+	// Effective setting value for restrict_workspace_admins setting. This is
+	// the final effective value of setting. To set a value use
+	// restrict_workspace_admins.
+	EffectiveRestrictWorkspaceAdmins types.Object `tfsdk:"effective_restrict_workspace_admins"`
+	// Effective setting value for string type setting. This is the final
+	// effective value of setting. To set a value use string_val.
+	EffectiveStringVal types.Object `tfsdk:"effective_string_val"`
+	// Setting value for integer type setting. This is the setting value set by
+	// consumers, check effective_integer_val for final setting value.
+	IntegerVal types.Object `tfsdk:"integer_val"`
+	// Name of the setting.
+	Name types.String `tfsdk:"name"`
+	// Setting value for operational_email_custom_recipient setting. This is the
+	// setting value set by consumers, check
+	// effective_operational_email_custom_recipient for final setting value.
+	OperationalEmailCustomRecipient types.Object `tfsdk:"operational_email_custom_recipient"`
+	// Setting value for personal_compute setting. This is the setting value set
+	// by consumers, check effective_personal_compute for final setting value.
+	PersonalCompute types.Object `tfsdk:"personal_compute"`
+	// Setting value for restrict_workspace_admins setting. This is the setting
+	// value set by consumers, check effective_restrict_workspace_admins for
+	// final setting value.
+	RestrictWorkspaceAdmins types.Object `tfsdk:"restrict_workspace_admins"`
+	// Setting value for string type setting. This is the setting value set by
+	// consumers, check effective_string_val for final setting value.
+	StringVal types.Object `tfsdk:"string_val"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -45,7 +126,30 @@ type SettingData struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m SettingData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.Setting.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"aibi_dashboard_embedding_access_policy":              reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}),
+		"aibi_dashboard_embedding_approved_domains":           reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}),
+		"allowed_apps_user_api_scopes":                        reflect.TypeOf(settingsv2_tf.AllowedAppsUserApiScopesMessage{}),
+		"automatic_cluster_update_workspace":                  reflect.TypeOf(settingsv2_tf.ClusterAutoRestartMessage{}),
+		"boolean_val":                                         reflect.TypeOf(settingsv2_tf.BooleanMessage{}),
+		"collaboration_platform_connectivity":                 reflect.TypeOf(settingsv2_tf.CollaborationPlatformConnectivityMessage{}),
+		"effective_aibi_dashboard_embedding_access_policy":    reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}),
+		"effective_aibi_dashboard_embedding_approved_domains": reflect.TypeOf(settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}),
+		"effective_allowed_apps_user_api_scopes":              reflect.TypeOf(settingsv2_tf.AllowedAppsUserApiScopesMessage{}),
+		"effective_automatic_cluster_update_workspace":        reflect.TypeOf(settingsv2_tf.ClusterAutoRestartMessage{}),
+		"effective_boolean_val":                               reflect.TypeOf(settingsv2_tf.BooleanMessage{}),
+		"effective_collaboration_platform_connectivity":       reflect.TypeOf(settingsv2_tf.CollaborationPlatformConnectivityMessage{}),
+		"effective_integer_val":                               reflect.TypeOf(settingsv2_tf.IntegerMessage{}),
+		"effective_operational_email_custom_recipient":        reflect.TypeOf(settingsv2_tf.OperationalEmailCustomRecipientMessage{}),
+		"effective_personal_compute":                          reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
+		"effective_restrict_workspace_admins":                 reflect.TypeOf(settingsv2_tf.RestrictWorkspaceAdminsMessage{}),
+		"effective_string_val":                                reflect.TypeOf(settingsv2_tf.StringMessage{}),
+		"integer_val":                                         reflect.TypeOf(settingsv2_tf.IntegerMessage{}),
+		"operational_email_custom_recipient":                  reflect.TypeOf(settingsv2_tf.OperationalEmailCustomRecipientMessage{}),
+		"personal_compute":                                    reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
+		"restrict_workspace_admins":                           reflect.TypeOf(settingsv2_tf.RestrictWorkspaceAdminsMessage{}),
+		"string_val":                                          reflect.TypeOf(settingsv2_tf.StringMessage{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -55,29 +159,94 @@ func (m SettingData) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 // interfere with how the plugin framework retrieves and sets values in state. Thus, SettingData
 // only implements ToObjectValue() and Type().
 func (m SettingData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.Setting.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{
+			"aibi_dashboard_embedding_access_policy":              m.AibiDashboardEmbeddingAccessPolicy,
+			"aibi_dashboard_embedding_approved_domains":           m.AibiDashboardEmbeddingApprovedDomains,
+			"allowed_apps_user_api_scopes":                        m.AllowedAppsUserApiScopes,
+			"automatic_cluster_update_workspace":                  m.AutomaticClusterUpdateWorkspace,
+			"boolean_val":                                         m.BooleanVal,
+			"collaboration_platform_connectivity":                 m.CollaborationPlatformConnectivity,
+			"effective_aibi_dashboard_embedding_access_policy":    m.EffectiveAibiDashboardEmbeddingAccessPolicy,
+			"effective_aibi_dashboard_embedding_approved_domains": m.EffectiveAibiDashboardEmbeddingApprovedDomains,
+			"effective_allowed_apps_user_api_scopes":              m.EffectiveAllowedAppsUserApiScopes,
+			"effective_automatic_cluster_update_workspace":        m.EffectiveAutomaticClusterUpdateWorkspace,
+			"effective_boolean_val":                               m.EffectiveBooleanVal,
+			"effective_collaboration_platform_connectivity":       m.EffectiveCollaborationPlatformConnectivity,
+			"effective_integer_val":                               m.EffectiveIntegerVal,
+			"effective_operational_email_custom_recipient":        m.EffectiveOperationalEmailCustomRecipient,
+			"effective_personal_compute":                          m.EffectivePersonalCompute,
+			"effective_restrict_workspace_admins":                 m.EffectiveRestrictWorkspaceAdmins,
+			"effective_string_val":                                m.EffectiveStringVal,
+			"integer_val":                                         m.IntegerVal,
+			"name":                                                m.Name,
+			"operational_email_custom_recipient":                  m.OperationalEmailCustomRecipient,
+			"personal_compute":                                    m.PersonalCompute,
+			"restrict_workspace_admins":                           m.RestrictWorkspaceAdmins,
+			"string_val":                                          m.StringVal,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m SettingData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.Setting.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-
-	return types.ObjectType{AttrTypes: attrTypes}
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"aibi_dashboard_embedding_access_policy":              settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}.Type(ctx),
+			"aibi_dashboard_embedding_approved_domains":           settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}.Type(ctx),
+			"allowed_apps_user_api_scopes":                        settingsv2_tf.AllowedAppsUserApiScopesMessage{}.Type(ctx),
+			"automatic_cluster_update_workspace":                  settingsv2_tf.ClusterAutoRestartMessage{}.Type(ctx),
+			"boolean_val":                                         settingsv2_tf.BooleanMessage{}.Type(ctx),
+			"collaboration_platform_connectivity":                 settingsv2_tf.CollaborationPlatformConnectivityMessage{}.Type(ctx),
+			"effective_aibi_dashboard_embedding_access_policy":    settingsv2_tf.AibiDashboardEmbeddingAccessPolicy{}.Type(ctx),
+			"effective_aibi_dashboard_embedding_approved_domains": settingsv2_tf.AibiDashboardEmbeddingApprovedDomains{}.Type(ctx),
+			"effective_allowed_apps_user_api_scopes":              settingsv2_tf.AllowedAppsUserApiScopesMessage{}.Type(ctx),
+			"effective_automatic_cluster_update_workspace":        settingsv2_tf.ClusterAutoRestartMessage{}.Type(ctx),
+			"effective_boolean_val":                               settingsv2_tf.BooleanMessage{}.Type(ctx),
+			"effective_collaboration_platform_connectivity":       settingsv2_tf.CollaborationPlatformConnectivityMessage{}.Type(ctx),
+			"effective_integer_val":                               settingsv2_tf.IntegerMessage{}.Type(ctx),
+			"effective_operational_email_custom_recipient":        settingsv2_tf.OperationalEmailCustomRecipientMessage{}.Type(ctx),
+			"effective_personal_compute":                          settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
+			"effective_restrict_workspace_admins":                 settingsv2_tf.RestrictWorkspaceAdminsMessage{}.Type(ctx),
+			"effective_string_val":                                settingsv2_tf.StringMessage{}.Type(ctx),
+			"integer_val":                                         settingsv2_tf.IntegerMessage{}.Type(ctx),
+			"name":                                                types.StringType,
+			"operational_email_custom_recipient":                  settingsv2_tf.OperationalEmailCustomRecipientMessage{}.Type(ctx),
+			"personal_compute":                                    settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
+			"restrict_workspace_admins":                           settingsv2_tf.RestrictWorkspaceAdminsMessage{}.Type(ctx),
+			"string_val":                                          settingsv2_tf.StringMessage{}.Type(ctx),
+		},
+	}
 }
 
-// SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and additional fields. This method is called
-// during read.
-func (m *SettingData) SyncFieldsDuringRead(ctx context.Context, existingState SettingData) {
-	m.Setting.SyncFieldsDuringRead(ctx, existingState.Setting)
+func (m SettingData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aibi_dashboard_embedding_access_policy"] = attrs["aibi_dashboard_embedding_access_policy"].SetComputed()
+	attrs["aibi_dashboard_embedding_approved_domains"] = attrs["aibi_dashboard_embedding_approved_domains"].SetComputed()
+	attrs["allowed_apps_user_api_scopes"] = attrs["allowed_apps_user_api_scopes"].SetComputed()
+	attrs["automatic_cluster_update_workspace"] = attrs["automatic_cluster_update_workspace"].SetComputed()
+	attrs["boolean_val"] = attrs["boolean_val"].SetComputed()
+	attrs["collaboration_platform_connectivity"] = attrs["collaboration_platform_connectivity"].SetComputed()
+	attrs["effective_aibi_dashboard_embedding_access_policy"] = attrs["effective_aibi_dashboard_embedding_access_policy"].SetComputed()
+	attrs["effective_aibi_dashboard_embedding_approved_domains"] = attrs["effective_aibi_dashboard_embedding_approved_domains"].SetComputed()
+	attrs["effective_allowed_apps_user_api_scopes"] = attrs["effective_allowed_apps_user_api_scopes"].SetComputed()
+	attrs["effective_automatic_cluster_update_workspace"] = attrs["effective_automatic_cluster_update_workspace"].SetComputed()
+	attrs["effective_boolean_val"] = attrs["effective_boolean_val"].SetComputed()
+	attrs["effective_collaboration_platform_connectivity"] = attrs["effective_collaboration_platform_connectivity"].SetComputed()
+	attrs["effective_integer_val"] = attrs["effective_integer_val"].SetComputed()
+	attrs["effective_operational_email_custom_recipient"] = attrs["effective_operational_email_custom_recipient"].SetComputed()
+	attrs["effective_personal_compute"] = attrs["effective_personal_compute"].SetComputed()
+	attrs["effective_restrict_workspace_admins"] = attrs["effective_restrict_workspace_admins"].SetComputed()
+	attrs["effective_string_val"] = attrs["effective_string_val"].SetComputed()
+	attrs["integer_val"] = attrs["integer_val"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["operational_email_custom_recipient"] = attrs["operational_email_custom_recipient"].SetComputed()
+	attrs["personal_compute"] = attrs["personal_compute"].SetComputed()
+	attrs["restrict_workspace_admins"] = attrs["restrict_workspace_admins"].SetComputed()
+	attrs["string_val"] = attrs["string_val"].SetComputed()
+
+	return attrs
 }
 
 func (r *SettingDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -85,9 +254,7 @@ func (r *SettingDataSource) Metadata(ctx context.Context, req datasource.Metadat
 }
 
 func (r *SettingDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, SettingData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, SettingData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Setting",
 		Attributes:  attrs,
@@ -102,12 +269,6 @@ func (r *SettingDataSource) Configure(ctx context.Context, req datasource.Config
 func (r *SettingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
-	client, diags := r.Client.GetAccountClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config SettingData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -120,13 +281,15 @@ func (r *SettingDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
+	client, clientDiags := r.Client.GetAccountClient()
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	response, err := client.SettingsV2.GetPublicAccountSetting(ctx, readRequest)
 	if err != nil {
-		if apierr.IsMissing(err) {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-
 		resp.Diagnostics.AddError("failed to get account_setting_v2", err.Error())
 		return
 	}
@@ -136,8 +299,6 @@ func (r *SettingDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	newState.SyncFieldsDuringRead(ctx, config)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

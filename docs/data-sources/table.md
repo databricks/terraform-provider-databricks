@@ -29,6 +29,8 @@ resource "databricks_grants" "things" {
 ## Argument Reference
 
 * `name` - (Required) Full name of the databricks_table: _`catalog`.`schema`.`table`_
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 
@@ -45,6 +47,8 @@ This data source exports the following attributes:
   * `columns` - Array of ColumnInfo objects of the table's columns
   * `owner` - Current owner of the table
   * `comment` - Free-form text description
+  * `table_id` - The unique identifier of the table.
+
 
 ## Related Resources
 

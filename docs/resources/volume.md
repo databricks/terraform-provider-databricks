@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_volume (Resource)
 
+[API Documentation](https://docs.databricks.com/api/workspace/volumes)
+
 Volumes are Unity Catalog objects representing a logical volume of storage in a cloud object storage location. Volumes provide capabilities for accessing, storing, governing, and organizing files. While tables provide governance over tabular datasets, volumes add governance over non-tabular datasets. You can use volumes to store and access files in any format, including structured, semi-structured, and unstructured data.
 
 -> This resource can only be used with a workspace-level provider!
@@ -83,8 +85,10 @@ The following arguments are supported:
 * `schema_name` - Name of parent Schema relative to parent Catalog. Change forces creation of a new resource.
 * `volume_type` - Volume type. `EXTERNAL` or `MANAGED`. Change forces creation of a new resource.
 * `owner` - (Optional) Name of the volume owner.
-* `storage_location` - (Optional) Path inside an External Location. Only used for `EXTERNAL` Volumes. Change forces creation of a new resource.
+* `storage_location` - (Optional) URL for the volume (should be inside of an existing [External Location](external_location.md)). Only used for `EXTERNAL` Volumes.  If the URL contains special characters, such as space, `&`, etc., they should be percent-encoded (space -> `%20`, etc.). Change forces creation of a new resource.
 * `comment` - (Optional) Free-form text.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

@@ -1,9 +1,19 @@
 package workspace_test
 
 import (
+	"context"
+	"fmt"
+	"regexp"
+	"strconv"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccNotebookResourceScalability(t *testing.T) {
@@ -17,6 +27,32 @@ func TestAccNotebookResourceScalability(t *testing.T) {
 			source = "{var.CWD}/../storage/testdata/tf-test-python.py"
 			path = "/Shared/provider-test/xx_{var.RANDOM}_renamed"
 		}`,
+	})
+}
+
+func TestAccNotebookCreate_NonExistentParent(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `resource "databricks_notebook" "this" {
+			content_base64 = "IyBEYXRhYnJpY2tzIG5vdGVib29rIHNvdXJjZQpwcmludCgiaGVsbG8iKQ=="
+			language = "PYTHON"
+			path = "/Shared/provider-test/notebook-parent-{var.RANDOM}/test.py"
+		}`,
+		Check: acceptance.ResourceCheck("databricks_notebook.this",
+			func(ctx context.Context, client *common.DatabricksClient, id string) error {
+				w, err := client.WorkspaceClient()
+				if err != nil {
+					return err
+				}
+				// Verify the notebook exists.
+				info, err := w.Workspace.GetStatusByPath(ctx, id)
+				require.NoError(t, err)
+				assert.Equal(t, id, info.Path)
+				// Verify the parent folder was created automatically.
+				parent := id[:len(id)-len("/test.py")]
+				_, err = w.Workspace.GetStatusByPath(ctx, parent)
+				assert.NoError(t, err, "parent folder should have been created automatically")
+				return nil
+			}),
 	})
 }
 
@@ -45,5 +81,113 @@ func TestAccNotebookResourceJupiterUpdate(t *testing.T) {
 			source = "{var.CWD}/acceptance/testdata/acc-test-update2.ipynb"
 			path = "/Shared/provider-test/jupiter_{var.STICKY_RANDOM}"
 		}`,
+	})
+}
+
+func notebookTemplate(provider_config string) string {
+	return fmt.Sprintf(`
+		resource "databricks_notebook" "this" {
+			%s
+			source = "{var.CWD}/acceptance/testdata/acc-test-update1.ipynb"
+			path = "/Shared/provider-test/jupiter_{var.STICKY_RANDOM}"
+		}
+	`, provider_config)
+}
+
+func TestAccNotebook_ProviderConfig_Mismatched(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: notebookTemplate(`
+			provider_config {
+				workspace_id = "123"
+			}
+		`),
+		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+		PlanOnly:    true,
+	})
+}
+
+func TestAccNotebook_ProviderConfig_EmptyID(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: notebookTemplate(`
+			provider_config {
+				workspace_id = ""
+			}
+		`),
+		ExpectError: regexp.MustCompile(`expected "provider_config.0.workspace_id" to not be an empty string`),
+		PlanOnly:    true,
+	})
+}
+
+func TestAccNotebook_ProviderConfig_Match(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: notebookTemplate(""),
+	}, acceptance.Step{
+		Template: notebookTemplate(fmt.Sprintf(`
+			provider_config {
+				workspace_id = "%s"
+			}
+		`, workspaceIDStr)),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				plancheck.ExpectResourceAction("databricks_notebook.this", plancheck.ResourceActionNoop),
+			},
+		},
+	})
+}
+
+func TestAccNotebook_ProviderConfig_Recreate(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: notebookTemplate(""),
+	}, acceptance.Step{
+		Template: notebookTemplate(fmt.Sprintf(`
+			provider_config {
+				workspace_id = "%s"
+			}
+		`, workspaceIDStr)),
+	}, acceptance.Step{
+		Template: notebookTemplate(`
+			provider_config {
+				workspace_id = "123"
+			}
+		`),
+		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+		PlanOnly:    true,
+	})
+}
+
+func TestAccNotebook_ProviderConfig_Remove(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	workspaceID, err := w.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	workspaceIDStr := strconv.FormatInt(workspaceID, 10)
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: notebookTemplate(""),
+	}, acceptance.Step{
+		Template: notebookTemplate(fmt.Sprintf(`
+			provider_config {
+				workspace_id = "%s"
+			}
+		`, workspaceIDStr)),
+	}, acceptance.Step{
+		Template: notebookTemplate(""),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				plancheck.ExpectResourceAction("databricks_notebook.this", plancheck.ResourceActionNoop),
+			},
+		},
 	})
 }

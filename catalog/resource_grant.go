@@ -1,9 +1,10 @@
 package catalog
 
 import (
+	"cmp"
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -59,8 +60,8 @@ func diffPermissionsForPrincipal(principal string, desired []catalog.PrivilegeAs
 		})
 	}
 	// so that we can deterministic tests
-	sort.Slice(diff, func(i, j int) bool {
-		return diff[i].Principal < diff[j].Principal
+	slices.SortFunc(diff, func(a, b catalog.PermissionsChange) int {
+		return cmp.Compare(a.Principal, b.Principal)
 	})
 	return diff
 }
@@ -72,7 +73,12 @@ func replacePermissionsForPrincipal(a permissions.UnityCatalogPermissionsAPI, se
 	if err != nil {
 		return err
 	}
-	err = a.UpdatePermissions(securableType, name, diffPermissionsForPrincipal(principal, list.PrivilegeAssignments, existing.PrivilegeAssignments))
+	diff := diffPermissionsForPrincipal(principal, list.PrivilegeAssignments, existing.PrivilegeAssignments)
+	if len(diff) == 0 {
+		// The permissions are already correct, no need to update or wait
+		return nil
+	}
+	err = a.UpdatePermissions(securableType, name, diff)
 	if err != nil {
 		return err
 	}
@@ -126,8 +132,13 @@ func parseSecurableId(d *schema.ResourceData) (string, string, string, error) {
 	return split[0], split[1], split[2], nil
 }
 
+type GrantSchemaStruct struct {
+	permissions.UnityCatalogPrivilegeAssignment
+	common.Namespace
+}
+
 func ResourceGrant() common.Resource {
-	s := common.StructToSchema(permissions.UnityCatalogPrivilegeAssignment{},
+	s := common.StructToSchema(GrantSchemaStruct{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			common.CustomizeSchemaPath(m, "principal").SetForceNew()
 
@@ -150,13 +161,15 @@ func ResourceGrant() common.Resource {
 					ConflictsWith: permissions.SliceWithoutString(allFields, field),
 				}
 			}
+			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
 
 	return common.Resource{
-		Schema: s,
+		Schema:        s,
+		CustomizeDiff: common.NamespaceCustomizeDiffNoForceNew,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -175,7 +188,7 @@ func ResourceGrant() common.Resource {
 				},
 			}
 			securable, name := permissions.Mappings.KeyValue(d)
-			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
+			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, w)
 			err = replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, grants)
 			if err != nil {
 				return err
@@ -188,7 +201,11 @@ func ResourceGrant() common.Resource {
 			if err != nil {
 				return err
 			}
-			grants, err := permissions.NewUnityCatalogPermissionsAPI(ctx, c).GetPermissions(permissions.Mappings.GetSecurableType(securable), name)
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			grants, err := permissions.NewUnityCatalogPermissionsAPI(ctx, w).GetPermissions(permissions.Mappings.GetSecurableType(securable), name)
 			if err != nil {
 				return err
 			}
@@ -203,7 +220,7 @@ func ResourceGrant() common.Resource {
 			return d.Set(securable, name)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -224,11 +241,11 @@ func ResourceGrant() common.Resource {
 					},
 				},
 			}
-			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
+			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, w)
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, grants)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -240,7 +257,7 @@ func ResourceGrant() common.Resource {
 			if err != nil {
 				return err
 			}
-			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
+			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, w)
 			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, catalog.GetPermissionsResponse{})
 		},
 	}

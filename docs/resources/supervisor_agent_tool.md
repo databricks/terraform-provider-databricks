@@ -1,0 +1,70 @@
+---
+subcategory: "Agent Bricks"
+---
+# databricks_supervisor_agent_tool Resource
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/supervisoragents)
+
+
+
+## Example Usage
+
+
+## Arguments
+The following arguments are supported:
+* `parent` (string, required) - Parent resource where this tool will be created.
+  Format: supervisor-agents/{supervisor_agent_id}
+* `tool_id` (string, required) - User specified id of the Tool
+* `tool_type` (string, required) - Tool type. Must be one of: "genie_space", "knowledge_assistant", "uc_function", "uc_connection", "uc_mcp", "app", "volume", "dashboard", "serving_endpoint", "table", "vector_search_index", "catalog", "schema", "supervisor_agent", "web_search", "skill". The legacy values "lakeview_dashboard" and "uc_table" are also accepted and remain equivalent to "dashboard" and "table" respectively
+* `app` (App, optional)
+* `description` (string, optional) - Description of what this tool does (user-facing)
+* `genie_space` (GenieSpace, optional)
+* `knowledge_assistant` (KnowledgeAssistant, optional)
+* `uc_connection` (UcConnection, optional)
+* `uc_function` (UcFunction, optional)
+* `volume` (Volume, optional)
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
+### App
+* `name` (string, required) - App name
+
+### GenieSpace
+* `id` (string, required, deprecated) - Deprecated: use space_id instead. Still REQUIRED for backward compatibility
+  until a future API version removes it
+
+### KnowledgeAssistant
+* `knowledge_assistant_id` (string, required) - The ID of the knowledge assistant
+* `serving_endpoint_name` (string, optional, deprecated) - Deprecated: use knowledge_assistant_id instead
+
+### UcConnection
+* `name` (string, required)
+
+### UcFunction
+* `name` (string, required) - Full uc function name
+
+### Volume
+* `name` (string, required) - Full uc volume name
+
+## Attributes
+In addition to the above arguments, the following attributes are exported:
+* `id` (string, deprecated) - Deprecated: Use tool_id instead
+* `name` (string) - Full resource name:
+  supervisor-agents/{supervisor_agent_id}/tools/{tool_id}
+
+## Import
+As of Terraform v1.5, resources can be imported through configuration.
+```hcl
+import {
+  id = "name"
+  to = databricks_supervisor_agent_tool.this
+}
+```
+
+If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
+```sh
+terraform import databricks_supervisor_agent_tool.this "name"
+```

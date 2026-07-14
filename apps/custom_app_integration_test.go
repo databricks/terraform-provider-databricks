@@ -9,7 +9,7 @@ import (
 
 var (
 	customAppIntegrationTemplate = `resource "databricks_custom_app_integration" "this" {
-			name = "custom_integration_name"
+			name = "tf-{var.STICKY_RANDOM}-app-integration"
 			redirect_urls = ["https://example.com"]
 			scopes = ["all-apis"]
 			token_access_policy {

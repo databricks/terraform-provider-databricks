@@ -297,6 +297,108 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 	assert.Equal(t, "789", d.Id())
 }
 
+func TestResourceJobCreate_DisabledTask(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, jobs.CreateJob{
+				Name:              "DisabledTaskJob",
+				MaxConcurrentRuns: 1,
+				Queue: &jobs.QueueSettings{
+					Enabled: false,
+				},
+				Tasks: []jobs.Task{
+					{
+						TaskKey:           "disabled_task",
+						Disabled:          true,
+						ExistingClusterId: "abc",
+						DependsOn: []jobs.TaskDependency{
+							{
+								TaskKey: "enabled_task",
+							},
+						},
+						NotebookTask: &jobs.NotebookTask{
+							NotebookPath: "/Inactive",
+						},
+					},
+					{
+						TaskKey:           "enabled_task",
+						ExistingClusterId: "abc",
+						NotebookTask: &jobs.NotebookTask{
+							NotebookPath: "/Active",
+						},
+					},
+				},
+			}).Return(&jobs.CreateResponse{
+				JobId: 123,
+			}, nil)
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 123,
+			}).Return(&jobs.Job{
+				JobId: 123,
+				Settings: &jobs.JobSettings{
+					Name: "DisabledTaskJob",
+					Tasks: []jobs.Task{
+						{
+							TaskKey:           "enabled_task",
+							ExistingClusterId: "abc",
+							NotebookTask: &jobs.NotebookTask{
+								NotebookPath: "/Active",
+							},
+						},
+						{
+							TaskKey:           "disabled_task",
+							Disabled:          true,
+							ExistingClusterId: "abc",
+							DependsOn: []jobs.TaskDependency{
+								{
+									TaskKey: "enabled_task",
+								},
+							},
+							NotebookTask: &jobs.NotebookTask{
+								NotebookPath: "/Inactive",
+							},
+						},
+					},
+				},
+			}, nil)
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "DisabledTaskJob"
+
+		task {
+			task_key = "enabled_task"
+
+			existing_cluster_id = "abc"
+
+			notebook_task {
+				notebook_path = "/Active"
+			}
+		}
+
+		task {
+			task_key = "disabled_task"
+			disabled = true
+
+			depends_on {
+				task_key = "enabled_task"
+			}
+
+			existing_cluster_id = "abc"
+
+			notebook_task {
+				notebook_path = "/Inactive"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "123", d.Id())
+	assert.Equal(t, true, d.Get("task.0.disabled"))
+	assert.Equal(t, false, d.Get("task.1.disabled"))
+}
+
 func TestResourceJobCreate_TaskOrder(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -668,7 +770,9 @@ func TestResourceJobCreate_PowerBiTask(t *testing.T) {
 				Return(&jobs.CreateResponse{
 					JobId: 789,
 				}, nil)
-			e.GetByJobId(mock.Anything, int64(789)).Return(&jobs.Job{
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: int64(789),
+			}).Return(&jobs.Job{
 				JobId: 789,
 				Settings: &jobs.JobSettings{
 					Name: "power_bi_task_name",
@@ -2285,7 +2389,7 @@ func TestResourceJobCreateFromGitSourceWithoutProviderFail(t *testing.T) {
 			}
 		}
 	`,
-	}.ExpectError(t, "git source is not empty but Git Provider is not specified and cannot be guessed by url &{GitBranch: GitCommit: GitProvider: GitSnapshot:<nil> GitTag:0.4.8 GitUrl:https://custom.git.hosting.com/databricks/terraform-provider-databricks JobSource:<nil> ForceSendFields:[]}")
+	}.ExpectError(t, "git source is not empty but Git Provider is not specified and cannot be guessed by url &{GitBranch: GitCommit: GitProvider: GitSnapshot:<nil> GitTag:0.4.8 GitUrl:https://custom.git.hosting.com/databricks/terraform-provider-databricks JobSource:<nil> SparseCheckout:<nil> ForceSendFields:[]}")
 }
 
 func TestResourceJobRead(t *testing.T) {
@@ -2323,6 +2427,9 @@ func TestResourceJobRead(t *testing.T) {
 		Read:     true,
 		New:      true,
 		ID:       "789",
+		// Pre-populate state with a legacy single-task indicator so isMultiTask()
+		// returns false and the legacy API 2.0 path is used.
+		State: map[string]any{"existing_cluster_id": "abc"},
 	}.Apply(t)
 	assert.NoError(t, err)
 
@@ -2367,6 +2474,78 @@ func TestResourceJobRead_NotFound(t *testing.T) {
 		New:      true,
 		Removed:  true,
 		ID:       "789",
+		// Pre-populate state with a legacy single-task indicator so isMultiTask()
+		// returns false and the legacy API 2.0 path is used.
+		State: map[string]any{"existing_cluster_id": "abc"},
+	}.ApplyNoError(t)
+}
+
+// TestResourceJobImport verifies that terraform import uses Go SDK (API 2.2)
+// regardless of job format. The legacy API 2.0 cannot handle jobs with >100
+// tasks, so the Importer must always use the Go SDK path.
+func TestResourceJobImport(t *testing.T) {
+	qa.MockWorkspaceApply(t,
+		func(w *mocks.MockWorkspaceClient) {
+			w.GetMockJobsAPI().EXPECT().
+				Get(mock.Anything, jobs.GetJobRequest{JobId: 789}).
+				Return(&jobs.Job{
+					JobId: 789,
+					Settings: &jobs.JobSettings{
+						Name:   "ImportedJob",
+						Format: "MULTI_TASK",
+						Tasks: []jobs.Task{
+							{
+								TaskKey: "main",
+								NotebookTask: &jobs.NotebookTask{
+									NotebookPath: "/Imported",
+								},
+							},
+						},
+					},
+				}, nil)
+		},
+		func(ctx context.Context, c *common.DatabricksClient) {
+			r := ResourceJob().ToResource()
+			d := r.TestResourceData()
+			d.SetId("789")
+
+			result, err := r.Importer.StateContext(ctx, d, c)
+			require.NoError(t, err)
+			require.Len(t, result, 1)
+			assert.Equal(t, "ImportedJob", result[0].Get("name"))
+			assert.Equal(t, 1, result[0].Get("task.#"))
+		},
+	)
+}
+
+func TestResourceJobReadMultiTask_NotFound(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Get(mock.Anything, jobs.GetJobRequest{
+				JobId: 789,
+			}).Return(nil, apierr.ErrNotFound)
+		},
+		Resource: ResourceJob(),
+		HCL: `
+		name = "Featurizer"
+		task {
+			task_key = "a"
+			spark_jar_task {
+				main_class_name = "com.labs.BarMain"
+			}
+		}
+		task {
+			task_key = "b"
+			notebook_task {
+				notebook_path = "/Stuff"
+			}
+		}`,
+
+		Read:    true,
+		New:     true,
+		Removed: true,
+		ID:      "789",
 	}.ApplyNoError(t)
 }
 
@@ -2387,6 +2566,9 @@ func TestResourceJobRead_Error(t *testing.T) {
 		Read:     true,
 		New:      true,
 		ID:       "789",
+		// Pre-populate state with a legacy single-task indicator so isMultiTask()
+		// returns false and the legacy API 2.0 path is used.
+		State: map[string]any{"existing_cluster_id": "abc"},
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "789", d.Id(), "Id should not be empty for error reads")

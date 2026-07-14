@@ -9,6 +9,8 @@ import (
 )
 
 func TestResourceGroupMemberCreate(t *testing.T) {
+	globalGroupsCache = newGroupCache()
+
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -43,6 +45,15 @@ func TestResourceGroupMemberCreate(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc|bcd", d.Id())
+
+	assert.Equal(t, 1, len(globalGroupsCache.cache), "Cache should contain one entry after create")
+	groupInfo, exists := globalGroupsCache.cache["abc"]
+	assert.True(t, exists, "Cache should contain group 'abc'")
+
+	assert.True(t, groupInfo.initialized, "Group info should be initialized")
+	assert.Equal(t, 1, len(groupInfo.members), "Should have one member cached")
+	_, memberExists := groupInfo.members["bcd"]
+	assert.True(t, memberExists, "Member 'bcd' should be in cache")
 }
 
 func TestResourceGroupMemberCreate_Error(t *testing.T) {
@@ -70,6 +81,8 @@ func TestResourceGroupMemberCreate_Error(t *testing.T) {
 }
 
 func TestResourceGroupMemberRead(t *testing.T) {
+	globalGroupsCache = newGroupCache()
+
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -93,6 +106,15 @@ func TestResourceGroupMemberRead(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc|bcd", d.Id(), "Id should not be empty")
+
+	assert.Equal(t, 1, len(globalGroupsCache.cache), "Cache should contain one entry after read")
+	groupInfo, exists := globalGroupsCache.cache["abc"]
+	assert.True(t, exists, "Cache should contain group 'abc'")
+
+	assert.True(t, groupInfo.initialized, "Group info should be initialized")
+	assert.Equal(t, 1, len(groupInfo.members), "Should have one member cached")
+	_, memberExists := groupInfo.members["bcd"]
+	assert.True(t, memberExists, "Member 'bcd' should be in cache")
 }
 
 func TestResourceGroupMemberRead_NoMember(t *testing.T) {
@@ -157,6 +179,20 @@ func TestResourceGroupMemberRead_Error(t *testing.T) {
 }
 
 func TestResourceGroupMemberDelete(t *testing.T) {
+	globalGroupsCache = newGroupCache()
+
+	groupInfo := globalGroupsCache.getOrCreateGroupInfo("abc")
+	groupInfo.initialized = true
+	groupInfo.members["bcd"] = struct{}{}
+
+	assert.Equal(t, 1, len(globalGroupsCache.cache), "Cache should contain one entry initially")
+	groupInfo, exists := globalGroupsCache.cache["abc"]
+	assert.True(t, exists, "Cache should contain group 'abc'")
+
+	assert.Equal(t, 1, len(groupInfo.members), "Should have one member initially")
+	_, memberExists := groupInfo.members["bcd"]
+	assert.True(t, memberExists, "Member 'bcd' should be in cache initially")
+
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -173,6 +209,13 @@ func TestResourceGroupMemberDelete(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc|bcd", d.Id())
+
+	groupInfo, exists = globalGroupsCache.cache["abc"]
+	assert.True(t, exists, "Cache should still contain group 'abc'")
+
+	assert.Equal(t, 0, len(groupInfo.members), "Should have no members after delete")
+	_, memberExists = groupInfo.members["bcd"]
+	assert.False(t, memberExists, "Member 'bcd' should not be in cache after delete")
 }
 
 func TestResourceGroupMemberDelete_Error(t *testing.T) {

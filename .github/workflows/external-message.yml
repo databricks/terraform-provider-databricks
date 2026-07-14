@@ -21,7 +21,7 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Delete old comments
         env:
@@ -46,7 +46,19 @@ jobs:
         run: |
           gh pr comment ${{ github.event.pull_request.number }} --body \
           "<!-- INTEGRATION_TESTS_MANUAL -->
-          If integration tests don't run automatically, an authorized user can run them manually by following the instructions below:
+          ### Unit tests
+
+          If this PR is from a fork, the \`tests\` check runs offline against a pre-warmed Go module cache because fork PRs cannot authenticate to the internal Go module proxy.
+
+          If this PR changes \`go.mod\` or \`go.sum\`, the \`tests\` check will fail until a maintainer warms the cache for it:
+
+          Actions -> Warm Go Cache -> Run workflow -> pr_number = ${{github.event.pull_request.number}}
+
+          Re-run the failed check once the cache warming completes.
+
+          ### Integration tests
+
+          Integration tests don't run automatically for external contributors; an authorized user can run them manually by following the instructions below:
 
           Trigger:
           [go/deco-tests-run/terraform](https://go/deco-tests-run/terraform)

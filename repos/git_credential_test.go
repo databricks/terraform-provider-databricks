@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +22,7 @@ func TestAccGitCredentials(t *testing.T) {
 			func(ctx context.Context, client *common.DatabricksClient, id string) error {
 				w, err := client.WorkspaceClient()
 				assert.NoError(t, err)
-				creds, err := w.GitCredentials.ListAll(ctx)
+				creds, err := w.GitCredentials.ListAll(ctx, workspace.ListCredentialsRequest{})
 				assert.NoError(t, err)
 				assert.Len(t, creds, 1)
 				assert.Equal(t, creds[0].GitUsername, "test")

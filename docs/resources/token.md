@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_token Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/tokens)
+
 This resource creates [Personal Access Tokens](https://docs.databricks.com/sql/user/security/personal-access-tokens.html) for the same user that is authenticated with the provider. Most likely you should use [databricks_obo_token](obo_token.md) to create [On-Behalf-Of tokens](https://docs.databricks.com/administration-guide/users-groups/service-principals.html#manage-personal-access-tokens-for-a-service-principal) for a [databricks_service_principal](service_principal.md) in Databricks workspaces on AWS. Databricks workspaces on other clouds use their own native OAuth token flows.
 
 -> This resource can only be used with a workspace-level provider!
@@ -53,7 +55,9 @@ resource "databricks_token" "pat" {
 The following arguments are available:
 
 * `lifetime_seconds` - (Optional) (Integer) The lifetime of the token, in seconds. If no lifetime is specified, then expire time will be set to maximum allowed by the workspace configuration or platform.
-* `comment` - (Optional) (String) Comment that will appear on the user’s settings page for this token.
+* `comment` - (Optional) (String) Comment that will appear on the user's settings page for this token.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

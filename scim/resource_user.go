@@ -42,6 +42,7 @@ func ResourceUser() common.Resource {
 	userSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			addEntitlementsToSchema(m)
+			common.AddApiField(m)
 			m["user_name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			m["active"].Default = true
 			m["force"] = &schema.Schema{
@@ -78,6 +79,8 @@ func ResourceUser() common.Resource {
 			}
 			return m
 		})
+	common.AddNamespaceInSchema(userSchema)
+	common.NamespaceCustomizeSchemaMap(userSchema)
 	scimUserFromData := func(d *schema.ResourceData) (user User, err error) {
 		var u entity
 		common.DataToStructPointer(d, userSchema, &u)
@@ -90,13 +93,21 @@ func ResourceUser() common.Resource {
 		}, nil
 	}
 	return common.Resource{
+		IsDual: true,
 		Schema: userSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			return common.CustomizeDiffDualResources(ctx, d, c)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForDualResource(ctx, d)
+			if err != nil {
+				return err
+			}
 			u, err := scimUserFromData(d)
 			if err != nil {
 				return err
 			}
-			usersAPI := NewUsersAPI(ctx, c)
+			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
 			user, err := usersAPI.Create(u)
 			if err != nil {
 				return createForceOverridesManuallyAddedUser(err, d, usersAPI, u)
@@ -105,7 +116,12 @@ func ResourceUser() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			user, err := NewUsersAPI(ctx, c).Read(d.Id(), userAttributes)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
+			if err != nil {
+				return err
+			}
+			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
+			user, err := usersAPI.Read(d.Id(), userAttributes)
 			if err != nil {
 				return err
 			}
@@ -115,17 +131,25 @@ func ResourceUser() common.Resource {
 			return user.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			c, err := c.DatabricksClientForDualResource(ctx, d)
+			if err != nil {
+				return err
+			}
 			u, err := scimUserFromData(d)
 			if err != nil {
 				return err
 			}
-			return NewUsersAPI(ctx, c).Update(d.Id(), u)
+			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
+			return usersAPI.Update(d.Id(), u)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			user := NewUsersAPI(ctx, c)
+			c, err := c.DatabricksClientForDualResource(ctx, d)
+			if err != nil {
+				return err
+			}
+			user := NewUsersAPI(ctx, c, common.GetApiLevel(d))
 			userName := d.Get("user_name").(string)
-			var err error = nil
-			isAccount := c.Config.IsAccountClient() && c.Config.AccountID != ""
+			isAccount := common.IsAccountLevel(d, c)
 			isForceDeleteRepos := d.Get("force_delete_repos").(bool)
 			isForceDeleteHomeDir := d.Get("force_delete_home_dir").(bool)
 			// Determine if disable or delete

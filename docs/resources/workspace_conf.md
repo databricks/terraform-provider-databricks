@@ -4,6 +4,8 @@ subcategory: "Workspace"
 
 # databricks_workspace_conf Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/workspaceconf)
+
 Manages workspace configuration for expert usage. Currently, more than one instance of resource can exist in Terraform state, though there's no deterministic behavior, when they manage the same property. We strongly recommend to use a single `databricks_workspace_conf` per workspace.
 
 -> This resource can only be used with a workspace-level provider!
@@ -35,6 +37,8 @@ resource "databricks_workspace_conf" "this" {
 The following arguments are available:
 
 - `custom_config` - (Required) Key-value map of strings that represent workspace configuration. Upon resource deletion, properties that start with `enable` or `enforce` will be reset to `false` value, regardless of initial default one.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Import
 

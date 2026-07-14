@@ -20,6 +20,7 @@ const fastApp = `
 	resource "databricks_app" "this" {
 		name = "{var.STICKY_RANDOM}"
 		description = "%s"
+		compute_size = "MEDIUM"
 		resources = [{
 			name = "secret"
 			description = "secret for app"
@@ -33,9 +34,6 @@ const fastApp = `
 
 func TestAccAppDataSource(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
-	if acceptance.IsGcp(t) {
-		acceptance.Skipf(t)("not available on GCP")
-	}
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: fastApp + `
 		data "databricks_app" "this" {

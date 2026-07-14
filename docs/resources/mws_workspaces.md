@@ -3,6 +3,8 @@ subcategory: "Deployment"
 ---
 # databricks_mws_workspaces resource
 
+[API Documentation](https://docs.databricks.com/api/account/workspaces)
+
 This resource allows you to set up [workspaces on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1) or [workspaces on GCP](https://docs.gcp.databricks.com/administration-guide/account-settings-gcp/workspaces.html). Please follow this complete runnable example on [AWS](../guides/aws-workspace.md) or [GCP](../guides/gcp-workspace.md) with new VPC and new workspace setup.
 
 -> This resource can only be used with an account-level provider!
@@ -11,19 +13,32 @@ This resource allows you to set up [workspaces on AWS](https://docs.databricks.c
 
 ~> On Azure you need to use [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource to create Azure Databricks workspaces.
 
+~> On GCP, the provider must be authenticated with a Google-issued OIDC token (not a Databricks OAuth token), because creating or updating this resource triggers operations against your GCP project. See [Authenticate with Databricks account API](../guides/gcp-workspace.md#authenticate-with-databricks-account-api) for setup instructions.
+
 ## Example Usage
 
-### Creating a serverless workspace in AWS
+### Creating a serverless workspace in AWS and GCP
 
 Creating a serverless workspace does not require any prerequisite resources. Simply specify `compute_mode = "SERVERLESS"` when creating the workspace. Serverless workspaces must not include `credentials_id` or `storage_configuration_id`.
 
-To use serverless workspaces, you must enroll in the [Default Storage preview](https://docs.databricks.com/aws/en/storage/express-storage).
+On [AWS](https://docs.databricks.com/aws/en/admin/workspace/serverless-workspaces):
 
 ```hcl
 resource "databricks_mws_workspaces" "serverless_workspace" {
   account_id     = "" # Your Databricks account ID
   workspace_name = "serverless-workspace"
   aws_region     = "us-east-1"
+  compute_mode   = "SERVERLESS"
+}
+```
+
+On [GCP](https://docs.databricks.com/gcp/en/admin/workspace/serverless-workspaces):
+
+```hcl
+resource "databricks_mws_workspaces" "serverless_workspace" {
+  account_id     = "" # Your Databricks account ID
+  workspace_name = "serverless-workspace"
+  location       = "us-east4"
   compute_mode   = "SERVERLESS"
 }
 ```
@@ -309,6 +324,7 @@ The following arguments are available:
 * `custom_tags` - (Optional / AWS only) - The custom tags key-value pairing that is attached to this workspace. These tags will be applied to clusters automatically in addition to any `default_tags` or `custom_tags` on a cluster level. Please note it can take up to an hour for custom_tags to be set due to scheduling on Control Plane. After custom tags are applied, they can be modified however they can never be completely removed.
 * `pricing_tier` - (Optional) - The pricing tier of the workspace.
 * `compute_mode` - (Optional) - The compute mode for the workspace. When unset, a classic workspace is created, and both `credentials_id` and `storage_configuration_id` must be specified. When set to `SERVERLESS`, the resulting workspace is a serverless workspace, and `credentials_id` and `storage_configuration_id` must not be set. The only allowed value for this is `SERVERLESS`. Changing this field requires recreation of the workspace.
+* `expected_workspace_status` - (Optional / GCP only / Private Preview) - The expected status of the workspace. When unset, it defaults to `RUNNING`. When set to `PROVISIONING`, workspace provisioning will pause and not enter `RUNNING` status. The only allowed values for this is `RUNNING` and `PROVISIONING`.
 
 ~> Databricks strongly recommends using OAuth instead of PATs for user account client authentication and authorization due to the improved security
 

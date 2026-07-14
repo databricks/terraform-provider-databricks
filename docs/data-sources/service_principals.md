@@ -38,12 +38,24 @@ resource "databricks_group_member" "my_member_spn" {
 Data source allows you to pick service principals by the following attributes
 
 - `display_name_contains` - (Optional) Only return [databricks_service_principal](service_principal.md) display name that match the given name string
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 
 Data source exposes the following attributes:
 
-- `application_ids` - List of `application_ids` of service principals.  Individual service principal can be retrieved using [databricks_service_principal](service_principal.md) data source
+- `application_ids` - List of `application_ids` of service principals.  Individual service principal can be retrieved using [databricks_service_principal](service_principal.md) data source or from `service_principals` attribute.
+- `service_principals` - List of objects describing individual service principals. Each object has the following attributes:
+  - `id` - The id of the service principal (SCIM ID).
+  - `application_id` - Application ID of the service principal.
+  - `display_name` - Display name of the [service principal](../resources/service_principal.md), e.g. `Foo SPN`.
+  - `scim_id` - same as `id`.
+  - `external_id` - ID of the service principal in an external identity provider.
+  - `home` - Home folder of the [service principal](../resources/service_principal.md), e.g. `/Users/11111111-2222-3333-4444-555666777888`.
+  - `repos` - Repos location of the [service principal](../resources/service_principal.md), e.g. `/Repos/11111111-2222-3333-4444-555666777888`.
+  - `active` - Whether service principal is active or not.
+  - `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](../resources/access_control_rule_set.md), e.g. `servicePrincipals/00000000-0000-0000-0000-000000000000`.
 
 ## Related Resources
 

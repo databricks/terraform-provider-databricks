@@ -343,6 +343,137 @@ func TestGrantUpdate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestGrantsReadHonorsProviderConfig(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
+				Response: map[string]any{
+					"id": "user1",
+				},
+			},
+		},
+		Resource: ResourceGrants(),
+		Read:     true,
+		ID:       "table/foo.bar.baz",
+		HCL: `
+		table = "foo.bar.baz"
+		grant {
+			principal = "me"
+			privileges = ["SELECT"]
+		}
+		provider_config {
+			workspace_id = "123456"
+		}
+		`,
+	}.ExpectError(t, `failed to validate workspace_id: workspace_id mismatch: provider is configured for workspace 12345 but got 123456 in provider_config. please check the workspace_id provided in provider_config`)
+}
+
+func TestGrantsRead(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrants(),
+		Read:     true,
+		ID:       "table/foo.bar.baz",
+		HCL: `
+		table = "foo.bar.baz"
+		grant {
+			principal = "me"
+			privileges = ["MODIFY", "SELECT"]
+		}
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestGrantsReadEmpty(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{},
+				},
+			},
+		},
+		Resource: ResourceGrants(),
+		Read:     true,
+		ID:       "table/foo.bar.baz",
+		HCL: `
+		table = "foo.bar.baz"
+		grant {
+			principal = "me"
+			privileges = ["MODIFY", "SELECT"]
+		}
+		`,
+	}.ExpectError(t, "resource is not expected to be removed")
+}
+
+func TestGrantsDelete(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
+						{
+							Principal: "me",
+							Remove:    []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{},
+				},
+			},
+		},
+		Resource: ResourceGrants(),
+		Delete:   true,
+		ID:       "table/foo.bar.baz",
+		InstanceState: map[string]string{
+			"table": "foo.bar.baz",
+		},
+		HCL: `
+		table = "foo.bar.baz"
+		grant {
+			principal = "me"
+			privileges = ["MODIFY", "SELECT"]
+		}
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestGrantReadMalformedId(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceGrants(),
@@ -576,6 +707,47 @@ func TestShareGrantUpdate(t *testing.T) {
 
 		grant {
 			principal = "you"
+			privileges = ["SELECT"]
+		}`,
+	}.ApplyNoError(t)
+}
+
+func TestShareGrantCreateNoChange(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "recipient1",
+							Privileges: []catalog.Privilege{"SELECT"},
+						},
+					},
+				},
+			},
+			// No PATCH request should be made since permissions are already correct
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "recipient1",
+							Privileges: []catalog.Privilege{"SELECT"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrants(),
+		Create:   true,
+		HCL: `
+		share = "myshare"
+
+		grant {
+			principal = "recipient1"
 			privileges = ["SELECT"]
 		}`,
 	}.ApplyNoError(t)

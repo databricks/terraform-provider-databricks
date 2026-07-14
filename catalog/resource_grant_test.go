@@ -441,6 +441,89 @@ func TestResourceGrantDelete(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourceGrantReadHonorsProviderConfig(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
+				Response: map[string]any{
+					"id": "user1",
+				},
+			},
+		},
+		Resource: ResourceGrant(),
+		Read:     true,
+		ID:       "table/foo.bar.baz/me",
+		HCL: `
+		table = "foo.bar.baz"
+		principal = "me"
+		privileges = ["SELECT"]
+		provider_config {
+			workspace_id = "123456"
+		}
+		`,
+	}.ExpectError(t, `failed to validate workspace_id: workspace_id mismatch: provider is configured for workspace 12345 but got 123456 in provider_config. please check the workspace_id provided in provider_config`)
+}
+
+func TestResourceGrantRead(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+						{
+							Principal:  "someone-else",
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrant(),
+		Read:     true,
+		ID:       "table/foo.bar.baz/me",
+		HCL: `
+		table = "foo.bar.baz"
+		principal = "me"
+		privileges = ["MODIFY", "SELECT"]
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceGrantReadNotFound(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "someone-else",
+							Privileges: []catalog.Privilege{"MODIFY", "SELECT"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrant(),
+		Read:     true,
+		ID:       "table/foo.bar.baz/me",
+		HCL: `
+		table = "foo.bar.baz"
+		principal = "me"
+		privileges = ["MODIFY", "SELECT"]
+		`,
+	}.ExpectError(t, "resource is not expected to be removed")
+}
+
 func TestResourceGrantReadMalformedId(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceGrant(),
@@ -846,6 +929,46 @@ func TestResourceGrantModelGrantCreate(t *testing.T) {
 
 		principal = "me"
 		privileges = ["EXECUTE"]
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceGrantShareGrantCreateNoChange(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "recipient1",
+							Privileges: []catalog.Privilege{"SELECT"},
+						},
+					},
+				},
+			},
+			// No PATCH request should be made since permissions are already correct
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/shares/myshare/permissions?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "recipient1",
+							Privileges: []catalog.Privilege{"SELECT"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrant(),
+		Create:   true,
+		HCL: `
+		share = "myshare"
+
+		principal = "recipient1"
+		privileges = ["SELECT"]
 		`,
 	}.ApplyNoError(t)
 }

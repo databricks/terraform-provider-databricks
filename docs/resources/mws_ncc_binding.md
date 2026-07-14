@@ -3,6 +3,8 @@ subcategory: "Deployment"
 ---
 # databricks_mws_ncc_binding Resource
 
+[API Documentation](https://docs.databricks.com/api/account/workspaces)
+
 Allows you to attach a [Network Connectivity Config](mws_network_connectivity_config) object to a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages serverless network connectivity configs](https://learn.microsoft.com/en-us/azure/databricks/sql/admin/serverless-firewall).
 
 -> This resource can only be used with an account-level provider!
@@ -10,6 +12,8 @@ Allows you to attach a [Network Connectivity Config](mws_network_connectivity_co
 -> This feature is available for AWS & Azure only, and is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html) in AWS.
 
 The NCC and workspace must be in the same region.
+
+-> A workspace can only be bound to a single NCC. Binding a different NCC to the same workspace will overwrite the previous one. If you need multiple private endpoint rules, add them to a single NCC using [`databricks_mws_ncc_private_endpoint_rule`](mws_ncc_private_endpoint_rule.md).
 
 ## Example Usage
 

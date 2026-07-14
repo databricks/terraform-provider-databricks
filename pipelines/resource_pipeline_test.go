@@ -335,8 +335,10 @@ func TestResourcePipelineRead(t *testing.T) {
 		},
 		"deployment": []any{
 			map[string]any{
+				"deployment_id":      "",
 				"kind":               "BUNDLE",
 				"metadata_file_path": "/foo/bar",
+				"version_id":         "",
 			},
 		},
 		"edition":    "ADVANCED",
@@ -805,4 +807,175 @@ func TestDefault(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abcd", d.Id())
+}
+
+func TestUpdatePipelineCatalogInPlace(t *testing.T) {
+	state := pipelines.PipelineStateRunning
+	spec := pipelines.PipelineSpec{
+		Id:      "abcd",
+		Name:    "test",
+		Catalog: "new_catalog",
+		Libraries: []pipelines.PipelineLibrary{
+			{
+				Notebook: &pipelines.NotebookLibrary{
+					Path: "/Test",
+				},
+			},
+		},
+		Filters: &pipelines.Filters{
+			Include: []string{"com.databricks.include"},
+		},
+		Channel: "CURRENT",
+		Edition: "ADVANCED",
+	}
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Update(mock.Anything, pipelines.EditPipeline{
+				Id:         "abcd",
+				PipelineId: "abcd",
+				Name:       "test",
+				Catalog:    "new_catalog",
+				Libraries: []pipelines.PipelineLibrary{
+					{
+						Notebook: &pipelines.NotebookLibrary{
+							Path: "/Test",
+						},
+					},
+				},
+				Filters: &pipelines.Filters{
+					Include: []string{"com.databricks.include"},
+				},
+				Channel: "CURRENT",
+				Edition: "ADVANCED",
+			}).Return(nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Spec:       &spec,
+				State:      state,
+			}, nil).Twice()
+		},
+		Resource: ResourcePipeline(),
+		HCL: `name = "test"
+		catalog = "new_catalog"
+		library {
+			notebook {
+				path = "/Test"
+			}
+		}
+		filters {
+			include = [ "com.databricks.include" ]
+		}`,
+		InstanceState: map[string]string{
+			"name":    "test",
+			"catalog": "old_catalog",
+		},
+		Update: true,
+		ID:     "abcd",
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":      "abcd",
+		"catalog": "new_catalog",
+	})
+}
+
+func TestUpdatePipelineStorageToCatalogForceNew(t *testing.T) {
+	state := pipelines.PipelineStateRunning
+	spec := pipelines.PipelineSpec{
+		Id:      "abcd",
+		Name:    "test",
+		Storage: "/test/storage",
+		Libraries: []pipelines.PipelineLibrary{
+			{
+				Notebook: &pipelines.NotebookLibrary{
+					Path: "/Test",
+				},
+			},
+		},
+		Filters: &pipelines.Filters{
+			Include: []string{"com.databricks.include"},
+		},
+		Channel: "CURRENT",
+		Edition: "ADVANCED",
+	}
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Update(mock.Anything, mock.Anything).Return(nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Spec:       &spec,
+				State:      state,
+			}, nil)
+		},
+		RequiresNew: true,
+		Resource:    ResourcePipeline(),
+		Update:      true,
+		ID:          "abcd",
+		InstanceState: map[string]string{
+			"name":    "test",
+			"storage": "/test/storage",
+		},
+		HCL: `
+		name = "test"
+		catalog = "new_catalog"
+		library {
+			notebook {
+				path = "/Test"
+			}
+		}`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdatePipelineCatalogToStorageForceNew(t *testing.T) {
+	state := pipelines.PipelineStateRunning
+	spec := pipelines.PipelineSpec{
+		Id:      "abcd",
+		Name:    "test",
+		Catalog: "old_catalog",
+		Libraries: []pipelines.PipelineLibrary{
+			{
+				Notebook: &pipelines.NotebookLibrary{
+					Path: "/Test",
+				},
+			},
+		},
+		Filters: &pipelines.Filters{
+			Include: []string{"com.databricks.include"},
+		},
+		Channel: "CURRENT",
+		Edition: "ADVANCED",
+	}
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Update(mock.Anything, mock.Anything).Return(nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Spec:       &spec,
+				State:      state,
+			}, nil)
+		},
+		RequiresNew: true,
+		Resource:    ResourcePipeline(),
+		Update:      true,
+		ID:          "abcd",
+		InstanceState: map[string]string{
+			"name":    "test",
+			"catalog": "old_catalog",
+		},
+		HCL: `
+		name = "test"
+		storage = "/test/storage"
+		library {
+			notebook {
+				path = "/Test"
+			}
+		}`,
+	}.ApplyNoError(t)
 }

@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_group_member Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/groups)
+
 This resource allows you to attach [users](user.md), [service_principal](service_principal.md), and [groups](group.md) as group members.
 
 -> This resource can be used with an account or workspace-level provider.
@@ -43,6 +45,7 @@ The following arguments are supported:
 
 * `group_id` - (Required) This is the `id` attribute (SCIM ID) of the [group](group.md) resource.
 * `member_id` - (Required) This is the `id` attribute (SCIM ID) of the [group](group.md), [service principal](service_principal.md), or [user](user.md).
+* `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
 
 ## Attribute Reference
 

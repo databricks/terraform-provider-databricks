@@ -11,11 +11,11 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourcesName = "alerts_v2"
@@ -28,14 +28,26 @@ func DataSourceAlertsV2() datasource.DataSource {
 
 // AlertsV2Data extends the main model with additional fields.
 type AlertsV2Data struct {
-	AlertsV2    types.List   `tfsdk:"results"`
-	WorkspaceID types.String `tfsdk:"workspace_id"`
+	AlertsV2 types.List `tfsdk:"alerts"`
+
+	PageSize           types.Int64  `tfsdk:"page_size"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 func (AlertsV2Data) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"results": reflect.TypeOf(sql_tf.AlertV2{}),
+		"alerts":          reflect.TypeOf(AlertV2Data{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
+}
+
+func (m AlertsV2Data) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	attrs["alerts"] = attrs["alerts"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
+	return attrs
 }
 
 type AlertsV2DataSource struct {
@@ -47,11 +59,7 @@ func (r *AlertsV2DataSource) Metadata(ctx context.Context, req datasource.Metada
 }
 
 func (r *AlertsV2DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AlertsV2Data{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetComputed("results")
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AlertsV2Data{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks AlertV2",
 		Attributes:  attrs,
@@ -66,12 +74,6 @@ func (r *AlertsV2DataSource) Configure(ctx context.Context, req datasource.Confi
 func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config AlertsV2Data
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -84,6 +86,21 @@ func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	response, err := client.AlertsV2.ListAlertsAll(ctx, listRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to list alerts_v2", err.Error())
@@ -92,16 +109,20 @@ func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	var results = []attr.Value{}
 	for _, item := range response {
-		var alert_v2 sql_tf.AlertV2
+		var alert_v2 AlertV2Data
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &alert_v2)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		alert_v2.ProviderConfigData = config.ProviderConfigData
+
 		results = append(results, alert_v2.ToObjectValue(ctx))
 	}
 
-	var newState AlertsV2Data
-	newState.AlertsV2 = types.ListValueMust(sql_tf.AlertV2{}.Type(ctx), results)
-	newState.WorkspaceID = config.WorkspaceID
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	config.AlertsV2 = types.ListValueMust(AlertV2Data{}.Type(ctx), results)
+	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

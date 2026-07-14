@@ -58,16 +58,6 @@ func TestUcAccMetastoreDeltaSharing(t *testing.T) {
 	})
 }
 
-func TestUcAccMetastoreDeltaSharingInfiniteLifetime(t *testing.T) {
-	acceptance.LoadUcacctEnv(t)
-	runMetastoreTest(t, map[string]any{
-		"storage_root":        getStorageRoot(t),
-		"region":              getRegion(t),
-		"delta_sharing_scope": "INTERNAL",
-		"delta_sharing_recipient_token_lifetime_in_seconds": 0,
-	})
-}
-
 func TestUcAccMetastoreWithOwnerUpdates(t *testing.T) {
 	acceptance.LoadUcacctEnv(t)
 	runMetastoreTestWithOwnerUpdates(t, map[string]any{

@@ -184,7 +184,7 @@ func TestCreateAccountDacWithAws(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials",
 				ExpectedRequest: catalog.AccountsCreateStorageCredential{
 					MetastoreId: "abc",
-					CredentialInfo: &catalog.CreateStorageCredential{
+					CredentialInfo: &catalog.CreateAccountsStorageCredential{
 						Name: "bcd",
 						AwsIamRole: &catalog.AwsIamRoleRequest{
 							RoleArn: "def",
@@ -202,7 +202,7 @@ func TestCreateAccountDacWithAws(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc",
 				ExpectedRequest: catalog.AccountsUpdateMetastore{
 					MetastoreId: "abc",
-					MetastoreInfo: &catalog.UpdateMetastore{
+					MetastoreInfo: &catalog.UpdateAccountsMetastore{
 						StorageRootCredentialId: "bcd",
 					},
 				},
@@ -222,7 +222,7 @@ func TestCreateAccountDacWithAws(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/100/metastores/abc?",
-				Response: catalog.AccountsMetastoreInfo{
+				Response: catalog.AccountsGetMetastoreResponse{
 					MetastoreInfo: &catalog.MetastoreInfo{
 						StorageRootCredentialId: "bcd",
 					},
@@ -236,6 +236,7 @@ func TestCreateAccountDacWithAws(t *testing.T) {
 		metastore_id = "abc"
 		name = "bcd"
 		is_default = true
+		api = "account"
 		aws_iam_role {
 			role_arn = "def"
 		}
@@ -251,7 +252,7 @@ func TestCreateAccountDacWithAzMI(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials",
 				ExpectedRequest: catalog.AccountsCreateStorageCredential{
 					MetastoreId: "abc",
-					CredentialInfo: &catalog.CreateStorageCredential{
+					CredentialInfo: &catalog.CreateAccountsStorageCredential{
 						Name: "bcd",
 						AzureManagedIdentity: &catalog.AzureManagedIdentityRequest{
 							AccessConnectorId: "def",
@@ -269,7 +270,7 @@ func TestCreateAccountDacWithAzMI(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc",
 				ExpectedRequest: catalog.AccountsUpdateMetastore{
 					MetastoreId: "abc",
-					MetastoreInfo: &catalog.UpdateMetastore{
+					MetastoreInfo: &catalog.UpdateAccountsMetastore{
 						StorageRootCredentialId: "bcd",
 					},
 				},
@@ -289,7 +290,7 @@ func TestCreateAccountDacWithAzMI(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/100/metastores/abc?",
-				Response: catalog.AccountsMetastoreInfo{
+				Response: catalog.AccountsGetMetastoreResponse{
 					MetastoreInfo: &catalog.MetastoreInfo{
 						StorageRootCredentialId: "bcd",
 					},
@@ -303,6 +304,7 @@ func TestCreateAccountDacWithAzMI(t *testing.T) {
 		metastore_id = "abc"
 		name = "bcd"
 		is_default = true
+		api = "account"
 		azure_managed_identity {
 			access_connector_id = "def"
 		}
@@ -318,7 +320,7 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc/storage-credentials",
 				ExpectedRequest: catalog.AccountsCreateStorageCredential{
 					MetastoreId: "abc",
-					CredentialInfo: &catalog.CreateStorageCredential{
+					CredentialInfo: &catalog.CreateAccountsStorageCredential{
 						Name:                        "bcd",
 						DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountRequest{},
 					},
@@ -337,7 +339,7 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 				Resource: "/api/2.0/accounts/100/metastores/abc",
 				ExpectedRequest: catalog.AccountsUpdateMetastore{
 					MetastoreId: "abc",
-					MetastoreInfo: &catalog.UpdateMetastore{
+					MetastoreInfo: &catalog.UpdateAccountsMetastore{
 						StorageRootCredentialId: "bcd",
 					},
 				},
@@ -357,7 +359,7 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/100/metastores/abc?",
-				Response: catalog.AccountsMetastoreInfo{
+				Response: catalog.AccountsGetMetastoreResponse{
 					MetastoreInfo: &catalog.MetastoreInfo{
 						StorageRootCredentialId: "bcd",
 					},
@@ -371,6 +373,7 @@ func TestCreateAccountDacWithDbGcpSA(t *testing.T) {
 		metastore_id = "abc"
 		name = "bcd"
 		is_default = true
+		api = "account"
 		databricks_gcp_service_account {}
 		`,
 	}.ApplyAndExpectData(t,

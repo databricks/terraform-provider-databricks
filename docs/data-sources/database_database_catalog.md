@@ -2,6 +2,10 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_database_catalog Data Source
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/database)
+
 This data source can be used to get a single Database Catalog.
 
 
@@ -18,12 +22,15 @@ data "databricks_database_database_catalog" "this" {
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - The name of the catalog in UC
-* `workspace_id` (string, optional) - Workspace ID of the resource
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:
 * `create_database_if_not_exists` (boolean)
 * `database_instance_name` (string) - The name of the DatabaseInstance housing the database
-* `database_name` (string) - The name of the database (in a instance) associated with the catalog
+* `database_name` (string) - The name of the database (in an instance) associated with the catalog
 * `name` (string) - The name of the catalog in UC
 * `uid` (string)

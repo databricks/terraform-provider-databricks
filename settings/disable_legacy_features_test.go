@@ -2,10 +2,8 @@ package settings_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
@@ -48,25 +46,9 @@ func TestMwsAccDisableLegacyFeaturesSetting(t *testing.T) {
 				w, err := client.AccountClient()
 				require.NoError(t, err)
 				// Terraform Check returns the latest resource status before it is destroyed, which has an outdated eTag.
-				// We are making an update call to get the correct eTag in the response error.
-				_, err = w.Settings.DisableLegacyFeatures().Update(ctx, settings.UpdateDisableLegacyFeaturesRequest{
-					AllowMissing: true,
-					Setting: settings.DisableLegacyFeatures{
-						DisableLegacyFeatures: settings.BooleanMessage{
-							Value: false,
-						},
-					},
-					FieldMask: "disable_legacy_features.value",
-				})
-				assert.Error(t, err)
-				var aerr *apierr.APIError
-				if !errors.As(err, &aerr) {
-					assert.FailNow(t, "cannot parse error message %v", err)
-				}
-				etag := aerr.Details[0].Metadata["etag"]
-				res, err := w.Settings.DisableLegacyFeatures().Get(ctx, settings.GetDisableLegacyFeaturesRequest{
-					Etag: etag,
-				})
+				// Previously we were making an update call to get the correct eTag in the response error,
+				// but now it works just without eTag.
+				res, err := w.Settings.DisableLegacyFeatures().Get(ctx, settings.GetDisableLegacyFeaturesRequest{})
 				// we should not be getting any error
 				assert.NoError(t, err)
 				// setting should go back to default

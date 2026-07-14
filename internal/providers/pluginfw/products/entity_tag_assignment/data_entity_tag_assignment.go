@@ -6,16 +6,18 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -32,10 +34,86 @@ type EntityTagAssignmentDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
+// ProviderConfigData contains the fields to configure the provider.
+type ProviderConfigData struct {
+	WorkspaceID types.String `tfsdk:"workspace_id"`
+}
+
+// ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
+func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
+	return attrs
+}
+
+// ProviderConfigDataWorkspaceIDPlanModifier is plan modifier for the workspace_id field.
+// Resource requires replacement if the workspace_id changes from one non-empty value to another.
+func ProviderConfigDataWorkspaceIDPlanModifier(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+	// Require replacement if workspace_id changes from one non-empty value to another
+	oldValue := req.StateValue.ValueString()
+	newValue := req.PlanValue.ValueString()
+
+	if oldValue != "" && newValue != "" && oldValue != newValue {
+		resp.RequiresReplace = true
+	}
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
+// ProviderConfigData struct. Container types (types.Map, types.List, types.Set) and
+// object types (types.Object) do not carry the type information of their elements in the Go
+// type system. This function provides a way to retrieve the type information of the elements in
+// complex fields at runtime. The values of the map are the reflected types of the contained elements.
+// They must be either primitive values from the plugin framework type system
+// (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
+func (r ProviderConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// ToObjectValue returns the object value for the resource, combining attributes from the
+// embedded TFSDK model and contains additional fields.
+//
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderConfigData
+// only implements ToObjectValue() and Type().
+func (r ProviderConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		r.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_id": r.WorkspaceID,
+		},
+	)
+}
+
+// Type returns the object type with attributes from both the embedded TFSDK model
+// and contains additional fields.
+func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_id": types.StringType,
+		},
+	}
+}
+
 // EntityTagAssignmentData extends the main model with additional fields.
 type EntityTagAssignmentData struct {
-	catalog_tf.EntityTagAssignment
-	WorkspaceID types.String `tfsdk:"workspace_id"`
+	// The fully qualified name of the entity to which the tag is assigned
+	EntityName types.String `tfsdk:"entity_name"`
+	// The type of the entity to which the tag is assigned.
+	EntityType types.String `tfsdk:"entity_type"`
+	// The source type of the tag assignment, e.g., user-assigned or
+	// system-assigned
+	SourceType types.String `tfsdk:"source_type"`
+	// The key of the tag
+	TagKey types.String `tfsdk:"tag_key"`
+	// The value of the tag
+	TagValue types.String `tfsdk:"tag_value"`
+	// The timestamp when the tag assignment was last updated
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
+	// The user or principal who updated the tag assignment
+	UpdatedBy          types.String `tfsdk:"updated_by"`
+	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -46,7 +124,9 @@ type EntityTagAssignmentData struct {
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m EntityTagAssignmentData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.EntityTagAssignment.GetComplexFieldTypes(ctx)
+	return map[string]reflect.Type{
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
+	}
 }
 
 // ToObjectValue returns the object value for the resource, combining attributes from the
@@ -56,31 +136,52 @@ func (m EntityTagAssignmentData) GetComplexFieldTypes(ctx context.Context) map[s
 // interfere with how the plugin framework retrieves and sets values in state. Thus, EntityTagAssignmentData
 // only implements ToObjectValue() and Type().
 func (m EntityTagAssignmentData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	embeddedObj := m.EntityTagAssignment.ToObjectValue(ctx)
-	embeddedAttrs := embeddedObj.Attributes()
-	embeddedAttrs["workspace_id"] = m.WorkspaceID
-
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		embeddedAttrs,
+		map[string]attr.Value{
+			"entity_name": m.EntityName,
+			"entity_type": m.EntityType,
+			"source_type": m.SourceType,
+			"tag_key":     m.TagKey,
+			"tag_value":   m.TagValue,
+			"update_time": m.UpdateTime,
+			"updated_by":  m.UpdatedBy,
+
+			"provider_config": m.ProviderConfigData,
+		},
 	)
 }
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
 func (m EntityTagAssignmentData) Type(ctx context.Context) attr.Type {
-	embeddedType := m.EntityTagAssignment.Type(ctx).(basetypes.ObjectType)
-	attrTypes := embeddedType.AttributeTypes()
-	attrTypes["workspace_id"] = types.StringType
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entity_name": types.StringType,
+			"entity_type": types.StringType,
+			"source_type": types.StringType,
+			"tag_key":     types.StringType,
+			"tag_value":   types.StringType,
+			"update_time": timetypes.RFC3339{}.Type(ctx),
+			"updated_by":  types.StringType,
 
-	return types.ObjectType{AttrTypes: attrTypes}
+			"provider_config": ProviderConfigData{}.Type(ctx),
+		},
+	}
 }
 
-// SyncFieldsDuringRead copies values from the existing state into the receiver,
-// including both embedded model fields and additional fields. This method is called
-// during read.
-func (m *EntityTagAssignmentData) SyncFieldsDuringRead(ctx context.Context, existingState EntityTagAssignmentData) {
-	m.EntityTagAssignment.SyncFieldsDuringRead(ctx, existingState.EntityTagAssignment)
+func (m EntityTagAssignmentData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_name"] = attrs["entity_name"].SetRequired()
+	attrs["entity_type"] = attrs["entity_type"].SetRequired()
+	attrs["source_type"] = attrs["source_type"].SetComputed()
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+	attrs["tag_value"] = attrs["tag_value"].SetComputed()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["updated_by"] = attrs["updated_by"].SetComputed()
+
+	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+
+	return attrs
 }
 
 func (r *EntityTagAssignmentDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -88,10 +189,7 @@ func (r *EntityTagAssignmentDataSource) Metadata(ctx context.Context, req dataso
 }
 
 func (r *EntityTagAssignmentDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, EntityTagAssignmentData{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetOptional("workspace_id")
-		return c
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, EntityTagAssignmentData{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks EntityTagAssignment",
 		Attributes:  attrs,
@@ -106,12 +204,6 @@ func (r *EntityTagAssignmentDataSource) Configure(ctx context.Context, req datas
 func (r *EntityTagAssignmentDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
-	client, diags := r.Client.GetWorkspaceClient()
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	var config EntityTagAssignmentData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -124,13 +216,23 @@ func (r *EntityTagAssignmentDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
+	var namespace ProviderConfigData
+	resp.Diagnostics.Append(config.ProviderConfigData.As(ctx, &namespace, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	client, clientDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
+
+	resp.Diagnostics.Append(clientDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	response, err := client.EntityTagAssignments.Get(ctx, readRequest)
 	if err != nil {
-		if apierr.IsMissing(err) {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-
 		resp.Diagnostics.AddError("failed to get entity_tag_assignment", err.Error())
 		return
 	}
@@ -140,8 +242,12 @@ func (r *EntityTagAssignmentDataSource) Read(ctx context.Context, req datasource
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	newState.SyncFieldsDuringRead(ctx, config)
+	// Preserve provider_config from config so state.Set has the correct type info
+	newState.ProviderConfigData = config.ProviderConfigData
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

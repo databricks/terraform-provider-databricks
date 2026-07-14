@@ -118,7 +118,14 @@ func (s *CustomizableSchema) SetRequired() *CustomizableSchema {
 }
 
 func (s *CustomizableSchema) SetSuppressDiff() *CustomizableSchema {
-	s.Schema.DiffSuppressFunc = diffSuppressor(s.path[len(s.path)-1], s.Schema)
+	return s.SetConditionalSuppressDiff(alwaysSuppress)
+}
+
+// SetConditionalSuppressDiff behaves like SetSuppressDiff, but only suppresses
+// the diff when enable returns true. This lets a resource gate the suppression
+// on, for example, the value of another attribute.
+func (s *CustomizableSchema) SetConditionalSuppressDiff(enable DiffSuppressorFn) *CustomizableSchema {
+	s.Schema.DiffSuppressFunc = conditionalDiffSuppressor(enable, s.path[len(s.path)-1], s.Schema)
 	s.isSuppressDiff = true
 	if s.Schema.Type == schema.TypeList && s.Schema.MaxItems == 1 {
 		// If it is a list with max items = 1, it means the corresponding sdk schema type is a struct or a ptr.
@@ -127,9 +134,8 @@ func (s *CustomizableSchema) SetSuppressDiff() *CustomizableSchema {
 		if !ok {
 			panic("Cannot cast Elem into Resource type.")
 		}
-		nestedSchema := resource.Schema
-		for k, v := range nestedSchema {
-			v.DiffSuppressFunc = diffSuppressor(k, v)
+		for k, v := range resource.Schema {
+			v.DiffSuppressFunc = conditionalDiffSuppressor(enable, k, v)
 		}
 	}
 	return s
@@ -243,12 +249,12 @@ func (s *CustomizableSchema) SetDeprecated(reason string) *CustomizableSchema {
 	return s
 }
 
-func (s *CustomizableSchema) SetValidateFunc(validate func(interface{}, string) ([]string, []error)) *CustomizableSchema {
+func (s *CustomizableSchema) SetValidateFunc(validate func(any, string) ([]string, []error)) *CustomizableSchema {
 	s.Schema.ValidateFunc = validate
 	return s
 }
 
-func (s *CustomizableSchema) SetValidateDiagFunc(validate func(interface{}, cty.Path) diag.Diagnostics) *CustomizableSchema {
+func (s *CustomizableSchema) SetValidateDiagFunc(validate func(any, cty.Path) diag.Diagnostics) *CustomizableSchema {
 	s.Schema.ValidateDiagFunc = validate
 	return s
 }

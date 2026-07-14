@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_obo_token Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/tokenmanagement)
+
 This resource creates [On-Behalf-Of tokens](https://docs.databricks.com/administration-guide/users-groups/service-principals.html#manage-personal-access-tokens-for-a-service-principal) for a [databricks_service_principal](service_principal.md) in Databricks workspaces on AWS and GCP.  In general it's best to use OAuth authentication using client ID and secret, and use this resource mostly for integrations that doesn't support OAuth.
 
 -> This resource can only be used with a workspace-level provider!
@@ -72,6 +74,8 @@ The following arguments are required:
 * `application_id` - Application ID of [databricks_service_principal](service_principal.md#application_id) to create a PAT token for.
 * `lifetime_seconds` - (Integer, Optional) The number of seconds before the token expires. Token resource is re-created when it expires. If no lifetime is specified, the token remains valid indefinitely.
 * `comment` - (String, Optional) Comment that describes the purpose of the token.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

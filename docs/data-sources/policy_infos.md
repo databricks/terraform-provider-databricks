@@ -2,9 +2,26 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_policy_infos Data Source
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/policies)
+
+Retrieves a list of all ABAC (Attribute-Based Access Control) policies defined on a specific securable in Unity Catalog. Use this data source to query all policies for a given securable type and name.
+
+ABAC policies provide governance for enforcing compliance through data attributes, allowing flexible and comprehensive access control based on conditions rather than specific resources.
+
 
 
 ## Example Usage
+### List All Policies on a Securable
+
+```hcl
+data "databricks_policy_infos" "catalog_policies" {
+  on_securable_type     = "CATALOG"
+  on_securable_fullname = "main"
+}
+```
+
 
 
 ## Arguments
@@ -16,7 +33,10 @@ The following arguments are supported:
 * `max_results` (integer, optional) - Optional.  Maximum number of policies to return on a single page (page length).
   - When not set or set to 0, the page length is set to a server configured value (recommended);
   - When set to a value greater than 0, the page length is the minimum of this value and a server configured value;
-* `workspace_id` (string, optional) - Workspace ID of the resource
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes
@@ -38,11 +58,11 @@ This data source exports a single attribute, `policies`. It is a list of resourc
 * `name` (string) - Name of the policy. Required on create and optional on update.
   To rename the policy, set `name` to a different value on update
 * `on_securable_fullname` (string) - Full name of the securable on which the policy is defined.
-  Required on create and ignored on update
+  Required on create
 * `on_securable_type` (string) - Type of the securable on which the policy is defined.
   Only `CATALOG`, `SCHEMA` and `TABLE` are supported at this moment.
-  Required on create and ignored on update. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `METASTORE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
-* `policy_type` (string) - Type of the policy. Required on create and ignored on update. Possible values are: `POLICY_TYPE_COLUMN_MASK`, `POLICY_TYPE_ROW_FILTER`
+  Required on create. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `METASTORE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
+* `policy_type` (string) - Type of the policy. Required on create. Possible values are: `POLICY_TYPE_COLUMN_MASK`, `POLICY_TYPE_ROW_FILTER`
 * `row_filter` (RowFilterOptions) - Options for row filter policies. Valid only if `policy_type` is `POLICY_TYPE_ROW_FILTER`.
   Required on create and optional on update. When specified on update,
   the new options will replace the existing options as a whole

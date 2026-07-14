@@ -7,6 +7,12 @@ Retrieves details about a [databricks_share](../resources/share.md) that were cr
 
 -> This data source can only be used with a workspace-level provider!
 
+## Plugin Framework Migration
+
+The share data source has been migrated from sdkv2 to plugin framework. If you encounter any problem with this data source and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_DATA_SOURCES="databricks_share"`.
+
+~> **Deprecation**: The SDKv2 fallback implementation, selectable via `USE_SDK_V2_DATA_SOURCES="databricks_share"`, is **deprecated** and will be removed in the next major release of the provider. Setting the environment variable now emits a runtime warning; remove the override to use the default Plugin Framework implementation.
+
 ## Example Usage
 
 Getting details of an existing share in the metastore
@@ -25,6 +31,8 @@ output "created_by" {
 ## Argument Reference
 
 * `name` - (Required) The name of the share
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

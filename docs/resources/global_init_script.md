@@ -3,6 +3,8 @@ subcategory: "Workspace"
 ---
 # databricks_global_init_script Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/globalinitscripts)
+
 This resource allows you to manage [global init scripts](https://docs.databricks.com/clusters/init-scripts.html#global-init-scripts), which are run on all [databricks_cluster](cluster.md#init_scripts) and [databricks_job](job.md#new_cluster).
 
 -> This resource can only be used with a workspace-level provider!
@@ -42,6 +44,8 @@ The size of a global init script source code must not exceed 64Kb. The following
 * `content_base64` - The base64-encoded source code global init script. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances
 * `enabled` (bool, optional default: `false`) specifies if the script is enabled for execution, or not
 * `position` (integer, optional default: `null`) - the position of a global init script, where `0` represents the first global init script to run, `1` is the second global init script to run, and so on. When omitted, the script gets the last position.
+* `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attribute Reference
 

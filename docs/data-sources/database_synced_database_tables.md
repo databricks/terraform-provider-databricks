@@ -2,6 +2,10 @@
 subcategory: "Database Instances"
 ---
 # databricks_database_synced_database_tables Data Source
+[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/database)
+
 
 
 ## Example Usage
@@ -11,7 +15,10 @@ subcategory: "Database Instances"
 The following arguments are supported:
 * `instance_name` (string, required) - Name of the instance to get synced tables for
 * `page_size` (integer, optional) - Upper bound for items returned
-* `workspace_id` (string, optional) - Workspace ID of the resource
+* `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
+
+### ProviderConfig
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes
@@ -22,8 +29,12 @@ This data source exports a single attribute, `synced_tables`. It is a list of re
   when creating synced database tables in registered catalogs, the database instance name MUST
   match that of the registered catalog (or the request will be rejected)
 * `effective_database_instance_name` (string) - The name of the database instance that this table is registered to. This field is always returned, and for
-  tables inside database catalogs is inferred database instance associated with the catalog
-* `effective_logical_database_name` (string) - The name of the logical database that this table is registered to
+  tables inside database catalogs is inferred database instance associated with the catalog.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
+* `effective_logical_database_name` (string) - The name of the logical database that this table is registered to.
+  This is an output only field that contains the value computed from the input field combined with
+  server side defaults. Use the field without the effective_ prefix to set the value
 * `logical_database_name` (string) - Target Postgres database object (logical database) name for this table.
   
   When creating a synced table in a registered Postgres catalog, the
@@ -46,6 +57,7 @@ This data source exports a single attribute, `synced_tables`. It is a list of re
 * `delta_commit_version` (integer) - The Delta Lake commit version that was last successfully synced
 
 ### NewPipelineSpec
+* `budget_policy_id` (string) - Budget policy to set on the newly created pipeline
 * `storage_catalog` (string) - This field needs to be specified if the destination catalog is a managed postgres catalog.
   
   UC catalog for the pipeline to store intermediate files (checkpoints, event logs etc).
@@ -92,6 +104,9 @@ This data source exports a single attribute, `synced_tables`. It is a list of re
   PROVISIONING_INITIAL_SNAPSHOT state
 
 ### SyncedTableSpec
+* `accelerated_sync` (boolean) - When true, enables accelerated sync mode for the initial data load.
+  This significantly improves performance for large tables.
+  Requires workspace-level enablement
 * `create_database_objects_if_missing` (boolean) - If true, the synced table's logical database and schema resources in PG
   will be created if they do not already exist
 * `existing_pipeline_id` (string) - At most one of existing_pipeline_id and new_pipeline_spec should be defined.
@@ -109,6 +124,14 @@ This data source exports a single attribute, `synced_tables`. It is a list of re
 * `scheduling_policy` (string) - Scheduling policy of the underlying pipeline. Possible values are: `CONTINUOUS`, `SNAPSHOT`, `TRIGGERED`
 * `source_table_full_name` (string) - Three-part (catalog, schema, table) name of the source Delta table
 * `timeseries_key` (string) - Time series key to deduplicate (tie-break) rows with the same primary key
+* `type_overrides` (list of SyncedTableSpecTypeOverride) - Override the default Delta->PG type mapping for specific columns.
+  A TypeOverride with PG_SPECIFIC_TYPE_UNSPECIFIED is rejected; a valid pg_type must be set
+
+### SyncedTableSpecTypeOverride
+* `column_name` (string) - Name of the source column whose target PostgreSQL type should be overridden
+* `pg_type` (string) - PostgreSQL-specific target type to use for the column. Possible values are: `PG_SPECIFIC_TYPE_VECTOR`
+* `size` (integer) - Size parameter for the target type. Required when pg_type is PG_SPECIFIC_TYPE_VECTOR
+  or PG_SPECIFIC_TYPE_HALFVEC (specifies the vector dimension, e.g., 1024)
 
 ### SyncedTableStatus
 * `continuous_update_status` (SyncedTableContinuousUpdateStatus)

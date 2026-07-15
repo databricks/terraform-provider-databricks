@@ -1204,6 +1204,11 @@ type StableUrl struct {
 	// Fully qualified resource name. Format:
 	// accounts/{account_id}/stable-urls/{stable_url_id}.
 	Name types.String `tfsdk:"name"`
+	// The stable workspace ID for this stable URL. Generated on creation and
+	// immutable thereafter; identifies the URL across failovers and is the same
+	// value embedded in the `url` (as the `w=` query parameter for SPOG URLs,
+	// or in the `conn-<id>` hostname for Private-Link URLs).
+	StableWorkspaceId types.String `tfsdk:"stable_workspace_id"`
 	// The stable URL endpoint. Generated on creation and immutable thereafter.
 	// For non-Private-Link workspaces this is
 	// `https://<spog_host>/?w=<connection_id>`. For Private-Link workspaces
@@ -1231,6 +1236,8 @@ func (m StableUrl) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["initial_workspace_id"] = attrs["initial_workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["stable_workspace_id"] = attrs["stable_workspace_id"].SetComputed()
+	attrs["stable_workspace_id"] = attrs["stable_workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["url"] = attrs["url"].SetComputed()
 	attrs["url"] = attrs["url"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
@@ -1258,6 +1265,7 @@ func (m StableUrl) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"failover_group_name":  m.FailoverGroupName,
 			"initial_workspace_id": m.InitialWorkspaceId,
 			"name":                 m.Name,
+			"stable_workspace_id":  m.StableWorkspaceId,
 			"url":                  m.Url,
 		})
 }
@@ -1269,6 +1277,7 @@ func (m StableUrl) Type(ctx context.Context) attr.Type {
 			"failover_group_name":  types.StringType,
 			"initial_workspace_id": types.StringType,
 			"name":                 types.StringType,
+			"stable_workspace_id":  types.StringType,
 			"url":                  types.StringType,
 		},
 	}

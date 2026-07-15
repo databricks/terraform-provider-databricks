@@ -556,7 +556,7 @@ type Group_SdkV2 struct {
 	// Display name of the group.
 	GroupName types.String `tfsdk:"group_name"`
 	// Internal group ID of the group in Databricks.
-	InternalId types.Int64 `tfsdk:"internal_id"`
+	InternalId types.String `tfsdk:"internal_id"`
 }
 
 func (to *Group_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Group_SdkV2) {
@@ -606,7 +606,7 @@ func (m Group_SdkV2) Type(ctx context.Context) attr.Type {
 			"account_id":  types.StringType,
 			"external_id": types.StringType,
 			"group_name":  types.StringType,
-			"internal_id": types.Int64Type,
+			"internal_id": types.StringType,
 		},
 	}
 }
@@ -1436,7 +1436,7 @@ type ServicePrincipal_SdkV2 struct {
 	// ExternalId of the service principal in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
 	// Internal service principal ID of the service principal in Databricks.
-	InternalId types.Int64 `tfsdk:"internal_id"`
+	InternalId types.String `tfsdk:"internal_id"`
 }
 
 func (to *ServicePrincipal_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ServicePrincipal_SdkV2) {
@@ -1492,7 +1492,7 @@ func (m ServicePrincipal_SdkV2) Type(ctx context.Context) attr.Type {
 			"application_id":    types.StringType,
 			"display_name":      types.StringType,
 			"external_id":       types.StringType,
-			"internal_id":       types.Int64Type,
+			"internal_id":       types.StringType,
 		},
 	}
 }
@@ -1727,7 +1727,7 @@ type User_SdkV2 struct {
 
 	FullName types.List `tfsdk:"full_name"`
 	// Internal userId of the user in Databricks.
-	InternalId types.Int64 `tfsdk:"internal_id"`
+	InternalId types.String `tfsdk:"internal_id"`
 	// Username/email of the user.
 	Username types.String `tfsdk:"username"`
 }
@@ -1807,7 +1807,7 @@ func (m User_SdkV2) Type(ctx context.Context) attr.Type {
 			"full_name": basetypes.ListType{
 				ElemType: UserFullName_SdkV2{}.Type(ctx),
 			},
-			"internal_id": types.Int64Type,
+			"internal_id": types.StringType,
 			"username":    types.StringType,
 		},
 	}

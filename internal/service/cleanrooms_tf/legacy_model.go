@@ -23,6 +23,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"  // .tmpl
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -39,6 +40,10 @@ type CleanRoom_SdkV2 struct {
 	Comment types.String `tfsdk:"comment"`
 	// When the clean room was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
+	// Whether allow task to write to shared output schema. When enabled, clean
+	// room task runs triggered by the current collaborator can write to the
+	// run-scoped shared output schema which is accessible by all collaborators.
+	EnableSharedOutput types.Bool `tfsdk:"enable_shared_output"`
 	// The alias of the collaborator tied to the local clean room.
 	LocalCollaboratorAlias types.String `tfsdk:"local_collaborator_alias"`
 	// The name of the clean room. It should follow [UC securable naming
@@ -107,6 +112,7 @@ func (m CleanRoom_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["access_restricted"] = attrs["access_restricted"].SetComputed()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["created_at"] = attrs["created_at"].SetComputed()
+	attrs["enable_shared_output"] = attrs["enable_shared_output"].SetOptional()
 	attrs["local_collaborator_alias"] = attrs["local_collaborator_alias"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
@@ -145,6 +151,7 @@ func (m CleanRoom_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"access_restricted":        m.AccessRestricted,
 			"comment":                  m.Comment,
 			"created_at":               m.CreatedAt,
+			"enable_shared_output":     m.EnableSharedOutput,
 			"local_collaborator_alias": m.LocalCollaboratorAlias,
 			"name":                     m.Name,
 			"output_catalog":           m.OutputCatalog,
@@ -162,6 +169,7 @@ func (m CleanRoom_SdkV2) Type(ctx context.Context) attr.Type {
 			"access_restricted":        types.StringType,
 			"comment":                  types.StringType,
 			"created_at":               types.Int64Type,
+			"enable_shared_output":     types.BoolType,
 			"local_collaborator_alias": types.StringType,
 			"name":                     types.StringType,
 			"output_catalog": basetypes.ListType{
@@ -876,6 +884,11 @@ func (m CleanRoomAssetForeignTableLocalDetails_SdkV2) Type(ctx context.Context) 
 }
 
 type CleanRoomAssetNotebook_SdkV2 struct {
+	// Optional description of the notebook shown to all collaborators.
+	Description types.String `tfsdk:"description"`
+	// The serverless environment version used to execute the notebook (e.g.
+	// "4"). Defaults to "2" if not specified.
+	EnvironmentVersion types.String `tfsdk:"environment_version"`
 	// Server generated etag that represents the notebook version.
 	Etag types.String `tfsdk:"etag"`
 	// Base 64 representation of the notebook contents. This is the same format
@@ -922,6 +935,8 @@ func (to *CleanRoomAssetNotebook_SdkV2) SyncFieldsDuringRead(ctx context.Context
 }
 
 func (m CleanRoomAssetNotebook_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["environment_version"] = attrs["environment_version"].SetOptional()
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["notebook_content"] = attrs["notebook_content"].SetRequired()
 	attrs["review_state"] = attrs["review_state"].SetComputed()
@@ -952,6 +967,8 @@ func (m CleanRoomAssetNotebook_SdkV2) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"description":                 m.Description,
+			"environment_version":         m.EnvironmentVersion,
 			"etag":                        m.Etag,
 			"notebook_content":            m.NotebookContent,
 			"review_state":                m.ReviewState,
@@ -964,9 +981,11 @@ func (m CleanRoomAssetNotebook_SdkV2) ToObjectValue(ctx context.Context) basetyp
 func (m CleanRoomAssetNotebook_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"etag":             types.StringType,
-			"notebook_content": types.StringType,
-			"review_state":     types.StringType,
+			"description":         types.StringType,
+			"environment_version": types.StringType,
+			"etag":                types.StringType,
+			"notebook_content":    types.StringType,
+			"review_state":        types.StringType,
 			"reviews": basetypes.ListType{
 				ElemType: CleanRoomNotebookReview_SdkV2{}.Type(ctx),
 			},
@@ -1678,6 +1697,13 @@ type CleanRoomNotebookTaskRun_SdkV2 struct {
 	OutputSchemaName types.String `tfsdk:"output_schema_name"`
 	// Duration of the task run, in milliseconds.
 	RunDuration types.Int64 `tfsdk:"run_duration"`
+	// Expiration time of the shared output schema of the task run (if any), in
+	// epoch milliseconds.
+	SharedOutputSchemaExpirationTime types.Int64 `tfsdk:"shared_output_schema_expiration_time"`
+	// Name of the shared output schema associated with the clean rooms notebook
+	// task run. This schema is accessible by all collaborators when
+	// enable_shared_output is true.
+	SharedOutputSchemaName types.String `tfsdk:"shared_output_schema_name"`
 	// When the task run started, in epoch milliseconds.
 	StartTime types.Int64 `tfsdk:"start_time"`
 }
@@ -1733,6 +1759,8 @@ func (m CleanRoomNotebookTaskRun_SdkV2) ApplySchemaCustomizations(attrs map[stri
 	attrs["output_schema_expiration_time"] = attrs["output_schema_expiration_time"].SetOptional()
 	attrs["output_schema_name"] = attrs["output_schema_name"].SetOptional()
 	attrs["run_duration"] = attrs["run_duration"].SetOptional()
+	attrs["shared_output_schema_expiration_time"] = attrs["shared_output_schema_expiration_time"].SetOptional()
+	attrs["shared_output_schema_name"] = attrs["shared_output_schema_name"].SetOptional()
 	attrs["start_time"] = attrs["start_time"].SetOptional()
 
 	return attrs
@@ -1759,15 +1787,17 @@ func (m CleanRoomNotebookTaskRun_SdkV2) ToObjectValue(ctx context.Context) baset
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"collaborator_job_run_info":     m.CollaboratorJobRunInfo,
-			"notebook_etag":                 m.NotebookEtag,
-			"notebook_job_run_state":        m.NotebookJobRunState,
-			"notebook_name":                 m.NotebookName,
-			"notebook_updated_at":           m.NotebookUpdatedAt,
-			"output_schema_expiration_time": m.OutputSchemaExpirationTime,
-			"output_schema_name":            m.OutputSchemaName,
-			"run_duration":                  m.RunDuration,
-			"start_time":                    m.StartTime,
+			"collaborator_job_run_info":            m.CollaboratorJobRunInfo,
+			"notebook_etag":                        m.NotebookEtag,
+			"notebook_job_run_state":               m.NotebookJobRunState,
+			"notebook_name":                        m.NotebookName,
+			"notebook_updated_at":                  m.NotebookUpdatedAt,
+			"output_schema_expiration_time":        m.OutputSchemaExpirationTime,
+			"output_schema_name":                   m.OutputSchemaName,
+			"run_duration":                         m.RunDuration,
+			"shared_output_schema_expiration_time": m.SharedOutputSchemaExpirationTime,
+			"shared_output_schema_name":            m.SharedOutputSchemaName,
+			"start_time":                           m.StartTime,
 		})
 }
 
@@ -1782,12 +1812,14 @@ func (m CleanRoomNotebookTaskRun_SdkV2) Type(ctx context.Context) attr.Type {
 			"notebook_job_run_state": basetypes.ListType{
 				ElemType: jobs_tf.CleanRoomTaskRunState_SdkV2{}.Type(ctx),
 			},
-			"notebook_name":                 types.StringType,
-			"notebook_updated_at":           types.Int64Type,
-			"output_schema_expiration_time": types.Int64Type,
-			"output_schema_name":            types.StringType,
-			"run_duration":                  types.Int64Type,
-			"start_time":                    types.Int64Type,
+			"notebook_name":                        types.StringType,
+			"notebook_updated_at":                  types.Int64Type,
+			"output_schema_expiration_time":        types.Int64Type,
+			"output_schema_name":                   types.StringType,
+			"run_duration":                         types.Int64Type,
+			"shared_output_schema_expiration_time": types.Int64Type,
+			"shared_output_schema_name":            types.StringType,
+			"start_time":                           types.Int64Type,
 		},
 	}
 }
@@ -1920,6 +1952,15 @@ type CleanRoomRemoteDetail_SdkV2 struct {
 	Creator types.List `tfsdk:"creator"`
 	// Egress network policy to apply to the central clean room workspace.
 	EgressNetworkPolicy types.List `tfsdk:"egress_network_policy"`
+	// Whether to enable shared output for the central clean room. When enabled,
+	// clean room task runs can write to the run-scoped shared output schema
+	// which is accessible by all collaborators.
+	EnableSharedOutput types.Bool `tfsdk:"enable_shared_output"`
+	// Alias of the provider collaborator. If set, packaged clean rooms mode is
+	// enabled. The consumer's experience is restricted: they can view notebook
+	// names and READMEs, add their own data assets, and trigger runs, but
+	// cannot view notebook code, provider data assets, or notebook run output.
+	PackageProviderCollaboratorAlias types.String `tfsdk:"package_provider_collaborator_alias"`
 	// Region of the central clean room.
 	Region types.String `tfsdk:"region"`
 }
@@ -2006,6 +2047,10 @@ func (m CleanRoomRemoteDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]
 	attrs["egress_network_policy"] = attrs["egress_network_policy"].SetOptional()
 	attrs["egress_network_policy"] = attrs["egress_network_policy"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["egress_network_policy"] = attrs["egress_network_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["enable_shared_output"] = attrs["enable_shared_output"].SetOptional()
+	attrs["enable_shared_output"] = attrs["enable_shared_output"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["package_provider_collaborator_alias"] = attrs["package_provider_collaborator_alias"].SetOptional()
+	attrs["package_provider_collaborator_alias"] = attrs["package_provider_collaborator_alias"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["region"] = attrs["region"].SetOptional()
 	attrs["region"] = attrs["region"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
@@ -2035,13 +2080,15 @@ func (m CleanRoomRemoteDetail_SdkV2) ToObjectValue(ctx context.Context) basetype
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"central_clean_room_id":       m.CentralCleanRoomId,
-			"cloud_vendor":                m.CloudVendor,
-			"collaborators":               m.Collaborators,
-			"compliance_security_profile": m.ComplianceSecurityProfile,
-			"creator":                     m.Creator,
-			"egress_network_policy":       m.EgressNetworkPolicy,
-			"region":                      m.Region,
+			"central_clean_room_id":               m.CentralCleanRoomId,
+			"cloud_vendor":                        m.CloudVendor,
+			"collaborators":                       m.Collaborators,
+			"compliance_security_profile":         m.ComplianceSecurityProfile,
+			"creator":                             m.Creator,
+			"egress_network_policy":               m.EgressNetworkPolicy,
+			"enable_shared_output":                m.EnableSharedOutput,
+			"package_provider_collaborator_alias": m.PackageProviderCollaboratorAlias,
+			"region":                              m.Region,
 		})
 }
 
@@ -2063,7 +2110,9 @@ func (m CleanRoomRemoteDetail_SdkV2) Type(ctx context.Context) attr.Type {
 			"egress_network_policy": basetypes.ListType{
 				ElemType: settings_tf.EgressNetworkPolicy_SdkV2{}.Type(ctx),
 			},
-			"region": types.StringType,
+			"enable_shared_output":                types.BoolType,
+			"package_provider_collaborator_alias": types.StringType,
+			"region":                              types.StringType,
 		},
 	}
 }

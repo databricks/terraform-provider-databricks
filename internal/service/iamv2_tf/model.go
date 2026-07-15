@@ -547,7 +547,7 @@ type Group struct {
 	// Display name of the group.
 	GroupName types.String `tfsdk:"group_name"`
 	// Internal group ID of the group in Databricks.
-	InternalId types.Int64 `tfsdk:"internal_id"`
+	InternalId types.String `tfsdk:"internal_id"`
 }
 
 func (to *Group) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Group) {
@@ -597,7 +597,7 @@ func (m Group) Type(ctx context.Context) attr.Type {
 			"account_id":  types.StringType,
 			"external_id": types.StringType,
 			"group_name":  types.StringType,
-			"internal_id": types.Int64Type,
+			"internal_id": types.StringType,
 		},
 	}
 }
@@ -1415,7 +1415,7 @@ type ServicePrincipal struct {
 	// ExternalId of the service principal in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
 	// Internal service principal ID of the service principal in Databricks.
-	InternalId types.Int64 `tfsdk:"internal_id"`
+	InternalId types.String `tfsdk:"internal_id"`
 }
 
 func (to *ServicePrincipal) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ServicePrincipal) {
@@ -1471,7 +1471,7 @@ func (m ServicePrincipal) Type(ctx context.Context) attr.Type {
 			"application_id":    types.StringType,
 			"display_name":      types.StringType,
 			"external_id":       types.StringType,
-			"internal_id":       types.Int64Type,
+			"internal_id":       types.StringType,
 		},
 	}
 }
@@ -1698,7 +1698,7 @@ type User struct {
 
 	FullName types.Object `tfsdk:"full_name"`
 	// Internal userId of the user in Databricks.
-	InternalId types.Int64 `tfsdk:"internal_id"`
+	InternalId types.String `tfsdk:"internal_id"`
 	// Username/email of the user.
 	Username types.String `tfsdk:"username"`
 }
@@ -1775,7 +1775,7 @@ func (m User) Type(ctx context.Context) attr.Type {
 			"account_user_status": types.StringType,
 			"external_id":         types.StringType,
 			"full_name":           UserFullName{}.Type(ctx),
-			"internal_id":         types.Int64Type,
+			"internal_id":         types.StringType,
 			"username":            types.StringType,
 		},
 	}

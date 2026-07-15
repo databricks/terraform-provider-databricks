@@ -41,6 +41,10 @@ In addition to the above arguments, the following attributes are exported:
   the stable URL is not attached to any failover group
 * `name` (string) - Fully qualified resource name.
   Format: accounts/{account_id}/stable-urls/{stable_url_id}
+* `stable_workspace_id` (string) - The stable workspace ID for this stable URL. Generated on creation and
+  immutable thereafter; identifies the URL across failovers and is the same
+  value embedded in the `url` (as the `w=` query parameter for SPOG URLs,
+  or in the `conn-<id>` hostname for Private-Link URLs)
 * `url` (string) - The stable URL endpoint. Generated on creation and
   immutable thereafter. For non-Private-Link workspaces this is
   `https://<spog_host>/?w=<connection_id>`. For Private-Link workspaces

@@ -268,8 +268,8 @@ func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) 
 	}.ExpectError(t, "pipeline abcd has failed")
 }
 
-// When creation fails and the user configured cascade = false, the cleanup delete
-// must respect that value (sending Cascade=false via ForceSendFields) so datasets
+// When creation fails and the user configured cascade_on_destroy = false, the cleanup
+// delete must respect that value (sending Cascade=false via ForceSendFields) so datasets
 // are preserved rather than always cascading.
 func TestResourcePipelineCreate_ErrorWhenWaitingCleanupNoCascade(t *testing.T) {
 	qa.ResourceFixture{
@@ -299,7 +299,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingCleanupNoCascade(t *testing.T) {
 		Resource: ResourcePipeline(),
 		HCL: `name = "test"
 		storage = "/test/storage"
-		cascade = false
+		cascade_on_destroy = false
 		library {
 			notebook {
 				path = "/Test"

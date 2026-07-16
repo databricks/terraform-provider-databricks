@@ -52,7 +52,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const testProviderWorkspaceID = "123456789"
+// testProviderWorkspaceID must match the workspace ID that the qa HTTP-fixture
+// client caches (see qa.HttpFixtureClientWithToken, which seeds
+// cachedWorkspaceID = 12345). Workspace-level Read now applies the provider's
+// workspace_id as a fallback and validates it against the cached workspace ID;
+// a value that disagreed with the cache would fail with a workspace_id mismatch.
+const testProviderWorkspaceID = "12345"
 
 // nolint
 func getJSONObject(filename string) any {

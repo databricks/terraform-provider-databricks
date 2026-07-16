@@ -196,28 +196,6 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 	return nil
 }
 
-// NamespaceValidateWorkspaceID validates that the workspace_id in provider_config
-// is reachable during the plan phase.
-// For workspace-level providers, it checks that the workspace_id matches the provider's workspace.
-// For account-level providers, it checks that the workspace is accessible from the account.
-// This is a no-op when provider_config is not set.
-func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
-	_, newWorkspaceID := d.GetChange(workspaceIDSchemaKey)
-	if newWorkspaceID == nil {
-		return nil
-	}
-	newWSID := newWorkspaceID.(string)
-	// Fall back to provider-level workspace_id only if not set on the resource.
-	if newWSID == "" {
-		newWSID = c.Config.WorkspaceID
-	}
-	_, err := c.GetWorkspaceClientForUnifiedProvider(ctx, newWSID)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // workspaceIDFromRawDiffConfig extracts the workspace ID from the raw config
 // of a ResourceDiff. Returns the workspace ID string and whether provider_config
 // is present in the config.
@@ -267,11 +245,14 @@ func validateApiLevelForUnifiedHost(apiLevel string, c *DatabricksClient) error 
 // resources (clusters, notebooks, jobs, ...). When the effective workspace_id
 // changes, it triggers ForceNew so the resource is destroyed in the old
 // workspace and recreated in the new one.
+//
+// workspace_id reachability/mismatch is intentionally NOT validated here at plan
+// time. That validation is enforced at apply time when CRUD acquires a workspace
+// client via GetWorkspaceClientForUnifiedProvider (see common/client.go), which
+// avoids plan-time API calls and the false positives they caused (e.g. limited
+// service principals that lack /Me, or unresolved cross-resource references).
 func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
-	if err := namespaceForceNew(ctx, d, c, true); err != nil {
-		return err
-	}
-	return NamespaceValidateWorkspaceID(ctx, d, c)
+	return namespaceForceNew(ctx, d, c, true)
 }
 
 // NamespaceCustomizeDiffNoForceNew is the CustomizeDiff entry point for
@@ -283,10 +264,9 @@ func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *Data
 // the new effective workspace_id to planned state (so SDKv2's Update is
 // invoked and writes the new value to state) without calling ForceNew.
 func NamespaceCustomizeDiffNoForceNew(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
-	if err := namespaceForceNew(ctx, d, c, false); err != nil {
-		return err
-	}
-	return NamespaceValidateWorkspaceID(ctx, d, c)
+	// As in NamespaceCustomizeDiff, workspace_id reachability/mismatch is validated
+	// at apply time (via GetWorkspaceClientForUnifiedProvider) rather than here.
+	return namespaceForceNew(ctx, d, c, false)
 }
 
 // CustomizeDiffDualResources is the CustomizeDiff entry point for dual
@@ -372,6 +352,22 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 		workspaceID = c.Config.WorkspaceID
 	}
 	if workspaceID == "" {
+		// No workspace_id could be resolved. A workspace-level provider is already
+		// scoped to a single workspace, so the base client routes correctly. On an
+		// account or unified host there is no implicit workspace: these
+		// (non-dual, workspace-scoped) resources cannot be routed without an
+		// explicit workspace_id. This mirrors the guard in
+		// getWorkspaceClientForAccountUnifiedHost and is the apply-time replacement
+		// for the removed plan-time validation (NamespaceValidateWorkspaceID) on
+		// the legacy (non-Go-SDK) client path.
+		//
+		// The Config nil-check keeps synthetic test clients (which have no
+		// underlying SDK config) on the original "return the base client" path;
+		// real providers always have a resolved Config.
+		if c.DatabricksClient != nil && c.Config != nil && c.HostTypeForTerraform() != config.WorkspaceHost {
+			return nil, fmt.Errorf("managing workspace-level resources requires a workspace_id, " +
+				"but none was found in the resource's provider_config block or the provider's workspace_id attribute")
+		}
 		return c, nil
 	}
 	return c.getDatabricksClientForUnifiedProvider(ctx, workspaceID)

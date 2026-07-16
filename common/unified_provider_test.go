@@ -540,7 +540,7 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 			description:   "Connection IDs cannot be reconciled against a workspace-level provider; surface a clear error directing the user to account-level credentials",
 		},
 		{
-			name: "account level provider without workspace_id - returns current client",
+			name: "account level provider without workspace_id - returns error",
 			resourceData: map[string]interface{}{
 				"name": "test",
 			},
@@ -553,9 +553,9 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 					},
 				},
 			},
-			expectError:      false,
-			expectSameClient: true,
-			description:      "Account-level provider without workspace_id returns current client for AccountOrWorkspaceRequest routing",
+			expectError:   true,
+			errorContains: "managing workspace-level resources requires a workspace_id",
+			description:   "Account/unified host without a workspace_id cannot route a workspace-scoped legacy resource; this errors at apply (previously caught by plan-time validation)",
 		},
 		{
 			name: "workspace_id mismatch - returns error",
@@ -703,6 +703,12 @@ func TestNamespaceCustomizeDiff_MatchingWorkspaceID(t *testing.T) {
 	assert.Nil(t, diff)
 }
 
+// TestNamespaceCustomizeDiff_MismatchedWorkspaceID asserts that a workspace_id
+// that does NOT match the provider's workspace no longer errors at plan time.
+// Reachability/mismatch is now validated at apply time when CRUD acquires a
+// workspace client via GetWorkspaceClientForUnifiedProvider — see
+// TestWorkspaceClientUnifiedProvider (case "workspace_id with different numeric
+// value") for the apply-time assertion of the same mismatch.
 func TestNamespaceCustomizeDiff_MismatchedWorkspaceID(t *testing.T) {
 	resource := newTestResourceForCustomizeDiff()
 	mockWS := &databricks.WorkspaceClient{
@@ -729,9 +735,9 @@ func TestNamespaceCustomizeDiff_MismatchedWorkspaceID(t *testing.T) {
 			},
 		},
 	}, c)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "workspace_id mismatch")
-	assert.Contains(t, err.Error(), "please check the workspace_id provided in provider_config")
+	// Plan no longer validates workspace_id reachability; the mismatch surfaces
+	// at apply instead.
+	assert.NoError(t, err)
 }
 
 func TestNamespaceCustomizeDiff_AccountLevelProvider_ValidWorkspace(t *testing.T) {
@@ -1102,7 +1108,14 @@ func TestWorkspaceClientUnifiedProviderWithWorkspaceID(t *testing.T) {
 			description:   "Should return error when neither workspace_id nor provider_config.workspace_id is set",
 		},
 		{
-			name: "workspace-level with workspace_id - ignores it and uses workspace client",
+			// Workspace host, no provider_config, but a provider-level workspace_id
+			// that disagrees with the workspace the host actually points at
+			// (cachedWorkspaceID). The provider-level workspace_id is now applied
+			// as a fallback inside GetWorkspaceClientForUnifiedProvider, so this
+			// contradiction is caught (a mismatch error) instead of being silently
+			// ignored. On current main the same config already errors — at plan,
+			// via the removed validator — so this preserves that guarantee at apply.
+			name: "workspace-level with mismatched provider workspace_id - errors",
 			resourceData: map[string]interface{}{
 				"name": "test",
 			},
@@ -1117,8 +1130,32 @@ func TestWorkspaceClientUnifiedProviderWithWorkspaceID(t *testing.T) {
 				cachedWorkspaceClient: mockWorkspaceClient,
 				cachedWorkspaceID:     123456,
 			},
+			expectError:   true,
+			errorContains: "workspace_id mismatch",
+			description:   "Workspace-level provider validates the provider-level workspace_id fallback and rejects a mismatch",
+		},
+		{
+			// Workspace host, no provider_config, and a provider-level workspace_id
+			// that MATCHES the workspace the host points at (the normal case, e.g.
+			// when the SDK auto-populates workspace_id from host metadata): the
+			// fallback resolves to the same workspace and validation passes.
+			name: "workspace-level with matching provider workspace_id - uses workspace client",
+			resourceData: map[string]interface{}{
+				"name": "test",
+			},
+			client: &DatabricksClient{
+				DatabricksClient: &client.DatabricksClient{
+					Config: &config.Config{
+						Host:        "https://workspace.test.databricks.com",
+						Token:       "test-token",
+						WorkspaceID: "123456",
+					},
+				},
+				cachedWorkspaceClient: mockWorkspaceClient,
+				cachedWorkspaceID:     123456,
+			},
 			expectError: false,
-			description: "Workspace-level provider should ignore workspace_id and use configured workspace",
+			description: "Workspace-level provider accepts a provider-level workspace_id that matches the configured workspace",
 		},
 	}
 
@@ -1619,9 +1656,12 @@ func TestPopulateProviderConfigInState(t *testing.T) {
 			expectedWSID:      "1111111111",
 		},
 		// Note: "account host with no workspace_id" is not tested here because
-		// it cannot happen in the Terraform lifecycle — NamespaceValidateWorkspaceID
-		// rejects account-level providers without workspace_id during plan, and
-		// dual resources at account level are guarded by the api field early return.
+		// this hook only runs after a resource already has an ID (post
+		// Create/Import). An account-level provider with no workspace_id can never
+		// get that far: CRUD's GetWorkspaceClientForUnifiedProvider errors with
+		// "managing workspace-level resources requires a workspace_id" at apply
+		// before the resource is created, and dual resources at account level are
+		// guarded by the api field early return.
 		// --- Subsequent reads (has state) scenarios: preserve state ---
 		{
 			name:         "subsequent read - preserves state, ignores different provider workspace_id",

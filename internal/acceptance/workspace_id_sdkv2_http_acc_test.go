@@ -142,7 +142,9 @@ func TestAccWorkspaceIDHttp_WS_RemoveProviderConfig(t *testing.T) {
 // to a different workspace on a workspace-level provider produces an error.
 // Step 1: Create with workspace_id matching current workspace.
 // Step 2: Change to different workspace_id -> error (workspace-level provider
-// cannot target a different workspace).
+// cannot target a different workspace). The mismatch is now reported at apply
+// time (workspace_id reachability validation was removed from the plan phase);
+// the error text is unchanged.
 func TestAccWorkspaceIDHttp_WS_ChangeProviderConfig(t *testing.T) {
 	WorkspaceLevel(t,
 		Step{
@@ -160,7 +162,6 @@ func TestAccWorkspaceIDHttp_WS_ChangeProviderConfig(t *testing.T) {
 				}
 			`),
 			ExpectError: regexp.MustCompile(`workspace_id mismatch`),
-			PlanOnly:    true,
 		},
 	)
 }
@@ -548,8 +549,9 @@ func TestMwsAccWorkspaceIDHttp_ChangeDefaultWithOverride(t *testing.T) {
 // Set workspace_id on Workspace-Level Provider
 // ==========================================
 //
-// workspace_id on a workspace-level provider is validated during CustomizeDiff.
-// If it matches the host's workspace ID, no error. If it doesn't, workspace_id mismatch.
+// A provider-level workspace_id on a workspace-level provider is validated when
+// a workspace client is acquired during CRUD (apply). If it matches the host's
+// workspace ID, no error. If it doesn't, workspace_id mismatch.
 
 func TestAccWorkspaceIDHttp_DefaultOnWorkspaceProvider_Same(t *testing.T) {
 	WorkspaceLevel(t, Step{
@@ -564,7 +566,6 @@ func TestAccWorkspaceIDHttp_DefaultOnWorkspaceProvider_Same(t *testing.T) {
 func TestAccWorkspaceIDHttp_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 	WorkspaceLevel(t, Step{
 		Template:    notebookWithProviderBlock(`workspace_id = "12345"`, ""),
-		PlanOnly:    true,
 		ExpectError: regexp.MustCompile(`workspace_id mismatch`),
 	})
 }
@@ -574,14 +575,10 @@ func TestAccWorkspaceIDHttp_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 // ==========================================
 //
 // Account-level provider with no workspace_id. Resource has no provider_config.
-// Expected: error during CRUD — no workspace_id available for routing.
-//
-// Unlike the Go SDK path (TestMwsAccWorkspaceID_NoDefaultNoOverride), which
-// returns a clear "no workspace_id" error via GetWorkspaceClientForUnifiedProvider,
-// the HTTP path (DatabricksClientForUnifiedProvider) cannot validate early because
-// it doesn't know whether the caller needs a workspace-scoped or account-scoped
-// client. It returns the account-level client, which then fails at the API layer
-// when the resource attempts a workspace-level operation.
+// Expected: error during CRUD (apply) — no workspace_id available for routing.
+// The HTTP path (DatabricksClientForUnifiedProvider) now returns the same clear
+// "no workspace_id" error as the Go SDK path when the host is not a workspace
+// host, so the message matches TestMwsAccWorkspaceID_NoDefaultNoOverride.
 
 func TestMwsAccWorkspaceIDHttp_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
@@ -589,7 +586,6 @@ func TestMwsAccWorkspaceIDHttp_NoDefaultNoOverride(t *testing.T) {
 		ExpectError: regexp.MustCompile(
 			`managing workspace-level resources requires a workspace_id, but none was found in the resource's provider_config block or the provider's workspace_id attribute`,
 		),
-		PlanOnly: true,
 	})
 }
 

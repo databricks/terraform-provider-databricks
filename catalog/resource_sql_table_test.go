@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -953,6 +954,95 @@ func TestResourceSqlTableUpdateView_Comments(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, "barview", d.Get("name"))
+}
+
+func TestResourceSqlTableUpdateView_ColumnComment(t *testing.T) {
+	oldColumns := []SqlColumnInfo{
+		{Name: "id", Comment: "old comment"},
+	}
+	newColumns := []SqlColumnInfo{
+		{Name: "id", Comment: "new comment"},
+	}
+	instanceStateMap := map[string]string{
+		"name":            "barview",
+		"catalog_name":    "main",
+		"schema_name":     "foo",
+		"table_type":      "VIEW",
+		"view_definition": "SELECT id FROM main.foo.bar",
+		"column.#":        strconv.Itoa(len(oldColumns)),
+	}
+	for k, v := range getColumnsInstanceState(oldColumns) {
+		instanceStateMap[k] = v
+	}
+	var commands []string
+	qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+			commands = append(commands, commandStr)
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		HCL: fmt.Sprintf(`
+		name               = "barview"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "VIEW"
+		cluster_id         = "existingcluster"
+		view_definition    = "SELECT id FROM main.foo.bar"
+		%s
+		`, GetSqlColumnInfoHCL(newColumns)),
+		InstanceState: instanceStateMap,
+		Fixtures: append([]qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.barview",
+				Response: SqlTableInfo{
+					Name:           "barview",
+					CatalogName:    "main",
+					SchemaName:     "foo",
+					TableType:      "VIEW",
+					ViewDefinition: "SELECT id FROM main.foo.bar",
+					ColumnInfos:    oldColumns,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.barview",
+				Response: SqlTableInfo{
+					Name:           "barview",
+					CatalogName:    "main",
+					SchemaName:     "foo",
+					TableType:      "VIEW",
+					ViewDefinition: "SELECT id FROM main.foo.bar",
+					ColumnInfos:    newColumns,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.barview?",
+				Response: catalog.TableInfo{},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/start",
+				ExpectedRequest: clusters.ClusterID{
+					ClusterID: "existingcluster",
+				},
+				Status: 404,
+			},
+		}, createClusterForSql...),
+		Resource: ResourceSqlTable(),
+		Update:   true,
+		ID:       "main.foo.barview",
+	}.ApplyNoError(t)
+
+	joined := strings.Join(commands, "\n")
+	// A column comment change on a VIEW must be applied in place via
+	// COMMENT ON COLUMN, never via ALTER VIEW ... ALTER COLUMN (which Databricks
+	// rejects with a PARSE_SYNTAX_ERROR).
+	assert.Contains(t, joined, "COMMENT ON COLUMN `main`.`foo`.`barview`.`id` IS 'new comment'")
+	assert.NotContains(t, joined, "ALTER COLUMN")
 }
 
 func getColumnsInstanceState(columns []SqlColumnInfo) map[string]string {

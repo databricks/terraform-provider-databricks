@@ -1205,6 +1205,13 @@ func (m LocationMappingEntry_SdkV2) Type(ctx context.Context) attr.Type {
 // A stable URL provides a failover-aware endpoint for accessing a workspace.
 // Its lifecycle is independent of any failover group.
 type StableUrl_SdkV2 struct {
+	// The workspace this stable URL currently routes to. Set to
+	// `initial_workspace_id` at creation, advanced to the failover group's
+	// primary while attached (including across a failover), and preserved when
+	// the stable URL is detached from its failover group. Read this to see
+	// where an unattached stable URL points: after a failover followed by a
+	// detach it reflects the post-failover primary, not `initial_workspace_id`.
+	EffectiveWorkspaceId types.String `tfsdk:"effective_workspace_id"`
 	// Fully qualified resource name of the FailoverGroup this stable URL is
 	// currently linked to, in the format
 	// `accounts/{account_id}/failover-groups/{failover_group_id}`. Empty when
@@ -1217,6 +1224,11 @@ type StableUrl_SdkV2 struct {
 	// Fully qualified resource name. Format:
 	// accounts/{account_id}/stable-urls/{stable_url_id}.
 	Name types.String `tfsdk:"name"`
+	// The stable workspace ID for this stable URL. Generated on creation and
+	// immutable thereafter; identifies the URL across failovers and is the same
+	// value embedded in the `url` (as the `w=` query parameter for SPOG URLs,
+	// or in the `conn-<id>` hostname for Private-Link URLs).
+	StableWorkspaceId types.String `tfsdk:"stable_workspace_id"`
 	// The stable URL endpoint. Generated on creation and immutable thereafter.
 	// For non-Private-Link workspaces this is
 	// `https://<spog_host>/?w=<connection_id>`. For Private-Link workspaces
@@ -1239,11 +1251,14 @@ func (to *StableUrl_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Stable
 }
 
 func (m StableUrl_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["effective_workspace_id"] = attrs["effective_workspace_id"].SetComputed()
 	attrs["failover_group_name"] = attrs["failover_group_name"].SetComputed()
 	attrs["initial_workspace_id"] = attrs["initial_workspace_id"].SetRequired()
 	attrs["initial_workspace_id"] = attrs["initial_workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["stable_workspace_id"] = attrs["stable_workspace_id"].SetComputed()
+	attrs["stable_workspace_id"] = attrs["stable_workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["url"] = attrs["url"].SetComputed()
 	attrs["url"] = attrs["url"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
@@ -1268,10 +1283,12 @@ func (m StableUrl_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"failover_group_name":  m.FailoverGroupName,
-			"initial_workspace_id": m.InitialWorkspaceId,
-			"name":                 m.Name,
-			"url":                  m.Url,
+			"effective_workspace_id": m.EffectiveWorkspaceId,
+			"failover_group_name":    m.FailoverGroupName,
+			"initial_workspace_id":   m.InitialWorkspaceId,
+			"name":                   m.Name,
+			"stable_workspace_id":    m.StableWorkspaceId,
+			"url":                    m.Url,
 		})
 }
 
@@ -1279,10 +1296,12 @@ func (m StableUrl_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m StableUrl_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"failover_group_name":  types.StringType,
-			"initial_workspace_id": types.StringType,
-			"name":                 types.StringType,
-			"url":                  types.StringType,
+			"effective_workspace_id": types.StringType,
+			"failover_group_name":    types.StringType,
+			"initial_workspace_id":   types.StringType,
+			"name":                   types.StringType,
+			"stable_workspace_id":    types.StringType,
+			"url":                    types.StringType,
 		},
 	}
 }

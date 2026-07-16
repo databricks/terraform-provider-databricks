@@ -10,7 +10,7 @@ from dataclasses import dataclass, replace
 import subprocess
 import time
 import json
-from github import Github, Repository, InputGitTreeElement, InputGitAuthor
+from github import Auth, Github, Repository, InputGitTreeElement, InputGitAuthor
 from datetime import datetime, timezone
 
 NEXT_CHANGELOG_FILE_NAME = "NEXT_CHANGELOG.md"
@@ -983,7 +983,7 @@ def get_packages_from_args() -> List[str]:
 def init_github():
     token = os.environ["GITHUB_TOKEN"]
     repo_name = os.environ["GITHUB_REPOSITORY"]
-    g = Github(token)
+    g = Github(auth=Auth.Token(token))
     repo = g.get_repo(repo_name)
     global gh
     gh = GitHubRepo(repo)

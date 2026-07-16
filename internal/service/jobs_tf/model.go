@@ -33,15 +33,6 @@ import (
 // run-submit request and are intentionally NOT duplicated here. Users compose
 // `ai_runtime_task` with the standard Jobs/DABs task wrapper to get those.
 type AiRuntimeTask struct {
-	// Optional workspace or UC volume path of the uploaded code-source archive.
-	// The CLI packages the user's local code directory into an archive and
-	// populates this. Customers calling the Jobs API directly should upload
-	// their archive to the workspace or a UC volume first and supply the
-	// resulting path here.
-	//
-	// When set, the training node exposes the value via the `$CODE_SOURCE`
-	// environment variable.
-	CodeSourcePath types.String `tfsdk:"code_source_path"`
 	// Deployment specs for this task. Exactly one deployment is currently
 	// supported (a single entry where every node runs the same command); this
 	// is a current-Preview constraint. Role-split workloads (driver + worker,
@@ -71,7 +62,6 @@ func (to *AiRuntimeTask) SyncFieldsDuringRead(ctx context.Context, from AiRuntim
 }
 
 func (m AiRuntimeTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["code_source_path"] = attrs["code_source_path"].SetOptional()
 	attrs["deployments"] = attrs["deployments"].SetRequired()
 	attrs["experiment"] = attrs["experiment"].SetRequired()
 	attrs["mlflow_experiment_directory"] = attrs["mlflow_experiment_directory"].SetOptional()
@@ -100,7 +90,6 @@ func (m AiRuntimeTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"code_source_path":            m.CodeSourcePath,
 			"deployments":                 m.Deployments,
 			"experiment":                  m.Experiment,
 			"mlflow_experiment_directory": m.MlflowExperimentDirectory,
@@ -112,7 +101,6 @@ func (m AiRuntimeTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m AiRuntimeTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"code_source_path": types.StringType,
 			"deployments": basetypes.ListType{
 				ElemType: DeploymentSpec{}.Type(ctx),
 			},
@@ -635,6 +623,10 @@ type BaseRun struct {
 	// The creator user name. This field won’t be included in the response if
 	// the user has already been deleted.
 	CreatorUserName types.String `tfsdk:"creator_user_name"`
+	// ID of the deployment that produced the job when this run was created.
+	// Used to look up deployment metadata from the Deployment Metadata service.
+	// Only set for job runs of jobs with a `BUNDLE` deployment.
+	DeploymentId types.String `tfsdk:"deployment_id"`
 	// Description of the run
 	Description types.String `tfsdk:"description"`
 	// The actual performance target used by the serverless run during
@@ -746,6 +738,11 @@ type BaseRun struct {
 	Trigger types.String `tfsdk:"trigger"`
 
 	TriggerInfo types.Object `tfsdk:"trigger_info"`
+	// ID of the deployment version that produced the job when this run was
+	// created. Identifies a specific snapshot of the deployment in the
+	// Deployment Metadata service. Only set for job runs of jobs with a
+	// `BUNDLE` deployment.
+	VersionId types.String `tfsdk:"version_id"`
 }
 
 func (to *BaseRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BaseRun) {
@@ -944,6 +941,7 @@ func (m BaseRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["cluster_instance"] = attrs["cluster_instance"].SetOptional()
 	attrs["cluster_spec"] = attrs["cluster_spec"].SetOptional()
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
+	attrs["deployment_id"] = attrs["deployment_id"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
 	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
@@ -973,6 +971,7 @@ func (m BaseRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["tasks"] = attrs["tasks"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
 	attrs["trigger_info"] = attrs["trigger_info"].SetOptional()
+	attrs["version_id"] = attrs["version_id"].SetOptional()
 
 	return attrs
 }
@@ -1013,6 +1012,7 @@ func (m BaseRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"cluster_instance":             m.ClusterInstance,
 			"cluster_spec":                 m.ClusterSpec,
 			"creator_user_name":            m.CreatorUserName,
+			"deployment_id":                m.DeploymentId,
 			"description":                  m.Description,
 			"effective_performance_target": m.EffectivePerformanceTarget,
 			"effective_usage_policy_id":    m.EffectiveUsagePolicyId,
@@ -1042,6 +1042,7 @@ func (m BaseRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"tasks":                        m.Tasks,
 			"trigger":                      m.Trigger,
 			"trigger_info":                 m.TriggerInfo,
+			"version_id":                   m.VersionId,
 		})
 }
 
@@ -1054,6 +1055,7 @@ func (m BaseRun) Type(ctx context.Context) attr.Type {
 			"cluster_instance":             ClusterInstance{}.Type(ctx),
 			"cluster_spec":                 ClusterSpec{}.Type(ctx),
 			"creator_user_name":            types.StringType,
+			"deployment_id":                types.StringType,
 			"description":                  types.StringType,
 			"effective_performance_target": types.StringType,
 			"effective_usage_policy_id":    types.StringType,
@@ -1091,6 +1093,7 @@ func (m BaseRun) Type(ctx context.Context) attr.Type {
 			},
 			"trigger":      types.StringType,
 			"trigger_info": TriggerInfo{}.Type(ctx),
+			"version_id":   types.StringType,
 		},
 	}
 }
@@ -4583,10 +4586,19 @@ func (m DeleteRun) Type(ctx context.Context) attr.Type {
 // workloads (driver + worker, parameter server, separate eval node, etc.) use
 // multiple entries.
 type DeploymentSpec struct {
-	// Workspace path of the bash script to execute on each node in this
-	// deployment. The CLI uploads the user's script and populates this.
-	// Customers calling the Jobs API directly should upload their script to the
-	// workspace first and supply the resulting path here.
+	// Workspace path of the script to run on each node in this deployment.
+	// Upload the script to this path and supply the path here. When the task
+	// runs, the file at this path is run on each node; if it fails, the task
+	// fails with its exit code.
+	//
+	// Example script contents:
+	//
+	// # Plain Python: python train.py --epochs 10
+	//
+	// # Multi-GPU via accelerate: accelerate launch train.py --config
+	// config.yaml
+	//
+	// # Distributed via torchrun: torchrun --nproc_per_node=8 train.py
 	CommandPath types.String `tfsdk:"command_path"`
 	// Compute resources allocated to each node in this deployment.
 	Compute types.Object `tfsdk:"compute"`
@@ -13752,6 +13764,10 @@ type Run struct {
 	// The creator user name. This field won’t be included in the response if
 	// the user has already been deleted.
 	CreatorUserName types.String `tfsdk:"creator_user_name"`
+	// ID of the deployment that produced the job when this run was created.
+	// Used to look up deployment metadata from the Deployment Metadata service.
+	// Only set for job runs of jobs with a `BUNDLE` deployment.
+	DeploymentId types.String `tfsdk:"deployment_id"`
 	// Description of the run
 	Description types.String `tfsdk:"description"`
 	// The actual performance target used by the serverless run during
@@ -13868,6 +13884,11 @@ type Run struct {
 	Trigger types.String `tfsdk:"trigger"`
 
 	TriggerInfo types.Object `tfsdk:"trigger_info"`
+	// ID of the deployment version that produced the job when this run was
+	// created. Identifies a specific snapshot of the deployment in the
+	// Deployment Metadata service. Only set for job runs of jobs with a
+	// `BUNDLE` deployment.
+	VersionId types.String `tfsdk:"version_id"`
 }
 
 func (to *Run) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Run) {
@@ -14078,6 +14099,7 @@ func (m Run) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilde
 	attrs["cluster_instance"] = attrs["cluster_instance"].SetOptional()
 	attrs["cluster_spec"] = attrs["cluster_spec"].SetOptional()
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
+	attrs["deployment_id"] = attrs["deployment_id"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
 	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
@@ -14109,6 +14131,7 @@ func (m Run) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilde
 	attrs["tasks"] = attrs["tasks"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
 	attrs["trigger_info"] = attrs["trigger_info"].SetOptional()
+	attrs["version_id"] = attrs["version_id"].SetOptional()
 
 	return attrs
 }
@@ -14150,6 +14173,7 @@ func (m Run) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"cluster_instance":             m.ClusterInstance,
 			"cluster_spec":                 m.ClusterSpec,
 			"creator_user_name":            m.CreatorUserName,
+			"deployment_id":                m.DeploymentId,
 			"description":                  m.Description,
 			"effective_performance_target": m.EffectivePerformanceTarget,
 			"effective_usage_policy_id":    m.EffectiveUsagePolicyId,
@@ -14181,6 +14205,7 @@ func (m Run) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"tasks":                        m.Tasks,
 			"trigger":                      m.Trigger,
 			"trigger_info":                 m.TriggerInfo,
+			"version_id":                   m.VersionId,
 		})
 }
 
@@ -14193,6 +14218,7 @@ func (m Run) Type(ctx context.Context) attr.Type {
 			"cluster_instance":             ClusterInstance{}.Type(ctx),
 			"cluster_spec":                 ClusterSpec{}.Type(ctx),
 			"creator_user_name":            types.StringType,
+			"deployment_id":                types.StringType,
 			"description":                  types.StringType,
 			"effective_performance_target": types.StringType,
 			"effective_usage_policy_id":    types.StringType,
@@ -14234,6 +14260,7 @@ func (m Run) Type(ctx context.Context) attr.Type {
 			},
 			"trigger":      types.StringType,
 			"trigger_info": TriggerInfo{}.Type(ctx),
+			"version_id":   types.StringType,
 		},
 	}
 }

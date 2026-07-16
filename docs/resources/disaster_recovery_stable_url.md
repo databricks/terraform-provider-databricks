@@ -2,7 +2,7 @@
 subcategory: "Disaster Recovery"
 ---
 # databricks_disaster_recovery_stable_url Resource
-[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/account/disasterrecovery)
 
@@ -35,6 +35,12 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
+* `effective_workspace_id` (string) - The workspace this stable URL currently routes to. Set to
+  `initial_workspace_id` at creation, advanced to the failover group's primary
+  while attached (including across a failover), and preserved when the stable
+  URL is detached from its failover group. Read this to see where an unattached
+  stable URL points: after a failover followed by a detach it reflects the
+  post-failover primary, not `initial_workspace_id`
 * `failover_group_name` (string) - Fully qualified resource name of the FailoverGroup this stable URL is
   currently linked to, in the format
   `accounts/{account_id}/failover-groups/{failover_group_id}`. Empty when

@@ -5,7 +5,7 @@
 ### Important Changes
 
 * Removed plan-time `workspace_id` reachability validation for unified-provider
-  resources ([#PRNUM](https://github.com/databricks/terraform-provider-databricks/pull/PRNUM)).
+  resources ([#5887](https://github.com/databricks/terraform-provider-databricks/pull/5887)).
 
   `workspace_id` reachability and mismatch errors (e.g. `workspace_id mismatch`,
   `managing workspace-level resources requires a workspace_id`) are now reported
@@ -34,7 +34,7 @@
 * A provider-level `workspace_id` is now consistently validated when a
   workspace-level resource acquires its client, regardless of whether the value
   came from the resource's `provider_config` block or the provider configuration
-  ([#PRNUM](https://github.com/databricks/terraform-provider-databricks/pull/PRNUM)).
+  ([#5887](https://github.com/databricks/terraform-provider-databricks/pull/5887)).
 
   Previously a workspace-level provider silently ignored a mismatched
   provider-level `workspace_id` when a resource omitted `provider_config`. It now

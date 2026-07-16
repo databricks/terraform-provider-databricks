@@ -13862,6 +13862,9 @@ type TableSpecificConfig struct {
 	// data. Spark Declarative Pipelines uses this sequencing to handle change
 	// events that arrive out of order.
 	SequenceBy types.List `tfsdk:"sequence_by"`
+	// (Optional) Name of the struct column added to each ingested record to
+	// hold per row source metadata.
+	SourceMetadataColumn types.String `tfsdk:"source_metadata_column"`
 	// Table properties to set on the destination table. These are key-value
 	// pairs that configure various Delta table behaviors or any user defined
 	// properties. Example: {"delta.feature.variantType": "supported",
@@ -14002,6 +14005,7 @@ func (m TableSpecificConfig) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["salesforce_include_formula_fields"] = attrs["salesforce_include_formula_fields"].SetOptional()
 	attrs["scd_type"] = attrs["scd_type"].SetOptional()
 	attrs["sequence_by"] = attrs["sequence_by"].SetOptional()
+	attrs["source_metadata_column"] = attrs["source_metadata_column"].SetOptional()
 	attrs["table_properties"] = attrs["table_properties"].SetOptional()
 	attrs["workday_report_parameters"] = attrs["workday_report_parameters"].SetOptional()
 
@@ -14047,6 +14051,7 @@ func (m TableSpecificConfig) ToObjectValue(ctx context.Context) basetypes.Object
 			"salesforce_include_formula_fields": m.SalesforceIncludeFormulaFields,
 			"scd_type":                          m.ScdType,
 			"sequence_by":                       m.SequenceBy,
+			"source_metadata_column":            m.SourceMetadataColumn,
 			"table_properties":                  m.TableProperties,
 			"workday_report_parameters":         m.WorkdayReportParameters,
 		})
@@ -14077,6 +14082,7 @@ func (m TableSpecificConfig) Type(ctx context.Context) attr.Type {
 			"sequence_by": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"source_metadata_column": types.StringType,
 			"table_properties": basetypes.MapType{
 				ElemType: types.StringType,
 			},

@@ -91,7 +91,8 @@ func (m CompleteVersionRequest) Type(ctx context.Context) attr.Type {
 }
 
 type CreateDeploymentRequest struct {
-	// The deployment to create.
+	// The deployment to create. Caller must set `initial_parent_path`; every
+	// other field is populated by the service.
 	Deployment types.Object `tfsdk:"deployment"`
 	// The ID to use for the deployment, which will become the final component
 	// of the deployment's resource name (i.e. `deployments/{deployment_id}`).
@@ -473,6 +474,13 @@ type Deployment struct {
 	// Git provenance of the deployment's source, derived from the latest
 	// version.
 	GitInfo types.Object `tfsdk:"git_info"`
+	// The workspace path of the folder where the deployment is initially
+	// created. Includes a leading slash and no trailing slash. On create, the
+	// deployment is registered as a typed BUNDLE_DEPLOYMENT tree node under
+	// this folder, which must already exist. This field is input only and is
+	// not returned in create, get, or list responses. The service rejects
+	// create requests that omit it.
+	InitialParentPath types.String `tfsdk:"initial_parent_path"`
 	// The version_id of the most recent deployment version.
 	LastVersionId types.String `tfsdk:"last_version_id"`
 	// Resource name of the deployment. Format: deployments/{deployment_id}
@@ -499,6 +507,10 @@ func (to *Deployment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from D
 			}
 		}
 	}
+	if !from.InitialParentPath.IsUnknown() && !from.InitialParentPath.IsNull() {
+		// InitialParentPath is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.InitialParentPath = from.InitialParentPath
+	}
 	if !from.WorkspaceInfo.IsNull() && !from.WorkspaceInfo.IsUnknown() {
 		if toWorkspaceInfo, ok := to.GetWorkspaceInfo(ctx); ok {
 			if fromWorkspaceInfo, ok := from.GetWorkspaceInfo(ctx); ok {
@@ -519,6 +531,10 @@ func (to *Deployment) SyncFieldsDuringRead(ctx context.Context, from Deployment)
 			}
 		}
 	}
+	if !from.InitialParentPath.IsUnknown() && !from.InitialParentPath.IsNull() {
+		// InitialParentPath is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.InitialParentPath = from.InitialParentPath
+	}
 	if !from.WorkspaceInfo.IsNull() && !from.WorkspaceInfo.IsUnknown() {
 		if toWorkspaceInfo, ok := to.GetWorkspaceInfo(ctx); ok {
 			if fromWorkspaceInfo, ok := from.GetWorkspaceInfo(ctx); ok {
@@ -537,6 +553,9 @@ func (m Deployment) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["destroyed_by"] = attrs["destroyed_by"].SetComputed()
 	attrs["display_name"] = attrs["display_name"].SetComputed()
 	attrs["git_info"] = attrs["git_info"].SetComputed()
+	attrs["initial_parent_path"] = attrs["initial_parent_path"].SetOptional()
+	attrs["initial_parent_path"] = attrs["initial_parent_path"].SetComputed()
+	attrs["initial_parent_path"] = attrs["initial_parent_path"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["last_version_id"] = attrs["last_version_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["status"] = attrs["status"].SetComputed()
@@ -568,19 +587,20 @@ func (m Deployment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time":     m.CreateTime,
-			"created_by":      m.CreatedBy,
-			"deployment_mode": m.DeploymentMode,
-			"destroy_time":    m.DestroyTime,
-			"destroyed_by":    m.DestroyedBy,
-			"display_name":    m.DisplayName,
-			"git_info":        m.GitInfo,
-			"last_version_id": m.LastVersionId,
-			"name":            m.Name,
-			"status":          m.Status,
-			"target_name":     m.TargetName,
-			"update_time":     m.UpdateTime,
-			"workspace_info":  m.WorkspaceInfo,
+			"create_time":         m.CreateTime,
+			"created_by":          m.CreatedBy,
+			"deployment_mode":     m.DeploymentMode,
+			"destroy_time":        m.DestroyTime,
+			"destroyed_by":        m.DestroyedBy,
+			"display_name":        m.DisplayName,
+			"git_info":            m.GitInfo,
+			"initial_parent_path": m.InitialParentPath,
+			"last_version_id":     m.LastVersionId,
+			"name":                m.Name,
+			"status":              m.Status,
+			"target_name":         m.TargetName,
+			"update_time":         m.UpdateTime,
+			"workspace_info":      m.WorkspaceInfo,
 		})
 }
 
@@ -588,19 +608,20 @@ func (m Deployment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Deployment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":     timetypes.RFC3339{}.Type(ctx),
-			"created_by":      types.StringType,
-			"deployment_mode": types.StringType,
-			"destroy_time":    timetypes.RFC3339{}.Type(ctx),
-			"destroyed_by":    types.StringType,
-			"display_name":    types.StringType,
-			"git_info":        GitInfo{}.Type(ctx),
-			"last_version_id": types.StringType,
-			"name":            types.StringType,
-			"status":          types.StringType,
-			"target_name":     types.StringType,
-			"update_time":     timetypes.RFC3339{}.Type(ctx),
-			"workspace_info":  WorkspaceInfo{}.Type(ctx),
+			"create_time":         timetypes.RFC3339{}.Type(ctx),
+			"created_by":          types.StringType,
+			"deployment_mode":     types.StringType,
+			"destroy_time":        timetypes.RFC3339{}.Type(ctx),
+			"destroyed_by":        types.StringType,
+			"display_name":        types.StringType,
+			"git_info":            GitInfo{}.Type(ctx),
+			"initial_parent_path": types.StringType,
+			"last_version_id":     types.StringType,
+			"name":                types.StringType,
+			"status":              types.StringType,
+			"target_name":         types.StringType,
+			"update_time":         timetypes.RFC3339{}.Type(ctx),
+			"workspace_info":      WorkspaceInfo{}.Type(ctx),
 		},
 	}
 }

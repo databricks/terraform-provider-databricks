@@ -179,6 +179,11 @@ The following attributes are exported:
 * `input` (string) - The input column from which the last N values are returned
 * `n` (integer) - The number of values to return
 
+### LifetimeWindow
+* `slide_duration` (string) - The slide duration for the discrete (offline) variant: the value updates only at these
+  boundaries. Must be positive when set. When absent, the window is continuous (the value is as
+  fresh as the pipeline delivers)
+
 ### LineageContext
 * `job_context` (JobContext) - Job context information including job ID and run ID
 * `notebook_id` (integer) - The notebook ID where this API was invoked
@@ -229,6 +234,7 @@ The following attributes are exported:
 
 ### TimeWindow
 * `continuous` (ContinuousWindow, deprecated)
+* `lifetime` (LifetimeWindow) - A window that spans the entire lifetime of the data source
 * `long_rolling` (LongRollingWindow) - A long (multi-day) rolling window served via the hybrid batch + streaming path
 * `rolling` (RollingWindow)
 * `sliding` (SlidingWindow)

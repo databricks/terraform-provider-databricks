@@ -35,6 +35,15 @@ jobs:
       github.repository == 'databricks/databricks-sdk-go' ||
       github.repository == 'databricks/databricks-sdk-py' ||
       github.repository == 'databricks/databricks-sdk-java'
+    env:
+      # Ref the release is cut from. Releasing from a branch is currently
+      # supported in the terraform repository only: for
+      # terraform-provider-databricks this follows the dispatched branch
+      # (``github.ref_name``), so a release can be cut from a branch other
+      # than main; every other synced repo (SDK go/py/java, …) stays pinned
+      # to main, preserving the pre-existing hardcoded-main behaviour and
+      # blocking branch releases even via a manual non-main dispatch.
+      RELEASE_REF: ${{ github.repository == 'databricks/terraform-provider-databricks' && github.ref_name || 'main' }}
     environment: "release-is"
     runs-on:
       group: databricks-protected-runner-group
@@ -50,12 +59,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          # Force re-resolution of ``main`` at step time. Without
-          # ``ref:``, checkout pins to ``github.sha`` — the SHA frozen
-          # at workflow_dispatch time — which means re-running a stale
-          # dispatch checks out an older main even when newer commits
-          # exist.
-          ref: main
+          # Check out the release ref. ``RELEASE_REF`` is the dispatched
+          # branch for terraform-provider-databricks and ``main`` for every
+          # other repo (see the job-level ``env``). For scheduled runs and
+          # manual dispatches left at defaults this is the default branch
+          # (main); dispatching terraform with ``--ref <branch>`` cuts the
+          # release from that branch instead.
+          #
+          # Naming the ref explicitly (rather than omitting ``ref:``)
+          # forces re-resolution of the branch head at step time. Without
+          # it, checkout pins to ``github.sha`` — the SHA frozen at
+          # workflow_dispatch time — so re-running a stale dispatch would
+          # check out an older commit even when newer ones exist.
+          ref: ${{ env.RELEASE_REF }}
           fetch-depth: 0
           token: ${{ steps.generate-token.outputs.token }}
 
@@ -73,6 +89,12 @@ jobs:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           PACKAGES: ${{ inputs.packages }}
+          # Branch the release is cut from. tagging.py commits the
+          # changelog bump and creates the tag on this branch, and its
+          # concurrent-advance guard checks this branch. Matches the ref
+          # checked out above (``RELEASE_REF``): the dispatched branch for
+          # terraform, main everywhere else.
+          DECO_TAGGING_REF: ${{ env.RELEASE_REF }}
         run: |
           if [ -n "$PACKAGES" ]; then
             uv run --locked tagging.py --package "$PACKAGES"

@@ -153,6 +153,9 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 	if w.ExpectedWorkspaceStatus != "" {
 		workspaceCreationRequest["expected_workspace_status"] = w.ExpectedWorkspaceStatus
 	}
+	if w.CustomTags != nil {
+		workspaceCreationRequest["custom_tags"] = w.CustomTags
+	}
 	return json.Marshal(workspaceCreationRequest)
 }
 
@@ -323,9 +326,6 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 		request["managed_services_customer_managed_key_id"] = ws.ManagedServicesCustomerManagedKeyID
 	}
 	if ws.CustomTags != nil {
-		if !a.client.IsAws() {
-			return fmt.Errorf("custom_tags are only allowed for AWS workspaces")
-		}
 		request["custom_tags"] = ws.CustomTags
 	}
 	if ws.ExpectedWorkspaceStatus != "" {
@@ -626,26 +626,6 @@ func ResourceMwsWorkspaces() common.Resource {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
 			common.DataToStructPointer(d, workspaceSchema, &workspace)
-			if c.IsAws() {
-				if _, ok := d.GetOk("aws_region"); !ok {
-					return fmt.Errorf("aws_region is required for AWS workspaces")
-				}
-				if d.Get("compute_mode") != "SERVERLESS" {
-					if _, ok := d.GetOk("credentials_id"); !ok {
-						return fmt.Errorf("credentials_id is required for non-serverless workspaces")
-					}
-					if _, ok := d.GetOk("storage_configuration_id"); !ok {
-						return fmt.Errorf("storage_configuration_id is required for non-serverless workspaces")
-					}
-				}
-			} else if c.IsGcp() {
-				if _, ok := d.GetOk("location"); !ok {
-					return fmt.Errorf("location is required for GCP workspaces")
-				}
-			}
-			if !c.IsAws() && workspace.CustomTags != nil {
-				return fmt.Errorf("custom_tags are only allowed for AWS workspaces")
-			}
 			if len(workspace.CustomerManagedKeyID) > 0 && len(workspace.ManagedServicesCustomerManagedKeyID) == 0 {
 				log.Print("[INFO] Using existing customer_managed_key_id as value for new managed_services_customer_managed_key_id")
 				workspace.ManagedServicesCustomerManagedKeyID = workspace.CustomerManagedKeyID

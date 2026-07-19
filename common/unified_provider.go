@@ -202,6 +202,16 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 // For account-level providers, it checks that the workspace is accessible from the account.
 // This is a no-op when provider_config is not set.
 func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
+	// Defer validation when workspace_id isn't yet known at plan time — e.g.
+	//   provider_config { workspace_id = databricks_mws_workspaces.ws.workspace_id }
+	// where workspace_id resolves only once the dependency is applied. With an
+	// unknown value, GetChange returns "" and the function would otherwise fall
+	// back to c.Config.WorkspaceID and error, even though the real value will be
+	// available at apply. Plan-time validation has nothing useful to check until
+	// the reference resolves.
+	if !d.NewValueKnown(workspaceIDSchemaKey) {
+		return nil
+	}
 	_, newWorkspaceID := d.GetChange(workspaceIDSchemaKey)
 	if newWorkspaceID == nil {
 		return nil

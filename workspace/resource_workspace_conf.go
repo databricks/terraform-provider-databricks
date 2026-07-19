@@ -9,8 +9,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"maps"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -103,12 +103,7 @@ func deleteWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.
 	config := d.Get("custom_config").(map[string]any)
 	// Delete keys one at a time to reset as many configuration values as possible to their original state.
 	// Delete in alphabetical order by key to ensure deterministic behavior.
-	keys := make([]string, 0, len(config))
-	for k := range config {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
+	for _, k := range slices.Sorted(maps.Keys(config)) {
 		v := config[k]
 		patch := settings.WorkspaceConf{}
 		// The default value for all configurations is assumed to be "false" for boolean

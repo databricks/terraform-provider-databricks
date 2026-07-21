@@ -121,6 +121,19 @@ func (to *BudgetPolicy) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 		// set the resulting resource state to the empty list to match the planned value.
 		to.CustomTags = from.CustomTags
 	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() {
+		if toCustomTags, ok := to.GetCustomTags(ctx); ok {
+			if fromCustomTags, ok := from.GetCustomTags(ctx); ok {
+				// Recursively sync the fields of each CustomTags element by position.
+				for i := range toCustomTags {
+					if i < len(fromCustomTags) {
+						toCustomTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromCustomTags[i])
+					}
+				}
+				to.SetCustomTags(ctx, toCustomTags)
+			}
+		}
+	}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -138,6 +151,18 @@ func (to *BudgetPolicy) SyncFieldsDuringRead(ctx context.Context, from BudgetPol
 		// If a user specified a non-Null, empty list for CustomTags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.CustomTags = from.CustomTags
+	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() {
+		if toCustomTags, ok := to.GetCustomTags(ctx); ok {
+			if fromCustomTags, ok := from.GetCustomTags(ctx); ok {
+				for i := range toCustomTags {
+					if i < len(fromCustomTags) {
+						toCustomTags[i].SyncFieldsDuringRead(ctx, fromCustomTags[i])
+					}
+				}
+				to.SetCustomTags(ctx, toCustomTags)
+			}
+		}
 	}
 }
 

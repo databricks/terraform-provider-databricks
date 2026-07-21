@@ -1615,6 +1615,19 @@ func (to *GetRepoPermissionLevelsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
 	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				// Recursively sync the fields of each PermissionLevels element by position.
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
+	}
 }
 
 func (to *GetRepoPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetRepoPermissionLevelsResponse_SdkV2) {
@@ -1623,6 +1636,18 @@ func (to *GetRepoPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx contex
 		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
+	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringRead(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
 	}
 }
 
@@ -1792,6 +1817,9 @@ func (m GetRepoRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetRepoResponse_SdkV2 struct {
 	// Branch that the local version of the repo is checked out to.
 	Branch types.String `tfsdk:"branch"`
+	// Whether the Git CLI is enabled for this Git folder (repo). When true, Git
+	// commands can be run directly against this Git folder using the Git CLI.
+	GitCliEnabled types.Bool `tfsdk:"git_cli_enabled"`
 	// SHA-1 hash representing the commit ID of the current HEAD of the repo.
 	HeadCommitId types.String `tfsdk:"head_commit_id"`
 	// ID of the Git folder (repo) object in the workspace.
@@ -1834,6 +1862,7 @@ func (to *GetRepoResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 
 func (m GetRepoResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["branch"] = attrs["branch"].SetOptional()
+	attrs["git_cli_enabled"] = attrs["git_cli_enabled"].SetOptional()
 	attrs["head_commit_id"] = attrs["head_commit_id"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["path"] = attrs["path"].SetOptional()
@@ -1866,6 +1895,7 @@ func (m GetRepoResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"branch":          m.Branch,
+			"git_cli_enabled": m.GitCliEnabled,
 			"head_commit_id":  m.HeadCommitId,
 			"id":              m.Id,
 			"path":            m.Path,
@@ -1879,11 +1909,12 @@ func (m GetRepoResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 func (m GetRepoResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"branch":         types.StringType,
-			"head_commit_id": types.StringType,
-			"id":             types.Int64Type,
-			"path":           types.StringType,
-			"provider":       types.StringType,
+			"branch":          types.StringType,
+			"git_cli_enabled": types.BoolType,
+			"head_commit_id":  types.StringType,
+			"id":              types.Int64Type,
+			"path":            types.StringType,
+			"provider":        types.StringType,
 			"sparse_checkout": basetypes.ListType{
 				ElemType: SparseCheckout_SdkV2{}.Type(ctx),
 			},
@@ -2139,6 +2170,19 @@ func (to *GetWorkspaceObjectPermissionLevelsResponse_SdkV2) SyncFieldsDuringCrea
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
 	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				// Recursively sync the fields of each PermissionLevels element by position.
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
+	}
 }
 
 func (to *GetWorkspaceObjectPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetWorkspaceObjectPermissionLevelsResponse_SdkV2) {
@@ -2147,6 +2191,18 @@ func (to *GetWorkspaceObjectPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead
 		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
+	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringRead(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
 	}
 }
 
@@ -2461,6 +2517,19 @@ func (to *ListAclsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Items = from.Items
 	}
+	if !from.Items.IsNull() && !from.Items.IsUnknown() {
+		if toItems, ok := to.GetItems(ctx); ok {
+			if fromItems, ok := from.GetItems(ctx); ok {
+				// Recursively sync the fields of each Items element by position.
+				for i := range toItems {
+					if i < len(fromItems) {
+						toItems[i].SyncFieldsDuringCreateOrUpdate(ctx, fromItems[i])
+					}
+				}
+				to.SetItems(ctx, toItems)
+			}
+		}
+	}
 }
 
 func (to *ListAclsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListAclsResponse_SdkV2) {
@@ -2469,6 +2538,18 @@ func (to *ListAclsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 		// If a user specified a non-Null, empty list for Items, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Items = from.Items
+	}
+	if !from.Items.IsNull() && !from.Items.IsUnknown() {
+		if toItems, ok := to.GetItems(ctx); ok {
+			if fromItems, ok := from.GetItems(ctx); ok {
+				for i := range toItems {
+					if i < len(fromItems) {
+						toItems[i].SyncFieldsDuringRead(ctx, fromItems[i])
+					}
+				}
+				to.SetItems(ctx, toItems)
+			}
+		}
 	}
 }
 
@@ -2600,6 +2681,19 @@ func (to *ListCredentialsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Credentials = from.Credentials
 	}
+	if !from.Credentials.IsNull() && !from.Credentials.IsUnknown() {
+		if toCredentials, ok := to.GetCredentials(ctx); ok {
+			if fromCredentials, ok := from.GetCredentials(ctx); ok {
+				// Recursively sync the fields of each Credentials element by position.
+				for i := range toCredentials {
+					if i < len(fromCredentials) {
+						toCredentials[i].SyncFieldsDuringCreateOrUpdate(ctx, fromCredentials[i])
+					}
+				}
+				to.SetCredentials(ctx, toCredentials)
+			}
+		}
+	}
 }
 
 func (to *ListCredentialsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCredentialsResponse_SdkV2) {
@@ -2608,6 +2702,18 @@ func (to *ListCredentialsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 		// If a user specified a non-Null, empty list for Credentials, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Credentials = from.Credentials
+	}
+	if !from.Credentials.IsNull() && !from.Credentials.IsUnknown() {
+		if toCredentials, ok := to.GetCredentials(ctx); ok {
+			if fromCredentials, ok := from.GetCredentials(ctx); ok {
+				for i := range toCredentials {
+					if i < len(fromCredentials) {
+						toCredentials[i].SyncFieldsDuringRead(ctx, fromCredentials[i])
+					}
+				}
+				to.SetCredentials(ctx, toCredentials)
+			}
+		}
 	}
 }
 
@@ -2750,6 +2856,19 @@ func (to *ListReposResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Repos = from.Repos
 	}
+	if !from.Repos.IsNull() && !from.Repos.IsUnknown() {
+		if toRepos, ok := to.GetRepos(ctx); ok {
+			if fromRepos, ok := from.GetRepos(ctx); ok {
+				// Recursively sync the fields of each Repos element by position.
+				for i := range toRepos {
+					if i < len(fromRepos) {
+						toRepos[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRepos[i])
+					}
+				}
+				to.SetRepos(ctx, toRepos)
+			}
+		}
+	}
 }
 
 func (to *ListReposResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListReposResponse_SdkV2) {
@@ -2758,6 +2877,18 @@ func (to *ListReposResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 		// If a user specified a non-Null, empty list for Repos, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Repos = from.Repos
+	}
+	if !from.Repos.IsNull() && !from.Repos.IsUnknown() {
+		if toRepos, ok := to.GetRepos(ctx); ok {
+			if fromRepos, ok := from.GetRepos(ctx); ok {
+				for i := range toRepos {
+					if i < len(fromRepos) {
+						toRepos[i].SyncFieldsDuringRead(ctx, fromRepos[i])
+					}
+				}
+				to.SetRepos(ctx, toRepos)
+			}
+		}
 	}
 }
 
@@ -2843,6 +2974,19 @@ func (to *ListResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Objects = from.Objects
 	}
+	if !from.Objects.IsNull() && !from.Objects.IsUnknown() {
+		if toObjects, ok := to.GetObjects(ctx); ok {
+			if fromObjects, ok := from.GetObjects(ctx); ok {
+				// Recursively sync the fields of each Objects element by position.
+				for i := range toObjects {
+					if i < len(fromObjects) {
+						toObjects[i].SyncFieldsDuringCreateOrUpdate(ctx, fromObjects[i])
+					}
+				}
+				to.SetObjects(ctx, toObjects)
+			}
+		}
+	}
 }
 
 func (to *ListResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListResponse_SdkV2) {
@@ -2851,6 +2995,18 @@ func (to *ListResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Lis
 		// If a user specified a non-Null, empty list for Objects, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Objects = from.Objects
+	}
+	if !from.Objects.IsNull() && !from.Objects.IsUnknown() {
+		if toObjects, ok := to.GetObjects(ctx); ok {
+			if fromObjects, ok := from.GetObjects(ctx); ok {
+				for i := range toObjects {
+					if i < len(fromObjects) {
+						toObjects[i].SyncFieldsDuringRead(ctx, fromObjects[i])
+					}
+				}
+				to.SetObjects(ctx, toObjects)
+			}
+		}
 	}
 }
 
@@ -2974,6 +3130,19 @@ func (to *ListScopesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Scopes = from.Scopes
 	}
+	if !from.Scopes.IsNull() && !from.Scopes.IsUnknown() {
+		if toScopes, ok := to.GetScopes(ctx); ok {
+			if fromScopes, ok := from.GetScopes(ctx); ok {
+				// Recursively sync the fields of each Scopes element by position.
+				for i := range toScopes {
+					if i < len(fromScopes) {
+						toScopes[i].SyncFieldsDuringCreateOrUpdate(ctx, fromScopes[i])
+					}
+				}
+				to.SetScopes(ctx, toScopes)
+			}
+		}
+	}
 }
 
 func (to *ListScopesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListScopesResponse_SdkV2) {
@@ -2982,6 +3151,18 @@ func (to *ListScopesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 		// If a user specified a non-Null, empty list for Scopes, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Scopes = from.Scopes
+	}
+	if !from.Scopes.IsNull() && !from.Scopes.IsUnknown() {
+		if toScopes, ok := to.GetScopes(ctx); ok {
+			if fromScopes, ok := from.GetScopes(ctx); ok {
+				for i := range toScopes {
+					if i < len(fromScopes) {
+						toScopes[i].SyncFieldsDuringRead(ctx, fromScopes[i])
+					}
+				}
+				to.SetScopes(ctx, toScopes)
+			}
+		}
 	}
 }
 
@@ -3112,6 +3293,19 @@ func (to *ListSecretsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Secrets = from.Secrets
 	}
+	if !from.Secrets.IsNull() && !from.Secrets.IsUnknown() {
+		if toSecrets, ok := to.GetSecrets(ctx); ok {
+			if fromSecrets, ok := from.GetSecrets(ctx); ok {
+				// Recursively sync the fields of each Secrets element by position.
+				for i := range toSecrets {
+					if i < len(fromSecrets) {
+						toSecrets[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSecrets[i])
+					}
+				}
+				to.SetSecrets(ctx, toSecrets)
+			}
+		}
+	}
 }
 
 func (to *ListSecretsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListSecretsResponse_SdkV2) {
@@ -3120,6 +3314,18 @@ func (to *ListSecretsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 		// If a user specified a non-Null, empty list for Secrets, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Secrets = from.Secrets
+	}
+	if !from.Secrets.IsNull() && !from.Secrets.IsUnknown() {
+		if toSecrets, ok := to.GetSecrets(ctx); ok {
+			if fromSecrets, ok := from.GetSecrets(ctx); ok {
+				for i := range toSecrets {
+					if i < len(fromSecrets) {
+						toSecrets[i].SyncFieldsDuringRead(ctx, fromSecrets[i])
+					}
+				}
+				to.SetSecrets(ctx, toSecrets)
+			}
+		}
 	}
 }
 
@@ -3629,6 +3835,19 @@ func (to *RepoAccessControlResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
 	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				// Recursively sync the fields of each AllPermissions element by position.
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
+	}
 }
 
 func (to *RepoAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RepoAccessControlResponse_SdkV2) {
@@ -3637,6 +3856,18 @@ func (to *RepoAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
+	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringRead(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
 	}
 }
 
@@ -3963,6 +4194,19 @@ func (to *RepoPermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *RepoPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RepoPermissions_SdkV2) {
@@ -3971,6 +4215,18 @@ func (to *RepoPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -4112,6 +4368,19 @@ func (to *RepoPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *RepoPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RepoPermissionsRequest_SdkV2) {
@@ -4120,6 +4389,18 @@ func (to *RepoPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -4949,6 +5230,19 @@ func (to *WorkspaceObjectAccessControlResponse_SdkV2) SyncFieldsDuringCreateOrUp
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
 	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				// Recursively sync the fields of each AllPermissions element by position.
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
+	}
 }
 
 func (to *WorkspaceObjectAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from WorkspaceObjectAccessControlResponse_SdkV2) {
@@ -4957,6 +5251,18 @@ func (to *WorkspaceObjectAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx c
 		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
+	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringRead(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
 	}
 }
 
@@ -5153,6 +5459,19 @@ func (to *WorkspaceObjectPermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *WorkspaceObjectPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from WorkspaceObjectPermissions_SdkV2) {
@@ -5161,6 +5480,18 @@ func (to *WorkspaceObjectPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Con
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -5306,6 +5637,19 @@ func (to *WorkspaceObjectPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdat
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *WorkspaceObjectPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from WorkspaceObjectPermissionsRequest_SdkV2) {
@@ -5314,6 +5658,18 @@ func (to *WorkspaceObjectPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx cont
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 

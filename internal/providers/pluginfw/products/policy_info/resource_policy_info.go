@@ -269,6 +269,19 @@ func (to *PolicyInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from P
 		// set the resulting resource state to the empty list to match the planned value.
 		to.MatchColumns = from.MatchColumns
 	}
+	if !from.MatchColumns.IsNull() && !from.MatchColumns.IsUnknown() {
+		if toMatchColumns, ok := to.GetMatchColumns(ctx); ok {
+			if fromMatchColumns, ok := from.GetMatchColumns(ctx); ok {
+				// Recursively sync the fields of each MatchColumns element by position.
+				for i := range toMatchColumns {
+					if i < len(fromMatchColumns) {
+						toMatchColumns[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMatchColumns[i])
+					}
+				}
+				to.SetMatchColumns(ctx, toMatchColumns)
+			}
+		}
+	}
 	if !from.RowFilter.IsNull() && !from.RowFilter.IsUnknown() {
 		if toRowFilter, ok := to.GetRowFilter(ctx); ok {
 			if fromRowFilter, ok := from.GetRowFilter(ctx); ok {
@@ -305,6 +318,18 @@ func (to *PolicyInfo) SyncFieldsDuringRead(ctx context.Context, from PolicyInfo)
 		// If a user specified a non-Null, empty list for MatchColumns, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.MatchColumns = from.MatchColumns
+	}
+	if !from.MatchColumns.IsNull() && !from.MatchColumns.IsUnknown() {
+		if toMatchColumns, ok := to.GetMatchColumns(ctx); ok {
+			if fromMatchColumns, ok := from.GetMatchColumns(ctx); ok {
+				for i := range toMatchColumns {
+					if i < len(fromMatchColumns) {
+						toMatchColumns[i].SyncFieldsDuringRead(ctx, fromMatchColumns[i])
+					}
+				}
+				to.SetMatchColumns(ctx, toMatchColumns)
+			}
+		}
 	}
 	if !from.RowFilter.IsNull() && !from.RowFilter.IsUnknown() {
 		if toRowFilter, ok := to.GetRowFilter(ctx); ok {

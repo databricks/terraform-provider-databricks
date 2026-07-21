@@ -189,13 +189,6 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `job_context` (JobContext) - Job context information including job ID and run ID
 * `notebook_id` (integer) - The notebook ID where this API was invoked
 
-### LongRollingWindow
-* `delay` (string) - The delay applied to the end of the rolling window (must be non-negative).
-  For example, delay=1d shifts the window end 1 day before the evaluation time
-* `window_duration` (string) - The duration of the rolling window. Must be positive and span more than two days, so that both
-  the batch (N-1 day) and stale-path (N-2 day) partial aggregates are well defined. The duration
-  need not be a whole number of days (e.g. 3 days 15 minutes is allowed)
-
 ### MaxFunction
 * `input` (string) - The input column from which the maximum is computed
 
@@ -208,11 +201,21 @@ This data source exports a single attribute, `features`. It is a list of resourc
 ### RollingWindow
 * `delay` (string) - The delay applied to the end of the rolling window (must be non-negative).
   For example, delay=1d shifts the window end 1 day before the evaluation time
-* `window_duration` (string) - The duration of the rolling window (must be positive)
+* `window_duration` (string) - The duration of the rolling window. Must be positive when set; absent means lifetime
+  (aggregate over the entity's entire history)
+
+### SawtoothWindow
+* `delay` (string) - The delay applied to the end of the window (must be non-negative).
+  For example, delay=1d shifts the window end 1 day before the evaluation time
+* `window_duration` (string) - The duration of the window. Must be positive and span more than two days when set, so that both
+  the batch (N-1 day) and stale-path (N-2 day) partial aggregates are well defined. The duration
+  need not be a whole number of days (e.g. 3 days 15 minutes is allowed). Absent means lifetime
+  (aggregate over the entity's entire history)
 
 ### SlidingWindow
 * `slide_duration` (string) - The slide duration (interval by which windows advance, must be positive and less than duration)
-* `window_duration` (string) - The duration of the sliding window
+* `window_duration` (string) - The duration of the sliding window. Must be positive when set; absent means lifetime
+  (aggregate over the entity's entire history)
 
 ### StddevPopFunction
 * `input` (string) - The input column from which the population standard deviation is computed. For Kafka sources,
@@ -224,8 +227,13 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `input` (string) - The input column from which the sample standard deviation is computed
 
 ### StreamSource
+* `dataframe_schema` (string) - Schema of the resulting dataframe after transformations, in Spark StructType
+  JSON format (from df.schema.json()).
+  Any subsequent functions operate against this dataframe
 * `filter_condition` (string) - The filter condition applied to the source data before aggregation
 * `full_name` (string) - Three-part full name of the Stream (catalog.schema.stream)
+* `transformation_sql` (string) - The pipeline runs these SQL statements immediately after conversion into
+  the schema specified on the Stream object
 
 ### SumFunction
 * `input` (string) - The input column from which the sum is computed. For Kafka sources, use dot-prefixed path
@@ -236,8 +244,8 @@ This data source exports a single attribute, `features`. It is a list of resourc
 ### TimeWindow
 * `continuous` (ContinuousWindow, deprecated)
 * `lifetime` (LifetimeWindow) - A window that spans the entire lifetime of the data source
-* `long_rolling` (LongRollingWindow) - A long (multi-day) rolling window served via the hybrid batch + streaming path
 * `rolling` (RollingWindow)
+* `sawtooth` (SawtoothWindow) - A sawtooth window served via the hybrid batch + streaming path
 * `sliding` (SlidingWindow)
 * `tumbling` (TumblingWindow)
 

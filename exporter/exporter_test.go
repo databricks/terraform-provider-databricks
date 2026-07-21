@@ -42,7 +42,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/service/workspace_tf"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	tf_sql "github.com/databricks/terraform-provider-databricks/sql"
 	tf_workspace "github.com/databricks/terraform-provider-databricks/workspace"
@@ -330,7 +329,7 @@ var emptyRepos = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
 	Resource:     "/api/2.0/repos?path_prefix=%2FWorkspace",
-	Response:     repos.ReposListResponse{},
+	Response:     sdk_workspace.ListReposResponse{},
 }
 
 var emptyVectorSearch = qa.HTTPFixture{
@@ -1870,12 +1869,12 @@ func TestImportingUser(t *testing.T) {
 }
 
 func TestImportingRepos(t *testing.T) {
-	resp := repos.ReposInformation{
-		ID:           121232342,
+	resp := sdk_workspace.RepoInfo{
+		Id:           121232342,
 		Url:          "https://github.com/user/test.git",
 		Provider:     "gitHub",
 		Path:         "/Repos/user@domain/test",
-		HeadCommitID: "1124323423abc23424",
+		HeadCommitId: "1124323423abc23424",
 		Branch:       "releases",
 	}
 
@@ -1890,8 +1889,8 @@ func TestImportingRepos(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/repos?path_prefix=%2FWorkspace",
-				Response: repos.ReposListResponse{
-					Repos: []repos.ReposInformation{
+				Response: sdk_workspace.ListReposResponse{
+					Repos: []sdk_workspace.RepoInfo{
 						resp,
 					},
 				},
@@ -1899,7 +1898,7 @@ func TestImportingRepos(t *testing.T) {
 			emptyGitCredentials,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/repos/121232342",
+				Resource: "/api/2.0/repos/121232342?",
 				Response: resp,
 			},
 			{
@@ -2216,13 +2215,13 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/repos/123",
-				Response: repos.ReposInformation{
-					ID:           123,
+				Resource: "/api/2.0/repos/123?",
+				Response: sdk_workspace.RepoInfo{
+					Id:           123,
 					Url:          "https://github.com/user/test.git",
 					Provider:     "gitHub",
 					Path:         "/Repos/user@domain.com/repo",
-					HeadCommitID: "1124323423abc23424",
+					HeadCommitId: "1124323423abc23424",
 					Branch:       "releases",
 				},
 				ReuseRequest: true,

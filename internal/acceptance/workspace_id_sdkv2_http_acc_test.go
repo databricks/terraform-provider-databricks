@@ -576,15 +576,18 @@ func TestAccWorkspaceIDHttp_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 //
 // Account-level provider with no workspace_id. Resource has no provider_config.
 // Expected: error during CRUD (apply) — no workspace_id available for routing.
-// The HTTP path (DatabricksClientForUnifiedProvider) now returns the same clear
-// "no workspace_id" error as the Go SDK path when the host is not a workspace
-// host, so the message matches TestMwsAccWorkspaceID_NoDefaultNoOverride.
-
+//
+// The HTTP path (DatabricksClientForUnifiedProvider) returns the base client
+// unchanged when no workspace_id can be resolved (it does not error early, so
+// account-level data sources that share this path keep working). For a genuinely
+// workspace-scoped resource like databricks_notebook, the failure therefore
+// surfaces when the workspace API call is attempted at apply: the account-host
+// client cannot construct a workspace client, so notebook creation fails.
 func TestMwsAccWorkspaceIDHttp_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: notebookWithProviderBlock("", ""),
 		ExpectError: regexp.MustCompile(
-			`managing workspace-level resources requires a workspace_id, but none was found in the resource's provider_config block or the provider's workspace_id attribute`,
+			`cannot create notebook`,
 		),
 	})
 }

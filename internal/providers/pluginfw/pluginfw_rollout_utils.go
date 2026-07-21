@@ -99,6 +99,7 @@ var pluginFwOnlyDataSources = append(
 		registered_model.DataSourceRegisteredModel,
 		registered_model.DataSourceRegisteredModelVersions,
 		serving.DataSourceServingEndpoints,
+		sharing.DataSourceRecipients,
 		user.DataSourceUsers,
 		// TODO: Add DataSourceCluster into migratedDataSources after fixing unit tests.
 		cluster.DataSourceCluster, // Using the staging name (with pluginframework suffix)

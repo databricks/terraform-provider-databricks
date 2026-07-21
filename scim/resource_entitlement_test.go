@@ -767,13 +767,34 @@ func TestResourceEntitlementsGroupCreateEmpty(t *testing.T) {
 	assert.Equal(t, false, d.Get("workspace_access"))
 }
 
+// TestResourceEntitlementsCreate_AccountLevelShouldError verifies that
+// databricks_entitlements cannot be managed through an account-level provider
+// unless a workspace is specified via provider_config.workspace_id. Without a
+// workspace_id, the entitlements SCIM call is attempted against the account host
+// and the server rejects it. (Plan-time reachability validation was removed; this
+// now surfaces when the API call runs.) The companion acceptance test
+// TestMwsAccEntitlements_AccountProvider_ProviderConfig covers the supported
+// account-level flow, where provider_config.workspace_id IS set.
 func TestResourceEntitlementsCreate_AccountLevelShouldError(t *testing.T) {
 	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
+				Status:   400,
+				Response: map[string]any{
+					"detail":   "entitlements can only be managed at the workspace level",
+					"status":   "400",
+					"schemas":  []string{"urn:ietf:params:scim:api:messages:2.0:Error"},
+					"scimType": "invalidValue",
+				},
+			},
+		},
+		AccountID: "abc-123",
+		Host:      "https://accounts.cloud.databricks.com",
 		Resource:  ResourceEntitlements(),
 		HCL:       `group_id = "abc"`,
 		Create:    true,
-		AccountID: "abc-123",
-		Host:      "https://accounts.cloud.databricks.com",
 	}.Apply(t)
-	assert.Contains(t, err.Error(), "managing workspace-level resources requires a workspace_id")
+	assert.Error(t, err)
 }

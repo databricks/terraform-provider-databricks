@@ -540,7 +540,7 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 			description:   "Connection IDs cannot be reconciled against a workspace-level provider; surface a clear error directing the user to account-level credentials",
 		},
 		{
-			name: "account level provider without workspace_id - returns error",
+			name: "account level provider without workspace_id - returns current client",
 			resourceData: map[string]interface{}{
 				"name": "test",
 			},
@@ -553,9 +553,9 @@ func TestDatabricksClientForUnifiedProvider(t *testing.T) {
 					},
 				},
 			},
-			expectError:   true,
-			errorContains: "managing workspace-level resources requires a workspace_id",
-			description:   "Account/unified host without a workspace_id cannot route a workspace-scoped legacy resource; this errors at apply (previously caught by plan-time validation)",
+			expectError:      false,
+			expectSameClient: true,
+			description:      "Account/unified host without a workspace_id returns the base client unchanged; account-level resources/data sources (e.g. mws_workspaces) rely on this to route through the account client",
 		},
 		{
 			name: "workspace_id mismatch - returns error",

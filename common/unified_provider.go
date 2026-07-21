@@ -352,22 +352,16 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 		workspaceID = c.Config.WorkspaceID
 	}
 	if workspaceID == "" {
-		// No workspace_id could be resolved. A workspace-level provider is already
-		// scoped to a single workspace, so the base client routes correctly. On an
-		// account or unified host there is no implicit workspace: these
-		// (non-dual, workspace-scoped) resources cannot be routed without an
-		// explicit workspace_id. This mirrors the guard in
-		// getWorkspaceClientForAccountUnifiedHost and is the apply-time replacement
-		// for the removed plan-time validation (NamespaceValidateWorkspaceID) on
-		// the legacy (non-Go-SDK) client path.
-		//
-		// The Config nil-check keeps synthetic test clients (which have no
-		// underlying SDK config) on the original "return the base client" path;
-		// real providers always have a resolved Config.
-		if c.DatabricksClient != nil && c.Config != nil && c.HostTypeForTerraform() != config.WorkspaceHost {
-			return nil, fmt.Errorf("managing workspace-level resources requires a workspace_id, " +
-				"but none was found in the resource's provider_config block or the provider's workspace_id attribute")
-		}
+		// No workspace_id was supplied or resolved. Return the base client
+		// unchanged (original behavior). We deliberately do NOT error here on
+		// account/unified hosts: this legacy accessor is also reached by
+		// account-level resources/data sources that carry a vestigial
+		// provider_config block (e.g. those built via the deprecated
+		// common.DataResource helper, such as databricks_mws_workspaces and
+		// databricks_mws_credentials), which route through the account client and
+		// have no workspace_id. Erroring here would break them. Genuinely
+		// workspace-scoped resources that reach this state will surface a clear
+		// error from the workspace API call at apply.
 		return c, nil
 	}
 	return c.getDatabricksClientForUnifiedProvider(ctx, workspaceID)

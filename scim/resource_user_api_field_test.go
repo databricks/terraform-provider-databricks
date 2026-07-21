@@ -7,8 +7,20 @@ import (
 )
 
 func TestResourceUserCreate_ApiFieldAccount(t *testing.T) {
+	globalUsersListCache = newUsersListCache()
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/accounts/acc-123/scim/v2/Users?attributes=id%2CuserName%2CdisplayName%2Cactive%2CexternalId%2Centitlements&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: UserList{
+					TotalResults: 1,
+					Resources: []User{
+						{ID: "abc", UserName: "me@example.com", DisplayName: "me", Active: true},
+					},
+				},
+			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/acc-123/scim/v2/Users",
@@ -39,8 +51,20 @@ func TestResourceUserCreate_ApiFieldAccount(t *testing.T) {
 
 func TestResourceUserCreate_ApiFieldWorkspace(t *testing.T) {
 	// Even with AccountID set, api = "workspace" routes to workspace SCIM
+	globalUsersListCache = newUsersListCache()
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName%2CdisplayName%2Cactive%2CexternalId%2Centitlements&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: UserList{
+					TotalResults: 1,
+					Resources: []User{
+						{ID: "def", UserName: "ws@example.com", DisplayName: "ws", Active: true},
+					},
+				},
+			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/preview/scim/v2/Users",

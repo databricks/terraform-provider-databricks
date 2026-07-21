@@ -10,6 +10,47 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// groupListAttrs are the SCIM attributes fetched when bulk-listing groups for the read cache.
+const groupListAttrs = "id,displayName,externalId,entitlements"
+
+// globalGroupsListCache caches a ListAll result per (host, apiLevel, accountID) so
+// that N concurrent reads for N distinct databricks_group resources only issue one
+// SCIM list call instead of N individual GET-by-ID calls.
+//
+// The cache key includes accountID so that two provider instances targeting the
+// same API host but different Databricks accounts never share cached groups.
+var globalGroupsListCache = newGroupsListCache()
+
+func newGroupsListCache() *common.KeyedCache[string, map[string]Group] {
+	return common.NewKeyedCache[string, map[string]Group]()
+}
+
+func groupsCacheKey(api GroupsAPI) string {
+	return api.client.Config.Host + "|" + api.ApiLevel + "|" + api.client.Config.AccountID
+}
+
+func groupsListCacheLookup(api GroupsAPI, groupID string) (Group, error) {
+	byID, err := globalGroupsListCache.Get(groupsCacheKey(api), func() (map[string]Group, error) {
+		groups, err := api.ListAll(groupListAttrs)
+		if err != nil {
+			return nil, err
+		}
+		m := make(map[string]Group, len(groups))
+		for _, g := range groups {
+			m[g.ID] = g
+		}
+		return m, nil
+	})
+	if err != nil {
+		return Group{}, err
+	}
+	if g, ok := byID[groupID]; ok {
+		return g, nil
+	}
+	// Cache populated but group absent (e.g. created concurrently); fall back to a direct read.
+	return api.Read(groupID, "displayName,externalId,entitlements")
+}
+
 // ResourceGroup manages user groups
 func ResourceGroup() common.Resource {
 	type entity struct {
@@ -48,12 +89,13 @@ func ResourceGroup() common.Resource {
 			if err != nil {
 				return err
 			}
+			groupsAPI := NewGroupsAPI(ctx, c, common.GetApiLevel(d))
+			defer globalGroupsListCache.Invalidate(groupsCacheKey(groupsAPI))
 			g := Group{
 				DisplayName:  d.Get("display_name").(string),
 				Entitlements: readEntitlementsFromData(d),
 				ExternalID:   d.Get("external_id").(string),
 			}
-			groupsAPI := NewGroupsAPI(ctx, c, common.GetApiLevel(d))
 			group, err := groupsAPI.Create(g)
 			if err != nil {
 				return createForceOverridesManuallyAddedGroup(err, d, groupsAPI, g)
@@ -67,7 +109,7 @@ func ResourceGroup() common.Resource {
 				return err
 			}
 			groupsAPI := NewGroupsAPI(ctx, c, common.GetApiLevel(d))
-			group, err := groupsAPI.Read(d.Id(), "displayName,externalId,entitlements")
+			group, err := groupsListCacheLookup(groupsAPI, d.Id())
 			if err != nil {
 				return err
 			}
@@ -87,6 +129,7 @@ func ResourceGroup() common.Resource {
 				return err
 			}
 			groupsAPI := NewGroupsAPI(ctx, c, common.GetApiLevel(d))
+			defer globalGroupsListCache.Invalidate(groupsCacheKey(groupsAPI))
 			groupName := d.Get("display_name").(string)
 			return groupsAPI.UpdateNameAndEntitlements(d.Id(), groupName,
 				d.Get("external_id").(string), readEntitlementsFromData(d))
@@ -97,6 +140,7 @@ func ResourceGroup() common.Resource {
 				return err
 			}
 			groupsAPI := NewGroupsAPI(ctx, c, common.GetApiLevel(d))
+			defer globalGroupsListCache.Invalidate(groupsCacheKey(groupsAPI))
 			return groupsAPI.Delete(d.Id())
 		},
 		Schema: groupSchema,

@@ -7,8 +7,18 @@ import (
 )
 
 func TestResourceGroupCreate_ApiFieldAccount(t *testing.T) {
+	globalGroupsListCache = newGroupsListCache()
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/accounts/acc-123/scim/v2/Groups?attributes=id%2CdisplayName%2CexternalId%2Centitlements&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: GroupList{
+					TotalResults: 1,
+					Resources:    []Group{{ID: "abc", DisplayName: "test-group"}},
+				},
+			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/acc-123/scim/v2/Groups",
@@ -37,8 +47,18 @@ func TestResourceGroupCreate_ApiFieldAccount(t *testing.T) {
 
 func TestResourceGroupCreate_ApiFieldWorkspace(t *testing.T) {
 	// Even with AccountID set, api = "workspace" routes to workspace SCIM
+	globalGroupsListCache = newGroupsListCache()
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2CdisplayName%2CexternalId%2Centitlements&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: GroupList{
+					TotalResults: 1,
+					Resources:    []Group{{ID: "def", DisplayName: "ws-group"}},
+				},
+			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/preview/scim/v2/Groups",
@@ -67,10 +87,8 @@ func TestResourceGroupCreate_ApiFieldWorkspace(t *testing.T) {
 }
 
 func TestResourceGroupCreate_ApiFieldNotSet_FallsBackToHostInference(t *testing.T) {
-	// When api is NOT set, account host routes to account SCIM (backwards compatible).
-	// Host inference is driven by the host metadata discovery — a 200 on
-	// /.well-known/databricks-config with host_type=ACCOUNT_HOST resolves the
-	// config to AccountHost, which is what a real accounts.* host would do.
+	// When api is NOT set, account host routes to account SCIM (backwards compatible)
+	globalGroupsListCache = newGroupsListCache()
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -78,6 +96,15 @@ func TestResourceGroupCreate_ApiFieldNotSet_FallsBackToHostInference(t *testing.
 				Resource:     "/.well-known/databricks-config",
 				Response:     map[string]string{"host_type": "account"},
 				ReuseRequest: true,
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/accounts/acc-123/scim/v2/Groups?attributes=id%2CdisplayName%2CexternalId%2Centitlements&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: GroupList{
+					TotalResults: 1,
+					Resources:    []Group{{ID: "abc", DisplayName: "test-group"}},
+				},
 			},
 			{
 				Method:   "POST",
@@ -106,8 +133,18 @@ func TestResourceGroupCreate_ApiFieldNotSet_FallsBackToHostInference(t *testing.
 
 func TestResourceGroupCreate_ApiFieldNotSet_WorkspaceHost(t *testing.T) {
 	// When api is NOT set and provider is workspace-level, routes to workspace SCIM (backwards compatible)
+	globalGroupsListCache = newGroupsListCache()
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2CdisplayName%2CexternalId%2Centitlements&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: GroupList{
+					TotalResults: 1,
+					Resources:    []Group{{ID: "abc", DisplayName: "test-group"}},
+				},
+			},
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/preview/scim/v2/Groups",
@@ -133,8 +170,18 @@ func TestResourceGroupCreate_ApiFieldNotSet_WorkspaceHost(t *testing.T) {
 }
 
 func TestResourceGroupRead_ApiFieldAccount(t *testing.T) {
+	globalGroupsListCache = newGroupsListCache()
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/accounts/acc-123/scim/v2/Groups?attributes=id%2CdisplayName%2CexternalId%2Centitlements&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: GroupList{
+					TotalResults: 1,
+					Resources:    []Group{{ID: "abc", DisplayName: "test-group"}},
+				},
+			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/acc-123/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",

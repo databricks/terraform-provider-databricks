@@ -1097,6 +1097,19 @@ func (to *ListAccountSettingsMetadataResponse_SdkV2) SyncFieldsDuringCreateOrUpd
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SettingsMetadata = from.SettingsMetadata
 	}
+	if !from.SettingsMetadata.IsNull() && !from.SettingsMetadata.IsUnknown() {
+		if toSettingsMetadata, ok := to.GetSettingsMetadata(ctx); ok {
+			if fromSettingsMetadata, ok := from.GetSettingsMetadata(ctx); ok {
+				// Recursively sync the fields of each SettingsMetadata element by position.
+				for i := range toSettingsMetadata {
+					if i < len(fromSettingsMetadata) {
+						toSettingsMetadata[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSettingsMetadata[i])
+					}
+				}
+				to.SetSettingsMetadata(ctx, toSettingsMetadata)
+			}
+		}
+	}
 }
 
 func (to *ListAccountSettingsMetadataResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListAccountSettingsMetadataResponse_SdkV2) {
@@ -1105,6 +1118,18 @@ func (to *ListAccountSettingsMetadataResponse_SdkV2) SyncFieldsDuringRead(ctx co
 		// If a user specified a non-Null, empty list for SettingsMetadata, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SettingsMetadata = from.SettingsMetadata
+	}
+	if !from.SettingsMetadata.IsNull() && !from.SettingsMetadata.IsUnknown() {
+		if toSettingsMetadata, ok := to.GetSettingsMetadata(ctx); ok {
+			if fromSettingsMetadata, ok := from.GetSettingsMetadata(ctx); ok {
+				for i := range toSettingsMetadata {
+					if i < len(fromSettingsMetadata) {
+						toSettingsMetadata[i].SyncFieldsDuringRead(ctx, fromSettingsMetadata[i])
+					}
+				}
+				to.SetSettingsMetadata(ctx, toSettingsMetadata)
+			}
+		}
 	}
 }
 
@@ -1260,6 +1285,19 @@ func (to *ListAccountUserPreferencesMetadataResponse_SdkV2) SyncFieldsDuringCrea
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SettingsMetadata = from.SettingsMetadata
 	}
+	if !from.SettingsMetadata.IsNull() && !from.SettingsMetadata.IsUnknown() {
+		if toSettingsMetadata, ok := to.GetSettingsMetadata(ctx); ok {
+			if fromSettingsMetadata, ok := from.GetSettingsMetadata(ctx); ok {
+				// Recursively sync the fields of each SettingsMetadata element by position.
+				for i := range toSettingsMetadata {
+					if i < len(fromSettingsMetadata) {
+						toSettingsMetadata[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSettingsMetadata[i])
+					}
+				}
+				to.SetSettingsMetadata(ctx, toSettingsMetadata)
+			}
+		}
+	}
 }
 
 func (to *ListAccountUserPreferencesMetadataResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListAccountUserPreferencesMetadataResponse_SdkV2) {
@@ -1268,6 +1306,18 @@ func (to *ListAccountUserPreferencesMetadataResponse_SdkV2) SyncFieldsDuringRead
 		// If a user specified a non-Null, empty list for SettingsMetadata, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SettingsMetadata = from.SettingsMetadata
+	}
+	if !from.SettingsMetadata.IsNull() && !from.SettingsMetadata.IsUnknown() {
+		if toSettingsMetadata, ok := to.GetSettingsMetadata(ctx); ok {
+			if fromSettingsMetadata, ok := from.GetSettingsMetadata(ctx); ok {
+				for i := range toSettingsMetadata {
+					if i < len(fromSettingsMetadata) {
+						toSettingsMetadata[i].SyncFieldsDuringRead(ctx, fromSettingsMetadata[i])
+					}
+				}
+				to.SetSettingsMetadata(ctx, toSettingsMetadata)
+			}
+		}
 	}
 }
 
@@ -1417,6 +1467,19 @@ func (to *ListWorkspaceSettingsMetadataResponse_SdkV2) SyncFieldsDuringCreateOrU
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SettingsMetadata = from.SettingsMetadata
 	}
+	if !from.SettingsMetadata.IsNull() && !from.SettingsMetadata.IsUnknown() {
+		if toSettingsMetadata, ok := to.GetSettingsMetadata(ctx); ok {
+			if fromSettingsMetadata, ok := from.GetSettingsMetadata(ctx); ok {
+				// Recursively sync the fields of each SettingsMetadata element by position.
+				for i := range toSettingsMetadata {
+					if i < len(fromSettingsMetadata) {
+						toSettingsMetadata[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSettingsMetadata[i])
+					}
+				}
+				to.SetSettingsMetadata(ctx, toSettingsMetadata)
+			}
+		}
+	}
 }
 
 func (to *ListWorkspaceSettingsMetadataResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListWorkspaceSettingsMetadataResponse_SdkV2) {
@@ -1425,6 +1488,18 @@ func (to *ListWorkspaceSettingsMetadataResponse_SdkV2) SyncFieldsDuringRead(ctx 
 		// If a user specified a non-Null, empty list for SettingsMetadata, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SettingsMetadata = from.SettingsMetadata
+	}
+	if !from.SettingsMetadata.IsNull() && !from.SettingsMetadata.IsUnknown() {
+		if toSettingsMetadata, ok := to.GetSettingsMetadata(ctx); ok {
+			if fromSettingsMetadata, ok := from.GetSettingsMetadata(ctx); ok {
+				for i := range toSettingsMetadata {
+					if i < len(fromSettingsMetadata) {
+						toSettingsMetadata[i].SyncFieldsDuringRead(ctx, fromSettingsMetadata[i])
+					}
+				}
+				to.SetSettingsMetadata(ctx, toSettingsMetadata)
+			}
+		}
 	}
 }
 

@@ -736,6 +736,19 @@ func (to *ListWorkspaceAssignmentDetailsResponse) SyncFieldsDuringCreateOrUpdate
 		// set the resulting resource state to the empty list to match the planned value.
 		to.WorkspaceAssignmentDetails = from.WorkspaceAssignmentDetails
 	}
+	if !from.WorkspaceAssignmentDetails.IsNull() && !from.WorkspaceAssignmentDetails.IsUnknown() {
+		if toWorkspaceAssignmentDetails, ok := to.GetWorkspaceAssignmentDetails(ctx); ok {
+			if fromWorkspaceAssignmentDetails, ok := from.GetWorkspaceAssignmentDetails(ctx); ok {
+				// Recursively sync the fields of each WorkspaceAssignmentDetails element by position.
+				for i := range toWorkspaceAssignmentDetails {
+					if i < len(fromWorkspaceAssignmentDetails) {
+						toWorkspaceAssignmentDetails[i].SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceAssignmentDetails[i])
+					}
+				}
+				to.SetWorkspaceAssignmentDetails(ctx, toWorkspaceAssignmentDetails)
+			}
+		}
+	}
 }
 
 func (to *ListWorkspaceAssignmentDetailsResponse) SyncFieldsDuringRead(ctx context.Context, from ListWorkspaceAssignmentDetailsResponse) {
@@ -744,6 +757,18 @@ func (to *ListWorkspaceAssignmentDetailsResponse) SyncFieldsDuringRead(ctx conte
 		// If a user specified a non-Null, empty list for WorkspaceAssignmentDetails, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.WorkspaceAssignmentDetails = from.WorkspaceAssignmentDetails
+	}
+	if !from.WorkspaceAssignmentDetails.IsNull() && !from.WorkspaceAssignmentDetails.IsUnknown() {
+		if toWorkspaceAssignmentDetails, ok := to.GetWorkspaceAssignmentDetails(ctx); ok {
+			if fromWorkspaceAssignmentDetails, ok := from.GetWorkspaceAssignmentDetails(ctx); ok {
+				for i := range toWorkspaceAssignmentDetails {
+					if i < len(fromWorkspaceAssignmentDetails) {
+						toWorkspaceAssignmentDetails[i].SyncFieldsDuringRead(ctx, fromWorkspaceAssignmentDetails[i])
+					}
+				}
+				to.SetWorkspaceAssignmentDetails(ctx, toWorkspaceAssignmentDetails)
+			}
+		}
 	}
 }
 
@@ -1989,7 +2014,7 @@ type WorkspaceAssignmentDetail struct {
 	// populated by ListWorkspaceAssignmentDetails (omitted for scalability);
 	// call GetWorkspaceAssignmentDetail to read the entitlements for a single
 	// principal.
-	Entitlements types.List `tfsdk:"entitlements"`
+	Entitlements types.Set `tfsdk:"entitlements"`
 	// The internal ID of the principal (user/sp/group) in Databricks.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
 
@@ -2059,7 +2084,7 @@ func (m WorkspaceAssignmentDetail) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id": types.StringType,
-			"entitlements": basetypes.ListType{
+			"entitlements": basetypes.SetType{
 				ElemType: types.StringType,
 			},
 			"principal_id":   types.Int64Type,
@@ -2092,5 +2117,5 @@ func (m *WorkspaceAssignmentDetail) SetEntitlements(ctx context.Context, v []typ
 	}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	m.Entitlements = types.ListValueMust(t, vs)
+	m.Entitlements = types.SetValueMust(t, vs)
 }

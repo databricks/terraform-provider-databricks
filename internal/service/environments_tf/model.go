@@ -670,6 +670,19 @@ func (to *ListWorkspaceBaseEnvironmentsResponse) SyncFieldsDuringCreateOrUpdate(
 		// set the resulting resource state to the empty list to match the planned value.
 		to.WorkspaceBaseEnvironments = from.WorkspaceBaseEnvironments
 	}
+	if !from.WorkspaceBaseEnvironments.IsNull() && !from.WorkspaceBaseEnvironments.IsUnknown() {
+		if toWorkspaceBaseEnvironments, ok := to.GetWorkspaceBaseEnvironments(ctx); ok {
+			if fromWorkspaceBaseEnvironments, ok := from.GetWorkspaceBaseEnvironments(ctx); ok {
+				// Recursively sync the fields of each WorkspaceBaseEnvironments element by position.
+				for i := range toWorkspaceBaseEnvironments {
+					if i < len(fromWorkspaceBaseEnvironments) {
+						toWorkspaceBaseEnvironments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceBaseEnvironments[i])
+					}
+				}
+				to.SetWorkspaceBaseEnvironments(ctx, toWorkspaceBaseEnvironments)
+			}
+		}
+	}
 }
 
 func (to *ListWorkspaceBaseEnvironmentsResponse) SyncFieldsDuringRead(ctx context.Context, from ListWorkspaceBaseEnvironmentsResponse) {
@@ -678,6 +691,18 @@ func (to *ListWorkspaceBaseEnvironmentsResponse) SyncFieldsDuringRead(ctx contex
 		// If a user specified a non-Null, empty list for WorkspaceBaseEnvironments, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.WorkspaceBaseEnvironments = from.WorkspaceBaseEnvironments
+	}
+	if !from.WorkspaceBaseEnvironments.IsNull() && !from.WorkspaceBaseEnvironments.IsUnknown() {
+		if toWorkspaceBaseEnvironments, ok := to.GetWorkspaceBaseEnvironments(ctx); ok {
+			if fromWorkspaceBaseEnvironments, ok := from.GetWorkspaceBaseEnvironments(ctx); ok {
+				for i := range toWorkspaceBaseEnvironments {
+					if i < len(fromWorkspaceBaseEnvironments) {
+						toWorkspaceBaseEnvironments[i].SyncFieldsDuringRead(ctx, fromWorkspaceBaseEnvironments[i])
+					}
+				}
+				to.SetWorkspaceBaseEnvironments(ctx, toWorkspaceBaseEnvironments)
+			}
+		}
 	}
 }
 

@@ -1691,6 +1691,19 @@ func (to *GetCustomAppIntegrationsOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Apps = from.Apps
 	}
+	if !from.Apps.IsNull() && !from.Apps.IsUnknown() {
+		if toApps, ok := to.GetApps(ctx); ok {
+			if fromApps, ok := from.GetApps(ctx); ok {
+				// Recursively sync the fields of each Apps element by position.
+				for i := range toApps {
+					if i < len(fromApps) {
+						toApps[i].SyncFieldsDuringCreateOrUpdate(ctx, fromApps[i])
+					}
+				}
+				to.SetApps(ctx, toApps)
+			}
+		}
+	}
 }
 
 func (to *GetCustomAppIntegrationsOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetCustomAppIntegrationsOutput_SdkV2) {
@@ -1699,6 +1712,18 @@ func (to *GetCustomAppIntegrationsOutput_SdkV2) SyncFieldsDuringRead(ctx context
 		// If a user specified a non-Null, empty list for Apps, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Apps = from.Apps
+	}
+	if !from.Apps.IsNull() && !from.Apps.IsUnknown() {
+		if toApps, ok := to.GetApps(ctx); ok {
+			if fromApps, ok := from.GetApps(ctx); ok {
+				for i := range toApps {
+					if i < len(fromApps) {
+						toApps[i].SyncFieldsDuringRead(ctx, fromApps[i])
+					}
+				}
+				to.SetApps(ctx, toApps)
+			}
+		}
 	}
 }
 
@@ -1955,6 +1980,19 @@ func (to *GetPublishedAppIntegrationsOutput_SdkV2) SyncFieldsDuringCreateOrUpdat
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Apps = from.Apps
 	}
+	if !from.Apps.IsNull() && !from.Apps.IsUnknown() {
+		if toApps, ok := to.GetApps(ctx); ok {
+			if fromApps, ok := from.GetApps(ctx); ok {
+				// Recursively sync the fields of each Apps element by position.
+				for i := range toApps {
+					if i < len(fromApps) {
+						toApps[i].SyncFieldsDuringCreateOrUpdate(ctx, fromApps[i])
+					}
+				}
+				to.SetApps(ctx, toApps)
+			}
+		}
+	}
 }
 
 func (to *GetPublishedAppIntegrationsOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetPublishedAppIntegrationsOutput_SdkV2) {
@@ -1963,6 +2001,18 @@ func (to *GetPublishedAppIntegrationsOutput_SdkV2) SyncFieldsDuringRead(ctx cont
 		// If a user specified a non-Null, empty list for Apps, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Apps = from.Apps
+	}
+	if !from.Apps.IsNull() && !from.Apps.IsUnknown() {
+		if toApps, ok := to.GetApps(ctx); ok {
+			if fromApps, ok := from.GetApps(ctx); ok {
+				for i := range toApps {
+					if i < len(fromApps) {
+						toApps[i].SyncFieldsDuringRead(ctx, fromApps[i])
+					}
+				}
+				to.SetApps(ctx, toApps)
+			}
+		}
 	}
 }
 
@@ -2051,6 +2101,19 @@ func (to *GetPublishedAppsOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Apps = from.Apps
 	}
+	if !from.Apps.IsNull() && !from.Apps.IsUnknown() {
+		if toApps, ok := to.GetApps(ctx); ok {
+			if fromApps, ok := from.GetApps(ctx); ok {
+				// Recursively sync the fields of each Apps element by position.
+				for i := range toApps {
+					if i < len(fromApps) {
+						toApps[i].SyncFieldsDuringCreateOrUpdate(ctx, fromApps[i])
+					}
+				}
+				to.SetApps(ctx, toApps)
+			}
+		}
+	}
 }
 
 func (to *GetPublishedAppsOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetPublishedAppsOutput_SdkV2) {
@@ -2059,6 +2122,18 @@ func (to *GetPublishedAppsOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context
 		// If a user specified a non-Null, empty list for Apps, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Apps = from.Apps
+	}
+	if !from.Apps.IsNull() && !from.Apps.IsUnknown() {
+		if toApps, ok := to.GetApps(ctx); ok {
+			if fromApps, ok := from.GetApps(ctx); ok {
+				for i := range toApps {
+					if i < len(fromApps) {
+						toApps[i].SyncFieldsDuringRead(ctx, fromApps[i])
+					}
+				}
+				to.SetApps(ctx, toApps)
+			}
+		}
 	}
 }
 
@@ -2310,6 +2385,19 @@ func (to *ListFederationPoliciesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Policies = from.Policies
 	}
+	if !from.Policies.IsNull() && !from.Policies.IsUnknown() {
+		if toPolicies, ok := to.GetPolicies(ctx); ok {
+			if fromPolicies, ok := from.GetPolicies(ctx); ok {
+				// Recursively sync the fields of each Policies element by position.
+				for i := range toPolicies {
+					if i < len(fromPolicies) {
+						toPolicies[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPolicies[i])
+					}
+				}
+				to.SetPolicies(ctx, toPolicies)
+			}
+		}
+	}
 }
 
 func (to *ListFederationPoliciesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListFederationPoliciesResponse_SdkV2) {
@@ -2318,6 +2406,18 @@ func (to *ListFederationPoliciesResponse_SdkV2) SyncFieldsDuringRead(ctx context
 		// If a user specified a non-Null, empty list for Policies, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Policies = from.Policies
+	}
+	if !from.Policies.IsNull() && !from.Policies.IsUnknown() {
+		if toPolicies, ok := to.GetPolicies(ctx); ok {
+			if fromPolicies, ok := from.GetPolicies(ctx); ok {
+				for i := range toPolicies {
+					if i < len(fromPolicies) {
+						toPolicies[i].SyncFieldsDuringRead(ctx, fromPolicies[i])
+					}
+				}
+				to.SetPolicies(ctx, toPolicies)
+			}
+		}
 	}
 }
 
@@ -2636,6 +2736,19 @@ func (to *ListServicePrincipalSecretsResponse_SdkV2) SyncFieldsDuringCreateOrUpd
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Secrets = from.Secrets
 	}
+	if !from.Secrets.IsNull() && !from.Secrets.IsUnknown() {
+		if toSecrets, ok := to.GetSecrets(ctx); ok {
+			if fromSecrets, ok := from.GetSecrets(ctx); ok {
+				// Recursively sync the fields of each Secrets element by position.
+				for i := range toSecrets {
+					if i < len(fromSecrets) {
+						toSecrets[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSecrets[i])
+					}
+				}
+				to.SetSecrets(ctx, toSecrets)
+			}
+		}
+	}
 }
 
 func (to *ListServicePrincipalSecretsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListServicePrincipalSecretsResponse_SdkV2) {
@@ -2644,6 +2757,18 @@ func (to *ListServicePrincipalSecretsResponse_SdkV2) SyncFieldsDuringRead(ctx co
 		// If a user specified a non-Null, empty list for Secrets, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Secrets = from.Secrets
+	}
+	if !from.Secrets.IsNull() && !from.Secrets.IsUnknown() {
+		if toSecrets, ok := to.GetSecrets(ctx); ok {
+			if fromSecrets, ok := from.GetSecrets(ctx); ok {
+				for i := range toSecrets {
+					if i < len(fromSecrets) {
+						toSecrets[i].SyncFieldsDuringRead(ctx, fromSecrets[i])
+					}
+				}
+				to.SetSecrets(ctx, toSecrets)
+			}
+		}
 	}
 }
 

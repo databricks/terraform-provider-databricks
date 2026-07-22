@@ -9,6 +9,11 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 )
 
+// grantsTemplate exercises databricks_grants, which is authoritative: applying it replaces the
+// securable's entire grant set, silently revoking any principal not listed here. It must only
+// target ephemeral securables this test owns, never a shared one such as the singleton metastore,
+// where it would wipe out grants belonging to others. Every securable below is created and
+// destroyed by the test and suffixed with {var.STICKY_RANDOM}.
 var grantsTemplate = `
 resource "databricks_catalog" "sandbox" {
 	name         = "sandbox{var.STICKY_RANDOM}"
@@ -74,13 +79,15 @@ resource "databricks_external_location" "some" {
 	comment         = "Managed by TF"
 }
 
-resource "databricks_grants" "metastore" {
-	metastore = "{env.TEST_METASTORE_ID}"
-	grant {
-		principal  = "%s"
-		privileges = ["CREATE_STORAGE_CREDENTIAL"]
-	}
-}
+# databricks_grants is authoritative over the whole securable, so applying it against the shared,
+# singleton metastore would revoke every other principal's metastore-level grants. Disabled for safety.
+# resource "databricks_grants" "metastore" {
+# 	metastore = "{env.TEST_METASTORE_ID}"
+# 	grant {
+# 		principal  = "%s"
+# 		privileges = ["CREATE_STORAGE_CREDENTIAL"]
+# 	}
+# }
 
 resource "databricks_grants" "catalog" {
 	catalog = databricks_catalog.sandbox.id

@@ -38,6 +38,13 @@ type StableUrlResource struct {
 
 // StableUrl extends the main model with additional fields.
 type StableUrl struct {
+	// The workspace this stable URL currently routes to. Set to
+	// `initial_workspace_id` at creation, advanced to the failover group's
+	// primary while attached (including across a failover), and preserved when
+	// the stable URL is detached from its failover group. Read this to see
+	// where an unattached stable URL points: after a failover followed by a
+	// detach it reflects the post-failover primary, not `initial_workspace_id`.
+	EffectiveWorkspaceId types.String `tfsdk:"effective_workspace_id"`
 	// Fully qualified resource name of the FailoverGroup this stable URL is
 	// currently linked to, in the format
 	// `accounts/{account_id}/failover-groups/{failover_group_id}`. Empty when
@@ -87,7 +94,8 @@ func (m StableUrl) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 func (m StableUrl) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{"failover_group_name": m.FailoverGroupName,
+		map[string]attr.Value{"effective_workspace_id": m.EffectiveWorkspaceId,
+			"failover_group_name":  m.FailoverGroupName,
 			"initial_workspace_id": m.InitialWorkspaceId,
 			"name":                 m.Name,
 			"parent":               m.Parent,
@@ -102,7 +110,8 @@ func (m StableUrl) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 // and contains additional fields.
 func (m StableUrl) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"failover_group_name": types.StringType,
+		AttrTypes: map[string]attr.Type{"effective_workspace_id": types.StringType,
+			"failover_group_name":  types.StringType,
 			"initial_workspace_id": types.StringType,
 			"name":                 types.StringType,
 			"parent":               types.StringType,
@@ -146,6 +155,8 @@ func (to *StableUrl) SyncFieldsDuringRead(ctx context.Context, from StableUrl) {
 }
 
 func (m StableUrl) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["effective_workspace_id"] = attrs["effective_workspace_id"].SetComputed()
+	attrs["effective_workspace_id"] = attrs["effective_workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["failover_group_name"] = attrs["failover_group_name"].SetComputed()
 	attrs["failover_group_name"] = attrs["failover_group_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["initial_workspace_id"] = attrs["initial_workspace_id"].SetRequired()

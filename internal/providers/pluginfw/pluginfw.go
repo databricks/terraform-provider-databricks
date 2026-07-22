@@ -102,6 +102,11 @@ func providerSchemaPluginFramework() schema.Schema {
 			}
 		}
 	}
+	// user_agent_extra is not an SDK configuration attribute: it is handled
+	// by the provider itself in configureDatabricksClient.
+	ps["user_agent_extra"] = schema.StringAttribute{
+		Optional: true,
+	}
 	return schema.Schema{
 		Attributes: ps,
 	}
@@ -188,6 +193,17 @@ func (p *DatabricksProviderPluginFramework) setAttribute(
 }
 
 func (p *DatabricksProviderPluginFramework) configureDatabricksClient(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) any {
+	var userAgentExtra types.String
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("user_agent_extra"), &userAgentExtra)...)
+	if resp.Diagnostics.HasError() {
+		return nil
+	}
+	if !userAgentExtra.IsNull() && !userAgentExtra.IsUnknown() {
+		if err := providercommon.ApplyUserAgentExtra(userAgentExtra.ValueString()); err != nil {
+			resp.Diagnostics.AddError("Failed to parse user_agent_extra", err.Error())
+			return nil
+		}
+	}
 	cfg := &config.Config{}
 	attrsUsed := []string{}
 	for _, attr := range config.ConfigAttributes {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/useragent"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -66,6 +67,16 @@ func TestConfigureDatabricksClient(t *testing.T) {
 				assert.Equal(t, "1234567890", dc.Config.WorkspaceID, "workspace_id should be set when provided")
 			},
 		},
+		{
+			name: "user_agent_extra can be set in provider config",
+			config: map[string]interface{}{
+				"user_agent_extra": "sdkv2-config-test/0.0.1",
+			},
+			validateResourceData: func(dc *common.DatabricksClient) {
+				assert.Contains(t, useragent.FromContext(context.Background()), "sdkv2-config-test/0.0.1",
+					"user_agent_extra products should be appended to the user agent")
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -88,4 +99,15 @@ func TestConfigureDatabricksClient(t *testing.T) {
 			tc.validateResourceData(dc)
 		})
 	}
+}
+
+func TestConfigureDatabricksClient_InvalidUserAgentExtra(t *testing.T) {
+	p := DatabricksProvider()
+	rd := schema.TestResourceDataRaw(t, p.Schema, map[string]interface{}{
+		"user_agent_extra": "not a valid (product)",
+	})
+
+	_, diags := ConfigureDatabricksClient(context.Background(), rd, nil)
+	assert.True(t, diags.HasError(), "invalid user_agent_extra should return an error")
+	assert.Contains(t, diags[0].Summary, "failed to parse user_agent_extra")
 }

@@ -17,4 +17,6 @@
 
 ### Exporter
 
+* Automatically skip interactive mode when `-services` or `-listing` options is specified ([#5900](https://github.com/databricks/terraform-provider-databricks/issues/5900)).
+
 ### Internal Changes

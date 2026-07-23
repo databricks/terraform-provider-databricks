@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -203,10 +202,6 @@ func (to *Role) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Role) {
 	if !from.ReplaceExisting.IsUnknown() {
 		to.ReplaceExisting = from.ReplaceExisting
 	}
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -235,10 +230,6 @@ func (to *Role) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Role) {
 func (to *Role) SyncFieldsDuringRead(ctx context.Context, from Role) {
 	if !from.ReplaceExisting.IsUnknown() {
 		to.ReplaceExisting = from.ReplaceExisting
-	}
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
 	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
@@ -270,8 +261,6 @@ func (m Role) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["role_id"] = attrs["role_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["role_id"] = attrs["role_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["replace_existing"] = attrs["replace_existing"].SetOptional()

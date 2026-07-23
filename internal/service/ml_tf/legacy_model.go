@@ -1674,9 +1674,34 @@ type BatchCreateMaterializedFeaturesRequest_SdkV2 struct {
 }
 
 func (to *BatchCreateMaterializedFeaturesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BatchCreateMaterializedFeaturesRequest_SdkV2) {
+	if !from.Requests.IsNull() && !from.Requests.IsUnknown() {
+		if toRequests, ok := to.GetRequests(ctx); ok {
+			if fromRequests, ok := from.GetRequests(ctx); ok {
+				// Recursively sync the fields of each Requests element by position.
+				for i := range toRequests {
+					if i < len(fromRequests) {
+						toRequests[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRequests[i])
+					}
+				}
+				to.SetRequests(ctx, toRequests)
+			}
+		}
+	}
 }
 
 func (to *BatchCreateMaterializedFeaturesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from BatchCreateMaterializedFeaturesRequest_SdkV2) {
+	if !from.Requests.IsNull() && !from.Requests.IsUnknown() {
+		if toRequests, ok := to.GetRequests(ctx); ok {
+			if fromRequests, ok := from.GetRequests(ctx); ok {
+				for i := range toRequests {
+					if i < len(fromRequests) {
+						toRequests[i].SyncFieldsDuringRead(ctx, fromRequests[i])
+					}
+				}
+				to.SetRequests(ctx, toRequests)
+			}
+		}
+	}
 }
 
 func (m BatchCreateMaterializedFeaturesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1758,6 +1783,19 @@ func (to *BatchCreateMaterializedFeaturesResponse_SdkV2) SyncFieldsDuringCreateO
 		// set the resulting resource state to the empty list to match the planned value.
 		to.MaterializedFeatures = from.MaterializedFeatures
 	}
+	if !from.MaterializedFeatures.IsNull() && !from.MaterializedFeatures.IsUnknown() {
+		if toMaterializedFeatures, ok := to.GetMaterializedFeatures(ctx); ok {
+			if fromMaterializedFeatures, ok := from.GetMaterializedFeatures(ctx); ok {
+				// Recursively sync the fields of each MaterializedFeatures element by position.
+				for i := range toMaterializedFeatures {
+					if i < len(fromMaterializedFeatures) {
+						toMaterializedFeatures[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMaterializedFeatures[i])
+					}
+				}
+				to.SetMaterializedFeatures(ctx, toMaterializedFeatures)
+			}
+		}
+	}
 }
 
 func (to *BatchCreateMaterializedFeaturesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from BatchCreateMaterializedFeaturesResponse_SdkV2) {
@@ -1766,6 +1804,18 @@ func (to *BatchCreateMaterializedFeaturesResponse_SdkV2) SyncFieldsDuringRead(ct
 		// If a user specified a non-Null, empty list for MaterializedFeatures, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.MaterializedFeatures = from.MaterializedFeatures
+	}
+	if !from.MaterializedFeatures.IsNull() && !from.MaterializedFeatures.IsUnknown() {
+		if toMaterializedFeatures, ok := to.GetMaterializedFeatures(ctx); ok {
+			if fromMaterializedFeatures, ok := from.GetMaterializedFeatures(ctx); ok {
+				for i := range toMaterializedFeatures {
+					if i < len(fromMaterializedFeatures) {
+						toMaterializedFeatures[i].SyncFieldsDuringRead(ctx, fromMaterializedFeatures[i])
+					}
+				}
+				to.SetMaterializedFeatures(ctx, toMaterializedFeatures)
+			}
+		}
 	}
 }
 
@@ -2345,6 +2395,19 @@ func (to *CreateExperiment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 	if !from.TraceLocation.IsNull() && !from.TraceLocation.IsUnknown() {
 		if toTraceLocation, ok := to.GetTraceLocation(ctx); ok {
 			if fromTraceLocation, ok := from.GetTraceLocation(ctx); ok {
@@ -2362,6 +2425,18 @@ func (to *CreateExperiment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 	if !from.TraceLocation.IsNull() && !from.TraceLocation.IsUnknown() {
 		if toTraceLocation, ok := to.GetTraceLocation(ctx); ok {
@@ -3213,11 +3288,37 @@ func (to *CreateLoggedModelRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
 	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				// Recursively sync the fields of each Params element by position.
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringCreateOrUpdate(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -3228,11 +3329,35 @@ func (to *CreateLoggedModelRequest_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
 	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringRead(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -3555,6 +3680,19 @@ func (to *CreateModelRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 }
 
 func (to *CreateModelRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateModelRequest_SdkV2) {
@@ -3563,6 +3701,18 @@ func (to *CreateModelRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -3758,6 +3908,19 @@ func (to *CreateModelVersionRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 }
 
 func (to *CreateModelVersionRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateModelVersionRequest_SdkV2) {
@@ -3766,6 +3929,18 @@ func (to *CreateModelVersionRequest_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -4304,6 +4479,19 @@ func (to *CreateRun_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 }
 
 func (to *CreateRun_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateRun_SdkV2) {
@@ -4312,6 +4500,18 @@ func (to *CreateRun_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Create
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -5261,6 +5461,19 @@ func (to *DatasetInput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 }
 
 func (to *DatasetInput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DatasetInput_SdkV2) {
@@ -5277,6 +5490,18 @@ func (to *DatasetInput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Dat
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -7488,6 +7713,19 @@ func (to *Experiment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 	if !from.TraceLocation.IsNull() && !from.TraceLocation.IsUnknown() {
 		if toTraceLocation, ok := to.GetTraceLocation(ctx); ok {
 			if fromTraceLocation, ok := from.GetTraceLocation(ctx); ok {
@@ -7505,6 +7743,18 @@ func (to *Experiment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Exper
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 	if !from.TraceLocation.IsNull() && !from.TraceLocation.IsUnknown() {
 		if toTraceLocation, ok := to.GetTraceLocation(ctx); ok {
@@ -7718,6 +7968,19 @@ func (to *ExperimentAccessControlResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
 	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				// Recursively sync the fields of each AllPermissions element by position.
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
+	}
 }
 
 func (to *ExperimentAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ExperimentAccessControlResponse_SdkV2) {
@@ -7726,6 +7989,18 @@ func (to *ExperimentAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx contex
 		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
+	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringRead(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
 	}
 }
 
@@ -7922,6 +8197,19 @@ func (to *ExperimentPermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *ExperimentPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ExperimentPermissions_SdkV2) {
@@ -7930,6 +8218,18 @@ func (to *ExperimentPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -8071,6 +8371,19 @@ func (to *ExperimentPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *ExperimentPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ExperimentPermissionsRequest_SdkV2) {
@@ -8079,6 +8392,18 @@ func (to *ExperimentPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.C
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -8360,6 +8685,19 @@ func (to *Feature_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entities = from.Entities
 	}
+	if !from.Entities.IsNull() && !from.Entities.IsUnknown() {
+		if toEntities, ok := to.GetEntities(ctx); ok {
+			if fromEntities, ok := from.GetEntities(ctx); ok {
+				// Recursively sync the fields of each Entities element by position.
+				for i := range toEntities {
+					if i < len(fromEntities) {
+						toEntities[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEntities[i])
+					}
+				}
+				to.SetEntities(ctx, toEntities)
+			}
+		}
+	}
 	if !from.Function.IsNull() && !from.Function.IsUnknown() {
 		if toFunction, ok := to.GetFunction(ctx); ok {
 			if fromFunction, ok := from.GetFunction(ctx); ok {
@@ -8419,6 +8757,18 @@ func (to *Feature_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Feature_
 		// If a user specified a non-Null, empty list for Entities, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entities = from.Entities
+	}
+	if !from.Entities.IsNull() && !from.Entities.IsUnknown() {
+		if toEntities, ok := to.GetEntities(ctx); ok {
+			if fromEntities, ok := from.GetEntities(ctx); ok {
+				for i := range toEntities {
+					if i < len(fromEntities) {
+						toEntities[i].SyncFieldsDuringRead(ctx, fromEntities[i])
+					}
+				}
+				to.SetEntities(ctx, toEntities)
+			}
+		}
 	}
 	if !from.Function.IsNull() && !from.Function.IsUnknown() {
 		if toFunction, ok := to.GetFunction(ctx); ok {
@@ -8777,17 +9127,56 @@ func (to *FeatureLineage_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FeatureSpecs = from.FeatureSpecs
 	}
+	if !from.FeatureSpecs.IsNull() && !from.FeatureSpecs.IsUnknown() {
+		if toFeatureSpecs, ok := to.GetFeatureSpecs(ctx); ok {
+			if fromFeatureSpecs, ok := from.GetFeatureSpecs(ctx); ok {
+				// Recursively sync the fields of each FeatureSpecs element by position.
+				for i := range toFeatureSpecs {
+					if i < len(fromFeatureSpecs) {
+						toFeatureSpecs[i].SyncFieldsDuringCreateOrUpdate(ctx, fromFeatureSpecs[i])
+					}
+				}
+				to.SetFeatureSpecs(ctx, toFeatureSpecs)
+			}
+		}
+	}
 	if !from.Models.IsNull() && !from.Models.IsUnknown() && to.Models.IsNull() && len(from.Models.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Models, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Models = from.Models
 	}
+	if !from.Models.IsNull() && !from.Models.IsUnknown() {
+		if toModels, ok := to.GetModels(ctx); ok {
+			if fromModels, ok := from.GetModels(ctx); ok {
+				// Recursively sync the fields of each Models element by position.
+				for i := range toModels {
+					if i < len(fromModels) {
+						toModels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromModels[i])
+					}
+				}
+				to.SetModels(ctx, toModels)
+			}
+		}
+	}
 	if !from.OnlineFeatures.IsNull() && !from.OnlineFeatures.IsUnknown() && to.OnlineFeatures.IsNull() && len(from.OnlineFeatures.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for OnlineFeatures, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnlineFeatures = from.OnlineFeatures
+	}
+	if !from.OnlineFeatures.IsNull() && !from.OnlineFeatures.IsUnknown() {
+		if toOnlineFeatures, ok := to.GetOnlineFeatures(ctx); ok {
+			if fromOnlineFeatures, ok := from.GetOnlineFeatures(ctx); ok {
+				// Recursively sync the fields of each OnlineFeatures element by position.
+				for i := range toOnlineFeatures {
+					if i < len(fromOnlineFeatures) {
+						toOnlineFeatures[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOnlineFeatures[i])
+					}
+				}
+				to.SetOnlineFeatures(ctx, toOnlineFeatures)
+			}
+		}
 	}
 }
 
@@ -8798,17 +9187,53 @@ func (to *FeatureLineage_SdkV2) SyncFieldsDuringRead(ctx context.Context, from F
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FeatureSpecs = from.FeatureSpecs
 	}
+	if !from.FeatureSpecs.IsNull() && !from.FeatureSpecs.IsUnknown() {
+		if toFeatureSpecs, ok := to.GetFeatureSpecs(ctx); ok {
+			if fromFeatureSpecs, ok := from.GetFeatureSpecs(ctx); ok {
+				for i := range toFeatureSpecs {
+					if i < len(fromFeatureSpecs) {
+						toFeatureSpecs[i].SyncFieldsDuringRead(ctx, fromFeatureSpecs[i])
+					}
+				}
+				to.SetFeatureSpecs(ctx, toFeatureSpecs)
+			}
+		}
+	}
 	if !from.Models.IsNull() && !from.Models.IsUnknown() && to.Models.IsNull() && len(from.Models.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Models, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Models = from.Models
 	}
+	if !from.Models.IsNull() && !from.Models.IsUnknown() {
+		if toModels, ok := to.GetModels(ctx); ok {
+			if fromModels, ok := from.GetModels(ctx); ok {
+				for i := range toModels {
+					if i < len(fromModels) {
+						toModels[i].SyncFieldsDuringRead(ctx, fromModels[i])
+					}
+				}
+				to.SetModels(ctx, toModels)
+			}
+		}
+	}
 	if !from.OnlineFeatures.IsNull() && !from.OnlineFeatures.IsUnknown() && to.OnlineFeatures.IsNull() && len(from.OnlineFeatures.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for OnlineFeatures, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnlineFeatures = from.OnlineFeatures
+	}
+	if !from.OnlineFeatures.IsNull() && !from.OnlineFeatures.IsUnknown() {
+		if toOnlineFeatures, ok := to.GetOnlineFeatures(ctx); ok {
+			if fromOnlineFeatures, ok := from.GetOnlineFeatures(ctx); ok {
+				for i := range toOnlineFeatures {
+					if i < len(fromOnlineFeatures) {
+						toOnlineFeatures[i].SyncFieldsDuringRead(ctx, fromOnlineFeatures[i])
+					}
+				}
+				to.SetOnlineFeatures(ctx, toOnlineFeatures)
+			}
+		}
 	}
 }
 
@@ -9109,6 +9534,19 @@ func (to *FeatureList_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Features = from.Features
 	}
+	if !from.Features.IsNull() && !from.Features.IsUnknown() {
+		if toFeatures, ok := to.GetFeatures(ctx); ok {
+			if fromFeatures, ok := from.GetFeatures(ctx); ok {
+				// Recursively sync the fields of each Features element by position.
+				for i := range toFeatures {
+					if i < len(fromFeatures) {
+						toFeatures[i].SyncFieldsDuringCreateOrUpdate(ctx, fromFeatures[i])
+					}
+				}
+				to.SetFeatures(ctx, toFeatures)
+			}
+		}
+	}
 }
 
 func (to *FeatureList_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FeatureList_SdkV2) {
@@ -9117,6 +9555,18 @@ func (to *FeatureList_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Feat
 		// If a user specified a non-Null, empty list for Features, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Features = from.Features
+	}
+	if !from.Features.IsNull() && !from.Features.IsUnknown() {
+		if toFeatures, ok := to.GetFeatures(ctx); ok {
+			if fromFeatures, ok := from.GetFeatures(ctx); ok {
+				for i := range toFeatures {
+					if i < len(fromFeatures) {
+						toFeatures[i].SyncFieldsDuringRead(ctx, fromFeatures[i])
+					}
+				}
+				to.SetFeatures(ctx, toFeatures)
+			}
+		}
 	}
 }
 
@@ -9672,9 +10122,34 @@ type FlatSchema_SdkV2 struct {
 }
 
 func (to *FlatSchema_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FlatSchema_SdkV2) {
+	if !from.Fields.IsNull() && !from.Fields.IsUnknown() {
+		if toFields, ok := to.GetFields(ctx); ok {
+			if fromFields, ok := from.GetFields(ctx); ok {
+				// Recursively sync the fields of each Fields element by position.
+				for i := range toFields {
+					if i < len(fromFields) {
+						toFields[i].SyncFieldsDuringCreateOrUpdate(ctx, fromFields[i])
+					}
+				}
+				to.SetFields(ctx, toFields)
+			}
+		}
+	}
 }
 
 func (to *FlatSchema_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FlatSchema_SdkV2) {
+	if !from.Fields.IsNull() && !from.Fields.IsUnknown() {
+		if toFields, ok := to.GetFields(ctx); ok {
+			if fromFields, ok := from.GetFields(ctx); ok {
+				for i := range toFields {
+					if i < len(fromFields) {
+						toFields[i].SyncFieldsDuringRead(ctx, fromFields[i])
+					}
+				}
+				to.SetFields(ctx, toFields)
+			}
+		}
+	}
 }
 
 func (m FlatSchema_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9843,6 +10318,19 @@ func (to *Function_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ExtraParameters = from.ExtraParameters
 	}
+	if !from.ExtraParameters.IsNull() && !from.ExtraParameters.IsUnknown() {
+		if toExtraParameters, ok := to.GetExtraParameters(ctx); ok {
+			if fromExtraParameters, ok := from.GetExtraParameters(ctx); ok {
+				// Recursively sync the fields of each ExtraParameters element by position.
+				for i := range toExtraParameters {
+					if i < len(fromExtraParameters) {
+						toExtraParameters[i].SyncFieldsDuringCreateOrUpdate(ctx, fromExtraParameters[i])
+					}
+				}
+				to.SetExtraParameters(ctx, toExtraParameters)
+			}
+		}
+	}
 }
 
 func (to *Function_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Function_SdkV2) {
@@ -9867,6 +10355,18 @@ func (to *Function_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Functio
 		// If a user specified a non-Null, empty list for ExtraParameters, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ExtraParameters = from.ExtraParameters
+	}
+	if !from.ExtraParameters.IsNull() && !from.ExtraParameters.IsUnknown() {
+		if toExtraParameters, ok := to.GetExtraParameters(ctx); ok {
+			if fromExtraParameters, ok := from.GetExtraParameters(ctx); ok {
+				for i := range toExtraParameters {
+					if i < len(fromExtraParameters) {
+						toExtraParameters[i].SyncFieldsDuringRead(ctx, fromExtraParameters[i])
+					}
+				}
+				to.SetExtraParameters(ctx, toExtraParameters)
+			}
+		}
 	}
 }
 
@@ -10266,6 +10766,19 @@ func (to *GetExperimentPermissionLevelsResponse_SdkV2) SyncFieldsDuringCreateOrU
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
 	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				// Recursively sync the fields of each PermissionLevels element by position.
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
+	}
 }
 
 func (to *GetExperimentPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetExperimentPermissionLevelsResponse_SdkV2) {
@@ -10274,6 +10787,18 @@ func (to *GetExperimentPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx 
 		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
+	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringRead(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
 	}
 }
 
@@ -10970,6 +11495,19 @@ func (to *GetLatestVersionsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ModelVersions = from.ModelVersions
 	}
+	if !from.ModelVersions.IsNull() && !from.ModelVersions.IsUnknown() {
+		if toModelVersions, ok := to.GetModelVersions(ctx); ok {
+			if fromModelVersions, ok := from.GetModelVersions(ctx); ok {
+				// Recursively sync the fields of each ModelVersions element by position.
+				for i := range toModelVersions {
+					if i < len(fromModelVersions) {
+						toModelVersions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromModelVersions[i])
+					}
+				}
+				to.SetModelVersions(ctx, toModelVersions)
+			}
+		}
+	}
 }
 
 func (to *GetLatestVersionsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetLatestVersionsResponse_SdkV2) {
@@ -10978,6 +11516,18 @@ func (to *GetLatestVersionsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for ModelVersions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ModelVersions = from.ModelVersions
+	}
+	if !from.ModelVersions.IsNull() && !from.ModelVersions.IsUnknown() {
+		if toModelVersions, ok := to.GetModelVersions(ctx); ok {
+			if fromModelVersions, ok := from.GetModelVersions(ctx); ok {
+				for i := range toModelVersions {
+					if i < len(fromModelVersions) {
+						toModelVersions[i].SyncFieldsDuringRead(ctx, fromModelVersions[i])
+					}
+				}
+				to.SetModelVersions(ctx, toModelVersions)
+			}
+		}
 	}
 }
 
@@ -11259,6 +11809,19 @@ func (to *GetMetricHistoryResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Metrics = from.Metrics
 	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				// Recursively sync the fields of each Metrics element by position.
+				for i := range toMetrics {
+					if i < len(fromMetrics) {
+						toMetrics[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMetrics[i])
+					}
+				}
+				to.SetMetrics(ctx, toMetrics)
+			}
+		}
+	}
 }
 
 func (to *GetMetricHistoryResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetMetricHistoryResponse_SdkV2) {
@@ -11267,6 +11830,18 @@ func (to *GetMetricHistoryResponse_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 		// If a user specified a non-Null, empty list for Metrics, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Metrics = from.Metrics
+	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				for i := range toMetrics {
+					if i < len(fromMetrics) {
+						toMetrics[i].SyncFieldsDuringRead(ctx, fromMetrics[i])
+					}
+				}
+				to.SetMetrics(ctx, toMetrics)
+			}
+		}
 	}
 }
 
@@ -11840,6 +12415,19 @@ func (to *GetRegisteredModelPermissionLevelsResponse_SdkV2) SyncFieldsDuringCrea
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
 	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				// Recursively sync the fields of each PermissionLevels element by position.
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
+	}
 }
 
 func (to *GetRegisteredModelPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetRegisteredModelPermissionLevelsResponse_SdkV2) {
@@ -11848,6 +12436,18 @@ func (to *GetRegisteredModelPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead
 		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
+	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringRead(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
 	}
 }
 
@@ -13228,6 +13828,19 @@ func (to *KafkaSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.EntityColumnIdentifiers = from.EntityColumnIdentifiers
 	}
+	if !from.EntityColumnIdentifiers.IsNull() && !from.EntityColumnIdentifiers.IsUnknown() {
+		if toEntityColumnIdentifiers, ok := to.GetEntityColumnIdentifiers(ctx); ok {
+			if fromEntityColumnIdentifiers, ok := from.GetEntityColumnIdentifiers(ctx); ok {
+				// Recursively sync the fields of each EntityColumnIdentifiers element by position.
+				for i := range toEntityColumnIdentifiers {
+					if i < len(fromEntityColumnIdentifiers) {
+						toEntityColumnIdentifiers[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEntityColumnIdentifiers[i])
+					}
+				}
+				to.SetEntityColumnIdentifiers(ctx, toEntityColumnIdentifiers)
+			}
+		}
+	}
 	if !from.TimeseriesColumnIdentifier.IsNull() && !from.TimeseriesColumnIdentifier.IsUnknown() {
 		if toTimeseriesColumnIdentifier, ok := to.GetTimeseriesColumnIdentifier(ctx); ok {
 			if fromTimeseriesColumnIdentifier, ok := from.GetTimeseriesColumnIdentifier(ctx); ok {
@@ -13245,6 +13858,18 @@ func (to *KafkaSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Kafk
 		// If a user specified a non-Null, empty list for EntityColumnIdentifiers, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.EntityColumnIdentifiers = from.EntityColumnIdentifiers
+	}
+	if !from.EntityColumnIdentifiers.IsNull() && !from.EntityColumnIdentifiers.IsUnknown() {
+		if toEntityColumnIdentifiers, ok := to.GetEntityColumnIdentifiers(ctx); ok {
+			if fromEntityColumnIdentifiers, ok := from.GetEntityColumnIdentifiers(ctx); ok {
+				for i := range toEntityColumnIdentifiers {
+					if i < len(fromEntityColumnIdentifiers) {
+						toEntityColumnIdentifiers[i].SyncFieldsDuringRead(ctx, fromEntityColumnIdentifiers[i])
+					}
+				}
+				to.SetEntityColumnIdentifiers(ctx, toEntityColumnIdentifiers)
+			}
+		}
 	}
 	if !from.TimeseriesColumnIdentifier.IsNull() && !from.TimeseriesColumnIdentifier.IsUnknown() {
 		if toTimeseriesColumnIdentifier, ok := to.GetTimeseriesColumnIdentifier(ctx); ok {
@@ -14024,6 +14649,19 @@ func (to *ListArtifactsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Files = from.Files
 	}
+	if !from.Files.IsNull() && !from.Files.IsUnknown() {
+		if toFiles, ok := to.GetFiles(ctx); ok {
+			if fromFiles, ok := from.GetFiles(ctx); ok {
+				// Recursively sync the fields of each Files element by position.
+				for i := range toFiles {
+					if i < len(fromFiles) {
+						toFiles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromFiles[i])
+					}
+				}
+				to.SetFiles(ctx, toFiles)
+			}
+		}
+	}
 }
 
 func (to *ListArtifactsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListArtifactsResponse_SdkV2) {
@@ -14032,6 +14670,18 @@ func (to *ListArtifactsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 		// If a user specified a non-Null, empty list for Files, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Files = from.Files
+	}
+	if !from.Files.IsNull() && !from.Files.IsUnknown() {
+		if toFiles, ok := to.GetFiles(ctx); ok {
+			if fromFiles, ok := from.GetFiles(ctx); ok {
+				for i := range toFiles {
+					if i < len(fromFiles) {
+						toFiles[i].SyncFieldsDuringRead(ctx, fromFiles[i])
+					}
+				}
+				to.SetFiles(ctx, toFiles)
+			}
+		}
 	}
 }
 
@@ -14187,6 +14837,19 @@ func (to *ListExperimentsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Experiments = from.Experiments
 	}
+	if !from.Experiments.IsNull() && !from.Experiments.IsUnknown() {
+		if toExperiments, ok := to.GetExperiments(ctx); ok {
+			if fromExperiments, ok := from.GetExperiments(ctx); ok {
+				// Recursively sync the fields of each Experiments element by position.
+				for i := range toExperiments {
+					if i < len(fromExperiments) {
+						toExperiments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromExperiments[i])
+					}
+				}
+				to.SetExperiments(ctx, toExperiments)
+			}
+		}
+	}
 }
 
 func (to *ListExperimentsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListExperimentsResponse_SdkV2) {
@@ -14195,6 +14858,18 @@ func (to *ListExperimentsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 		// If a user specified a non-Null, empty list for Experiments, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Experiments = from.Experiments
+	}
+	if !from.Experiments.IsNull() && !from.Experiments.IsUnknown() {
+		if toExperiments, ok := to.GetExperiments(ctx); ok {
+			if fromExperiments, ok := from.GetExperiments(ctx); ok {
+				for i := range toExperiments {
+					if i < len(fromExperiments) {
+						toExperiments[i].SyncFieldsDuringRead(ctx, fromExperiments[i])
+					}
+				}
+				to.SetExperiments(ctx, toExperiments)
+			}
+		}
 	}
 }
 
@@ -14344,6 +15019,19 @@ func (to *ListFeatureTagsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FeatureTags = from.FeatureTags
 	}
+	if !from.FeatureTags.IsNull() && !from.FeatureTags.IsUnknown() {
+		if toFeatureTags, ok := to.GetFeatureTags(ctx); ok {
+			if fromFeatureTags, ok := from.GetFeatureTags(ctx); ok {
+				// Recursively sync the fields of each FeatureTags element by position.
+				for i := range toFeatureTags {
+					if i < len(fromFeatureTags) {
+						toFeatureTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromFeatureTags[i])
+					}
+				}
+				to.SetFeatureTags(ctx, toFeatureTags)
+			}
+		}
+	}
 }
 
 func (to *ListFeatureTagsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListFeatureTagsResponse_SdkV2) {
@@ -14352,6 +15040,18 @@ func (to *ListFeatureTagsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 		// If a user specified a non-Null, empty list for FeatureTags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FeatureTags = from.FeatureTags
+	}
+	if !from.FeatureTags.IsNull() && !from.FeatureTags.IsUnknown() {
+		if toFeatureTags, ok := to.GetFeatureTags(ctx); ok {
+			if fromFeatureTags, ok := from.GetFeatureTags(ctx); ok {
+				for i := range toFeatureTags {
+					if i < len(fromFeatureTags) {
+						toFeatureTags[i].SyncFieldsDuringRead(ctx, fromFeatureTags[i])
+					}
+				}
+				to.SetFeatureTags(ctx, toFeatureTags)
+			}
+		}
 	}
 }
 
@@ -14502,6 +15202,19 @@ func (to *ListFeaturesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Features = from.Features
 	}
+	if !from.Features.IsNull() && !from.Features.IsUnknown() {
+		if toFeatures, ok := to.GetFeatures(ctx); ok {
+			if fromFeatures, ok := from.GetFeatures(ctx); ok {
+				// Recursively sync the fields of each Features element by position.
+				for i := range toFeatures {
+					if i < len(fromFeatures) {
+						toFeatures[i].SyncFieldsDuringCreateOrUpdate(ctx, fromFeatures[i])
+					}
+				}
+				to.SetFeatures(ctx, toFeatures)
+			}
+		}
+	}
 }
 
 func (to *ListFeaturesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListFeaturesResponse_SdkV2) {
@@ -14510,6 +15223,18 @@ func (to *ListFeaturesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for Features, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Features = from.Features
+	}
+	if !from.Features.IsNull() && !from.Features.IsUnknown() {
+		if toFeatures, ok := to.GetFeatures(ctx); ok {
+			if fromFeatures, ok := from.GetFeatures(ctx); ok {
+				for i := range toFeatures {
+					if i < len(fromFeatures) {
+						toFeatures[i].SyncFieldsDuringRead(ctx, fromFeatures[i])
+					}
+				}
+				to.SetFeatures(ctx, toFeatures)
+			}
+		}
 	}
 }
 
@@ -14644,9 +15369,34 @@ type ListKafkaConfigsResponse_SdkV2 struct {
 }
 
 func (to *ListKafkaConfigsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListKafkaConfigsResponse_SdkV2) {
+	if !from.KafkaConfigs.IsNull() && !from.KafkaConfigs.IsUnknown() {
+		if toKafkaConfigs, ok := to.GetKafkaConfigs(ctx); ok {
+			if fromKafkaConfigs, ok := from.GetKafkaConfigs(ctx); ok {
+				// Recursively sync the fields of each KafkaConfigs element by position.
+				for i := range toKafkaConfigs {
+					if i < len(fromKafkaConfigs) {
+						toKafkaConfigs[i].SyncFieldsDuringCreateOrUpdate(ctx, fromKafkaConfigs[i])
+					}
+				}
+				to.SetKafkaConfigs(ctx, toKafkaConfigs)
+			}
+		}
+	}
 }
 
 func (to *ListKafkaConfigsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListKafkaConfigsResponse_SdkV2) {
+	if !from.KafkaConfigs.IsNull() && !from.KafkaConfigs.IsUnknown() {
+		if toKafkaConfigs, ok := to.GetKafkaConfigs(ctx); ok {
+			if fromKafkaConfigs, ok := from.GetKafkaConfigs(ctx); ok {
+				for i := range toKafkaConfigs {
+					if i < len(fromKafkaConfigs) {
+						toKafkaConfigs[i].SyncFieldsDuringRead(ctx, fromKafkaConfigs[i])
+					}
+				}
+				to.SetKafkaConfigs(ctx, toKafkaConfigs)
+			}
+		}
+	}
 }
 
 func (m ListKafkaConfigsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -14793,6 +15543,19 @@ func (to *ListMaterializedFeaturesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate
 		// set the resulting resource state to the empty list to match the planned value.
 		to.MaterializedFeatures = from.MaterializedFeatures
 	}
+	if !from.MaterializedFeatures.IsNull() && !from.MaterializedFeatures.IsUnknown() {
+		if toMaterializedFeatures, ok := to.GetMaterializedFeatures(ctx); ok {
+			if fromMaterializedFeatures, ok := from.GetMaterializedFeatures(ctx); ok {
+				// Recursively sync the fields of each MaterializedFeatures element by position.
+				for i := range toMaterializedFeatures {
+					if i < len(fromMaterializedFeatures) {
+						toMaterializedFeatures[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMaterializedFeatures[i])
+					}
+				}
+				to.SetMaterializedFeatures(ctx, toMaterializedFeatures)
+			}
+		}
+	}
 }
 
 func (to *ListMaterializedFeaturesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListMaterializedFeaturesResponse_SdkV2) {
@@ -14801,6 +15564,18 @@ func (to *ListMaterializedFeaturesResponse_SdkV2) SyncFieldsDuringRead(ctx conte
 		// If a user specified a non-Null, empty list for MaterializedFeatures, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.MaterializedFeatures = from.MaterializedFeatures
+	}
+	if !from.MaterializedFeatures.IsNull() && !from.MaterializedFeatures.IsUnknown() {
+		if toMaterializedFeatures, ok := to.GetMaterializedFeatures(ctx); ok {
+			if fromMaterializedFeatures, ok := from.GetMaterializedFeatures(ctx); ok {
+				for i := range toMaterializedFeatures {
+					if i < len(fromMaterializedFeatures) {
+						toMaterializedFeatures[i].SyncFieldsDuringRead(ctx, fromMaterializedFeatures[i])
+					}
+				}
+				to.SetMaterializedFeatures(ctx, toMaterializedFeatures)
+			}
+		}
 	}
 }
 
@@ -14941,6 +15716,19 @@ func (to *ListModelsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RegisteredModels = from.RegisteredModels
 	}
+	if !from.RegisteredModels.IsNull() && !from.RegisteredModels.IsUnknown() {
+		if toRegisteredModels, ok := to.GetRegisteredModels(ctx); ok {
+			if fromRegisteredModels, ok := from.GetRegisteredModels(ctx); ok {
+				// Recursively sync the fields of each RegisteredModels element by position.
+				for i := range toRegisteredModels {
+					if i < len(fromRegisteredModels) {
+						toRegisteredModels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRegisteredModels[i])
+					}
+				}
+				to.SetRegisteredModels(ctx, toRegisteredModels)
+			}
+		}
+	}
 }
 
 func (to *ListModelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListModelsResponse_SdkV2) {
@@ -14949,6 +15737,18 @@ func (to *ListModelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 		// If a user specified a non-Null, empty list for RegisteredModels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RegisteredModels = from.RegisteredModels
+	}
+	if !from.RegisteredModels.IsNull() && !from.RegisteredModels.IsUnknown() {
+		if toRegisteredModels, ok := to.GetRegisteredModels(ctx); ok {
+			if fromRegisteredModels, ok := from.GetRegisteredModels(ctx); ok {
+				for i := range toRegisteredModels {
+					if i < len(fromRegisteredModels) {
+						toRegisteredModels[i].SyncFieldsDuringRead(ctx, fromRegisteredModels[i])
+					}
+				}
+				to.SetRegisteredModels(ctx, toRegisteredModels)
+			}
+		}
 	}
 }
 
@@ -15090,6 +15890,19 @@ func (to *ListOnlineStoresResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnlineStores = from.OnlineStores
 	}
+	if !from.OnlineStores.IsNull() && !from.OnlineStores.IsUnknown() {
+		if toOnlineStores, ok := to.GetOnlineStores(ctx); ok {
+			if fromOnlineStores, ok := from.GetOnlineStores(ctx); ok {
+				// Recursively sync the fields of each OnlineStores element by position.
+				for i := range toOnlineStores {
+					if i < len(fromOnlineStores) {
+						toOnlineStores[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOnlineStores[i])
+					}
+				}
+				to.SetOnlineStores(ctx, toOnlineStores)
+			}
+		}
+	}
 }
 
 func (to *ListOnlineStoresResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListOnlineStoresResponse_SdkV2) {
@@ -15098,6 +15911,18 @@ func (to *ListOnlineStoresResponse_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 		// If a user specified a non-Null, empty list for OnlineStores, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnlineStores = from.OnlineStores
+	}
+	if !from.OnlineStores.IsNull() && !from.OnlineStores.IsUnknown() {
+		if toOnlineStores, ok := to.GetOnlineStores(ctx); ok {
+			if fromOnlineStores, ok := from.GetOnlineStores(ctx); ok {
+				for i := range toOnlineStores {
+					if i < len(fromOnlineStores) {
+						toOnlineStores[i].SyncFieldsDuringRead(ctx, fromOnlineStores[i])
+					}
+				}
+				to.SetOnlineStores(ctx, toOnlineStores)
+			}
+		}
 	}
 }
 
@@ -15185,6 +16010,19 @@ func (to *ListRegistryWebhooks_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Webhooks = from.Webhooks
 	}
+	if !from.Webhooks.IsNull() && !from.Webhooks.IsUnknown() {
+		if toWebhooks, ok := to.GetWebhooks(ctx); ok {
+			if fromWebhooks, ok := from.GetWebhooks(ctx); ok {
+				// Recursively sync the fields of each Webhooks element by position.
+				for i := range toWebhooks {
+					if i < len(fromWebhooks) {
+						toWebhooks[i].SyncFieldsDuringCreateOrUpdate(ctx, fromWebhooks[i])
+					}
+				}
+				to.SetWebhooks(ctx, toWebhooks)
+			}
+		}
+	}
 }
 
 func (to *ListRegistryWebhooks_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListRegistryWebhooks_SdkV2) {
@@ -15193,6 +16031,18 @@ func (to *ListRegistryWebhooks_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for Webhooks, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Webhooks = from.Webhooks
+	}
+	if !from.Webhooks.IsNull() && !from.Webhooks.IsUnknown() {
+		if toWebhooks, ok := to.GetWebhooks(ctx); ok {
+			if fromWebhooks, ok := from.GetWebhooks(ctx); ok {
+				for i := range toWebhooks {
+					if i < len(fromWebhooks) {
+						toWebhooks[i].SyncFieldsDuringRead(ctx, fromWebhooks[i])
+					}
+				}
+				to.SetWebhooks(ctx, toWebhooks)
+			}
+		}
 	}
 }
 
@@ -15346,6 +16196,19 @@ func (to *ListStreamsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Streams = from.Streams
 	}
+	if !from.Streams.IsNull() && !from.Streams.IsUnknown() {
+		if toStreams, ok := to.GetStreams(ctx); ok {
+			if fromStreams, ok := from.GetStreams(ctx); ok {
+				// Recursively sync the fields of each Streams element by position.
+				for i := range toStreams {
+					if i < len(fromStreams) {
+						toStreams[i].SyncFieldsDuringCreateOrUpdate(ctx, fromStreams[i])
+					}
+				}
+				to.SetStreams(ctx, toStreams)
+			}
+		}
+	}
 }
 
 func (to *ListStreamsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListStreamsResponse_SdkV2) {
@@ -15354,6 +16217,18 @@ func (to *ListStreamsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 		// If a user specified a non-Null, empty list for Streams, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Streams = from.Streams
+	}
+	if !from.Streams.IsNull() && !from.Streams.IsUnknown() {
+		if toStreams, ok := to.GetStreams(ctx); ok {
+			if fromStreams, ok := from.GetStreams(ctx); ok {
+				for i := range toStreams {
+					if i < len(fromStreams) {
+						toStreams[i].SyncFieldsDuringRead(ctx, fromStreams[i])
+					}
+				}
+				to.SetStreams(ctx, toStreams)
+			}
+		}
 	}
 }
 
@@ -15492,6 +16367,19 @@ func (to *ListTransitionRequestsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Requests = from.Requests
 	}
+	if !from.Requests.IsNull() && !from.Requests.IsUnknown() {
+		if toRequests, ok := to.GetRequests(ctx); ok {
+			if fromRequests, ok := from.GetRequests(ctx); ok {
+				// Recursively sync the fields of each Requests element by position.
+				for i := range toRequests {
+					if i < len(fromRequests) {
+						toRequests[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRequests[i])
+					}
+				}
+				to.SetRequests(ctx, toRequests)
+			}
+		}
+	}
 }
 
 func (to *ListTransitionRequestsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListTransitionRequestsResponse_SdkV2) {
@@ -15500,6 +16388,18 @@ func (to *ListTransitionRequestsResponse_SdkV2) SyncFieldsDuringRead(ctx context
 		// If a user specified a non-Null, empty list for Requests, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Requests = from.Requests
+	}
+	if !from.Requests.IsNull() && !from.Requests.IsUnknown() {
+		if toRequests, ok := to.GetRequests(ctx); ok {
+			if fromRequests, ok := from.GetRequests(ctx); ok {
+				for i := range toRequests {
+					if i < len(fromRequests) {
+						toRequests[i].SyncFieldsDuringRead(ctx, fromRequests[i])
+					}
+				}
+				to.SetRequests(ctx, toRequests)
+			}
+		}
 	}
 }
 
@@ -15733,17 +16633,56 @@ func (to *LogBatch_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Metrics = from.Metrics
 	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				// Recursively sync the fields of each Metrics element by position.
+				for i := range toMetrics {
+					if i < len(fromMetrics) {
+						toMetrics[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMetrics[i])
+					}
+				}
+				to.SetMetrics(ctx, toMetrics)
+			}
+		}
+	}
 	if !from.Params.IsNull() && !from.Params.IsUnknown() && to.Params.IsNull() && len(from.Params.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Params, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
 	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				// Recursively sync the fields of each Params element by position.
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringCreateOrUpdate(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -15754,17 +16693,53 @@ func (to *LogBatch_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LogBatc
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Metrics = from.Metrics
 	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				for i := range toMetrics {
+					if i < len(fromMetrics) {
+						toMetrics[i].SyncFieldsDuringRead(ctx, fromMetrics[i])
+					}
+				}
+				to.SetMetrics(ctx, toMetrics)
+			}
+		}
+	}
 	if !from.Params.IsNull() && !from.Params.IsUnknown() && to.Params.IsNull() && len(from.Params.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Params, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
 	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringRead(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -15959,11 +16934,37 @@ func (to *LogInputs_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Datasets = from.Datasets
 	}
+	if !from.Datasets.IsNull() && !from.Datasets.IsUnknown() {
+		if toDatasets, ok := to.GetDatasets(ctx); ok {
+			if fromDatasets, ok := from.GetDatasets(ctx); ok {
+				// Recursively sync the fields of each Datasets element by position.
+				for i := range toDatasets {
+					if i < len(fromDatasets) {
+						toDatasets[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDatasets[i])
+					}
+				}
+				to.SetDatasets(ctx, toDatasets)
+			}
+		}
+	}
 	if !from.Models.IsNull() && !from.Models.IsUnknown() && to.Models.IsNull() && len(from.Models.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Models, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Models = from.Models
+	}
+	if !from.Models.IsNull() && !from.Models.IsUnknown() {
+		if toModels, ok := to.GetModels(ctx); ok {
+			if fromModels, ok := from.GetModels(ctx); ok {
+				// Recursively sync the fields of each Models element by position.
+				for i := range toModels {
+					if i < len(fromModels) {
+						toModels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromModels[i])
+					}
+				}
+				to.SetModels(ctx, toModels)
+			}
+		}
 	}
 }
 
@@ -15974,11 +16975,35 @@ func (to *LogInputs_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LogInp
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Datasets = from.Datasets
 	}
+	if !from.Datasets.IsNull() && !from.Datasets.IsUnknown() {
+		if toDatasets, ok := to.GetDatasets(ctx); ok {
+			if fromDatasets, ok := from.GetDatasets(ctx); ok {
+				for i := range toDatasets {
+					if i < len(fromDatasets) {
+						toDatasets[i].SyncFieldsDuringRead(ctx, fromDatasets[i])
+					}
+				}
+				to.SetDatasets(ctx, toDatasets)
+			}
+		}
+	}
 	if !from.Models.IsNull() && !from.Models.IsUnknown() && to.Models.IsNull() && len(from.Models.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Models, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Models = from.Models
+	}
+	if !from.Models.IsNull() && !from.Models.IsUnknown() {
+		if toModels, ok := to.GetModels(ctx); ok {
+			if fromModels, ok := from.GetModels(ctx); ok {
+				for i := range toModels {
+					if i < len(fromModels) {
+						toModels[i].SyncFieldsDuringRead(ctx, fromModels[i])
+					}
+				}
+				to.SetModels(ctx, toModels)
+			}
+		}
 	}
 }
 
@@ -16139,6 +17164,19 @@ func (to *LogLoggedModelParamsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
 	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				// Recursively sync the fields of each Params element by position.
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringCreateOrUpdate(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
+	}
 }
 
 func (to *LogLoggedModelParamsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LogLoggedModelParamsRequest_SdkV2) {
@@ -16147,6 +17185,18 @@ func (to *LogLoggedModelParamsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Co
 		// If a user specified a non-Null, empty list for Params, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
+	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringRead(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
 	}
 }
 
@@ -16502,6 +17552,19 @@ func (to *LogOutputsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Models = from.Models
 	}
+	if !from.Models.IsNull() && !from.Models.IsUnknown() {
+		if toModels, ok := to.GetModels(ctx); ok {
+			if fromModels, ok := from.GetModels(ctx); ok {
+				// Recursively sync the fields of each Models element by position.
+				for i := range toModels {
+					if i < len(fromModels) {
+						toModels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromModels[i])
+					}
+				}
+				to.SetModels(ctx, toModels)
+			}
+		}
+	}
 }
 
 func (to *LogOutputsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LogOutputsRequest_SdkV2) {
@@ -16510,6 +17573,18 @@ func (to *LogOutputsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 		// If a user specified a non-Null, empty list for Models, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Models = from.Models
+	}
+	if !from.Models.IsNull() && !from.Models.IsUnknown() {
+		if toModels, ok := to.GetModels(ctx); ok {
+			if fromModels, ok := from.GetModels(ctx); ok {
+				for i := range toModels {
+					if i < len(fromModels) {
+						toModels[i].SyncFieldsDuringRead(ctx, fromModels[i])
+					}
+				}
+				to.SetModels(ctx, toModels)
+			}
+		}
 	}
 }
 
@@ -16894,11 +17969,37 @@ func (to *LoggedModelData_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Metrics = from.Metrics
 	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				// Recursively sync the fields of each Metrics element by position.
+				for i := range toMetrics {
+					if i < len(fromMetrics) {
+						toMetrics[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMetrics[i])
+					}
+				}
+				to.SetMetrics(ctx, toMetrics)
+			}
+		}
+	}
 	if !from.Params.IsNull() && !from.Params.IsUnknown() && to.Params.IsNull() && len(from.Params.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Params, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
+	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				// Recursively sync the fields of each Params element by position.
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringCreateOrUpdate(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
 	}
 }
 
@@ -16909,11 +18010,35 @@ func (to *LoggedModelData_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Metrics = from.Metrics
 	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				for i := range toMetrics {
+					if i < len(fromMetrics) {
+						toMetrics[i].SyncFieldsDuringRead(ctx, fromMetrics[i])
+					}
+				}
+				to.SetMetrics(ctx, toMetrics)
+			}
+		}
+	}
 	if !from.Params.IsNull() && !from.Params.IsUnknown() && to.Params.IsNull() && len(from.Params.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Params, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
+	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringRead(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
 	}
 }
 
@@ -17054,6 +18179,19 @@ func (to *LoggedModelInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 }
 
 func (to *LoggedModelInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LoggedModelInfo_SdkV2) {
@@ -17062,6 +18200,18 @@ func (to *LoggedModelInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -17269,70 +18419,6 @@ func (m LoggedModelTag_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"key":   types.StringType,
 			"value": types.StringType,
-		},
-	}
-}
-
-// A long (multi-day) rolling window served via the hybrid batch + streaming
-// path. The batch pipeline maintains daily partial aggregates for the bulk of
-// the window while the streaming pipeline maintains the most recent day(s), and
-// serving merges them on read. Distinct from RollingWindow so the control plane
-// can explicitly identify long rolling window features rather than inferring
-// hybrid behavior from window_duration.
-type LongRollingWindow_SdkV2 struct {
-	// The delay applied to the end of the rolling window (must be
-	// non-negative). For example, delay=1d shifts the window end 1 day before
-	// the evaluation time.
-	Delay timetypes.GoDuration `tfsdk:"delay"`
-	// The duration of the rolling window. Must be positive and span more than
-	// two days, so that both the batch (N-1 day) and stale-path (N-2 day)
-	// partial aggregates are well defined. The duration need not be a whole
-	// number of days (e.g. 3 days 15 minutes is allowed).
-	WindowDuration timetypes.GoDuration `tfsdk:"window_duration"`
-}
-
-func (to *LongRollingWindow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LongRollingWindow_SdkV2) {
-}
-
-func (to *LongRollingWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LongRollingWindow_SdkV2) {
-}
-
-func (m LongRollingWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["delay"] = attrs["delay"].SetOptional()
-	attrs["window_duration"] = attrs["window_duration"].SetRequired()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in LongRollingWindow.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (m LongRollingWindow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, LongRollingWindow_SdkV2
-// only implements ToObjectValue() and Type().
-func (m LongRollingWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"delay":           m.Delay,
-			"window_duration": m.WindowDuration,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (m LongRollingWindow_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"delay":           timetypes.GoDuration{}.Type(ctx),
-			"window_duration": timetypes.GoDuration{}.Type(ctx),
 		},
 	}
 }
@@ -17901,11 +18987,37 @@ func (to *Model_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.LatestVersions = from.LatestVersions
 	}
+	if !from.LatestVersions.IsNull() && !from.LatestVersions.IsUnknown() {
+		if toLatestVersions, ok := to.GetLatestVersions(ctx); ok {
+			if fromLatestVersions, ok := from.GetLatestVersions(ctx); ok {
+				// Recursively sync the fields of each LatestVersions element by position.
+				for i := range toLatestVersions {
+					if i < len(fromLatestVersions) {
+						toLatestVersions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromLatestVersions[i])
+					}
+				}
+				to.SetLatestVersions(ctx, toLatestVersions)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -17916,11 +19028,35 @@ func (to *Model_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Model_SdkV
 		// set the resulting resource state to the empty list to match the planned value.
 		to.LatestVersions = from.LatestVersions
 	}
+	if !from.LatestVersions.IsNull() && !from.LatestVersions.IsUnknown() {
+		if toLatestVersions, ok := to.GetLatestVersions(ctx); ok {
+			if fromLatestVersions, ok := from.GetLatestVersions(ctx); ok {
+				for i := range toLatestVersions {
+					if i < len(fromLatestVersions) {
+						toLatestVersions[i].SyncFieldsDuringRead(ctx, fromLatestVersions[i])
+					}
+				}
+				to.SetLatestVersions(ctx, toLatestVersions)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -18066,11 +19202,37 @@ func (to *ModelDatabricks_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.LatestVersions = from.LatestVersions
 	}
+	if !from.LatestVersions.IsNull() && !from.LatestVersions.IsUnknown() {
+		if toLatestVersions, ok := to.GetLatestVersions(ctx); ok {
+			if fromLatestVersions, ok := from.GetLatestVersions(ctx); ok {
+				// Recursively sync the fields of each LatestVersions element by position.
+				for i := range toLatestVersions {
+					if i < len(fromLatestVersions) {
+						toLatestVersions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromLatestVersions[i])
+					}
+				}
+				to.SetLatestVersions(ctx, toLatestVersions)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -18081,11 +19243,35 @@ func (to *ModelDatabricks_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.LatestVersions = from.LatestVersions
 	}
+	if !from.LatestVersions.IsNull() && !from.LatestVersions.IsUnknown() {
+		if toLatestVersions, ok := to.GetLatestVersions(ctx); ok {
+			if fromLatestVersions, ok := from.GetLatestVersions(ctx); ok {
+				for i := range toLatestVersions {
+					if i < len(fromLatestVersions) {
+						toLatestVersions[i].SyncFieldsDuringRead(ctx, fromLatestVersions[i])
+					}
+				}
+				to.SetLatestVersions(ctx, toLatestVersions)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -18405,6 +19591,19 @@ func (to *ModelVersion_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 }
 
 func (to *ModelVersion_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ModelVersion_SdkV2) {
@@ -18413,6 +19612,18 @@ func (to *ModelVersion_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Mod
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -18580,11 +19791,37 @@ func (to *ModelVersionDatabricks_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OpenRequests = from.OpenRequests
 	}
+	if !from.OpenRequests.IsNull() && !from.OpenRequests.IsUnknown() {
+		if toOpenRequests, ok := to.GetOpenRequests(ctx); ok {
+			if fromOpenRequests, ok := from.GetOpenRequests(ctx); ok {
+				// Recursively sync the fields of each OpenRequests element by position.
+				for i := range toOpenRequests {
+					if i < len(fromOpenRequests) {
+						toOpenRequests[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOpenRequests[i])
+					}
+				}
+				to.SetOpenRequests(ctx, toOpenRequests)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -18603,11 +19840,35 @@ func (to *ModelVersionDatabricks_SdkV2) SyncFieldsDuringRead(ctx context.Context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OpenRequests = from.OpenRequests
 	}
+	if !from.OpenRequests.IsNull() && !from.OpenRequests.IsUnknown() {
+		if toOpenRequests, ok := to.GetOpenRequests(ctx); ok {
+			if fromOpenRequests, ok := from.GetOpenRequests(ctx); ok {
+				for i := range toOpenRequests {
+					if i < len(fromOpenRequests) {
+						toOpenRequests[i].SyncFieldsDuringRead(ctx, fromOpenRequests[i])
+					}
+				}
+				to.SetOpenRequests(ctx, toOpenRequests)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -19705,6 +20966,19 @@ func (to *RegisteredModelAccessControlResponse_SdkV2) SyncFieldsDuringCreateOrUp
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
 	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				// Recursively sync the fields of each AllPermissions element by position.
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
+	}
 }
 
 func (to *RegisteredModelAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RegisteredModelAccessControlResponse_SdkV2) {
@@ -19713,6 +20987,18 @@ func (to *RegisteredModelAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx c
 		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
+	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringRead(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
 	}
 }
 
@@ -19909,6 +21195,19 @@ func (to *RegisteredModelPermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *RegisteredModelPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RegisteredModelPermissions_SdkV2) {
@@ -19917,6 +21216,18 @@ func (to *RegisteredModelPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Con
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -20058,6 +21369,19 @@ func (to *RegisteredModelPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdat
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *RegisteredModelPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RegisteredModelPermissionsRequest_SdkV2) {
@@ -20066,6 +21390,18 @@ func (to *RegisteredModelPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx cont
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -21105,7 +22441,8 @@ type RollingWindow_SdkV2 struct {
 	// non-negative). For example, delay=1d shifts the window end 1 day before
 	// the evaluation time.
 	Delay timetypes.GoDuration `tfsdk:"delay"`
-	// The duration of the rolling window (must be positive).
+	// The duration of the rolling window. Must be positive when set; absent
+	// means lifetime (aggregate over the entity's entire history).
 	WindowDuration timetypes.GoDuration `tfsdk:"window_duration"`
 }
 
@@ -21117,7 +22454,7 @@ func (to *RollingWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Ro
 
 func (m RollingWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["delay"] = attrs["delay"].SetOptional()
-	attrs["window_duration"] = attrs["window_duration"].SetRequired()
+	attrs["window_duration"] = attrs["window_duration"].SetOptional()
 
 	return attrs
 }
@@ -21373,17 +22710,56 @@ func (to *RunData_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Metrics = from.Metrics
 	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				// Recursively sync the fields of each Metrics element by position.
+				for i := range toMetrics {
+					if i < len(fromMetrics) {
+						toMetrics[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMetrics[i])
+					}
+				}
+				to.SetMetrics(ctx, toMetrics)
+			}
+		}
+	}
 	if !from.Params.IsNull() && !from.Params.IsUnknown() && to.Params.IsNull() && len(from.Params.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Params, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
 	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				// Recursively sync the fields of each Params element by position.
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringCreateOrUpdate(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -21394,17 +22770,53 @@ func (to *RunData_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunData_
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Metrics = from.Metrics
 	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				for i := range toMetrics {
+					if i < len(fromMetrics) {
+						toMetrics[i].SyncFieldsDuringRead(ctx, fromMetrics[i])
+					}
+				}
+				to.SetMetrics(ctx, toMetrics)
+			}
+		}
+	}
 	if !from.Params.IsNull() && !from.Params.IsUnknown() && to.Params.IsNull() && len(from.Params.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Params, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
 	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringRead(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -21654,11 +23066,37 @@ func (to *RunInputs_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 		// set the resulting resource state to the empty list to match the planned value.
 		to.DatasetInputs = from.DatasetInputs
 	}
+	if !from.DatasetInputs.IsNull() && !from.DatasetInputs.IsUnknown() {
+		if toDatasetInputs, ok := to.GetDatasetInputs(ctx); ok {
+			if fromDatasetInputs, ok := from.GetDatasetInputs(ctx); ok {
+				// Recursively sync the fields of each DatasetInputs element by position.
+				for i := range toDatasetInputs {
+					if i < len(fromDatasetInputs) {
+						toDatasetInputs[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDatasetInputs[i])
+					}
+				}
+				to.SetDatasetInputs(ctx, toDatasetInputs)
+			}
+		}
+	}
 	if !from.ModelInputs.IsNull() && !from.ModelInputs.IsUnknown() && to.ModelInputs.IsNull() && len(from.ModelInputs.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ModelInputs, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ModelInputs = from.ModelInputs
+	}
+	if !from.ModelInputs.IsNull() && !from.ModelInputs.IsUnknown() {
+		if toModelInputs, ok := to.GetModelInputs(ctx); ok {
+			if fromModelInputs, ok := from.GetModelInputs(ctx); ok {
+				// Recursively sync the fields of each ModelInputs element by position.
+				for i := range toModelInputs {
+					if i < len(fromModelInputs) {
+						toModelInputs[i].SyncFieldsDuringCreateOrUpdate(ctx, fromModelInputs[i])
+					}
+				}
+				to.SetModelInputs(ctx, toModelInputs)
+			}
+		}
 	}
 }
 
@@ -21669,11 +23107,35 @@ func (to *RunInputs_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunInp
 		// set the resulting resource state to the empty list to match the planned value.
 		to.DatasetInputs = from.DatasetInputs
 	}
+	if !from.DatasetInputs.IsNull() && !from.DatasetInputs.IsUnknown() {
+		if toDatasetInputs, ok := to.GetDatasetInputs(ctx); ok {
+			if fromDatasetInputs, ok := from.GetDatasetInputs(ctx); ok {
+				for i := range toDatasetInputs {
+					if i < len(fromDatasetInputs) {
+						toDatasetInputs[i].SyncFieldsDuringRead(ctx, fromDatasetInputs[i])
+					}
+				}
+				to.SetDatasetInputs(ctx, toDatasetInputs)
+			}
+		}
+	}
 	if !from.ModelInputs.IsNull() && !from.ModelInputs.IsUnknown() && to.ModelInputs.IsNull() && len(from.ModelInputs.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ModelInputs, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ModelInputs = from.ModelInputs
+	}
+	if !from.ModelInputs.IsNull() && !from.ModelInputs.IsUnknown() {
+		if toModelInputs, ok := to.GetModelInputs(ctx); ok {
+			if fromModelInputs, ok := from.GetModelInputs(ctx); ok {
+				for i := range toModelInputs {
+					if i < len(fromModelInputs) {
+						toModelInputs[i].SyncFieldsDuringRead(ctx, fromModelInputs[i])
+					}
+				}
+				to.SetModelInputs(ctx, toModelInputs)
+			}
+		}
 	}
 }
 
@@ -21826,6 +23288,70 @@ func (m RunTag_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"key":   types.StringType,
 			"value": types.StringType,
+		},
+	}
+}
+
+// A sawtooth window served via the hybrid batch + streaming path. The batch
+// pipeline maintains daily partial aggregates for the bulk of the window while
+// the streaming pipeline maintains the most recent day(s), and serving merges
+// them on read. Same field shape as RollingWindow, but a distinct type so the
+// control plane can explicitly identify hybrid (sawtooth) features rather than
+// inferring hybrid behavior from window_duration.
+type SawtoothWindow_SdkV2 struct {
+	// The delay applied to the end of the window (must be non-negative). For
+	// example, delay=1d shifts the window end 1 day before the evaluation time.
+	Delay timetypes.GoDuration `tfsdk:"delay"`
+	// The duration of the window. Must be positive and span more than two days
+	// when set, so that both the batch (N-1 day) and stale-path (N-2 day)
+	// partial aggregates are well defined. The duration need not be a whole
+	// number of days (e.g. 3 days 15 minutes is allowed). Absent means lifetime
+	// (aggregate over the entity's entire history).
+	WindowDuration timetypes.GoDuration `tfsdk:"window_duration"`
+}
+
+func (to *SawtoothWindow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SawtoothWindow_SdkV2) {
+}
+
+func (to *SawtoothWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SawtoothWindow_SdkV2) {
+}
+
+func (m SawtoothWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delay"] = attrs["delay"].SetOptional()
+	attrs["window_duration"] = attrs["window_duration"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SawtoothWindow.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SawtoothWindow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SawtoothWindow_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SawtoothWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"delay":           m.Delay,
+			"window_duration": m.WindowDuration,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SawtoothWindow_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"delay":           timetypes.GoDuration{}.Type(ctx),
+			"window_duration": timetypes.GoDuration{}.Type(ctx),
 		},
 	}
 }
@@ -22068,6 +23594,19 @@ func (to *SearchExperimentsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Experiments = from.Experiments
 	}
+	if !from.Experiments.IsNull() && !from.Experiments.IsUnknown() {
+		if toExperiments, ok := to.GetExperiments(ctx); ok {
+			if fromExperiments, ok := from.GetExperiments(ctx); ok {
+				// Recursively sync the fields of each Experiments element by position.
+				for i := range toExperiments {
+					if i < len(fromExperiments) {
+						toExperiments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromExperiments[i])
+					}
+				}
+				to.SetExperiments(ctx, toExperiments)
+			}
+		}
+	}
 }
 
 func (to *SearchExperimentsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SearchExperimentsResponse_SdkV2) {
@@ -22076,6 +23615,18 @@ func (to *SearchExperimentsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for Experiments, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Experiments = from.Experiments
+	}
+	if !from.Experiments.IsNull() && !from.Experiments.IsUnknown() {
+		if toExperiments, ok := to.GetExperiments(ctx); ok {
+			if fromExperiments, ok := from.GetExperiments(ctx); ok {
+				for i := range toExperiments {
+					if i < len(fromExperiments) {
+						toExperiments[i].SyncFieldsDuringRead(ctx, fromExperiments[i])
+					}
+				}
+				to.SetExperiments(ctx, toExperiments)
+			}
+		}
 	}
 }
 
@@ -22303,6 +23854,19 @@ func (to *SearchLoggedModelsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Datasets = from.Datasets
 	}
+	if !from.Datasets.IsNull() && !from.Datasets.IsUnknown() {
+		if toDatasets, ok := to.GetDatasets(ctx); ok {
+			if fromDatasets, ok := from.GetDatasets(ctx); ok {
+				// Recursively sync the fields of each Datasets element by position.
+				for i := range toDatasets {
+					if i < len(fromDatasets) {
+						toDatasets[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDatasets[i])
+					}
+				}
+				to.SetDatasets(ctx, toDatasets)
+			}
+		}
+	}
 	if !from.ExperimentIds.IsNull() && !from.ExperimentIds.IsUnknown() && to.ExperimentIds.IsNull() && len(from.ExperimentIds.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ExperimentIds, and the deserialized field value is Null,
@@ -22314,6 +23878,19 @@ func (to *SearchLoggedModelsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// If a user specified a non-Null, empty list for OrderBy, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OrderBy = from.OrderBy
+	}
+	if !from.OrderBy.IsNull() && !from.OrderBy.IsUnknown() {
+		if toOrderBy, ok := to.GetOrderBy(ctx); ok {
+			if fromOrderBy, ok := from.GetOrderBy(ctx); ok {
+				// Recursively sync the fields of each OrderBy element by position.
+				for i := range toOrderBy {
+					if i < len(fromOrderBy) {
+						toOrderBy[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOrderBy[i])
+					}
+				}
+				to.SetOrderBy(ctx, toOrderBy)
+			}
+		}
 	}
 }
 
@@ -22324,6 +23901,18 @@ func (to *SearchLoggedModelsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Datasets = from.Datasets
 	}
+	if !from.Datasets.IsNull() && !from.Datasets.IsUnknown() {
+		if toDatasets, ok := to.GetDatasets(ctx); ok {
+			if fromDatasets, ok := from.GetDatasets(ctx); ok {
+				for i := range toDatasets {
+					if i < len(fromDatasets) {
+						toDatasets[i].SyncFieldsDuringRead(ctx, fromDatasets[i])
+					}
+				}
+				to.SetDatasets(ctx, toDatasets)
+			}
+		}
+	}
 	if !from.ExperimentIds.IsNull() && !from.ExperimentIds.IsUnknown() && to.ExperimentIds.IsNull() && len(from.ExperimentIds.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ExperimentIds, and the deserialized field value is Null,
@@ -22335,6 +23924,18 @@ func (to *SearchLoggedModelsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for OrderBy, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OrderBy = from.OrderBy
+	}
+	if !from.OrderBy.IsNull() && !from.OrderBy.IsUnknown() {
+		if toOrderBy, ok := to.GetOrderBy(ctx); ok {
+			if fromOrderBy, ok := from.GetOrderBy(ctx); ok {
+				for i := range toOrderBy {
+					if i < len(fromOrderBy) {
+						toOrderBy[i].SyncFieldsDuringRead(ctx, fromOrderBy[i])
+					}
+				}
+				to.SetOrderBy(ctx, toOrderBy)
+			}
+		}
 	}
 }
 
@@ -22492,6 +24093,19 @@ func (to *SearchLoggedModelsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Models = from.Models
 	}
+	if !from.Models.IsNull() && !from.Models.IsUnknown() {
+		if toModels, ok := to.GetModels(ctx); ok {
+			if fromModels, ok := from.GetModels(ctx); ok {
+				// Recursively sync the fields of each Models element by position.
+				for i := range toModels {
+					if i < len(fromModels) {
+						toModels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromModels[i])
+					}
+				}
+				to.SetModels(ctx, toModels)
+			}
+		}
+	}
 }
 
 func (to *SearchLoggedModelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SearchLoggedModelsResponse_SdkV2) {
@@ -22500,6 +24114,18 @@ func (to *SearchLoggedModelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Con
 		// If a user specified a non-Null, empty list for Models, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Models = from.Models
+	}
+	if !from.Models.IsNull() && !from.Models.IsUnknown() {
+		if toModels, ok := to.GetModels(ctx); ok {
+			if fromModels, ok := from.GetModels(ctx); ok {
+				for i := range toModels {
+					if i < len(fromModels) {
+						toModels[i].SyncFieldsDuringRead(ctx, fromModels[i])
+					}
+				}
+				to.SetModels(ctx, toModels)
+			}
+		}
 	}
 }
 
@@ -22697,6 +24323,19 @@ func (to *SearchModelVersionsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ModelVersions = from.ModelVersions
 	}
+	if !from.ModelVersions.IsNull() && !from.ModelVersions.IsUnknown() {
+		if toModelVersions, ok := to.GetModelVersions(ctx); ok {
+			if fromModelVersions, ok := from.GetModelVersions(ctx); ok {
+				// Recursively sync the fields of each ModelVersions element by position.
+				for i := range toModelVersions {
+					if i < len(fromModelVersions) {
+						toModelVersions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromModelVersions[i])
+					}
+				}
+				to.SetModelVersions(ctx, toModelVersions)
+			}
+		}
+	}
 }
 
 func (to *SearchModelVersionsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SearchModelVersionsResponse_SdkV2) {
@@ -22705,6 +24344,18 @@ func (to *SearchModelVersionsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Co
 		// If a user specified a non-Null, empty list for ModelVersions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ModelVersions = from.ModelVersions
+	}
+	if !from.ModelVersions.IsNull() && !from.ModelVersions.IsUnknown() {
+		if toModelVersions, ok := to.GetModelVersions(ctx); ok {
+			if fromModelVersions, ok := from.GetModelVersions(ctx); ok {
+				for i := range toModelVersions {
+					if i < len(fromModelVersions) {
+						toModelVersions[i].SyncFieldsDuringRead(ctx, fromModelVersions[i])
+					}
+				}
+				to.SetModelVersions(ctx, toModelVersions)
+			}
+		}
 	}
 }
 
@@ -22901,6 +24552,19 @@ func (to *SearchModelsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RegisteredModels = from.RegisteredModels
 	}
+	if !from.RegisteredModels.IsNull() && !from.RegisteredModels.IsUnknown() {
+		if toRegisteredModels, ok := to.GetRegisteredModels(ctx); ok {
+			if fromRegisteredModels, ok := from.GetRegisteredModels(ctx); ok {
+				// Recursively sync the fields of each RegisteredModels element by position.
+				for i := range toRegisteredModels {
+					if i < len(fromRegisteredModels) {
+						toRegisteredModels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRegisteredModels[i])
+					}
+				}
+				to.SetRegisteredModels(ctx, toRegisteredModels)
+			}
+		}
+	}
 }
 
 func (to *SearchModelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SearchModelsResponse_SdkV2) {
@@ -22909,6 +24573,18 @@ func (to *SearchModelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for RegisteredModels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RegisteredModels = from.RegisteredModels
+	}
+	if !from.RegisteredModels.IsNull() && !from.RegisteredModels.IsUnknown() {
+		if toRegisteredModels, ok := to.GetRegisteredModels(ctx); ok {
+			if fromRegisteredModels, ok := from.GetRegisteredModels(ctx); ok {
+				for i := range toRegisteredModels {
+					if i < len(fromRegisteredModels) {
+						toRegisteredModels[i].SyncFieldsDuringRead(ctx, fromRegisteredModels[i])
+					}
+				}
+				to.SetRegisteredModels(ctx, toRegisteredModels)
+			}
+		}
 	}
 }
 
@@ -23169,6 +24845,19 @@ func (to *SearchRunsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Runs = from.Runs
 	}
+	if !from.Runs.IsNull() && !from.Runs.IsUnknown() {
+		if toRuns, ok := to.GetRuns(ctx); ok {
+			if fromRuns, ok := from.GetRuns(ctx); ok {
+				// Recursively sync the fields of each Runs element by position.
+				for i := range toRuns {
+					if i < len(fromRuns) {
+						toRuns[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRuns[i])
+					}
+				}
+				to.SetRuns(ctx, toRuns)
+			}
+		}
+	}
 }
 
 func (to *SearchRunsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SearchRunsResponse_SdkV2) {
@@ -23177,6 +24866,18 @@ func (to *SearchRunsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 		// If a user specified a non-Null, empty list for Runs, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Runs = from.Runs
+	}
+	if !from.Runs.IsNull() && !from.Runs.IsUnknown() {
+		if toRuns, ok := to.GetRuns(ctx); ok {
+			if fromRuns, ok := from.GetRuns(ctx); ok {
+				for i := range toRuns {
+					if i < len(fromRuns) {
+						toRuns[i].SyncFieldsDuringRead(ctx, fromRuns[i])
+					}
+				}
+				to.SetRuns(ctx, toRuns)
+			}
+		}
 	}
 }
 
@@ -23420,6 +25121,19 @@ func (to *SetLoggedModelTagsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 }
 
 func (to *SetLoggedModelTagsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SetLoggedModelTagsRequest_SdkV2) {
@@ -23428,6 +25142,18 @@ func (to *SetLoggedModelTagsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -23865,7 +25591,8 @@ type SlidingWindow_SdkV2 struct {
 	// The slide duration (interval by which windows advance, must be positive
 	// and less than duration).
 	SlideDuration types.String `tfsdk:"slide_duration"`
-	// The duration of the sliding window.
+	// The duration of the sliding window. Must be positive when set; absent
+	// means lifetime (aggregate over the entity's entire history).
 	WindowDuration types.String `tfsdk:"window_duration"`
 }
 
@@ -23877,7 +25604,7 @@ func (to *SlidingWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Sl
 
 func (m SlidingWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["slide_duration"] = attrs["slide_duration"].SetRequired()
-	attrs["window_duration"] = attrs["window_duration"].SetRequired()
+	attrs["window_duration"] = attrs["window_duration"].SetOptional()
 
 	return attrs
 }
@@ -24519,10 +26246,17 @@ func (m *StreamSchemaConfig_SdkV2) SetDirectSchemas(ctx context.Context, v Direc
 
 // A Stream entity used as a data source for a feature.
 type StreamSource_SdkV2 struct {
+	// Schema of the resulting dataframe after transformations, in Spark
+	// StructType JSON format (from df.schema.json()). Any subsequent functions
+	// operate against this dataframe.
+	DataframeSchema types.String `tfsdk:"dataframe_schema"`
 	// The filter condition applied to the source data before aggregation.
 	FilterCondition types.String `tfsdk:"filter_condition"`
 	// Three-part full name of the Stream (catalog.schema.stream).
 	FullName types.String `tfsdk:"full_name"`
+	// The pipeline runs these SQL statements immediately after conversion into
+	// the schema specified on the Stream object.
+	TransformationSql types.String `tfsdk:"transformation_sql"`
 }
 
 func (to *StreamSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamSource_SdkV2) {
@@ -24532,8 +26266,10 @@ func (to *StreamSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Str
 }
 
 func (m StreamSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dataframe_schema"] = attrs["dataframe_schema"].SetOptional()
 	attrs["filter_condition"] = attrs["filter_condition"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetRequired()
+	attrs["transformation_sql"] = attrs["transformation_sql"].SetOptional()
 
 	return attrs
 }
@@ -24556,8 +26292,10 @@ func (m StreamSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"filter_condition": m.FilterCondition,
-			"full_name":        m.FullName,
+			"dataframe_schema":   m.DataframeSchema,
+			"filter_condition":   m.FilterCondition,
+			"full_name":          m.FullName,
+			"transformation_sql": m.TransformationSql,
 		})
 }
 
@@ -24565,8 +26303,10 @@ func (m StreamSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (m StreamSource_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"filter_condition": types.StringType,
-			"full_name":        types.StringType,
+			"dataframe_schema":   types.StringType,
+			"filter_condition":   types.StringType,
+			"full_name":          types.StringType,
+			"transformation_sql": types.StringType,
 		},
 	}
 }
@@ -24994,11 +26734,10 @@ type TimeWindow_SdkV2 struct {
 	Continuous types.List `tfsdk:"continuous"`
 	// A window that spans the entire lifetime of the data source.
 	Lifetime types.List `tfsdk:"lifetime"`
-	// A long (multi-day) rolling window served via the hybrid batch + streaming
-	// path.
-	LongRolling types.List `tfsdk:"long_rolling"`
 
 	Rolling types.List `tfsdk:"rolling"`
+	// A sawtooth window served via the hybrid batch + streaming path.
+	Sawtooth types.List `tfsdk:"sawtooth"`
 
 	Sliding types.List `tfsdk:"sliding"`
 
@@ -25024,21 +26763,21 @@ func (to *TimeWindow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 			}
 		}
 	}
-	if !from.LongRolling.IsNull() && !from.LongRolling.IsUnknown() {
-		if toLongRolling, ok := to.GetLongRolling(ctx); ok {
-			if fromLongRolling, ok := from.GetLongRolling(ctx); ok {
-				// Recursively sync the fields of LongRolling
-				toLongRolling.SyncFieldsDuringCreateOrUpdate(ctx, fromLongRolling)
-				to.SetLongRolling(ctx, toLongRolling)
-			}
-		}
-	}
 	if !from.Rolling.IsNull() && !from.Rolling.IsUnknown() {
 		if toRolling, ok := to.GetRolling(ctx); ok {
 			if fromRolling, ok := from.GetRolling(ctx); ok {
 				// Recursively sync the fields of Rolling
 				toRolling.SyncFieldsDuringCreateOrUpdate(ctx, fromRolling)
 				to.SetRolling(ctx, toRolling)
+			}
+		}
+	}
+	if !from.Sawtooth.IsNull() && !from.Sawtooth.IsUnknown() {
+		if toSawtooth, ok := to.GetSawtooth(ctx); ok {
+			if fromSawtooth, ok := from.GetSawtooth(ctx); ok {
+				// Recursively sync the fields of Sawtooth
+				toSawtooth.SyncFieldsDuringCreateOrUpdate(ctx, fromSawtooth)
+				to.SetSawtooth(ctx, toSawtooth)
 			}
 		}
 	}
@@ -25079,19 +26818,19 @@ func (to *TimeWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TimeW
 			}
 		}
 	}
-	if !from.LongRolling.IsNull() && !from.LongRolling.IsUnknown() {
-		if toLongRolling, ok := to.GetLongRolling(ctx); ok {
-			if fromLongRolling, ok := from.GetLongRolling(ctx); ok {
-				toLongRolling.SyncFieldsDuringRead(ctx, fromLongRolling)
-				to.SetLongRolling(ctx, toLongRolling)
-			}
-		}
-	}
 	if !from.Rolling.IsNull() && !from.Rolling.IsUnknown() {
 		if toRolling, ok := to.GetRolling(ctx); ok {
 			if fromRolling, ok := from.GetRolling(ctx); ok {
 				toRolling.SyncFieldsDuringRead(ctx, fromRolling)
 				to.SetRolling(ctx, toRolling)
+			}
+		}
+	}
+	if !from.Sawtooth.IsNull() && !from.Sawtooth.IsUnknown() {
+		if toSawtooth, ok := to.GetSawtooth(ctx); ok {
+			if fromSawtooth, ok := from.GetSawtooth(ctx); ok {
+				toSawtooth.SyncFieldsDuringRead(ctx, fromSawtooth)
+				to.SetSawtooth(ctx, toSawtooth)
 			}
 		}
 	}
@@ -25118,10 +26857,10 @@ func (m TimeWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["continuous"] = attrs["continuous"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["lifetime"] = attrs["lifetime"].SetOptional()
 	attrs["lifetime"] = attrs["lifetime"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["long_rolling"] = attrs["long_rolling"].SetOptional()
-	attrs["long_rolling"] = attrs["long_rolling"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["rolling"] = attrs["rolling"].SetOptional()
 	attrs["rolling"] = attrs["rolling"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["sawtooth"] = attrs["sawtooth"].SetOptional()
+	attrs["sawtooth"] = attrs["sawtooth"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["sliding"] = attrs["sliding"].SetOptional()
 	attrs["sliding"] = attrs["sliding"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["tumbling"] = attrs["tumbling"].SetOptional()
@@ -25139,12 +26878,12 @@ func (m TimeWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (m TimeWindow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"continuous":   reflect.TypeOf(ContinuousWindow_SdkV2{}),
-		"lifetime":     reflect.TypeOf(LifetimeWindow_SdkV2{}),
-		"long_rolling": reflect.TypeOf(LongRollingWindow_SdkV2{}),
-		"rolling":      reflect.TypeOf(RollingWindow_SdkV2{}),
-		"sliding":      reflect.TypeOf(SlidingWindow_SdkV2{}),
-		"tumbling":     reflect.TypeOf(TumblingWindow_SdkV2{}),
+		"continuous": reflect.TypeOf(ContinuousWindow_SdkV2{}),
+		"lifetime":   reflect.TypeOf(LifetimeWindow_SdkV2{}),
+		"rolling":    reflect.TypeOf(RollingWindow_SdkV2{}),
+		"sawtooth":   reflect.TypeOf(SawtoothWindow_SdkV2{}),
+		"sliding":    reflect.TypeOf(SlidingWindow_SdkV2{}),
+		"tumbling":   reflect.TypeOf(TumblingWindow_SdkV2{}),
 	}
 }
 
@@ -25155,12 +26894,12 @@ func (m TimeWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"continuous":   m.Continuous,
-			"lifetime":     m.Lifetime,
-			"long_rolling": m.LongRolling,
-			"rolling":      m.Rolling,
-			"sliding":      m.Sliding,
-			"tumbling":     m.Tumbling,
+			"continuous": m.Continuous,
+			"lifetime":   m.Lifetime,
+			"rolling":    m.Rolling,
+			"sawtooth":   m.Sawtooth,
+			"sliding":    m.Sliding,
+			"tumbling":   m.Tumbling,
 		})
 }
 
@@ -25174,11 +26913,11 @@ func (m TimeWindow_SdkV2) Type(ctx context.Context) attr.Type {
 			"lifetime": basetypes.ListType{
 				ElemType: LifetimeWindow_SdkV2{}.Type(ctx),
 			},
-			"long_rolling": basetypes.ListType{
-				ElemType: LongRollingWindow_SdkV2{}.Type(ctx),
-			},
 			"rolling": basetypes.ListType{
 				ElemType: RollingWindow_SdkV2{}.Type(ctx),
+			},
+			"sawtooth": basetypes.ListType{
+				ElemType: SawtoothWindow_SdkV2{}.Type(ctx),
 			},
 			"sliding": basetypes.ListType{
 				ElemType: SlidingWindow_SdkV2{}.Type(ctx),
@@ -25242,32 +26981,6 @@ func (m *TimeWindow_SdkV2) SetLifetime(ctx context.Context, v LifetimeWindow_Sdk
 	m.Lifetime = types.ListValueMust(t, vs)
 }
 
-// GetLongRolling returns the value of the LongRolling field in TimeWindow_SdkV2 as
-// a LongRollingWindow_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *TimeWindow_SdkV2) GetLongRolling(ctx context.Context) (LongRollingWindow_SdkV2, bool) {
-	var e LongRollingWindow_SdkV2
-	if m.LongRolling.IsNull() || m.LongRolling.IsUnknown() {
-		return e, false
-	}
-	var v []LongRollingWindow_SdkV2
-	d := m.LongRolling.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetLongRolling sets the value of the LongRolling field in TimeWindow_SdkV2.
-func (m *TimeWindow_SdkV2) SetLongRolling(ctx context.Context, v LongRollingWindow_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["long_rolling"]
-	m.LongRolling = types.ListValueMust(t, vs)
-}
-
 // GetRolling returns the value of the Rolling field in TimeWindow_SdkV2 as
 // a RollingWindow_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -25292,6 +27005,32 @@ func (m *TimeWindow_SdkV2) SetRolling(ctx context.Context, v RollingWindow_SdkV2
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["rolling"]
 	m.Rolling = types.ListValueMust(t, vs)
+}
+
+// GetSawtooth returns the value of the Sawtooth field in TimeWindow_SdkV2 as
+// a SawtoothWindow_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TimeWindow_SdkV2) GetSawtooth(ctx context.Context) (SawtoothWindow_SdkV2, bool) {
+	var e SawtoothWindow_SdkV2
+	if m.Sawtooth.IsNull() || m.Sawtooth.IsUnknown() {
+		return e, false
+	}
+	var v []SawtoothWindow_SdkV2
+	d := m.Sawtooth.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSawtooth sets the value of the Sawtooth field in TimeWindow_SdkV2.
+func (m *TimeWindow_SdkV2) SetSawtooth(ctx context.Context, v SawtoothWindow_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sawtooth"]
+	m.Sawtooth = types.ListValueMust(t, vs)
 }
 
 // GetSliding returns the value of the Sliding field in TimeWindow_SdkV2 as
@@ -25752,12 +27491,17 @@ func (m TumblingWindow_SdkV2) Type(ctx context.Context) attr.Type {
 type UcTraceLocation_SdkV2 struct {
 	// The name of the Unity Catalog catalog.
 	Catalog types.String `tfsdk:"catalog"`
+	// The trace-table prefix actually in effect: `table_prefix` if it was set
+	// on creation, otherwise the server-generated default.
+	EffectiveTablePrefix types.String `tfsdk:"effective_table_prefix"`
 	// The name of the Unity Catalog schema within `catalog`.
 	Schema types.String `tfsdk:"schema"`
 	// The prefix for the trace tables, which are named
 	// `{catalog}.{schema}.{table_prefix}_otel_*`. May only contain letters,
 	// digits, and underscores, and may be at most 238 characters. When unset, a
-	// server-generated prefix derived from the experiment ID is used.
+	// server-generated prefix derived from the experiment ID is used and this
+	// field stays empty on read; the resolved value is always available in
+	// `effective_table_prefix`.
 	TablePrefix types.String `tfsdk:"table_prefix"`
 }
 
@@ -25770,6 +27514,7 @@ func (to *UcTraceLocation_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 func (m UcTraceLocation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["catalog"] = attrs["catalog"].SetRequired()
 	attrs["catalog"] = attrs["catalog"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["effective_table_prefix"] = attrs["effective_table_prefix"].SetComputed()
 	attrs["schema"] = attrs["schema"].SetRequired()
 	attrs["schema"] = attrs["schema"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["table_prefix"] = attrs["table_prefix"].SetOptional()
@@ -25796,9 +27541,10 @@ func (m UcTraceLocation_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"catalog":      m.Catalog,
-			"schema":       m.Schema,
-			"table_prefix": m.TablePrefix,
+			"catalog":                m.Catalog,
+			"effective_table_prefix": m.EffectiveTablePrefix,
+			"schema":                 m.Schema,
+			"table_prefix":           m.TablePrefix,
 		})
 }
 
@@ -25806,9 +27552,10 @@ func (m UcTraceLocation_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 func (m UcTraceLocation_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"catalog":      types.StringType,
-			"schema":       types.StringType,
-			"table_prefix": types.StringType,
+			"catalog":                types.StringType,
+			"effective_table_prefix": types.StringType,
+			"schema":                 types.StringType,
+			"table_prefix":           types.StringType,
 		},
 	}
 }

@@ -1124,6 +1124,19 @@ func (to *ListDeploymentsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Deployments = from.Deployments
 	}
+	if !from.Deployments.IsNull() && !from.Deployments.IsUnknown() {
+		if toDeployments, ok := to.GetDeployments(ctx); ok {
+			if fromDeployments, ok := from.GetDeployments(ctx); ok {
+				// Recursively sync the fields of each Deployments element by position.
+				for i := range toDeployments {
+					if i < len(fromDeployments) {
+						toDeployments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDeployments[i])
+					}
+				}
+				to.SetDeployments(ctx, toDeployments)
+			}
+		}
+	}
 }
 
 func (to *ListDeploymentsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListDeploymentsResponse_SdkV2) {
@@ -1132,6 +1145,18 @@ func (to *ListDeploymentsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 		// If a user specified a non-Null, empty list for Deployments, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Deployments = from.Deployments
+	}
+	if !from.Deployments.IsNull() && !from.Deployments.IsUnknown() {
+		if toDeployments, ok := to.GetDeployments(ctx); ok {
+			if fromDeployments, ok := from.GetDeployments(ctx); ok {
+				for i := range toDeployments {
+					if i < len(fromDeployments) {
+						toDeployments[i].SyncFieldsDuringRead(ctx, fromDeployments[i])
+					}
+				}
+				to.SetDeployments(ctx, toDeployments)
+			}
+		}
 	}
 }
 
@@ -1283,6 +1308,19 @@ func (to *ListOperationsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Operations = from.Operations
 	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				// Recursively sync the fields of each Operations element by position.
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
+	}
 }
 
 func (to *ListOperationsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListOperationsResponse_SdkV2) {
@@ -1291,6 +1329,18 @@ func (to *ListOperationsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context
 		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Operations = from.Operations
+	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringRead(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
 	}
 }
 
@@ -1441,6 +1491,19 @@ func (to *ListResourcesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
 	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				// Recursively sync the fields of each Resources element by position.
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringCreateOrUpdate(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
+	}
 }
 
 func (to *ListResourcesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListResourcesResponse_SdkV2) {
@@ -1449,6 +1512,18 @@ func (to *ListResourcesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
+	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringRead(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
 	}
 }
 
@@ -1599,6 +1674,19 @@ func (to *ListVersionsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Versions = from.Versions
 	}
+	if !from.Versions.IsNull() && !from.Versions.IsUnknown() {
+		if toVersions, ok := to.GetVersions(ctx); ok {
+			if fromVersions, ok := from.GetVersions(ctx); ok {
+				// Recursively sync the fields of each Versions element by position.
+				for i := range toVersions {
+					if i < len(fromVersions) {
+						toVersions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromVersions[i])
+					}
+				}
+				to.SetVersions(ctx, toVersions)
+			}
+		}
+	}
 }
 
 func (to *ListVersionsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListVersionsResponse_SdkV2) {
@@ -1607,6 +1695,18 @@ func (to *ListVersionsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for Versions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Versions = from.Versions
+	}
+	if !from.Versions.IsNull() && !from.Versions.IsUnknown() {
+		if toVersions, ok := to.GetVersions(ctx); ok {
+			if fromVersions, ok := from.GetVersions(ctx); ok {
+				for i := range toVersions {
+					if i < len(fromVersions) {
+						toVersions[i].SyncFieldsDuringRead(ctx, fromVersions[i])
+					}
+				}
+				to.SetVersions(ctx, toVersions)
+			}
+		}
 	}
 }
 

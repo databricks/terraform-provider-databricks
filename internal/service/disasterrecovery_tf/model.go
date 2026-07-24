@@ -459,6 +459,19 @@ func (to *FailoverGroup) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 			}
 		}
 	}
+	if !from.WorkspaceSets.IsNull() && !from.WorkspaceSets.IsUnknown() {
+		if toWorkspaceSets, ok := to.GetWorkspaceSets(ctx); ok {
+			if fromWorkspaceSets, ok := from.GetWorkspaceSets(ctx); ok {
+				// Recursively sync the fields of each WorkspaceSets element by position.
+				for i := range toWorkspaceSets {
+					if i < len(fromWorkspaceSets) {
+						toWorkspaceSets[i].SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceSets[i])
+					}
+				}
+				to.SetWorkspaceSets(ctx, toWorkspaceSets)
+			}
+		}
+	}
 }
 
 func (to *FailoverGroup) SyncFieldsDuringRead(ctx context.Context, from FailoverGroup) {
@@ -471,6 +484,18 @@ func (to *FailoverGroup) SyncFieldsDuringRead(ctx context.Context, from Failover
 			if fromUnityCatalogAssets, ok := from.GetUnityCatalogAssets(ctx); ok {
 				toUnityCatalogAssets.SyncFieldsDuringRead(ctx, fromUnityCatalogAssets)
 				to.SetUnityCatalogAssets(ctx, toUnityCatalogAssets)
+			}
+		}
+	}
+	if !from.WorkspaceSets.IsNull() && !from.WorkspaceSets.IsUnknown() {
+		if toWorkspaceSets, ok := to.GetWorkspaceSets(ctx); ok {
+			if fromWorkspaceSets, ok := from.GetWorkspaceSets(ctx); ok {
+				for i := range toWorkspaceSets {
+					if i < len(fromWorkspaceSets) {
+						toWorkspaceSets[i].SyncFieldsDuringRead(ctx, fromWorkspaceSets[i])
+					}
+				}
+				to.SetWorkspaceSets(ctx, toWorkspaceSets)
 			}
 		}
 	}
@@ -808,6 +833,19 @@ func (to *ListFailoverGroupsResponse) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FailoverGroups = from.FailoverGroups
 	}
+	if !from.FailoverGroups.IsNull() && !from.FailoverGroups.IsUnknown() {
+		if toFailoverGroups, ok := to.GetFailoverGroups(ctx); ok {
+			if fromFailoverGroups, ok := from.GetFailoverGroups(ctx); ok {
+				// Recursively sync the fields of each FailoverGroups element by position.
+				for i := range toFailoverGroups {
+					if i < len(fromFailoverGroups) {
+						toFailoverGroups[i].SyncFieldsDuringCreateOrUpdate(ctx, fromFailoverGroups[i])
+					}
+				}
+				to.SetFailoverGroups(ctx, toFailoverGroups)
+			}
+		}
+	}
 }
 
 func (to *ListFailoverGroupsResponse) SyncFieldsDuringRead(ctx context.Context, from ListFailoverGroupsResponse) {
@@ -816,6 +854,18 @@ func (to *ListFailoverGroupsResponse) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for FailoverGroups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FailoverGroups = from.FailoverGroups
+	}
+	if !from.FailoverGroups.IsNull() && !from.FailoverGroups.IsUnknown() {
+		if toFailoverGroups, ok := to.GetFailoverGroups(ctx); ok {
+			if fromFailoverGroups, ok := from.GetFailoverGroups(ctx); ok {
+				for i := range toFailoverGroups {
+					if i < len(fromFailoverGroups) {
+						toFailoverGroups[i].SyncFieldsDuringRead(ctx, fromFailoverGroups[i])
+					}
+				}
+				to.SetFailoverGroups(ctx, toFailoverGroups)
+			}
+		}
 	}
 }
 
@@ -968,6 +1018,19 @@ func (to *ListStableUrlsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.StableUrls = from.StableUrls
 	}
+	if !from.StableUrls.IsNull() && !from.StableUrls.IsUnknown() {
+		if toStableUrls, ok := to.GetStableUrls(ctx); ok {
+			if fromStableUrls, ok := from.GetStableUrls(ctx); ok {
+				// Recursively sync the fields of each StableUrls element by position.
+				for i := range toStableUrls {
+					if i < len(fromStableUrls) {
+						toStableUrls[i].SyncFieldsDuringCreateOrUpdate(ctx, fromStableUrls[i])
+					}
+				}
+				to.SetStableUrls(ctx, toStableUrls)
+			}
+		}
+	}
 }
 
 func (to *ListStableUrlsResponse) SyncFieldsDuringRead(ctx context.Context, from ListStableUrlsResponse) {
@@ -976,6 +1039,18 @@ func (to *ListStableUrlsResponse) SyncFieldsDuringRead(ctx context.Context, from
 		// If a user specified a non-Null, empty list for StableUrls, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.StableUrls = from.StableUrls
+	}
+	if !from.StableUrls.IsNull() && !from.StableUrls.IsUnknown() {
+		if toStableUrls, ok := to.GetStableUrls(ctx); ok {
+			if fromStableUrls, ok := from.GetStableUrls(ctx); ok {
+				for i := range toStableUrls {
+					if i < len(fromStableUrls) {
+						toStableUrls[i].SyncFieldsDuringRead(ctx, fromStableUrls[i])
+					}
+				}
+				to.SetStableUrls(ctx, toStableUrls)
+			}
+		}
 	}
 }
 
@@ -1059,9 +1134,34 @@ type LocationMapping struct {
 }
 
 func (to *LocationMapping) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LocationMapping) {
+	if !from.UriByRegion.IsNull() && !from.UriByRegion.IsUnknown() {
+		if toUriByRegion, ok := to.GetUriByRegion(ctx); ok {
+			if fromUriByRegion, ok := from.GetUriByRegion(ctx); ok {
+				// Recursively sync the fields of each UriByRegion element by position.
+				for i := range toUriByRegion {
+					if i < len(fromUriByRegion) {
+						toUriByRegion[i].SyncFieldsDuringCreateOrUpdate(ctx, fromUriByRegion[i])
+					}
+				}
+				to.SetUriByRegion(ctx, toUriByRegion)
+			}
+		}
+	}
 }
 
 func (to *LocationMapping) SyncFieldsDuringRead(ctx context.Context, from LocationMapping) {
+	if !from.UriByRegion.IsNull() && !from.UriByRegion.IsUnknown() {
+		if toUriByRegion, ok := to.GetUriByRegion(ctx); ok {
+			if fromUriByRegion, ok := from.GetUriByRegion(ctx); ok {
+				for i := range toUriByRegion {
+					if i < len(fromUriByRegion) {
+						toUriByRegion[i].SyncFieldsDuringRead(ctx, fromUriByRegion[i])
+					}
+				}
+				to.SetUriByRegion(ctx, toUriByRegion)
+			}
+		}
+	}
 }
 
 func (m LocationMapping) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1354,20 +1454,70 @@ type UcReplicationConfig struct {
 }
 
 func (to *UcReplicationConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UcReplicationConfig) {
+	if !from.Catalogs.IsNull() && !from.Catalogs.IsUnknown() {
+		if toCatalogs, ok := to.GetCatalogs(ctx); ok {
+			if fromCatalogs, ok := from.GetCatalogs(ctx); ok {
+				// Recursively sync the fields of each Catalogs element by position.
+				for i := range toCatalogs {
+					if i < len(fromCatalogs) {
+						toCatalogs[i].SyncFieldsDuringCreateOrUpdate(ctx, fromCatalogs[i])
+					}
+				}
+				to.SetCatalogs(ctx, toCatalogs)
+			}
+		}
+	}
 	if !from.LocationMappings.IsNull() && !from.LocationMappings.IsUnknown() && to.LocationMappings.IsNull() && len(from.LocationMappings.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for LocationMappings, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.LocationMappings = from.LocationMappings
 	}
+	if !from.LocationMappings.IsNull() && !from.LocationMappings.IsUnknown() {
+		if toLocationMappings, ok := to.GetLocationMappings(ctx); ok {
+			if fromLocationMappings, ok := from.GetLocationMappings(ctx); ok {
+				// Recursively sync the fields of each LocationMappings element by position.
+				for i := range toLocationMappings {
+					if i < len(fromLocationMappings) {
+						toLocationMappings[i].SyncFieldsDuringCreateOrUpdate(ctx, fromLocationMappings[i])
+					}
+				}
+				to.SetLocationMappings(ctx, toLocationMappings)
+			}
+		}
+	}
 }
 
 func (to *UcReplicationConfig) SyncFieldsDuringRead(ctx context.Context, from UcReplicationConfig) {
+	if !from.Catalogs.IsNull() && !from.Catalogs.IsUnknown() {
+		if toCatalogs, ok := to.GetCatalogs(ctx); ok {
+			if fromCatalogs, ok := from.GetCatalogs(ctx); ok {
+				for i := range toCatalogs {
+					if i < len(fromCatalogs) {
+						toCatalogs[i].SyncFieldsDuringRead(ctx, fromCatalogs[i])
+					}
+				}
+				to.SetCatalogs(ctx, toCatalogs)
+			}
+		}
+	}
 	if !from.LocationMappings.IsNull() && !from.LocationMappings.IsUnknown() && to.LocationMappings.IsNull() && len(from.LocationMappings.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for LocationMappings, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.LocationMappings = from.LocationMappings
+	}
+	if !from.LocationMappings.IsNull() && !from.LocationMappings.IsUnknown() {
+		if toLocationMappings, ok := to.GetLocationMappings(ctx); ok {
+			if fromLocationMappings, ok := from.GetLocationMappings(ctx); ok {
+				for i := range toLocationMappings {
+					if i < len(fromLocationMappings) {
+						toLocationMappings[i].SyncFieldsDuringRead(ctx, fromLocationMappings[i])
+					}
+				}
+				to.SetLocationMappings(ctx, toLocationMappings)
+			}
+		}
 	}
 }
 

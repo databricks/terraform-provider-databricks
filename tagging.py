@@ -184,6 +184,13 @@ class GitHubRepo:
         element = InputGitTreeElement(path=local_path, mode="100644", type="blob", sha=blob.sha)
         self.changed_files.append(element)
 
+    # Replaces "git rm file"
+    def delete_file(self, loc: str):
+        """``git rm`` equivalent for GitHubRepo: stage a tree deletion (sha=None)."""
+        local_path = os.path.relpath(loc, os.getcwd())
+        print(f"Deleting file {local_path}")
+        self.changed_files.append(InputGitTreeElement(path=local_path, mode="100644", type="blob", sha=None))
+
     # Replaces "git commit && git push"
     def commit_and_push(self, message: str):
         head_ref = self.repo.get_git_ref(self.ref)
@@ -1069,7 +1076,11 @@ def validate_git_root():
         raise Exception("Please run this script from the root of the repository.")
 
 
-if __name__ == "__main__":
+def main():
     validate_git_root()
     init_github()
     process()
+
+
+if __name__ == "__main__":
+    main()

@@ -621,6 +621,19 @@ func (to *DataProfilingConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.CustomMetrics = from.CustomMetrics
 	}
+	if !from.CustomMetrics.IsNull() && !from.CustomMetrics.IsUnknown() {
+		if toCustomMetrics, ok := to.GetCustomMetrics(ctx); ok {
+			if fromCustomMetrics, ok := from.GetCustomMetrics(ctx); ok {
+				// Recursively sync the fields of each CustomMetrics element by position.
+				for i := range toCustomMetrics {
+					if i < len(fromCustomMetrics) {
+						toCustomMetrics[i].SyncFieldsDuringCreateOrUpdate(ctx, fromCustomMetrics[i])
+					}
+				}
+				to.SetCustomMetrics(ctx, toCustomMetrics)
+			}
+		}
+	}
 	if !from.InferenceLog.IsNull() && !from.InferenceLog.IsUnknown() {
 		if toInferenceLog, ok := to.GetInferenceLog(ctx); ok {
 			if fromInferenceLog, ok := from.GetInferenceLog(ctx); ok {
@@ -680,6 +693,18 @@ func (to *DataProfilingConfig) SyncFieldsDuringRead(ctx context.Context, from Da
 		// If a user specified a non-Null, empty list for CustomMetrics, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.CustomMetrics = from.CustomMetrics
+	}
+	if !from.CustomMetrics.IsNull() && !from.CustomMetrics.IsUnknown() {
+		if toCustomMetrics, ok := to.GetCustomMetrics(ctx); ok {
+			if fromCustomMetrics, ok := from.GetCustomMetrics(ctx); ok {
+				for i := range toCustomMetrics {
+					if i < len(fromCustomMetrics) {
+						toCustomMetrics[i].SyncFieldsDuringRead(ctx, fromCustomMetrics[i])
+					}
+				}
+				to.SetCustomMetrics(ctx, toCustomMetrics)
+			}
+		}
 	}
 	if !from.InferenceLog.IsNull() && !from.InferenceLog.IsUnknown() {
 		if toInferenceLog, ok := to.GetInferenceLog(ctx); ok {
@@ -1565,6 +1590,19 @@ func (to *ListMonitorResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Monitors = from.Monitors
 	}
+	if !from.Monitors.IsNull() && !from.Monitors.IsUnknown() {
+		if toMonitors, ok := to.GetMonitors(ctx); ok {
+			if fromMonitors, ok := from.GetMonitors(ctx); ok {
+				// Recursively sync the fields of each Monitors element by position.
+				for i := range toMonitors {
+					if i < len(fromMonitors) {
+						toMonitors[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMonitors[i])
+					}
+				}
+				to.SetMonitors(ctx, toMonitors)
+			}
+		}
+	}
 }
 
 func (to *ListMonitorResponse) SyncFieldsDuringRead(ctx context.Context, from ListMonitorResponse) {
@@ -1573,6 +1611,18 @@ func (to *ListMonitorResponse) SyncFieldsDuringRead(ctx context.Context, from Li
 		// If a user specified a non-Null, empty list for Monitors, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Monitors = from.Monitors
+	}
+	if !from.Monitors.IsNull() && !from.Monitors.IsUnknown() {
+		if toMonitors, ok := to.GetMonitors(ctx); ok {
+			if fromMonitors, ok := from.GetMonitors(ctx); ok {
+				for i := range toMonitors {
+					if i < len(fromMonitors) {
+						toMonitors[i].SyncFieldsDuringRead(ctx, fromMonitors[i])
+					}
+				}
+				to.SetMonitors(ctx, toMonitors)
+			}
+		}
 	}
 }
 
@@ -1737,6 +1787,19 @@ func (to *ListRefreshResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Refreshes = from.Refreshes
 	}
+	if !from.Refreshes.IsNull() && !from.Refreshes.IsUnknown() {
+		if toRefreshes, ok := to.GetRefreshes(ctx); ok {
+			if fromRefreshes, ok := from.GetRefreshes(ctx); ok {
+				// Recursively sync the fields of each Refreshes element by position.
+				for i := range toRefreshes {
+					if i < len(fromRefreshes) {
+						toRefreshes[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRefreshes[i])
+					}
+				}
+				to.SetRefreshes(ctx, toRefreshes)
+			}
+		}
+	}
 }
 
 func (to *ListRefreshResponse) SyncFieldsDuringRead(ctx context.Context, from ListRefreshResponse) {
@@ -1745,6 +1808,18 @@ func (to *ListRefreshResponse) SyncFieldsDuringRead(ctx context.Context, from Li
 		// If a user specified a non-Null, empty list for Refreshes, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Refreshes = from.Refreshes
+	}
+	if !from.Refreshes.IsNull() && !from.Refreshes.IsUnknown() {
+		if toRefreshes, ok := to.GetRefreshes(ctx); ok {
+			if fromRefreshes, ok := from.GetRefreshes(ctx); ok {
+				for i := range toRefreshes {
+					if i < len(fromRefreshes) {
+						toRefreshes[i].SyncFieldsDuringRead(ctx, fromRefreshes[i])
+					}
+				}
+				to.SetRefreshes(ctx, toRefreshes)
+			}
+		}
 	}
 }
 

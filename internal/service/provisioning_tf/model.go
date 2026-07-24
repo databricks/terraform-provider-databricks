@@ -4062,6 +4062,19 @@ func (to *Network) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Netw
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ErrorMessages = from.ErrorMessages
 	}
+	if !from.ErrorMessages.IsNull() && !from.ErrorMessages.IsUnknown() {
+		if toErrorMessages, ok := to.GetErrorMessages(ctx); ok {
+			if fromErrorMessages, ok := from.GetErrorMessages(ctx); ok {
+				// Recursively sync the fields of each ErrorMessages element by position.
+				for i := range toErrorMessages {
+					if i < len(fromErrorMessages) {
+						toErrorMessages[i].SyncFieldsDuringCreateOrUpdate(ctx, fromErrorMessages[i])
+					}
+				}
+				to.SetErrorMessages(ctx, toErrorMessages)
+			}
+		}
+	}
 	if !from.GcpNetworkInfo.IsNull() && !from.GcpNetworkInfo.IsUnknown() {
 		if toGcpNetworkInfo, ok := to.GetGcpNetworkInfo(ctx); ok {
 			if fromGcpNetworkInfo, ok := from.GetGcpNetworkInfo(ctx); ok {
@@ -4098,6 +4111,19 @@ func (to *Network) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Netw
 		// set the resulting resource state to the empty list to match the planned value.
 		to.WarningMessages = from.WarningMessages
 	}
+	if !from.WarningMessages.IsNull() && !from.WarningMessages.IsUnknown() {
+		if toWarningMessages, ok := to.GetWarningMessages(ctx); ok {
+			if fromWarningMessages, ok := from.GetWarningMessages(ctx); ok {
+				// Recursively sync the fields of each WarningMessages element by position.
+				for i := range toWarningMessages {
+					if i < len(fromWarningMessages) {
+						toWarningMessages[i].SyncFieldsDuringCreateOrUpdate(ctx, fromWarningMessages[i])
+					}
+				}
+				to.SetWarningMessages(ctx, toWarningMessages)
+			}
+		}
+	}
 }
 
 func (to *Network) SyncFieldsDuringRead(ctx context.Context, from Network) {
@@ -4106,6 +4132,18 @@ func (to *Network) SyncFieldsDuringRead(ctx context.Context, from Network) {
 		// If a user specified a non-Null, empty list for ErrorMessages, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ErrorMessages = from.ErrorMessages
+	}
+	if !from.ErrorMessages.IsNull() && !from.ErrorMessages.IsUnknown() {
+		if toErrorMessages, ok := to.GetErrorMessages(ctx); ok {
+			if fromErrorMessages, ok := from.GetErrorMessages(ctx); ok {
+				for i := range toErrorMessages {
+					if i < len(fromErrorMessages) {
+						toErrorMessages[i].SyncFieldsDuringRead(ctx, fromErrorMessages[i])
+					}
+				}
+				to.SetErrorMessages(ctx, toErrorMessages)
+			}
+		}
 	}
 	if !from.GcpNetworkInfo.IsNull() && !from.GcpNetworkInfo.IsUnknown() {
 		if toGcpNetworkInfo, ok := to.GetGcpNetworkInfo(ctx); ok {
@@ -4140,6 +4178,18 @@ func (to *Network) SyncFieldsDuringRead(ctx context.Context, from Network) {
 		// If a user specified a non-Null, empty list for WarningMessages, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.WarningMessages = from.WarningMessages
+	}
+	if !from.WarningMessages.IsNull() && !from.WarningMessages.IsUnknown() {
+		if toWarningMessages, ok := to.GetWarningMessages(ctx); ok {
+			if fromWarningMessages, ok := from.GetWarningMessages(ctx); ok {
+				for i := range toWarningMessages {
+					if i < len(fromWarningMessages) {
+						toWarningMessages[i].SyncFieldsDuringRead(ctx, fromWarningMessages[i])
+					}
+				}
+				to.SetWarningMessages(ctx, toWarningMessages)
+			}
+		}
 	}
 }
 

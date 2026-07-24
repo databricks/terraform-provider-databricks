@@ -510,6 +510,19 @@ func (to *ListTagAssignmentsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.TagAssignments = from.TagAssignments
 	}
+	if !from.TagAssignments.IsNull() && !from.TagAssignments.IsUnknown() {
+		if toTagAssignments, ok := to.GetTagAssignments(ctx); ok {
+			if fromTagAssignments, ok := from.GetTagAssignments(ctx); ok {
+				// Recursively sync the fields of each TagAssignments element by position.
+				for i := range toTagAssignments {
+					if i < len(fromTagAssignments) {
+						toTagAssignments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTagAssignments[i])
+					}
+				}
+				to.SetTagAssignments(ctx, toTagAssignments)
+			}
+		}
+	}
 }
 
 func (to *ListTagAssignmentsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListTagAssignmentsResponse_SdkV2) {
@@ -518,6 +531,18 @@ func (to *ListTagAssignmentsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Con
 		// If a user specified a non-Null, empty list for TagAssignments, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.TagAssignments = from.TagAssignments
+	}
+	if !from.TagAssignments.IsNull() && !from.TagAssignments.IsUnknown() {
+		if toTagAssignments, ok := to.GetTagAssignments(ctx); ok {
+			if fromTagAssignments, ok := from.GetTagAssignments(ctx); ok {
+				for i := range toTagAssignments {
+					if i < len(fromTagAssignments) {
+						toTagAssignments[i].SyncFieldsDuringRead(ctx, fromTagAssignments[i])
+					}
+				}
+				to.SetTagAssignments(ctx, toTagAssignments)
+			}
+		}
 	}
 }
 
@@ -660,6 +685,19 @@ func (to *ListTagPoliciesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.TagPolicies = from.TagPolicies
 	}
+	if !from.TagPolicies.IsNull() && !from.TagPolicies.IsUnknown() {
+		if toTagPolicies, ok := to.GetTagPolicies(ctx); ok {
+			if fromTagPolicies, ok := from.GetTagPolicies(ctx); ok {
+				// Recursively sync the fields of each TagPolicies element by position.
+				for i := range toTagPolicies {
+					if i < len(fromTagPolicies) {
+						toTagPolicies[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTagPolicies[i])
+					}
+				}
+				to.SetTagPolicies(ctx, toTagPolicies)
+			}
+		}
+	}
 }
 
 func (to *ListTagPoliciesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListTagPoliciesResponse_SdkV2) {
@@ -668,6 +706,18 @@ func (to *ListTagPoliciesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 		// If a user specified a non-Null, empty list for TagPolicies, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.TagPolicies = from.TagPolicies
+	}
+	if !from.TagPolicies.IsNull() && !from.TagPolicies.IsUnknown() {
+		if toTagPolicies, ok := to.GetTagPolicies(ctx); ok {
+			if fromTagPolicies, ok := from.GetTagPolicies(ctx); ok {
+				for i := range toTagPolicies {
+					if i < len(fromTagPolicies) {
+						toTagPolicies[i].SyncFieldsDuringRead(ctx, fromTagPolicies[i])
+					}
+				}
+				to.SetTagPolicies(ctx, toTagPolicies)
+			}
+		}
 	}
 }
 

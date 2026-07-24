@@ -29,7 +29,9 @@ The following arguments are supported:
 ### Filter
 * `creator_user_id` (integer, optional, deprecated) - The policy creator user id to be filtered on.
   If unspecified, all policies will be returned
-* `creator_user_name` (string, optional) - The policy creator user name to be filtered on.
+* `creator_user_name` (string, optional, deprecated) - Deprecated: Do not use this field in new integrations. Creator filtering will be removed in a
+  future version.
+  The policy creator user name to be filtered on.
   If unspecified, all policies will be returned
 * `policy_name` (string, optional) - The partial name of policies to be filtered on.
   If unspecified, all policies will be returned

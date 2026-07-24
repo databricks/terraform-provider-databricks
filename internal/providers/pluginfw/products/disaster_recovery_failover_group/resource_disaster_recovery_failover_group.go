@@ -167,6 +167,19 @@ func (to *FailoverGroup) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 			}
 		}
 	}
+	if !from.WorkspaceSets.IsNull() && !from.WorkspaceSets.IsUnknown() {
+		if toWorkspaceSets, ok := to.GetWorkspaceSets(ctx); ok {
+			if fromWorkspaceSets, ok := from.GetWorkspaceSets(ctx); ok {
+				// Recursively sync the fields of each WorkspaceSets element by position.
+				for i := range toWorkspaceSets {
+					if i < len(fromWorkspaceSets) {
+						toWorkspaceSets[i].SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceSets[i])
+					}
+				}
+				to.SetWorkspaceSets(ctx, toWorkspaceSets)
+			}
+		}
+	}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -188,6 +201,18 @@ func (to *FailoverGroup) SyncFieldsDuringRead(ctx context.Context, from Failover
 			if fromUnityCatalogAssets, ok := from.GetUnityCatalogAssets(ctx); ok {
 				toUnityCatalogAssets.SyncFieldsDuringRead(ctx, fromUnityCatalogAssets)
 				to.SetUnityCatalogAssets(ctx, toUnityCatalogAssets)
+			}
+		}
+	}
+	if !from.WorkspaceSets.IsNull() && !from.WorkspaceSets.IsUnknown() {
+		if toWorkspaceSets, ok := to.GetWorkspaceSets(ctx); ok {
+			if fromWorkspaceSets, ok := from.GetWorkspaceSets(ctx); ok {
+				for i := range toWorkspaceSets {
+					if i < len(fromWorkspaceSets) {
+						toWorkspaceSets[i].SyncFieldsDuringRead(ctx, fromWorkspaceSets[i])
+					}
+				}
+				to.SetWorkspaceSets(ctx, toWorkspaceSets)
 			}
 		}
 	}

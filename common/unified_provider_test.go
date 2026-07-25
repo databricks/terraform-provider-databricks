@@ -828,6 +828,52 @@ func TestNamespaceCustomizeDiff_UnifiedHost_DirectFallback(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// TestNamespaceCustomizeDiff_UnknownWorkspaceIDFromCrossResourceRef covers the
+// case where a resource declares
+//
+//	provider_config { workspace_id = databricks_mws_workspaces.this.workspace_id }
+//
+// and the referenced workspace doesn't exist yet. The workspace_id is unknown
+// at plan time, so validation must defer (return nil) instead of falling back
+// to the provider-level workspace_id and parsing a sentinel like "none" that
+// some Databricks CLI flows write to ~/.databrickscfg for account profiles.
+func TestNamespaceCustomizeDiff_UnknownWorkspaceIDFromCrossResourceRef(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:        "https://accounts.cloud.databricks.com",
+				AccountID:   "test-account-id",
+				Token:       "test-token",
+				WorkspaceID: "none", // sentinel written by `databricks auth login` for account profiles
+			},
+		},
+	}
+
+	rawConfig := cty.ObjectVal(map[string]cty.Value{
+		"name": cty.StringVal("test"),
+		"provider_config": cty.ListVal([]cty.Value{
+			cty.ObjectVal(map[string]cty.Value{
+				// Unknown simulates a reference like
+				// databricks_mws_workspaces.this.workspace_id where the
+				// referenced resource has not been applied yet.
+				"workspace_id": cty.UnknownVal(cty.String),
+			}),
+		}),
+	})
+
+	block := schema.InternalMap(resource.Schema).CoreConfigSchema()
+	rc := terraform.NewResourceConfigShimmed(rawConfig, block)
+	is := &terraform.InstanceState{
+		Attributes: map[string]string{"name": "test"},
+		RawConfig:  rawConfig,
+	}
+
+	_, err := resource.Diff(context.Background(), is, rc, c)
+	assert.NoError(t, err, "validation should defer when workspace_id is unknown at plan time")
+}
+
 // newDualResourceForCustomizeDiff builds a test resource with the `api` field
 // (mirroring dual resources that call AddApiField) wired to CustomizeDiffDualResources.
 func newDualResourceForCustomizeDiff() *schema.Resource {

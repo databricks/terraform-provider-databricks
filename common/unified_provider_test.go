@@ -765,6 +765,49 @@ func TestNamespaceCustomizeDiff_AccountLevelProvider_ValidWorkspace(t *testing.T
 	assert.NoError(t, err)
 }
 
+// unknownValueSentinel is the legacy SDK marker for "unknown at plan time" —
+// the same constant as hcl2shim.UnknownVariableValue, which lives in an
+// internal/ package and so can't be imported by name. Passing this string in
+// rawConfig through NewResourceConfigRaw produces a ResourceDiff whose
+// NewValueKnown returns false for the corresponding key, modelling values
+// like databricks_mws_workspaces.ws.workspace_id that aren't resolved until
+// apply.
+const unknownValueSentinel = "74D93920-ED26-11E3-AC10-0800200C9A66"
+
+// TestNamespaceCustomizeDiff_UnknownWorkspaceID_DefersValidation verifies that
+// when provider_config.workspace_id references a value that's unknown at plan
+// time (e.g., it points at another resource being created in the same plan,
+// like databricks_mws_workspaces.ws.workspace_id), validation is deferred to
+// apply time instead of falling back to c.Config.WorkspaceID and erroring.
+//
+// The Config below uses a placeholder Host that would fail a real parse and a
+// WorkspaceID intentionally set to something parseInt couldn't handle — if the
+// short-circuit ever regresses, the test fails with the parseInt error rather
+// than passing silently.
+func TestNamespaceCustomizeDiff_UnknownWorkspaceID_DefersValidation(t *testing.T) {
+	resource := newTestResourceForCustomizeDiff()
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:        "https://accounts.cloud.databricks.com",
+				AccountID:   "test-account-id",
+				Token:       "test-token",
+				WorkspaceID: "not-an-int",
+			},
+		},
+	}
+
+	_, err := diffCustomizeDiff(t, resource, nil, map[string]interface{}{
+		"name": "test",
+		"provider_config": []interface{}{
+			map[string]interface{}{
+				"workspace_id": unknownValueSentinel,
+			},
+		},
+	}, c)
+	assert.NoError(t, err)
+}
+
 // unifiedHostConfig returns a config whose resolved host type is UnifiedHost.
 // It installs a HostMetadataResolver that returns UnifiedHost and forces
 // EnsureResolved to run so resolvedHostType is populated before HostType() is

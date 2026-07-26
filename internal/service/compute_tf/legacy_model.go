@@ -16715,6 +16715,25 @@ func (m InstancePoolAwsAttributes_SdkV2) Type(ctx context.Context) attr.Type {
 type InstancePoolAzureAttributes_SdkV2 struct {
 	// Availability type used for the spot nodes.
 	Availability types.String `tfsdk:"availability"`
+	// The Azure capacity reservation group resource ID to use for launching VMs
+	// in this pool. When specified, VMs will be launched using the provided
+	// capacity reservation.
+	//
+	// NOTE: Omitting this field will clear any existing configured capacity
+	// reservation group on the pool.
+	//
+	// Capacity reservations can only be specified when the workspace uses
+	// injected vnet (i.e. customer defined vnet not managed by databricks).
+	// Ensure the databricks-login-prod Enterprise Application is granted the
+	// following four permissions: 1.
+	// Microsoft.Compute/capacityReservationGroups/read 2.
+	// Microsoft.Compute/capacityReservationGroups/deploy/action 3.
+	// Microsoft.Compute/capacityReservationGroups/capacityReservations/read 4.
+	// Microsoft.Compute/capacityReservationGroups/capacityReservations/deploy/action
+	//
+	// Format:
+	// `/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/capacityReservationGroups/{capacityReservationGroupName}`
+	CapacityReservationGroup types.String `tfsdk:"capacity_reservation_group"`
 	// With variable pricing, you have option to set a max price, in US dollars
 	// (USD) For example, the value 2 would be a max price of $2.00 USD per
 	// hour. If you set the max price to be -1, the VM won't be evicted based on
@@ -16732,6 +16751,7 @@ func (to *InstancePoolAzureAttributes_SdkV2) SyncFieldsDuringRead(ctx context.Co
 
 func (m InstancePoolAzureAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["availability"] = attrs["availability"].SetOptional()
+	attrs["capacity_reservation_group"] = attrs["capacity_reservation_group"].SetOptional()
 	attrs["spot_bid_max_price"] = attrs["spot_bid_max_price"].SetOptional()
 
 	return attrs
@@ -16755,8 +16775,9 @@ func (m InstancePoolAzureAttributes_SdkV2) ToObjectValue(ctx context.Context) ba
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"availability":       m.Availability,
-			"spot_bid_max_price": m.SpotBidMaxPrice,
+			"availability":               m.Availability,
+			"capacity_reservation_group": m.CapacityReservationGroup,
+			"spot_bid_max_price":         m.SpotBidMaxPrice,
 		})
 }
 
@@ -16764,8 +16785,9 @@ func (m InstancePoolAzureAttributes_SdkV2) ToObjectValue(ctx context.Context) ba
 func (m InstancePoolAzureAttributes_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"availability":       types.StringType,
-			"spot_bid_max_price": types.Float64Type,
+			"availability":               types.StringType,
+			"capacity_reservation_group": types.StringType,
+			"spot_bid_max_price":         types.Float64Type,
 		},
 	}
 }

@@ -5227,6 +5227,10 @@ type CreateConnection struct {
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
 	Options types.Map `tfsdk:"options"`
+	// Parent schema for schema-level connections, in format
+	// "schemas/{catalog}.{schema}". Absent for metastore-level (L1)
+	// connections.
+	Parent types.String `tfsdk:"parent"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
 	// If the connection is read only.
@@ -5262,6 +5266,7 @@ func (m CreateConnection) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["environment_settings"] = attrs["environment_settings"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["options"] = attrs["options"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetOptional()
 	attrs["properties"] = attrs["properties"].SetOptional()
 	attrs["read_only"] = attrs["read_only"].SetOptional()
 
@@ -5295,6 +5300,7 @@ func (m CreateConnection) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"environment_settings": m.EnvironmentSettings,
 			"name":                 m.Name,
 			"options":              m.Options,
+			"parent":               m.Parent,
 			"properties":           m.Properties,
 			"read_only":            m.ReadOnly,
 		})
@@ -5311,6 +5317,7 @@ func (m CreateConnection) Type(ctx context.Context) attr.Type {
 			"options": basetypes.MapType{
 				ElemType: types.StringType,
 			},
+			"parent": types.StringType,
 			"properties": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -7388,7 +7395,7 @@ func (to *CreateRegisteredModelRequest) SyncFieldsDuringRead(ctx context.Context
 
 func (m CreateRegisteredModelRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["aliases"] = attrs["aliases"].SetOptional()
-	attrs["browse_only"] = attrs["browse_only"].SetOptional()
+	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["created_at"] = attrs["created_at"].SetOptional()
@@ -19306,6 +19313,9 @@ type ListConnectionsRequest struct {
 	MaxResults types.Int64 `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
+	// Optional. Parent schema filter for listing schema-level connections, in
+	// format "schemas/{catalog}.{schema}".
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *ListConnectionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListConnectionsRequest) {
@@ -19317,6 +19327,7 @@ func (to *ListConnectionsRequest) SyncFieldsDuringRead(ctx context.Context, from
 func (m ListConnectionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["max_results"] = attrs["max_results"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetOptional()
 
 	return attrs
 }
@@ -19341,6 +19352,7 @@ func (m ListConnectionsRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 		map[string]attr.Value{
 			"max_results": m.MaxResults,
 			"page_token":  m.PageToken,
+			"parent":      m.Parent,
 		})
 }
 
@@ -19350,6 +19362,7 @@ func (m ListConnectionsRequest) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"max_results": types.Int64Type,
 			"page_token":  types.StringType,
+			"parent":      types.StringType,
 		},
 	}
 }
@@ -27184,7 +27197,7 @@ func (to *RegisteredModelInfo) SyncFieldsDuringRead(ctx context.Context, from Re
 
 func (m RegisteredModelInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["aliases"] = attrs["aliases"].SetOptional()
-	attrs["browse_only"] = attrs["browse_only"].SetOptional()
+	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["created_at"] = attrs["created_at"].SetOptional()
@@ -33599,7 +33612,7 @@ func (to *UpdateRegisteredModelRequest) SyncFieldsDuringRead(ctx context.Context
 
 func (m UpdateRegisteredModelRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["aliases"] = attrs["aliases"].SetOptional()
-	attrs["browse_only"] = attrs["browse_only"].SetOptional()
+	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["created_at"] = attrs["created_at"].SetOptional()

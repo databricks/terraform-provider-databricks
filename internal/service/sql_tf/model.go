@@ -3458,7 +3458,7 @@ type CreateWarehouseRequest struct {
 	// increase the number of concurrent queries, please tune max_num_clusters.
 	//
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
-	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large - Auto
+	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
@@ -5343,7 +5343,7 @@ type EditWarehouseRequest struct {
 	// increase the number of concurrent queries, please tune max_num_clusters.
 	//
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
-	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large - Auto
+	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
@@ -5826,7 +5826,7 @@ type EndpointInfo struct {
 	// increase the number of concurrent queries, please tune max_num_clusters.
 	//
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
-	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large - Auto
+	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
@@ -7959,7 +7959,7 @@ type GetWarehouseResponse struct {
 	// increase the number of concurrent queries, please tune max_num_clusters.
 	//
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
-	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large - Auto
+	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
@@ -15034,6 +15034,7 @@ func (m SetWorkspaceWarehouseConfigResponse) Type(ctx context.Context) attr.Type
 	}
 }
 
+// Starts a SQL warehouse. This API is idempotent.
 type StartRequest struct {
 	// Required. Id of the SQL warehouse.
 	Id types.String `tfsdk:"-"`
@@ -15491,6 +15492,7 @@ func (m *StatementStatus) SetError(ctx context.Context, v ServiceError) {
 	m.Error = vs
 }
 
+// Stops a SQL warehouse. This API is idempotent.
 type StopRequest struct {
 	// Required. Id of the SQL warehouse.
 	Id types.String `tfsdk:"-"`

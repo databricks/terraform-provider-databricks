@@ -1,17 +1,17 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package supervisor_agent_tool
+package postgres_cdf_config
 
 import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/service/supervisoragents"
+	"github.com/databricks/databricks-sdk-go/service/postgres"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/supervisoragents_tf"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -22,15 +22,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-const dataSourceName = "supervisor_agent_tool"
+const dataSourceName = "postgres_cdf_config"
 
-var _ datasource.DataSourceWithConfigure = &ToolDataSource{}
+var _ datasource.DataSourceWithConfigure = &CdfConfigDataSource{}
 
-func DataSourceTool() datasource.DataSource {
-	return &ToolDataSource{}
+func DataSourceCdfConfig() datasource.DataSource {
+	return &CdfConfigDataSource{}
 }
 
-type ToolDataSource struct {
+type CdfConfigDataSource struct {
 	Client *autogen.DatabricksClient
 }
 
@@ -96,56 +96,38 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// ToolData extends the main model with additional fields.
-type ToolData struct {
-	App types.Object `tfsdk:"app"`
-	// Description of what this tool does (user-facing).
-	Description types.String `tfsdk:"description"`
-
-	GenieSpace types.Object `tfsdk:"genie_space"`
-	// Deprecated: Use tool_id instead.
-	Id types.String `tfsdk:"id"`
-
-	KnowledgeAssistant types.Object `tfsdk:"knowledge_assistant"`
-	// Full resource name:
-	// supervisor-agents/{supervisor_agent_id}/tools/{tool_id}
+// CdfConfigData extends the main model with additional fields.
+type CdfConfigData struct {
+	// The Unity Catalog catalog that replicated tables are written into. Set at
+	// creation; the CdfConfig is immutable.
+	Catalog types.String `tfsdk:"catalog"`
+	// The user-specified id; equals the final segment of `name`. Defaults to
+	// the Postgres schema name for configs without an explicit id.
+	CdfConfigId types.String `tfsdk:"cdf_config_id"`
+	// When the CdfConfig was created.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// Output only. The full resource name of the CdfConfig. Format:
+	// projects/{project}/branches/{branch}/databases/{database}/cdf-configs/{cdf_config}
 	Name types.String `tfsdk:"name"`
-	// User specified id of the Tool.
-	ToolId types.String `tfsdk:"tool_id"`
-	// Tool type. Must be one of: "genie_space", "knowledge_assistant",
-	// "uc_function", "uc_connection", "uc_mcp", "app", "volume", "dashboard",
-	// "serving_endpoint", "table", "vector_search_index", "catalog", "schema",
-	// "supervisor_agent", "databricks_web_search", "skill". The legacy values
-	// "lakeview_dashboard", "uc_table", and "web_search" are also accepted and
-	// remain equivalent to "dashboard", "table", and "databricks_web_search"
-	// respectively. The "databricks_web_search" tool_type maps to the
-	// `web_search` spec field.
-	ToolType types.String `tfsdk:"tool_type"`
-
-	UcConnection types.Object `tfsdk:"uc_connection"`
-
-	UcFunction types.Object `tfsdk:"uc_function"`
-
-	Volume             types.Object `tfsdk:"volume"`
+	// The Postgres schema this CdfConfig replicates from. Unique within the
+	// parent database. Set at creation; the CdfConfig is immutable.
+	PostgresSchema types.String `tfsdk:"postgres_schema"`
+	// The Unity Catalog schema that replicated tables are written into. Set at
+	// creation; the CdfConfig is immutable.
+	Schema             types.String `tfsdk:"schema"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
-// ToolData struct. Container types (types.Map, types.List, types.Set) and
+// CdfConfigData struct. Container types (types.Map, types.List, types.Set) and
 // object types (types.Object) do not carry the type information of their elements in the Go
 // type system. This function provides a way to retrieve the type information of the elements in
 // complex fields at runtime. The values of the map are the reflected types of the contained elements.
 // They must be either primitive values from the plugin framework type system
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
-func (m ToolData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m CdfConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"app":                 reflect.TypeOf(supervisoragents_tf.App{}),
-		"genie_space":         reflect.TypeOf(supervisoragents_tf.GenieSpace{}),
-		"knowledge_assistant": reflect.TypeOf(supervisoragents_tf.KnowledgeAssistant{}),
-		"uc_connection":       reflect.TypeOf(supervisoragents_tf.UcConnection{}),
-		"uc_function":         reflect.TypeOf(supervisoragents_tf.UcFunction{}),
-		"volume":              reflect.TypeOf(supervisoragents_tf.Volume{}),
-		"provider_config":     reflect.TypeOf(ProviderConfigData{}),
+		"provider_config": reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -153,23 +135,18 @@ func (m ToolData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.T
 // embedded TFSDK model and contains additional fields.
 //
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ToolData
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CdfConfigData
 // only implements ToObjectValue() and Type().
-func (m ToolData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m CdfConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"app":                 m.App,
-			"description":         m.Description,
-			"genie_space":         m.GenieSpace,
-			"id":                  m.Id,
-			"knowledge_assistant": m.KnowledgeAssistant,
-			"name":                m.Name,
-			"tool_id":             m.ToolId,
-			"tool_type":           m.ToolType,
-			"uc_connection":       m.UcConnection,
-			"uc_function":         m.UcFunction,
-			"volume":              m.Volume,
+			"catalog":         m.Catalog,
+			"cdf_config_id":   m.CdfConfigId,
+			"create_time":     m.CreateTime,
+			"name":            m.Name,
+			"postgres_schema": m.PostgresSchema,
+			"schema":          m.Schema,
 
 			"provider_config": m.ProviderConfigData,
 		},
@@ -178,71 +155,61 @@ func (m ToolData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 
 // Type returns the object type with attributes from both the embedded TFSDK model
 // and contains additional fields.
-func (m ToolData) Type(ctx context.Context) attr.Type {
+func (m CdfConfigData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"app":                 supervisoragents_tf.App{}.Type(ctx),
-			"description":         types.StringType,
-			"genie_space":         supervisoragents_tf.GenieSpace{}.Type(ctx),
-			"id":                  types.StringType,
-			"knowledge_assistant": supervisoragents_tf.KnowledgeAssistant{}.Type(ctx),
-			"name":                types.StringType,
-			"tool_id":             types.StringType,
-			"tool_type":           types.StringType,
-			"uc_connection":       supervisoragents_tf.UcConnection{}.Type(ctx),
-			"uc_function":         supervisoragents_tf.UcFunction{}.Type(ctx),
-			"volume":              supervisoragents_tf.Volume{}.Type(ctx),
+			"catalog":         types.StringType,
+			"cdf_config_id":   types.StringType,
+			"create_time":     timetypes.RFC3339{}.Type(ctx),
+			"name":            types.StringType,
+			"postgres_schema": types.StringType,
+			"schema":          types.StringType,
 
 			"provider_config": ProviderConfigData{}.Type(ctx),
 		},
 	}
 }
 
-func (m ToolData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["app"] = attrs["app"].SetComputed()
-	attrs["description"] = attrs["description"].SetComputed()
-	attrs["genie_space"] = attrs["genie_space"].SetComputed()
-	attrs["id"] = attrs["id"].SetComputed()
-	attrs["knowledge_assistant"] = attrs["knowledge_assistant"].SetComputed()
+func (m CdfConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog"] = attrs["catalog"].SetComputed()
+	attrs["cdf_config_id"] = attrs["cdf_config_id"].SetComputed()
+	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["tool_id"] = attrs["tool_id"].SetComputed()
-	attrs["tool_type"] = attrs["tool_type"].SetComputed()
-	attrs["uc_connection"] = attrs["uc_connection"].SetComputed()
-	attrs["uc_function"] = attrs["uc_function"].SetComputed()
-	attrs["volume"] = attrs["volume"].SetComputed()
+	attrs["postgres_schema"] = attrs["postgres_schema"].SetComputed()
+	attrs["schema"] = attrs["schema"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 
 	return attrs
 }
 
-func (r *ToolDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (r *CdfConfigDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(dataSourceName)
 }
 
-func (r *ToolDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, ToolData{}, nil)
+func (r *CdfConfigDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, CdfConfigData{}, nil)
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks Tool",
+		Description: "Terraform schema for Databricks CdfConfig",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
 }
 
-func (r *ToolDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (r *CdfConfigDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	r.Client = autogen.ConfigureDataSource(req, resp)
 }
 
-func (r *ToolDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (r *CdfConfigDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 
-	var config ToolData
+	var config CdfConfigData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var readRequest supervisoragents.GetToolRequest
+	var readRequest postgres.GetCdfConfigRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -263,13 +230,13 @@ func (r *ToolDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	response, err := client.SupervisorAgents.GetTool(ctx, readRequest)
+	response, err := client.Postgres.GetCdfConfig(ctx, readRequest)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to get supervisor_agent_tool", err.Error())
+		resp.Diagnostics.AddError("failed to get postgres_cdf_config", err.Error())
 		return
 	}
 
-	var newState ToolData
+	var newState CdfConfigData
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return

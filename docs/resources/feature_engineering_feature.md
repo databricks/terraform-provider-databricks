@@ -168,6 +168,11 @@ The following arguments are supported:
 * `input` (string, required) - The input column from which the last N values are returned
 * `n` (integer, required) - The number of values to return
 
+### LifetimeWindow
+* `slide_duration` (string, optional) - The slide duration for the discrete (offline) variant: the value updates only at these
+  boundaries. Must be positive when set. When absent, the window is continuous (the value is as
+  fresh as the pipeline delivers)
+
 ### LineageContext
 * `job_context` (JobContext, optional) - Job context information including job ID and run ID
 * `notebook_id` (integer, optional) - The notebook ID where this API was invoked
@@ -218,6 +223,7 @@ The following arguments are supported:
 
 ### TimeWindow
 * `continuous` (ContinuousWindow, optional, deprecated)
+* `lifetime` (LifetimeWindow, optional) - A window that spans the entire lifetime of the data source
 * `long_rolling` (LongRollingWindow, optional) - A long (multi-day) rolling window served via the hybrid batch + streaming path
 * `rolling` (RollingWindow, optional)
 * `sliding` (SlidingWindow, optional)

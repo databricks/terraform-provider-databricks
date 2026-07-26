@@ -2331,6 +2331,11 @@ type CreateExperiment_SdkV2 struct {
 	// tag values up to 5000 bytes in size. All storage backends are also
 	// guaranteed to support up to 20 tags per request.
 	Tags types.List `tfsdk:"tags"`
+	// The location where the experiment's traces are stored. When set, the
+	// underlying storage is provisioned and the experiment's traces are routed
+	// to it. When unset, traces are stored in the default MLflow backend. This
+	// field cannot be updated after the experiment is created.
+	TraceLocation types.List `tfsdk:"trace_location"`
 }
 
 func (to *CreateExperiment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateExperiment_SdkV2) {
@@ -2339,6 +2344,15 @@ func (to *CreateExperiment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.TraceLocation.IsNull() && !from.TraceLocation.IsUnknown() {
+		if toTraceLocation, ok := to.GetTraceLocation(ctx); ok {
+			if fromTraceLocation, ok := from.GetTraceLocation(ctx); ok {
+				// Recursively sync the fields of TraceLocation
+				toTraceLocation.SyncFieldsDuringCreateOrUpdate(ctx, fromTraceLocation)
+				to.SetTraceLocation(ctx, toTraceLocation)
+			}
+		}
 	}
 }
 
@@ -2349,12 +2363,23 @@ func (to *CreateExperiment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.TraceLocation.IsNull() && !from.TraceLocation.IsUnknown() {
+		if toTraceLocation, ok := to.GetTraceLocation(ctx); ok {
+			if fromTraceLocation, ok := from.GetTraceLocation(ctx); ok {
+				toTraceLocation.SyncFieldsDuringRead(ctx, fromTraceLocation)
+				to.SetTraceLocation(ctx, toTraceLocation)
+			}
+		}
+	}
 }
 
 func (m CreateExperiment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["artifact_location"] = attrs["artifact_location"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["trace_location"] = attrs["trace_location"].SetOptional()
+	attrs["trace_location"] = attrs["trace_location"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["trace_location"] = attrs["trace_location"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -2368,7 +2393,8 @@ func (m CreateExperiment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // SDK values.
 func (m CreateExperiment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"tags": reflect.TypeOf(ExperimentTag_SdkV2{}),
+		"tags":           reflect.TypeOf(ExperimentTag_SdkV2{}),
+		"trace_location": reflect.TypeOf(ExperimentTraceLocation_SdkV2{}),
 	}
 }
 
@@ -2382,6 +2408,7 @@ func (m CreateExperiment_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 			"artifact_location": m.ArtifactLocation,
 			"name":              m.Name,
 			"tags":              m.Tags,
+			"trace_location":    m.TraceLocation,
 		})
 }
 
@@ -2393,6 +2420,9 @@ func (m CreateExperiment_SdkV2) Type(ctx context.Context) attr.Type {
 			"name":              types.StringType,
 			"tags": basetypes.ListType{
 				ElemType: ExperimentTag_SdkV2{}.Type(ctx),
+			},
+			"trace_location": basetypes.ListType{
+				ElemType: ExperimentTraceLocation_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2422,6 +2452,32 @@ func (m *CreateExperiment_SdkV2) SetTags(ctx context.Context, v []ExperimentTag_
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Tags = types.ListValueMust(t, vs)
+}
+
+// GetTraceLocation returns the value of the TraceLocation field in CreateExperiment_SdkV2 as
+// a ExperimentTraceLocation_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateExperiment_SdkV2) GetTraceLocation(ctx context.Context) (ExperimentTraceLocation_SdkV2, bool) {
+	var e ExperimentTraceLocation_SdkV2
+	if m.TraceLocation.IsNull() || m.TraceLocation.IsUnknown() {
+		return e, false
+	}
+	var v []ExperimentTraceLocation_SdkV2
+	d := m.TraceLocation.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTraceLocation sets the value of the TraceLocation field in CreateExperiment_SdkV2.
+func (m *CreateExperiment_SdkV2) SetTraceLocation(ctx context.Context, v ExperimentTraceLocation_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["trace_location"]
+	m.TraceLocation = types.ListValueMust(t, vs)
 }
 
 type CreateExperimentResponse_SdkV2 struct {
@@ -7419,6 +7475,10 @@ type Experiment_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// Tags: Additional metadata key-value pairs.
 	Tags types.List `tfsdk:"tags"`
+	// The location where the experiment's traces are stored. Unset when traces
+	// are stored in the default MLflow backend. This field cannot be updated
+	// after the experiment is created.
+	TraceLocation types.List `tfsdk:"trace_location"`
 }
 
 func (to *Experiment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Experiment_SdkV2) {
@@ -7428,6 +7488,15 @@ func (to *Experiment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.TraceLocation.IsNull() && !from.TraceLocation.IsUnknown() {
+		if toTraceLocation, ok := to.GetTraceLocation(ctx); ok {
+			if fromTraceLocation, ok := from.GetTraceLocation(ctx); ok {
+				// Recursively sync the fields of TraceLocation
+				toTraceLocation.SyncFieldsDuringCreateOrUpdate(ctx, fromTraceLocation)
+				to.SetTraceLocation(ctx, toTraceLocation)
+			}
+		}
+	}
 }
 
 func (to *Experiment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Experiment_SdkV2) {
@@ -7436,6 +7505,14 @@ func (to *Experiment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Exper
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.TraceLocation.IsNull() && !from.TraceLocation.IsUnknown() {
+		if toTraceLocation, ok := to.GetTraceLocation(ctx); ok {
+			if fromTraceLocation, ok := from.GetTraceLocation(ctx); ok {
+				toTraceLocation.SyncFieldsDuringRead(ctx, fromTraceLocation)
+				to.SetTraceLocation(ctx, toTraceLocation)
+			}
+		}
 	}
 }
 
@@ -7447,6 +7524,9 @@ func (m Experiment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["lifecycle_stage"] = attrs["lifecycle_stage"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["trace_location"] = attrs["trace_location"].SetOptional()
+	attrs["trace_location"] = attrs["trace_location"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["trace_location"] = attrs["trace_location"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -7460,7 +7540,8 @@ func (m Experiment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (m Experiment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"tags": reflect.TypeOf(ExperimentTag_SdkV2{}),
+		"tags":           reflect.TypeOf(ExperimentTag_SdkV2{}),
+		"trace_location": reflect.TypeOf(ExperimentTraceLocation_SdkV2{}),
 	}
 }
 
@@ -7478,6 +7559,7 @@ func (m Experiment_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"lifecycle_stage":   m.LifecycleStage,
 			"name":              m.Name,
 			"tags":              m.Tags,
+			"trace_location":    m.TraceLocation,
 		})
 }
 
@@ -7493,6 +7575,9 @@ func (m Experiment_SdkV2) Type(ctx context.Context) attr.Type {
 			"name":              types.StringType,
 			"tags": basetypes.ListType{
 				ElemType: ExperimentTag_SdkV2{}.Type(ctx),
+			},
+			"trace_location": basetypes.ListType{
+				ElemType: ExperimentTraceLocation_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7522,6 +7607,32 @@ func (m *Experiment_SdkV2) SetTags(ctx context.Context, v []ExperimentTag_SdkV2)
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Tags = types.ListValueMust(t, vs)
+}
+
+// GetTraceLocation returns the value of the TraceLocation field in Experiment_SdkV2 as
+// a ExperimentTraceLocation_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Experiment_SdkV2) GetTraceLocation(ctx context.Context) (ExperimentTraceLocation_SdkV2, bool) {
+	var e ExperimentTraceLocation_SdkV2
+	if m.TraceLocation.IsNull() || m.TraceLocation.IsUnknown() {
+		return e, false
+	}
+	var v []ExperimentTraceLocation_SdkV2
+	d := m.TraceLocation.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTraceLocation sets the value of the TraceLocation field in Experiment_SdkV2.
+func (m *Experiment_SdkV2) SetTraceLocation(ctx context.Context, v ExperimentTraceLocation_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["trace_location"]
+	m.TraceLocation = types.ListValueMust(t, vs)
 }
 
 type ExperimentAccessControlRequest_SdkV2 struct {
@@ -8093,6 +8204,104 @@ func (m ExperimentTag_SdkV2) Type(ctx context.Context) attr.Type {
 			"value": types.StringType,
 		},
 	}
+}
+
+// The storage location for an experiment's traces.
+type ExperimentTraceLocation_SdkV2 struct {
+	// A Unity Catalog schema where the experiment's traces are stored as Delta
+	// tables.
+	UcTraceLocation types.List `tfsdk:"uc_trace_location"`
+}
+
+func (to *ExperimentTraceLocation_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExperimentTraceLocation_SdkV2) {
+	if !from.UcTraceLocation.IsNull() && !from.UcTraceLocation.IsUnknown() {
+		if toUcTraceLocation, ok := to.GetUcTraceLocation(ctx); ok {
+			if fromUcTraceLocation, ok := from.GetUcTraceLocation(ctx); ok {
+				// Recursively sync the fields of UcTraceLocation
+				toUcTraceLocation.SyncFieldsDuringCreateOrUpdate(ctx, fromUcTraceLocation)
+				to.SetUcTraceLocation(ctx, toUcTraceLocation)
+			}
+		}
+	}
+}
+
+func (to *ExperimentTraceLocation_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ExperimentTraceLocation_SdkV2) {
+	if !from.UcTraceLocation.IsNull() && !from.UcTraceLocation.IsUnknown() {
+		if toUcTraceLocation, ok := to.GetUcTraceLocation(ctx); ok {
+			if fromUcTraceLocation, ok := from.GetUcTraceLocation(ctx); ok {
+				toUcTraceLocation.SyncFieldsDuringRead(ctx, fromUcTraceLocation)
+				to.SetUcTraceLocation(ctx, toUcTraceLocation)
+			}
+		}
+	}
+}
+
+func (m ExperimentTraceLocation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["uc_trace_location"] = attrs["uc_trace_location"].SetOptional()
+	attrs["uc_trace_location"] = attrs["uc_trace_location"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExperimentTraceLocation.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ExperimentTraceLocation_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"uc_trace_location": reflect.TypeOf(UcTraceLocation_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExperimentTraceLocation_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ExperimentTraceLocation_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"uc_trace_location": m.UcTraceLocation,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ExperimentTraceLocation_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"uc_trace_location": basetypes.ListType{
+				ElemType: UcTraceLocation_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetUcTraceLocation returns the value of the UcTraceLocation field in ExperimentTraceLocation_SdkV2 as
+// a UcTraceLocation_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ExperimentTraceLocation_SdkV2) GetUcTraceLocation(ctx context.Context) (UcTraceLocation_SdkV2, bool) {
+	var e UcTraceLocation_SdkV2
+	if m.UcTraceLocation.IsNull() || m.UcTraceLocation.IsUnknown() {
+		return e, false
+	}
+	var v []UcTraceLocation_SdkV2
+	d := m.UcTraceLocation.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetUcTraceLocation sets the value of the UcTraceLocation field in ExperimentTraceLocation_SdkV2.
+func (m *ExperimentTraceLocation_SdkV2) SetUcTraceLocation(ctx context.Context, v UcTraceLocation_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["uc_trace_location"]
+	m.UcTraceLocation = types.ListValueMust(t, vs)
 }
 
 type Feature_SdkV2 struct {
@@ -13509,6 +13718,59 @@ func (m LastNFunction_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"input": types.StringType,
 			"n":     types.Int64Type,
+		},
+	}
+}
+
+// A window that spans the entire lifetime of a data source, accumulating from
+// the source's start rather than over a bounded duration. All fields are
+// optional; an empty message denotes the continuous, fully-accurate variant.
+type LifetimeWindow_SdkV2 struct {
+	// The slide duration for the discrete (offline) variant: the value updates
+	// only at these boundaries. Must be positive when set. When absent, the
+	// window is continuous (the value is as fresh as the pipeline delivers).
+	SlideDuration timetypes.GoDuration `tfsdk:"slide_duration"`
+}
+
+func (to *LifetimeWindow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LifetimeWindow_SdkV2) {
+}
+
+func (to *LifetimeWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LifetimeWindow_SdkV2) {
+}
+
+func (m LifetimeWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["slide_duration"] = attrs["slide_duration"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LifetimeWindow.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m LifetimeWindow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LifetimeWindow_SdkV2
+// only implements ToObjectValue() and Type().
+func (m LifetimeWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"slide_duration": m.SlideDuration,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m LifetimeWindow_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"slide_duration": timetypes.GoDuration{}.Type(ctx),
 		},
 	}
 }
@@ -24730,6 +24992,8 @@ func (m TestRegistryWebhookResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type TimeWindow_SdkV2 struct {
 	Continuous types.List `tfsdk:"continuous"`
+	// A window that spans the entire lifetime of the data source.
+	Lifetime types.List `tfsdk:"lifetime"`
 	// A long (multi-day) rolling window served via the hybrid batch + streaming
 	// path.
 	LongRolling types.List `tfsdk:"long_rolling"`
@@ -24748,6 +25012,15 @@ func (to *TimeWindow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 				// Recursively sync the fields of Continuous
 				toContinuous.SyncFieldsDuringCreateOrUpdate(ctx, fromContinuous)
 				to.SetContinuous(ctx, toContinuous)
+			}
+		}
+	}
+	if !from.Lifetime.IsNull() && !from.Lifetime.IsUnknown() {
+		if toLifetime, ok := to.GetLifetime(ctx); ok {
+			if fromLifetime, ok := from.GetLifetime(ctx); ok {
+				// Recursively sync the fields of Lifetime
+				toLifetime.SyncFieldsDuringCreateOrUpdate(ctx, fromLifetime)
+				to.SetLifetime(ctx, toLifetime)
 			}
 		}
 	}
@@ -24798,6 +25071,14 @@ func (to *TimeWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TimeW
 			}
 		}
 	}
+	if !from.Lifetime.IsNull() && !from.Lifetime.IsUnknown() {
+		if toLifetime, ok := to.GetLifetime(ctx); ok {
+			if fromLifetime, ok := from.GetLifetime(ctx); ok {
+				toLifetime.SyncFieldsDuringRead(ctx, fromLifetime)
+				to.SetLifetime(ctx, toLifetime)
+			}
+		}
+	}
 	if !from.LongRolling.IsNull() && !from.LongRolling.IsUnknown() {
 		if toLongRolling, ok := to.GetLongRolling(ctx); ok {
 			if fromLongRolling, ok := from.GetLongRolling(ctx); ok {
@@ -24835,6 +25116,8 @@ func (to *TimeWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TimeW
 func (m TimeWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["continuous"] = attrs["continuous"].SetOptional()
 	attrs["continuous"] = attrs["continuous"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["lifetime"] = attrs["lifetime"].SetOptional()
+	attrs["lifetime"] = attrs["lifetime"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["long_rolling"] = attrs["long_rolling"].SetOptional()
 	attrs["long_rolling"] = attrs["long_rolling"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["rolling"] = attrs["rolling"].SetOptional()
@@ -24857,6 +25140,7 @@ func (m TimeWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 func (m TimeWindow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"continuous":   reflect.TypeOf(ContinuousWindow_SdkV2{}),
+		"lifetime":     reflect.TypeOf(LifetimeWindow_SdkV2{}),
 		"long_rolling": reflect.TypeOf(LongRollingWindow_SdkV2{}),
 		"rolling":      reflect.TypeOf(RollingWindow_SdkV2{}),
 		"sliding":      reflect.TypeOf(SlidingWindow_SdkV2{}),
@@ -24872,6 +25156,7 @@ func (m TimeWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"continuous":   m.Continuous,
+			"lifetime":     m.Lifetime,
 			"long_rolling": m.LongRolling,
 			"rolling":      m.Rolling,
 			"sliding":      m.Sliding,
@@ -24885,6 +25170,9 @@ func (m TimeWindow_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"continuous": basetypes.ListType{
 				ElemType: ContinuousWindow_SdkV2{}.Type(ctx),
+			},
+			"lifetime": basetypes.ListType{
+				ElemType: LifetimeWindow_SdkV2{}.Type(ctx),
 			},
 			"long_rolling": basetypes.ListType{
 				ElemType: LongRollingWindow_SdkV2{}.Type(ctx),
@@ -24926,6 +25214,32 @@ func (m *TimeWindow_SdkV2) SetContinuous(ctx context.Context, v ContinuousWindow
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["continuous"]
 	m.Continuous = types.ListValueMust(t, vs)
+}
+
+// GetLifetime returns the value of the Lifetime field in TimeWindow_SdkV2 as
+// a LifetimeWindow_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TimeWindow_SdkV2) GetLifetime(ctx context.Context) (LifetimeWindow_SdkV2, bool) {
+	var e LifetimeWindow_SdkV2
+	if m.Lifetime.IsNull() || m.Lifetime.IsUnknown() {
+		return e, false
+	}
+	var v []LifetimeWindow_SdkV2
+	d := m.Lifetime.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLifetime sets the value of the Lifetime field in TimeWindow_SdkV2.
+func (m *TimeWindow_SdkV2) SetLifetime(ctx context.Context, v LifetimeWindow_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["lifetime"]
+	m.Lifetime = types.ListValueMust(t, vs)
 }
 
 // GetLongRolling returns the value of the LongRolling field in TimeWindow_SdkV2 as
@@ -25429,6 +25743,72 @@ func (m TumblingWindow_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"window_duration": types.StringType,
+		},
+	}
+}
+
+// A Unity Catalog trace storage location. Traces are stored as Delta tables in
+// the specified catalog and schema.
+type UcTraceLocation_SdkV2 struct {
+	// The name of the Unity Catalog catalog.
+	Catalog types.String `tfsdk:"catalog"`
+	// The name of the Unity Catalog schema within `catalog`.
+	Schema types.String `tfsdk:"schema"`
+	// The prefix for the trace tables, which are named
+	// `{catalog}.{schema}.{table_prefix}_otel_*`. May only contain letters,
+	// digits, and underscores, and may be at most 238 characters. When unset, a
+	// server-generated prefix derived from the experiment ID is used.
+	TablePrefix types.String `tfsdk:"table_prefix"`
+}
+
+func (to *UcTraceLocation_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UcTraceLocation_SdkV2) {
+}
+
+func (to *UcTraceLocation_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UcTraceLocation_SdkV2) {
+}
+
+func (m UcTraceLocation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog"] = attrs["catalog"].SetRequired()
+	attrs["catalog"] = attrs["catalog"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["schema"] = attrs["schema"].SetRequired()
+	attrs["schema"] = attrs["schema"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["table_prefix"] = attrs["table_prefix"].SetOptional()
+	attrs["table_prefix"] = attrs["table_prefix"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UcTraceLocation.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UcTraceLocation_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UcTraceLocation_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UcTraceLocation_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog":      m.Catalog,
+			"schema":       m.Schema,
+			"table_prefix": m.TablePrefix,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UcTraceLocation_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog":      types.StringType,
+			"schema":       types.StringType,
+			"table_prefix": types.StringType,
 		},
 	}
 }

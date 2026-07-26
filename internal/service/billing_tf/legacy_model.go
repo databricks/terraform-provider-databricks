@@ -108,6 +108,19 @@ func (to *AlertConfiguration_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ActionConfigurations = from.ActionConfigurations
 	}
+	if !from.ActionConfigurations.IsNull() && !from.ActionConfigurations.IsUnknown() {
+		if toActionConfigurations, ok := to.GetActionConfigurations(ctx); ok {
+			if fromActionConfigurations, ok := from.GetActionConfigurations(ctx); ok {
+				// Recursively sync the fields of each ActionConfigurations element by position.
+				for i := range toActionConfigurations {
+					if i < len(fromActionConfigurations) {
+						toActionConfigurations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromActionConfigurations[i])
+					}
+				}
+				to.SetActionConfigurations(ctx, toActionConfigurations)
+			}
+		}
+	}
 }
 
 func (to *AlertConfiguration_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AlertConfiguration_SdkV2) {
@@ -116,6 +129,18 @@ func (to *AlertConfiguration_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 		// If a user specified a non-Null, empty list for ActionConfigurations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ActionConfigurations = from.ActionConfigurations
+	}
+	if !from.ActionConfigurations.IsNull() && !from.ActionConfigurations.IsUnknown() {
+		if toActionConfigurations, ok := to.GetActionConfigurations(ctx); ok {
+			if fromActionConfigurations, ok := from.GetActionConfigurations(ctx); ok {
+				for i := range toActionConfigurations {
+					if i < len(fromActionConfigurations) {
+						toActionConfigurations[i].SyncFieldsDuringRead(ctx, fromActionConfigurations[i])
+					}
+				}
+				to.SetActionConfigurations(ctx, toActionConfigurations)
+			}
+		}
 	}
 }
 
@@ -229,6 +254,19 @@ func (to *BudgetConfiguration_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AlertConfigurations = from.AlertConfigurations
 	}
+	if !from.AlertConfigurations.IsNull() && !from.AlertConfigurations.IsUnknown() {
+		if toAlertConfigurations, ok := to.GetAlertConfigurations(ctx); ok {
+			if fromAlertConfigurations, ok := from.GetAlertConfigurations(ctx); ok {
+				// Recursively sync the fields of each AlertConfigurations element by position.
+				for i := range toAlertConfigurations {
+					if i < len(fromAlertConfigurations) {
+						toAlertConfigurations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAlertConfigurations[i])
+					}
+				}
+				to.SetAlertConfigurations(ctx, toAlertConfigurations)
+			}
+		}
+	}
 	if !from.Filter.IsNull() && !from.Filter.IsUnknown() {
 		if toFilter, ok := to.GetFilter(ctx); ok {
 			if fromFilter, ok := from.GetFilter(ctx); ok {
@@ -246,6 +284,18 @@ func (to *BudgetConfiguration_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 		// If a user specified a non-Null, empty list for AlertConfigurations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AlertConfigurations = from.AlertConfigurations
+	}
+	if !from.AlertConfigurations.IsNull() && !from.AlertConfigurations.IsUnknown() {
+		if toAlertConfigurations, ok := to.GetAlertConfigurations(ctx); ok {
+			if fromAlertConfigurations, ok := from.GetAlertConfigurations(ctx); ok {
+				for i := range toAlertConfigurations {
+					if i < len(fromAlertConfigurations) {
+						toAlertConfigurations[i].SyncFieldsDuringRead(ctx, fromAlertConfigurations[i])
+					}
+				}
+				to.SetAlertConfigurations(ctx, toAlertConfigurations)
+			}
+		}
 	}
 	if !from.Filter.IsNull() && !from.Filter.IsUnknown() {
 		if toFilter, ok := to.GetFilter(ctx); ok {
@@ -388,6 +438,19 @@ func (to *BudgetConfigurationFilter_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 	if !from.WorkspaceId.IsNull() && !from.WorkspaceId.IsUnknown() {
 		if toWorkspaceId, ok := to.GetWorkspaceId(ctx); ok {
 			if fromWorkspaceId, ok := from.GetWorkspaceId(ctx); ok {
@@ -405,6 +468,18 @@ func (to *BudgetConfigurationFilter_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 	if !from.WorkspaceId.IsNull() && !from.WorkspaceId.IsUnknown() {
 		if toWorkspaceId, ok := to.GetWorkspaceId(ctx); ok {
@@ -835,6 +910,19 @@ func (to *BudgetPolicy_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.CustomTags = from.CustomTags
 	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() {
+		if toCustomTags, ok := to.GetCustomTags(ctx); ok {
+			if fromCustomTags, ok := from.GetCustomTags(ctx); ok {
+				// Recursively sync the fields of each CustomTags element by position.
+				for i := range toCustomTags {
+					if i < len(fromCustomTags) {
+						toCustomTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromCustomTags[i])
+					}
+				}
+				to.SetCustomTags(ctx, toCustomTags)
+			}
+		}
+	}
 }
 
 func (to *BudgetPolicy_SdkV2) SyncFieldsDuringRead(ctx context.Context, from BudgetPolicy_SdkV2) {
@@ -849,6 +937,18 @@ func (to *BudgetPolicy_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Bud
 		// If a user specified a non-Null, empty list for CustomTags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.CustomTags = from.CustomTags
+	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() {
+		if toCustomTags, ok := to.GetCustomTags(ctx); ok {
+			if fromCustomTags, ok := from.GetCustomTags(ctx); ok {
+				for i := range toCustomTags {
+					if i < len(fromCustomTags) {
+						toCustomTags[i].SyncFieldsDuringRead(ctx, fromCustomTags[i])
+					}
+				}
+				to.SetCustomTags(ctx, toCustomTags)
+			}
+		}
 	}
 }
 
@@ -1090,6 +1190,19 @@ func (to *CreateBudgetConfigurationBudget_SdkV2) SyncFieldsDuringCreateOrUpdate(
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AlertConfigurations = from.AlertConfigurations
 	}
+	if !from.AlertConfigurations.IsNull() && !from.AlertConfigurations.IsUnknown() {
+		if toAlertConfigurations, ok := to.GetAlertConfigurations(ctx); ok {
+			if fromAlertConfigurations, ok := from.GetAlertConfigurations(ctx); ok {
+				// Recursively sync the fields of each AlertConfigurations element by position.
+				for i := range toAlertConfigurations {
+					if i < len(fromAlertConfigurations) {
+						toAlertConfigurations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAlertConfigurations[i])
+					}
+				}
+				to.SetAlertConfigurations(ctx, toAlertConfigurations)
+			}
+		}
+	}
 	if !from.Filter.IsNull() && !from.Filter.IsUnknown() {
 		if toFilter, ok := to.GetFilter(ctx); ok {
 			if fromFilter, ok := from.GetFilter(ctx); ok {
@@ -1107,6 +1220,18 @@ func (to *CreateBudgetConfigurationBudget_SdkV2) SyncFieldsDuringRead(ctx contex
 		// If a user specified a non-Null, empty list for AlertConfigurations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AlertConfigurations = from.AlertConfigurations
+	}
+	if !from.AlertConfigurations.IsNull() && !from.AlertConfigurations.IsUnknown() {
+		if toAlertConfigurations, ok := to.GetAlertConfigurations(ctx); ok {
+			if fromAlertConfigurations, ok := from.GetAlertConfigurations(ctx); ok {
+				for i := range toAlertConfigurations {
+					if i < len(fromAlertConfigurations) {
+						toAlertConfigurations[i].SyncFieldsDuringRead(ctx, fromAlertConfigurations[i])
+					}
+				}
+				to.SetAlertConfigurations(ctx, toAlertConfigurations)
+			}
+		}
 	}
 	if !from.Filter.IsNull() && !from.Filter.IsUnknown() {
 		if toFilter, ok := to.GetFilter(ctx); ok {
@@ -1301,6 +1426,19 @@ func (to *CreateBudgetConfigurationBudgetAlertConfigurations_SdkV2) SyncFieldsDu
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ActionConfigurations = from.ActionConfigurations
 	}
+	if !from.ActionConfigurations.IsNull() && !from.ActionConfigurations.IsUnknown() {
+		if toActionConfigurations, ok := to.GetActionConfigurations(ctx); ok {
+			if fromActionConfigurations, ok := from.GetActionConfigurations(ctx); ok {
+				// Recursively sync the fields of each ActionConfigurations element by position.
+				for i := range toActionConfigurations {
+					if i < len(fromActionConfigurations) {
+						toActionConfigurations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromActionConfigurations[i])
+					}
+				}
+				to.SetActionConfigurations(ctx, toActionConfigurations)
+			}
+		}
+	}
 }
 
 func (to *CreateBudgetConfigurationBudgetAlertConfigurations_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateBudgetConfigurationBudgetAlertConfigurations_SdkV2) {
@@ -1309,6 +1447,18 @@ func (to *CreateBudgetConfigurationBudgetAlertConfigurations_SdkV2) SyncFieldsDu
 		// If a user specified a non-Null, empty list for ActionConfigurations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ActionConfigurations = from.ActionConfigurations
+	}
+	if !from.ActionConfigurations.IsNull() && !from.ActionConfigurations.IsUnknown() {
+		if toActionConfigurations, ok := to.GetActionConfigurations(ctx); ok {
+			if fromActionConfigurations, ok := from.GetActionConfigurations(ctx); ok {
+				for i := range toActionConfigurations {
+					if i < len(fromActionConfigurations) {
+						toActionConfigurations[i].SyncFieldsDuringRead(ctx, fromActionConfigurations[i])
+					}
+				}
+				to.SetActionConfigurations(ctx, toActionConfigurations)
+			}
+		}
 	}
 }
 
@@ -2126,8 +2276,9 @@ type Filter_SdkV2 struct {
 	// The policy creator user id to be filtered on. If unspecified, all
 	// policies will be returned.
 	CreatorUserId types.Int64 `tfsdk:"creator_user_id"`
-	// The policy creator user name to be filtered on. If unspecified, all
-	// policies will be returned.
+	// Deprecated: Do not use this field in new integrations. Creator filtering
+	// will be removed in a future version. The policy creator user name to be
+	// filtered on. If unspecified, all policies will be returned.
 	CreatorUserName types.String `tfsdk:"creator_user_name"`
 	// The partial name of policies to be filtered on. If unspecified, all
 	// policies will be returned.
@@ -2739,6 +2890,19 @@ func (to *ListBudgetConfigurationsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Budgets = from.Budgets
 	}
+	if !from.Budgets.IsNull() && !from.Budgets.IsUnknown() {
+		if toBudgets, ok := to.GetBudgets(ctx); ok {
+			if fromBudgets, ok := from.GetBudgets(ctx); ok {
+				// Recursively sync the fields of each Budgets element by position.
+				for i := range toBudgets {
+					if i < len(fromBudgets) {
+						toBudgets[i].SyncFieldsDuringCreateOrUpdate(ctx, fromBudgets[i])
+					}
+				}
+				to.SetBudgets(ctx, toBudgets)
+			}
+		}
+	}
 }
 
 func (to *ListBudgetConfigurationsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListBudgetConfigurationsResponse_SdkV2) {
@@ -2747,6 +2911,18 @@ func (to *ListBudgetConfigurationsResponse_SdkV2) SyncFieldsDuringRead(ctx conte
 		// If a user specified a non-Null, empty list for Budgets, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Budgets = from.Budgets
+	}
+	if !from.Budgets.IsNull() && !from.Budgets.IsUnknown() {
+		if toBudgets, ok := to.GetBudgets(ctx); ok {
+			if fromBudgets, ok := from.GetBudgets(ctx); ok {
+				for i := range toBudgets {
+					if i < len(fromBudgets) {
+						toBudgets[i].SyncFieldsDuringRead(ctx, fromBudgets[i])
+					}
+				}
+				to.SetBudgets(ctx, toBudgets)
+			}
+		}
 	}
 }
 
@@ -3006,6 +3182,19 @@ func (to *ListBudgetPoliciesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Policies = from.Policies
 	}
+	if !from.Policies.IsNull() && !from.Policies.IsUnknown() {
+		if toPolicies, ok := to.GetPolicies(ctx); ok {
+			if fromPolicies, ok := from.GetPolicies(ctx); ok {
+				// Recursively sync the fields of each Policies element by position.
+				for i := range toPolicies {
+					if i < len(fromPolicies) {
+						toPolicies[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPolicies[i])
+					}
+				}
+				to.SetPolicies(ctx, toPolicies)
+			}
+		}
+	}
 }
 
 func (to *ListBudgetPoliciesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListBudgetPoliciesResponse_SdkV2) {
@@ -3014,6 +3203,18 @@ func (to *ListBudgetPoliciesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Con
 		// If a user specified a non-Null, empty list for Policies, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Policies = from.Policies
+	}
+	if !from.Policies.IsNull() && !from.Policies.IsUnknown() {
+		if toPolicies, ok := to.GetPolicies(ctx); ok {
+			if fromPolicies, ok := from.GetPolicies(ctx); ok {
+				for i := range toPolicies {
+					if i < len(fromPolicies) {
+						toPolicies[i].SyncFieldsDuringRead(ctx, fromPolicies[i])
+					}
+				}
+				to.SetPolicies(ctx, toPolicies)
+			}
+		}
 	}
 }
 
@@ -3600,6 +3801,19 @@ func (to *UpdateBudgetConfigurationBudget_SdkV2) SyncFieldsDuringCreateOrUpdate(
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AlertConfigurations = from.AlertConfigurations
 	}
+	if !from.AlertConfigurations.IsNull() && !from.AlertConfigurations.IsUnknown() {
+		if toAlertConfigurations, ok := to.GetAlertConfigurations(ctx); ok {
+			if fromAlertConfigurations, ok := from.GetAlertConfigurations(ctx); ok {
+				// Recursively sync the fields of each AlertConfigurations element by position.
+				for i := range toAlertConfigurations {
+					if i < len(fromAlertConfigurations) {
+						toAlertConfigurations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAlertConfigurations[i])
+					}
+				}
+				to.SetAlertConfigurations(ctx, toAlertConfigurations)
+			}
+		}
+	}
 	if !from.Filter.IsNull() && !from.Filter.IsUnknown() {
 		if toFilter, ok := to.GetFilter(ctx); ok {
 			if fromFilter, ok := from.GetFilter(ctx); ok {
@@ -3617,6 +3831,18 @@ func (to *UpdateBudgetConfigurationBudget_SdkV2) SyncFieldsDuringRead(ctx contex
 		// If a user specified a non-Null, empty list for AlertConfigurations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AlertConfigurations = from.AlertConfigurations
+	}
+	if !from.AlertConfigurations.IsNull() && !from.AlertConfigurations.IsUnknown() {
+		if toAlertConfigurations, ok := to.GetAlertConfigurations(ctx); ok {
+			if fromAlertConfigurations, ok := from.GetAlertConfigurations(ctx); ok {
+				for i := range toAlertConfigurations {
+					if i < len(fromAlertConfigurations) {
+						toAlertConfigurations[i].SyncFieldsDuringRead(ctx, fromAlertConfigurations[i])
+					}
+				}
+				to.SetAlertConfigurations(ctx, toAlertConfigurations)
+			}
+		}
 	}
 	if !from.Filter.IsNull() && !from.Filter.IsUnknown() {
 		if toFilter, ok := to.GetFilter(ctx); ok {
@@ -4361,6 +4587,19 @@ func (to *WrappedLogDeliveryConfigurations_SdkV2) SyncFieldsDuringCreateOrUpdate
 		// set the resulting resource state to the empty list to match the planned value.
 		to.LogDeliveryConfigurations = from.LogDeliveryConfigurations
 	}
+	if !from.LogDeliveryConfigurations.IsNull() && !from.LogDeliveryConfigurations.IsUnknown() {
+		if toLogDeliveryConfigurations, ok := to.GetLogDeliveryConfigurations(ctx); ok {
+			if fromLogDeliveryConfigurations, ok := from.GetLogDeliveryConfigurations(ctx); ok {
+				// Recursively sync the fields of each LogDeliveryConfigurations element by position.
+				for i := range toLogDeliveryConfigurations {
+					if i < len(fromLogDeliveryConfigurations) {
+						toLogDeliveryConfigurations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromLogDeliveryConfigurations[i])
+					}
+				}
+				to.SetLogDeliveryConfigurations(ctx, toLogDeliveryConfigurations)
+			}
+		}
+	}
 }
 
 func (to *WrappedLogDeliveryConfigurations_SdkV2) SyncFieldsDuringRead(ctx context.Context, from WrappedLogDeliveryConfigurations_SdkV2) {
@@ -4369,6 +4608,18 @@ func (to *WrappedLogDeliveryConfigurations_SdkV2) SyncFieldsDuringRead(ctx conte
 		// If a user specified a non-Null, empty list for LogDeliveryConfigurations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.LogDeliveryConfigurations = from.LogDeliveryConfigurations
+	}
+	if !from.LogDeliveryConfigurations.IsNull() && !from.LogDeliveryConfigurations.IsUnknown() {
+		if toLogDeliveryConfigurations, ok := to.GetLogDeliveryConfigurations(ctx); ok {
+			if fromLogDeliveryConfigurations, ok := from.GetLogDeliveryConfigurations(ctx); ok {
+				for i := range toLogDeliveryConfigurations {
+					if i < len(fromLogDeliveryConfigurations) {
+						toLogDeliveryConfigurations[i].SyncFieldsDuringRead(ctx, fromLogDeliveryConfigurations[i])
+					}
+				}
+				to.SetLogDeliveryConfigurations(ctx, toLogDeliveryConfigurations)
+			}
+		}
 	}
 }
 

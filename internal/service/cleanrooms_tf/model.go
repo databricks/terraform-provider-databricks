@@ -244,6 +244,9 @@ type CleanRoomAsset struct {
 	// Local details for a foreign that are only available to its owner. Present
 	// if and only if **asset_type** is **FOREIGN_TABLE**
 	ForeignTableLocalDetails types.Object `tfsdk:"foreign_table_local_details"`
+	// Jar analysis details available to all collaborators of the clean room.
+	// Present if and only if **asset_type** is **JAR_ANALYSIS**
+	JarAnalysis types.Object `tfsdk:"jar_analysis"`
 	// A fully qualified name that uniquely identifies the asset within the
 	// clean room. This is also the name displayed in the clean room UI.
 	//
@@ -293,6 +296,15 @@ func (to *CleanRoomAsset) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 				// Recursively sync the fields of ForeignTableLocalDetails
 				toForeignTableLocalDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromForeignTableLocalDetails)
 				to.SetForeignTableLocalDetails(ctx, toForeignTableLocalDetails)
+			}
+		}
+	}
+	if !from.JarAnalysis.IsNull() && !from.JarAnalysis.IsUnknown() {
+		if toJarAnalysis, ok := to.GetJarAnalysis(ctx); ok {
+			if fromJarAnalysis, ok := from.GetJarAnalysis(ctx); ok {
+				// Recursively sync the fields of JarAnalysis
+				toJarAnalysis.SyncFieldsDuringCreateOrUpdate(ctx, fromJarAnalysis)
+				to.SetJarAnalysis(ctx, toJarAnalysis)
 			}
 		}
 	}
@@ -369,6 +381,14 @@ func (to *CleanRoomAsset) SyncFieldsDuringRead(ctx context.Context, from CleanRo
 			}
 		}
 	}
+	if !from.JarAnalysis.IsNull() && !from.JarAnalysis.IsUnknown() {
+		if toJarAnalysis, ok := to.GetJarAnalysis(ctx); ok {
+			if fromJarAnalysis, ok := from.GetJarAnalysis(ctx); ok {
+				toJarAnalysis.SyncFieldsDuringRead(ctx, fromJarAnalysis)
+				to.SetJarAnalysis(ctx, toJarAnalysis)
+			}
+		}
+	}
 	if !from.Notebook.IsNull() && !from.Notebook.IsUnknown() {
 		if toNotebook, ok := to.GetNotebook(ctx); ok {
 			if fromNotebook, ok := from.GetNotebook(ctx); ok {
@@ -425,6 +445,7 @@ func (m CleanRoomAsset) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["clean_room_name"] = attrs["clean_room_name"].SetOptional()
 	attrs["foreign_table"] = attrs["foreign_table"].SetOptional()
 	attrs["foreign_table_local_details"] = attrs["foreign_table_local_details"].SetOptional()
+	attrs["jar_analysis"] = attrs["jar_analysis"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["notebook"] = attrs["notebook"].SetOptional()
 	attrs["owner_collaborator_alias"] = attrs["owner_collaborator_alias"].SetComputed()
@@ -449,6 +470,7 @@ func (m CleanRoomAsset) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{
 		"foreign_table":               reflect.TypeOf(CleanRoomAssetForeignTable{}),
 		"foreign_table_local_details": reflect.TypeOf(CleanRoomAssetForeignTableLocalDetails{}),
+		"jar_analysis":                reflect.TypeOf(CleanRoomAssetJarAnalysis{}),
 		"notebook":                    reflect.TypeOf(CleanRoomAssetNotebook{}),
 		"table":                       reflect.TypeOf(CleanRoomAssetTable{}),
 		"table_local_details":         reflect.TypeOf(CleanRoomAssetTableLocalDetails{}),
@@ -470,6 +492,7 @@ func (m CleanRoomAsset) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"clean_room_name":             m.CleanRoomName,
 			"foreign_table":               m.ForeignTable,
 			"foreign_table_local_details": m.ForeignTableLocalDetails,
+			"jar_analysis":                m.JarAnalysis,
 			"name":                        m.Name,
 			"notebook":                    m.Notebook,
 			"owner_collaborator_alias":    m.OwnerCollaboratorAlias,
@@ -491,6 +514,7 @@ func (m CleanRoomAsset) Type(ctx context.Context) attr.Type {
 			"clean_room_name":             types.StringType,
 			"foreign_table":               CleanRoomAssetForeignTable{}.Type(ctx),
 			"foreign_table_local_details": CleanRoomAssetForeignTableLocalDetails{}.Type(ctx),
+			"jar_analysis":                CleanRoomAssetJarAnalysis{}.Type(ctx),
 			"name":                        types.StringType,
 			"notebook":                    CleanRoomAssetNotebook{}.Type(ctx),
 			"owner_collaborator_alias":    types.StringType,
@@ -552,6 +576,31 @@ func (m *CleanRoomAsset) GetForeignTableLocalDetails(ctx context.Context) (Clean
 func (m *CleanRoomAsset) SetForeignTableLocalDetails(ctx context.Context, v CleanRoomAssetForeignTableLocalDetails) {
 	vs := v.ToObjectValue(ctx)
 	m.ForeignTableLocalDetails = vs
+}
+
+// GetJarAnalysis returns the value of the JarAnalysis field in CleanRoomAsset as
+// a CleanRoomAssetJarAnalysis value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CleanRoomAsset) GetJarAnalysis(ctx context.Context) (CleanRoomAssetJarAnalysis, bool) {
+	var e CleanRoomAssetJarAnalysis
+	if m.JarAnalysis.IsNull() || m.JarAnalysis.IsUnknown() {
+		return e, false
+	}
+	var v CleanRoomAssetJarAnalysis
+	d := m.JarAnalysis.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJarAnalysis sets the value of the JarAnalysis field in CleanRoomAsset.
+func (m *CleanRoomAsset) SetJarAnalysis(ctx context.Context, v CleanRoomAssetJarAnalysis) {
+	vs := v.ToObjectValue(ctx)
+	m.JarAnalysis = vs
 }
 
 // GetNotebook returns the value of the Notebook field in CleanRoomAsset as
@@ -841,6 +890,220 @@ func (m CleanRoomAssetForeignTableLocalDetails) Type(ctx context.Context) attr.T
 			"local_name": types.StringType,
 		},
 	}
+}
+
+type CleanRoomAssetJarAnalysis struct {
+	// The full paths in central to the jar files that are added to the library
+	// during execution (e.g.
+	// /Volumes/creator/schema/volume/folder/my_jar_file.jar) Only returned for
+	// the owner collaborator.
+	CentralJarFilePaths types.List `tfsdk:"central_jar_file_paths"`
+	// Optional description of the jar analysis shown to all collaborators.
+	Description types.String `tfsdk:"description"`
+	// The serverless environment version used to execute the JAR analysis (e.g.
+	// "4"). Defaults to "4-scala-preview" if not specified.
+	EnvironmentVersion types.String `tfsdk:"environment_version"`
+	// Server generated etag that represents the jar analysis version.
+	Etag types.String `tfsdk:"etag"`
+	// The full name of the class containing the main method to be executed.
+	// This class must be contained in a JAR provided as a library The code must
+	// use `SparkContext.getOrCreate` to obtain a Spark context; otherwise, runs
+	// of the job fail
+	MainClassName types.String `tfsdk:"main_class_name"`
+	// Top-level status derived from all reviews.
+	ReviewState types.String `tfsdk:"review_state"`
+	// All existing approvals or rejections.
+	Reviews types.List `tfsdk:"reviews"`
+	// Collaborators that can run the jar.
+	RunnerCollaboratorAliases types.List `tfsdk:"runner_collaborator_aliases"`
+}
+
+func (to *CleanRoomAssetJarAnalysis) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomAssetJarAnalysis) {
+	if !from.CentralJarFilePaths.IsNull() && !from.CentralJarFilePaths.IsUnknown() && to.CentralJarFilePaths.IsNull() && len(from.CentralJarFilePaths.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for CentralJarFilePaths, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.CentralJarFilePaths = from.CentralJarFilePaths
+	}
+	if !from.Reviews.IsNull() && !from.Reviews.IsUnknown() && to.Reviews.IsNull() && len(from.Reviews.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Reviews, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Reviews = from.Reviews
+	}
+	if !from.RunnerCollaboratorAliases.IsNull() && !from.RunnerCollaboratorAliases.IsUnknown() && to.RunnerCollaboratorAliases.IsNull() && len(from.RunnerCollaboratorAliases.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RunnerCollaboratorAliases, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RunnerCollaboratorAliases = from.RunnerCollaboratorAliases
+	}
+}
+
+func (to *CleanRoomAssetJarAnalysis) SyncFieldsDuringRead(ctx context.Context, from CleanRoomAssetJarAnalysis) {
+	if !from.CentralJarFilePaths.IsNull() && !from.CentralJarFilePaths.IsUnknown() && to.CentralJarFilePaths.IsNull() && len(from.CentralJarFilePaths.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for CentralJarFilePaths, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.CentralJarFilePaths = from.CentralJarFilePaths
+	}
+	if !from.Reviews.IsNull() && !from.Reviews.IsUnknown() && to.Reviews.IsNull() && len(from.Reviews.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Reviews, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Reviews = from.Reviews
+	}
+	if !from.RunnerCollaboratorAliases.IsNull() && !from.RunnerCollaboratorAliases.IsUnknown() && to.RunnerCollaboratorAliases.IsNull() && len(from.RunnerCollaboratorAliases.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RunnerCollaboratorAliases, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RunnerCollaboratorAliases = from.RunnerCollaboratorAliases
+	}
+}
+
+func (m CleanRoomAssetJarAnalysis) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["central_jar_file_paths"] = attrs["central_jar_file_paths"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["environment_version"] = attrs["environment_version"].SetOptional()
+	attrs["etag"] = attrs["etag"].SetComputed()
+	attrs["main_class_name"] = attrs["main_class_name"].SetOptional()
+	attrs["review_state"] = attrs["review_state"].SetOptional()
+	attrs["reviews"] = attrs["reviews"].SetOptional()
+	attrs["runner_collaborator_aliases"] = attrs["runner_collaborator_aliases"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetJarAnalysis.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CleanRoomAssetJarAnalysis) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"central_jar_file_paths":      reflect.TypeOf(types.String{}),
+		"reviews":                     reflect.TypeOf(CleanRoomJarAnalysisReview{}),
+		"runner_collaborator_aliases": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetJarAnalysis
+// only implements ToObjectValue() and Type().
+func (m CleanRoomAssetJarAnalysis) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"central_jar_file_paths":      m.CentralJarFilePaths,
+			"description":                 m.Description,
+			"environment_version":         m.EnvironmentVersion,
+			"etag":                        m.Etag,
+			"main_class_name":             m.MainClassName,
+			"review_state":                m.ReviewState,
+			"reviews":                     m.Reviews,
+			"runner_collaborator_aliases": m.RunnerCollaboratorAliases,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CleanRoomAssetJarAnalysis) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"central_jar_file_paths": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"description":         types.StringType,
+			"environment_version": types.StringType,
+			"etag":                types.StringType,
+			"main_class_name":     types.StringType,
+			"review_state":        types.StringType,
+			"reviews": basetypes.ListType{
+				ElemType: CleanRoomJarAnalysisReview{}.Type(ctx),
+			},
+			"runner_collaborator_aliases": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetCentralJarFilePaths returns the value of the CentralJarFilePaths field in CleanRoomAssetJarAnalysis as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CleanRoomAssetJarAnalysis) GetCentralJarFilePaths(ctx context.Context) ([]types.String, bool) {
+	if m.CentralJarFilePaths.IsNull() || m.CentralJarFilePaths.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.CentralJarFilePaths.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCentralJarFilePaths sets the value of the CentralJarFilePaths field in CleanRoomAssetJarAnalysis.
+func (m *CleanRoomAssetJarAnalysis) SetCentralJarFilePaths(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["central_jar_file_paths"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.CentralJarFilePaths = types.ListValueMust(t, vs)
+}
+
+// GetReviews returns the value of the Reviews field in CleanRoomAssetJarAnalysis as
+// a slice of CleanRoomJarAnalysisReview values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CleanRoomAssetJarAnalysis) GetReviews(ctx context.Context) ([]CleanRoomJarAnalysisReview, bool) {
+	if m.Reviews.IsNull() || m.Reviews.IsUnknown() {
+		return nil, false
+	}
+	var v []CleanRoomJarAnalysisReview
+	d := m.Reviews.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetReviews sets the value of the Reviews field in CleanRoomAssetJarAnalysis.
+func (m *CleanRoomAssetJarAnalysis) SetReviews(ctx context.Context, v []CleanRoomJarAnalysisReview) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["reviews"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Reviews = types.ListValueMust(t, vs)
+}
+
+// GetRunnerCollaboratorAliases returns the value of the RunnerCollaboratorAliases field in CleanRoomAssetJarAnalysis as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CleanRoomAssetJarAnalysis) GetRunnerCollaboratorAliases(ctx context.Context) ([]types.String, bool) {
+	if m.RunnerCollaboratorAliases.IsNull() || m.RunnerCollaboratorAliases.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.RunnerCollaboratorAliases.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRunnerCollaboratorAliases sets the value of the RunnerCollaboratorAliases field in CleanRoomAssetJarAnalysis.
+func (m *CleanRoomAssetJarAnalysis) SetRunnerCollaboratorAliases(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["runner_collaborator_aliases"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.RunnerCollaboratorAliases = types.ListValueMust(t, vs)
 }
 
 type CleanRoomAssetNotebook struct {
@@ -1565,6 +1828,76 @@ func (m CleanRoomCollaborator) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// This only applies to a JAR Analysis as a first-class asset in the Clean Room,
+// and not to Volumes
+type CleanRoomJarAnalysisReview struct {
+	// review comment
+	Comment types.String `tfsdk:"comment"`
+	// timestamp of when the review was submitted
+	CreatedAtMillis types.Int64 `tfsdk:"created_at_millis"`
+	// review outcome
+	ReviewState types.String `tfsdk:"review_state"`
+	// specified when the review was not explicitly made by a user
+	ReviewSubReason types.String `tfsdk:"review_sub_reason"`
+	// collaborator alias of the reviewer
+	ReviewerCollaboratorAlias types.String `tfsdk:"reviewer_collaborator_alias"`
+}
+
+func (to *CleanRoomJarAnalysisReview) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomJarAnalysisReview) {
+}
+
+func (to *CleanRoomJarAnalysisReview) SyncFieldsDuringRead(ctx context.Context, from CleanRoomJarAnalysisReview) {
+}
+
+func (m CleanRoomJarAnalysisReview) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["created_at_millis"] = attrs["created_at_millis"].SetOptional()
+	attrs["review_state"] = attrs["review_state"].SetOptional()
+	attrs["review_sub_reason"] = attrs["review_sub_reason"].SetOptional()
+	attrs["reviewer_collaborator_alias"] = attrs["reviewer_collaborator_alias"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomJarAnalysisReview.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CleanRoomJarAnalysisReview) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomJarAnalysisReview
+// only implements ToObjectValue() and Type().
+func (m CleanRoomJarAnalysisReview) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"comment":                     m.Comment,
+			"created_at_millis":           m.CreatedAtMillis,
+			"review_state":                m.ReviewState,
+			"review_sub_reason":           m.ReviewSubReason,
+			"reviewer_collaborator_alias": m.ReviewerCollaboratorAlias,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CleanRoomJarAnalysisReview) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"comment":                     types.StringType,
+			"created_at_millis":           types.Int64Type,
+			"review_state":                types.StringType,
+			"review_sub_reason":           types.StringType,
+			"reviewer_collaborator_alias": types.StringType,
+		},
+	}
+}
+
 type CleanRoomNotebookReview struct {
 	// Review comment
 	Comment types.String `tfsdk:"comment"`
@@ -2161,6 +2494,423 @@ func (m *CleanRoomRemoteDetail) SetEgressNetworkPolicy(ctx context.Context, v se
 	m.EgressNetworkPolicy = vs
 }
 
+// Stores information about a single task run.
+type CleanRoomTaskRun struct {
+	// Information about the analysis run (etag, updated at)
+	AnalysisDetails types.Object `tfsdk:"analysis_details"`
+	// Job run info of the task in the runner's local workspace. This field is
+	// only included in the LIST API if the task was run within the same
+	// workspace the API is being called. If the task run was in a different
+	// workspace under the same metastore, only the workspace_id is included.
+	CollaboratorJobRunInfo types.Object `tfsdk:"collaborator_job_run_info"`
+	// Name of the executable.
+	Name types.String `tfsdk:"name"`
+	// Information about run output
+	OutputInfo types.Object `tfsdk:"output_info"`
+	// Duration of the task run, in milliseconds.
+	RunDuration types.Int64 `tfsdk:"run_duration"`
+	// Information about shared output accessible by all collaborators. This
+	// field is only populated when enable_shared_output is true.
+	SharedOutputInfo types.Object `tfsdk:"shared_output_info"`
+	// When the task run started, in epoch milliseconds.
+	StartTime types.Int64 `tfsdk:"start_time"`
+	// State of the task run.
+	TaskRunState types.Object `tfsdk:"task_run_state"`
+	// The type of Clean Room task.
+	TaskType types.String `tfsdk:"task_type"`
+}
+
+func (to *CleanRoomTaskRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomTaskRun) {
+	if !from.AnalysisDetails.IsNull() && !from.AnalysisDetails.IsUnknown() {
+		if toAnalysisDetails, ok := to.GetAnalysisDetails(ctx); ok {
+			if fromAnalysisDetails, ok := from.GetAnalysisDetails(ctx); ok {
+				// Recursively sync the fields of AnalysisDetails
+				toAnalysisDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromAnalysisDetails)
+				to.SetAnalysisDetails(ctx, toAnalysisDetails)
+			}
+		}
+	}
+	if !from.CollaboratorJobRunInfo.IsNull() && !from.CollaboratorJobRunInfo.IsUnknown() {
+		if toCollaboratorJobRunInfo, ok := to.GetCollaboratorJobRunInfo(ctx); ok {
+			if fromCollaboratorJobRunInfo, ok := from.GetCollaboratorJobRunInfo(ctx); ok {
+				// Recursively sync the fields of CollaboratorJobRunInfo
+				toCollaboratorJobRunInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromCollaboratorJobRunInfo)
+				to.SetCollaboratorJobRunInfo(ctx, toCollaboratorJobRunInfo)
+			}
+		}
+	}
+	if !from.OutputInfo.IsNull() && !from.OutputInfo.IsUnknown() {
+		if toOutputInfo, ok := to.GetOutputInfo(ctx); ok {
+			if fromOutputInfo, ok := from.GetOutputInfo(ctx); ok {
+				// Recursively sync the fields of OutputInfo
+				toOutputInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromOutputInfo)
+				to.SetOutputInfo(ctx, toOutputInfo)
+			}
+		}
+	}
+	if !from.SharedOutputInfo.IsNull() && !from.SharedOutputInfo.IsUnknown() {
+		if toSharedOutputInfo, ok := to.GetSharedOutputInfo(ctx); ok {
+			if fromSharedOutputInfo, ok := from.GetSharedOutputInfo(ctx); ok {
+				// Recursively sync the fields of SharedOutputInfo
+				toSharedOutputInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromSharedOutputInfo)
+				to.SetSharedOutputInfo(ctx, toSharedOutputInfo)
+			}
+		}
+	}
+	if !from.TaskRunState.IsNull() && !from.TaskRunState.IsUnknown() {
+		if toTaskRunState, ok := to.GetTaskRunState(ctx); ok {
+			if fromTaskRunState, ok := from.GetTaskRunState(ctx); ok {
+				// Recursively sync the fields of TaskRunState
+				toTaskRunState.SyncFieldsDuringCreateOrUpdate(ctx, fromTaskRunState)
+				to.SetTaskRunState(ctx, toTaskRunState)
+			}
+		}
+	}
+}
+
+func (to *CleanRoomTaskRun) SyncFieldsDuringRead(ctx context.Context, from CleanRoomTaskRun) {
+	if !from.AnalysisDetails.IsNull() && !from.AnalysisDetails.IsUnknown() {
+		if toAnalysisDetails, ok := to.GetAnalysisDetails(ctx); ok {
+			if fromAnalysisDetails, ok := from.GetAnalysisDetails(ctx); ok {
+				toAnalysisDetails.SyncFieldsDuringRead(ctx, fromAnalysisDetails)
+				to.SetAnalysisDetails(ctx, toAnalysisDetails)
+			}
+		}
+	}
+	if !from.CollaboratorJobRunInfo.IsNull() && !from.CollaboratorJobRunInfo.IsUnknown() {
+		if toCollaboratorJobRunInfo, ok := to.GetCollaboratorJobRunInfo(ctx); ok {
+			if fromCollaboratorJobRunInfo, ok := from.GetCollaboratorJobRunInfo(ctx); ok {
+				toCollaboratorJobRunInfo.SyncFieldsDuringRead(ctx, fromCollaboratorJobRunInfo)
+				to.SetCollaboratorJobRunInfo(ctx, toCollaboratorJobRunInfo)
+			}
+		}
+	}
+	if !from.OutputInfo.IsNull() && !from.OutputInfo.IsUnknown() {
+		if toOutputInfo, ok := to.GetOutputInfo(ctx); ok {
+			if fromOutputInfo, ok := from.GetOutputInfo(ctx); ok {
+				toOutputInfo.SyncFieldsDuringRead(ctx, fromOutputInfo)
+				to.SetOutputInfo(ctx, toOutputInfo)
+			}
+		}
+	}
+	if !from.SharedOutputInfo.IsNull() && !from.SharedOutputInfo.IsUnknown() {
+		if toSharedOutputInfo, ok := to.GetSharedOutputInfo(ctx); ok {
+			if fromSharedOutputInfo, ok := from.GetSharedOutputInfo(ctx); ok {
+				toSharedOutputInfo.SyncFieldsDuringRead(ctx, fromSharedOutputInfo)
+				to.SetSharedOutputInfo(ctx, toSharedOutputInfo)
+			}
+		}
+	}
+	if !from.TaskRunState.IsNull() && !from.TaskRunState.IsUnknown() {
+		if toTaskRunState, ok := to.GetTaskRunState(ctx); ok {
+			if fromTaskRunState, ok := from.GetTaskRunState(ctx); ok {
+				toTaskRunState.SyncFieldsDuringRead(ctx, fromTaskRunState)
+				to.SetTaskRunState(ctx, toTaskRunState)
+			}
+		}
+	}
+}
+
+func (m CleanRoomTaskRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["analysis_details"] = attrs["analysis_details"].SetOptional()
+	attrs["collaborator_job_run_info"] = attrs["collaborator_job_run_info"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["output_info"] = attrs["output_info"].SetOptional()
+	attrs["run_duration"] = attrs["run_duration"].SetOptional()
+	attrs["shared_output_info"] = attrs["shared_output_info"].SetOptional()
+	attrs["start_time"] = attrs["start_time"].SetOptional()
+	attrs["task_run_state"] = attrs["task_run_state"].SetOptional()
+	attrs["task_type"] = attrs["task_type"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomTaskRun.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CleanRoomTaskRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"analysis_details":          reflect.TypeOf(CleanRoomTaskRunCleanRoomTaskAnalysisDetails{}),
+		"collaborator_job_run_info": reflect.TypeOf(CollaboratorJobRunInfo{}),
+		"output_info":               reflect.TypeOf(CleanRoomTaskRunOutputInfo{}),
+		"shared_output_info":        reflect.TypeOf(CleanRoomTaskRunOutputInfo{}),
+		"task_run_state":            reflect.TypeOf(jobs_tf.CleanRoomTaskRunState{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomTaskRun
+// only implements ToObjectValue() and Type().
+func (m CleanRoomTaskRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"analysis_details":          m.AnalysisDetails,
+			"collaborator_job_run_info": m.CollaboratorJobRunInfo,
+			"name":                      m.Name,
+			"output_info":               m.OutputInfo,
+			"run_duration":              m.RunDuration,
+			"shared_output_info":        m.SharedOutputInfo,
+			"start_time":                m.StartTime,
+			"task_run_state":            m.TaskRunState,
+			"task_type":                 m.TaskType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CleanRoomTaskRun) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"analysis_details":          CleanRoomTaskRunCleanRoomTaskAnalysisDetails{}.Type(ctx),
+			"collaborator_job_run_info": CollaboratorJobRunInfo{}.Type(ctx),
+			"name":                      types.StringType,
+			"output_info":               CleanRoomTaskRunOutputInfo{}.Type(ctx),
+			"run_duration":              types.Int64Type,
+			"shared_output_info":        CleanRoomTaskRunOutputInfo{}.Type(ctx),
+			"start_time":                types.Int64Type,
+			"task_run_state":            jobs_tf.CleanRoomTaskRunState{}.Type(ctx),
+			"task_type":                 types.StringType,
+		},
+	}
+}
+
+// GetAnalysisDetails returns the value of the AnalysisDetails field in CleanRoomTaskRun as
+// a CleanRoomTaskRunCleanRoomTaskAnalysisDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CleanRoomTaskRun) GetAnalysisDetails(ctx context.Context) (CleanRoomTaskRunCleanRoomTaskAnalysisDetails, bool) {
+	var e CleanRoomTaskRunCleanRoomTaskAnalysisDetails
+	if m.AnalysisDetails.IsNull() || m.AnalysisDetails.IsUnknown() {
+		return e, false
+	}
+	var v CleanRoomTaskRunCleanRoomTaskAnalysisDetails
+	d := m.AnalysisDetails.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAnalysisDetails sets the value of the AnalysisDetails field in CleanRoomTaskRun.
+func (m *CleanRoomTaskRun) SetAnalysisDetails(ctx context.Context, v CleanRoomTaskRunCleanRoomTaskAnalysisDetails) {
+	vs := v.ToObjectValue(ctx)
+	m.AnalysisDetails = vs
+}
+
+// GetCollaboratorJobRunInfo returns the value of the CollaboratorJobRunInfo field in CleanRoomTaskRun as
+// a CollaboratorJobRunInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CleanRoomTaskRun) GetCollaboratorJobRunInfo(ctx context.Context) (CollaboratorJobRunInfo, bool) {
+	var e CollaboratorJobRunInfo
+	if m.CollaboratorJobRunInfo.IsNull() || m.CollaboratorJobRunInfo.IsUnknown() {
+		return e, false
+	}
+	var v CollaboratorJobRunInfo
+	d := m.CollaboratorJobRunInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCollaboratorJobRunInfo sets the value of the CollaboratorJobRunInfo field in CleanRoomTaskRun.
+func (m *CleanRoomTaskRun) SetCollaboratorJobRunInfo(ctx context.Context, v CollaboratorJobRunInfo) {
+	vs := v.ToObjectValue(ctx)
+	m.CollaboratorJobRunInfo = vs
+}
+
+// GetOutputInfo returns the value of the OutputInfo field in CleanRoomTaskRun as
+// a CleanRoomTaskRunOutputInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CleanRoomTaskRun) GetOutputInfo(ctx context.Context) (CleanRoomTaskRunOutputInfo, bool) {
+	var e CleanRoomTaskRunOutputInfo
+	if m.OutputInfo.IsNull() || m.OutputInfo.IsUnknown() {
+		return e, false
+	}
+	var v CleanRoomTaskRunOutputInfo
+	d := m.OutputInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOutputInfo sets the value of the OutputInfo field in CleanRoomTaskRun.
+func (m *CleanRoomTaskRun) SetOutputInfo(ctx context.Context, v CleanRoomTaskRunOutputInfo) {
+	vs := v.ToObjectValue(ctx)
+	m.OutputInfo = vs
+}
+
+// GetSharedOutputInfo returns the value of the SharedOutputInfo field in CleanRoomTaskRun as
+// a CleanRoomTaskRunOutputInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CleanRoomTaskRun) GetSharedOutputInfo(ctx context.Context) (CleanRoomTaskRunOutputInfo, bool) {
+	var e CleanRoomTaskRunOutputInfo
+	if m.SharedOutputInfo.IsNull() || m.SharedOutputInfo.IsUnknown() {
+		return e, false
+	}
+	var v CleanRoomTaskRunOutputInfo
+	d := m.SharedOutputInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSharedOutputInfo sets the value of the SharedOutputInfo field in CleanRoomTaskRun.
+func (m *CleanRoomTaskRun) SetSharedOutputInfo(ctx context.Context, v CleanRoomTaskRunOutputInfo) {
+	vs := v.ToObjectValue(ctx)
+	m.SharedOutputInfo = vs
+}
+
+// GetTaskRunState returns the value of the TaskRunState field in CleanRoomTaskRun as
+// a jobs_tf.CleanRoomTaskRunState value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CleanRoomTaskRun) GetTaskRunState(ctx context.Context) (jobs_tf.CleanRoomTaskRunState, bool) {
+	var e jobs_tf.CleanRoomTaskRunState
+	if m.TaskRunState.IsNull() || m.TaskRunState.IsUnknown() {
+		return e, false
+	}
+	var v jobs_tf.CleanRoomTaskRunState
+	d := m.TaskRunState.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTaskRunState sets the value of the TaskRunState field in CleanRoomTaskRun.
+func (m *CleanRoomTaskRun) SetTaskRunState(ctx context.Context, v jobs_tf.CleanRoomTaskRunState) {
+	vs := v.ToObjectValue(ctx)
+	m.TaskRunState = vs
+}
+
+type CleanRoomTaskRunCleanRoomTaskAnalysisDetails struct {
+	// Etag of the asset executed in this task run, used to identify the asset
+	// version.
+	Etag types.String `tfsdk:"etag"`
+	// The timestamp of when the asset was last updated.
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
+}
+
+func (to *CleanRoomTaskRunCleanRoomTaskAnalysisDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomTaskRunCleanRoomTaskAnalysisDetails) {
+}
+
+func (to *CleanRoomTaskRunCleanRoomTaskAnalysisDetails) SyncFieldsDuringRead(ctx context.Context, from CleanRoomTaskRunCleanRoomTaskAnalysisDetails) {
+}
+
+func (m CleanRoomTaskRunCleanRoomTaskAnalysisDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomTaskRunCleanRoomTaskAnalysisDetails.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CleanRoomTaskRunCleanRoomTaskAnalysisDetails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomTaskRunCleanRoomTaskAnalysisDetails
+// only implements ToObjectValue() and Type().
+func (m CleanRoomTaskRunCleanRoomTaskAnalysisDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag":       m.Etag,
+			"updated_at": m.UpdatedAt,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CleanRoomTaskRunCleanRoomTaskAnalysisDetails) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag":       types.StringType,
+			"updated_at": types.Int64Type,
+		},
+	}
+}
+
+type CleanRoomTaskRunOutputInfo struct {
+	// Expiration time of the output schema of the task run (if any), in epoch
+	// milliseconds.
+	OutputSchemaExpirationTime types.Int64 `tfsdk:"output_schema_expiration_time"`
+	// Name of the output schema associated with the clean room task run.
+	OutputSchemaName types.String `tfsdk:"output_schema_name"`
+}
+
+func (to *CleanRoomTaskRunOutputInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CleanRoomTaskRunOutputInfo) {
+}
+
+func (to *CleanRoomTaskRunOutputInfo) SyncFieldsDuringRead(ctx context.Context, from CleanRoomTaskRunOutputInfo) {
+}
+
+func (m CleanRoomTaskRunOutputInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["output_schema_expiration_time"] = attrs["output_schema_expiration_time"].SetOptional()
+	attrs["output_schema_name"] = attrs["output_schema_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomTaskRunOutputInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CleanRoomTaskRunOutputInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomTaskRunOutputInfo
+// only implements ToObjectValue() and Type().
+func (m CleanRoomTaskRunOutputInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"output_schema_expiration_time": m.OutputSchemaExpirationTime,
+			"output_schema_name":            m.OutputSchemaName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CleanRoomTaskRunOutputInfo) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"output_schema_expiration_time": types.Int64Type,
+			"output_schema_name":            types.StringType,
+		},
+	}
+}
+
 type CollaboratorJobRunInfo struct {
 	// Alias of the collaborator that triggered the task run.
 	CollaboratorAlias types.String `tfsdk:"collaborator_alias"`
@@ -2429,6 +3179,8 @@ type CreateCleanRoomAssetReviewRequest struct {
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room
 	CleanRoomName types.String `tfsdk:"-"`
+
+	JarAnalysisReview types.Object `tfsdk:"jar_analysis_review"`
 	// Name of the asset
 	Name types.String `tfsdk:"-"`
 
@@ -2436,6 +3188,15 @@ type CreateCleanRoomAssetReviewRequest struct {
 }
 
 func (to *CreateCleanRoomAssetReviewRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCleanRoomAssetReviewRequest) {
+	if !from.JarAnalysisReview.IsNull() && !from.JarAnalysisReview.IsUnknown() {
+		if toJarAnalysisReview, ok := to.GetJarAnalysisReview(ctx); ok {
+			if fromJarAnalysisReview, ok := from.GetJarAnalysisReview(ctx); ok {
+				// Recursively sync the fields of JarAnalysisReview
+				toJarAnalysisReview.SyncFieldsDuringCreateOrUpdate(ctx, fromJarAnalysisReview)
+				to.SetJarAnalysisReview(ctx, toJarAnalysisReview)
+			}
+		}
+	}
 	if !from.NotebookReview.IsNull() && !from.NotebookReview.IsUnknown() {
 		if toNotebookReview, ok := to.GetNotebookReview(ctx); ok {
 			if fromNotebookReview, ok := from.GetNotebookReview(ctx); ok {
@@ -2448,6 +3209,14 @@ func (to *CreateCleanRoomAssetReviewRequest) SyncFieldsDuringCreateOrUpdate(ctx 
 }
 
 func (to *CreateCleanRoomAssetReviewRequest) SyncFieldsDuringRead(ctx context.Context, from CreateCleanRoomAssetReviewRequest) {
+	if !from.JarAnalysisReview.IsNull() && !from.JarAnalysisReview.IsUnknown() {
+		if toJarAnalysisReview, ok := to.GetJarAnalysisReview(ctx); ok {
+			if fromJarAnalysisReview, ok := from.GetJarAnalysisReview(ctx); ok {
+				toJarAnalysisReview.SyncFieldsDuringRead(ctx, fromJarAnalysisReview)
+				to.SetJarAnalysisReview(ctx, toJarAnalysisReview)
+			}
+		}
+	}
 	if !from.NotebookReview.IsNull() && !from.NotebookReview.IsUnknown() {
 		if toNotebookReview, ok := to.GetNotebookReview(ctx); ok {
 			if fromNotebookReview, ok := from.GetNotebookReview(ctx); ok {
@@ -2459,6 +3228,7 @@ func (to *CreateCleanRoomAssetReviewRequest) SyncFieldsDuringRead(ctx context.Co
 }
 
 func (m CreateCleanRoomAssetReviewRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["jar_analysis_review"] = attrs["jar_analysis_review"].SetOptional()
 	attrs["notebook_review"] = attrs["notebook_review"].SetOptional()
 	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
 	attrs["asset_type"] = attrs["asset_type"].SetRequired()
@@ -2476,7 +3246,8 @@ func (m CreateCleanRoomAssetReviewRequest) ApplySchemaCustomizations(attrs map[s
 // SDK values.
 func (m CreateCleanRoomAssetReviewRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"notebook_review": reflect.TypeOf(NotebookVersionReview{}),
+		"jar_analysis_review": reflect.TypeOf(JarAnalysisVersionReview{}),
+		"notebook_review":     reflect.TypeOf(NotebookVersionReview{}),
 	}
 }
 
@@ -2487,10 +3258,11 @@ func (m CreateCleanRoomAssetReviewRequest) ToObjectValue(ctx context.Context) ba
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"asset_type":      m.AssetType,
-			"clean_room_name": m.CleanRoomName,
-			"name":            m.Name,
-			"notebook_review": m.NotebookReview,
+			"asset_type":          m.AssetType,
+			"clean_room_name":     m.CleanRoomName,
+			"jar_analysis_review": m.JarAnalysisReview,
+			"name":                m.Name,
+			"notebook_review":     m.NotebookReview,
 		})
 }
 
@@ -2498,12 +3270,38 @@ func (m CreateCleanRoomAssetReviewRequest) ToObjectValue(ctx context.Context) ba
 func (m CreateCleanRoomAssetReviewRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"asset_type":      types.StringType,
-			"clean_room_name": types.StringType,
-			"name":            types.StringType,
-			"notebook_review": NotebookVersionReview{}.Type(ctx),
+			"asset_type":          types.StringType,
+			"clean_room_name":     types.StringType,
+			"jar_analysis_review": JarAnalysisVersionReview{}.Type(ctx),
+			"name":                types.StringType,
+			"notebook_review":     NotebookVersionReview{}.Type(ctx),
 		},
 	}
+}
+
+// GetJarAnalysisReview returns the value of the JarAnalysisReview field in CreateCleanRoomAssetReviewRequest as
+// a JarAnalysisVersionReview value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateCleanRoomAssetReviewRequest) GetJarAnalysisReview(ctx context.Context) (JarAnalysisVersionReview, bool) {
+	var e JarAnalysisVersionReview
+	if m.JarAnalysisReview.IsNull() || m.JarAnalysisReview.IsUnknown() {
+		return e, false
+	}
+	var v JarAnalysisVersionReview
+	d := m.JarAnalysisReview.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJarAnalysisReview sets the value of the JarAnalysisReview field in CreateCleanRoomAssetReviewRequest.
+func (m *CreateCleanRoomAssetReviewRequest) SetJarAnalysisReview(ctx context.Context, v JarAnalysisVersionReview) {
+	vs := v.ToObjectValue(ctx)
+	m.JarAnalysisReview = vs
 }
 
 // GetNotebookReview returns the value of the NotebookReview field in CreateCleanRoomAssetReviewRequest as
@@ -2532,6 +3330,10 @@ func (m *CreateCleanRoomAssetReviewRequest) SetNotebookReview(ctx context.Contex
 }
 
 type CreateCleanRoomAssetReviewResponse struct {
+	// top-level status derived from all reviews
+	JarAnalysisReviewState types.String `tfsdk:"jar_analysis_review_state"`
+	// All existing jar analysis approvals or rejections
+	JarAnalysisReviews types.List `tfsdk:"jar_analysis_reviews"`
 	// Top-level status derived from all reviews
 	NotebookReviewState types.String `tfsdk:"notebook_review_state"`
 	// All existing notebook approvals or rejections
@@ -2539,6 +3341,12 @@ type CreateCleanRoomAssetReviewResponse struct {
 }
 
 func (to *CreateCleanRoomAssetReviewResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCleanRoomAssetReviewResponse) {
+	if !from.JarAnalysisReviews.IsNull() && !from.JarAnalysisReviews.IsUnknown() && to.JarAnalysisReviews.IsNull() && len(from.JarAnalysisReviews.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JarAnalysisReviews, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JarAnalysisReviews = from.JarAnalysisReviews
+	}
 	if !from.NotebookReviews.IsNull() && !from.NotebookReviews.IsUnknown() && to.NotebookReviews.IsNull() && len(from.NotebookReviews.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for NotebookReviews, and the deserialized field value is Null,
@@ -2548,6 +3356,12 @@ func (to *CreateCleanRoomAssetReviewResponse) SyncFieldsDuringCreateOrUpdate(ctx
 }
 
 func (to *CreateCleanRoomAssetReviewResponse) SyncFieldsDuringRead(ctx context.Context, from CreateCleanRoomAssetReviewResponse) {
+	if !from.JarAnalysisReviews.IsNull() && !from.JarAnalysisReviews.IsUnknown() && to.JarAnalysisReviews.IsNull() && len(from.JarAnalysisReviews.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for JarAnalysisReviews, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.JarAnalysisReviews = from.JarAnalysisReviews
+	}
 	if !from.NotebookReviews.IsNull() && !from.NotebookReviews.IsUnknown() && to.NotebookReviews.IsNull() && len(from.NotebookReviews.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for NotebookReviews, and the deserialized field value is Null,
@@ -2557,6 +3371,8 @@ func (to *CreateCleanRoomAssetReviewResponse) SyncFieldsDuringRead(ctx context.C
 }
 
 func (m CreateCleanRoomAssetReviewResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["jar_analysis_review_state"] = attrs["jar_analysis_review_state"].SetOptional()
+	attrs["jar_analysis_reviews"] = attrs["jar_analysis_reviews"].SetOptional()
 	attrs["notebook_review_state"] = attrs["notebook_review_state"].SetOptional()
 	attrs["notebook_reviews"] = attrs["notebook_reviews"].SetOptional()
 
@@ -2572,7 +3388,8 @@ func (m CreateCleanRoomAssetReviewResponse) ApplySchemaCustomizations(attrs map[
 // SDK values.
 func (m CreateCleanRoomAssetReviewResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"notebook_reviews": reflect.TypeOf(CleanRoomNotebookReview{}),
+		"jar_analysis_reviews": reflect.TypeOf(CleanRoomJarAnalysisReview{}),
+		"notebook_reviews":     reflect.TypeOf(CleanRoomNotebookReview{}),
 	}
 }
 
@@ -2583,8 +3400,10 @@ func (m CreateCleanRoomAssetReviewResponse) ToObjectValue(ctx context.Context) b
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"notebook_review_state": m.NotebookReviewState,
-			"notebook_reviews":      m.NotebookReviews,
+			"jar_analysis_review_state": m.JarAnalysisReviewState,
+			"jar_analysis_reviews":      m.JarAnalysisReviews,
+			"notebook_review_state":     m.NotebookReviewState,
+			"notebook_reviews":          m.NotebookReviews,
 		})
 }
 
@@ -2592,12 +3411,42 @@ func (m CreateCleanRoomAssetReviewResponse) ToObjectValue(ctx context.Context) b
 func (m CreateCleanRoomAssetReviewResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"jar_analysis_review_state": types.StringType,
+			"jar_analysis_reviews": basetypes.ListType{
+				ElemType: CleanRoomJarAnalysisReview{}.Type(ctx),
+			},
 			"notebook_review_state": types.StringType,
 			"notebook_reviews": basetypes.ListType{
 				ElemType: CleanRoomNotebookReview{}.Type(ctx),
 			},
 		},
 	}
+}
+
+// GetJarAnalysisReviews returns the value of the JarAnalysisReviews field in CreateCleanRoomAssetReviewResponse as
+// a slice of CleanRoomJarAnalysisReview values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateCleanRoomAssetReviewResponse) GetJarAnalysisReviews(ctx context.Context) ([]CleanRoomJarAnalysisReview, bool) {
+	if m.JarAnalysisReviews.IsNull() || m.JarAnalysisReviews.IsUnknown() {
+		return nil, false
+	}
+	var v []CleanRoomJarAnalysisReview
+	d := m.JarAnalysisReviews.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJarAnalysisReviews sets the value of the JarAnalysisReviews field in CreateCleanRoomAssetReviewResponse.
+func (m *CreateCleanRoomAssetReviewResponse) SetJarAnalysisReviews(ctx context.Context, v []CleanRoomJarAnalysisReview) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_analysis_reviews"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.JarAnalysisReviews = types.ListValueMust(t, vs)
 }
 
 // GetNotebookReviews returns the value of the NotebookReviews field in CreateCleanRoomAssetReviewResponse as
@@ -3425,6 +4274,65 @@ func (m GetCleanRoomRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type JarAnalysisVersionReview struct {
+	// Review comment
+	Comment types.String `tfsdk:"comment"`
+	// Etag identifying the jar analysis version, with its value being a hash of
+	// an internally-generated UUID
+	Etag types.String `tfsdk:"etag"`
+	// Review outcome
+	ReviewState types.String `tfsdk:"review_state"`
+}
+
+func (to *JarAnalysisVersionReview) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JarAnalysisVersionReview) {
+}
+
+func (to *JarAnalysisVersionReview) SyncFieldsDuringRead(ctx context.Context, from JarAnalysisVersionReview) {
+}
+
+func (m JarAnalysisVersionReview) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["etag"] = attrs["etag"].SetRequired()
+	attrs["review_state"] = attrs["review_state"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JarAnalysisVersionReview.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m JarAnalysisVersionReview) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JarAnalysisVersionReview
+// only implements ToObjectValue() and Type().
+func (m JarAnalysisVersionReview) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"comment":      m.Comment,
+			"etag":         m.Etag,
+			"review_state": m.ReviewState,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m JarAnalysisVersionReview) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"comment":      types.StringType,
+			"etag":         types.StringType,
+			"review_state": types.StringType,
+		},
+	}
+}
+
 type ListCleanRoomAssetRevisionsRequest struct {
 	// Asset type. Only NOTEBOOK_FILE is supported.
 	AssetType types.String `tfsdk:"-"`
@@ -4043,6 +4951,171 @@ func (m *ListCleanRoomNotebookTaskRunsResponse) GetRuns(ctx context.Context) ([]
 
 // SetRuns sets the value of the Runs field in ListCleanRoomNotebookTaskRunsResponse.
 func (m *ListCleanRoomNotebookTaskRunsResponse) SetRuns(ctx context.Context, v []CleanRoomNotebookTaskRun) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["runs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Runs = types.ListValueMust(t, vs)
+}
+
+type ListCleanRoomTaskRunsRequest struct {
+	// Name of the clean room.
+	CleanRoomName types.String `tfsdk:"-"`
+	// Executable name.
+	Name types.String `tfsdk:"-"`
+	// The maximum number of task runs to return. Maximum value of 100.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Opaque pagination token to go to next page based on previous query.
+	PageToken types.String `tfsdk:"-"`
+	// Filter by the type of Clean Room task.
+	TaskType types.String `tfsdk:"-"`
+}
+
+func (to *ListCleanRoomTaskRunsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCleanRoomTaskRunsRequest) {
+}
+
+func (to *ListCleanRoomTaskRunsRequest) SyncFieldsDuringRead(ctx context.Context, from ListCleanRoomTaskRunsRequest) {
+}
+
+func (m ListCleanRoomTaskRunsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["task_type"] = attrs["task_type"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomTaskRunsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListCleanRoomTaskRunsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomTaskRunsRequest
+// only implements ToObjectValue() and Type().
+func (m ListCleanRoomTaskRunsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"clean_room_name": m.CleanRoomName,
+			"name":            m.Name,
+			"page_size":       m.PageSize,
+			"page_token":      m.PageToken,
+			"task_type":       m.TaskType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListCleanRoomTaskRunsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"clean_room_name": types.StringType,
+			"name":            types.StringType,
+			"page_size":       types.Int64Type,
+			"page_token":      types.StringType,
+			"task_type":       types.StringType,
+		},
+	}
+}
+
+type ListCleanRoomTaskRunsResponse struct {
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. page_token should be set to this value for the next request
+	// (for the next page of results).
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// Task runs in the clean room.
+	Runs types.List `tfsdk:"runs"`
+}
+
+func (to *ListCleanRoomTaskRunsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCleanRoomTaskRunsResponse) {
+	if !from.Runs.IsNull() && !from.Runs.IsUnknown() && to.Runs.IsNull() && len(from.Runs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Runs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Runs = from.Runs
+	}
+}
+
+func (to *ListCleanRoomTaskRunsResponse) SyncFieldsDuringRead(ctx context.Context, from ListCleanRoomTaskRunsResponse) {
+	if !from.Runs.IsNull() && !from.Runs.IsUnknown() && to.Runs.IsNull() && len(from.Runs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Runs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Runs = from.Runs
+	}
+}
+
+func (m ListCleanRoomTaskRunsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["runs"] = attrs["runs"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomTaskRunsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListCleanRoomTaskRunsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"runs": reflect.TypeOf(CleanRoomTaskRun{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomTaskRunsResponse
+// only implements ToObjectValue() and Type().
+func (m ListCleanRoomTaskRunsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token": m.NextPageToken,
+			"runs":            m.Runs,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListCleanRoomTaskRunsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"runs": basetypes.ListType{
+				ElemType: CleanRoomTaskRun{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetRuns returns the value of the Runs field in ListCleanRoomTaskRunsResponse as
+// a slice of CleanRoomTaskRun values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListCleanRoomTaskRunsResponse) GetRuns(ctx context.Context) ([]CleanRoomTaskRun, bool) {
+	if m.Runs.IsNull() || m.Runs.IsUnknown() {
+		return nil, false
+	}
+	var v []CleanRoomTaskRun
+	d := m.Runs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRuns sets the value of the Runs field in ListCleanRoomTaskRunsResponse.
+func (m *ListCleanRoomTaskRunsResponse) SetRuns(ctx context.Context, v []CleanRoomTaskRun) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))

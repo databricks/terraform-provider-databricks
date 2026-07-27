@@ -7608,7 +7608,7 @@ func (to *CreateRegisteredModelRequest_SdkV2) SyncFieldsDuringRead(ctx context.C
 
 func (m CreateRegisteredModelRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["aliases"] = attrs["aliases"].SetOptional()
-	attrs["browse_only"] = attrs["browse_only"].SetOptional()
+	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["created_at"] = attrs["created_at"].SetOptional()
@@ -27754,7 +27754,7 @@ func (to *RegisteredModelInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 
 func (m RegisteredModelInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["aliases"] = attrs["aliases"].SetOptional()
-	attrs["browse_only"] = attrs["browse_only"].SetOptional()
+	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["created_at"] = attrs["created_at"].SetOptional()
@@ -34361,7 +34361,7 @@ func (to *UpdateRegisteredModelRequest_SdkV2) SyncFieldsDuringRead(ctx context.C
 
 func (m UpdateRegisteredModelRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["aliases"] = attrs["aliases"].SetOptional()
-	attrs["browse_only"] = attrs["browse_only"].SetOptional()
+	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["created_at"] = attrs["created_at"].SetOptional()

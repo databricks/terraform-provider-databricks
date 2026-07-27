@@ -33,15 +33,6 @@ import (
 // run-submit request and are intentionally NOT duplicated here. Users compose
 // `ai_runtime_task` with the standard Jobs/DABs task wrapper to get those.
 type AiRuntimeTask struct {
-	// Optional workspace or UC volume path of the uploaded code-source archive.
-	// The CLI packages the user's local code directory into an archive and
-	// populates this. Customers calling the Jobs API directly should upload
-	// their archive to the workspace or a UC volume first and supply the
-	// resulting path here.
-	//
-	// When set, the training node exposes the value via the `$CODE_SOURCE`
-	// environment variable.
-	CodeSourcePath types.String `tfsdk:"code_source_path"`
 	// Deployment specs for this task. Exactly one deployment is currently
 	// supported (a single entry where every node runs the same command); this
 	// is a current-Preview constraint. Role-split workloads (driver + worker,
@@ -71,7 +62,6 @@ func (to *AiRuntimeTask) SyncFieldsDuringRead(ctx context.Context, from AiRuntim
 }
 
 func (m AiRuntimeTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["code_source_path"] = attrs["code_source_path"].SetOptional()
 	attrs["deployments"] = attrs["deployments"].SetRequired()
 	attrs["experiment"] = attrs["experiment"].SetRequired()
 	attrs["mlflow_experiment_directory"] = attrs["mlflow_experiment_directory"].SetOptional()
@@ -100,7 +90,6 @@ func (m AiRuntimeTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"code_source_path":            m.CodeSourcePath,
 			"deployments":                 m.Deployments,
 			"experiment":                  m.Experiment,
 			"mlflow_experiment_directory": m.MlflowExperimentDirectory,
@@ -112,7 +101,6 @@ func (m AiRuntimeTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m AiRuntimeTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"code_source_path": types.StringType,
 			"deployments": basetypes.ListType{
 				ElemType: DeploymentSpec{}.Type(ctx),
 			},
@@ -4598,10 +4586,19 @@ func (m DeleteRun) Type(ctx context.Context) attr.Type {
 // workloads (driver + worker, parameter server, separate eval node, etc.) use
 // multiple entries.
 type DeploymentSpec struct {
-	// Workspace path of the bash script to execute on each node in this
-	// deployment. The CLI uploads the user's script and populates this.
-	// Customers calling the Jobs API directly should upload their script to the
-	// workspace first and supply the resulting path here.
+	// Workspace path of the script to run on each node in this deployment.
+	// Upload the script to this path and supply the path here. When the task
+	// runs, the file at this path is run on each node; if it fails, the task
+	// fails with its exit code.
+	//
+	// Example script contents:
+	//
+	// # Plain Python: python train.py --epochs 10
+	//
+	// # Multi-GPU via accelerate: accelerate launch train.py --config
+	// config.yaml
+	//
+	// # Distributed via torchrun: torchrun --nproc_per_node=8 train.py
 	CommandPath types.String `tfsdk:"command_path"`
 	// Compute resources allocated to each node in this deployment.
 	Compute types.Object `tfsdk:"compute"`

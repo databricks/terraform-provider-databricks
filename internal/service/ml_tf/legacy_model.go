@@ -13722,6 +13722,59 @@ func (m LastNFunction_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A window that spans the entire lifetime of a data source, accumulating from
+// the source's start rather than over a bounded duration. All fields are
+// optional; an empty message denotes the continuous, fully-accurate variant.
+type LifetimeWindow_SdkV2 struct {
+	// The slide duration for the discrete (offline) variant: the value updates
+	// only at these boundaries. Must be positive when set. When absent, the
+	// window is continuous (the value is as fresh as the pipeline delivers).
+	SlideDuration timetypes.GoDuration `tfsdk:"slide_duration"`
+}
+
+func (to *LifetimeWindow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LifetimeWindow_SdkV2) {
+}
+
+func (to *LifetimeWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LifetimeWindow_SdkV2) {
+}
+
+func (m LifetimeWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["slide_duration"] = attrs["slide_duration"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LifetimeWindow.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m LifetimeWindow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LifetimeWindow_SdkV2
+// only implements ToObjectValue() and Type().
+func (m LifetimeWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"slide_duration": m.SlideDuration,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m LifetimeWindow_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"slide_duration": timetypes.GoDuration{}.Type(ctx),
+		},
+	}
+}
+
 // Lineage context information for tracking where an API was invoked. This will
 // allow us to track lineage, which currently uses caller entity information for
 // use across the Lineage Client and Observability in Lumberjack.
@@ -24939,6 +24992,8 @@ func (m TestRegistryWebhookResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type TimeWindow_SdkV2 struct {
 	Continuous types.List `tfsdk:"continuous"`
+	// A window that spans the entire lifetime of the data source.
+	Lifetime types.List `tfsdk:"lifetime"`
 	// A long (multi-day) rolling window served via the hybrid batch + streaming
 	// path.
 	LongRolling types.List `tfsdk:"long_rolling"`
@@ -24957,6 +25012,15 @@ func (to *TimeWindow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 				// Recursively sync the fields of Continuous
 				toContinuous.SyncFieldsDuringCreateOrUpdate(ctx, fromContinuous)
 				to.SetContinuous(ctx, toContinuous)
+			}
+		}
+	}
+	if !from.Lifetime.IsNull() && !from.Lifetime.IsUnknown() {
+		if toLifetime, ok := to.GetLifetime(ctx); ok {
+			if fromLifetime, ok := from.GetLifetime(ctx); ok {
+				// Recursively sync the fields of Lifetime
+				toLifetime.SyncFieldsDuringCreateOrUpdate(ctx, fromLifetime)
+				to.SetLifetime(ctx, toLifetime)
 			}
 		}
 	}
@@ -25007,6 +25071,14 @@ func (to *TimeWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TimeW
 			}
 		}
 	}
+	if !from.Lifetime.IsNull() && !from.Lifetime.IsUnknown() {
+		if toLifetime, ok := to.GetLifetime(ctx); ok {
+			if fromLifetime, ok := from.GetLifetime(ctx); ok {
+				toLifetime.SyncFieldsDuringRead(ctx, fromLifetime)
+				to.SetLifetime(ctx, toLifetime)
+			}
+		}
+	}
 	if !from.LongRolling.IsNull() && !from.LongRolling.IsUnknown() {
 		if toLongRolling, ok := to.GetLongRolling(ctx); ok {
 			if fromLongRolling, ok := from.GetLongRolling(ctx); ok {
@@ -25044,6 +25116,8 @@ func (to *TimeWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TimeW
 func (m TimeWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["continuous"] = attrs["continuous"].SetOptional()
 	attrs["continuous"] = attrs["continuous"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["lifetime"] = attrs["lifetime"].SetOptional()
+	attrs["lifetime"] = attrs["lifetime"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["long_rolling"] = attrs["long_rolling"].SetOptional()
 	attrs["long_rolling"] = attrs["long_rolling"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["rolling"] = attrs["rolling"].SetOptional()
@@ -25066,6 +25140,7 @@ func (m TimeWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 func (m TimeWindow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"continuous":   reflect.TypeOf(ContinuousWindow_SdkV2{}),
+		"lifetime":     reflect.TypeOf(LifetimeWindow_SdkV2{}),
 		"long_rolling": reflect.TypeOf(LongRollingWindow_SdkV2{}),
 		"rolling":      reflect.TypeOf(RollingWindow_SdkV2{}),
 		"sliding":      reflect.TypeOf(SlidingWindow_SdkV2{}),
@@ -25081,6 +25156,7 @@ func (m TimeWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"continuous":   m.Continuous,
+			"lifetime":     m.Lifetime,
 			"long_rolling": m.LongRolling,
 			"rolling":      m.Rolling,
 			"sliding":      m.Sliding,
@@ -25094,6 +25170,9 @@ func (m TimeWindow_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"continuous": basetypes.ListType{
 				ElemType: ContinuousWindow_SdkV2{}.Type(ctx),
+			},
+			"lifetime": basetypes.ListType{
+				ElemType: LifetimeWindow_SdkV2{}.Type(ctx),
 			},
 			"long_rolling": basetypes.ListType{
 				ElemType: LongRollingWindow_SdkV2{}.Type(ctx),
@@ -25135,6 +25214,32 @@ func (m *TimeWindow_SdkV2) SetContinuous(ctx context.Context, v ContinuousWindow
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["continuous"]
 	m.Continuous = types.ListValueMust(t, vs)
+}
+
+// GetLifetime returns the value of the Lifetime field in TimeWindow_SdkV2 as
+// a LifetimeWindow_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TimeWindow_SdkV2) GetLifetime(ctx context.Context) (LifetimeWindow_SdkV2, bool) {
+	var e LifetimeWindow_SdkV2
+	if m.Lifetime.IsNull() || m.Lifetime.IsUnknown() {
+		return e, false
+	}
+	var v []LifetimeWindow_SdkV2
+	d := m.Lifetime.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLifetime sets the value of the Lifetime field in TimeWindow_SdkV2.
+func (m *TimeWindow_SdkV2) SetLifetime(ctx context.Context, v LifetimeWindow_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["lifetime"]
+	m.Lifetime = types.ListValueMust(t, vs)
 }
 
 // GetLongRolling returns the value of the LongRolling field in TimeWindow_SdkV2 as

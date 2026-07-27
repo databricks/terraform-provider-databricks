@@ -3,7 +3,7 @@ subcategory: "Delta Sharing"
 ---
 # databricks_recipients Data Source
 
-Retrieves a list of [databricks_recipient](../resources/recipient.md) names, that were created by Terraform or manually.
+Retrieves a set of [databricks_recipient](../resources/recipient.md) names, that were created by Terraform or manually.
 
 -> This data source can only be used with a workspace-level provider!
 
@@ -28,7 +28,7 @@ output "recipient_names" {
 
 This data source exports the following attributes:
 
-* `recipients` - list of [databricks_recipient](../resources/recipient.md) names.
+* `recipients` - set of [databricks_recipient](../resources/recipient.md) names.
 
 ## Related Resources
 

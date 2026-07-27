@@ -18,7 +18,7 @@ import (
 const dataSourceNameRecipients = "recipients"
 
 type RecipientsList struct {
-	Recipients types.List `tfsdk:"recipients"`
+	Recipients types.Set `tfsdk:"recipients"`
 	tfschema.Namespace
 }
 
@@ -29,10 +29,15 @@ func (s RecipientsList) GetComplexFieldTypes(context.Context) map[string]reflect
 	}
 }
 
-func (s RecipientsList) ToObjectType(ctx context.Context) types.ObjectType {
+// Type implements the ObjectTypable interface so the schema builder uses this
+// explicit attribute map instead of reflection. This is required because the
+// reflection-based typer does not support types.Set fields; declaring recipients
+// as a set (rather than a list) avoids spurious diffs from the API returning
+// recipients in a non-deterministic order.
+func (s RecipientsList) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"recipients":      types.ListType{ElemType: types.StringType},
+			"recipients":      types.SetType{ElemType: types.StringType},
 			"provider_config": tfschema.ProviderConfigData{}.Type(ctx),
 		},
 	}
@@ -106,7 +111,7 @@ func (d *RecipientsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 
 	newState := RecipientsList{
-		Recipients: types.ListValueMust(types.StringType, recipientNames),
+		Recipients: types.SetValueMust(types.StringType, recipientNames),
 		Namespace: tfschema.Namespace{
 			ProviderConfig: config.ProviderConfig,
 		},

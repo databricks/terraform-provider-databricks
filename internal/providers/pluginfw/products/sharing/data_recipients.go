@@ -29,11 +29,9 @@ func (s RecipientsList) GetComplexFieldTypes(context.Context) map[string]reflect
 	}
 }
 
-// Type implements the ObjectTypable interface so the schema builder uses this
-// explicit attribute map instead of reflection. This is required because the
-// reflection-based typer does not support types.Set fields; declaring recipients
-// as a set (rather than a list) avoids spurious diffs from the API returning
-// recipients in a non-deterministic order.
+// Type is implemented (rather than relying on schema reflection) because the
+// reflection typer doesn't support types.Set. recipients is a set since the API
+// doesn't guarantee ordering.
 func (s RecipientsList) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{

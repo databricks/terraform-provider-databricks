@@ -51,7 +51,7 @@ The following arguments are supported:
 * `name` - (Required) Name of MLflow experiment. It must be an absolute path within the Databricks workspace, e.g. `/Users/<some-username>/my-experiment`. For more information about changes to experiment naming conventions, see [mlflow docs](https://docs.databricks.com/applications/mlflow/experiments.html#experiment-migration).
 * `artifact_location` - Path to artifact location of the MLflow experiment.
 * `tags` - Tags for the MLflow experiment.
-* `trace_location` - (Optional, Computed, Immutable) Unity Catalog location where the experiment's traces are stored. Cannot be changed after the experiment is created; changing it forces replacement of the experiment. Omitting the block for an experiment that already has a location leaves the existing location in place (it is read back from the server) rather than forcing replacement. This block consists of the following fields:
+* `trace_location` - (Optional, Immutable) Unity Catalog location where the experiment's traces are stored. Cannot be changed after the experiment is created; changing it forces replacement of the experiment. This block consists of the following fields:
   * `uc_trace_location` - (Required) The Unity Catalog storage location. This block consists of the following fields:
     * `catalog` - (Required) Name of the Unity Catalog catalog.
     * `schema` - (Required) Name of the Unity Catalog schema within `catalog`.

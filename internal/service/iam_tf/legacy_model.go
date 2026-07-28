@@ -106,6 +106,19 @@ func (to *AccessControlResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
 	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				// Recursively sync the fields of each AllPermissions element by position.
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
+	}
 }
 
 func (to *AccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AccessControlResponse_SdkV2) {
@@ -114,6 +127,18 @@ func (to *AccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
+	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringRead(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
 	}
 }
 
@@ -220,6 +245,19 @@ func (to *AccountGroup_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Members = from.Members
 	}
+	if !from.Members.IsNull() && !from.Members.IsUnknown() {
+		if toMembers, ok := to.GetMembers(ctx); ok {
+			if fromMembers, ok := from.GetMembers(ctx); ok {
+				// Recursively sync the fields of each Members element by position.
+				for i := range toMembers {
+					if i < len(fromMembers) {
+						toMembers[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMembers[i])
+					}
+				}
+				to.SetMembers(ctx, toMembers)
+			}
+		}
+	}
 	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
 		if toMeta, ok := to.GetMeta(ctx); ok {
 			if fromMeta, ok := from.GetMeta(ctx); ok {
@@ -235,6 +273,19 @@ func (to *AccountGroup_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 }
 
 func (to *AccountGroup_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AccountGroup_SdkV2) {
@@ -243,6 +294,18 @@ func (to *AccountGroup_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Acc
 		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Members = from.Members
+	}
+	if !from.Members.IsNull() && !from.Members.IsUnknown() {
+		if toMembers, ok := to.GetMembers(ctx); ok {
+			if fromMembers, ok := from.GetMembers(ctx); ok {
+				for i := range toMembers {
+					if i < len(fromMembers) {
+						toMembers[i].SyncFieldsDuringRead(ctx, fromMembers[i])
+					}
+				}
+				to.SetMembers(ctx, toMembers)
+			}
+		}
 	}
 	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
 		if toMeta, ok := to.GetMeta(ctx); ok {
@@ -257,6 +320,18 @@ func (to *AccountGroup_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Acc
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 }
 
@@ -428,6 +503,19 @@ func (to *AccountServicePrincipal_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 }
 
 func (to *AccountServicePrincipal_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AccountServicePrincipal_SdkV2) {
@@ -436,6 +524,18 @@ func (to *AccountServicePrincipal_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 }
 
@@ -553,6 +653,19 @@ func (to *AccountUser_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Emails = from.Emails
 	}
+	if !from.Emails.IsNull() && !from.Emails.IsUnknown() {
+		if toEmails, ok := to.GetEmails(ctx); ok {
+			if fromEmails, ok := from.GetEmails(ctx); ok {
+				// Recursively sync the fields of each Emails element by position.
+				for i := range toEmails {
+					if i < len(fromEmails) {
+						toEmails[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEmails[i])
+					}
+				}
+				to.SetEmails(ctx, toEmails)
+			}
+		}
+	}
 	if !from.Name.IsNull() && !from.Name.IsUnknown() {
 		if toName, ok := to.GetName(ctx); ok {
 			if fromName, ok := from.GetName(ctx); ok {
@@ -568,6 +681,19 @@ func (to *AccountUser_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 }
 
 func (to *AccountUser_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AccountUser_SdkV2) {
@@ -576,6 +702,18 @@ func (to *AccountUser_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Acco
 		// If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Emails = from.Emails
+	}
+	if !from.Emails.IsNull() && !from.Emails.IsUnknown() {
+		if toEmails, ok := to.GetEmails(ctx); ok {
+			if fromEmails, ok := from.GetEmails(ctx); ok {
+				for i := range toEmails {
+					if i < len(fromEmails) {
+						toEmails[i].SyncFieldsDuringRead(ctx, fromEmails[i])
+					}
+				}
+				to.SetEmails(ctx, toEmails)
+			}
+		}
 	}
 	if !from.Name.IsNull() && !from.Name.IsUnknown() {
 		if toName, ok := to.GetName(ctx); ok {
@@ -590,6 +728,18 @@ func (to *AccountUser_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Acco
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 }
 
@@ -1029,6 +1179,19 @@ func (to *CreateAccountGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Members = from.Members
 	}
+	if !from.Members.IsNull() && !from.Members.IsUnknown() {
+		if toMembers, ok := to.GetMembers(ctx); ok {
+			if fromMembers, ok := from.GetMembers(ctx); ok {
+				// Recursively sync the fields of each Members element by position.
+				for i := range toMembers {
+					if i < len(fromMembers) {
+						toMembers[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMembers[i])
+					}
+				}
+				to.SetMembers(ctx, toMembers)
+			}
+		}
+	}
 	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
 		if toMeta, ok := to.GetMeta(ctx); ok {
 			if fromMeta, ok := from.GetMeta(ctx); ok {
@@ -1044,6 +1207,19 @@ func (to *CreateAccountGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 }
 
 func (to *CreateAccountGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateAccountGroupRequest_SdkV2) {
@@ -1052,6 +1228,18 @@ func (to *CreateAccountGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Members = from.Members
+	}
+	if !from.Members.IsNull() && !from.Members.IsUnknown() {
+		if toMembers, ok := to.GetMembers(ctx); ok {
+			if fromMembers, ok := from.GetMembers(ctx); ok {
+				for i := range toMembers {
+					if i < len(fromMembers) {
+						toMembers[i].SyncFieldsDuringRead(ctx, fromMembers[i])
+					}
+				}
+				to.SetMembers(ctx, toMembers)
+			}
+		}
 	}
 	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
 		if toMeta, ok := to.GetMeta(ctx); ok {
@@ -1066,6 +1254,18 @@ func (to *CreateAccountGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 }
 
@@ -1233,6 +1433,19 @@ func (to *CreateAccountServicePrincipalRequest_SdkV2) SyncFieldsDuringCreateOrUp
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 }
 
 func (to *CreateAccountServicePrincipalRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateAccountServicePrincipalRequest_SdkV2) {
@@ -1241,6 +1454,18 @@ func (to *CreateAccountServicePrincipalRequest_SdkV2) SyncFieldsDuringRead(ctx c
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 }
 
@@ -1354,6 +1579,19 @@ func (to *CreateAccountUserRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Emails = from.Emails
 	}
+	if !from.Emails.IsNull() && !from.Emails.IsUnknown() {
+		if toEmails, ok := to.GetEmails(ctx); ok {
+			if fromEmails, ok := from.GetEmails(ctx); ok {
+				// Recursively sync the fields of each Emails element by position.
+				for i := range toEmails {
+					if i < len(fromEmails) {
+						toEmails[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEmails[i])
+					}
+				}
+				to.SetEmails(ctx, toEmails)
+			}
+		}
+	}
 	if !from.Name.IsNull() && !from.Name.IsUnknown() {
 		if toName, ok := to.GetName(ctx); ok {
 			if fromName, ok := from.GetName(ctx); ok {
@@ -1369,6 +1607,19 @@ func (to *CreateAccountUserRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 }
 
 func (to *CreateAccountUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateAccountUserRequest_SdkV2) {
@@ -1377,6 +1628,18 @@ func (to *CreateAccountUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 		// If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Emails = from.Emails
+	}
+	if !from.Emails.IsNull() && !from.Emails.IsUnknown() {
+		if toEmails, ok := to.GetEmails(ctx); ok {
+			if fromEmails, ok := from.GetEmails(ctx); ok {
+				for i := range toEmails {
+					if i < len(fromEmails) {
+						toEmails[i].SyncFieldsDuringRead(ctx, fromEmails[i])
+					}
+				}
+				to.SetEmails(ctx, toEmails)
+			}
+		}
 	}
 	if !from.Name.IsNull() && !from.Name.IsUnknown() {
 		if toName, ok := to.GetName(ctx); ok {
@@ -1391,6 +1654,18 @@ func (to *CreateAccountUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 }
 
@@ -1573,17 +1848,56 @@ func (to *CreateGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				// Recursively sync the fields of each Entitlements element by position.
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
 	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				// Recursively sync the fields of each Groups element by position.
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringCreateOrUpdate(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
+	}
 	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Members = from.Members
+	}
+	if !from.Members.IsNull() && !from.Members.IsUnknown() {
+		if toMembers, ok := to.GetMembers(ctx); ok {
+			if fromMembers, ok := from.GetMembers(ctx); ok {
+				// Recursively sync the fields of each Members element by position.
+				for i := range toMembers {
+					if i < len(fromMembers) {
+						toMembers[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMembers[i])
+					}
+				}
+				to.SetMembers(ctx, toMembers)
+			}
+		}
 	}
 	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
 		if toMeta, ok := to.GetMeta(ctx); ok {
@@ -1600,6 +1914,19 @@ func (to *CreateGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
@@ -1615,17 +1942,53 @@ func (to *CreateGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringRead(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
 	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringRead(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
+	}
 	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Members = from.Members
+	}
+	if !from.Members.IsNull() && !from.Members.IsUnknown() {
+		if toMembers, ok := to.GetMembers(ctx); ok {
+			if fromMembers, ok := from.GetMembers(ctx); ok {
+				for i := range toMembers {
+					if i < len(fromMembers) {
+						toMembers[i].SyncFieldsDuringRead(ctx, fromMembers[i])
+					}
+				}
+				to.SetMembers(ctx, toMembers)
+			}
+		}
 	}
 	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
 		if toMeta, ok := to.GetMeta(ctx); ok {
@@ -1640,6 +2003,18 @@ func (to *CreateGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -1917,17 +2292,56 @@ func (to *CreateServicePrincipalRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ct
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				// Recursively sync the fields of each Entitlements element by position.
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
 	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				// Recursively sync the fields of each Groups element by position.
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringCreateOrUpdate(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
+	}
 	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -1944,17 +2358,53 @@ func (to *CreateServicePrincipalRequest_SdkV2) SyncFieldsDuringRead(ctx context.
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringRead(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
 	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringRead(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
+	}
 	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -2182,17 +2632,56 @@ func (to *CreateUserRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Emails = from.Emails
 	}
+	if !from.Emails.IsNull() && !from.Emails.IsUnknown() {
+		if toEmails, ok := to.GetEmails(ctx); ok {
+			if fromEmails, ok := from.GetEmails(ctx); ok {
+				// Recursively sync the fields of each Emails element by position.
+				for i := range toEmails {
+					if i < len(fromEmails) {
+						toEmails[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEmails[i])
+					}
+				}
+				to.SetEmails(ctx, toEmails)
+			}
+		}
+	}
 	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				// Recursively sync the fields of each Entitlements element by position.
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
+	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				// Recursively sync the fields of each Groups element by position.
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringCreateOrUpdate(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
 	}
 	if !from.Name.IsNull() && !from.Name.IsUnknown() {
 		if toName, ok := to.GetName(ctx); ok {
@@ -2209,6 +2698,19 @@ func (to *CreateUserRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
@@ -2224,17 +2726,53 @@ func (to *CreateUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Emails = from.Emails
 	}
+	if !from.Emails.IsNull() && !from.Emails.IsUnknown() {
+		if toEmails, ok := to.GetEmails(ctx); ok {
+			if fromEmails, ok := from.GetEmails(ctx); ok {
+				for i := range toEmails {
+					if i < len(fromEmails) {
+						toEmails[i].SyncFieldsDuringRead(ctx, fromEmails[i])
+					}
+				}
+				to.SetEmails(ctx, toEmails)
+			}
+		}
+	}
 	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringRead(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
+	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringRead(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
 	}
 	if !from.Name.IsNull() && !from.Name.IsUnknown() {
 		if toName, ok := to.GetName(ctx); ok {
@@ -2249,6 +2787,18 @@ func (to *CreateUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -3144,6 +3694,19 @@ func (to *GetAssignableRolesForResourceResponse_SdkV2) SyncFieldsDuringCreateOrU
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 }
 
 func (to *GetAssignableRolesForResourceResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetAssignableRolesForResourceResponse_SdkV2) {
@@ -3152,6 +3715,18 @@ func (to *GetAssignableRolesForResourceResponse_SdkV2) SyncFieldsDuringRead(ctx 
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 }
 
@@ -3323,6 +3898,19 @@ func (to *GetPasswordPermissionLevelsResponse_SdkV2) SyncFieldsDuringCreateOrUpd
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
 	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				// Recursively sync the fields of each PermissionLevels element by position.
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
+	}
 }
 
 func (to *GetPasswordPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetPasswordPermissionLevelsResponse_SdkV2) {
@@ -3331,6 +3919,18 @@ func (to *GetPasswordPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx co
 		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
+	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringRead(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
 	}
 }
 
@@ -3511,6 +4111,19 @@ func (to *GetPermissionLevelsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
 	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				// Recursively sync the fields of each PermissionLevels element by position.
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
+	}
 }
 
 func (to *GetPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetPermissionLevelsResponse_SdkV2) {
@@ -3519,6 +4132,18 @@ func (to *GetPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Co
 		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
+	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringRead(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
 	}
 }
 
@@ -4040,17 +4665,56 @@ func (to *Group_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				// Recursively sync the fields of each Entitlements element by position.
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
 	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				// Recursively sync the fields of each Groups element by position.
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringCreateOrUpdate(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
+	}
 	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Members = from.Members
+	}
+	if !from.Members.IsNull() && !from.Members.IsUnknown() {
+		if toMembers, ok := to.GetMembers(ctx); ok {
+			if fromMembers, ok := from.GetMembers(ctx); ok {
+				// Recursively sync the fields of each Members element by position.
+				for i := range toMembers {
+					if i < len(fromMembers) {
+						toMembers[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMembers[i])
+					}
+				}
+				to.SetMembers(ctx, toMembers)
+			}
+		}
 	}
 	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
 		if toMeta, ok := to.GetMeta(ctx); ok {
@@ -4067,6 +4731,19 @@ func (to *Group_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
@@ -4082,17 +4759,53 @@ func (to *Group_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Group_SdkV
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringRead(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
 	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringRead(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
+	}
 	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Members = from.Members
+	}
+	if !from.Members.IsNull() && !from.Members.IsUnknown() {
+		if toMembers, ok := to.GetMembers(ctx); ok {
+			if fromMembers, ok := from.GetMembers(ctx); ok {
+				for i := range toMembers {
+					if i < len(fromMembers) {
+						toMembers[i].SyncFieldsDuringRead(ctx, fromMembers[i])
+					}
+				}
+				to.SetMembers(ctx, toMembers)
+			}
+		}
 	}
 	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
 		if toMeta, ok := to.GetMeta(ctx); ok {
@@ -4107,6 +4820,18 @@ func (to *Group_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Group_SdkV
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -4457,6 +5182,19 @@ func (to *ListAccountGroupsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
 	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				// Recursively sync the fields of each Resources element by position.
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringCreateOrUpdate(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
+	}
 }
 
 func (to *ListAccountGroupsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListAccountGroupsResponse_SdkV2) {
@@ -4465,6 +5203,18 @@ func (to *ListAccountGroupsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
+	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringRead(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
 	}
 }
 
@@ -4648,6 +5398,19 @@ func (to *ListAccountServicePrincipalsResponse_SdkV2) SyncFieldsDuringCreateOrUp
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
 	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				// Recursively sync the fields of each Resources element by position.
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringCreateOrUpdate(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
+	}
 }
 
 func (to *ListAccountServicePrincipalsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListAccountServicePrincipalsResponse_SdkV2) {
@@ -4656,6 +5419,18 @@ func (to *ListAccountServicePrincipalsResponse_SdkV2) SyncFieldsDuringRead(ctx c
 		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
+	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringRead(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
 	}
 }
 
@@ -4840,6 +5615,19 @@ func (to *ListAccountUsersResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
 	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				// Recursively sync the fields of each Resources element by position.
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringCreateOrUpdate(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
+	}
 }
 
 func (to *ListAccountUsersResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListAccountUsersResponse_SdkV2) {
@@ -4848,6 +5636,18 @@ func (to *ListAccountUsersResponse_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
+	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringRead(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
 	}
 }
 
@@ -5032,6 +5832,19 @@ func (to *ListGroupsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
 	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				// Recursively sync the fields of each Resources element by position.
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringCreateOrUpdate(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
+	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
@@ -5046,6 +5859,18 @@ func (to *ListGroupsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
+	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringRead(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -5184,6 +6009,19 @@ func (to *ListServicePrincipalResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
 	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				// Recursively sync the fields of each Resources element by position.
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringCreateOrUpdate(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
+	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
@@ -5198,6 +6036,18 @@ func (to *ListServicePrincipalResponse_SdkV2) SyncFieldsDuringRead(ctx context.C
 		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
+	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringRead(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -5505,6 +6355,19 @@ func (to *ListUsersResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
 	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				// Recursively sync the fields of each Resources element by position.
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringCreateOrUpdate(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
+	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
@@ -5519,6 +6382,18 @@ func (to *ListUsersResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
+	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringRead(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -5918,6 +6793,19 @@ func (to *ObjectPermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *ObjectPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ObjectPermissions_SdkV2) {
@@ -5926,6 +6814,18 @@ func (to *ObjectPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -6085,6 +6985,19 @@ func (to *PasswordAccessControlResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ct
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
 	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				// Recursively sync the fields of each AllPermissions element by position.
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
+	}
 }
 
 func (to *PasswordAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PasswordAccessControlResponse_SdkV2) {
@@ -6093,6 +7006,18 @@ func (to *PasswordAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.
 		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
+	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringRead(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
 	}
 }
 
@@ -6289,6 +7214,19 @@ func (to *PasswordPermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *PasswordPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PasswordPermissions_SdkV2) {
@@ -6297,6 +7235,18 @@ func (to *PasswordPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -6436,6 +7386,19 @@ func (to *PasswordPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *PasswordPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PasswordPermissionsRequest_SdkV2) {
@@ -6444,6 +7407,18 @@ func (to *PasswordPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Con
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -6589,6 +7564,19 @@ func (to *PatchAccountGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Operations = from.Operations
 	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				// Recursively sync the fields of each Operations element by position.
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
+	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
@@ -6603,6 +7591,18 @@ func (to *PatchAccountGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Operations = from.Operations
+	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringRead(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -6732,6 +7732,19 @@ func (to *PatchAccountServicePrincipalRequest_SdkV2) SyncFieldsDuringCreateOrUpd
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Operations = from.Operations
 	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				// Recursively sync the fields of each Operations element by position.
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
+	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
@@ -6746,6 +7759,18 @@ func (to *PatchAccountServicePrincipalRequest_SdkV2) SyncFieldsDuringRead(ctx co
 		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Operations = from.Operations
+	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringRead(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -6875,6 +7900,19 @@ func (to *PatchAccountUserRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Operations = from.Operations
 	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				// Recursively sync the fields of each Operations element by position.
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
+	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
@@ -6889,6 +7927,18 @@ func (to *PatchAccountUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Operations = from.Operations
+	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringRead(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -7018,6 +8068,19 @@ func (to *PatchGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Operations = from.Operations
 	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				// Recursively sync the fields of each Operations element by position.
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
+	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
@@ -7032,6 +8095,18 @@ func (to *PatchGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Operations = from.Operations
+	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringRead(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -7160,6 +8235,19 @@ func (to *PatchServicePrincipalRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Operations = from.Operations
 	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				// Recursively sync the fields of each Operations element by position.
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
+	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
@@ -7174,6 +8262,18 @@ func (to *PatchServicePrincipalRequest_SdkV2) SyncFieldsDuringRead(ctx context.C
 		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Operations = from.Operations
+	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringRead(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -7302,6 +8402,19 @@ func (to *PatchUserRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Operations = from.Operations
 	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				// Recursively sync the fields of each Operations element by position.
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
+	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
@@ -7316,6 +8429,18 @@ func (to *PatchUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Operations = from.Operations
+	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringRead(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -7687,6 +8812,19 @@ func (to *PermissionAssignments_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionAssignments = from.PermissionAssignments
 	}
+	if !from.PermissionAssignments.IsNull() && !from.PermissionAssignments.IsUnknown() {
+		if toPermissionAssignments, ok := to.GetPermissionAssignments(ctx); ok {
+			if fromPermissionAssignments, ok := from.GetPermissionAssignments(ctx); ok {
+				// Recursively sync the fields of each PermissionAssignments element by position.
+				for i := range toPermissionAssignments {
+					if i < len(fromPermissionAssignments) {
+						toPermissionAssignments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPermissionAssignments[i])
+					}
+				}
+				to.SetPermissionAssignments(ctx, toPermissionAssignments)
+			}
+		}
+	}
 }
 
 func (to *PermissionAssignments_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PermissionAssignments_SdkV2) {
@@ -7695,6 +8833,18 @@ func (to *PermissionAssignments_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 		// If a user specified a non-Null, empty list for PermissionAssignments, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionAssignments = from.PermissionAssignments
+	}
+	if !from.PermissionAssignments.IsNull() && !from.PermissionAssignments.IsUnknown() {
+		if toPermissionAssignments, ok := to.GetPermissionAssignments(ctx); ok {
+			if fromPermissionAssignments, ok := from.GetPermissionAssignments(ctx); ok {
+				for i := range toPermissionAssignments {
+					if i < len(fromPermissionAssignments) {
+						toPermissionAssignments[i].SyncFieldsDuringRead(ctx, fromPermissionAssignments[i])
+					}
+				}
+				to.SetPermissionAssignments(ctx, toPermissionAssignments)
+			}
+		}
 	}
 }
 
@@ -8061,6 +9211,19 @@ func (to *RuleSetResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.GrantRules = from.GrantRules
 	}
+	if !from.GrantRules.IsNull() && !from.GrantRules.IsUnknown() {
+		if toGrantRules, ok := to.GetGrantRules(ctx); ok {
+			if fromGrantRules, ok := from.GetGrantRules(ctx); ok {
+				// Recursively sync the fields of each GrantRules element by position.
+				for i := range toGrantRules {
+					if i < len(fromGrantRules) {
+						toGrantRules[i].SyncFieldsDuringCreateOrUpdate(ctx, fromGrantRules[i])
+					}
+				}
+				to.SetGrantRules(ctx, toGrantRules)
+			}
+		}
+	}
 }
 
 func (to *RuleSetResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RuleSetResponse_SdkV2) {
@@ -8069,6 +9232,18 @@ func (to *RuleSetResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for GrantRules, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.GrantRules = from.GrantRules
+	}
+	if !from.GrantRules.IsNull() && !from.GrantRules.IsUnknown() {
+		if toGrantRules, ok := to.GetGrantRules(ctx); ok {
+			if fromGrantRules, ok := from.GetGrantRules(ctx); ok {
+				for i := range toGrantRules {
+					if i < len(fromGrantRules) {
+						toGrantRules[i].SyncFieldsDuringRead(ctx, fromGrantRules[i])
+					}
+				}
+				to.SetGrantRules(ctx, toGrantRules)
+			}
+		}
 	}
 }
 
@@ -8169,6 +9344,19 @@ func (to *RuleSetUpdateRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.GrantRules = from.GrantRules
 	}
+	if !from.GrantRules.IsNull() && !from.GrantRules.IsUnknown() {
+		if toGrantRules, ok := to.GetGrantRules(ctx); ok {
+			if fromGrantRules, ok := from.GetGrantRules(ctx); ok {
+				// Recursively sync the fields of each GrantRules element by position.
+				for i := range toGrantRules {
+					if i < len(fromGrantRules) {
+						toGrantRules[i].SyncFieldsDuringCreateOrUpdate(ctx, fromGrantRules[i])
+					}
+				}
+				to.SetGrantRules(ctx, toGrantRules)
+			}
+		}
+	}
 }
 
 func (to *RuleSetUpdateRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RuleSetUpdateRequest_SdkV2) {
@@ -8177,6 +9365,18 @@ func (to *RuleSetUpdateRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for GrantRules, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.GrantRules = from.GrantRules
+	}
+	if !from.GrantRules.IsNull() && !from.GrantRules.IsUnknown() {
+		if toGrantRules, ok := to.GetGrantRules(ctx); ok {
+			if fromGrantRules, ok := from.GetGrantRules(ctx); ok {
+				for i := range toGrantRules {
+					if i < len(fromGrantRules) {
+						toGrantRules[i].SyncFieldsDuringRead(ctx, fromGrantRules[i])
+					}
+				}
+				to.SetGrantRules(ctx, toGrantRules)
+			}
+		}
 	}
 }
 
@@ -8284,17 +9484,56 @@ func (to *ServicePrincipal_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				// Recursively sync the fields of each Entitlements element by position.
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
 	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				// Recursively sync the fields of each Groups element by position.
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringCreateOrUpdate(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
+	}
 	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -8311,17 +9550,53 @@ func (to *ServicePrincipal_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringRead(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
 	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringRead(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
+	}
 	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -8529,6 +9804,19 @@ func (to *SetObjectPermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *SetObjectPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SetObjectPermissions_SdkV2) {
@@ -8537,6 +9825,18 @@ func (to *SetObjectPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -8635,6 +9935,19 @@ func (to *UpdateAccountGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Members = from.Members
 	}
+	if !from.Members.IsNull() && !from.Members.IsUnknown() {
+		if toMembers, ok := to.GetMembers(ctx); ok {
+			if fromMembers, ok := from.GetMembers(ctx); ok {
+				// Recursively sync the fields of each Members element by position.
+				for i := range toMembers {
+					if i < len(fromMembers) {
+						toMembers[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMembers[i])
+					}
+				}
+				to.SetMembers(ctx, toMembers)
+			}
+		}
+	}
 	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
 		if toMeta, ok := to.GetMeta(ctx); ok {
 			if fromMeta, ok := from.GetMeta(ctx); ok {
@@ -8650,6 +9963,19 @@ func (to *UpdateAccountGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 }
 
 func (to *UpdateAccountGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateAccountGroupRequest_SdkV2) {
@@ -8658,6 +9984,18 @@ func (to *UpdateAccountGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Members = from.Members
+	}
+	if !from.Members.IsNull() && !from.Members.IsUnknown() {
+		if toMembers, ok := to.GetMembers(ctx); ok {
+			if fromMembers, ok := from.GetMembers(ctx); ok {
+				for i := range toMembers {
+					if i < len(fromMembers) {
+						toMembers[i].SyncFieldsDuringRead(ctx, fromMembers[i])
+					}
+				}
+				to.SetMembers(ctx, toMembers)
+			}
+		}
 	}
 	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
 		if toMeta, ok := to.GetMeta(ctx); ok {
@@ -8672,6 +10010,18 @@ func (to *UpdateAccountGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 }
 
@@ -8839,6 +10189,19 @@ func (to *UpdateAccountServicePrincipalRequest_SdkV2) SyncFieldsDuringCreateOrUp
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 }
 
 func (to *UpdateAccountServicePrincipalRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateAccountServicePrincipalRequest_SdkV2) {
@@ -8847,6 +10210,18 @@ func (to *UpdateAccountServicePrincipalRequest_SdkV2) SyncFieldsDuringRead(ctx c
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 }
 
@@ -8960,6 +10335,19 @@ func (to *UpdateAccountUserRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Emails = from.Emails
 	}
+	if !from.Emails.IsNull() && !from.Emails.IsUnknown() {
+		if toEmails, ok := to.GetEmails(ctx); ok {
+			if fromEmails, ok := from.GetEmails(ctx); ok {
+				// Recursively sync the fields of each Emails element by position.
+				for i := range toEmails {
+					if i < len(fromEmails) {
+						toEmails[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEmails[i])
+					}
+				}
+				to.SetEmails(ctx, toEmails)
+			}
+		}
+	}
 	if !from.Name.IsNull() && !from.Name.IsUnknown() {
 		if toName, ok := to.GetName(ctx); ok {
 			if fromName, ok := from.GetName(ctx); ok {
@@ -8975,6 +10363,19 @@ func (to *UpdateAccountUserRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 }
 
 func (to *UpdateAccountUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateAccountUserRequest_SdkV2) {
@@ -8983,6 +10384,18 @@ func (to *UpdateAccountUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 		// If a user specified a non-Null, empty list for Emails, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Emails = from.Emails
+	}
+	if !from.Emails.IsNull() && !from.Emails.IsUnknown() {
+		if toEmails, ok := to.GetEmails(ctx); ok {
+			if fromEmails, ok := from.GetEmails(ctx); ok {
+				for i := range toEmails {
+					if i < len(fromEmails) {
+						toEmails[i].SyncFieldsDuringRead(ctx, fromEmails[i])
+					}
+				}
+				to.SetEmails(ctx, toEmails)
+			}
+		}
 	}
 	if !from.Name.IsNull() && !from.Name.IsUnknown() {
 		if toName, ok := to.GetName(ctx); ok {
@@ -8997,6 +10410,18 @@ func (to *UpdateAccountUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 }
 
@@ -9179,17 +10604,56 @@ func (to *UpdateGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				// Recursively sync the fields of each Entitlements element by position.
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
 	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				// Recursively sync the fields of each Groups element by position.
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringCreateOrUpdate(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
+	}
 	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Members = from.Members
+	}
+	if !from.Members.IsNull() && !from.Members.IsUnknown() {
+		if toMembers, ok := to.GetMembers(ctx); ok {
+			if fromMembers, ok := from.GetMembers(ctx); ok {
+				// Recursively sync the fields of each Members element by position.
+				for i := range toMembers {
+					if i < len(fromMembers) {
+						toMembers[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMembers[i])
+					}
+				}
+				to.SetMembers(ctx, toMembers)
+			}
+		}
 	}
 	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
 		if toMeta, ok := to.GetMeta(ctx); ok {
@@ -9206,6 +10670,19 @@ func (to *UpdateGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
@@ -9221,17 +10698,53 @@ func (to *UpdateGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringRead(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
 	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringRead(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
+	}
 	if !from.Members.IsNull() && !from.Members.IsUnknown() && to.Members.IsNull() && len(from.Members.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Members, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Members = from.Members
+	}
+	if !from.Members.IsNull() && !from.Members.IsUnknown() {
+		if toMembers, ok := to.GetMembers(ctx); ok {
+			if fromMembers, ok := from.GetMembers(ctx); ok {
+				for i := range toMembers {
+					if i < len(fromMembers) {
+						toMembers[i].SyncFieldsDuringRead(ctx, fromMembers[i])
+					}
+				}
+				to.SetMembers(ctx, toMembers)
+			}
+		}
 	}
 	if !from.Meta.IsNull() && !from.Meta.IsUnknown() {
 		if toMeta, ok := to.GetMeta(ctx); ok {
@@ -9246,6 +10759,18 @@ func (to *UpdateGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -9512,6 +11037,19 @@ func (to *UpdateObjectPermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *UpdateObjectPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateObjectPermissions_SdkV2) {
@@ -9520,6 +11058,18 @@ func (to *UpdateObjectPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -9729,17 +11279,56 @@ func (to *UpdateServicePrincipalRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ct
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				// Recursively sync the fields of each Entitlements element by position.
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
 	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				// Recursively sync the fields of each Groups element by position.
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringCreateOrUpdate(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
+	}
 	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -9756,17 +11345,53 @@ func (to *UpdateServicePrincipalRequest_SdkV2) SyncFieldsDuringRead(ctx context.
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringRead(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
 	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringRead(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
+	}
 	if !from.Roles.IsNull() && !from.Roles.IsUnknown() && to.Roles.IsNull() && len(from.Roles.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -9994,17 +11619,56 @@ func (to *UpdateUserRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Emails = from.Emails
 	}
+	if !from.Emails.IsNull() && !from.Emails.IsUnknown() {
+		if toEmails, ok := to.GetEmails(ctx); ok {
+			if fromEmails, ok := from.GetEmails(ctx); ok {
+				// Recursively sync the fields of each Emails element by position.
+				for i := range toEmails {
+					if i < len(fromEmails) {
+						toEmails[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEmails[i])
+					}
+				}
+				to.SetEmails(ctx, toEmails)
+			}
+		}
+	}
 	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				// Recursively sync the fields of each Entitlements element by position.
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
+	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				// Recursively sync the fields of each Groups element by position.
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringCreateOrUpdate(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
 	}
 	if !from.Name.IsNull() && !from.Name.IsUnknown() {
 		if toName, ok := to.GetName(ctx); ok {
@@ -10021,6 +11685,19 @@ func (to *UpdateUserRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
@@ -10036,17 +11713,53 @@ func (to *UpdateUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Emails = from.Emails
 	}
+	if !from.Emails.IsNull() && !from.Emails.IsUnknown() {
+		if toEmails, ok := to.GetEmails(ctx); ok {
+			if fromEmails, ok := from.GetEmails(ctx); ok {
+				for i := range toEmails {
+					if i < len(fromEmails) {
+						toEmails[i].SyncFieldsDuringRead(ctx, fromEmails[i])
+					}
+				}
+				to.SetEmails(ctx, toEmails)
+			}
+		}
+	}
 	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringRead(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
+	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringRead(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
 	}
 	if !from.Name.IsNull() && !from.Name.IsUnknown() {
 		if toName, ok := to.GetName(ctx); ok {
@@ -10061,6 +11774,18 @@ func (to *UpdateUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -10459,17 +12184,56 @@ func (to *User_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from U
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Emails = from.Emails
 	}
+	if !from.Emails.IsNull() && !from.Emails.IsUnknown() {
+		if toEmails, ok := to.GetEmails(ctx); ok {
+			if fromEmails, ok := from.GetEmails(ctx); ok {
+				// Recursively sync the fields of each Emails element by position.
+				for i := range toEmails {
+					if i < len(fromEmails) {
+						toEmails[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEmails[i])
+					}
+				}
+				to.SetEmails(ctx, toEmails)
+			}
+		}
+	}
 	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				// Recursively sync the fields of each Entitlements element by position.
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
+	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				// Recursively sync the fields of each Groups element by position.
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringCreateOrUpdate(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
 	}
 	if !from.Name.IsNull() && !from.Name.IsUnknown() {
 		if toName, ok := to.GetName(ctx); ok {
@@ -10486,6 +12250,19 @@ func (to *User_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from U
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Schemas, and the deserialized field value is Null,
@@ -10501,17 +12278,53 @@ func (to *User_SdkV2) SyncFieldsDuringRead(ctx context.Context, from User_SdkV2)
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Emails = from.Emails
 	}
+	if !from.Emails.IsNull() && !from.Emails.IsUnknown() {
+		if toEmails, ok := to.GetEmails(ctx); ok {
+			if fromEmails, ok := from.GetEmails(ctx); ok {
+				for i := range toEmails {
+					if i < len(fromEmails) {
+						toEmails[i].SyncFieldsDuringRead(ctx, fromEmails[i])
+					}
+				}
+				to.SetEmails(ctx, toEmails)
+			}
+		}
+	}
 	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entitlements = from.Entitlements
 	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() {
+		if toEntitlements, ok := to.GetEntitlements(ctx); ok {
+			if fromEntitlements, ok := from.GetEntitlements(ctx); ok {
+				for i := range toEntitlements {
+					if i < len(fromEntitlements) {
+						toEntitlements[i].SyncFieldsDuringRead(ctx, fromEntitlements[i])
+					}
+				}
+				to.SetEntitlements(ctx, toEntitlements)
+			}
+		}
+	}
 	if !from.Groups.IsNull() && !from.Groups.IsUnknown() && to.Groups.IsNull() && len(from.Groups.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Groups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Groups = from.Groups
+	}
+	if !from.Groups.IsNull() && !from.Groups.IsUnknown() {
+		if toGroups, ok := to.GetGroups(ctx); ok {
+			if fromGroups, ok := from.GetGroups(ctx); ok {
+				for i := range toGroups {
+					if i < len(fromGroups) {
+						toGroups[i].SyncFieldsDuringRead(ctx, fromGroups[i])
+					}
+				}
+				to.SetGroups(ctx, toGroups)
+			}
+		}
 	}
 	if !from.Name.IsNull() && !from.Name.IsUnknown() {
 		if toName, ok := to.GetName(ctx); ok {
@@ -10526,6 +12339,18 @@ func (to *User_SdkV2) SyncFieldsDuringRead(ctx context.Context, from User_SdkV2)
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 	if !from.Schemas.IsNull() && !from.Schemas.IsUnknown() && to.Schemas.IsNull() && len(from.Schemas.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -10790,6 +12615,19 @@ func (to *WorkspacePermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Permissions = from.Permissions
 	}
+	if !from.Permissions.IsNull() && !from.Permissions.IsUnknown() {
+		if toPermissions, ok := to.GetPermissions(ctx); ok {
+			if fromPermissions, ok := from.GetPermissions(ctx); ok {
+				// Recursively sync the fields of each Permissions element by position.
+				for i := range toPermissions {
+					if i < len(fromPermissions) {
+						toPermissions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPermissions[i])
+					}
+				}
+				to.SetPermissions(ctx, toPermissions)
+			}
+		}
+	}
 }
 
 func (to *WorkspacePermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from WorkspacePermissions_SdkV2) {
@@ -10798,6 +12636,18 @@ func (to *WorkspacePermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for Permissions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Permissions = from.Permissions
+	}
+	if !from.Permissions.IsNull() && !from.Permissions.IsUnknown() {
+		if toPermissions, ok := to.GetPermissions(ctx); ok {
+			if fromPermissions, ok := from.GetPermissions(ctx); ok {
+				for i := range toPermissions {
+					if i < len(fromPermissions) {
+						toPermissions[i].SyncFieldsDuringRead(ctx, fromPermissions[i])
+					}
+				}
+				to.SetPermissions(ctx, toPermissions)
+			}
+		}
 	}
 }
 

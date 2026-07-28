@@ -76,6 +76,8 @@ The following arguments are supported:
 * `warehouse_id` (string, required) - ID of the SQL warehouse attached to the alert
 * `custom_description` (string, optional) - Custom description for the alert. support mustache template
 * `custom_summary` (string, optional) - Custom summary for the alert. support mustache template
+* `parameters` (list of AlertStatementParameter, optional) - Query parameters bound when executing the alert query, referenced in the
+  query text with `:name` syntax. Static values only
 * `parent_path` (string, optional) - The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated
 * `purge_on_delete` (boolean, optional) - Whether to permanently delete the alert. If not set, the alert will only be soft deleted
 * `run_as` (AlertV2RunAs, optional) - Specifies the identity that will be used to run the alert.
@@ -90,6 +92,13 @@ The following arguments are supported:
 
 ### ProviderConfig
 * `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
+### AlertStatementParameter
+* `name` (string, required) - The name of the parameter, referenced in the query as `:name`
+* `type` (string, optional) - The SQL data type of the parameter, e.g. STRING, INT, or DATE. Defaults to STRING. This is a
+  string rather than an enum because scalar subtypes such as DECIMAL(10, 4) cannot be enumerated.
+  Complex types such as ARRAY, MAP, and STRUCT are not supported
+* `value` (string, optional) - The bound value for the parameter, given as a string. If omitted, the value is interpreted as NULL
 
 ### AlertV2Evaluation
 * `comparison_operator` (string, required) - Operator used for comparison in alert evaluation. Possible values are: `EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `IS_NOT_NULL`, `IS_NULL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`

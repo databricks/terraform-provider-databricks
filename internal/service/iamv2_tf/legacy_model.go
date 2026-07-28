@@ -2037,7 +2037,30 @@ func (m *WorkspaceAccessDetail_SdkV2) SetPermissions(ctx context.Context, v []ty
 	m.Permissions = types.ListValueMust(t, vs)
 }
 
-// The details of a principal's assignment to a workspace.
+// The direct assignment of a provisioned account-level principal (user, service
+// principal, or group) to a workspace, together with the entitlements that
+// assignment grants in the workspace.
+//
+// A WorkspaceAssignmentDetail exists only for principals that are directly
+// assigned to the workspace; principals that merely inherit workspace access
+// through a group are not represented here (see WorkspaceAccessDetail /
+// WorkspaceIdentityDetail for the effective, direct-or-indirect view). Creating
+// the resource assigns the principal to the workspace; deleting it removes the
+// assignment. The `entitlements` field is the only client-settable field and
+// defines the entitlements granted directly on this assignment;
+// `effective_entitlements` is the read-only union of those plus any granted via
+// group membership.
+//
+// A direct assignment always carries at least one directly-assigned
+// entitlement: the assignment is what grants the entitlement, so a
+// WorkspaceAssignmentDetail with an empty `entitlements` set is not a valid
+// state. Both create and update require a non-empty `entitlements` set (an
+// empty set is rejected); to remove a principal's assignment entirely, delete
+// the resource.
+//
+// This resource replaces workspace assignment previously managed through the
+// workspace SCIM and permission-assignment APIs, and is intended for account
+// and workspace admins.
 type WorkspaceAssignmentDetail_SdkV2 struct {
 	// The account ID parent of the workspace where the principal is assigned
 	AccountId types.String `tfsdk:"account_id"`

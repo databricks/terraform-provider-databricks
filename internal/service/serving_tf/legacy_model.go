@@ -6706,6 +6706,113 @@ func (m *PatchServingEndpointTags_SdkV2) SetDeleteTags(ctx context.Context, v []
 	m.DeleteTags = types.ListValueMust(t, vs)
 }
 
+// Updates the telemetry configuration of a serving endpoint.
+type PatchTelemetryConfigRequest_SdkV2 struct {
+	// The name of the serving endpoint whose telemetry configuration is being
+	// updated. This field is required.
+	Name types.String `tfsdk:"-"`
+	// The telemetry configuration to be applied to the serving endpoint. Can
+	// specify either a telemetry_profile_id to use an existing profile, or
+	// table_names to create a new profile with the specified Unity Catalog
+	// tables. If not provided, the telemetry configuration will be removed from
+	// the endpoint.
+	TelemetryConfig types.List `tfsdk:"telemetry_config"`
+}
+
+func (to *PatchTelemetryConfigRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PatchTelemetryConfigRequest_SdkV2) {
+	if !from.TelemetryConfig.IsNull() && !from.TelemetryConfig.IsUnknown() {
+		if toTelemetryConfig, ok := to.GetTelemetryConfig(ctx); ok {
+			if fromTelemetryConfig, ok := from.GetTelemetryConfig(ctx); ok {
+				// Recursively sync the fields of TelemetryConfig
+				toTelemetryConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromTelemetryConfig)
+				to.SetTelemetryConfig(ctx, toTelemetryConfig)
+			}
+		}
+	}
+}
+
+func (to *PatchTelemetryConfigRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PatchTelemetryConfigRequest_SdkV2) {
+	if !from.TelemetryConfig.IsNull() && !from.TelemetryConfig.IsUnknown() {
+		if toTelemetryConfig, ok := to.GetTelemetryConfig(ctx); ok {
+			if fromTelemetryConfig, ok := from.GetTelemetryConfig(ctx); ok {
+				toTelemetryConfig.SyncFieldsDuringRead(ctx, fromTelemetryConfig)
+				to.SetTelemetryConfig(ctx, toTelemetryConfig)
+			}
+		}
+	}
+}
+
+func (m PatchTelemetryConfigRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["telemetry_config"] = attrs["telemetry_config"].SetOptional()
+	attrs["telemetry_config"] = attrs["telemetry_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchTelemetryConfigRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m PatchTelemetryConfigRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"telemetry_config": reflect.TypeOf(TelemetryConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PatchTelemetryConfigRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m PatchTelemetryConfigRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":             m.Name,
+			"telemetry_config": m.TelemetryConfig,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m PatchTelemetryConfigRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+			"telemetry_config": basetypes.ListType{
+				ElemType: TelemetryConfig_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetTelemetryConfig returns the value of the TelemetryConfig field in PatchTelemetryConfigRequest_SdkV2 as
+// a TelemetryConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PatchTelemetryConfigRequest_SdkV2) GetTelemetryConfig(ctx context.Context) (TelemetryConfig_SdkV2, bool) {
+	var e TelemetryConfig_SdkV2
+	if m.TelemetryConfig.IsNull() || m.TelemetryConfig.IsUnknown() {
+		return e, false
+	}
+	var v []TelemetryConfig_SdkV2
+	d := m.TelemetryConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTelemetryConfig sets the value of the TelemetryConfig field in PatchTelemetryConfigRequest_SdkV2.
+func (m *PatchTelemetryConfigRequest_SdkV2) SetTelemetryConfig(ctx context.Context, v TelemetryConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["telemetry_config"]
+	m.TelemetryConfig = types.ListValueMust(t, vs)
+}
+
 type PayloadTable_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 

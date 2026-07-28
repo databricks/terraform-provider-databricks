@@ -729,7 +729,7 @@ func (m DownloadResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type FileInfo_SdkV2 struct {
-	// The length of the file in bytes. This field is omitted for directories.
+	// The length of the file in bytes. Set to 0 for directories.
 	FileSize types.Int64 `tfsdk:"file_size"`
 	// True if the path is a directory.
 	IsDir types.Bool `tfsdk:"is_dir"`

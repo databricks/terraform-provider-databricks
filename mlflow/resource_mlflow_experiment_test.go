@@ -130,6 +130,46 @@ func TestExperimentCreateWithTraceLocation(t *testing.T) {
 	assert.Equal(t, "my_experiment", d.Get("trace_location.0.uc_trace_location.0.effective_table_prefix"))
 }
 
+// An experiment with a server-set location, managed by config that omits the
+// block, must not force replacement. ApplyNoError fails if any attribute
+// requires new.
+func TestExperimentTraceLocationOmittedNoForceNew(t *testing.T) {
+	re := ml.Experiment{
+		Name:         "xyz",
+		ExperimentId: "123456790123456",
+		TraceLocation: &ml.ExperimentTraceLocation{
+			UcTraceLocation: &ml.UcTraceLocation{
+				Catalog:              "my_catalog",
+				Schema:               "my_schema",
+				EffectiveTablePrefix: "experiment_123456790123456",
+			},
+		},
+	}
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
+				Response: ml.GetExperimentResponse{Experiment: &re},
+			},
+		},
+		Resource: ResourceMlflowExperiment(),
+		Read:     true,
+		ID:       re.ExperimentId,
+		InstanceState: map[string]string{
+			"name":                                 "xyz",
+			"trace_location.#":                     "1",
+			"trace_location.0.uc_trace_location.#": "1",
+			"trace_location.0.uc_trace_location.0.catalog":                "my_catalog",
+			"trace_location.0.uc_trace_location.0.schema":                 "my_schema",
+			"trace_location.0.uc_trace_location.0.effective_table_prefix": "experiment_123456790123456",
+		},
+		HCL: `
+		name = "xyz"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestExperimentCreateGetError(t *testing.T) {
 	re := e()
 	re.ExperimentId = "123456790123456"

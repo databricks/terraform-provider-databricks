@@ -33,11 +33,9 @@ func ResourceMlflowExperiment() common.Resource {
 			}
 			common.CustomizeSchemaPath(m, "artifact_location").SetForceNew().SetSuppressDiff()
 			common.CustomizeSchemaPath(m, "name").SetRequired().SetCustomSuppressDiff(experimentNameSuppressDiff)
-			// Immutable server-side, so a change must replace. Computed so an
-			// experiment adopted without the block keeps its server value instead of
-			// diffing to zero and forcing replacement.
-			common.CustomizeSchemaPath(m, "trace_location").SetForceNew().SetComputed()
-			common.CustomizeSchemaPath(m, "trace_location", "uc_trace_location").SetForceNew().SetComputed()
+			// Immutable server-side, so a change must replace.
+			common.CustomizeSchemaPath(m, "trace_location").SetForceNew()
+			common.CustomizeSchemaPath(m, "trace_location", "uc_trace_location").SetForceNew()
 			// Case-insensitive identifiers: suppress case-only diffs so a normalized
 			// server echo does not force replacement.
 			common.CustomizeSchemaPath(m, "trace_location", "uc_trace_location", "catalog").

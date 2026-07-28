@@ -112,6 +112,19 @@ func (to *CatalogConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AutoTagConfigs = from.AutoTagConfigs
 	}
+	if !from.AutoTagConfigs.IsNull() && !from.AutoTagConfigs.IsUnknown() {
+		if toAutoTagConfigs, ok := to.GetAutoTagConfigs(ctx); ok {
+			if fromAutoTagConfigs, ok := from.GetAutoTagConfigs(ctx); ok {
+				// Recursively sync the fields of each AutoTagConfigs element by position.
+				for i := range toAutoTagConfigs {
+					if i < len(fromAutoTagConfigs) {
+						toAutoTagConfigs[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAutoTagConfigs[i])
+					}
+				}
+				to.SetAutoTagConfigs(ctx, toAutoTagConfigs)
+			}
+		}
+	}
 	if !from.ExcludedSchemas.IsNull() && !from.ExcludedSchemas.IsUnknown() {
 		if toExcludedSchemas, ok := to.GetExcludedSchemas(ctx); ok {
 			if fromExcludedSchemas, ok := from.GetExcludedSchemas(ctx); ok {
@@ -138,6 +151,18 @@ func (to *CatalogConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Ca
 		// If a user specified a non-Null, empty list for AutoTagConfigs, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AutoTagConfigs = from.AutoTagConfigs
+	}
+	if !from.AutoTagConfigs.IsNull() && !from.AutoTagConfigs.IsUnknown() {
+		if toAutoTagConfigs, ok := to.GetAutoTagConfigs(ctx); ok {
+			if fromAutoTagConfigs, ok := from.GetAutoTagConfigs(ctx); ok {
+				for i := range toAutoTagConfigs {
+					if i < len(fromAutoTagConfigs) {
+						toAutoTagConfigs[i].SyncFieldsDuringRead(ctx, fromAutoTagConfigs[i])
+					}
+				}
+				to.SetAutoTagConfigs(ctx, toAutoTagConfigs)
+			}
+		}
 	}
 	if !from.ExcludedSchemas.IsNull() && !from.ExcludedSchemas.IsUnknown() {
 		if toExcludedSchemas, ok := to.GetExcludedSchemas(ctx); ok {

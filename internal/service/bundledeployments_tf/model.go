@@ -91,12 +91,9 @@ func (m CompleteVersionRequest) Type(ctx context.Context) attr.Type {
 }
 
 type CreateDeploymentRequest struct {
-	// The deployment to create. Caller must set `initial_parent_path`; every
-	// other field is populated by the service.
+	// The deployment to create. The caller must set `initial_parent_path`.
+	// Other fields are ignored on input and populated by the service.
 	Deployment types.Object `tfsdk:"deployment"`
-	// The ID to use for the deployment, which will become the final component
-	// of the deployment's resource name (i.e. `deployments/{deployment_id}`).
-	DeploymentId types.String `tfsdk:"-"`
 }
 
 func (to *CreateDeploymentRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateDeploymentRequest) {
@@ -124,7 +121,6 @@ func (to *CreateDeploymentRequest) SyncFieldsDuringRead(ctx context.Context, fro
 
 func (m CreateDeploymentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["deployment"] = attrs["deployment"].SetRequired()
-	attrs["deployment_id"] = attrs["deployment_id"].SetRequired()
 
 	return attrs
 }
@@ -149,8 +145,7 @@ func (m CreateDeploymentRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"deployment":    m.Deployment,
-			"deployment_id": m.DeploymentId,
+			"deployment": m.Deployment,
 		})
 }
 
@@ -158,8 +153,7 @@ func (m CreateDeploymentRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 func (m CreateDeploymentRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"deployment":    Deployment{}.Type(ctx),
-			"deployment_id": types.StringType,
+			"deployment": Deployment{}.Type(ctx),
 		},
 	}
 }
@@ -460,26 +454,27 @@ type Deployment struct {
 	// Bundle target deployment mode (development or production), derived from
 	// the most recent version's mode.
 	DeploymentMode types.String `tfsdk:"deployment_mode"`
-	// When the deployment was destroyed (i.e. `bundle destroy` completed).
-	// Unset if the deployment has not been destroyed. Named destroy_time (not
-	// delete_time) because this tracks the `databricks bundle destroy` command,
-	// not the API-level deletion.
+	// When deletion was recorded. Unset if deletion has not been recorded. This
+	// response metadata does not determine the deployment's lifecycle status.
 	DestroyTime timetypes.RFC3339 `tfsdk:"destroy_time"`
 	// The user who destroyed the deployment (email or principal name). Unset if
 	// the deployment has not been destroyed.
 	DestroyedBy types.String `tfsdk:"destroyed_by"`
-	// Human-readable name for the deployment. Output only: it is denormalized
-	// from the latest version, not set directly on the deployment.
+	// Human-readable name for the deployment, up to 256 characters. Output
+	// only: clients update it by setting `display_name` when creating a
+	// version.
 	DisplayName types.String `tfsdk:"display_name"`
 	// Git provenance of the deployment's source, derived from the latest
 	// version.
 	GitInfo types.Object `tfsdk:"git_info"`
-	// The workspace path of the folder where the deployment is initially
-	// created. Includes a leading slash and no trailing slash. On create, the
-	// deployment is registered as a typed BUNDLE_DEPLOYMENT tree node under
-	// this folder, which must already exist. This field is input only and is
-	// not returned in create, get, or list responses. The service rejects
-	// create requests that omit it.
+	// The workspace path of the existing folder where the deployment is
+	// initially created. Must be absolute and canonical, with single
+	// separators, no `.` or `..` segments, and no trailing slash unless the
+	// path is `/`. It may contain at most 24 path segments, excluding an
+	// optional leading `/Workspace` segment. The complete path may contain up
+	// to 1,024 characters, and each segment may contain up to 511 characters.
+	// This field is input only and is not returned in create, get, or list
+	// responses.
 	InitialParentPath types.String `tfsdk:"initial_parent_path"`
 	// The version_id of the most recent deployment version.
 	LastVersionId types.String `tfsdk:"last_version_id"`
@@ -1033,8 +1028,8 @@ func (m HeartbeatResponse) Type(ctx context.Context) attr.Type {
 
 type ListDeploymentsRequest struct {
 	// The maximum number of deployments to return. The service may return fewer
-	// than this value. If unspecified, at most 50 deployments will be returned.
-	// The maximum value is 1000; values above 1000 will be coerced to 1000.
+	// than this value. If unspecified, at most 20 deployments will be returned.
+	// The maximum value is 100; values above 100 will be coerced to 100.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token, received from a previous `ListDeployments` call. Provide
 	// this to retrieve the subsequent page.
@@ -1103,6 +1098,19 @@ func (to *ListDeploymentsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Deployments = from.Deployments
 	}
+	if !from.Deployments.IsNull() && !from.Deployments.IsUnknown() {
+		if toDeployments, ok := to.GetDeployments(ctx); ok {
+			if fromDeployments, ok := from.GetDeployments(ctx); ok {
+				// Recursively sync the fields of each Deployments element by position.
+				for i := range toDeployments {
+					if i < len(fromDeployments) {
+						toDeployments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDeployments[i])
+					}
+				}
+				to.SetDeployments(ctx, toDeployments)
+			}
+		}
+	}
 }
 
 func (to *ListDeploymentsResponse) SyncFieldsDuringRead(ctx context.Context, from ListDeploymentsResponse) {
@@ -1111,6 +1119,18 @@ func (to *ListDeploymentsResponse) SyncFieldsDuringRead(ctx context.Context, fro
 		// If a user specified a non-Null, empty list for Deployments, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Deployments = from.Deployments
+	}
+	if !from.Deployments.IsNull() && !from.Deployments.IsUnknown() {
+		if toDeployments, ok := to.GetDeployments(ctx); ok {
+			if fromDeployments, ok := from.GetDeployments(ctx); ok {
+				for i := range toDeployments {
+					if i < len(fromDeployments) {
+						toDeployments[i].SyncFieldsDuringRead(ctx, fromDeployments[i])
+					}
+				}
+				to.SetDeployments(ctx, toDeployments)
+			}
+		}
 	}
 }
 
@@ -1262,6 +1282,19 @@ func (to *ListOperationsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Operations = from.Operations
 	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				// Recursively sync the fields of each Operations element by position.
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
+	}
 }
 
 func (to *ListOperationsResponse) SyncFieldsDuringRead(ctx context.Context, from ListOperationsResponse) {
@@ -1270,6 +1303,18 @@ func (to *ListOperationsResponse) SyncFieldsDuringRead(ctx context.Context, from
 		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Operations = from.Operations
+	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringRead(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
 	}
 }
 
@@ -1420,6 +1465,19 @@ func (to *ListResourcesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
 	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				// Recursively sync the fields of each Resources element by position.
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringCreateOrUpdate(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
+	}
 }
 
 func (to *ListResourcesResponse) SyncFieldsDuringRead(ctx context.Context, from ListResourcesResponse) {
@@ -1428,6 +1486,18 @@ func (to *ListResourcesResponse) SyncFieldsDuringRead(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
+	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringRead(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
 	}
 }
 
@@ -1503,8 +1573,8 @@ func (m *ListResourcesResponse) SetResources(ctx context.Context, v []Resource) 
 
 type ListVersionsRequest struct {
 	// The maximum number of versions to return. The service may return fewer
-	// than this value. If unspecified, at most 50 versions will be returned.
-	// The maximum value is 1000; values above 1000 will be coerced to 1000.
+	// than this value. If unspecified, at most 20 versions will be returned.
+	// The maximum value is 100; values above 100 will be coerced to 100.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token, received from a previous `ListVersions` call. Provide this
 	// to retrieve the subsequent page.
@@ -1578,6 +1648,19 @@ func (to *ListVersionsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Versions = from.Versions
 	}
+	if !from.Versions.IsNull() && !from.Versions.IsUnknown() {
+		if toVersions, ok := to.GetVersions(ctx); ok {
+			if fromVersions, ok := from.GetVersions(ctx); ok {
+				// Recursively sync the fields of each Versions element by position.
+				for i := range toVersions {
+					if i < len(fromVersions) {
+						toVersions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromVersions[i])
+					}
+				}
+				to.SetVersions(ctx, toVersions)
+			}
+		}
+	}
 }
 
 func (to *ListVersionsResponse) SyncFieldsDuringRead(ctx context.Context, from ListVersionsResponse) {
@@ -1586,6 +1669,18 @@ func (to *ListVersionsResponse) SyncFieldsDuringRead(ctx context.Context, from L
 		// If a user specified a non-Null, empty list for Versions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Versions = from.Versions
+	}
+	if !from.Versions.IsNull() && !from.Versions.IsUnknown() {
+		if toVersions, ok := to.GetVersions(ctx); ok {
+			if fromVersions, ok := from.GetVersions(ctx); ok {
+				for i := range toVersions {
+					if i < len(fromVersions) {
+						toVersions[i].SyncFieldsDuringRead(ctx, fromVersions[i])
+					}
+				}
+				to.SetVersions(ctx, toVersions)
+			}
+		}
 	}
 }
 
@@ -1887,7 +1982,10 @@ type Version struct {
 	// Bundle target deployment mode (development or production), captured at
 	// the time of this version.
 	DeploymentMode types.String `tfsdk:"deployment_mode"`
-	// Display name for the deployment, captured at the time of this version.
+	// Display name for the deployment, captured at the time of this version. Up
+	// to 256 characters. When present, creating the version updates the
+	// deployment display name. An empty value clears it; an absent value leaves
+	// the current deployment display name unchanged.
 	DisplayName types.String `tfsdk:"display_name"`
 	// Git provenance of the source, captured at the time of this version.
 	GitInfo types.Object `tfsdk:"git_info"`

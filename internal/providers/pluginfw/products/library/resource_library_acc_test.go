@@ -177,7 +177,6 @@ func TestAccLibrary_ProviderConfig_Mismatched(t *testing.T) {
 		ExpectError: regexp.MustCompile(
 			`(?s)failed to get workspace client`,
 		),
-		PlanOnly: true,
 	})
 }
 

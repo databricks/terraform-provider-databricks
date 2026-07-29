@@ -130,10 +130,10 @@ func TestExperimentCreateWithTraceLocation(t *testing.T) {
 	assert.Equal(t, "my_experiment", d.Get("trace_location.0.uc_trace_location.0.effective_table_prefix"))
 }
 
-// An experiment with a server-set location, managed by config that omits the
-// block, must not force replacement. ApplyNoError fails if any attribute
-// requires new.
-func TestExperimentTraceLocationOmittedNoForceNew(t *testing.T) {
+// Reading an experiment whose location was set out-of-band, with config that
+// omits the block, must not pull that location into state. This is what keeps
+// existing experiments from drifting when the field is first adopted.
+func TestExperimentTraceLocationOmittedNotTracked(t *testing.T) {
 	re := ml.Experiment{
 		Name:         "xyz",
 		ExperimentId: "123456790123456",
@@ -145,7 +145,7 @@ func TestExperimentTraceLocationOmittedNoForceNew(t *testing.T) {
 			},
 		},
 	}
-	qa.ResourceFixture{
+	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -156,18 +156,12 @@ func TestExperimentTraceLocationOmittedNoForceNew(t *testing.T) {
 		Resource: ResourceMlflowExperiment(),
 		Read:     true,
 		ID:       re.ExperimentId,
-		InstanceState: map[string]string{
-			"name":                                 "xyz",
-			"trace_location.#":                     "1",
-			"trace_location.0.uc_trace_location.#": "1",
-			"trace_location.0.uc_trace_location.0.catalog":                "my_catalog",
-			"trace_location.0.uc_trace_location.0.schema":                 "my_schema",
-			"trace_location.0.uc_trace_location.0.effective_table_prefix": "experiment_123456790123456",
-		},
-		HCL: `
-		name = "xyz"
-		`,
-	}.ApplyNoError(t)
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	// The block is not Computed, so a location the config never set is left out
+	// of state instead of being pulled in (which would produce spurious drift).
+	assert.Equal(t, 0, d.Get("trace_location.#"))
 }
 
 func TestExperimentCreateGetError(t *testing.T) {

@@ -25954,7 +25954,7 @@ type StreamConnectionConfig struct {
 	DirectMtlsConfig types.Object `tfsdk:"direct_mtls_config"`
 	// Name of an existing UC Connection for stream platform access. Must be the
 	// correct type for the streaming platform (e.g. a Kafka Connection for a
-	// Kafka Stream).
+	// Kafka Stream, or a Kinesis Connection for a Kinesis Stream).
 	UcConnectionName types.String `tfsdk:"uc_connection_name"`
 }
 

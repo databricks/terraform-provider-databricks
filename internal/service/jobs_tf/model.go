@@ -18305,8 +18305,9 @@ func (m *RunStatus) SetTerminationDetails(ctx context.Context, v TerminationDeta
 
 // Used when outputting a child run, in GetRun or ListRuns.
 type RunTask struct {
-	// The task runs a multi-node GPU compute workload on Databricks AI Runtime.
-	// External-facing surface; mirrors the AIR CLI (fka SGCLI) v2 YAML schema.
+	// The task runs a multi-gpu compute workload on Databricks AI Runtime.
+	// Specify the accelerator type and count, the command to run, and where the
+	// workload's code and MLflow output are stored.
 	AiRuntimeTask types.Object `tfsdk:"ai_runtime_task"`
 	// The task evaluates a Databricks alert and sends notifications to
 	// subscribers when the `alert_task` field is present.
@@ -22989,8 +22990,9 @@ func (m SubmitRunResponse) Type(ctx context.Context) attr.Type {
 }
 
 type SubmitTask struct {
-	// The task runs a multi-node GPU compute workload on Databricks AI Runtime.
-	// External-facing surface; mirrors the AIR CLI (fka SGCLI) v2 YAML schema.
+	// The task runs a multi-gpu compute workload on Databricks AI Runtime.
+	// Specify the accelerator type and count, the command to run, and where the
+	// workload's code and MLflow output are stored.
 	AiRuntimeTask types.Object `tfsdk:"ai_runtime_task"`
 	// The task evaluates a Databricks alert and sends notifications to
 	// subscribers when the `alert_task` field is present.
@@ -24990,8 +24992,9 @@ func (m *TableUpdateTriggerConfiguration) SetTableNames(ctx context.Context, v [
 }
 
 type Task struct {
-	// The task runs a multi-node GPU compute workload on Databricks AI Runtime.
-	// External-facing surface; mirrors the AIR CLI (fka SGCLI) v2 YAML schema.
+	// The task runs a multi-gpu compute workload on Databricks AI Runtime.
+	// Specify the accelerator type and count, the command to run, and where the
+	// workload's code and MLflow output are stored.
 	AiRuntimeTask types.Object `tfsdk:"ai_runtime_task"`
 	// The task evaluates a Databricks alert and sends notifications to
 	// subscribers when the `alert_task` field is present.

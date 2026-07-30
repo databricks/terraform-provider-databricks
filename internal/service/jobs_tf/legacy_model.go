@@ -18682,8 +18682,9 @@ func (m *RunStatus_SdkV2) SetTerminationDetails(ctx context.Context, v Terminati
 
 // Used when outputting a child run, in GetRun or ListRuns.
 type RunTask_SdkV2 struct {
-	// The task runs a multi-node GPU compute workload on Databricks AI Runtime.
-	// External-facing surface; mirrors the AIR CLI (fka SGCLI) v2 YAML schema.
+	// The task runs a multi-gpu compute workload on Databricks AI Runtime.
+	// Specify the accelerator type and count, the command to run, and where the
+	// workload's code and MLflow output are stored.
 	AiRuntimeTask types.List `tfsdk:"ai_runtime_task"`
 	// The task evaluates a Databricks alert and sends notifications to
 	// subscribers when the `alert_task` field is present.
@@ -23546,8 +23547,9 @@ func (m SubmitRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type SubmitTask_SdkV2 struct {
-	// The task runs a multi-node GPU compute workload on Databricks AI Runtime.
-	// External-facing surface; mirrors the AIR CLI (fka SGCLI) v2 YAML schema.
+	// The task runs a multi-gpu compute workload on Databricks AI Runtime.
+	// Specify the accelerator type and count, the command to run, and where the
+	// workload's code and MLflow output are stored.
 	AiRuntimeTask types.List `tfsdk:"ai_runtime_task"`
 	// The task evaluates a Databricks alert and sends notifications to
 	// subscribers when the `alert_task` field is present.
@@ -25651,8 +25653,9 @@ func (m *TableUpdateTriggerConfiguration_SdkV2) SetTableNames(ctx context.Contex
 }
 
 type Task_SdkV2 struct {
-	// The task runs a multi-node GPU compute workload on Databricks AI Runtime.
-	// External-facing surface; mirrors the AIR CLI (fka SGCLI) v2 YAML schema.
+	// The task runs a multi-gpu compute workload on Databricks AI Runtime.
+	// Specify the accelerator type and count, the command to run, and where the
+	// workload's code and MLflow output are stored.
 	AiRuntimeTask types.List `tfsdk:"ai_runtime_task"`
 	// The task evaluates a Databricks alert and sends notifications to
 	// subscribers when the `alert_task` field is present.

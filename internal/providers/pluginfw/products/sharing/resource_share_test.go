@@ -7,8 +7,35 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestShareCommentChanged(t *testing.T) {
+	for _, tt := range []struct {
+		name  string
+		plan  types.String
+		state types.String
+		want  bool
+	}{
+		// Omitted / deferred comment must never be sent (would clobber an
+		// out-of-band value or PATCH a spurious "" from ValueString() on unknown).
+		{"null plan, value in state", types.StringNull(), types.StringValue("x"), false},
+		{"null plan, null state", types.StringNull(), types.StringNull(), false},
+		{"unknown plan, value in state", types.StringUnknown(), types.StringValue("x"), false},
+		// Concrete, differing comment is a real change.
+		{"set from null", types.StringValue("x"), types.StringNull(), true},
+		{"changed value", types.StringValue("y"), types.StringValue("x"), true},
+		{"explicit clear", types.StringValue(""), types.StringValue("x"), true},
+		// No-op when the known comment already matches state.
+		{"unchanged value", types.StringValue("x"), types.StringValue("x"), false},
+		{"unchanged empty", types.StringValue(""), types.StringValue(""), false},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, shareCommentChanged(tt.plan, tt.state))
+		})
+	}
+}
 
 func TestShareSyncEffectiveFields(t *testing.T) {
 	shareName := "test-share-name"

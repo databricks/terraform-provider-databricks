@@ -614,6 +614,54 @@ func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 	})
 }
 
+// TestUcAccShareCommentSetOutsideTerraform reproduces ES-2090741: a share is managed
+// without a comment in config, then a comment is set out-of-band (e.g. in the UI). Before
+// the fix, the next plan/apply failed with "produced an unexpected new value: .comment:
+// was null, but now cty.StringVal(...)" because comment was Optional-not-Computed. With
+// comment Optional+Computed the out-of-band value is adopted and the plan stays empty.
+func TestUcAccShareCommentSetOutsideTerraform(t *testing.T) {
+	var shareName string
+	shareConfig := preTestTemplateSchema + `
+	resource "databricks_share" "myshare" {
+		name  = "{var.STICKY_RANDOM}-terraform-delta-share-comment-oob"
+		object {
+			name = databricks_schema.schema1.id
+			data_object_type = "SCHEMA"
+		}
+	}`
+
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: shareConfig, // no comment in config
+		Check: func(s *terraform.State) error {
+			share := s.RootModule().Resources["databricks_share.myshare"]
+			if share == nil {
+				return fmt.Errorf("expected databricks_share.myshare in state")
+			}
+			shareName = share.Primary.Attributes["name"]
+			assert.NotEmpty(t, shareName)
+			return nil
+		},
+	}, acceptance.Step{
+		PreConfig: func() {
+			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
+			require.NoError(t, err)
+			// Set a comment outside terraform, as a UI edit would.
+			_, err = w.Shares.Update(context.Background(), sharing.UpdateShare{
+				Name:            shareName,
+				Comment:         "set outside terraform",
+				ForceSendFields: []string{"Comment"},
+			})
+			require.NoError(t, err)
+		},
+		// Same comment-less config: the out-of-band comment must be adopted into state
+		// with no inconsistent-result error and no lingering diff.
+		Template: shareConfig,
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+		},
+	})
+}
+
 func shareTemplate(provider_config string) string {
 	return fmt.Sprintf(`
 	resource "databricks_share" "myshare" {

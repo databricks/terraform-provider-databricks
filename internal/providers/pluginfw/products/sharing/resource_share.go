@@ -140,6 +140,18 @@ func shareChanges(si sharing.ShareInfo, action string) sharing.UpdateShare {
 	}
 }
 
+// shareCommentChanged reports whether the planned comment carries a concrete change
+// that should be sent to the backend. comment is Optional+Computed, so the planned
+// value can legitimately be unknown (e.g. on an update that changes other attributes
+// before UseStateForUnknown resolves it); types.String.IsNull is false for an unknown
+// value, so a naive !IsNull check would call ValueString() on unknown and PATCH a
+// spurious "". We only send a comment when it is known, non-null, and differs from the
+// current state — which also means an omitted (null/unknown) comment never clears a
+// value set out-of-band, matching the legacy SDKv2 semantics.
+func shareCommentChanged(planComment, stateComment types.String) bool {
+	return !planComment.IsNull() && !planComment.IsUnknown() && !planComment.Equal(stateComment)
+}
+
 type ShareResource struct {
 	Client *common.DatabricksClient
 }
@@ -156,6 +168,16 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name") // ForceNew
 		c.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "created_at")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "created_by")
+
+		// comment is Optional+Computed so that a comment set out-of-band (e.g. in the
+		// UI) is adopted into state instead of failing the apply with "produced an
+		// unexpected new value". The Delta Sharing backend stores an empty string
+		// rather than omitting the field once a comment has ever been set, so a null
+		// config can never round-trip to a null server value. UseStateForUnknown keeps
+		// the refreshed value pinned on updates that change other attributes (the
+		// framework otherwise marks null-config computed attributes unknown).
+		c.SetComputed("comment")
+		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "comment")
 
 		c.SetRequired("object", "data_object_type")
 		c.SetRequired("object", "partition", "value", "op")
@@ -400,14 +422,18 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	upToDateShareInfo := currentShareInfo
-	if len(changes) > 0 || !plan.Comment.IsNull() {
+	commentChanged := shareCommentChanged(plan.Comment, state.Comment)
+	if len(changes) > 0 || commentChanged {
 		// if there are any other changes, update the share with the changes
 		update := sharing.UpdateShare{
 			Name:    plan.Name.ValueString(),
 			Updates: changes,
 		}
-		if !plan.Comment.IsNull() {
+		if commentChanged {
+			// ForceSendFields is required so an explicit `comment = ""` (clear the
+			// description) survives the SDK's omitempty and reaches the backend.
 			update.Comment = plan.Comment.ValueString()
+			update.ForceSendFields = append(update.ForceSendFields, "Comment")
 		}
 		upToDateShareInfo, err = w.Shares.Update(ctx, update)
 

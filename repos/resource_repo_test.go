@@ -556,3 +556,31 @@ func TestReposCreateRaisesHTTPTimeout(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, int64(123), resp.ID)
 }
+
+// TestReposUpdateRaisesHTTPTimeout verifies switching branch survives a stall
+// longer than the configured timeout: the checkout happens inline, just like
+// the clone in Create.
+func TestReposUpdateRaisesHTTPTimeout(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/2.0/repos/123" && r.Method == http.MethodPatch {
+			// Stall past the 1s timeout configured below.
+			time.Sleep(1200 * time.Millisecond)
+			w.Write([]byte(`{}`))
+			return
+		}
+		w.Write([]byte(`{}`))
+	}))
+	defer server.Close()
+
+	inner, err := client.New(&config.Config{
+		Host:               server.URL,
+		Token:              "dapi123",
+		HTTPTimeoutSeconds: 1,
+		// Fail fast rather than retrying a timed-out request for minutes.
+		RetryTimeoutSeconds: 1,
+	})
+	require.NoError(t, err)
+
+	api := NewReposAPI(context.Background(), &common.DatabricksClient{DatabricksClient: inner})
+	require.NoError(t, api.Update("123", map[string]any{"branch": "releases"}))
+}

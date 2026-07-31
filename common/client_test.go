@@ -792,17 +792,18 @@ func TestCurrentWorkspaceID_ReturnsCachedValue(t *testing.T) {
 	assert.Equal(t, int64(12345), id2)
 }
 
-func TestClientWithMinimumHTTPTimeout_RaisesTimeout(t *testing.T) {
+func TestClientWithDefaultHTTPTimeout_RaisesUnsetTimeout(t *testing.T) {
 	c := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
-				Host:               "https://e2-workspace.cloud.databricks.com/",
-				Token:              "dapi123",
+				Host:  "https://e2-workspace.cloud.databricks.com/",
+				Token: "dapi123",
+				// 65 is the provider default, not a user choice.
 				HTTPTimeoutSeconds: 65,
 			},
 		},
 	}
-	cc, err := c.ClientWithMinimumHTTPTimeout(600)
+	cc, err := c.ClientWithDefaultHTTPTimeout(600)
 	require.NoError(t, err)
 	assert.NotSame(t, c, cc, "a new client is required, as the SDK reads the timeout once")
 	// The config is shared, so raising the timeout must not mutate the original
@@ -810,32 +811,37 @@ func TestClientWithMinimumHTTPTimeout_RaisesTimeout(t *testing.T) {
 	assert.Equal(t, 65, c.Config.HTTPTimeoutSeconds)
 }
 
-func TestClientWithMinimumHTTPTimeout_KeepsHigherUserTimeout(t *testing.T) {
-	c := &DatabricksClient{
-		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{
-				Host:               "https://e2-workspace.cloud.databricks.com/",
-				Token:              "dapi123",
-				HTTPTimeoutSeconds: 1200,
+func TestClientWithDefaultHTTPTimeout_RespectsUserTimeout(t *testing.T) {
+	// An explicit http_timeout_seconds wins in either direction: a user who
+	// lowered it to fail fast keeps that, and one who raised it keeps that too.
+	for _, userTimeout := range []int{30, 1200} {
+		c := &DatabricksClient{
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host:               "https://e2-workspace.cloud.databricks.com/",
+					Token:              "dapi123",
+					HTTPTimeoutSeconds: userTimeout,
+				},
 			},
-		},
+		}
+		c.SetHTTPTimeoutSetByUser(true)
+		cc, err := c.ClientWithDefaultHTTPTimeout(600)
+		require.NoError(t, err)
+		assert.Same(t, c, cc, "explicit http_timeout_seconds=%d must not be overridden", userTimeout)
 	}
-	cc, err := c.ClientWithMinimumHTTPTimeout(600)
-	require.NoError(t, err)
-	assert.Same(t, c, cc, "an explicitly configured longer timeout must not be lowered")
 }
 
-func TestClientWithMinimumHTTPTimeout_NoConfig(t *testing.T) {
+func TestClientWithDefaultHTTPTimeout_NoConfig(t *testing.T) {
 	c := &DatabricksClient{}
-	cc, err := c.ClientWithMinimumHTTPTimeout(600)
+	cc, err := c.ClientWithDefaultHTTPTimeout(600)
 	require.NoError(t, err)
 	assert.Same(t, c, cc)
 }
 
-// TestClientWithMinimumHTTPTimeout_OutlastsShortTimeout proves the derived
+// TestClientWithDefaultHTTPTimeout_OutlastsShortTimeout proves the derived
 // client actually waits longer: the server stalls past the original timeout,
 // which would fail the request on the parent client.
-func TestClientWithMinimumHTTPTimeout_OutlastsShortTimeout(t *testing.T) {
+func TestClientWithDefaultHTTPTimeout_OutlastsShortTimeout(t *testing.T) {
 	// HTTPTimeoutSeconds has second granularity, so the stall has to exceed 1s
 	// to be distinguishable from the shortest configurable timeout.
 	serverDelay := 1200 * time.Millisecond
@@ -866,7 +872,7 @@ func TestClientWithMinimumHTTPTimeout_OutlastsShortTimeout(t *testing.T) {
 	assert.Contains(t, shortErr.Error(), "inactivity")
 
 	// ...and the same request succeeds once the timeout is raised.
-	raised, err := short.ClientWithMinimumHTTPTimeout(600)
+	raised, err := short.ClientWithDefaultHTTPTimeout(600)
 	require.NoError(t, err)
 	require.NoError(t, raised.Get(context.Background(), "/repos", nil, &resp))
 }

@@ -43,6 +43,7 @@ func PrepareDatabricksClient(ctx context.Context, cfg *config.Config, configCust
 	}
 	// If not set, the default provider timeout is 65 seconds. Most APIs have a server-side timeout of 60 seconds.
 	// The additional 5 seconds is to account for network latency.
+	httpTimeoutSetByUser := cfg.HTTPTimeoutSeconds != 0
 	if cfg.HTTPTimeoutSeconds == 0 {
 		cfg.HTTPTimeoutSeconds = 65
 	}
@@ -67,6 +68,7 @@ func PrepareDatabricksClient(ctx context.Context, cfg *config.Config, configCust
 	pc := &common.DatabricksClient{
 		DatabricksClient: client,
 	}
+	pc.SetHTTPTimeoutSetByUser(httpTimeoutSetByUser)
 	pc.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {
 		return commands.NewCommandsAPI(ctx, client)
 	})

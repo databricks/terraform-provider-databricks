@@ -12,7 +12,7 @@
 * Add resource and data sources for `databricks_ai_gateway_mcp_service`.
 
 ### Bug Fixes
-* Use a 600 second HTTP timeout for `databricks_repo` operations that run git commands inline (the clone on create and the branch/tag checkout on update), so larger repositories no longer fail with `request timed out after 1m5s of inactivity`. A higher `http_timeout_seconds` is still respected.
+* Default to a 600 second HTTP timeout for `databricks_repo` operations that run git commands inline (the clone on create and the branch/tag checkout on update), so larger repositories no longer fail with `request timed out after 1m5s of inactivity`. An explicitly configured `http_timeout_seconds` still takes precedence.
 
 ### Documentation
 

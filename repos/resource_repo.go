@@ -76,7 +76,7 @@ func (a ReposAPI) Create(r reposCreateRequest) (ReposInformation, error) {
 
 	// The clone happens inline in this request, so it needs a longer HTTP
 	// timeout than the rest of the Repos API.
-	client, err := a.client.ClientWithMinimumHTTPTimeout(repoCloneTimeoutSeconds)
+	client, err := a.client.ClientWithDefaultHTTPTimeout(repoCloneTimeoutSeconds)
 	if err != nil {
 		return resp, err
 	}
@@ -104,7 +104,7 @@ func (a ReposAPI) Update(id string, r map[string]any) error {
 	}
 	// Switching branch or tag checks out the new ref inline, so this needs the
 	// same longer timeout as the clone in Create.
-	client, err := a.client.ClientWithMinimumHTTPTimeout(repoCloneTimeoutSeconds)
+	client, err := a.client.ClientWithDefaultHTTPTimeout(repoCloneTimeoutSeconds)
 	if err != nil {
 		return err
 	}

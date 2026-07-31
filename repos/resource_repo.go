@@ -14,6 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// createRepoTimeoutSeconds is the HTTP inactivity timeout used for the initial
+// clone performed by CreateRepo. Cloning is synchronous and unbounded by repo
+// size, and the API has historically been given ~5 minutes of server-side
+// budget, so the provider default of 65s is not enough for larger repositories.
+const createRepoTimeoutSeconds = 600
+
 // ReposAPI exposes the Repos API
 type ReposAPI struct {
 	client  *common.DatabricksClient
@@ -67,7 +73,13 @@ func (a ReposAPI) Create(r reposCreateRequest) (ReposInformation, error) {
 		}
 	}
 
-	err := a.client.Post(a.context, "/repos", r, &resp, a.client.AddWorkspaceIdHeader)
+	// The clone happens inline in this request, so it needs a longer HTTP
+	// timeout than the rest of the Repos API.
+	client, err := a.client.ClientWithMinimumHTTPTimeout(createRepoTimeoutSeconds)
+	if err != nil {
+		return resp, err
+	}
+	err = client.Post(a.context, "/repos", r, &resp, client.AddWorkspaceIdHeader)
 	return resp, err
 }
 

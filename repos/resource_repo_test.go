@@ -4,10 +4,15 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -520,4 +525,34 @@ func TestReposListWithPrefix(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, len(reposList), 1)
 	assert.Equal(t, resp.Branch, reposList[0].Branch)
+}
+
+// TestReposCreateRaisesHTTPTimeout verifies the clone performed by CreateRepo
+// survives a stall longer than the client's configured HTTP timeout, which is
+// the failure customers hit with the provider's 65s default.
+func TestReposCreateRaisesHTTPTimeout(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/2.0/repos" && r.Method == http.MethodPost {
+			// Stall past the 1s timeout configured below.
+			time.Sleep(1200 * time.Millisecond)
+			w.Write([]byte(`{"id": 123, "url": "https://github.com/user/repo.git", "provider": "gitHub"}`))
+			return
+		}
+		w.Write([]byte(`{}`))
+	}))
+	defer server.Close()
+
+	inner, err := client.New(&config.Config{
+		Host:               server.URL,
+		Token:              "dapi123",
+		HTTPTimeoutSeconds: 1,
+		// Fail fast rather than retrying a timed-out request for minutes.
+		RetryTimeoutSeconds: 1,
+	})
+	require.NoError(t, err)
+
+	api := NewReposAPI(context.Background(), &common.DatabricksClient{DatabricksClient: inner})
+	resp, err := api.Create(reposCreateRequest{Url: "https://github.com/user/repo.git", Provider: "gitHub"})
+	require.NoError(t, err)
+	assert.Equal(t, int64(123), resp.ID)
 }

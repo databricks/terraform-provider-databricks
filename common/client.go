@@ -10,10 +10,12 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/httpclient"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"github.com/golang-jwt/jwt/v4"
@@ -800,6 +802,44 @@ func (c *DatabricksClient) ClientForHost(ctx context.Context, url string) (*Data
 	// copy all client configuration options except Databricks CLI profile
 	return &DatabricksClient{
 		DatabricksClient: client,
+		commandFactory:   c.commandFactory,
+	}, nil
+}
+
+// ClientWithMinimumHTTPTimeout returns a DatabricksClient whose HTTP inactivity
+// timeout is at least minTimeoutSeconds, for use by a single long-running call.
+//
+// The SDK reads HTTPTimeout once, when the underlying http client is built, so a
+// longer timeout cannot be requested per-request; a derived client is required.
+// If the configured timeout is already at least minTimeoutSeconds, the receiver
+// is returned unchanged so an explicit user setting is never lowered.
+//
+// Prefer this over raising the provider-wide default: a timeout long enough for
+// the slowest endpoint would also delay surfacing failures on every other one.
+func (c *DatabricksClient) ClientWithMinimumHTTPTimeout(minTimeoutSeconds int) (*DatabricksClient, error) {
+	// A nil inner client means the wrapper was hand-built without a config
+	// (some unit-test harnesses do this); there is no timeout to raise.
+	if c.DatabricksClient == nil || c.Config == nil {
+		return c, nil
+	}
+	if c.Config.HTTPTimeoutSeconds >= minTimeoutSeconds {
+		return c, nil
+	}
+	// Reuse the same *config.Config rather than copying it: the config carries
+	// resolved auth state behind a mutex, so only the derived httpclient config
+	// (a plain value) is adjusted. This also preserves any custom HTTPTransport,
+	// which unit-test fixtures rely on to intercept requests.
+	clientCfg, err := config.HTTPClientConfigFromConfig(c.Config)
+	if err != nil {
+		return nil, fmt.Errorf("cannot derive client config: %w", err)
+	}
+	clientCfg.HTTPTimeout = time.Duration(minTimeoutSeconds) * time.Second
+	inner, err := client.NewWithClient(c.Config, httpclient.NewApiClient(clientCfg))
+	if err != nil {
+		return nil, fmt.Errorf("cannot configure client with %ds HTTP timeout: %w", minTimeoutSeconds, err)
+	}
+	return &DatabricksClient{
+		DatabricksClient: inner,
 		commandFactory:   c.commandFactory,
 	}, nil
 }

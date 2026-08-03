@@ -632,7 +632,9 @@ type AccountUser_SdkV2 struct {
 	// String that represents a concatenation of given and family names. For
 	// example `John Smith`.
 	DisplayName types.String `tfsdk:"display_name"`
-	// All the emails associated with the Databricks user.
+	// All the emails associated with the Databricks user. This attribute cannot
+	// be updated through the SCIM PATCH or PUT APIs; any supplied change is
+	// ignored.
 	Emails types.List `tfsdk:"emails"`
 	// External ID is not currently supported. It is reserved for future use.
 	ExternalId types.String `tfsdk:"external_id"`
@@ -642,7 +644,8 @@ type AccountUser_SdkV2 struct {
 	Name types.List `tfsdk:"name"`
 	// Indicates if the group has the admin role.
 	Roles types.List `tfsdk:"roles"`
-	// Email address of the Databricks user.
+	// Email address of the Databricks user. This attribute cannot be updated
+	// through the SCIM PATCH or PUT APIs; any supplied change is ignored.
 	UserName types.String `tfsdk:"user_name"`
 }
 
@@ -12154,7 +12157,9 @@ type User_SdkV2 struct {
 	//
 	// [identity federation is enabled]: https://docs.databricks.com/administration-guide/users-groups/best-practices.html#enable-identity-federation
 	DisplayName types.String `tfsdk:"display_name"`
-	// All the emails associated with the Databricks user.
+	// All the emails associated with the Databricks user. This attribute cannot
+	// be updated through the SCIM PATCH or PUT APIs; any supplied change is
+	// ignored.
 	Emails types.List `tfsdk:"emails"`
 	// Entitlements assigned to the user. See [assigning entitlements] for a
 	// full list of supported values.
@@ -12173,7 +12178,8 @@ type User_SdkV2 struct {
 	Roles types.List `tfsdk:"roles"`
 	// The schema of the user.
 	Schemas types.List `tfsdk:"schemas"`
-	// Email address of the Databricks user.
+	// Email address of the Databricks user. This attribute cannot be updated
+	// through the SCIM PATCH or PUT APIs; any supplied change is ignored.
 	UserName types.String `tfsdk:"user_name"`
 }
 

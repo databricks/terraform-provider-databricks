@@ -119,6 +119,9 @@ type AlertV2Data struct {
 	// The owner's username. This field is set to "Unavailable" if the user has
 	// been deleted.
 	OwnerUserName types.String `tfsdk:"owner_user_name"`
+	// Query parameters bound when executing the alert query, referenced in the
+	// query text with `:name` syntax. Static values only.
+	Parameters types.Set `tfsdk:"parameters"`
 	// The workspace path of the folder containing the alert. Can only be set on
 	// create, and cannot be updated.
 	ParentPath types.String `tfsdk:"parent_path"`
@@ -158,6 +161,7 @@ func (m AlertV2Data) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	return map[string]reflect.Type{
 		"effective_run_as": reflect.TypeOf(sql_tf.AlertV2RunAs{}),
 		"evaluation":       reflect.TypeOf(sql_tf.AlertV2Evaluation{}),
+		"parameters":       reflect.TypeOf(sql_tf.AlertStatementParameter{}),
 		"run_as":           reflect.TypeOf(sql_tf.AlertV2RunAs{}),
 		"schedule":         reflect.TypeOf(sql_tf.CronSchedule{}),
 		"provider_config":  reflect.TypeOf(ProviderConfigData{}),
@@ -183,6 +187,7 @@ func (m AlertV2Data) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"id":                 m.Id,
 			"lifecycle_state":    m.LifecycleState,
 			"owner_user_name":    m.OwnerUserName,
+			"parameters":         m.Parameters,
 			"parent_path":        m.ParentPath,
 			"query_text":         m.QueryText,
 			"run_as":             m.RunAs,
@@ -210,13 +215,16 @@ func (m AlertV2Data) Type(ctx context.Context) attr.Type {
 			"id":                 types.StringType,
 			"lifecycle_state":    types.StringType,
 			"owner_user_name":    types.StringType,
-			"parent_path":        types.StringType,
-			"query_text":         types.StringType,
-			"run_as":             sql_tf.AlertV2RunAs{}.Type(ctx),
-			"run_as_user_name":   types.StringType,
-			"schedule":           sql_tf.CronSchedule{}.Type(ctx),
-			"update_time":        types.StringType,
-			"warehouse_id":       types.StringType,
+			"parameters": basetypes.SetType{
+				ElemType: sql_tf.AlertStatementParameter{}.Type(ctx),
+			},
+			"parent_path":      types.StringType,
+			"query_text":       types.StringType,
+			"run_as":           sql_tf.AlertV2RunAs{}.Type(ctx),
+			"run_as_user_name": types.StringType,
+			"schedule":         sql_tf.CronSchedule{}.Type(ctx),
+			"update_time":      types.StringType,
+			"warehouse_id":     types.StringType,
 
 			"provider_config": ProviderConfigData{}.Type(ctx),
 		},
@@ -233,6 +241,7 @@ func (m AlertV2Data) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
 	attrs["owner_user_name"] = attrs["owner_user_name"].SetComputed()
+	attrs["parameters"] = attrs["parameters"].SetComputed()
 	attrs["parent_path"] = attrs["parent_path"].SetComputed()
 	attrs["query_text"] = attrs["query_text"].SetComputed()
 	attrs["run_as"] = attrs["run_as"].SetComputed()

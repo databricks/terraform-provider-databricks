@@ -116,6 +116,20 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProviderWithDiagnostics(
 func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
+	// If no workspace_id was supplied by the resource's provider_config block,
+	// fall back to the provider-level workspace_id from the SDK config. This
+	// fallback is applied uniformly here (rather than inside a single host
+	// branch) so that this function is a pure function of its argument: the
+	// same effective workspace_id is resolved regardless of the caller. This is
+	// what makes apply-time CRUD routing self-sufficient and lets the plan-time
+	// reachability validation be removed without weakening any guarantee — the
+	// mismatch/reachability checks that used to run at plan now run here, at
+	// apply, for both account/unified and workspace hosts. See
+	// getWorkspaceClientForWorkspaceConfiguredProvider for the workspace-host
+	// mismatch check.
+	if workspaceID == "" && c.DatabricksClient != nil && c.Config != nil {
+		workspaceID = c.Config.WorkspaceID
+	}
 	// The provider can be configured at account level or workspace level.
 	if c.HostTypeForTerraform() != config.WorkspaceHost {
 		return c.getWorkspaceClientForAccountUnifiedHost(ctx, workspaceID)
@@ -129,11 +143,9 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 func (c *DatabricksClient) getWorkspaceClientForAccountUnifiedHost(
 	ctx context.Context, workspaceID string,
 ) (*databricks.WorkspaceClient, error) {
-	// If workspace_id is not provided in provider_config, use the provider-level
-	// workspace_id from SDK config as fallback
-	if workspaceID == "" {
-		workspaceID = c.Config.WorkspaceID
-	}
+	// The provider-level workspace_id fallback is applied by the caller
+	// (GetWorkspaceClientForUnifiedProvider), so workspaceID here is already the
+	// effective value.
 	if workspaceID == "" {
 		return nil, fmt.Errorf("managing workspace-level resources requires a workspace_id, " +
 			"but none was found in the resource's provider_config block or the provider's workspace_id attribute")

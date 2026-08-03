@@ -736,6 +736,19 @@ func (to *ListWorkspaceAssignmentDetailsResponse) SyncFieldsDuringCreateOrUpdate
 		// set the resulting resource state to the empty list to match the planned value.
 		to.WorkspaceAssignmentDetails = from.WorkspaceAssignmentDetails
 	}
+	if !from.WorkspaceAssignmentDetails.IsNull() && !from.WorkspaceAssignmentDetails.IsUnknown() {
+		if toWorkspaceAssignmentDetails, ok := to.GetWorkspaceAssignmentDetails(ctx); ok {
+			if fromWorkspaceAssignmentDetails, ok := from.GetWorkspaceAssignmentDetails(ctx); ok {
+				// Recursively sync the fields of each WorkspaceAssignmentDetails element by position.
+				for i := range toWorkspaceAssignmentDetails {
+					if i < len(fromWorkspaceAssignmentDetails) {
+						toWorkspaceAssignmentDetails[i].SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceAssignmentDetails[i])
+					}
+				}
+				to.SetWorkspaceAssignmentDetails(ctx, toWorkspaceAssignmentDetails)
+			}
+		}
+	}
 }
 
 func (to *ListWorkspaceAssignmentDetailsResponse) SyncFieldsDuringRead(ctx context.Context, from ListWorkspaceAssignmentDetailsResponse) {
@@ -744,6 +757,18 @@ func (to *ListWorkspaceAssignmentDetailsResponse) SyncFieldsDuringRead(ctx conte
 		// If a user specified a non-Null, empty list for WorkspaceAssignmentDetails, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.WorkspaceAssignmentDetails = from.WorkspaceAssignmentDetails
+	}
+	if !from.WorkspaceAssignmentDetails.IsNull() && !from.WorkspaceAssignmentDetails.IsUnknown() {
+		if toWorkspaceAssignmentDetails, ok := to.GetWorkspaceAssignmentDetails(ctx); ok {
+			if fromWorkspaceAssignmentDetails, ok := from.GetWorkspaceAssignmentDetails(ctx); ok {
+				for i := range toWorkspaceAssignmentDetails {
+					if i < len(fromWorkspaceAssignmentDetails) {
+						toWorkspaceAssignmentDetails[i].SyncFieldsDuringRead(ctx, fromWorkspaceAssignmentDetails[i])
+					}
+				}
+				to.SetWorkspaceAssignmentDetails(ctx, toWorkspaceAssignmentDetails)
+			}
+		}
 	}
 }
 
@@ -1979,17 +2004,44 @@ func (m *WorkspaceAccessDetail) SetPermissions(ctx context.Context, v []types.St
 	m.Permissions = types.ListValueMust(t, vs)
 }
 
-// The details of a principal's assignment to a workspace.
+// The direct assignment of a provisioned account-level principal (user, service
+// principal, or group) to a workspace, together with the entitlements that
+// assignment grants in the workspace.
+//
+// A WorkspaceAssignmentDetail exists only for principals that are directly
+// assigned to the workspace; principals that merely inherit workspace access
+// through a group are not represented here (see WorkspaceAccessDetail /
+// WorkspaceIdentityDetail for the effective, direct-or-indirect view). Creating
+// the resource assigns the principal to the workspace; deleting it removes the
+// assignment. The `entitlements` field is the only client-settable field and
+// defines the entitlements granted directly on this assignment;
+// `effective_entitlements` is the read-only union of those plus any granted via
+// group membership.
+//
+// A direct assignment always carries at least one directly-assigned
+// entitlement: the assignment is what grants the entitlement, so a
+// WorkspaceAssignmentDetail with an empty `entitlements` set is not a valid
+// state. Both create and update require a non-empty `entitlements` set (an
+// empty set is rejected); to remove a principal's assignment entirely, delete
+// the resource.
+//
+// This resource replaces workspace assignment previously managed through the
+// workspace SCIM and permission-assignment APIs, and is intended for account
+// and workspace admins.
 type WorkspaceAssignmentDetail struct {
 	// The account ID parent of the workspace where the principal is assigned
 	AccountId types.String `tfsdk:"account_id"`
+	// The principal's full effective entitlements granted in this workspace:
+	// every entitlement it holds whether granted directly or via group
+	// membership. Populated on Get; empty on List.
+	EffectiveEntitlements types.Set `tfsdk:"effective_entitlements"`
 	// Entitlements granted directly to the principal on this workspace. The
 	// only client-settable field: create and update manage exactly this set
 	// (including entitlements the principal also holds via a group). Not
 	// populated by ListWorkspaceAssignmentDetails (omitted for scalability);
 	// call GetWorkspaceAssignmentDetail to read the entitlements for a single
 	// principal.
-	Entitlements types.List `tfsdk:"entitlements"`
+	Entitlements types.Set `tfsdk:"entitlements"`
 	// The internal ID of the principal (user/sp/group) in Databricks.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
 
@@ -1999,6 +2051,12 @@ type WorkspaceAssignmentDetail struct {
 }
 
 func (to *WorkspaceAssignmentDetail) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WorkspaceAssignmentDetail) {
+	if !from.EffectiveEntitlements.IsNull() && !from.EffectiveEntitlements.IsUnknown() && to.EffectiveEntitlements.IsNull() && len(from.EffectiveEntitlements.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EffectiveEntitlements, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EffectiveEntitlements = from.EffectiveEntitlements
+	}
 	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
@@ -2008,6 +2066,12 @@ func (to *WorkspaceAssignmentDetail) SyncFieldsDuringCreateOrUpdate(ctx context.
 }
 
 func (to *WorkspaceAssignmentDetail) SyncFieldsDuringRead(ctx context.Context, from WorkspaceAssignmentDetail) {
+	if !from.EffectiveEntitlements.IsNull() && !from.EffectiveEntitlements.IsUnknown() && to.EffectiveEntitlements.IsNull() && len(from.EffectiveEntitlements.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EffectiveEntitlements, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EffectiveEntitlements = from.EffectiveEntitlements
+	}
 	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
@@ -2018,6 +2082,7 @@ func (to *WorkspaceAssignmentDetail) SyncFieldsDuringRead(ctx context.Context, f
 
 func (m WorkspaceAssignmentDetail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["effective_entitlements"] = attrs["effective_entitlements"].SetComputed()
 	attrs["entitlements"] = attrs["entitlements"].SetOptional()
 	attrs["principal_id"] = attrs["principal_id"].SetRequired()
 	attrs["principal_type"] = attrs["principal_type"].SetComputed()
@@ -2035,7 +2100,8 @@ func (m WorkspaceAssignmentDetail) ApplySchemaCustomizations(attrs map[string]tf
 // SDK values.
 func (m WorkspaceAssignmentDetail) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"entitlements": reflect.TypeOf(types.String{}),
+		"effective_entitlements": reflect.TypeOf(types.String{}),
+		"entitlements":           reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2046,11 +2112,12 @@ func (m WorkspaceAssignmentDetail) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":     m.AccountId,
-			"entitlements":   m.Entitlements,
-			"principal_id":   m.PrincipalId,
-			"principal_type": m.PrincipalType,
-			"workspace_id":   m.WorkspaceId,
+			"account_id":             m.AccountId,
+			"effective_entitlements": m.EffectiveEntitlements,
+			"entitlements":           m.Entitlements,
+			"principal_id":           m.PrincipalId,
+			"principal_type":         m.PrincipalType,
+			"workspace_id":           m.WorkspaceId,
 		})
 }
 
@@ -2059,7 +2126,10 @@ func (m WorkspaceAssignmentDetail) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id": types.StringType,
-			"entitlements": basetypes.ListType{
+			"effective_entitlements": basetypes.SetType{
+				ElemType: types.StringType,
+			},
+			"entitlements": basetypes.SetType{
 				ElemType: types.StringType,
 			},
 			"principal_id":   types.Int64Type,
@@ -2067,6 +2137,32 @@ func (m WorkspaceAssignmentDetail) Type(ctx context.Context) attr.Type {
 			"workspace_id":   types.Int64Type,
 		},
 	}
+}
+
+// GetEffectiveEntitlements returns the value of the EffectiveEntitlements field in WorkspaceAssignmentDetail as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *WorkspaceAssignmentDetail) GetEffectiveEntitlements(ctx context.Context) ([]types.String, bool) {
+	if m.EffectiveEntitlements.IsNull() || m.EffectiveEntitlements.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.EffectiveEntitlements.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectiveEntitlements sets the value of the EffectiveEntitlements field in WorkspaceAssignmentDetail.
+func (m *WorkspaceAssignmentDetail) SetEffectiveEntitlements(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_entitlements"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EffectiveEntitlements = types.SetValueMust(t, vs)
 }
 
 // GetEntitlements returns the value of the Entitlements field in WorkspaceAssignmentDetail as
@@ -2092,5 +2188,5 @@ func (m *WorkspaceAssignmentDetail) SetEntitlements(ctx context.Context, v []typ
 	}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	m.Entitlements = types.ListValueMust(t, vs)
+	m.Entitlements = types.SetValueMust(t, vs)
 }

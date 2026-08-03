@@ -433,12 +433,9 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 		Schema:                            resourceSchema,
 		SkipProviderConfigStatePopulation: isAccountOnly,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-			// Account-only settings have no workspace context. NamespaceCustomizeDiff
-			// would call NamespaceValidateWorkspaceID, which falls back to
-			// c.Config.WorkspaceID (empty for account-level providers) and then
-			// errors out of GetWorkspaceClientForUnifiedProvider with
-			// "managing workspace-level resources requires a workspace_id".
-			// Skip workspace-tracking entirely for these resources.
+			// Account-only settings have no workspace context, so skip the
+			// workspace-tracking CustomizeDiff (ForceNew-on-workspace-change)
+			// entirely for these resources.
 			if isAccountOnly {
 				return nil
 			}

@@ -295,6 +295,55 @@ func (c *DatabricksClient) setCachedWorkspaceID(ctx context.Context, w *databric
 	return nil
 }
 
+// ReconcileWorkspaceIDFromHostMetadata reconciles the workspace_id advertised by
+// the host's /.well-known/databricks-config discovery metadata with any
+// user-supplied workspace_id, for workspace-configured providers. It is called
+// once during provider configuration, after the SDK config has been resolved.
+//
+// For workspace hosts the metadata already carries the canonical numeric
+// workspace_id, so this lets the provider:
+//   - fail fast when the user supplied a numeric workspace_id that disagrees with
+//     the host (surfacing the error at plan instead of at apply), and
+//   - seed cachedWorkspaceID so downstream CurrentWorkspaceID and
+//     validateWorkspaceIDFromProvider calls are cache hits that never issue the
+//     SCIM GET /api/2.0/preview/scim/v2/Me request.
+//
+// userWorkspaceID is the effective value from config/env/profile as observed
+// before the SDK's host-metadata back-fill; hostWorkspaceID is meta.WorkspaceID.
+// Both may be empty. Account and unified hosts multiplex workspaces, so they are
+// left untouched; hosts whose metadata omits workspace_id are also left untouched,
+// preserving the lazy SCIM /Me fallback.
+func (c *DatabricksClient) ReconcileWorkspaceIDFromHostMetadata(hostType config.HostType, userWorkspaceID, hostWorkspaceID string) error {
+	if hostType != config.WorkspaceHost {
+		return nil
+	}
+	// Normalize the "none" sentinel (see PrepareDatabricksClient) so it is not
+	// compared against the host's numeric workspace_id.
+	if userWorkspaceID == "none" {
+		userWorkspaceID = ""
+	}
+	// Without a host-advertised workspace_id there is nothing to reconcile or
+	// seed; fall back to lazy SCIM /Me resolution.
+	if hostWorkspaceID == "" {
+		return nil
+	}
+	// Fail fast on a genuine mismatch. Only a numeric user-supplied ID is
+	// comparable to the host's canonical numeric ID; a connection ID is not, so it
+	// is left to validateWorkspaceIDFromProvider at apply time, which emits an
+	// actionable connection-ID message.
+	if userWorkspaceID != "" && isNumericWorkspaceID(userWorkspaceID) && userWorkspaceID != hostWorkspaceID {
+		return fmt.Errorf("workspace_id mismatch: the provider is configured with workspace_id %s "+
+			"but the host resolves to workspace %s. please check the workspace_id in the provider configuration",
+			userWorkspaceID, hostWorkspaceID)
+	}
+	// Seed the cache so downstream resolution/validation is a cache hit and never
+	// calls SCIM /Me. Only a numeric host workspace_id is a valid cache value.
+	if id, err := strconv.ParseInt(hostWorkspaceID, 10, 64); err == nil {
+		c.SetCachedWorkspaceID(id)
+	}
+	return nil
+}
+
 // GetWorkspaceClient returns the Databricks WorkspaceClient or a diagnostics if
 // that fails. This is used by resources and data sources that are developed
 // over plugin framework.

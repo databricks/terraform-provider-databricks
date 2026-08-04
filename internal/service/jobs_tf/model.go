@@ -27406,6 +27406,10 @@ func (m *TriggerSettings) SetTableUpdate(ctx context.Context, v TableUpdateTrigg
 
 type TriggerStateProto struct {
 	FileArrival types.Object `tfsdk:"file_arrival"`
+	// Whether this trigger is paused or not. For continuous schedules, it can
+	// differ from the configured pause_status whenever a paused continuous job
+	// is kickstarted by an operation other than an update, such as a run-now.
+	PauseStatus types.String `tfsdk:"pause_status"`
 	// State for SQL condition evaluation, can coexist with other trigger
 	// states.
 	SqlCondition types.Object `tfsdk:"sql_condition"`
@@ -27472,6 +27476,7 @@ func (to *TriggerStateProto) SyncFieldsDuringRead(ctx context.Context, from Trig
 
 func (m TriggerStateProto) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
+	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["sql_condition"] = attrs["sql_condition"].SetOptional()
 	attrs["table"] = attrs["table"].SetOptional()
 
@@ -27501,6 +27506,7 @@ func (m TriggerStateProto) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"file_arrival":  m.FileArrival,
+			"pause_status":  m.PauseStatus,
 			"sql_condition": m.SqlCondition,
 			"table":         m.Table,
 		})
@@ -27511,6 +27517,7 @@ func (m TriggerStateProto) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_arrival":  FileArrivalTriggerState{}.Type(ctx),
+			"pause_status":  types.StringType,
 			"sql_condition": SqlConditionState{}.Type(ctx),
 			"table":         TableTriggerState{}.Type(ctx),
 		},

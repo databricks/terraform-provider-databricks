@@ -553,10 +553,10 @@ type Group_SdkV2 struct {
 	AccountId types.String `tfsdk:"account_id"`
 	// ExternalId of the group in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
+	// Internal group ID of the group in Databricks.
+	GroupId types.String `tfsdk:"group_id"`
 	// Display name of the group.
 	GroupName types.String `tfsdk:"group_name"`
-	// Internal group ID of the group in Databricks.
-	InternalId types.String `tfsdk:"internal_id"`
 }
 
 func (to *Group_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Group_SdkV2) {
@@ -568,8 +568,8 @@ func (to *Group_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Group_SdkV
 func (m Group_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
+	attrs["group_id"] = attrs["group_id"].SetComputed()
 	attrs["group_name"] = attrs["group_name"].SetOptional()
-	attrs["internal_id"] = attrs["internal_id"].SetComputed()
 
 	return attrs
 }
@@ -594,8 +594,8 @@ func (m Group_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"account_id":  m.AccountId,
 			"external_id": m.ExternalId,
+			"group_id":    m.GroupId,
 			"group_name":  m.GroupName,
-			"internal_id": m.InternalId,
 		})
 }
 
@@ -605,8 +605,8 @@ func (m Group_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"account_id":  types.StringType,
 			"external_id": types.StringType,
+			"group_id":    types.StringType,
 			"group_name":  types.StringType,
-			"internal_id": types.StringType,
 		},
 	}
 }
@@ -1461,7 +1461,7 @@ type ServicePrincipal_SdkV2 struct {
 	// ExternalId of the service principal in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
 	// Internal service principal ID of the service principal in Databricks.
-	InternalId types.String `tfsdk:"internal_id"`
+	ServicePrincipalId types.String `tfsdk:"service_principal_id"`
 }
 
 func (to *ServicePrincipal_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ServicePrincipal_SdkV2) {
@@ -1476,7 +1476,7 @@ func (m ServicePrincipal_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["application_id"] = attrs["application_id"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["internal_id"] = attrs["internal_id"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
 
 	return attrs
 }
@@ -1499,12 +1499,12 @@ func (m ServicePrincipal_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":        m.AccountId,
-			"account_sp_status": m.AccountSpStatus,
-			"application_id":    m.ApplicationId,
-			"display_name":      m.DisplayName,
-			"external_id":       m.ExternalId,
-			"internal_id":       m.InternalId,
+			"account_id":           m.AccountId,
+			"account_sp_status":    m.AccountSpStatus,
+			"application_id":       m.ApplicationId,
+			"display_name":         m.DisplayName,
+			"external_id":          m.ExternalId,
+			"service_principal_id": m.ServicePrincipalId,
 		})
 }
 
@@ -1512,12 +1512,12 @@ func (m ServicePrincipal_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m ServicePrincipal_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":        types.StringType,
-			"account_sp_status": types.StringType,
-			"application_id":    types.StringType,
-			"display_name":      types.StringType,
-			"external_id":       types.StringType,
-			"internal_id":       types.StringType,
+			"account_id":           types.StringType,
+			"account_sp_status":    types.StringType,
+			"application_id":       types.StringType,
+			"display_name":         types.StringType,
+			"external_id":          types.StringType,
+			"service_principal_id": types.StringType,
 		},
 	}
 }
@@ -1752,7 +1752,7 @@ type User_SdkV2 struct {
 
 	FullName types.List `tfsdk:"full_name"`
 	// Internal userId of the user in Databricks.
-	InternalId types.String `tfsdk:"internal_id"`
+	UserId types.String `tfsdk:"user_id"`
 	// Username/email of the user.
 	Username types.String `tfsdk:"username"`
 }
@@ -1786,7 +1786,7 @@ func (m User_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["internal_id"] = attrs["internal_id"].SetComputed()
+	attrs["user_id"] = attrs["user_id"].SetComputed()
 	attrs["username"] = attrs["username"].SetOptional()
 	attrs["username"] = attrs["username"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
@@ -1817,7 +1817,7 @@ func (m User_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"account_user_status": m.AccountUserStatus,
 			"external_id":         m.ExternalId,
 			"full_name":           m.FullName,
-			"internal_id":         m.InternalId,
+			"user_id":             m.UserId,
 			"username":            m.Username,
 		})
 }
@@ -1832,8 +1832,8 @@ func (m User_SdkV2) Type(ctx context.Context) attr.Type {
 			"full_name": basetypes.ListType{
 				ElemType: UserFullName_SdkV2{}.Type(ctx),
 			},
-			"internal_id": types.StringType,
-			"username":    types.StringType,
+			"user_id":  types.StringType,
+			"username": types.StringType,
 		},
 	}
 }

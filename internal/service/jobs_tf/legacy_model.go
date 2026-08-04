@@ -28195,6 +28195,10 @@ func (m *TriggerSettings_SdkV2) SetTableUpdate(ctx context.Context, v TableUpdat
 
 type TriggerStateProto_SdkV2 struct {
 	FileArrival types.List `tfsdk:"file_arrival"`
+	// Whether this trigger is paused or not. For continuous schedules, it can
+	// differ from the configured pause_status whenever a paused continuous job
+	// is kickstarted by an operation other than an update, such as a run-now.
+	PauseStatus types.String `tfsdk:"pause_status"`
 	// State for SQL condition evaluation, can coexist with other trigger
 	// states.
 	SqlCondition types.List `tfsdk:"sql_condition"`
@@ -28262,6 +28266,7 @@ func (to *TriggerStateProto_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 func (m TriggerStateProto_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
 	attrs["file_arrival"] = attrs["file_arrival"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["sql_condition"] = attrs["sql_condition"].SetOptional()
 	attrs["sql_condition"] = attrs["sql_condition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["table"] = attrs["table"].SetOptional()
@@ -28293,6 +28298,7 @@ func (m TriggerStateProto_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"file_arrival":  m.FileArrival,
+			"pause_status":  m.PauseStatus,
 			"sql_condition": m.SqlCondition,
 			"table":         m.Table,
 		})
@@ -28305,6 +28311,7 @@ func (m TriggerStateProto_SdkV2) Type(ctx context.Context) attr.Type {
 			"file_arrival": basetypes.ListType{
 				ElemType: FileArrivalTriggerState_SdkV2{}.Type(ctx),
 			},
+			"pause_status": types.StringType,
 			"sql_condition": basetypes.ListType{
 				ElemType: SqlConditionState_SdkV2{}.Type(ctx),
 			},

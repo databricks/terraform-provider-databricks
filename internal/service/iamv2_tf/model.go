@@ -544,10 +544,10 @@ type Group struct {
 	AccountId types.String `tfsdk:"account_id"`
 	// ExternalId of the group in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
+	// Internal group ID of the group in Databricks.
+	GroupId types.String `tfsdk:"group_id"`
 	// Display name of the group.
 	GroupName types.String `tfsdk:"group_name"`
-	// Internal group ID of the group in Databricks.
-	InternalId types.String `tfsdk:"internal_id"`
 }
 
 func (to *Group) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Group) {
@@ -559,8 +559,8 @@ func (to *Group) SyncFieldsDuringRead(ctx context.Context, from Group) {
 func (m Group) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
+	attrs["group_id"] = attrs["group_id"].SetComputed()
 	attrs["group_name"] = attrs["group_name"].SetOptional()
-	attrs["internal_id"] = attrs["internal_id"].SetComputed()
 
 	return attrs
 }
@@ -585,8 +585,8 @@ func (m Group) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"account_id":  m.AccountId,
 			"external_id": m.ExternalId,
+			"group_id":    m.GroupId,
 			"group_name":  m.GroupName,
-			"internal_id": m.InternalId,
 		})
 }
 
@@ -596,8 +596,8 @@ func (m Group) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"account_id":  types.StringType,
 			"external_id": types.StringType,
+			"group_id":    types.StringType,
 			"group_name":  types.StringType,
-			"internal_id": types.StringType,
 		},
 	}
 }
@@ -1440,7 +1440,7 @@ type ServicePrincipal struct {
 	// ExternalId of the service principal in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
 	// Internal service principal ID of the service principal in Databricks.
-	InternalId types.String `tfsdk:"internal_id"`
+	ServicePrincipalId types.String `tfsdk:"service_principal_id"`
 }
 
 func (to *ServicePrincipal) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ServicePrincipal) {
@@ -1455,7 +1455,7 @@ func (m ServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["application_id"] = attrs["application_id"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["internal_id"] = attrs["internal_id"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
 
 	return attrs
 }
@@ -1478,12 +1478,12 @@ func (m ServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":        m.AccountId,
-			"account_sp_status": m.AccountSpStatus,
-			"application_id":    m.ApplicationId,
-			"display_name":      m.DisplayName,
-			"external_id":       m.ExternalId,
-			"internal_id":       m.InternalId,
+			"account_id":           m.AccountId,
+			"account_sp_status":    m.AccountSpStatus,
+			"application_id":       m.ApplicationId,
+			"display_name":         m.DisplayName,
+			"external_id":          m.ExternalId,
+			"service_principal_id": m.ServicePrincipalId,
 		})
 }
 
@@ -1491,12 +1491,12 @@ func (m ServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m ServicePrincipal) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":        types.StringType,
-			"account_sp_status": types.StringType,
-			"application_id":    types.StringType,
-			"display_name":      types.StringType,
-			"external_id":       types.StringType,
-			"internal_id":       types.StringType,
+			"account_id":           types.StringType,
+			"account_sp_status":    types.StringType,
+			"application_id":       types.StringType,
+			"display_name":         types.StringType,
+			"external_id":          types.StringType,
+			"service_principal_id": types.StringType,
 		},
 	}
 }
@@ -1723,7 +1723,7 @@ type User struct {
 
 	FullName types.Object `tfsdk:"full_name"`
 	// Internal userId of the user in Databricks.
-	InternalId types.String `tfsdk:"internal_id"`
+	UserId types.String `tfsdk:"user_id"`
 	// Username/email of the user.
 	Username types.String `tfsdk:"username"`
 }
@@ -1756,7 +1756,7 @@ func (m User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["account_user_status"] = attrs["account_user_status"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetOptional()
-	attrs["internal_id"] = attrs["internal_id"].SetComputed()
+	attrs["user_id"] = attrs["user_id"].SetComputed()
 	attrs["username"] = attrs["username"].SetOptional()
 	attrs["username"] = attrs["username"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
@@ -1787,7 +1787,7 @@ func (m User) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"account_user_status": m.AccountUserStatus,
 			"external_id":         m.ExternalId,
 			"full_name":           m.FullName,
-			"internal_id":         m.InternalId,
+			"user_id":             m.UserId,
 			"username":            m.Username,
 		})
 }
@@ -1800,7 +1800,7 @@ func (m User) Type(ctx context.Context) attr.Type {
 			"account_user_status": types.StringType,
 			"external_id":         types.StringType,
 			"full_name":           UserFullName{}.Type(ctx),
-			"internal_id":         types.StringType,
+			"user_id":             types.StringType,
 			"username":            types.StringType,
 		},
 	}

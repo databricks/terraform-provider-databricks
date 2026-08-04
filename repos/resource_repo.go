@@ -224,6 +224,13 @@ func ResourceRepo() common.Resource {
 			} else if branch != "" && branch != resp.Branch {
 				updateReq["branch"] = branch
 			}
+			// The checkout below is a separate request that also authenticates against the Git
+			// remote, so it needs the same credential that was used for the clone.
+			if len(updateReq) > 0 {
+				if gitCredentialID := d.Get("git_credential_id").(int); gitCredentialID != 0 {
+					updateReq["git_credential_id"] = int64(gitCredentialID)
+				}
+			}
 			return reposAPI.Update(d.Id(), updateReq)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -273,8 +280,12 @@ func ResourceRepo() common.Resource {
 			if repo.SparseCheckout != nil {
 				req["sparse_checkout"] = map[string]any{"patterns": repo.SparseCheckout.Patterns}
 			}
-			if d.HasChange("git_credential_id") {
-				req["git_credential_id"] = int64(d.Get("git_credential_id").(int))
+			// git_credential_id is a per-operation parameter: the API uses it to authenticate this
+			// specific update against the Git remote and does not store it on the repo. Send it on
+			// every update that has one configured, not only when it changed, otherwise a
+			// branch-only update would authenticate with the caller's default credential instead.
+			if gitCredentialID := d.Get("git_credential_id").(int); gitCredentialID != 0 {
+				req["git_credential_id"] = int64(gitCredentialID)
 			}
 			return reposAPI.Update(d.Id(), req)
 		},

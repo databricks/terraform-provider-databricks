@@ -211,6 +211,53 @@ func TestResourceRepoUpdateGitCredentialID(t *testing.T) {
 		map[string]any{"id": resp.RepoID(), "git_credential_id": 388825371666399})
 }
 
+// git_credential_id authenticates each individual update against the Git remote, so it must be
+// sent even when only the branch changed. Otherwise the checkout would fall back to the caller's
+// default credential.
+func TestResourceRepoUpdateBranchSendsUnchangedGitCredentialID(t *testing.T) {
+	resp := ReposInformation{
+		ID:           121232342,
+		Url:          "https://github.com/user/test.git",
+		Provider:     "gitHub",
+		Branch:       "feature",
+		Path:         "/Repos/user@domain/test",
+		HeadCommitID: "1124323423abc23424",
+	}
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/repos/121232342",
+				ExpectedRequest: map[string]any{
+					"branch":            "feature",
+					"git_credential_id": 388825371666399,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/repos/121232342",
+				Response: resp,
+			},
+		},
+		Resource: ResourceRepo(),
+		InstanceState: map[string]string{
+			"url":               "https://github.com/user/test.git",
+			"git_provider":      "gitHub",
+			"branch":            "main",
+			"git_credential_id": "388825371666399",
+		},
+		State: map[string]any{
+			"url":               "https://github.com/user/test.git",
+			"git_provider":      "gitHub",
+			"branch":            "feature",
+			"git_credential_id": 388825371666399,
+		},
+		Update: true,
+		ID:     "121232342",
+	}.ApplyAndExpectData(t,
+		map[string]any{"id": resp.RepoID(), "branch": "feature", "git_credential_id": 388825371666399})
+}
+
 func TestResourceRepoCreateCustomDirectory(t *testing.T) {
 	resp := ReposInformation{
 		ID:           121232342,

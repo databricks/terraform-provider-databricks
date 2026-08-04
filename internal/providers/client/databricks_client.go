@@ -11,12 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// capturedHostMeta records the two workspace_id values observed during the
-// single /.well-known/databricks-config resolution the SDK performs inside
-// EnsureResolved: the effective user-supplied value (config/env/profile) as seen
-// before the SDK back-fills it, and the value the host advertises. It is filled
-// by the HostMetadataResolver wrapper installed by installWorkspaceIDCapture and
-// consumed after EnsureResolved to reconcile and seed the workspace_id.
+// capturedHostMeta holds the user-supplied and host-advertised workspace_id
+// observed during the SDK's single /.well-known/databricks-config resolution. The
+// user value is captured before EnsureResolved back-fills it from the host, so a
+// mismatch between the two can still be detected afterwards.
 type capturedHostMeta struct {
 	userWorkspaceID string
 	hostWorkspaceID string
@@ -61,12 +59,8 @@ func installWorkspaceIDCapture(cfg *config.Config) *capturedHostMeta {
 //   - ensuring the config is resolved
 //   - setting a default retry timeout if not set
 //   - setting a default HTTP timeout if not set
-//   - for workspace hosts, reconciling and seeding the workspace_id from the host's
-//     /.well-known/databricks-config metadata: a user-supplied workspace_id that
-//     disagrees with the host fails fast here (at configure, surfacing at plan), and
-//     the resolved workspace_id is cached so downstream resolution/validation never
-//     issues the SCIM GET /api/2.0/preview/scim/v2/Me request. Hosts whose metadata
-//     omits workspace_id keep the lazy SCIM /Me fallback.
+//   - for workspace hosts, reconciling and seeding the workspace_id from host metadata
+//     (see ReconcileWorkspaceIDFromHostMetadata)
 //
 // TODO: this should be colocated with the definition of DatabricksClient in common/client.go, but
 // this isn't possible without introducing a circular dependency. Fixing this will require refactoring

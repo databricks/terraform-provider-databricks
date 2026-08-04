@@ -131,17 +131,13 @@ func TestMwsAccAccountHostCreateJobs(t *testing.T) {
 	createJobWithProviderConfig(t, workspaceID, nil)
 }
 
-// createRepoWithProviderConfig exercises a NewXYZAPI-style raw-HTTP resource
-// (databricks_repo → NewReposAPI → DatabricksClient.Post/Get/Delete) against a
-// unified host. The Go SDK only injects the X-Databricks-Workspace-Id routing header
-// from the generated per-service impl.go files (e.g. service/jobs/impl.go), so
-// resources that go through common.DatabricksClient's raw HTTP path send no
-// routing header at all. On a unified host that is fatal: the gateway has no
-// way to route the request to the right workspace.
+// createRepoWithProviderConfig exercises the databricks_repo resource against a
+// unified host. The resource now goes through the Go SDK (workspace.Repos), which
+// injects the X-Databricks-Workspace-Id routing header from its generated
+// per-service impl.go, so the gateway can route the request to the right workspace.
 //
-// Mirror of createJobWithProviderConfig — same shape, different resource — so
-// the contrast is direct: jobs (Go SDK) passes, repo (raw HTTP) is expected to
-// fail on the unified host.
+// Mirror of createJobWithProviderConfig — same shape, different resource — so both
+// jobs and repo exercise the Go SDK routing-header path on the unified host.
 func createRepoWithProviderConfig(t *testing.T, workspaceID string, providerFactories map[string]func() (tfprotov6.ProviderServer, error)) {
 	// Path validator on databricks_repo.path requires /Repos/<directory>/<repo>
 	// (3 components after the leading slash) — see repos/resource_repo.go's

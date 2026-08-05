@@ -11,6 +11,9 @@ name: Provider schema
 #   breaking changes are present and no bypass directive is set. The status
 #   job is the required check.
 #
+# - merge-queue-status: posts a synthetic `status` success on merge-queue refs.
+#   See the comment on that job for why the real classifier does not run there.
+#
 # Triggered on `pull_request: [opened, synchronize, edited]` so that editing
 # the PR description to add `ALLOW_SCHEMA_BREAKING_CHANGE=true` re-fires the
 # workflow and the bypass takes effect without needing a new commit.
@@ -25,6 +28,12 @@ name: Provider schema
 on:
   pull_request:
     types: [opened, synchronize, edited]
+
+  # Required status checks are enforced against the merge-queue ref as well as
+  # the PR head, so the `status` context must report on `gh-readonly-queue/*`
+  # or queued entries stall until the queue's status-check timeout and get
+  # dequeued. Only the merge-queue-status job runs here.
+  merge_group:
 
   workflow_dispatch:
     inputs:
@@ -43,12 +52,17 @@ permissions:
 
 jobs:
   classify:
+    # Explicit event allowlist. `merge_group` must not reach this job: the old
+    # `github.event_name != 'pull_request'` form was true there, which would
+    # rebuild the provider on both sides in the queue for no new signal.
+    #
     # Skip non-body PR edits (title-only, base-only) — those don't change the
     # classifier's output and would waste CI time on a rebuild.
     if: |
-      github.event_name != 'pull_request' ||
-      github.event.action != 'edited' ||
-      github.event.changes.body != null
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       (github.event.action != 'edited' ||
+        github.event.changes.body != null))
     runs-on: ubuntu-latest
 
     steps:
@@ -268,3 +282,53 @@ jobs:
             echo "The workflow will re-fire on the next 'edited' event and pick up the bypass."
           fi
           exit 1
+
+  # Statuses and checks apply to specific commits (by hash), and required checks
+  # are enforced at the merge-queue level as well as the PR level. The squashed
+  # queue commit is a different hash than the PR head, so the `status` check from
+  # the PR does not carry over — without something reporting here, every queued
+  # entry would wait out the queue's status-check timeout and be dequeued.
+  #
+  # Rather than re-run the classifier on the queue ref, post a synthetic success,
+  # matching the auto-approve job in integration-tests.yml. Two reasons:
+  # * The classifier is a double provider build; it already ran at the tip of the
+  #   branch, and the queue only squashes commits that each passed it.
+  # * The bypass directive is read from `github.event.pull_request.body`, which
+  #   does not exist on the merge_group payload. A PR that legitimately carries
+  #   ALLOW_SCHEMA_BREAKING_CHANGE=true would pass on the PR and then fail here
+  #   with no way to unblock it.
+  #
+  # Tradeoff: the schema is verified at PR head, not at the squashed commit, so
+  # two PRs that each pass alone but conflict semantically could merge. This is
+  # the same tradeoff already accepted for Integration Tests, narrowed by the
+  # queue's strict-required-checks policy and ALLGREEN grouping.
+  merge-queue-status:
+    if: github.event_name == 'merge_group'
+
+    runs-on:
+      group: databricks-deco-testing-runner-group
+      labels: ubuntu-latest-deco
+
+    permissions:
+      checks: write
+      contents: read
+
+    steps:
+      - name: Post synthetic Provider schema success for merge queue
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            // Name must match the required status check context, which is the
+            // `status` job id — that job declares no `name:`.
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'status',
+              head_sha: context.sha,
+              status: 'completed',
+              conclusion: 'success',
+              output: {
+                title: 'Provider schema',
+                summary: 'Auto-approved for merge queue (the breaking-change classifier already ran on the pull request).'
+              }
+            });

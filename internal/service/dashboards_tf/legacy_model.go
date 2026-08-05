@@ -7903,12 +7903,19 @@ func (m SubscriptionSubscriberUser_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A text response on a conversation message: the answer, the final summary, or
+// a clarifying follow-up question, along with optional phase and verification
+// metadata.
 type TextAttachment_SdkV2 struct {
 	// AI generated message
 	Content types.String `tfsdk:"content"`
 
 	Id types.String `tfsdk:"id"`
-	// Purpose/intent of this text attachment
+	// Purpose of this text attachment. A completed message may contain more
+	// than one text attachment (for example a clarifying follow-up question
+	// alongside the final answer); use this field to tell them apart.
+	// `TEXT_ATTACHMENT_PURPOSE_ANSWER` marks the final answer/summary and
+	// `FOLLOW_UP_QUESTION` marks a clarifying question.
 	Purpose types.String `tfsdk:"purpose"`
 }
 

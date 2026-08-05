@@ -14189,6 +14189,193 @@ func (m KafkaSubscriptionMode_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Kinesis-specific configuration for a Stream. For the underlying connector and
+// its source options, see the Databricks documentation on connecting to Amazon
+// Kinesis (https://docs.databricks.com/aws/en/connect/streaming/kinesis).
+type KinesisStreamConfig_SdkV2 struct {
+	// Optional Kinesis source options, validated against a server-side
+	// allowlist at request time. Auth and connection details belong on the
+	// parent Stream's `connection_config`, not here.
+	ExtraOptions types.Map `tfsdk:"extra_options"`
+	// Kinesis stream ARNs to read from.
+	StreamArns types.List `tfsdk:"stream_arns"`
+	// Kinesis stream names to read from.
+	StreamNames types.List `tfsdk:"stream_names"`
+}
+
+func (to *KinesisStreamConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from KinesisStreamConfig_SdkV2) {
+	if !from.StreamArns.IsNull() && !from.StreamArns.IsUnknown() {
+		if toStreamArns, ok := to.GetStreamArns(ctx); ok {
+			if fromStreamArns, ok := from.GetStreamArns(ctx); ok {
+				// Recursively sync the fields of StreamArns
+				toStreamArns.SyncFieldsDuringCreateOrUpdate(ctx, fromStreamArns)
+				to.SetStreamArns(ctx, toStreamArns)
+			}
+		}
+	}
+	if !from.StreamNames.IsNull() && !from.StreamNames.IsUnknown() {
+		if toStreamNames, ok := to.GetStreamNames(ctx); ok {
+			if fromStreamNames, ok := from.GetStreamNames(ctx); ok {
+				// Recursively sync the fields of StreamNames
+				toStreamNames.SyncFieldsDuringCreateOrUpdate(ctx, fromStreamNames)
+				to.SetStreamNames(ctx, toStreamNames)
+			}
+		}
+	}
+}
+
+func (to *KinesisStreamConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from KinesisStreamConfig_SdkV2) {
+	if !from.StreamArns.IsNull() && !from.StreamArns.IsUnknown() {
+		if toStreamArns, ok := to.GetStreamArns(ctx); ok {
+			if fromStreamArns, ok := from.GetStreamArns(ctx); ok {
+				toStreamArns.SyncFieldsDuringRead(ctx, fromStreamArns)
+				to.SetStreamArns(ctx, toStreamArns)
+			}
+		}
+	}
+	if !from.StreamNames.IsNull() && !from.StreamNames.IsUnknown() {
+		if toStreamNames, ok := to.GetStreamNames(ctx); ok {
+			if fromStreamNames, ok := from.GetStreamNames(ctx); ok {
+				toStreamNames.SyncFieldsDuringRead(ctx, fromStreamNames)
+				to.SetStreamNames(ctx, toStreamNames)
+			}
+		}
+	}
+}
+
+func (m KinesisStreamConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["extra_options"] = attrs["extra_options"].SetOptional()
+	attrs["stream_arns"] = attrs["stream_arns"].SetOptional()
+	attrs["stream_arns"] = attrs["stream_arns"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["stream_names"] = attrs["stream_names"].SetOptional()
+	attrs["stream_names"] = attrs["stream_names"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in KinesisStreamConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m KinesisStreamConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"extra_options": reflect.TypeOf(types.String{}),
+		"stream_arns":   reflect.TypeOf(StreamArnList_SdkV2{}),
+		"stream_names":  reflect.TypeOf(StreamNameList_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, KinesisStreamConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m KinesisStreamConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"extra_options": m.ExtraOptions,
+			"stream_arns":   m.StreamArns,
+			"stream_names":  m.StreamNames,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m KinesisStreamConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"extra_options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"stream_arns": basetypes.ListType{
+				ElemType: StreamArnList_SdkV2{}.Type(ctx),
+			},
+			"stream_names": basetypes.ListType{
+				ElemType: StreamNameList_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetExtraOptions returns the value of the ExtraOptions field in KinesisStreamConfig_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KinesisStreamConfig_SdkV2) GetExtraOptions(ctx context.Context) (map[string]types.String, bool) {
+	if m.ExtraOptions.IsNull() || m.ExtraOptions.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.ExtraOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExtraOptions sets the value of the ExtraOptions field in KinesisStreamConfig_SdkV2.
+func (m *KinesisStreamConfig_SdkV2) SetExtraOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["extra_options"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ExtraOptions = types.MapValueMust(t, vs)
+}
+
+// GetStreamArns returns the value of the StreamArns field in KinesisStreamConfig_SdkV2 as
+// a StreamArnList_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KinesisStreamConfig_SdkV2) GetStreamArns(ctx context.Context) (StreamArnList_SdkV2, bool) {
+	var e StreamArnList_SdkV2
+	if m.StreamArns.IsNull() || m.StreamArns.IsUnknown() {
+		return e, false
+	}
+	var v []StreamArnList_SdkV2
+	d := m.StreamArns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStreamArns sets the value of the StreamArns field in KinesisStreamConfig_SdkV2.
+func (m *KinesisStreamConfig_SdkV2) SetStreamArns(ctx context.Context, v StreamArnList_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["stream_arns"]
+	m.StreamArns = types.ListValueMust(t, vs)
+}
+
+// GetStreamNames returns the value of the StreamNames field in KinesisStreamConfig_SdkV2 as
+// a StreamNameList_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KinesisStreamConfig_SdkV2) GetStreamNames(ctx context.Context) (StreamNameList_SdkV2, bool) {
+	var e StreamNameList_SdkV2
+	if m.StreamNames.IsNull() || m.StreamNames.IsUnknown() {
+		return e, false
+	}
+	var v []StreamNameList_SdkV2
+	d := m.StreamNames.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStreamNames sets the value of the StreamNames field in KinesisStreamConfig_SdkV2.
+func (m *KinesisStreamConfig_SdkV2) SetStreamNames(ctx context.Context, v StreamNameList_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["stream_names"]
+	m.StreamNames = types.ListValueMust(t, vs)
+}
+
 // Returns the last N distinct values, ordered by the feature's timeseries
 // column.
 type LastDistinctFunction_SdkV2 struct {
@@ -26354,6 +26541,98 @@ func (m *Stream_SdkV2) SetSourceConfig(ctx context.Context, v StreamSourceConfig
 	m.SourceConfig = types.ListValueMust(t, vs)
 }
 
+// A list of Kinesis stream ARNs to read from.
+type StreamArnList_SdkV2 struct {
+	// Kinesis stream ARNs to read from. For example,
+	// 'arn:aws:kinesis:us-west-2:111122223333:stream/stream-a'.
+	Arns types.List `tfsdk:"arns"`
+}
+
+func (to *StreamArnList_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamArnList_SdkV2) {
+	if !from.Arns.IsNull() && !from.Arns.IsUnknown() && to.Arns.IsNull() && len(from.Arns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Arns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Arns = from.Arns
+	}
+}
+
+func (to *StreamArnList_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StreamArnList_SdkV2) {
+	if !from.Arns.IsNull() && !from.Arns.IsUnknown() && to.Arns.IsNull() && len(from.Arns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Arns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Arns = from.Arns
+	}
+}
+
+func (m StreamArnList_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["arns"] = attrs["arns"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StreamArnList.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StreamArnList_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"arns": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StreamArnList_SdkV2
+// only implements ToObjectValue() and Type().
+func (m StreamArnList_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"arns": m.Arns,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StreamArnList_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"arns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetArns returns the value of the Arns field in StreamArnList_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StreamArnList_SdkV2) GetArns(ctx context.Context) ([]types.String, bool) {
+	if m.Arns.IsNull() || m.Arns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Arns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetArns sets the value of the Arns field in StreamArnList_SdkV2.
+func (m *StreamArnList_SdkV2) SetArns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["arns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Arns = types.ListValueMust(t, vs)
+}
+
 // Specifies how to connect and authenticate to the stream platform.
 type StreamConnectionConfig_SdkV2 struct {
 	// Direct mTLS configuration for stream platform access. This is only used
@@ -26458,6 +26737,97 @@ func (m *StreamConnectionConfig_SdkV2) SetDirectMtlsConfig(ctx context.Context, 
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["direct_mtls_config"]
 	m.DirectMtlsConfig = types.ListValueMust(t, vs)
+}
+
+// A list of Kinesis stream names to read from.
+type StreamNameList_SdkV2 struct {
+	// Kinesis stream names to read from.
+	Names types.List `tfsdk:"names"`
+}
+
+func (to *StreamNameList_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamNameList_SdkV2) {
+	if !from.Names.IsNull() && !from.Names.IsUnknown() && to.Names.IsNull() && len(from.Names.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Names, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Names = from.Names
+	}
+}
+
+func (to *StreamNameList_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StreamNameList_SdkV2) {
+	if !from.Names.IsNull() && !from.Names.IsUnknown() && to.Names.IsNull() && len(from.Names.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Names, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Names = from.Names
+	}
+}
+
+func (m StreamNameList_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["names"] = attrs["names"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StreamNameList.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StreamNameList_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"names": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StreamNameList_SdkV2
+// only implements ToObjectValue() and Type().
+func (m StreamNameList_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"names": m.Names,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StreamNameList_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"names": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetNames returns the value of the Names field in StreamNameList_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StreamNameList_SdkV2) GetNames(ctx context.Context) ([]types.String, bool) {
+	if m.Names.IsNull() || m.Names.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Names.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNames sets the value of the Names field in StreamNameList_SdkV2.
+func (m *StreamNameList_SdkV2) SetNames(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["names"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Names = types.ListValueMust(t, vs)
 }
 
 // Schema definitions for the stream. Feature store supports both direct schemas
@@ -26681,6 +27051,8 @@ func (m StreamSource_SdkV2) Type(ctx context.Context) attr.Type {
 type StreamSourceConfig_SdkV2 struct {
 	// Configuration for Apache Kafka streams.
 	KafkaStreamConfig types.List `tfsdk:"kafka_stream_config"`
+	// Configuration for AWS Kinesis Data Streams.
+	KinesisStreamConfig types.List `tfsdk:"kinesis_stream_config"`
 }
 
 func (to *StreamSourceConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamSourceConfig_SdkV2) {
@@ -26690,6 +27062,15 @@ func (to *StreamSourceConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 				// Recursively sync the fields of KafkaStreamConfig
 				toKafkaStreamConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromKafkaStreamConfig)
 				to.SetKafkaStreamConfig(ctx, toKafkaStreamConfig)
+			}
+		}
+	}
+	if !from.KinesisStreamConfig.IsNull() && !from.KinesisStreamConfig.IsUnknown() {
+		if toKinesisStreamConfig, ok := to.GetKinesisStreamConfig(ctx); ok {
+			if fromKinesisStreamConfig, ok := from.GetKinesisStreamConfig(ctx); ok {
+				// Recursively sync the fields of KinesisStreamConfig
+				toKinesisStreamConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromKinesisStreamConfig)
+				to.SetKinesisStreamConfig(ctx, toKinesisStreamConfig)
 			}
 		}
 	}
@@ -26704,11 +27085,21 @@ func (to *StreamSourceConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 			}
 		}
 	}
+	if !from.KinesisStreamConfig.IsNull() && !from.KinesisStreamConfig.IsUnknown() {
+		if toKinesisStreamConfig, ok := to.GetKinesisStreamConfig(ctx); ok {
+			if fromKinesisStreamConfig, ok := from.GetKinesisStreamConfig(ctx); ok {
+				toKinesisStreamConfig.SyncFieldsDuringRead(ctx, fromKinesisStreamConfig)
+				to.SetKinesisStreamConfig(ctx, toKinesisStreamConfig)
+			}
+		}
+	}
 }
 
 func (m StreamSourceConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["kafka_stream_config"] = attrs["kafka_stream_config"].SetOptional()
 	attrs["kafka_stream_config"] = attrs["kafka_stream_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["kinesis_stream_config"] = attrs["kinesis_stream_config"].SetOptional()
+	attrs["kinesis_stream_config"] = attrs["kinesis_stream_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -26722,7 +27113,8 @@ func (m StreamSourceConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 // SDK values.
 func (m StreamSourceConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"kafka_stream_config": reflect.TypeOf(KafkaStreamConfig_SdkV2{}),
+		"kafka_stream_config":   reflect.TypeOf(KafkaStreamConfig_SdkV2{}),
+		"kinesis_stream_config": reflect.TypeOf(KinesisStreamConfig_SdkV2{}),
 	}
 }
 
@@ -26733,7 +27125,8 @@ func (m StreamSourceConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"kafka_stream_config": m.KafkaStreamConfig,
+			"kafka_stream_config":   m.KafkaStreamConfig,
+			"kinesis_stream_config": m.KinesisStreamConfig,
 		})
 }
 
@@ -26743,6 +27136,9 @@ func (m StreamSourceConfig_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"kafka_stream_config": basetypes.ListType{
 				ElemType: KafkaStreamConfig_SdkV2{}.Type(ctx),
+			},
+			"kinesis_stream_config": basetypes.ListType{
+				ElemType: KinesisStreamConfig_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -26772,6 +27168,32 @@ func (m *StreamSourceConfig_SdkV2) SetKafkaStreamConfig(ctx context.Context, v K
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["kafka_stream_config"]
 	m.KafkaStreamConfig = types.ListValueMust(t, vs)
+}
+
+// GetKinesisStreamConfig returns the value of the KinesisStreamConfig field in StreamSourceConfig_SdkV2 as
+// a KinesisStreamConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StreamSourceConfig_SdkV2) GetKinesisStreamConfig(ctx context.Context) (KinesisStreamConfig_SdkV2, bool) {
+	var e KinesisStreamConfig_SdkV2
+	if m.KinesisStreamConfig.IsNull() || m.KinesisStreamConfig.IsUnknown() {
+		return e, false
+	}
+	var v []KinesisStreamConfig_SdkV2
+	d := m.KinesisStreamConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetKinesisStreamConfig sets the value of the KinesisStreamConfig field in StreamSourceConfig_SdkV2.
+func (m *StreamSourceConfig_SdkV2) SetKinesisStreamConfig(ctx context.Context, v KinesisStreamConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["kinesis_stream_config"]
+	m.KinesisStreamConfig = types.ListValueMust(t, vs)
 }
 
 // The streaming mode configuration for a streaming materialization pipeline.

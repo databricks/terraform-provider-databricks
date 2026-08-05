@@ -16593,6 +16593,10 @@ type UpdateInfo_SdkV2 struct {
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
 	FullRefreshSelection types.List `tfsdk:"full_refresh_selection"`
+	// Indicates whether the update is either part of a continuous job run, or
+	// running in legacy continuous pipeline mode. Returned only for GetUpdate;
+	// not populated in ListUpdates responses.
+	Mode types.String `tfsdk:"mode"`
 	// Key/value map of parameters used to initiate the update
 	Parameters types.Map `tfsdk:"parameters"`
 	// The ID of the pipeline.
@@ -16666,6 +16670,7 @@ func (m UpdateInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["creation_time"] = attrs["creation_time"].SetOptional()
 	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
 	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
+	attrs["mode"] = attrs["mode"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
 	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
@@ -16705,6 +16710,7 @@ func (m UpdateInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"creation_time":          m.CreationTime,
 			"full_refresh":           m.FullRefresh,
 			"full_refresh_selection": m.FullRefreshSelection,
+			"mode":                   m.Mode,
 			"parameters":             m.Parameters,
 			"pipeline_id":            m.PipelineId,
 			"refresh_selection":      m.RefreshSelection,
@@ -16728,6 +16734,7 @@ func (m UpdateInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"full_refresh_selection": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"mode": types.StringType,
 			"parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},

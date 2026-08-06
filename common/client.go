@@ -10,10 +10,12 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/httpclient"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"github.com/golang-jwt/jwt/v4"
@@ -91,6 +93,20 @@ type DatabricksClient struct {
 	// This is used by legacy SDKv2 resources and data sources not using Go SDK where
 	// a new client is created.
 	muLegacy sync.Mutex
+
+	// httpTimeoutSetByUser records whether http_timeout_seconds came from the
+	// provider configuration rather than the built-in default. Endpoints that
+	// raise their own default timeout must not override an explicit choice —
+	// see ClientWithDefaultHTTPTimeout. This cannot be inferred from
+	// Config.HTTPTimeoutSeconds, which is always populated by the time resource
+	// code runs.
+	httpTimeoutSetByUser bool
+}
+
+// SetHTTPTimeoutSetByUser records that http_timeout_seconds was explicitly
+// configured. Called once during provider configuration.
+func (c *DatabricksClient) SetHTTPTimeoutSetByUser(v bool) {
+	c.httpTimeoutSetByUser = v
 }
 
 // GetWorkspaceClientForUnifiedProviderWithDiagnostics returns the Databricks
@@ -799,8 +815,54 @@ func (c *DatabricksClient) ClientForHost(ctx context.Context, url string) (*Data
 	}
 	// copy all client configuration options except Databricks CLI profile
 	return &DatabricksClient{
-		DatabricksClient: client,
-		commandFactory:   c.commandFactory,
+		DatabricksClient:     client,
+		commandFactory:       c.commandFactory,
+		httpTimeoutSetByUser: c.httpTimeoutSetByUser,
+	}, nil
+}
+
+// ClientWithDefaultHTTPTimeout returns a DatabricksClient whose HTTP inactivity
+// timeout is defaultTimeoutSeconds, for endpoints whose own default should be
+// higher than the provider-wide one because they are inherently slow.
+//
+// An explicit http_timeout_seconds always wins, in either direction: a user who
+// lowered it to fail fast keeps that, and one who raised it keeps that too. The
+// endpoint default only applies when the setting was left unset.
+//
+// The SDK reads HTTPTimeout once, when the underlying http client is built, and
+// offers no per-request override, so a derived client is required.
+//
+// Prefer this over raising the provider-wide default. That default is
+// deliberately just above the ~60s server-side timeout most APIs have, so the
+// server's own error message wins the race and reaches the user instead of a
+// generic client-side timeout (see #4628). Raising it globally would forfeit
+// that for every fast endpoint.
+func (c *DatabricksClient) ClientWithDefaultHTTPTimeout(defaultTimeoutSeconds int) (*DatabricksClient, error) {
+	// A nil inner client means the wrapper was hand-built without a config
+	// (some unit-test harnesses do this); there is no timeout to change.
+	if c.DatabricksClient == nil || c.Config == nil {
+		return c, nil
+	}
+	if c.httpTimeoutSetByUser || c.Config.HTTPTimeoutSeconds == defaultTimeoutSeconds {
+		return c, nil
+	}
+	// Reuse the same *config.Config rather than copying it: the config carries
+	// resolved auth state behind a mutex, so only the derived httpclient config
+	// (a plain value) is adjusted. This also preserves any custom HTTPTransport,
+	// which unit-test fixtures rely on to intercept requests.
+	clientCfg, err := config.HTTPClientConfigFromConfig(c.Config)
+	if err != nil {
+		return nil, fmt.Errorf("cannot derive client config: %w", err)
+	}
+	clientCfg.HTTPTimeout = time.Duration(defaultTimeoutSeconds) * time.Second
+	inner, err := client.NewWithClient(c.Config, httpclient.NewApiClient(clientCfg))
+	if err != nil {
+		return nil, fmt.Errorf("cannot configure client with %ds HTTP timeout: %w", defaultTimeoutSeconds, err)
+	}
+	return &DatabricksClient{
+		DatabricksClient:     inner,
+		commandFactory:       c.commandFactory,
+		httpTimeoutSetByUser: c.httpTimeoutSetByUser,
 	}, nil
 }
 

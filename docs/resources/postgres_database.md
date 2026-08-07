@@ -197,6 +197,12 @@ The following arguments are supported:
 * `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### DatabaseDatabaseSpec
+* `role` (string, required) - The name of the role that owns the database.
+  Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
+  
+  To change the owner, pass valid existing Role name when updating the Database
+  
+  A database always has an owner
 * `postgres_database` (string, optional) - The name of the Postgres database.
   
   This expects a valid Postgres identifier as specified in the link below.
@@ -204,12 +210,6 @@ The following arguments are supported:
   Required when creating the Database.
   
   To rename, pass a valid postgres identifier when updating the Database
-* `role` (string, optional) - The name of the role that owns the database.
-  Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
-  
-  To change the owner, pass valid existing Role name when updating the Database
-  
-  A database always has an owner
 
 ### DatabaseDatabaseStatus
 * `postgres_database` (string, optional) - The name of the Postgres database

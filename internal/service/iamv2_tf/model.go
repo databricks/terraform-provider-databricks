@@ -544,10 +544,10 @@ type Group struct {
 	AccountId types.String `tfsdk:"account_id"`
 	// ExternalId of the group in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
+	// Internal group ID of the group in Databricks.
+	GroupId types.String `tfsdk:"group_id"`
 	// Display name of the group.
 	GroupName types.String `tfsdk:"group_name"`
-	// Internal group ID of the group in Databricks.
-	InternalId types.Int64 `tfsdk:"internal_id"`
 }
 
 func (to *Group) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Group) {
@@ -559,8 +559,8 @@ func (to *Group) SyncFieldsDuringRead(ctx context.Context, from Group) {
 func (m Group) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
+	attrs["group_id"] = attrs["group_id"].SetComputed()
 	attrs["group_name"] = attrs["group_name"].SetOptional()
-	attrs["internal_id"] = attrs["internal_id"].SetComputed()
 
 	return attrs
 }
@@ -585,8 +585,8 @@ func (m Group) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"account_id":  m.AccountId,
 			"external_id": m.ExternalId,
+			"group_id":    m.GroupId,
 			"group_name":  m.GroupName,
-			"internal_id": m.InternalId,
 		})
 }
 
@@ -596,8 +596,8 @@ func (m Group) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"account_id":  types.StringType,
 			"external_id": types.StringType,
+			"group_id":    types.StringType,
 			"group_name":  types.StringType,
-			"internal_id": types.Int64Type,
 		},
 	}
 }
@@ -606,8 +606,7 @@ type ListWorkspaceAssignmentDetailsProxyRequest struct {
 	// The maximum number of workspace assignment details to return. The service
 	// may return fewer than this value.
 	PageSize types.Int64 `tfsdk:"-"`
-	// A page token, received from a previous
-	// ListWorkspaceAssignmentDetailsProxy call. Provide this to retrieve the
+	// A page token from a previous list call. Provide this to retrieve the
 	// subsequent page.
 	PageToken types.String `tfsdk:"-"`
 }
@@ -736,6 +735,19 @@ func (to *ListWorkspaceAssignmentDetailsResponse) SyncFieldsDuringCreateOrUpdate
 		// set the resulting resource state to the empty list to match the planned value.
 		to.WorkspaceAssignmentDetails = from.WorkspaceAssignmentDetails
 	}
+	if !from.WorkspaceAssignmentDetails.IsNull() && !from.WorkspaceAssignmentDetails.IsUnknown() {
+		if toWorkspaceAssignmentDetails, ok := to.GetWorkspaceAssignmentDetails(ctx); ok {
+			if fromWorkspaceAssignmentDetails, ok := from.GetWorkspaceAssignmentDetails(ctx); ok {
+				// Recursively sync the fields of each WorkspaceAssignmentDetails element by position.
+				for i := range toWorkspaceAssignmentDetails {
+					if i < len(fromWorkspaceAssignmentDetails) {
+						toWorkspaceAssignmentDetails[i].SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceAssignmentDetails[i])
+					}
+				}
+				to.SetWorkspaceAssignmentDetails(ctx, toWorkspaceAssignmentDetails)
+			}
+		}
+	}
 }
 
 func (to *ListWorkspaceAssignmentDetailsResponse) SyncFieldsDuringRead(ctx context.Context, from ListWorkspaceAssignmentDetailsResponse) {
@@ -744,6 +756,18 @@ func (to *ListWorkspaceAssignmentDetailsResponse) SyncFieldsDuringRead(ctx conte
 		// If a user specified a non-Null, empty list for WorkspaceAssignmentDetails, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.WorkspaceAssignmentDetails = from.WorkspaceAssignmentDetails
+	}
+	if !from.WorkspaceAssignmentDetails.IsNull() && !from.WorkspaceAssignmentDetails.IsUnknown() {
+		if toWorkspaceAssignmentDetails, ok := to.GetWorkspaceAssignmentDetails(ctx); ok {
+			if fromWorkspaceAssignmentDetails, ok := from.GetWorkspaceAssignmentDetails(ctx); ok {
+				for i := range toWorkspaceAssignmentDetails {
+					if i < len(fromWorkspaceAssignmentDetails) {
+						toWorkspaceAssignmentDetails[i].SyncFieldsDuringRead(ctx, fromWorkspaceAssignmentDetails[i])
+					}
+				}
+				to.SetWorkspaceAssignmentDetails(ctx, toWorkspaceAssignmentDetails)
+			}
+		}
 	}
 }
 
@@ -819,7 +843,7 @@ func (m *ListWorkspaceAssignmentDetailsResponse) SetWorkspaceAssignmentDetails(c
 
 // Request message for resolving a group with the given external ID from the
 // customer's IdP into Databricks. Will resolve metadata such as the group's
-// groupname, and inherited parent groups.
+// name and inherited parent groups.
 type ResolveGroupProxyRequest struct {
 	// Required. The external ID of the group in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
@@ -870,7 +894,7 @@ func (m ResolveGroupProxyRequest) Type(ctx context.Context) attr.Type {
 
 // Request message for resolving a group with the given external ID from the
 // customer's IdP into Databricks. Will resolve metadata such as the group's
-// groupname, and inherited parent groups.
+// name and inherited parent groups.
 type ResolveGroupRequest struct {
 	// Required. The external ID of the group in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
@@ -1014,7 +1038,7 @@ func (m *ResolveGroupResponse) SetGroup(ctx context.Context, v Group) {
 
 // Request message for resolving a service principal with the given external ID
 // from the customer's IdP into Databricks. Will resolve metadata such as the
-// service principal's displayname, status, and inherited parent groups.
+// service principal's display name, status, and inherited parent groups.
 type ResolveServicePrincipalProxyRequest struct {
 	// Required. The external ID of the service principal in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
@@ -1065,7 +1089,7 @@ func (m ResolveServicePrincipalProxyRequest) Type(ctx context.Context) attr.Type
 
 // Request message for resolving a service principal with the given external ID
 // from the customer's IdP into Databricks. Will resolve metadata such as the
-// service principal's displayname, status, and inherited parent groups.
+// service principal's display name, status, and inherited parent groups.
 type ResolveServicePrincipalRequest struct {
 	// Required. The external ID of the service principal in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
@@ -1209,7 +1233,7 @@ func (m *ResolveServicePrincipalResponse) SetServicePrincipal(ctx context.Contex
 
 // Request message for resolving a user with the given external ID from the
 // customer's IdP into Databricks. Will resolve metadata such as the user's
-// displayname, status, and inherited parent groups.
+// display name, status, and inherited parent groups.
 type ResolveUserProxyRequest struct {
 	// Required. The external ID of the user in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
@@ -1260,7 +1284,7 @@ func (m ResolveUserProxyRequest) Type(ctx context.Context) attr.Type {
 
 // Request message for resolving a user with the given external ID from the
 // customer's IdP into Databricks. Will resolve metadata such as the user's
-// displayname, status, and inherited parent groups.
+// display name, status, and inherited parent groups.
 type ResolveUserRequest struct {
 	// Required. The external ID of the user in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
@@ -1415,7 +1439,7 @@ type ServicePrincipal struct {
 	// ExternalId of the service principal in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
 	// Internal service principal ID of the service principal in Databricks.
-	InternalId types.Int64 `tfsdk:"internal_id"`
+	ServicePrincipalId types.String `tfsdk:"service_principal_id"`
 }
 
 func (to *ServicePrincipal) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ServicePrincipal) {
@@ -1430,7 +1454,7 @@ func (m ServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["application_id"] = attrs["application_id"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["internal_id"] = attrs["internal_id"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
 
 	return attrs
 }
@@ -1453,12 +1477,12 @@ func (m ServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":        m.AccountId,
-			"account_sp_status": m.AccountSpStatus,
-			"application_id":    m.ApplicationId,
-			"display_name":      m.DisplayName,
-			"external_id":       m.ExternalId,
-			"internal_id":       m.InternalId,
+			"account_id":           m.AccountId,
+			"account_sp_status":    m.AccountSpStatus,
+			"application_id":       m.ApplicationId,
+			"display_name":         m.DisplayName,
+			"external_id":          m.ExternalId,
+			"service_principal_id": m.ServicePrincipalId,
 		})
 }
 
@@ -1466,12 +1490,12 @@ func (m ServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m ServicePrincipal) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":        types.StringType,
-			"account_sp_status": types.StringType,
-			"application_id":    types.StringType,
-			"display_name":      types.StringType,
-			"external_id":       types.StringType,
-			"internal_id":       types.Int64Type,
+			"account_id":           types.StringType,
+			"account_sp_status":    types.StringType,
+			"application_id":       types.StringType,
+			"display_name":         types.StringType,
+			"external_id":          types.StringType,
+			"service_principal_id": types.StringType,
 		},
 	}
 }
@@ -1698,7 +1722,7 @@ type User struct {
 
 	FullName types.Object `tfsdk:"full_name"`
 	// Internal userId of the user in Databricks.
-	InternalId types.Int64 `tfsdk:"internal_id"`
+	UserId types.String `tfsdk:"user_id"`
 	// Username/email of the user.
 	Username types.String `tfsdk:"username"`
 }
@@ -1731,7 +1755,7 @@ func (m User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["account_user_status"] = attrs["account_user_status"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetOptional()
-	attrs["internal_id"] = attrs["internal_id"].SetComputed()
+	attrs["user_id"] = attrs["user_id"].SetComputed()
 	attrs["username"] = attrs["username"].SetOptional()
 	attrs["username"] = attrs["username"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
@@ -1762,7 +1786,7 @@ func (m User) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"account_user_status": m.AccountUserStatus,
 			"external_id":         m.ExternalId,
 			"full_name":           m.FullName,
-			"internal_id":         m.InternalId,
+			"user_id":             m.UserId,
 			"username":            m.Username,
 		})
 }
@@ -1775,7 +1799,7 @@ func (m User) Type(ctx context.Context) attr.Type {
 			"account_user_status": types.StringType,
 			"external_id":         types.StringType,
 			"full_name":           UserFullName{}.Type(ctx),
-			"internal_id":         types.Int64Type,
+			"user_id":             types.StringType,
 			"username":            types.StringType,
 		},
 	}
@@ -1979,17 +2003,42 @@ func (m *WorkspaceAccessDetail) SetPermissions(ctx context.Context, v []types.St
 	m.Permissions = types.ListValueMust(t, vs)
 }
 
-// The details of a principal's assignment to a workspace.
+// The direct assignment of a provisioned account-level principal (user, service
+// principal, or group) to a workspace, together with the entitlements that
+// assignment grants in the workspace.
+//
+// This resource covers only principals assigned directly to the workspace.
+// Principals that inherit workspace access through a group are not represented
+// here. See WorkspaceAccessDetail and WorkspaceIdentityDetail for the
+// effective, direct-or-indirect view. Creating the resource assigns the
+// principal to the workspace, and deleting it removes the assignment.
+//
+// `entitlements` is the only client-settable field. It holds the entitlements
+// granted directly on this assignment, including any the principal also holds
+// through a group. `effective_entitlements` is the read-only union of those and
+// any granted through group membership.
+//
+// A direct assignment always carries at least one directly-assigned
+// entitlement, because the assignment is what grants it. Create and update both
+// reject an empty `entitlements` set. To remove a principal's assignment
+// entirely, delete the resource.
+//
+// This resource replaces workspace assignment previously managed through the
+// workspace SCIM and permission-assignment APIs, and is intended for account
+// and workspace admins.
 type WorkspaceAssignmentDetail struct {
 	// The account ID parent of the workspace where the principal is assigned
 	AccountId types.String `tfsdk:"account_id"`
-	// Entitlements granted directly to the principal on this workspace. The
-	// only client-settable field: create and update manage exactly this set
-	// (including entitlements the principal also holds via a group). Not
-	// populated by ListWorkspaceAssignmentDetails (omitted for scalability);
-	// call GetWorkspaceAssignmentDetail to read the entitlements for a single
-	// principal.
-	Entitlements types.List `tfsdk:"entitlements"`
+	// Every entitlement the principal holds in this workspace, whether granted
+	// directly or through group membership. Get responses populate this field.
+	// List responses leave it empty.
+	EffectiveEntitlements types.Set `tfsdk:"effective_entitlements"`
+	// Entitlements granted directly to the principal on this workspace. This is
+	// the only client-settable field. Create and update manage exactly this
+	// set, including entitlements the principal also holds through a group.
+	// List responses leave this field empty. Get a single principal to read its
+	// entitlements.
+	Entitlements types.Set `tfsdk:"entitlements"`
 	// The internal ID of the principal (user/sp/group) in Databricks.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
 
@@ -1999,6 +2048,12 @@ type WorkspaceAssignmentDetail struct {
 }
 
 func (to *WorkspaceAssignmentDetail) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WorkspaceAssignmentDetail) {
+	if !from.EffectiveEntitlements.IsNull() && !from.EffectiveEntitlements.IsUnknown() && to.EffectiveEntitlements.IsNull() && len(from.EffectiveEntitlements.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EffectiveEntitlements, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EffectiveEntitlements = from.EffectiveEntitlements
+	}
 	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
@@ -2008,6 +2063,12 @@ func (to *WorkspaceAssignmentDetail) SyncFieldsDuringCreateOrUpdate(ctx context.
 }
 
 func (to *WorkspaceAssignmentDetail) SyncFieldsDuringRead(ctx context.Context, from WorkspaceAssignmentDetail) {
+	if !from.EffectiveEntitlements.IsNull() && !from.EffectiveEntitlements.IsUnknown() && to.EffectiveEntitlements.IsNull() && len(from.EffectiveEntitlements.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EffectiveEntitlements, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EffectiveEntitlements = from.EffectiveEntitlements
+	}
 	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
@@ -2018,6 +2079,7 @@ func (to *WorkspaceAssignmentDetail) SyncFieldsDuringRead(ctx context.Context, f
 
 func (m WorkspaceAssignmentDetail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["effective_entitlements"] = attrs["effective_entitlements"].SetComputed()
 	attrs["entitlements"] = attrs["entitlements"].SetOptional()
 	attrs["principal_id"] = attrs["principal_id"].SetRequired()
 	attrs["principal_type"] = attrs["principal_type"].SetComputed()
@@ -2035,7 +2097,8 @@ func (m WorkspaceAssignmentDetail) ApplySchemaCustomizations(attrs map[string]tf
 // SDK values.
 func (m WorkspaceAssignmentDetail) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"entitlements": reflect.TypeOf(types.String{}),
+		"effective_entitlements": reflect.TypeOf(types.String{}),
+		"entitlements":           reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2046,11 +2109,12 @@ func (m WorkspaceAssignmentDetail) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":     m.AccountId,
-			"entitlements":   m.Entitlements,
-			"principal_id":   m.PrincipalId,
-			"principal_type": m.PrincipalType,
-			"workspace_id":   m.WorkspaceId,
+			"account_id":             m.AccountId,
+			"effective_entitlements": m.EffectiveEntitlements,
+			"entitlements":           m.Entitlements,
+			"principal_id":           m.PrincipalId,
+			"principal_type":         m.PrincipalType,
+			"workspace_id":           m.WorkspaceId,
 		})
 }
 
@@ -2059,7 +2123,10 @@ func (m WorkspaceAssignmentDetail) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id": types.StringType,
-			"entitlements": basetypes.ListType{
+			"effective_entitlements": basetypes.SetType{
+				ElemType: types.StringType,
+			},
+			"entitlements": basetypes.SetType{
 				ElemType: types.StringType,
 			},
 			"principal_id":   types.Int64Type,
@@ -2067,6 +2134,32 @@ func (m WorkspaceAssignmentDetail) Type(ctx context.Context) attr.Type {
 			"workspace_id":   types.Int64Type,
 		},
 	}
+}
+
+// GetEffectiveEntitlements returns the value of the EffectiveEntitlements field in WorkspaceAssignmentDetail as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *WorkspaceAssignmentDetail) GetEffectiveEntitlements(ctx context.Context) ([]types.String, bool) {
+	if m.EffectiveEntitlements.IsNull() || m.EffectiveEntitlements.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.EffectiveEntitlements.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectiveEntitlements sets the value of the EffectiveEntitlements field in WorkspaceAssignmentDetail.
+func (m *WorkspaceAssignmentDetail) SetEffectiveEntitlements(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_entitlements"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EffectiveEntitlements = types.SetValueMust(t, vs)
 }
 
 // GetEntitlements returns the value of the Entitlements field in WorkspaceAssignmentDetail as
@@ -2092,5 +2185,5 @@ func (m *WorkspaceAssignmentDetail) SetEntitlements(ctx context.Context, v []typ
 	}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
 	t = t.(attr.TypeWithElementType).ElementType()
-	m.Entitlements = types.ListValueMust(t, vs)
+	m.Entitlements = types.SetValueMust(t, vs)
 }

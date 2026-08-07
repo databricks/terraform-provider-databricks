@@ -33,14 +33,9 @@ import (
 // run-submit request and are intentionally NOT duplicated here. Users compose
 // `ai_runtime_task` with the standard Jobs/DABs task wrapper to get those.
 type AiRuntimeTask struct {
-	// Optional workspace or UC volume path of the uploaded code-source archive.
-	// The CLI packages the user's local code directory into an archive and
-	// populates this. Customers calling the Jobs API directly should upload
-	// their archive to the workspace or a UC volume first and supply the
-	// resulting path here.
-	//
-	// When set, the training node exposes the value via the `$CODE_SOURCE`
-	// environment variable.
+	// Workspace or UC volume path of the code-source archive, unpacked on each
+	// node and exposed through `$CODE_SOURCE`. Set by first-party tooling; not
+	// for direct callers.
 	CodeSourcePath types.String `tfsdk:"code_source_path"`
 	// Deployment specs for this task. Exactly one deployment is currently
 	// supported (a single entry where every node runs the same command); this
@@ -65,9 +60,34 @@ type AiRuntimeTask struct {
 }
 
 func (to *AiRuntimeTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiRuntimeTask) {
+	if !from.Deployments.IsNull() && !from.Deployments.IsUnknown() {
+		if toDeployments, ok := to.GetDeployments(ctx); ok {
+			if fromDeployments, ok := from.GetDeployments(ctx); ok {
+				// Recursively sync the fields of each Deployments element by position.
+				for i := range toDeployments {
+					if i < len(fromDeployments) {
+						toDeployments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDeployments[i])
+					}
+				}
+				to.SetDeployments(ctx, toDeployments)
+			}
+		}
+	}
 }
 
 func (to *AiRuntimeTask) SyncFieldsDuringRead(ctx context.Context, from AiRuntimeTask) {
+	if !from.Deployments.IsNull() && !from.Deployments.IsUnknown() {
+		if toDeployments, ok := to.GetDeployments(ctx); ok {
+			if fromDeployments, ok := from.GetDeployments(ctx); ok {
+				for i := range toDeployments {
+					if i < len(fromDeployments) {
+						toDeployments[i].SyncFieldsDuringRead(ctx, fromDeployments[i])
+					}
+				}
+				to.SetDeployments(ctx, toDeployments)
+			}
+		}
+	}
 }
 
 func (m AiRuntimeTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -239,6 +259,19 @@ func (to *AlertTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Al
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Subscribers = from.Subscribers
 	}
+	if !from.Subscribers.IsNull() && !from.Subscribers.IsUnknown() {
+		if toSubscribers, ok := to.GetSubscribers(ctx); ok {
+			if fromSubscribers, ok := from.GetSubscribers(ctx); ok {
+				// Recursively sync the fields of each Subscribers element by position.
+				for i := range toSubscribers {
+					if i < len(fromSubscribers) {
+						toSubscribers[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSubscribers[i])
+					}
+				}
+				to.SetSubscribers(ctx, toSubscribers)
+			}
+		}
+	}
 }
 
 func (to *AlertTask) SyncFieldsDuringRead(ctx context.Context, from AlertTask) {
@@ -247,6 +280,18 @@ func (to *AlertTask) SyncFieldsDuringRead(ctx context.Context, from AlertTask) {
 		// If a user specified a non-Null, empty list for Subscribers, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Subscribers = from.Subscribers
+	}
+	if !from.Subscribers.IsNull() && !from.Subscribers.IsUnknown() {
+		if toSubscribers, ok := to.GetSubscribers(ctx); ok {
+			if fromSubscribers, ok := from.GetSubscribers(ctx); ok {
+				for i := range toSubscribers {
+					if i < len(fromSubscribers) {
+						toSubscribers[i].SyncFieldsDuringRead(ctx, fromSubscribers[i])
+					}
+				}
+				to.SetSubscribers(ctx, toSubscribers)
+			}
+		}
 	}
 }
 
@@ -635,6 +680,10 @@ type BaseRun struct {
 	// The creator user name. This field won’t be included in the response if
 	// the user has already been deleted.
 	CreatorUserName types.String `tfsdk:"creator_user_name"`
+	// ID of the deployment that produced the job when this run was created.
+	// Used to look up deployment metadata from the Deployment Metadata service.
+	// Only set for job runs of jobs with a `BUNDLE` deployment.
+	DeploymentId types.String `tfsdk:"deployment_id"`
 	// Description of the run
 	Description types.String `tfsdk:"description"`
 	// The actual performance target used by the serverless run during
@@ -746,6 +795,11 @@ type BaseRun struct {
 	Trigger types.String `tfsdk:"trigger"`
 
 	TriggerInfo types.Object `tfsdk:"trigger_info"`
+	// ID of the deployment version that produced the job when this run was
+	// created. Identifies a specific snapshot of the deployment in the
+	// Deployment Metadata service. Only set for job runs of jobs with a
+	// `BUNDLE` deployment.
+	VersionId types.String `tfsdk:"version_id"`
 }
 
 func (to *BaseRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BaseRun) {
@@ -782,11 +836,37 @@ func (to *BaseRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Base
 		// set the resulting resource state to the empty list to match the planned value.
 		to.JobClusters = from.JobClusters
 	}
+	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() {
+		if toJobClusters, ok := to.GetJobClusters(ctx); ok {
+			if fromJobClusters, ok := from.GetJobClusters(ctx); ok {
+				// Recursively sync the fields of each JobClusters element by position.
+				for i := range toJobClusters {
+					if i < len(fromJobClusters) {
+						toJobClusters[i].SyncFieldsDuringCreateOrUpdate(ctx, fromJobClusters[i])
+					}
+				}
+				to.SetJobClusters(ctx, toJobClusters)
+			}
+		}
+	}
 	if !from.JobParameters.IsNull() && !from.JobParameters.IsUnknown() && to.JobParameters.IsNull() && len(from.JobParameters.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for JobParameters, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.JobParameters = from.JobParameters
+	}
+	if !from.JobParameters.IsNull() && !from.JobParameters.IsUnknown() {
+		if toJobParameters, ok := to.GetJobParameters(ctx); ok {
+			if fromJobParameters, ok := from.GetJobParameters(ctx); ok {
+				// Recursively sync the fields of each JobParameters element by position.
+				for i := range toJobParameters {
+					if i < len(fromJobParameters) {
+						toJobParameters[i].SyncFieldsDuringCreateOrUpdate(ctx, fromJobParameters[i])
+					}
+				}
+				to.SetJobParameters(ctx, toJobParameters)
+			}
+		}
 	}
 	if !from.OverridingParameters.IsNull() && !from.OverridingParameters.IsUnknown() {
 		if toOverridingParameters, ok := to.GetOverridingParameters(ctx); ok {
@@ -802,6 +882,19 @@ func (to *BaseRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Base
 		// If a user specified a non-Null, empty list for RepairHistory, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RepairHistory = from.RepairHistory
+	}
+	if !from.RepairHistory.IsNull() && !from.RepairHistory.IsUnknown() {
+		if toRepairHistory, ok := to.GetRepairHistory(ctx); ok {
+			if fromRepairHistory, ok := from.GetRepairHistory(ctx); ok {
+				// Recursively sync the fields of each RepairHistory element by position.
+				for i := range toRepairHistory {
+					if i < len(fromRepairHistory) {
+						toRepairHistory[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRepairHistory[i])
+					}
+				}
+				to.SetRepairHistory(ctx, toRepairHistory)
+			}
+		}
 	}
 	if !from.Schedule.IsNull() && !from.Schedule.IsUnknown() {
 		if toSchedule, ok := to.GetSchedule(ctx); ok {
@@ -835,6 +928,19 @@ func (to *BaseRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Base
 		// If a user specified a non-Null, empty list for Tasks, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tasks = from.Tasks
+	}
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() {
+		if toTasks, ok := to.GetTasks(ctx); ok {
+			if fromTasks, ok := from.GetTasks(ctx); ok {
+				// Recursively sync the fields of each Tasks element by position.
+				for i := range toTasks {
+					if i < len(fromTasks) {
+						toTasks[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTasks[i])
+					}
+				}
+				to.SetTasks(ctx, toTasks)
+			}
+		}
 	}
 	if !from.TriggerInfo.IsNull() && !from.TriggerInfo.IsUnknown() {
 		if toTriggerInfo, ok := to.GetTriggerInfo(ctx); ok {
@@ -878,11 +984,35 @@ func (to *BaseRun) SyncFieldsDuringRead(ctx context.Context, from BaseRun) {
 		// set the resulting resource state to the empty list to match the planned value.
 		to.JobClusters = from.JobClusters
 	}
+	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() {
+		if toJobClusters, ok := to.GetJobClusters(ctx); ok {
+			if fromJobClusters, ok := from.GetJobClusters(ctx); ok {
+				for i := range toJobClusters {
+					if i < len(fromJobClusters) {
+						toJobClusters[i].SyncFieldsDuringRead(ctx, fromJobClusters[i])
+					}
+				}
+				to.SetJobClusters(ctx, toJobClusters)
+			}
+		}
+	}
 	if !from.JobParameters.IsNull() && !from.JobParameters.IsUnknown() && to.JobParameters.IsNull() && len(from.JobParameters.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for JobParameters, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.JobParameters = from.JobParameters
+	}
+	if !from.JobParameters.IsNull() && !from.JobParameters.IsUnknown() {
+		if toJobParameters, ok := to.GetJobParameters(ctx); ok {
+			if fromJobParameters, ok := from.GetJobParameters(ctx); ok {
+				for i := range toJobParameters {
+					if i < len(fromJobParameters) {
+						toJobParameters[i].SyncFieldsDuringRead(ctx, fromJobParameters[i])
+					}
+				}
+				to.SetJobParameters(ctx, toJobParameters)
+			}
+		}
 	}
 	if !from.OverridingParameters.IsNull() && !from.OverridingParameters.IsUnknown() {
 		if toOverridingParameters, ok := to.GetOverridingParameters(ctx); ok {
@@ -897,6 +1027,18 @@ func (to *BaseRun) SyncFieldsDuringRead(ctx context.Context, from BaseRun) {
 		// If a user specified a non-Null, empty list for RepairHistory, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RepairHistory = from.RepairHistory
+	}
+	if !from.RepairHistory.IsNull() && !from.RepairHistory.IsUnknown() {
+		if toRepairHistory, ok := to.GetRepairHistory(ctx); ok {
+			if fromRepairHistory, ok := from.GetRepairHistory(ctx); ok {
+				for i := range toRepairHistory {
+					if i < len(fromRepairHistory) {
+						toRepairHistory[i].SyncFieldsDuringRead(ctx, fromRepairHistory[i])
+					}
+				}
+				to.SetRepairHistory(ctx, toRepairHistory)
+			}
+		}
 	}
 	if !from.Schedule.IsNull() && !from.Schedule.IsUnknown() {
 		if toSchedule, ok := to.GetSchedule(ctx); ok {
@@ -928,6 +1070,18 @@ func (to *BaseRun) SyncFieldsDuringRead(ctx context.Context, from BaseRun) {
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tasks = from.Tasks
 	}
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() {
+		if toTasks, ok := to.GetTasks(ctx); ok {
+			if fromTasks, ok := from.GetTasks(ctx); ok {
+				for i := range toTasks {
+					if i < len(fromTasks) {
+						toTasks[i].SyncFieldsDuringRead(ctx, fromTasks[i])
+					}
+				}
+				to.SetTasks(ctx, toTasks)
+			}
+		}
+	}
 	if !from.TriggerInfo.IsNull() && !from.TriggerInfo.IsUnknown() {
 		if toTriggerInfo, ok := to.GetTriggerInfo(ctx); ok {
 			if fromTriggerInfo, ok := from.GetTriggerInfo(ctx); ok {
@@ -944,6 +1098,7 @@ func (m BaseRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["cluster_instance"] = attrs["cluster_instance"].SetOptional()
 	attrs["cluster_spec"] = attrs["cluster_spec"].SetOptional()
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
+	attrs["deployment_id"] = attrs["deployment_id"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
 	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
@@ -973,6 +1128,7 @@ func (m BaseRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["tasks"] = attrs["tasks"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
 	attrs["trigger_info"] = attrs["trigger_info"].SetOptional()
+	attrs["version_id"] = attrs["version_id"].SetOptional()
 
 	return attrs
 }
@@ -1013,6 +1169,7 @@ func (m BaseRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"cluster_instance":             m.ClusterInstance,
 			"cluster_spec":                 m.ClusterSpec,
 			"creator_user_name":            m.CreatorUserName,
+			"deployment_id":                m.DeploymentId,
 			"description":                  m.Description,
 			"effective_performance_target": m.EffectivePerformanceTarget,
 			"effective_usage_policy_id":    m.EffectiveUsagePolicyId,
@@ -1042,6 +1199,7 @@ func (m BaseRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"tasks":                        m.Tasks,
 			"trigger":                      m.Trigger,
 			"trigger_info":                 m.TriggerInfo,
+			"version_id":                   m.VersionId,
 		})
 }
 
@@ -1054,6 +1212,7 @@ func (m BaseRun) Type(ctx context.Context) attr.Type {
 			"cluster_instance":             ClusterInstance{}.Type(ctx),
 			"cluster_spec":                 ClusterSpec{}.Type(ctx),
 			"creator_user_name":            types.StringType,
+			"deployment_id":                types.StringType,
 			"description":                  types.StringType,
 			"effective_performance_target": types.StringType,
 			"effective_usage_policy_id":    types.StringType,
@@ -1091,6 +1250,7 @@ func (m BaseRun) Type(ctx context.Context) attr.Type {
 			},
 			"trigger":      types.StringType,
 			"trigger_info": TriggerInfo{}.Type(ctx),
+			"version_id":   types.StringType,
 		},
 	}
 }
@@ -1935,6 +2095,19 @@ func (to *ClusterSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Libraries = from.Libraries
 	}
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() {
+		if toLibraries, ok := to.GetLibraries(ctx); ok {
+			if fromLibraries, ok := from.GetLibraries(ctx); ok {
+				// Recursively sync the fields of each Libraries element by position.
+				for i := range toLibraries {
+					if i < len(fromLibraries) {
+						toLibraries[i].SyncFieldsDuringCreateOrUpdate(ctx, fromLibraries[i])
+					}
+				}
+				to.SetLibraries(ctx, toLibraries)
+			}
+		}
+	}
 	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
 		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
 			if fromNewCluster, ok := from.GetNewCluster(ctx); ok {
@@ -1952,6 +2125,18 @@ func (to *ClusterSpec) SyncFieldsDuringRead(ctx context.Context, from ClusterSpe
 		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Libraries = from.Libraries
+	}
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() {
+		if toLibraries, ok := to.GetLibraries(ctx); ok {
+			if fromLibraries, ok := from.GetLibraries(ctx); ok {
+				for i := range toLibraries {
+					if i < len(fromLibraries) {
+						toLibraries[i].SyncFieldsDuringRead(ctx, fromLibraries[i])
+					}
+				}
+				to.SetLibraries(ctx, toLibraries)
+			}
+		}
 	}
 	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
 		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
@@ -2489,6 +2674,19 @@ func (to *CreateJob) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Cr
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 	if !from.Continuous.IsNull() && !from.Continuous.IsUnknown() {
 		if toContinuous, ok := to.GetContinuous(ctx); ok {
 			if fromContinuous, ok := from.GetContinuous(ctx); ok {
@@ -2522,6 +2720,19 @@ func (to *CreateJob) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Cr
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Environments = from.Environments
 	}
+	if !from.Environments.IsNull() && !from.Environments.IsUnknown() {
+		if toEnvironments, ok := to.GetEnvironments(ctx); ok {
+			if fromEnvironments, ok := from.GetEnvironments(ctx); ok {
+				// Recursively sync the fields of each Environments element by position.
+				for i := range toEnvironments {
+					if i < len(fromEnvironments) {
+						toEnvironments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEnvironments[i])
+					}
+				}
+				to.SetEnvironments(ctx, toEnvironments)
+			}
+		}
+	}
 	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
 		if toGitSource, ok := to.GetGitSource(ctx); ok {
 			if fromGitSource, ok := from.GetGitSource(ctx); ok {
@@ -2546,6 +2757,19 @@ func (to *CreateJob) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Cr
 		// set the resulting resource state to the empty list to match the planned value.
 		to.JobClusters = from.JobClusters
 	}
+	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() {
+		if toJobClusters, ok := to.GetJobClusters(ctx); ok {
+			if fromJobClusters, ok := from.GetJobClusters(ctx); ok {
+				// Recursively sync the fields of each JobClusters element by position.
+				for i := range toJobClusters {
+					if i < len(fromJobClusters) {
+						toJobClusters[i].SyncFieldsDuringCreateOrUpdate(ctx, fromJobClusters[i])
+					}
+				}
+				to.SetJobClusters(ctx, toJobClusters)
+			}
+		}
+	}
 	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
 		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
 			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
@@ -2560,6 +2784,19 @@ func (to *CreateJob) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Cr
 		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Parameters = from.Parameters
+	}
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() {
+		if toParameters, ok := to.GetParameters(ctx); ok {
+			if fromParameters, ok := from.GetParameters(ctx); ok {
+				// Recursively sync the fields of each Parameters element by position.
+				for i := range toParameters {
+					if i < len(fromParameters) {
+						toParameters[i].SyncFieldsDuringCreateOrUpdate(ctx, fromParameters[i])
+					}
+				}
+				to.SetParameters(ctx, toParameters)
+			}
+		}
 	}
 	if !from.Queue.IsNull() && !from.Queue.IsUnknown() {
 		if toQueue, ok := to.GetQueue(ctx); ok {
@@ -2594,6 +2831,19 @@ func (to *CreateJob) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Cr
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tasks = from.Tasks
 	}
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() {
+		if toTasks, ok := to.GetTasks(ctx); ok {
+			if fromTasks, ok := from.GetTasks(ctx); ok {
+				// Recursively sync the fields of each Tasks element by position.
+				for i := range toTasks {
+					if i < len(fromTasks) {
+						toTasks[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTasks[i])
+					}
+				}
+				to.SetTasks(ctx, toTasks)
+			}
+		}
+	}
 	if !from.Trigger.IsNull() && !from.Trigger.IsUnknown() {
 		if toTrigger, ok := to.GetTrigger(ctx); ok {
 			if fromTrigger, ok := from.GetTrigger(ctx); ok {
@@ -2620,6 +2870,18 @@ func (to *CreateJob) SyncFieldsDuringRead(ctx context.Context, from CreateJob) {
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 	if !from.Continuous.IsNull() && !from.Continuous.IsUnknown() {
 		if toContinuous, ok := to.GetContinuous(ctx); ok {
@@ -2651,6 +2913,18 @@ func (to *CreateJob) SyncFieldsDuringRead(ctx context.Context, from CreateJob) {
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Environments = from.Environments
 	}
+	if !from.Environments.IsNull() && !from.Environments.IsUnknown() {
+		if toEnvironments, ok := to.GetEnvironments(ctx); ok {
+			if fromEnvironments, ok := from.GetEnvironments(ctx); ok {
+				for i := range toEnvironments {
+					if i < len(fromEnvironments) {
+						toEnvironments[i].SyncFieldsDuringRead(ctx, fromEnvironments[i])
+					}
+				}
+				to.SetEnvironments(ctx, toEnvironments)
+			}
+		}
+	}
 	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
 		if toGitSource, ok := to.GetGitSource(ctx); ok {
 			if fromGitSource, ok := from.GetGitSource(ctx); ok {
@@ -2673,6 +2947,18 @@ func (to *CreateJob) SyncFieldsDuringRead(ctx context.Context, from CreateJob) {
 		// set the resulting resource state to the empty list to match the planned value.
 		to.JobClusters = from.JobClusters
 	}
+	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() {
+		if toJobClusters, ok := to.GetJobClusters(ctx); ok {
+			if fromJobClusters, ok := from.GetJobClusters(ctx); ok {
+				for i := range toJobClusters {
+					if i < len(fromJobClusters) {
+						toJobClusters[i].SyncFieldsDuringRead(ctx, fromJobClusters[i])
+					}
+				}
+				to.SetJobClusters(ctx, toJobClusters)
+			}
+		}
+	}
 	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
 		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
 			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
@@ -2686,6 +2972,18 @@ func (to *CreateJob) SyncFieldsDuringRead(ctx context.Context, from CreateJob) {
 		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Parameters = from.Parameters
+	}
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() {
+		if toParameters, ok := to.GetParameters(ctx); ok {
+			if fromParameters, ok := from.GetParameters(ctx); ok {
+				for i := range toParameters {
+					if i < len(fromParameters) {
+						toParameters[i].SyncFieldsDuringRead(ctx, fromParameters[i])
+					}
+				}
+				to.SetParameters(ctx, toParameters)
+			}
+		}
 	}
 	if !from.Queue.IsNull() && !from.Queue.IsUnknown() {
 		if toQueue, ok := to.GetQueue(ctx); ok {
@@ -2716,6 +3014,18 @@ func (to *CreateJob) SyncFieldsDuringRead(ctx context.Context, from CreateJob) {
 		// If a user specified a non-Null, empty list for Tasks, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tasks = from.Tasks
+	}
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() {
+		if toTasks, ok := to.GetTasks(ctx); ok {
+			if fromTasks, ok := from.GetTasks(ctx); ok {
+				for i := range toTasks {
+					if i < len(fromTasks) {
+						toTasks[i].SyncFieldsDuringRead(ctx, fromTasks[i])
+					}
+				}
+				to.SetTasks(ctx, toTasks)
+			}
+		}
 	}
 	if !from.Trigger.IsNull() && !from.Trigger.IsUnknown() {
 		if toTrigger, ok := to.GetTrigger(ctx); ok {
@@ -3488,6 +3798,19 @@ func (to *DashboardPageSnapshot) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.WidgetErrorDetails = from.WidgetErrorDetails
 	}
+	if !from.WidgetErrorDetails.IsNull() && !from.WidgetErrorDetails.IsUnknown() {
+		if toWidgetErrorDetails, ok := to.GetWidgetErrorDetails(ctx); ok {
+			if fromWidgetErrorDetails, ok := from.GetWidgetErrorDetails(ctx); ok {
+				// Recursively sync the fields of each WidgetErrorDetails element by position.
+				for i := range toWidgetErrorDetails {
+					if i < len(fromWidgetErrorDetails) {
+						toWidgetErrorDetails[i].SyncFieldsDuringCreateOrUpdate(ctx, fromWidgetErrorDetails[i])
+					}
+				}
+				to.SetWidgetErrorDetails(ctx, toWidgetErrorDetails)
+			}
+		}
+	}
 }
 
 func (to *DashboardPageSnapshot) SyncFieldsDuringRead(ctx context.Context, from DashboardPageSnapshot) {
@@ -3496,6 +3819,18 @@ func (to *DashboardPageSnapshot) SyncFieldsDuringRead(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for WidgetErrorDetails, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.WidgetErrorDetails = from.WidgetErrorDetails
+	}
+	if !from.WidgetErrorDetails.IsNull() && !from.WidgetErrorDetails.IsUnknown() {
+		if toWidgetErrorDetails, ok := to.GetWidgetErrorDetails(ctx); ok {
+			if fromWidgetErrorDetails, ok := from.GetWidgetErrorDetails(ctx); ok {
+				for i := range toWidgetErrorDetails {
+					if i < len(fromWidgetErrorDetails) {
+						toWidgetErrorDetails[i].SyncFieldsDuringRead(ctx, fromWidgetErrorDetails[i])
+					}
+				}
+				to.SetWidgetErrorDetails(ctx, toWidgetErrorDetails)
+			}
+		}
 	}
 }
 
@@ -3729,6 +4064,19 @@ func (to *DashboardTaskOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PageSnapshots = from.PageSnapshots
 	}
+	if !from.PageSnapshots.IsNull() && !from.PageSnapshots.IsUnknown() {
+		if toPageSnapshots, ok := to.GetPageSnapshots(ctx); ok {
+			if fromPageSnapshots, ok := from.GetPageSnapshots(ctx); ok {
+				// Recursively sync the fields of each PageSnapshots element by position.
+				for i := range toPageSnapshots {
+					if i < len(fromPageSnapshots) {
+						toPageSnapshots[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPageSnapshots[i])
+					}
+				}
+				to.SetPageSnapshots(ctx, toPageSnapshots)
+			}
+		}
+	}
 }
 
 func (to *DashboardTaskOutput) SyncFieldsDuringRead(ctx context.Context, from DashboardTaskOutput) {
@@ -3737,6 +4085,18 @@ func (to *DashboardTaskOutput) SyncFieldsDuringRead(ctx context.Context, from Da
 		// If a user specified a non-Null, empty list for PageSnapshots, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PageSnapshots = from.PageSnapshots
+	}
+	if !from.PageSnapshots.IsNull() && !from.PageSnapshots.IsUnknown() {
+		if toPageSnapshots, ok := to.GetPageSnapshots(ctx); ok {
+			if fromPageSnapshots, ok := from.GetPageSnapshots(ctx); ok {
+				for i := range toPageSnapshots {
+					if i < len(fromPageSnapshots) {
+						toPageSnapshots[i].SyncFieldsDuringRead(ctx, fromPageSnapshots[i])
+					}
+				}
+				to.SetPageSnapshots(ctx, toPageSnapshots)
+			}
+		}
 	}
 }
 
@@ -3944,6 +4304,19 @@ func (to *DbtCloudTaskOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.DbtCloudJobRunOutput = from.DbtCloudJobRunOutput
 	}
+	if !from.DbtCloudJobRunOutput.IsNull() && !from.DbtCloudJobRunOutput.IsUnknown() {
+		if toDbtCloudJobRunOutput, ok := to.GetDbtCloudJobRunOutput(ctx); ok {
+			if fromDbtCloudJobRunOutput, ok := from.GetDbtCloudJobRunOutput(ctx); ok {
+				// Recursively sync the fields of each DbtCloudJobRunOutput element by position.
+				for i := range toDbtCloudJobRunOutput {
+					if i < len(fromDbtCloudJobRunOutput) {
+						toDbtCloudJobRunOutput[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDbtCloudJobRunOutput[i])
+					}
+				}
+				to.SetDbtCloudJobRunOutput(ctx, toDbtCloudJobRunOutput)
+			}
+		}
+	}
 }
 
 func (to *DbtCloudTaskOutput) SyncFieldsDuringRead(ctx context.Context, from DbtCloudTaskOutput) {
@@ -3952,6 +4325,18 @@ func (to *DbtCloudTaskOutput) SyncFieldsDuringRead(ctx context.Context, from Dbt
 		// If a user specified a non-Null, empty list for DbtCloudJobRunOutput, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.DbtCloudJobRunOutput = from.DbtCloudJobRunOutput
+	}
+	if !from.DbtCloudJobRunOutput.IsNull() && !from.DbtCloudJobRunOutput.IsUnknown() {
+		if toDbtCloudJobRunOutput, ok := to.GetDbtCloudJobRunOutput(ctx); ok {
+			if fromDbtCloudJobRunOutput, ok := from.GetDbtCloudJobRunOutput(ctx); ok {
+				for i := range toDbtCloudJobRunOutput {
+					if i < len(fromDbtCloudJobRunOutput) {
+						toDbtCloudJobRunOutput[i].SyncFieldsDuringRead(ctx, fromDbtCloudJobRunOutput[i])
+					}
+				}
+				to.SetDbtCloudJobRunOutput(ctx, toDbtCloudJobRunOutput)
+			}
+		}
 	}
 }
 
@@ -4265,6 +4650,19 @@ func (to *DbtPlatformTaskOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.DbtPlatformJobRunOutput = from.DbtPlatformJobRunOutput
 	}
+	if !from.DbtPlatformJobRunOutput.IsNull() && !from.DbtPlatformJobRunOutput.IsUnknown() {
+		if toDbtPlatformJobRunOutput, ok := to.GetDbtPlatformJobRunOutput(ctx); ok {
+			if fromDbtPlatformJobRunOutput, ok := from.GetDbtPlatformJobRunOutput(ctx); ok {
+				// Recursively sync the fields of each DbtPlatformJobRunOutput element by position.
+				for i := range toDbtPlatformJobRunOutput {
+					if i < len(fromDbtPlatformJobRunOutput) {
+						toDbtPlatformJobRunOutput[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDbtPlatformJobRunOutput[i])
+					}
+				}
+				to.SetDbtPlatformJobRunOutput(ctx, toDbtPlatformJobRunOutput)
+			}
+		}
+	}
 }
 
 func (to *DbtPlatformTaskOutput) SyncFieldsDuringRead(ctx context.Context, from DbtPlatformTaskOutput) {
@@ -4273,6 +4671,18 @@ func (to *DbtPlatformTaskOutput) SyncFieldsDuringRead(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for DbtPlatformJobRunOutput, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.DbtPlatformJobRunOutput = from.DbtPlatformJobRunOutput
+	}
+	if !from.DbtPlatformJobRunOutput.IsNull() && !from.DbtPlatformJobRunOutput.IsUnknown() {
+		if toDbtPlatformJobRunOutput, ok := to.GetDbtPlatformJobRunOutput(ctx); ok {
+			if fromDbtPlatformJobRunOutput, ok := from.GetDbtPlatformJobRunOutput(ctx); ok {
+				for i := range toDbtPlatformJobRunOutput {
+					if i < len(fromDbtPlatformJobRunOutput) {
+						toDbtPlatformJobRunOutput[i].SyncFieldsDuringRead(ctx, fromDbtPlatformJobRunOutput[i])
+					}
+				}
+				to.SetDbtPlatformJobRunOutput(ctx, toDbtPlatformJobRunOutput)
+			}
+		}
 	}
 }
 
@@ -4583,10 +4993,19 @@ func (m DeleteRun) Type(ctx context.Context) attr.Type {
 // workloads (driver + worker, parameter server, separate eval node, etc.) use
 // multiple entries.
 type DeploymentSpec struct {
-	// Workspace path of the bash script to execute on each node in this
-	// deployment. The CLI uploads the user's script and populates this.
-	// Customers calling the Jobs API directly should upload their script to the
-	// workspace first and supply the resulting path here.
+	// Workspace path of the script to run on each node in this deployment.
+	// Upload the script to this path and supply the path here. When the task
+	// runs, the file at this path is run on each node; if it fails, the task
+	// fails with its exit code.
+	//
+	// Example script contents:
+	//
+	// # Plain Python: python train.py --epochs 10
+	//
+	// # Multi-GPU via accelerate: accelerate launch train.py --config
+	// config.yaml
+	//
+	// # Distributed via torchrun: torchrun --nproc_per_node=8 train.py
 	CommandPath types.String `tfsdk:"command_path"`
 	// Compute resources allocated to each node in this deployment.
 	Compute types.Object `tfsdk:"compute"`
@@ -4835,6 +5254,19 @@ func (to *EnforcePolicyComplianceResponse) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.JobClusterChanges = from.JobClusterChanges
 	}
+	if !from.JobClusterChanges.IsNull() && !from.JobClusterChanges.IsUnknown() {
+		if toJobClusterChanges, ok := to.GetJobClusterChanges(ctx); ok {
+			if fromJobClusterChanges, ok := from.GetJobClusterChanges(ctx); ok {
+				// Recursively sync the fields of each JobClusterChanges element by position.
+				for i := range toJobClusterChanges {
+					if i < len(fromJobClusterChanges) {
+						toJobClusterChanges[i].SyncFieldsDuringCreateOrUpdate(ctx, fromJobClusterChanges[i])
+					}
+				}
+				to.SetJobClusterChanges(ctx, toJobClusterChanges)
+			}
+		}
+	}
 	if !from.Settings.IsNull() && !from.Settings.IsUnknown() {
 		if toSettings, ok := to.GetSettings(ctx); ok {
 			if fromSettings, ok := from.GetSettings(ctx); ok {
@@ -4852,6 +5284,18 @@ func (to *EnforcePolicyComplianceResponse) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for JobClusterChanges, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.JobClusterChanges = from.JobClusterChanges
+	}
+	if !from.JobClusterChanges.IsNull() && !from.JobClusterChanges.IsUnknown() {
+		if toJobClusterChanges, ok := to.GetJobClusterChanges(ctx); ok {
+			if fromJobClusterChanges, ok := from.GetJobClusterChanges(ctx); ok {
+				for i := range toJobClusterChanges {
+					if i < len(fromJobClusterChanges) {
+						toJobClusterChanges[i].SyncFieldsDuringRead(ctx, fromJobClusterChanges[i])
+					}
+				}
+				to.SetJobClusterChanges(ctx, toJobClusterChanges)
+			}
+		}
 	}
 	if !from.Settings.IsNull() && !from.Settings.IsUnknown() {
 		if toSettings, ok := to.GetSettings(ctx); ok {
@@ -4977,6 +5421,19 @@ func (to *ExportRunOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Views = from.Views
 	}
+	if !from.Views.IsNull() && !from.Views.IsUnknown() {
+		if toViews, ok := to.GetViews(ctx); ok {
+			if fromViews, ok := from.GetViews(ctx); ok {
+				// Recursively sync the fields of each Views element by position.
+				for i := range toViews {
+					if i < len(fromViews) {
+						toViews[i].SyncFieldsDuringCreateOrUpdate(ctx, fromViews[i])
+					}
+				}
+				to.SetViews(ctx, toViews)
+			}
+		}
+	}
 }
 
 func (to *ExportRunOutput) SyncFieldsDuringRead(ctx context.Context, from ExportRunOutput) {
@@ -4985,6 +5442,18 @@ func (to *ExportRunOutput) SyncFieldsDuringRead(ctx context.Context, from Export
 		// If a user specified a non-Null, empty list for Views, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Views = from.Views
+	}
+	if !from.Views.IsNull() && !from.Views.IsUnknown() {
+		if toViews, ok := to.GetViews(ctx); ok {
+			if fromViews, ok := from.GetViews(ctx); ok {
+				for i := range toViews {
+					if i < len(fromViews) {
+						toViews[i].SyncFieldsDuringRead(ctx, fromViews[i])
+					}
+				}
+				to.SetViews(ctx, toViews)
+			}
+		}
 	}
 }
 
@@ -5235,6 +5704,19 @@ func (to *ForEachStats) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ErrorMessageStats = from.ErrorMessageStats
 	}
+	if !from.ErrorMessageStats.IsNull() && !from.ErrorMessageStats.IsUnknown() {
+		if toErrorMessageStats, ok := to.GetErrorMessageStats(ctx); ok {
+			if fromErrorMessageStats, ok := from.GetErrorMessageStats(ctx); ok {
+				// Recursively sync the fields of each ErrorMessageStats element by position.
+				for i := range toErrorMessageStats {
+					if i < len(fromErrorMessageStats) {
+						toErrorMessageStats[i].SyncFieldsDuringCreateOrUpdate(ctx, fromErrorMessageStats[i])
+					}
+				}
+				to.SetErrorMessageStats(ctx, toErrorMessageStats)
+			}
+		}
+	}
 	if !from.TaskRunStats.IsNull() && !from.TaskRunStats.IsUnknown() {
 		if toTaskRunStats, ok := to.GetTaskRunStats(ctx); ok {
 			if fromTaskRunStats, ok := from.GetTaskRunStats(ctx); ok {
@@ -5252,6 +5734,18 @@ func (to *ForEachStats) SyncFieldsDuringRead(ctx context.Context, from ForEachSt
 		// If a user specified a non-Null, empty list for ErrorMessageStats, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ErrorMessageStats = from.ErrorMessageStats
+	}
+	if !from.ErrorMessageStats.IsNull() && !from.ErrorMessageStats.IsUnknown() {
+		if toErrorMessageStats, ok := to.GetErrorMessageStats(ctx); ok {
+			if fromErrorMessageStats, ok := from.GetErrorMessageStats(ctx); ok {
+				for i := range toErrorMessageStats {
+					if i < len(fromErrorMessageStats) {
+						toErrorMessageStats[i].SyncFieldsDuringRead(ctx, fromErrorMessageStats[i])
+					}
+				}
+				to.SetErrorMessageStats(ctx, toErrorMessageStats)
+			}
+		}
 	}
 	if !from.TaskRunStats.IsNull() && !from.TaskRunStats.IsUnknown() {
 		if toTaskRunStats, ok := to.GetTaskRunStats(ctx); ok {
@@ -5804,6 +6298,19 @@ func (to *GetJobPermissionLevelsResponse) SyncFieldsDuringCreateOrUpdate(ctx con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
 	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				// Recursively sync the fields of each PermissionLevels element by position.
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
+	}
 }
 
 func (to *GetJobPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, from GetJobPermissionLevelsResponse) {
@@ -5812,6 +6319,18 @@ func (to *GetJobPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Conte
 		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
+	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringRead(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
 	}
 }
 
@@ -6804,6 +7323,19 @@ func (to *JobAccessControlResponse) SyncFieldsDuringCreateOrUpdate(ctx context.C
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
 	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				// Recursively sync the fields of each AllPermissions element by position.
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
+	}
 }
 
 func (to *JobAccessControlResponse) SyncFieldsDuringRead(ctx context.Context, from JobAccessControlResponse) {
@@ -6812,6 +7344,18 @@ func (to *JobAccessControlResponse) SyncFieldsDuringRead(ctx context.Context, fr
 		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
+	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringRead(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
 	}
 }
 
@@ -6901,6 +7445,11 @@ type JobCluster struct {
 	JobClusterKey types.String `tfsdk:"job_cluster_key"`
 	// If new_cluster, a description of a cluster that is created for each task.
 	NewCluster types.Object `tfsdk:"new_cluster"`
+	// The ID of the serverless compute object to bind this cluster to. At most
+	// one JobCluster per job may set this field; the rate limit defined on the
+	// referenced serverless compute applies across all tasks bound to this
+	// cluster.
+	ServerlessComputeId types.String `tfsdk:"serverless_compute_id"`
 }
 
 func (to *JobCluster) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobCluster) {
@@ -6929,6 +7478,7 @@ func (to *JobCluster) SyncFieldsDuringRead(ctx context.Context, from JobCluster)
 func (m JobCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["job_cluster_key"] = attrs["job_cluster_key"].SetRequired()
 	attrs["new_cluster"] = attrs["new_cluster"].SetRequired()
+	attrs["serverless_compute_id"] = attrs["serverless_compute_id"].SetOptional()
 
 	return attrs
 }
@@ -6953,8 +7503,9 @@ func (m JobCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"job_cluster_key": m.JobClusterKey,
-			"new_cluster":     m.NewCluster,
+			"job_cluster_key":       m.JobClusterKey,
+			"new_cluster":           m.NewCluster,
+			"serverless_compute_id": m.ServerlessComputeId,
 		})
 }
 
@@ -6962,8 +7513,9 @@ func (m JobCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m JobCluster) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"job_cluster_key": types.StringType,
-			"new_cluster":     compute_tf.ClusterSpec{}.Type(ctx),
+			"job_cluster_key":       types.StringType,
+			"new_cluster":           compute_tf.ClusterSpec{}.Type(ctx),
+			"serverless_compute_id": types.StringType,
 		},
 	}
 }
@@ -7833,6 +8385,19 @@ func (to *JobPermissions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *JobPermissions) SyncFieldsDuringRead(ctx context.Context, from JobPermissions) {
@@ -7841,6 +8406,18 @@ func (to *JobPermissions) SyncFieldsDuringRead(ctx context.Context, from JobPerm
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -7982,6 +8559,19 @@ func (to *JobPermissionsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *JobPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, from JobPermissionsRequest) {
@@ -7990,6 +8580,18 @@ func (to *JobPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -8288,6 +8890,19 @@ func (to *JobSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Environments = from.Environments
 	}
+	if !from.Environments.IsNull() && !from.Environments.IsUnknown() {
+		if toEnvironments, ok := to.GetEnvironments(ctx); ok {
+			if fromEnvironments, ok := from.GetEnvironments(ctx); ok {
+				// Recursively sync the fields of each Environments element by position.
+				for i := range toEnvironments {
+					if i < len(fromEnvironments) {
+						toEnvironments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEnvironments[i])
+					}
+				}
+				to.SetEnvironments(ctx, toEnvironments)
+			}
+		}
+	}
 	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
 		if toGitSource, ok := to.GetGitSource(ctx); ok {
 			if fromGitSource, ok := from.GetGitSource(ctx); ok {
@@ -8312,6 +8927,19 @@ func (to *JobSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.JobClusters = from.JobClusters
 	}
+	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() {
+		if toJobClusters, ok := to.GetJobClusters(ctx); ok {
+			if fromJobClusters, ok := from.GetJobClusters(ctx); ok {
+				// Recursively sync the fields of each JobClusters element by position.
+				for i := range toJobClusters {
+					if i < len(fromJobClusters) {
+						toJobClusters[i].SyncFieldsDuringCreateOrUpdate(ctx, fromJobClusters[i])
+					}
+				}
+				to.SetJobClusters(ctx, toJobClusters)
+			}
+		}
+	}
 	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
 		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
 			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
@@ -8326,6 +8954,19 @@ func (to *JobSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Parameters = from.Parameters
+	}
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() {
+		if toParameters, ok := to.GetParameters(ctx); ok {
+			if fromParameters, ok := from.GetParameters(ctx); ok {
+				// Recursively sync the fields of each Parameters element by position.
+				for i := range toParameters {
+					if i < len(fromParameters) {
+						toParameters[i].SyncFieldsDuringCreateOrUpdate(ctx, fromParameters[i])
+					}
+				}
+				to.SetParameters(ctx, toParameters)
+			}
+		}
 	}
 	if !from.Queue.IsNull() && !from.Queue.IsUnknown() {
 		if toQueue, ok := to.GetQueue(ctx); ok {
@@ -8359,6 +9000,19 @@ func (to *JobSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for Tasks, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tasks = from.Tasks
+	}
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() {
+		if toTasks, ok := to.GetTasks(ctx); ok {
+			if fromTasks, ok := from.GetTasks(ctx); ok {
+				// Recursively sync the fields of each Tasks element by position.
+				for i := range toTasks {
+					if i < len(fromTasks) {
+						toTasks[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTasks[i])
+					}
+				}
+				to.SetTasks(ctx, toTasks)
+			}
+		}
 	}
 	if !from.Trigger.IsNull() && !from.Trigger.IsUnknown() {
 		if toTrigger, ok := to.GetTrigger(ctx); ok {
@@ -8411,6 +9065,18 @@ func (to *JobSettings) SyncFieldsDuringRead(ctx context.Context, from JobSetting
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Environments = from.Environments
 	}
+	if !from.Environments.IsNull() && !from.Environments.IsUnknown() {
+		if toEnvironments, ok := to.GetEnvironments(ctx); ok {
+			if fromEnvironments, ok := from.GetEnvironments(ctx); ok {
+				for i := range toEnvironments {
+					if i < len(fromEnvironments) {
+						toEnvironments[i].SyncFieldsDuringRead(ctx, fromEnvironments[i])
+					}
+				}
+				to.SetEnvironments(ctx, toEnvironments)
+			}
+		}
+	}
 	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
 		if toGitSource, ok := to.GetGitSource(ctx); ok {
 			if fromGitSource, ok := from.GetGitSource(ctx); ok {
@@ -8433,6 +9099,18 @@ func (to *JobSettings) SyncFieldsDuringRead(ctx context.Context, from JobSetting
 		// set the resulting resource state to the empty list to match the planned value.
 		to.JobClusters = from.JobClusters
 	}
+	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() {
+		if toJobClusters, ok := to.GetJobClusters(ctx); ok {
+			if fromJobClusters, ok := from.GetJobClusters(ctx); ok {
+				for i := range toJobClusters {
+					if i < len(fromJobClusters) {
+						toJobClusters[i].SyncFieldsDuringRead(ctx, fromJobClusters[i])
+					}
+				}
+				to.SetJobClusters(ctx, toJobClusters)
+			}
+		}
+	}
 	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
 		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
 			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
@@ -8446,6 +9124,18 @@ func (to *JobSettings) SyncFieldsDuringRead(ctx context.Context, from JobSetting
 		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Parameters = from.Parameters
+	}
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() {
+		if toParameters, ok := to.GetParameters(ctx); ok {
+			if fromParameters, ok := from.GetParameters(ctx); ok {
+				for i := range toParameters {
+					if i < len(fromParameters) {
+						toParameters[i].SyncFieldsDuringRead(ctx, fromParameters[i])
+					}
+				}
+				to.SetParameters(ctx, toParameters)
+			}
+		}
 	}
 	if !from.Queue.IsNull() && !from.Queue.IsUnknown() {
 		if toQueue, ok := to.GetQueue(ctx); ok {
@@ -8476,6 +9166,18 @@ func (to *JobSettings) SyncFieldsDuringRead(ctx context.Context, from JobSetting
 		// If a user specified a non-Null, empty list for Tasks, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tasks = from.Tasks
+	}
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() {
+		if toTasks, ok := to.GetTasks(ctx); ok {
+			if fromTasks, ok := from.GetTasks(ctx); ok {
+				for i := range toTasks {
+					if i < len(fromTasks) {
+						toTasks[i].SyncFieldsDuringRead(ctx, fromTasks[i])
+					}
+				}
+				to.SetTasks(ctx, toTasks)
+			}
+		}
 	}
 	if !from.Trigger.IsNull() && !from.Trigger.IsUnknown() {
 		if toTrigger, ok := to.GetTrigger(ctx); ok {
@@ -9177,6 +9879,19 @@ func (to *JobsHealthRules) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Rules = from.Rules
 	}
+	if !from.Rules.IsNull() && !from.Rules.IsUnknown() {
+		if toRules, ok := to.GetRules(ctx); ok {
+			if fromRules, ok := from.GetRules(ctx); ok {
+				// Recursively sync the fields of each Rules element by position.
+				for i := range toRules {
+					if i < len(fromRules) {
+						toRules[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRules[i])
+					}
+				}
+				to.SetRules(ctx, toRules)
+			}
+		}
+	}
 }
 
 func (to *JobsHealthRules) SyncFieldsDuringRead(ctx context.Context, from JobsHealthRules) {
@@ -9185,6 +9900,18 @@ func (to *JobsHealthRules) SyncFieldsDuringRead(ctx context.Context, from JobsHe
 		// If a user specified a non-Null, empty list for Rules, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Rules = from.Rules
+	}
+	if !from.Rules.IsNull() && !from.Rules.IsUnknown() {
+		if toRules, ok := to.GetRules(ctx); ok {
+			if fromRules, ok := from.GetRules(ctx); ok {
+				for i := range toRules {
+					if i < len(fromRules) {
+						toRules[i].SyncFieldsDuringRead(ctx, fromRules[i])
+					}
+				}
+				to.SetRules(ctx, toRules)
+			}
+		}
 	}
 }
 
@@ -9275,6 +10002,19 @@ func (to *ListJobComplianceForPolicyResponse) SyncFieldsDuringCreateOrUpdate(ctx
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Jobs = from.Jobs
 	}
+	if !from.Jobs.IsNull() && !from.Jobs.IsUnknown() {
+		if toJobs, ok := to.GetJobs(ctx); ok {
+			if fromJobs, ok := from.GetJobs(ctx); ok {
+				// Recursively sync the fields of each Jobs element by position.
+				for i := range toJobs {
+					if i < len(fromJobs) {
+						toJobs[i].SyncFieldsDuringCreateOrUpdate(ctx, fromJobs[i])
+					}
+				}
+				to.SetJobs(ctx, toJobs)
+			}
+		}
+	}
 }
 
 func (to *ListJobComplianceForPolicyResponse) SyncFieldsDuringRead(ctx context.Context, from ListJobComplianceForPolicyResponse) {
@@ -9283,6 +10023,18 @@ func (to *ListJobComplianceForPolicyResponse) SyncFieldsDuringRead(ctx context.C
 		// If a user specified a non-Null, empty list for Jobs, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Jobs = from.Jobs
+	}
+	if !from.Jobs.IsNull() && !from.Jobs.IsUnknown() {
+		if toJobs, ok := to.GetJobs(ctx); ok {
+			if fromJobs, ok := from.GetJobs(ctx); ok {
+				for i := range toJobs {
+					if i < len(fromJobs) {
+						toJobs[i].SyncFieldsDuringRead(ctx, fromJobs[i])
+					}
+				}
+				to.SetJobs(ctx, toJobs)
+			}
+		}
 	}
 }
 
@@ -9516,6 +10268,19 @@ func (to *ListJobsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Jobs = from.Jobs
 	}
+	if !from.Jobs.IsNull() && !from.Jobs.IsUnknown() {
+		if toJobs, ok := to.GetJobs(ctx); ok {
+			if fromJobs, ok := from.GetJobs(ctx); ok {
+				// Recursively sync the fields of each Jobs element by position.
+				for i := range toJobs {
+					if i < len(fromJobs) {
+						toJobs[i].SyncFieldsDuringCreateOrUpdate(ctx, fromJobs[i])
+					}
+				}
+				to.SetJobs(ctx, toJobs)
+			}
+		}
+	}
 }
 
 func (to *ListJobsResponse) SyncFieldsDuringRead(ctx context.Context, from ListJobsResponse) {
@@ -9524,6 +10289,18 @@ func (to *ListJobsResponse) SyncFieldsDuringRead(ctx context.Context, from ListJ
 		// If a user specified a non-Null, empty list for Jobs, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Jobs = from.Jobs
+	}
+	if !from.Jobs.IsNull() && !from.Jobs.IsUnknown() {
+		if toJobs, ok := to.GetJobs(ctx); ok {
+			if fromJobs, ok := from.GetJobs(ctx); ok {
+				for i := range toJobs {
+					if i < len(fromJobs) {
+						toJobs[i].SyncFieldsDuringRead(ctx, fromJobs[i])
+					}
+				}
+				to.SetJobs(ctx, toJobs)
+			}
+		}
 	}
 }
 
@@ -9736,6 +10513,19 @@ func (to *ListRunsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Runs = from.Runs
 	}
+	if !from.Runs.IsNull() && !from.Runs.IsUnknown() {
+		if toRuns, ok := to.GetRuns(ctx); ok {
+			if fromRuns, ok := from.GetRuns(ctx); ok {
+				// Recursively sync the fields of each Runs element by position.
+				for i := range toRuns {
+					if i < len(fromRuns) {
+						toRuns[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRuns[i])
+					}
+				}
+				to.SetRuns(ctx, toRuns)
+			}
+		}
+	}
 }
 
 func (to *ListRunsResponse) SyncFieldsDuringRead(ctx context.Context, from ListRunsResponse) {
@@ -9744,6 +10534,18 @@ func (to *ListRunsResponse) SyncFieldsDuringRead(ctx context.Context, from ListR
 		// If a user specified a non-Null, empty list for Runs, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Runs = from.Runs
+	}
+	if !from.Runs.IsNull() && !from.Runs.IsUnknown() {
+		if toRuns, ok := to.GetRuns(ctx); ok {
+			if fromRuns, ok := from.GetRuns(ctx); ok {
+				for i := range toRuns {
+					if i < len(fromRuns) {
+						toRuns[i].SyncFieldsDuringRead(ctx, fromRuns[i])
+					}
+				}
+				to.SetRuns(ctx, toRuns)
+			}
+		}
 	}
 }
 
@@ -10906,6 +11708,19 @@ func (to *PowerBiTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tables = from.Tables
 	}
+	if !from.Tables.IsNull() && !from.Tables.IsUnknown() {
+		if toTables, ok := to.GetTables(ctx); ok {
+			if fromTables, ok := from.GetTables(ctx); ok {
+				// Recursively sync the fields of each Tables element by position.
+				for i := range toTables {
+					if i < len(fromTables) {
+						toTables[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTables[i])
+					}
+				}
+				to.SetTables(ctx, toTables)
+			}
+		}
+	}
 }
 
 func (to *PowerBiTask) SyncFieldsDuringRead(ctx context.Context, from PowerBiTask) {
@@ -10922,6 +11737,18 @@ func (to *PowerBiTask) SyncFieldsDuringRead(ctx context.Context, from PowerBiTas
 		// If a user specified a non-Null, empty list for Tables, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tables = from.Tables
+	}
+	if !from.Tables.IsNull() && !from.Tables.IsUnknown() {
+		if toTables, ok := to.GetTables(ctx); ok {
+			if fromTables, ok := from.GetTables(ctx); ok {
+				for i := range toTables {
+					if i < len(fromTables) {
+						toTables[i].SyncFieldsDuringRead(ctx, fromTables[i])
+					}
+				}
+				to.SetTables(ctx, toTables)
+			}
+		}
 	}
 }
 
@@ -11046,6 +11873,19 @@ func (to *PythonOperatorTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Parameters = from.Parameters
 	}
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() {
+		if toParameters, ok := to.GetParameters(ctx); ok {
+			if fromParameters, ok := from.GetParameters(ctx); ok {
+				// Recursively sync the fields of each Parameters element by position.
+				for i := range toParameters {
+					if i < len(fromParameters) {
+						toParameters[i].SyncFieldsDuringCreateOrUpdate(ctx, fromParameters[i])
+					}
+				}
+				to.SetParameters(ctx, toParameters)
+			}
+		}
+	}
 }
 
 func (to *PythonOperatorTask) SyncFieldsDuringRead(ctx context.Context, from PythonOperatorTask) {
@@ -11054,6 +11894,18 @@ func (to *PythonOperatorTask) SyncFieldsDuringRead(ctx context.Context, from Pyt
 		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Parameters = from.Parameters
+	}
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() {
+		if toParameters, ok := to.GetParameters(ctx); ok {
+			if fromParameters, ok := from.GetParameters(ctx); ok {
+				for i := range toParameters {
+					if i < len(fromParameters) {
+						toParameters[i].SyncFieldsDuringRead(ctx, fromParameters[i])
+					}
+				}
+				to.SetParameters(ctx, toParameters)
+			}
+		}
 	}
 }
 
@@ -13682,9 +14534,8 @@ func (m *ResolvedValues) SetSqlTask(ctx context.Context, v ResolvedParamPairValu
 	m.SqlTask = vs
 }
 
-// Resolved env_vars for an AiRuntimeTask after dynamic-value substitution.
-// Mirrors the task's `resolved_parameters_field` (env_vars) so Jobs can expand
-// `{{tasks.<key>.values.<name>}}` references before submission.
+// Resolved values for an AiRuntimeTask after dynamic-value substitution, so
+// Jobs can expand `{{tasks.<key>.values.<name>}}` references before submission.
 type ResolvedValuesAiRuntimeTaskResolvedValues struct {
 }
 
@@ -13752,6 +14603,10 @@ type Run struct {
 	// The creator user name. This field won’t be included in the response if
 	// the user has already been deleted.
 	CreatorUserName types.String `tfsdk:"creator_user_name"`
+	// ID of the deployment that produced the job when this run was created.
+	// Used to look up deployment metadata from the Deployment Metadata service.
+	// Only set for job runs of jobs with a `BUNDLE` deployment.
+	DeploymentId types.String `tfsdk:"deployment_id"`
 	// Description of the run
 	Description types.String `tfsdk:"description"`
 	// The actual performance target used by the serverless run during
@@ -13868,6 +14723,11 @@ type Run struct {
 	Trigger types.String `tfsdk:"trigger"`
 
 	TriggerInfo types.Object `tfsdk:"trigger_info"`
+	// ID of the deployment version that produced the job when this run was
+	// created. Identifies a specific snapshot of the deployment in the
+	// Deployment Metadata service. Only set for job runs of jobs with a
+	// `BUNDLE` deployment.
+	VersionId types.String `tfsdk:"version_id"`
 }
 
 func (to *Run) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Run) {
@@ -13904,17 +14764,56 @@ func (to *Run) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Run) {
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Iterations = from.Iterations
 	}
+	if !from.Iterations.IsNull() && !from.Iterations.IsUnknown() {
+		if toIterations, ok := to.GetIterations(ctx); ok {
+			if fromIterations, ok := from.GetIterations(ctx); ok {
+				// Recursively sync the fields of each Iterations element by position.
+				for i := range toIterations {
+					if i < len(fromIterations) {
+						toIterations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromIterations[i])
+					}
+				}
+				to.SetIterations(ctx, toIterations)
+			}
+		}
+	}
 	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() && to.JobClusters.IsNull() && len(from.JobClusters.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for JobClusters, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.JobClusters = from.JobClusters
 	}
+	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() {
+		if toJobClusters, ok := to.GetJobClusters(ctx); ok {
+			if fromJobClusters, ok := from.GetJobClusters(ctx); ok {
+				// Recursively sync the fields of each JobClusters element by position.
+				for i := range toJobClusters {
+					if i < len(fromJobClusters) {
+						toJobClusters[i].SyncFieldsDuringCreateOrUpdate(ctx, fromJobClusters[i])
+					}
+				}
+				to.SetJobClusters(ctx, toJobClusters)
+			}
+		}
+	}
 	if !from.JobParameters.IsNull() && !from.JobParameters.IsUnknown() && to.JobParameters.IsNull() && len(from.JobParameters.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for JobParameters, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.JobParameters = from.JobParameters
+	}
+	if !from.JobParameters.IsNull() && !from.JobParameters.IsUnknown() {
+		if toJobParameters, ok := to.GetJobParameters(ctx); ok {
+			if fromJobParameters, ok := from.GetJobParameters(ctx); ok {
+				// Recursively sync the fields of each JobParameters element by position.
+				for i := range toJobParameters {
+					if i < len(fromJobParameters) {
+						toJobParameters[i].SyncFieldsDuringCreateOrUpdate(ctx, fromJobParameters[i])
+					}
+				}
+				to.SetJobParameters(ctx, toJobParameters)
+			}
+		}
 	}
 	if !from.OverridingParameters.IsNull() && !from.OverridingParameters.IsUnknown() {
 		if toOverridingParameters, ok := to.GetOverridingParameters(ctx); ok {
@@ -13930,6 +14829,19 @@ func (to *Run) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Run) {
 		// If a user specified a non-Null, empty list for RepairHistory, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RepairHistory = from.RepairHistory
+	}
+	if !from.RepairHistory.IsNull() && !from.RepairHistory.IsUnknown() {
+		if toRepairHistory, ok := to.GetRepairHistory(ctx); ok {
+			if fromRepairHistory, ok := from.GetRepairHistory(ctx); ok {
+				// Recursively sync the fields of each RepairHistory element by position.
+				for i := range toRepairHistory {
+					if i < len(fromRepairHistory) {
+						toRepairHistory[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRepairHistory[i])
+					}
+				}
+				to.SetRepairHistory(ctx, toRepairHistory)
+			}
+		}
 	}
 	if !from.Schedule.IsNull() && !from.Schedule.IsUnknown() {
 		if toSchedule, ok := to.GetSchedule(ctx); ok {
@@ -13963,6 +14875,19 @@ func (to *Run) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Run) {
 		// If a user specified a non-Null, empty list for Tasks, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tasks = from.Tasks
+	}
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() {
+		if toTasks, ok := to.GetTasks(ctx); ok {
+			if fromTasks, ok := from.GetTasks(ctx); ok {
+				// Recursively sync the fields of each Tasks element by position.
+				for i := range toTasks {
+					if i < len(fromTasks) {
+						toTasks[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTasks[i])
+					}
+				}
+				to.SetTasks(ctx, toTasks)
+			}
+		}
 	}
 	if !from.TriggerInfo.IsNull() && !from.TriggerInfo.IsUnknown() {
 		if toTriggerInfo, ok := to.GetTriggerInfo(ctx); ok {
@@ -14006,17 +14931,53 @@ func (to *Run) SyncFieldsDuringRead(ctx context.Context, from Run) {
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Iterations = from.Iterations
 	}
+	if !from.Iterations.IsNull() && !from.Iterations.IsUnknown() {
+		if toIterations, ok := to.GetIterations(ctx); ok {
+			if fromIterations, ok := from.GetIterations(ctx); ok {
+				for i := range toIterations {
+					if i < len(fromIterations) {
+						toIterations[i].SyncFieldsDuringRead(ctx, fromIterations[i])
+					}
+				}
+				to.SetIterations(ctx, toIterations)
+			}
+		}
+	}
 	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() && to.JobClusters.IsNull() && len(from.JobClusters.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for JobClusters, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.JobClusters = from.JobClusters
 	}
+	if !from.JobClusters.IsNull() && !from.JobClusters.IsUnknown() {
+		if toJobClusters, ok := to.GetJobClusters(ctx); ok {
+			if fromJobClusters, ok := from.GetJobClusters(ctx); ok {
+				for i := range toJobClusters {
+					if i < len(fromJobClusters) {
+						toJobClusters[i].SyncFieldsDuringRead(ctx, fromJobClusters[i])
+					}
+				}
+				to.SetJobClusters(ctx, toJobClusters)
+			}
+		}
+	}
 	if !from.JobParameters.IsNull() && !from.JobParameters.IsUnknown() && to.JobParameters.IsNull() && len(from.JobParameters.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for JobParameters, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.JobParameters = from.JobParameters
+	}
+	if !from.JobParameters.IsNull() && !from.JobParameters.IsUnknown() {
+		if toJobParameters, ok := to.GetJobParameters(ctx); ok {
+			if fromJobParameters, ok := from.GetJobParameters(ctx); ok {
+				for i := range toJobParameters {
+					if i < len(fromJobParameters) {
+						toJobParameters[i].SyncFieldsDuringRead(ctx, fromJobParameters[i])
+					}
+				}
+				to.SetJobParameters(ctx, toJobParameters)
+			}
+		}
 	}
 	if !from.OverridingParameters.IsNull() && !from.OverridingParameters.IsUnknown() {
 		if toOverridingParameters, ok := to.GetOverridingParameters(ctx); ok {
@@ -14031,6 +14992,18 @@ func (to *Run) SyncFieldsDuringRead(ctx context.Context, from Run) {
 		// If a user specified a non-Null, empty list for RepairHistory, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RepairHistory = from.RepairHistory
+	}
+	if !from.RepairHistory.IsNull() && !from.RepairHistory.IsUnknown() {
+		if toRepairHistory, ok := to.GetRepairHistory(ctx); ok {
+			if fromRepairHistory, ok := from.GetRepairHistory(ctx); ok {
+				for i := range toRepairHistory {
+					if i < len(fromRepairHistory) {
+						toRepairHistory[i].SyncFieldsDuringRead(ctx, fromRepairHistory[i])
+					}
+				}
+				to.SetRepairHistory(ctx, toRepairHistory)
+			}
+		}
 	}
 	if !from.Schedule.IsNull() && !from.Schedule.IsUnknown() {
 		if toSchedule, ok := to.GetSchedule(ctx); ok {
@@ -14062,6 +15035,18 @@ func (to *Run) SyncFieldsDuringRead(ctx context.Context, from Run) {
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tasks = from.Tasks
 	}
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() {
+		if toTasks, ok := to.GetTasks(ctx); ok {
+			if fromTasks, ok := from.GetTasks(ctx); ok {
+				for i := range toTasks {
+					if i < len(fromTasks) {
+						toTasks[i].SyncFieldsDuringRead(ctx, fromTasks[i])
+					}
+				}
+				to.SetTasks(ctx, toTasks)
+			}
+		}
+	}
 	if !from.TriggerInfo.IsNull() && !from.TriggerInfo.IsUnknown() {
 		if toTriggerInfo, ok := to.GetTriggerInfo(ctx); ok {
 			if fromTriggerInfo, ok := from.GetTriggerInfo(ctx); ok {
@@ -14078,6 +15063,7 @@ func (m Run) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilde
 	attrs["cluster_instance"] = attrs["cluster_instance"].SetOptional()
 	attrs["cluster_spec"] = attrs["cluster_spec"].SetOptional()
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
+	attrs["deployment_id"] = attrs["deployment_id"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
 	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
@@ -14109,6 +15095,7 @@ func (m Run) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilde
 	attrs["tasks"] = attrs["tasks"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
 	attrs["trigger_info"] = attrs["trigger_info"].SetOptional()
+	attrs["version_id"] = attrs["version_id"].SetOptional()
 
 	return attrs
 }
@@ -14150,6 +15137,7 @@ func (m Run) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"cluster_instance":             m.ClusterInstance,
 			"cluster_spec":                 m.ClusterSpec,
 			"creator_user_name":            m.CreatorUserName,
+			"deployment_id":                m.DeploymentId,
 			"description":                  m.Description,
 			"effective_performance_target": m.EffectivePerformanceTarget,
 			"effective_usage_policy_id":    m.EffectiveUsagePolicyId,
@@ -14181,6 +15169,7 @@ func (m Run) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"tasks":                        m.Tasks,
 			"trigger":                      m.Trigger,
 			"trigger_info":                 m.TriggerInfo,
+			"version_id":                   m.VersionId,
 		})
 }
 
@@ -14193,6 +15182,7 @@ func (m Run) Type(ctx context.Context) attr.Type {
 			"cluster_instance":             ClusterInstance{}.Type(ctx),
 			"cluster_spec":                 ClusterSpec{}.Type(ctx),
 			"creator_user_name":            types.StringType,
+			"deployment_id":                types.StringType,
 			"description":                  types.StringType,
 			"effective_performance_target": types.StringType,
 			"effective_usage_policy_id":    types.StringType,
@@ -14234,6 +15224,7 @@ func (m Run) Type(ctx context.Context) attr.Type {
 			},
 			"trigger":      types.StringType,
 			"trigger_info": TriggerInfo{}.Type(ctx),
+			"version_id":   types.StringType,
 		},
 	}
 }
@@ -15358,10 +16349,6 @@ type RunNow struct {
 	// launched with that idempotency token.
 	//
 	// This token must have at most 64 characters.
-	//
-	// For more information, see [How to ensure idempotency for jobs].
-	//
-	// [How to ensure idempotency for jobs]: https://kb.databricks.com/jobs/jobs-idempotency.html
 	IdempotencyToken types.String `tfsdk:"idempotency_token"`
 	// A list of parameters for jobs with Spark JAR tasks, for example
 	// `"jar_params": ["john doe", "35"]`. The parameters are used to invoke the
@@ -17314,8 +18301,9 @@ func (m *RunStatus) SetTerminationDetails(ctx context.Context, v TerminationDeta
 
 // Used when outputting a child run, in GetRun or ListRuns.
 type RunTask struct {
-	// The task runs a multi-node GPU compute workload on Databricks AI Runtime.
-	// External-facing surface; mirrors the AIR CLI (fka SGCLI) v2 YAML schema.
+	// The task runs a multi-gpu compute workload on Databricks AI Runtime.
+	// Specify the accelerator type and count, the command to run, and where the
+	// workload's code and MLflow output are stored.
 	AiRuntimeTask types.Object `tfsdk:"ai_runtime_task"`
 	// The task evaluates a Databricks alert and sends notifications to
 	// subscribers when the `alert_task` field is present.
@@ -17619,6 +18607,19 @@ func (to *RunTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunT
 		// set the resulting resource state to the empty list to match the planned value.
 		to.DependsOn = from.DependsOn
 	}
+	if !from.DependsOn.IsNull() && !from.DependsOn.IsUnknown() {
+		if toDependsOn, ok := to.GetDependsOn(ctx); ok {
+			if fromDependsOn, ok := from.GetDependsOn(ctx); ok {
+				// Recursively sync the fields of each DependsOn element by position.
+				for i := range toDependsOn {
+					if i < len(fromDependsOn) {
+						toDependsOn[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDependsOn[i])
+					}
+				}
+				to.SetDependsOn(ctx, toDependsOn)
+			}
+		}
+	}
 	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
 		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
 			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
@@ -17660,6 +18661,19 @@ func (to *RunTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunT
 		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Libraries = from.Libraries
+	}
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() {
+		if toLibraries, ok := to.GetLibraries(ctx); ok {
+			if fromLibraries, ok := from.GetLibraries(ctx); ok {
+				// Recursively sync the fields of each Libraries element by position.
+				for i := range toLibraries {
+					if i < len(fromLibraries) {
+						toLibraries[i].SyncFieldsDuringCreateOrUpdate(ctx, fromLibraries[i])
+					}
+				}
+				to.SetLibraries(ctx, toLibraries)
+			}
+		}
 	}
 	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
 		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
@@ -17898,6 +18912,18 @@ func (to *RunTask) SyncFieldsDuringRead(ctx context.Context, from RunTask) {
 		// set the resulting resource state to the empty list to match the planned value.
 		to.DependsOn = from.DependsOn
 	}
+	if !from.DependsOn.IsNull() && !from.DependsOn.IsUnknown() {
+		if toDependsOn, ok := to.GetDependsOn(ctx); ok {
+			if fromDependsOn, ok := from.GetDependsOn(ctx); ok {
+				for i := range toDependsOn {
+					if i < len(fromDependsOn) {
+						toDependsOn[i].SyncFieldsDuringRead(ctx, fromDependsOn[i])
+					}
+				}
+				to.SetDependsOn(ctx, toDependsOn)
+			}
+		}
+	}
 	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
 		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
 			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
@@ -17935,6 +18961,18 @@ func (to *RunTask) SyncFieldsDuringRead(ctx context.Context, from RunTask) {
 		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Libraries = from.Libraries
+	}
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() {
+		if toLibraries, ok := to.GetLibraries(ctx); ok {
+			if fromLibraries, ok := from.GetLibraries(ctx); ok {
+				for i := range toLibraries {
+					if i < len(fromLibraries) {
+						toLibraries[i].SyncFieldsDuringRead(ctx, fromLibraries[i])
+					}
+				}
+				to.SetLibraries(ctx, toLibraries)
+			}
+		}
 	}
 	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
 		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
@@ -19547,6 +20585,19 @@ func (to *SqlAlertOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SqlStatements = from.SqlStatements
 	}
+	if !from.SqlStatements.IsNull() && !from.SqlStatements.IsUnknown() {
+		if toSqlStatements, ok := to.GetSqlStatements(ctx); ok {
+			if fromSqlStatements, ok := from.GetSqlStatements(ctx); ok {
+				// Recursively sync the fields of each SqlStatements element by position.
+				for i := range toSqlStatements {
+					if i < len(fromSqlStatements) {
+						toSqlStatements[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSqlStatements[i])
+					}
+				}
+				to.SetSqlStatements(ctx, toSqlStatements)
+			}
+		}
+	}
 }
 
 func (to *SqlAlertOutput) SyncFieldsDuringRead(ctx context.Context, from SqlAlertOutput) {
@@ -19555,6 +20606,18 @@ func (to *SqlAlertOutput) SyncFieldsDuringRead(ctx context.Context, from SqlAler
 		// If a user specified a non-Null, empty list for SqlStatements, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SqlStatements = from.SqlStatements
+	}
+	if !from.SqlStatements.IsNull() && !from.SqlStatements.IsUnknown() {
+		if toSqlStatements, ok := to.GetSqlStatements(ctx); ok {
+			if fromSqlStatements, ok := from.GetSqlStatements(ctx); ok {
+				for i := range toSqlStatements {
+					if i < len(fromSqlStatements) {
+						toSqlStatements[i].SyncFieldsDuringRead(ctx, fromSqlStatements[i])
+					}
+				}
+				to.SetSqlStatements(ctx, toSqlStatements)
+			}
+		}
 	}
 }
 
@@ -19840,6 +20903,19 @@ func (to *SqlDashboardOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Widgets = from.Widgets
 	}
+	if !from.Widgets.IsNull() && !from.Widgets.IsUnknown() {
+		if toWidgets, ok := to.GetWidgets(ctx); ok {
+			if fromWidgets, ok := from.GetWidgets(ctx); ok {
+				// Recursively sync the fields of each Widgets element by position.
+				for i := range toWidgets {
+					if i < len(fromWidgets) {
+						toWidgets[i].SyncFieldsDuringCreateOrUpdate(ctx, fromWidgets[i])
+					}
+				}
+				to.SetWidgets(ctx, toWidgets)
+			}
+		}
+	}
 }
 
 func (to *SqlDashboardOutput) SyncFieldsDuringRead(ctx context.Context, from SqlDashboardOutput) {
@@ -19848,6 +20924,18 @@ func (to *SqlDashboardOutput) SyncFieldsDuringRead(ctx context.Context, from Sql
 		// If a user specified a non-Null, empty list for Widgets, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Widgets = from.Widgets
+	}
+	if !from.Widgets.IsNull() && !from.Widgets.IsUnknown() {
+		if toWidgets, ok := to.GetWidgets(ctx); ok {
+			if fromWidgets, ok := from.GetWidgets(ctx); ok {
+				for i := range toWidgets {
+					if i < len(fromWidgets) {
+						toWidgets[i].SyncFieldsDuringRead(ctx, fromWidgets[i])
+					}
+				}
+				to.SetWidgets(ctx, toWidgets)
+			}
+		}
 	}
 }
 
@@ -20299,6 +21387,19 @@ func (to *SqlQueryOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SqlStatements = from.SqlStatements
 	}
+	if !from.SqlStatements.IsNull() && !from.SqlStatements.IsUnknown() {
+		if toSqlStatements, ok := to.GetSqlStatements(ctx); ok {
+			if fromSqlStatements, ok := from.GetSqlStatements(ctx); ok {
+				// Recursively sync the fields of each SqlStatements element by position.
+				for i := range toSqlStatements {
+					if i < len(fromSqlStatements) {
+						toSqlStatements[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSqlStatements[i])
+					}
+				}
+				to.SetSqlStatements(ctx, toSqlStatements)
+			}
+		}
+	}
 }
 
 func (to *SqlQueryOutput) SyncFieldsDuringRead(ctx context.Context, from SqlQueryOutput) {
@@ -20307,6 +21408,18 @@ func (to *SqlQueryOutput) SyncFieldsDuringRead(ctx context.Context, from SqlQuer
 		// If a user specified a non-Null, empty list for SqlStatements, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.SqlStatements = from.SqlStatements
+	}
+	if !from.SqlStatements.IsNull() && !from.SqlStatements.IsUnknown() {
+		if toSqlStatements, ok := to.GetSqlStatements(ctx); ok {
+			if fromSqlStatements, ok := from.GetSqlStatements(ctx); ok {
+				for i := range toSqlStatements {
+					if i < len(fromSqlStatements) {
+						toSqlStatements[i].SyncFieldsDuringRead(ctx, fromSqlStatements[i])
+					}
+				}
+				to.SetSqlStatements(ctx, toSqlStatements)
+			}
+		}
 	}
 }
 
@@ -20733,6 +21846,19 @@ func (to *SqlTaskAlert) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Subscriptions = from.Subscriptions
 	}
+	if !from.Subscriptions.IsNull() && !from.Subscriptions.IsUnknown() {
+		if toSubscriptions, ok := to.GetSubscriptions(ctx); ok {
+			if fromSubscriptions, ok := from.GetSubscriptions(ctx); ok {
+				// Recursively sync the fields of each Subscriptions element by position.
+				for i := range toSubscriptions {
+					if i < len(fromSubscriptions) {
+						toSubscriptions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSubscriptions[i])
+					}
+				}
+				to.SetSubscriptions(ctx, toSubscriptions)
+			}
+		}
+	}
 }
 
 func (to *SqlTaskAlert) SyncFieldsDuringRead(ctx context.Context, from SqlTaskAlert) {
@@ -20741,6 +21867,18 @@ func (to *SqlTaskAlert) SyncFieldsDuringRead(ctx context.Context, from SqlTaskAl
 		// If a user specified a non-Null, empty list for Subscriptions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Subscriptions = from.Subscriptions
+	}
+	if !from.Subscriptions.IsNull() && !from.Subscriptions.IsUnknown() {
+		if toSubscriptions, ok := to.GetSubscriptions(ctx); ok {
+			if fromSubscriptions, ok := from.GetSubscriptions(ctx); ok {
+				for i := range toSubscriptions {
+					if i < len(fromSubscriptions) {
+						toSubscriptions[i].SyncFieldsDuringRead(ctx, fromSubscriptions[i])
+					}
+				}
+				to.SetSubscriptions(ctx, toSubscriptions)
+			}
+		}
 	}
 }
 
@@ -20836,6 +21974,19 @@ func (to *SqlTaskDashboard) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Subscriptions = from.Subscriptions
 	}
+	if !from.Subscriptions.IsNull() && !from.Subscriptions.IsUnknown() {
+		if toSubscriptions, ok := to.GetSubscriptions(ctx); ok {
+			if fromSubscriptions, ok := from.GetSubscriptions(ctx); ok {
+				// Recursively sync the fields of each Subscriptions element by position.
+				for i := range toSubscriptions {
+					if i < len(fromSubscriptions) {
+						toSubscriptions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSubscriptions[i])
+					}
+				}
+				to.SetSubscriptions(ctx, toSubscriptions)
+			}
+		}
+	}
 }
 
 func (to *SqlTaskDashboard) SyncFieldsDuringRead(ctx context.Context, from SqlTaskDashboard) {
@@ -20844,6 +21995,18 @@ func (to *SqlTaskDashboard) SyncFieldsDuringRead(ctx context.Context, from SqlTa
 		// If a user specified a non-Null, empty list for Subscriptions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Subscriptions = from.Subscriptions
+	}
+	if !from.Subscriptions.IsNull() && !from.Subscriptions.IsUnknown() {
+		if toSubscriptions, ok := to.GetSubscriptions(ctx); ok {
+			if fromSubscriptions, ok := from.GetSubscriptions(ctx); ok {
+				for i := range toSubscriptions {
+					if i < len(fromSubscriptions) {
+						toSubscriptions[i].SyncFieldsDuringRead(ctx, fromSubscriptions[i])
+					}
+				}
+				to.SetSubscriptions(ctx, toSubscriptions)
+			}
+		}
 	}
 }
 
@@ -21126,15 +22289,20 @@ type SubmitRun struct {
 	// launched with that idempotency token.
 	//
 	// This token must have at most 64 characters.
-	//
-	// For more information, see [How to ensure idempotency for jobs].
-	//
-	// [How to ensure idempotency for jobs]: https://kb.databricks.com/jobs/jobs-idempotency.html
 	IdempotencyToken types.String `tfsdk:"idempotency_token"`
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// run.
 	NotificationSettings types.Object `tfsdk:"notification_settings"`
+	// The performance mode on a serverless one-time run. This field determines
+	// the level of compute performance or cost-efficiency for the run. The
+	// performance target does not apply to tasks that run on Serverless GPU
+	// compute.
+	//
+	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
+	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance.
+	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// The queue settings of the one-time run.
 	Queue types.Object `tfsdk:"queue"`
 	// Specifies the user or service principal that the job runs as. If not
@@ -21163,6 +22331,19 @@ func (to *SubmitRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Su
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 	if !from.BudgetPolicyId.IsUnknown() && !from.BudgetPolicyId.IsNull() {
 		// BudgetPolicyId is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.BudgetPolicyId = from.BudgetPolicyId
@@ -21181,6 +22362,19 @@ func (to *SubmitRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Su
 		// If a user specified a non-Null, empty list for Environments, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Environments = from.Environments
+	}
+	if !from.Environments.IsNull() && !from.Environments.IsUnknown() {
+		if toEnvironments, ok := to.GetEnvironments(ctx); ok {
+			if fromEnvironments, ok := from.GetEnvironments(ctx); ok {
+				// Recursively sync the fields of each Environments element by position.
+				for i := range toEnvironments {
+					if i < len(fromEnvironments) {
+						toEnvironments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEnvironments[i])
+					}
+				}
+				to.SetEnvironments(ctx, toEnvironments)
+			}
+		}
 	}
 	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
 		if toGitSource, ok := to.GetGitSource(ctx); ok {
@@ -21233,6 +22427,19 @@ func (to *SubmitRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Su
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tasks = from.Tasks
 	}
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() {
+		if toTasks, ok := to.GetTasks(ctx); ok {
+			if fromTasks, ok := from.GetTasks(ctx); ok {
+				// Recursively sync the fields of each Tasks element by position.
+				for i := range toTasks {
+					if i < len(fromTasks) {
+						toTasks[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTasks[i])
+					}
+				}
+				to.SetTasks(ctx, toTasks)
+			}
+		}
+	}
 	if !from.UsagePolicyId.IsUnknown() && !from.UsagePolicyId.IsNull() {
 		// UsagePolicyId is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.UsagePolicyId = from.UsagePolicyId
@@ -21255,6 +22462,18 @@ func (to *SubmitRun) SyncFieldsDuringRead(ctx context.Context, from SubmitRun) {
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 	if !from.BudgetPolicyId.IsUnknown() && !from.BudgetPolicyId.IsNull() {
 		// BudgetPolicyId is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.BudgetPolicyId = from.BudgetPolicyId
@@ -21272,6 +22491,18 @@ func (to *SubmitRun) SyncFieldsDuringRead(ctx context.Context, from SubmitRun) {
 		// If a user specified a non-Null, empty list for Environments, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Environments = from.Environments
+	}
+	if !from.Environments.IsNull() && !from.Environments.IsUnknown() {
+		if toEnvironments, ok := to.GetEnvironments(ctx); ok {
+			if fromEnvironments, ok := from.GetEnvironments(ctx); ok {
+				for i := range toEnvironments {
+					if i < len(fromEnvironments) {
+						toEnvironments[i].SyncFieldsDuringRead(ctx, fromEnvironments[i])
+					}
+				}
+				to.SetEnvironments(ctx, toEnvironments)
+			}
+		}
 	}
 	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
 		if toGitSource, ok := to.GetGitSource(ctx); ok {
@@ -21319,6 +22550,18 @@ func (to *SubmitRun) SyncFieldsDuringRead(ctx context.Context, from SubmitRun) {
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tasks = from.Tasks
 	}
+	if !from.Tasks.IsNull() && !from.Tasks.IsUnknown() {
+		if toTasks, ok := to.GetTasks(ctx); ok {
+			if fromTasks, ok := from.GetTasks(ctx); ok {
+				for i := range toTasks {
+					if i < len(fromTasks) {
+						toTasks[i].SyncFieldsDuringRead(ctx, fromTasks[i])
+					}
+				}
+				to.SetTasks(ctx, toTasks)
+			}
+		}
+	}
 	if !from.UsagePolicyId.IsUnknown() && !from.UsagePolicyId.IsNull() {
 		// UsagePolicyId is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.UsagePolicyId = from.UsagePolicyId
@@ -21344,6 +22587,7 @@ func (m SubmitRun) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["health"] = attrs["health"].SetOptional()
 	attrs["idempotency_token"] = attrs["idempotency_token"].SetOptional()
 	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
+	attrs["performance_target"] = attrs["performance_target"].SetOptional()
 	attrs["queue"] = attrs["queue"].SetOptional()
 	attrs["run_as"] = attrs["run_as"].SetOptional()
 	attrs["run_name"] = attrs["run_name"].SetOptional()
@@ -21394,6 +22638,7 @@ func (m SubmitRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"health":                m.Health,
 			"idempotency_token":     m.IdempotencyToken,
 			"notification_settings": m.NotificationSettings,
+			"performance_target":    m.PerformanceTarget,
 			"queue":                 m.Queue,
 			"run_as":                m.RunAs,
 			"run_name":              m.RunName,
@@ -21420,6 +22665,7 @@ func (m SubmitRun) Type(ctx context.Context) attr.Type {
 			"health":                JobsHealthRules{}.Type(ctx),
 			"idempotency_token":     types.StringType,
 			"notification_settings": JobNotificationSettings{}.Type(ctx),
+			"performance_target":    types.StringType,
 			"queue":                 QueueSettings{}.Type(ctx),
 			"run_as":                JobRunAs{}.Type(ctx),
 			"run_name":              types.StringType,
@@ -21736,8 +22982,9 @@ func (m SubmitRunResponse) Type(ctx context.Context) attr.Type {
 }
 
 type SubmitTask struct {
-	// The task runs a multi-node GPU compute workload on Databricks AI Runtime.
-	// External-facing surface; mirrors the AIR CLI (fka SGCLI) v2 YAML schema.
+	// The task runs a multi-gpu compute workload on Databricks AI Runtime.
+	// Specify the accelerator type and count, the command to run, and where the
+	// workload's code and MLflow output are stored.
 	AiRuntimeTask types.Object `tfsdk:"ai_runtime_task"`
 	// The task evaluates a Databricks alert and sends notifications to
 	// subscribers when the `alert_task` field is present.
@@ -21956,6 +23203,19 @@ func (to *SubmitTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from S
 		// set the resulting resource state to the empty list to match the planned value.
 		to.DependsOn = from.DependsOn
 	}
+	if !from.DependsOn.IsNull() && !from.DependsOn.IsUnknown() {
+		if toDependsOn, ok := to.GetDependsOn(ctx); ok {
+			if fromDependsOn, ok := from.GetDependsOn(ctx); ok {
+				// Recursively sync the fields of each DependsOn element by position.
+				for i := range toDependsOn {
+					if i < len(fromDependsOn) {
+						toDependsOn[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDependsOn[i])
+					}
+				}
+				to.SetDependsOn(ctx, toDependsOn)
+			}
+		}
+	}
 	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
 		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
 			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
@@ -21997,6 +23257,19 @@ func (to *SubmitTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from S
 		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Libraries = from.Libraries
+	}
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() {
+		if toLibraries, ok := to.GetLibraries(ctx); ok {
+			if fromLibraries, ok := from.GetLibraries(ctx); ok {
+				// Recursively sync the fields of each Libraries element by position.
+				for i := range toLibraries {
+					if i < len(fromLibraries) {
+						toLibraries[i].SyncFieldsDuringCreateOrUpdate(ctx, fromLibraries[i])
+					}
+				}
+				to.SetLibraries(ctx, toLibraries)
+			}
+		}
 	}
 	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
 		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
@@ -22200,6 +23473,18 @@ func (to *SubmitTask) SyncFieldsDuringRead(ctx context.Context, from SubmitTask)
 		// set the resulting resource state to the empty list to match the planned value.
 		to.DependsOn = from.DependsOn
 	}
+	if !from.DependsOn.IsNull() && !from.DependsOn.IsUnknown() {
+		if toDependsOn, ok := to.GetDependsOn(ctx); ok {
+			if fromDependsOn, ok := from.GetDependsOn(ctx); ok {
+				for i := range toDependsOn {
+					if i < len(fromDependsOn) {
+						toDependsOn[i].SyncFieldsDuringRead(ctx, fromDependsOn[i])
+					}
+				}
+				to.SetDependsOn(ctx, toDependsOn)
+			}
+		}
+	}
 	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
 		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
 			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
@@ -22237,6 +23522,18 @@ func (to *SubmitTask) SyncFieldsDuringRead(ctx context.Context, from SubmitTask)
 		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Libraries = from.Libraries
+	}
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() {
+		if toLibraries, ok := to.GetLibraries(ctx); ok {
+			if fromLibraries, ok := from.GetLibraries(ctx); ok {
+				for i := range toLibraries {
+					if i < len(fromLibraries) {
+						toLibraries[i].SyncFieldsDuringRead(ctx, fromLibraries[i])
+					}
+				}
+				to.SetLibraries(ctx, toLibraries)
+			}
+		}
 	}
 	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
 		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
@@ -23249,6 +24546,19 @@ func (to *Subscription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Subscribers = from.Subscribers
 	}
+	if !from.Subscribers.IsNull() && !from.Subscribers.IsUnknown() {
+		if toSubscribers, ok := to.GetSubscribers(ctx); ok {
+			if fromSubscribers, ok := from.GetSubscribers(ctx); ok {
+				// Recursively sync the fields of each Subscribers element by position.
+				for i := range toSubscribers {
+					if i < len(fromSubscribers) {
+						toSubscribers[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSubscribers[i])
+					}
+				}
+				to.SetSubscribers(ctx, toSubscribers)
+			}
+		}
+	}
 }
 
 func (to *Subscription) SyncFieldsDuringRead(ctx context.Context, from Subscription) {
@@ -23257,6 +24567,18 @@ func (to *Subscription) SyncFieldsDuringRead(ctx context.Context, from Subscript
 		// If a user specified a non-Null, empty list for Subscribers, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Subscribers = from.Subscribers
+	}
+	if !from.Subscribers.IsNull() && !from.Subscribers.IsUnknown() {
+		if toSubscribers, ok := to.GetSubscribers(ctx); ok {
+			if fromSubscribers, ok := from.GetSubscribers(ctx); ok {
+				for i := range toSubscribers {
+					if i < len(fromSubscribers) {
+						toSubscribers[i].SyncFieldsDuringRead(ctx, fromSubscribers[i])
+					}
+				}
+				to.SetSubscribers(ctx, toSubscribers)
+			}
+		}
 	}
 }
 
@@ -23456,6 +24778,19 @@ func (to *TableTriggerState) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.LastSeenTableStates = from.LastSeenTableStates
 	}
+	if !from.LastSeenTableStates.IsNull() && !from.LastSeenTableStates.IsUnknown() {
+		if toLastSeenTableStates, ok := to.GetLastSeenTableStates(ctx); ok {
+			if fromLastSeenTableStates, ok := from.GetLastSeenTableStates(ctx); ok {
+				// Recursively sync the fields of each LastSeenTableStates element by position.
+				for i := range toLastSeenTableStates {
+					if i < len(fromLastSeenTableStates) {
+						toLastSeenTableStates[i].SyncFieldsDuringCreateOrUpdate(ctx, fromLastSeenTableStates[i])
+					}
+				}
+				to.SetLastSeenTableStates(ctx, toLastSeenTableStates)
+			}
+		}
+	}
 }
 
 func (to *TableTriggerState) SyncFieldsDuringRead(ctx context.Context, from TableTriggerState) {
@@ -23464,6 +24799,18 @@ func (to *TableTriggerState) SyncFieldsDuringRead(ctx context.Context, from Tabl
 		// If a user specified a non-Null, empty list for LastSeenTableStates, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.LastSeenTableStates = from.LastSeenTableStates
+	}
+	if !from.LastSeenTableStates.IsNull() && !from.LastSeenTableStates.IsUnknown() {
+		if toLastSeenTableStates, ok := to.GetLastSeenTableStates(ctx); ok {
+			if fromLastSeenTableStates, ok := from.GetLastSeenTableStates(ctx); ok {
+				for i := range toLastSeenTableStates {
+					if i < len(fromLastSeenTableStates) {
+						toLastSeenTableStates[i].SyncFieldsDuringRead(ctx, fromLastSeenTableStates[i])
+					}
+				}
+				to.SetLastSeenTableStates(ctx, toLastSeenTableStates)
+			}
+		}
 	}
 }
 
@@ -23637,8 +24984,9 @@ func (m *TableUpdateTriggerConfiguration) SetTableNames(ctx context.Context, v [
 }
 
 type Task struct {
-	// The task runs a multi-node GPU compute workload on Databricks AI Runtime.
-	// External-facing surface; mirrors the AIR CLI (fka SGCLI) v2 YAML schema.
+	// The task runs a multi-gpu compute workload on Databricks AI Runtime.
+	// Specify the accelerator type and count, the command to run, and where the
+	// workload's code and MLflow output are stored.
 	AiRuntimeTask types.Object `tfsdk:"ai_runtime_task"`
 	// The task evaluates a Databricks alert and sends notifications to
 	// subscribers when the `alert_task` field is present.
@@ -23862,6 +25210,19 @@ func (to *Task) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Task) {
 		// set the resulting resource state to the empty list to match the planned value.
 		to.DependsOn = from.DependsOn
 	}
+	if !from.DependsOn.IsNull() && !from.DependsOn.IsUnknown() {
+		if toDependsOn, ok := to.GetDependsOn(ctx); ok {
+			if fromDependsOn, ok := from.GetDependsOn(ctx); ok {
+				// Recursively sync the fields of each DependsOn element by position.
+				for i := range toDependsOn {
+					if i < len(fromDependsOn) {
+						toDependsOn[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDependsOn[i])
+					}
+				}
+				to.SetDependsOn(ctx, toDependsOn)
+			}
+		}
+	}
 	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
 		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
 			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
@@ -23903,6 +25264,19 @@ func (to *Task) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Task) {
 		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Libraries = from.Libraries
+	}
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() {
+		if toLibraries, ok := to.GetLibraries(ctx); ok {
+			if fromLibraries, ok := from.GetLibraries(ctx); ok {
+				// Recursively sync the fields of each Libraries element by position.
+				for i := range toLibraries {
+					if i < len(fromLibraries) {
+						toLibraries[i].SyncFieldsDuringCreateOrUpdate(ctx, fromLibraries[i])
+					}
+				}
+				to.SetLibraries(ctx, toLibraries)
+			}
+		}
 	}
 	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
 		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
@@ -24102,6 +25476,18 @@ func (to *Task) SyncFieldsDuringRead(ctx context.Context, from Task) {
 		// set the resulting resource state to the empty list to match the planned value.
 		to.DependsOn = from.DependsOn
 	}
+	if !from.DependsOn.IsNull() && !from.DependsOn.IsUnknown() {
+		if toDependsOn, ok := to.GetDependsOn(ctx); ok {
+			if fromDependsOn, ok := from.GetDependsOn(ctx); ok {
+				for i := range toDependsOn {
+					if i < len(fromDependsOn) {
+						toDependsOn[i].SyncFieldsDuringRead(ctx, fromDependsOn[i])
+					}
+				}
+				to.SetDependsOn(ctx, toDependsOn)
+			}
+		}
+	}
 	if !from.EmailNotifications.IsNull() && !from.EmailNotifications.IsUnknown() {
 		if toEmailNotifications, ok := to.GetEmailNotifications(ctx); ok {
 			if fromEmailNotifications, ok := from.GetEmailNotifications(ctx); ok {
@@ -24139,6 +25525,18 @@ func (to *Task) SyncFieldsDuringRead(ctx context.Context, from Task) {
 		// If a user specified a non-Null, empty list for Libraries, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Libraries = from.Libraries
+	}
+	if !from.Libraries.IsNull() && !from.Libraries.IsUnknown() {
+		if toLibraries, ok := to.GetLibraries(ctx); ok {
+			if fromLibraries, ok := from.GetLibraries(ctx); ok {
+				for i := range toLibraries {
+					if i < len(fromLibraries) {
+						toLibraries[i].SyncFieldsDuringRead(ctx, fromLibraries[i])
+					}
+				}
+				to.SetLibraries(ctx, toLibraries)
+			}
+		}
 	}
 	if !from.NewCluster.IsNull() && !from.NewCluster.IsUnknown() {
 		if toNewCluster, ok := to.GetNewCluster(ctx); ok {
@@ -26000,6 +27398,10 @@ func (m *TriggerSettings) SetTableUpdate(ctx context.Context, v TableUpdateTrigg
 
 type TriggerStateProto struct {
 	FileArrival types.Object `tfsdk:"file_arrival"`
+	// Whether this trigger is paused or not. For continuous schedules, it can
+	// differ from the configured pause_status whenever a paused continuous job
+	// is kickstarted by an operation other than an update, such as a run-now.
+	PauseStatus types.String `tfsdk:"pause_status"`
 	// State for SQL condition evaluation, can coexist with other trigger
 	// states.
 	SqlCondition types.Object `tfsdk:"sql_condition"`
@@ -26066,6 +27468,7 @@ func (to *TriggerStateProto) SyncFieldsDuringRead(ctx context.Context, from Trig
 
 func (m TriggerStateProto) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
+	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["sql_condition"] = attrs["sql_condition"].SetOptional()
 	attrs["table"] = attrs["table"].SetOptional()
 
@@ -26095,6 +27498,7 @@ func (m TriggerStateProto) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"file_arrival":  m.FileArrival,
+			"pause_status":  m.PauseStatus,
 			"sql_condition": m.SqlCondition,
 			"table":         m.Table,
 		})
@@ -26105,6 +27509,7 @@ func (m TriggerStateProto) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_arrival":  FileArrivalTriggerState{}.Type(ctx),
+			"pause_status":  types.StringType,
 			"sql_condition": SqlConditionState{}.Type(ctx),
 			"table":         TableTriggerState{}.Type(ctx),
 		},
@@ -26482,11 +27887,37 @@ func (to *WebhookNotifications) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnDurationWarningThresholdExceeded = from.OnDurationWarningThresholdExceeded
 	}
+	if !from.OnDurationWarningThresholdExceeded.IsNull() && !from.OnDurationWarningThresholdExceeded.IsUnknown() {
+		if toOnDurationWarningThresholdExceeded, ok := to.GetOnDurationWarningThresholdExceeded(ctx); ok {
+			if fromOnDurationWarningThresholdExceeded, ok := from.GetOnDurationWarningThresholdExceeded(ctx); ok {
+				// Recursively sync the fields of each OnDurationWarningThresholdExceeded element by position.
+				for i := range toOnDurationWarningThresholdExceeded {
+					if i < len(fromOnDurationWarningThresholdExceeded) {
+						toOnDurationWarningThresholdExceeded[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOnDurationWarningThresholdExceeded[i])
+					}
+				}
+				to.SetOnDurationWarningThresholdExceeded(ctx, toOnDurationWarningThresholdExceeded)
+			}
+		}
+	}
 	if !from.OnFailure.IsNull() && !from.OnFailure.IsUnknown() && to.OnFailure.IsNull() && len(from.OnFailure.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for OnFailure, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnFailure = from.OnFailure
+	}
+	if !from.OnFailure.IsNull() && !from.OnFailure.IsUnknown() {
+		if toOnFailure, ok := to.GetOnFailure(ctx); ok {
+			if fromOnFailure, ok := from.GetOnFailure(ctx); ok {
+				// Recursively sync the fields of each OnFailure element by position.
+				for i := range toOnFailure {
+					if i < len(fromOnFailure) {
+						toOnFailure[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOnFailure[i])
+					}
+				}
+				to.SetOnFailure(ctx, toOnFailure)
+			}
+		}
 	}
 	if !from.OnStart.IsNull() && !from.OnStart.IsUnknown() && to.OnStart.IsNull() && len(from.OnStart.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -26494,17 +27925,56 @@ func (to *WebhookNotifications) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnStart = from.OnStart
 	}
+	if !from.OnStart.IsNull() && !from.OnStart.IsUnknown() {
+		if toOnStart, ok := to.GetOnStart(ctx); ok {
+			if fromOnStart, ok := from.GetOnStart(ctx); ok {
+				// Recursively sync the fields of each OnStart element by position.
+				for i := range toOnStart {
+					if i < len(fromOnStart) {
+						toOnStart[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOnStart[i])
+					}
+				}
+				to.SetOnStart(ctx, toOnStart)
+			}
+		}
+	}
 	if !from.OnStreamingBacklogExceeded.IsNull() && !from.OnStreamingBacklogExceeded.IsUnknown() && to.OnStreamingBacklogExceeded.IsNull() && len(from.OnStreamingBacklogExceeded.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for OnStreamingBacklogExceeded, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnStreamingBacklogExceeded = from.OnStreamingBacklogExceeded
 	}
+	if !from.OnStreamingBacklogExceeded.IsNull() && !from.OnStreamingBacklogExceeded.IsUnknown() {
+		if toOnStreamingBacklogExceeded, ok := to.GetOnStreamingBacklogExceeded(ctx); ok {
+			if fromOnStreamingBacklogExceeded, ok := from.GetOnStreamingBacklogExceeded(ctx); ok {
+				// Recursively sync the fields of each OnStreamingBacklogExceeded element by position.
+				for i := range toOnStreamingBacklogExceeded {
+					if i < len(fromOnStreamingBacklogExceeded) {
+						toOnStreamingBacklogExceeded[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOnStreamingBacklogExceeded[i])
+					}
+				}
+				to.SetOnStreamingBacklogExceeded(ctx, toOnStreamingBacklogExceeded)
+			}
+		}
+	}
 	if !from.OnSuccess.IsNull() && !from.OnSuccess.IsUnknown() && to.OnSuccess.IsNull() && len(from.OnSuccess.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for OnSuccess, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnSuccess = from.OnSuccess
+	}
+	if !from.OnSuccess.IsNull() && !from.OnSuccess.IsUnknown() {
+		if toOnSuccess, ok := to.GetOnSuccess(ctx); ok {
+			if fromOnSuccess, ok := from.GetOnSuccess(ctx); ok {
+				// Recursively sync the fields of each OnSuccess element by position.
+				for i := range toOnSuccess {
+					if i < len(fromOnSuccess) {
+						toOnSuccess[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOnSuccess[i])
+					}
+				}
+				to.SetOnSuccess(ctx, toOnSuccess)
+			}
+		}
 	}
 }
 
@@ -26515,11 +27985,35 @@ func (to *WebhookNotifications) SyncFieldsDuringRead(ctx context.Context, from W
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnDurationWarningThresholdExceeded = from.OnDurationWarningThresholdExceeded
 	}
+	if !from.OnDurationWarningThresholdExceeded.IsNull() && !from.OnDurationWarningThresholdExceeded.IsUnknown() {
+		if toOnDurationWarningThresholdExceeded, ok := to.GetOnDurationWarningThresholdExceeded(ctx); ok {
+			if fromOnDurationWarningThresholdExceeded, ok := from.GetOnDurationWarningThresholdExceeded(ctx); ok {
+				for i := range toOnDurationWarningThresholdExceeded {
+					if i < len(fromOnDurationWarningThresholdExceeded) {
+						toOnDurationWarningThresholdExceeded[i].SyncFieldsDuringRead(ctx, fromOnDurationWarningThresholdExceeded[i])
+					}
+				}
+				to.SetOnDurationWarningThresholdExceeded(ctx, toOnDurationWarningThresholdExceeded)
+			}
+		}
+	}
 	if !from.OnFailure.IsNull() && !from.OnFailure.IsUnknown() && to.OnFailure.IsNull() && len(from.OnFailure.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for OnFailure, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnFailure = from.OnFailure
+	}
+	if !from.OnFailure.IsNull() && !from.OnFailure.IsUnknown() {
+		if toOnFailure, ok := to.GetOnFailure(ctx); ok {
+			if fromOnFailure, ok := from.GetOnFailure(ctx); ok {
+				for i := range toOnFailure {
+					if i < len(fromOnFailure) {
+						toOnFailure[i].SyncFieldsDuringRead(ctx, fromOnFailure[i])
+					}
+				}
+				to.SetOnFailure(ctx, toOnFailure)
+			}
+		}
 	}
 	if !from.OnStart.IsNull() && !from.OnStart.IsUnknown() && to.OnStart.IsNull() && len(from.OnStart.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -26527,17 +28021,53 @@ func (to *WebhookNotifications) SyncFieldsDuringRead(ctx context.Context, from W
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnStart = from.OnStart
 	}
+	if !from.OnStart.IsNull() && !from.OnStart.IsUnknown() {
+		if toOnStart, ok := to.GetOnStart(ctx); ok {
+			if fromOnStart, ok := from.GetOnStart(ctx); ok {
+				for i := range toOnStart {
+					if i < len(fromOnStart) {
+						toOnStart[i].SyncFieldsDuringRead(ctx, fromOnStart[i])
+					}
+				}
+				to.SetOnStart(ctx, toOnStart)
+			}
+		}
+	}
 	if !from.OnStreamingBacklogExceeded.IsNull() && !from.OnStreamingBacklogExceeded.IsUnknown() && to.OnStreamingBacklogExceeded.IsNull() && len(from.OnStreamingBacklogExceeded.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for OnStreamingBacklogExceeded, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnStreamingBacklogExceeded = from.OnStreamingBacklogExceeded
 	}
+	if !from.OnStreamingBacklogExceeded.IsNull() && !from.OnStreamingBacklogExceeded.IsUnknown() {
+		if toOnStreamingBacklogExceeded, ok := to.GetOnStreamingBacklogExceeded(ctx); ok {
+			if fromOnStreamingBacklogExceeded, ok := from.GetOnStreamingBacklogExceeded(ctx); ok {
+				for i := range toOnStreamingBacklogExceeded {
+					if i < len(fromOnStreamingBacklogExceeded) {
+						toOnStreamingBacklogExceeded[i].SyncFieldsDuringRead(ctx, fromOnStreamingBacklogExceeded[i])
+					}
+				}
+				to.SetOnStreamingBacklogExceeded(ctx, toOnStreamingBacklogExceeded)
+			}
+		}
+	}
 	if !from.OnSuccess.IsNull() && !from.OnSuccess.IsUnknown() && to.OnSuccess.IsNull() && len(from.OnSuccess.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for OnSuccess, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnSuccess = from.OnSuccess
+	}
+	if !from.OnSuccess.IsNull() && !from.OnSuccess.IsUnknown() {
+		if toOnSuccess, ok := to.GetOnSuccess(ctx); ok {
+			if fromOnSuccess, ok := from.GetOnSuccess(ctx); ok {
+				for i := range toOnSuccess {
+					if i < len(fromOnSuccess) {
+						toOnSuccess[i].SyncFieldsDuringRead(ctx, fromOnSuccess[i])
+					}
+				}
+				to.SetOnSuccess(ctx, toOnSuccess)
+			}
+		}
 	}
 }
 

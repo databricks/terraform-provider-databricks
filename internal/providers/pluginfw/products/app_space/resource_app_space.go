@@ -244,6 +244,19 @@ func (to *Space) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Space)
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
 	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				// Recursively sync the fields of each Resources element by position.
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringCreateOrUpdate(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
+	}
 	if !from.Status.IsNull() && !from.Status.IsUnknown() {
 		if toStatus, ok := to.GetStatus(ctx); ok {
 			if fromStatus, ok := from.GetStatus(ctx); ok {
@@ -278,6 +291,18 @@ func (to *Space) SyncFieldsDuringRead(ctx context.Context, from Space) {
 		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
+	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringRead(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
 	}
 	if !from.Status.IsNull() && !from.Status.IsUnknown() {
 		if toStatus, ok := to.GetStatus(ctx); ok {

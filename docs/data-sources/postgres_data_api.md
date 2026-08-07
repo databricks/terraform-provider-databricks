@@ -13,16 +13,16 @@ This data source retrieves the Data API configuration for a single Lakebase data
 ### Retrieve the Data API for a Database
 
 ```hcl
-data "databricks_postgres_data_api" "app" {
-  name = "projects/my-project/branches/main/databases/app/data-api"
+data "databricks_postgres_data_api" "app_db" {
+  name = "projects/my-project/branches/production/databases/app-db/data-api"
 }
 
 output "data_api_url" {
-  value = data.databricks_postgres_data_api.app.status.url
+  value = data.databricks_postgres_data_api.app_db.status.url
 }
 
 output "available_schemas" {
-  value = data.databricks_postgres_data_api.app.status.available_schemas
+  value = data.databricks_postgres_data_api.app_db.status.available_schemas
 }
 ```
 

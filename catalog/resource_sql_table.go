@@ -414,7 +414,14 @@ func (ti *SqlTableInfo) alterExistingColumnStatements(oldti *SqlTableInfo, state
 			statements = append(statements, fmt.Sprintf("ALTER %s %s RENAME COLUMN %s to %s", typestring, ti.SQLFullName(), oldCi.getWrappedColumnName(), ci.getWrappedColumnName()))
 		}
 		if ci.Comment != oldCi.Comment {
-			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s COMMENT '%s'", typestring, ti.SQLFullName(), ci.getWrappedColumnName(), parseComment(ci.Comment)))
+			if ti.TableType == "VIEW" {
+				// ALTER VIEW ... ALTER COLUMN ... COMMENT is not valid Databricks SQL
+				// (it fails with PARSE_SYNTAX_ERROR). COMMENT ON COLUMN updates a view
+				// column comment in place.
+				statements = append(statements, fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'", ti.SQLFullName(), ci.getWrappedColumnName(), parseComment(ci.Comment)))
+			} else {
+				statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s COMMENT '%s'", typestring, ti.SQLFullName(), ci.getWrappedColumnName(), parseComment(ci.Comment)))
+			}
 		}
 		if ci.Nullable != oldCi.Nullable {
 			var keyWord string

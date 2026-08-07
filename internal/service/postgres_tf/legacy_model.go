@@ -847,6 +847,222 @@ func (m CatalogOperationMetadata_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A Lakebase CDF configuration (CdfConfig): one per Postgres schema per
+// database, replicating that schema's tables into a Unity Catalog schema.
+// Immutable once created.
+type CdfConfig_SdkV2 struct {
+	// The Unity Catalog catalog that replicated tables are written into. Set at
+	// creation; the CdfConfig is immutable.
+	Catalog types.String `tfsdk:"catalog"`
+	// The user-specified id; equals the final segment of `name`. Defaults to
+	// the Postgres schema name for configs without an explicit id.
+	CdfConfigId types.String `tfsdk:"cdf_config_id"`
+	// When the CdfConfig was created.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// Output only. The full resource name of the CdfConfig. Format:
+	// projects/{project}/branches/{branch}/databases/{database}/cdf-configs/{cdf_config}
+	Name types.String `tfsdk:"name"`
+	// The Postgres schema this CdfConfig replicates from. Unique within the
+	// parent database. Set at creation; the CdfConfig is immutable.
+	PostgresSchema types.String `tfsdk:"postgres_schema"`
+	// The Unity Catalog schema that replicated tables are written into. Set at
+	// creation; the CdfConfig is immutable.
+	Schema types.String `tfsdk:"schema"`
+}
+
+func (to *CdfConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CdfConfig_SdkV2) {
+}
+
+func (to *CdfConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CdfConfig_SdkV2) {
+}
+
+func (m CdfConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog"] = attrs["catalog"].SetRequired()
+	attrs["catalog"] = attrs["catalog"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["cdf_config_id"] = attrs["cdf_config_id"].SetComputed()
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["postgres_schema"] = attrs["postgres_schema"].SetRequired()
+	attrs["postgres_schema"] = attrs["postgres_schema"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["schema"] = attrs["schema"].SetRequired()
+	attrs["schema"] = attrs["schema"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CdfConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CdfConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CdfConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CdfConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog":         m.Catalog,
+			"cdf_config_id":   m.CdfConfigId,
+			"create_time":     m.CreateTime,
+			"name":            m.Name,
+			"postgres_schema": m.PostgresSchema,
+			"schema":          m.Schema,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CdfConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog":         types.StringType,
+			"cdf_config_id":   types.StringType,
+			"create_time":     timetypes.RFC3339{}.Type(ctx),
+			"name":            types.StringType,
+			"postgres_schema": types.StringType,
+			"schema":          types.StringType,
+		},
+	}
+}
+
+// Metadata for CdfConfig long-running operations. Intentionally empty today;
+// fields (e.g. progress) may be added as the operation contract grows.
+type CdfConfigOperationMetadata_SdkV2 struct {
+}
+
+func (to *CdfConfigOperationMetadata_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CdfConfigOperationMetadata_SdkV2) {
+}
+
+func (to *CdfConfigOperationMetadata_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CdfConfigOperationMetadata_SdkV2) {
+}
+
+func (m CdfConfigOperationMetadata_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CdfConfigOperationMetadata.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CdfConfigOperationMetadata_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CdfConfigOperationMetadata_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CdfConfigOperationMetadata_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CdfConfigOperationMetadata_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+// The read-only replication status of a single Postgres table replicated under
+// a CdfConfig. One status exists per replicated table. It is created
+// automatically and cannot be modified.
+type CdfStatus_SdkV2 struct {
+	// The high-watermark Log Sequence Number (LSN) committed to Delta Lake.
+	CommittedLsn types.String `tfsdk:"committed_lsn"`
+	// When replication for this table was first established.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// The last time changes for this table were written to Delta Lake.
+	LastSyncTime timetypes.RFC3339 `tfsdk:"last_sync_time"`
+	// Output only. The full resource name of the CdfStatus. Format:
+	// projects/{project}/branches/{branch}/databases/{database}/cdf-configs/{cdf_config}/cdf-statuses/{cdf_status}
+	// The {cdf_status} segment is the Postgres table name.
+	Name types.String `tfsdk:"name"`
+	// The Postgres table being replicated.
+	PostgresTable types.String `tfsdk:"postgres_table"`
+	// The current replication state of this table.
+	State types.String `tfsdk:"state"`
+	// Human-readable detail for the current state (e.g. the skip/error reason).
+	// Empty for healthy states.
+	StatusDetail types.String `tfsdk:"status_detail"`
+	// The Unity Catalog table receiving replicated data.
+	UcTable types.String `tfsdk:"uc_table"`
+}
+
+func (to *CdfStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CdfStatus_SdkV2) {
+}
+
+func (to *CdfStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CdfStatus_SdkV2) {
+}
+
+func (m CdfStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["committed_lsn"] = attrs["committed_lsn"].SetComputed()
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["last_sync_time"] = attrs["last_sync_time"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["postgres_table"] = attrs["postgres_table"].SetComputed()
+	attrs["state"] = attrs["state"].SetComputed()
+	attrs["status_detail"] = attrs["status_detail"].SetComputed()
+	attrs["uc_table"] = attrs["uc_table"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CdfStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CdfStatus_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CdfStatus_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CdfStatus_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"committed_lsn":  m.CommittedLsn,
+			"create_time":    m.CreateTime,
+			"last_sync_time": m.LastSyncTime,
+			"name":           m.Name,
+			"postgres_table": m.PostgresTable,
+			"state":          m.State,
+			"status_detail":  m.StatusDetail,
+			"uc_table":       m.UcTable,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CdfStatus_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"committed_lsn":  types.StringType,
+			"create_time":    timetypes.RFC3339{}.Type(ctx),
+			"last_sync_time": timetypes.RFC3339{}.Type(ctx),
+			"name":           types.StringType,
+			"postgres_table": types.StringType,
+			"state":          types.StringType,
+			"status_detail":  types.StringType,
+			"uc_table":       types.StringType,
+		},
+	}
+}
+
 type CreateBranchRequest_SdkV2 struct {
 	// The Branch to create.
 	Branch types.List `tfsdk:"branch"`
@@ -1073,6 +1289,116 @@ func (m *CreateCatalogRequest_SdkV2) SetCatalog(ctx context.Context, v Catalog_S
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["catalog"]
 	m.Catalog = types.ListValueMust(t, vs)
+}
+
+type CreateCdfConfigRequest_SdkV2 struct {
+	// The CdfConfig to create. The catalog, schema, and postgres_schema fields
+	// are required; all other fields are output only and ignored on input.
+	CdfConfig types.List `tfsdk:"cdf_config"`
+	// The user-specified id for the CdfConfig, forming the final segment of its
+	// resource name. Must match the pattern `[a-z][a-z0-9_]{0,62}`. Defaults to
+	// the Postgres schema name when omitted.
+	CdfConfigId types.String `tfsdk:"-"`
+	// The parent database under which to create the CdfConfig. Format:
+	// projects/{project}/branches/{branch}/databases/{database}
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *CreateCdfConfigRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateCdfConfigRequest_SdkV2) {
+	if !from.CdfConfig.IsNull() && !from.CdfConfig.IsUnknown() {
+		if toCdfConfig, ok := to.GetCdfConfig(ctx); ok {
+			if fromCdfConfig, ok := from.GetCdfConfig(ctx); ok {
+				// Recursively sync the fields of CdfConfig
+				toCdfConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromCdfConfig)
+				to.SetCdfConfig(ctx, toCdfConfig)
+			}
+		}
+	}
+}
+
+func (to *CreateCdfConfigRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateCdfConfigRequest_SdkV2) {
+	if !from.CdfConfig.IsNull() && !from.CdfConfig.IsUnknown() {
+		if toCdfConfig, ok := to.GetCdfConfig(ctx); ok {
+			if fromCdfConfig, ok := from.GetCdfConfig(ctx); ok {
+				toCdfConfig.SyncFieldsDuringRead(ctx, fromCdfConfig)
+				to.SetCdfConfig(ctx, toCdfConfig)
+			}
+		}
+	}
+}
+
+func (m CreateCdfConfigRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cdf_config"] = attrs["cdf_config"].SetRequired()
+	attrs["cdf_config"] = attrs["cdf_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["cdf_config_id"] = attrs["cdf_config_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCdfConfigRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateCdfConfigRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"cdf_config": reflect.TypeOf(CdfConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCdfConfigRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CreateCdfConfigRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"cdf_config":    m.CdfConfig,
+			"cdf_config_id": m.CdfConfigId,
+			"parent":        m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateCdfConfigRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"cdf_config": basetypes.ListType{
+				ElemType: CdfConfig_SdkV2{}.Type(ctx),
+			},
+			"cdf_config_id": types.StringType,
+			"parent":        types.StringType,
+		},
+	}
+}
+
+// GetCdfConfig returns the value of the CdfConfig field in CreateCdfConfigRequest_SdkV2 as
+// a CdfConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateCdfConfigRequest_SdkV2) GetCdfConfig(ctx context.Context) (CdfConfig_SdkV2, bool) {
+	var e CdfConfig_SdkV2
+	if m.CdfConfig.IsNull() || m.CdfConfig.IsUnknown() {
+		return e, false
+	}
+	var v []CdfConfig_SdkV2
+	d := m.CdfConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCdfConfig sets the value of the CdfConfig field in CreateCdfConfigRequest_SdkV2.
+func (m *CreateCdfConfigRequest_SdkV2) SetCdfConfig(ctx context.Context, v CdfConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["cdf_config"]
+	m.CdfConfig = types.ListValueMust(t, vs)
 }
 
 type CreateDataApiRequest_SdkV2 struct {
@@ -2761,7 +3087,7 @@ func (to *DatabaseDatabaseSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 
 func (m DatabaseDatabaseSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["postgres_database"] = attrs["postgres_database"].SetOptional()
-	attrs["role"] = attrs["role"].SetOptional()
+	attrs["role"] = attrs["role"].SetRequired()
 
 	return attrs
 }
@@ -3104,6 +3430,62 @@ func (m DeleteCatalogRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
+		},
+	}
+}
+
+type DeleteCdfConfigRequest_SdkV2 struct {
+	// When true, also drops the replicated Delta tables in Unity Catalog. When
+	// false (the default), the replicated tables are preserved at their last
+	// synced state.
+	Force types.Bool `tfsdk:"-"`
+	// The resource name of the CdfConfig to delete. Format:
+	// projects/{project}/branches/{branch}/databases/{database}/cdf-configs/{cdf_config}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteCdfConfigRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteCdfConfigRequest_SdkV2) {
+}
+
+func (to *DeleteCdfConfigRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteCdfConfigRequest_SdkV2) {
+}
+
+func (m DeleteCdfConfigRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["force"] = attrs["force"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCdfConfigRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteCdfConfigRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteCdfConfigRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DeleteCdfConfigRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"force": m.Force,
+			"name":  m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteCdfConfigRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"force": types.BoolType,
+			"name":  types.StringType,
 		},
 	}
 }
@@ -4449,6 +4831,19 @@ func (to *GenerateDatabaseCredentialRequest_SdkV2) SyncFieldsDuringCreateOrUpdat
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Claims = from.Claims
 	}
+	if !from.Claims.IsNull() && !from.Claims.IsUnknown() {
+		if toClaims, ok := to.GetClaims(ctx); ok {
+			if fromClaims, ok := from.GetClaims(ctx); ok {
+				// Recursively sync the fields of each Claims element by position.
+				for i := range toClaims {
+					if i < len(fromClaims) {
+						toClaims[i].SyncFieldsDuringCreateOrUpdate(ctx, fromClaims[i])
+					}
+				}
+				to.SetClaims(ctx, toClaims)
+			}
+		}
+	}
 }
 
 func (to *GenerateDatabaseCredentialRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GenerateDatabaseCredentialRequest_SdkV2) {
@@ -4457,6 +4852,18 @@ func (to *GenerateDatabaseCredentialRequest_SdkV2) SyncFieldsDuringRead(ctx cont
 		// If a user specified a non-Null, empty list for Claims, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Claims = from.Claims
+	}
+	if !from.Claims.IsNull() && !from.Claims.IsUnknown() {
+		if toClaims, ok := to.GetClaims(ctx); ok {
+			if fromClaims, ok := from.GetClaims(ctx); ok {
+				for i := range toClaims {
+					if i < len(fromClaims) {
+						toClaims[i].SyncFieldsDuringRead(ctx, fromClaims[i])
+					}
+				}
+				to.SetClaims(ctx, toClaims)
+			}
+		}
 	}
 }
 
@@ -4628,6 +5035,104 @@ func (m GetCatalogRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 
 // Type implements basetypes.ObjectValuable.
 func (m GetCatalogRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type GetCdfConfigRequest_SdkV2 struct {
+	// The resource name of the CdfConfig to retrieve. Format:
+	// projects/{project}/branches/{branch}/databases/{database}/cdf-configs/{cdf_config}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetCdfConfigRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetCdfConfigRequest_SdkV2) {
+}
+
+func (to *GetCdfConfigRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetCdfConfigRequest_SdkV2) {
+}
+
+func (m GetCdfConfigRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCdfConfigRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetCdfConfigRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCdfConfigRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetCdfConfigRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetCdfConfigRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type GetCdfStatusRequest_SdkV2 struct {
+	// The resource name of the CdfStatus to retrieve. Format:
+	// projects/{project}/branches/{branch}/databases/{database}/cdf-configs/{cdf_config}/cdf-statuses/{cdf_status}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetCdfStatusRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetCdfStatusRequest_SdkV2) {
+}
+
+func (to *GetCdfStatusRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetCdfStatusRequest_SdkV2) {
+}
+
+func (m GetCdfStatusRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCdfStatusRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetCdfStatusRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCdfStatusRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetCdfStatusRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetCdfStatusRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -5230,6 +5735,19 @@ func (to *ListBranchesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Branches = from.Branches
 	}
+	if !from.Branches.IsNull() && !from.Branches.IsUnknown() {
+		if toBranches, ok := to.GetBranches(ctx); ok {
+			if fromBranches, ok := from.GetBranches(ctx); ok {
+				// Recursively sync the fields of each Branches element by position.
+				for i := range toBranches {
+					if i < len(fromBranches) {
+						toBranches[i].SyncFieldsDuringCreateOrUpdate(ctx, fromBranches[i])
+					}
+				}
+				to.SetBranches(ctx, toBranches)
+			}
+		}
+	}
 }
 
 func (to *ListBranchesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListBranchesResponse_SdkV2) {
@@ -5238,6 +5756,18 @@ func (to *ListBranchesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for Branches, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Branches = from.Branches
+	}
+	if !from.Branches.IsNull() && !from.Branches.IsUnknown() {
+		if toBranches, ok := to.GetBranches(ctx); ok {
+			if fromBranches, ok := from.GetBranches(ctx); ok {
+				for i := range toBranches {
+					if i < len(fromBranches) {
+						toBranches[i].SyncFieldsDuringRead(ctx, fromBranches[i])
+					}
+				}
+				to.SetBranches(ctx, toBranches)
+			}
+		}
 	}
 }
 
@@ -5309,6 +5839,370 @@ func (m *ListBranchesResponse_SdkV2) SetBranches(ctx context.Context, v []Branch
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["branches"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Branches = types.ListValueMust(t, vs)
+}
+
+type ListCdfConfigsRequest_SdkV2 struct {
+	// Maximum number of CdfConfigs to return.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Pagination token returned by a previous ListCdfConfigs call. Empty on the
+	// first page.
+	PageToken types.String `tfsdk:"-"`
+	// The parent database to list CdfConfigs for. Format:
+	// projects/{project}/branches/{branch}/databases/{database}
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *ListCdfConfigsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCdfConfigsRequest_SdkV2) {
+}
+
+func (to *ListCdfConfigsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCdfConfigsRequest_SdkV2) {
+}
+
+func (m ListCdfConfigsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCdfConfigsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListCdfConfigsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCdfConfigsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListCdfConfigsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListCdfConfigsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+		},
+	}
+}
+
+// Response to a ListCdfConfigs request, containing a page of CdfConfigs and a
+// token for fetching the next page.
+type ListCdfConfigsResponse_SdkV2 struct {
+	// The CdfConfigs under the parent database.
+	CdfConfigs types.List `tfsdk:"cdf_configs"`
+	// Token to retrieve the next page of results; empty when there are no more.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListCdfConfigsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCdfConfigsResponse_SdkV2) {
+	if !from.CdfConfigs.IsNull() && !from.CdfConfigs.IsUnknown() && to.CdfConfigs.IsNull() && len(from.CdfConfigs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for CdfConfigs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.CdfConfigs = from.CdfConfigs
+	}
+	if !from.CdfConfigs.IsNull() && !from.CdfConfigs.IsUnknown() {
+		if toCdfConfigs, ok := to.GetCdfConfigs(ctx); ok {
+			if fromCdfConfigs, ok := from.GetCdfConfigs(ctx); ok {
+				// Recursively sync the fields of each CdfConfigs element by position.
+				for i := range toCdfConfigs {
+					if i < len(fromCdfConfigs) {
+						toCdfConfigs[i].SyncFieldsDuringCreateOrUpdate(ctx, fromCdfConfigs[i])
+					}
+				}
+				to.SetCdfConfigs(ctx, toCdfConfigs)
+			}
+		}
+	}
+}
+
+func (to *ListCdfConfigsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCdfConfigsResponse_SdkV2) {
+	if !from.CdfConfigs.IsNull() && !from.CdfConfigs.IsUnknown() && to.CdfConfigs.IsNull() && len(from.CdfConfigs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for CdfConfigs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.CdfConfigs = from.CdfConfigs
+	}
+	if !from.CdfConfigs.IsNull() && !from.CdfConfigs.IsUnknown() {
+		if toCdfConfigs, ok := to.GetCdfConfigs(ctx); ok {
+			if fromCdfConfigs, ok := from.GetCdfConfigs(ctx); ok {
+				for i := range toCdfConfigs {
+					if i < len(fromCdfConfigs) {
+						toCdfConfigs[i].SyncFieldsDuringRead(ctx, fromCdfConfigs[i])
+					}
+				}
+				to.SetCdfConfigs(ctx, toCdfConfigs)
+			}
+		}
+	}
+}
+
+func (m ListCdfConfigsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cdf_configs"] = attrs["cdf_configs"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCdfConfigsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListCdfConfigsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"cdf_configs": reflect.TypeOf(CdfConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCdfConfigsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListCdfConfigsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"cdf_configs":     m.CdfConfigs,
+			"next_page_token": m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListCdfConfigsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"cdf_configs": basetypes.ListType{
+				ElemType: CdfConfig_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetCdfConfigs returns the value of the CdfConfigs field in ListCdfConfigsResponse_SdkV2 as
+// a slice of CdfConfig_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListCdfConfigsResponse_SdkV2) GetCdfConfigs(ctx context.Context) ([]CdfConfig_SdkV2, bool) {
+	if m.CdfConfigs.IsNull() || m.CdfConfigs.IsUnknown() {
+		return nil, false
+	}
+	var v []CdfConfig_SdkV2
+	d := m.CdfConfigs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCdfConfigs sets the value of the CdfConfigs field in ListCdfConfigsResponse_SdkV2.
+func (m *ListCdfConfigsResponse_SdkV2) SetCdfConfigs(ctx context.Context, v []CdfConfig_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["cdf_configs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.CdfConfigs = types.ListValueMust(t, vs)
+}
+
+type ListCdfStatusesRequest_SdkV2 struct {
+	// Maximum number of CdfStatuses to return.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Pagination token returned by a previous ListCdfStatuses call. Empty on
+	// the first page.
+	PageToken types.String `tfsdk:"-"`
+	// The parent CdfConfig to list CdfStatuses for. Format:
+	// projects/{project}/branches/{branch}/databases/{database}/cdf-configs/{cdf_config}
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *ListCdfStatusesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCdfStatusesRequest_SdkV2) {
+}
+
+func (to *ListCdfStatusesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCdfStatusesRequest_SdkV2) {
+}
+
+func (m ListCdfStatusesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCdfStatusesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListCdfStatusesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCdfStatusesRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListCdfStatusesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListCdfStatusesRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+		},
+	}
+}
+
+// Response to a ListCdfStatuses request, containing a page of replicated table
+// statuses and a token for fetching the next page.
+type ListCdfStatusesResponse_SdkV2 struct {
+	// The replicated tables under the parent CdfConfig.
+	CdfStatuses types.List `tfsdk:"cdf_statuses"`
+	// Token to retrieve the next page of results; empty when there are no more.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListCdfStatusesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListCdfStatusesResponse_SdkV2) {
+	if !from.CdfStatuses.IsNull() && !from.CdfStatuses.IsUnknown() && to.CdfStatuses.IsNull() && len(from.CdfStatuses.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for CdfStatuses, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.CdfStatuses = from.CdfStatuses
+	}
+	if !from.CdfStatuses.IsNull() && !from.CdfStatuses.IsUnknown() {
+		if toCdfStatuses, ok := to.GetCdfStatuses(ctx); ok {
+			if fromCdfStatuses, ok := from.GetCdfStatuses(ctx); ok {
+				// Recursively sync the fields of each CdfStatuses element by position.
+				for i := range toCdfStatuses {
+					if i < len(fromCdfStatuses) {
+						toCdfStatuses[i].SyncFieldsDuringCreateOrUpdate(ctx, fromCdfStatuses[i])
+					}
+				}
+				to.SetCdfStatuses(ctx, toCdfStatuses)
+			}
+		}
+	}
+}
+
+func (to *ListCdfStatusesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListCdfStatusesResponse_SdkV2) {
+	if !from.CdfStatuses.IsNull() && !from.CdfStatuses.IsUnknown() && to.CdfStatuses.IsNull() && len(from.CdfStatuses.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for CdfStatuses, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.CdfStatuses = from.CdfStatuses
+	}
+	if !from.CdfStatuses.IsNull() && !from.CdfStatuses.IsUnknown() {
+		if toCdfStatuses, ok := to.GetCdfStatuses(ctx); ok {
+			if fromCdfStatuses, ok := from.GetCdfStatuses(ctx); ok {
+				for i := range toCdfStatuses {
+					if i < len(fromCdfStatuses) {
+						toCdfStatuses[i].SyncFieldsDuringRead(ctx, fromCdfStatuses[i])
+					}
+				}
+				to.SetCdfStatuses(ctx, toCdfStatuses)
+			}
+		}
+	}
+}
+
+func (m ListCdfStatusesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cdf_statuses"] = attrs["cdf_statuses"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCdfStatusesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListCdfStatusesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"cdf_statuses": reflect.TypeOf(CdfStatus_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCdfStatusesResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListCdfStatusesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"cdf_statuses":    m.CdfStatuses,
+			"next_page_token": m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListCdfStatusesResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"cdf_statuses": basetypes.ListType{
+				ElemType: CdfStatus_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetCdfStatuses returns the value of the CdfStatuses field in ListCdfStatusesResponse_SdkV2 as
+// a slice of CdfStatus_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListCdfStatusesResponse_SdkV2) GetCdfStatuses(ctx context.Context) ([]CdfStatus_SdkV2, bool) {
+	if m.CdfStatuses.IsNull() || m.CdfStatuses.IsUnknown() {
+		return nil, false
+	}
+	var v []CdfStatus_SdkV2
+	d := m.CdfStatuses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCdfStatuses sets the value of the CdfStatuses field in ListCdfStatusesResponse_SdkV2.
+func (m *ListCdfStatusesResponse_SdkV2) SetCdfStatuses(ctx context.Context, v []CdfStatus_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["cdf_statuses"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.CdfStatuses = types.ListValueMust(t, vs)
 }
 
 type ListDatabasesRequest_SdkV2 struct {
@@ -5385,6 +6279,19 @@ func (to *ListDatabasesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Databases = from.Databases
 	}
+	if !from.Databases.IsNull() && !from.Databases.IsUnknown() {
+		if toDatabases, ok := to.GetDatabases(ctx); ok {
+			if fromDatabases, ok := from.GetDatabases(ctx); ok {
+				// Recursively sync the fields of each Databases element by position.
+				for i := range toDatabases {
+					if i < len(fromDatabases) {
+						toDatabases[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDatabases[i])
+					}
+				}
+				to.SetDatabases(ctx, toDatabases)
+			}
+		}
+	}
 }
 
 func (to *ListDatabasesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListDatabasesResponse_SdkV2) {
@@ -5393,6 +6300,18 @@ func (to *ListDatabasesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 		// If a user specified a non-Null, empty list for Databases, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Databases = from.Databases
+	}
+	if !from.Databases.IsNull() && !from.Databases.IsUnknown() {
+		if toDatabases, ok := to.GetDatabases(ctx); ok {
+			if fromDatabases, ok := from.GetDatabases(ctx); ok {
+				for i := range toDatabases {
+					if i < len(fromDatabases) {
+						toDatabases[i].SyncFieldsDuringRead(ctx, fromDatabases[i])
+					}
+				}
+				to.SetDatabases(ctx, toDatabases)
+			}
+		}
 	}
 }
 
@@ -5540,6 +6459,19 @@ func (to *ListEndpointsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Endpoints = from.Endpoints
 	}
+	if !from.Endpoints.IsNull() && !from.Endpoints.IsUnknown() {
+		if toEndpoints, ok := to.GetEndpoints(ctx); ok {
+			if fromEndpoints, ok := from.GetEndpoints(ctx); ok {
+				// Recursively sync the fields of each Endpoints element by position.
+				for i := range toEndpoints {
+					if i < len(fromEndpoints) {
+						toEndpoints[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEndpoints[i])
+					}
+				}
+				to.SetEndpoints(ctx, toEndpoints)
+			}
+		}
+	}
 }
 
 func (to *ListEndpointsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListEndpointsResponse_SdkV2) {
@@ -5548,6 +6480,18 @@ func (to *ListEndpointsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 		// If a user specified a non-Null, empty list for Endpoints, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Endpoints = from.Endpoints
+	}
+	if !from.Endpoints.IsNull() && !from.Endpoints.IsUnknown() {
+		if toEndpoints, ok := to.GetEndpoints(ctx); ok {
+			if fromEndpoints, ok := from.GetEndpoints(ctx); ok {
+				for i := range toEndpoints {
+					if i < len(fromEndpoints) {
+						toEndpoints[i].SyncFieldsDuringRead(ctx, fromEndpoints[i])
+					}
+				}
+				to.SetEndpoints(ctx, toEndpoints)
+			}
+		}
 	}
 }
 
@@ -5698,6 +6642,19 @@ func (to *ListProjectsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Projects = from.Projects
 	}
+	if !from.Projects.IsNull() && !from.Projects.IsUnknown() {
+		if toProjects, ok := to.GetProjects(ctx); ok {
+			if fromProjects, ok := from.GetProjects(ctx); ok {
+				// Recursively sync the fields of each Projects element by position.
+				for i := range toProjects {
+					if i < len(fromProjects) {
+						toProjects[i].SyncFieldsDuringCreateOrUpdate(ctx, fromProjects[i])
+					}
+				}
+				to.SetProjects(ctx, toProjects)
+			}
+		}
+	}
 }
 
 func (to *ListProjectsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListProjectsResponse_SdkV2) {
@@ -5706,6 +6663,18 @@ func (to *ListProjectsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for Projects, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Projects = from.Projects
+	}
+	if !from.Projects.IsNull() && !from.Projects.IsUnknown() {
+		if toProjects, ok := to.GetProjects(ctx); ok {
+			if fromProjects, ok := from.GetProjects(ctx); ok {
+				for i := range toProjects {
+					if i < len(fromProjects) {
+						toProjects[i].SyncFieldsDuringRead(ctx, fromProjects[i])
+					}
+				}
+				to.SetProjects(ctx, toProjects)
+			}
+		}
 	}
 }
 
@@ -5853,6 +6822,19 @@ func (to *ListRolesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
 	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				// Recursively sync the fields of each Roles element by position.
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
+	}
 }
 
 func (to *ListRolesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListRolesResponse_SdkV2) {
@@ -5861,6 +6843,18 @@ func (to *ListRolesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 		// If a user specified a non-Null, empty list for Roles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Roles = from.Roles
+	}
+	if !from.Roles.IsNull() && !from.Roles.IsUnknown() {
+		if toRoles, ok := to.GetRoles(ctx); ok {
+			if fromRoles, ok := from.GetRoles(ctx); ok {
+				for i := range toRoles {
+					if i < len(fromRoles) {
+						toRoles[i].SyncFieldsDuringRead(ctx, fromRoles[i])
+					}
+				}
+				to.SetRoles(ctx, toRoles)
+			}
+		}
 	}
 }
 
@@ -6689,6 +7683,19 @@ func (to *ProjectSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.CustomTags = from.CustomTags
 	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() {
+		if toCustomTags, ok := to.GetCustomTags(ctx); ok {
+			if fromCustomTags, ok := from.GetCustomTags(ctx); ok {
+				// Recursively sync the fields of each CustomTags element by position.
+				for i := range toCustomTags {
+					if i < len(fromCustomTags) {
+						toCustomTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromCustomTags[i])
+					}
+				}
+				to.SetCustomTags(ctx, toCustomTags)
+			}
+		}
+	}
 	if !from.DefaultEndpointSettings.IsNull() && !from.DefaultEndpointSettings.IsUnknown() {
 		if toDefaultEndpointSettings, ok := to.GetDefaultEndpointSettings(ctx); ok {
 			if fromDefaultEndpointSettings, ok := from.GetDefaultEndpointSettings(ctx); ok {
@@ -6706,6 +7713,18 @@ func (to *ProjectSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Proj
 		// If a user specified a non-Null, empty list for CustomTags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.CustomTags = from.CustomTags
+	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() {
+		if toCustomTags, ok := to.GetCustomTags(ctx); ok {
+			if fromCustomTags, ok := from.GetCustomTags(ctx); ok {
+				for i := range toCustomTags {
+					if i < len(fromCustomTags) {
+						toCustomTags[i].SyncFieldsDuringRead(ctx, fromCustomTags[i])
+					}
+				}
+				to.SetCustomTags(ctx, toCustomTags)
+			}
+		}
 	}
 	if !from.DefaultEndpointSettings.IsNull() && !from.DefaultEndpointSettings.IsUnknown() {
 		if toDefaultEndpointSettings, ok := to.GetDefaultEndpointSettings(ctx); ok {
@@ -6874,6 +7893,19 @@ func (to *ProjectStatus_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.CustomTags = from.CustomTags
 	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() {
+		if toCustomTags, ok := to.GetCustomTags(ctx); ok {
+			if fromCustomTags, ok := from.GetCustomTags(ctx); ok {
+				// Recursively sync the fields of each CustomTags element by position.
+				for i := range toCustomTags {
+					if i < len(fromCustomTags) {
+						toCustomTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromCustomTags[i])
+					}
+				}
+				to.SetCustomTags(ctx, toCustomTags)
+			}
+		}
+	}
 	if !from.DefaultEndpointSettings.IsNull() && !from.DefaultEndpointSettings.IsUnknown() {
 		if toDefaultEndpointSettings, ok := to.GetDefaultEndpointSettings(ctx); ok {
 			if fromDefaultEndpointSettings, ok := from.GetDefaultEndpointSettings(ctx); ok {
@@ -6891,6 +7923,18 @@ func (to *ProjectStatus_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Pr
 		// If a user specified a non-Null, empty list for CustomTags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.CustomTags = from.CustomTags
+	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() {
+		if toCustomTags, ok := to.GetCustomTags(ctx); ok {
+			if fromCustomTags, ok := from.GetCustomTags(ctx); ok {
+				for i := range toCustomTags {
+					if i < len(fromCustomTags) {
+						toCustomTags[i].SyncFieldsDuringRead(ctx, fromCustomTags[i])
+					}
+				}
+				to.SetCustomTags(ctx, toCustomTags)
+			}
+		}
 	}
 	if !from.DefaultEndpointSettings.IsNull() && !from.DefaultEndpointSettings.IsUnknown() {
 		if toDefaultEndpointSettings, ok := to.GetDefaultEndpointSettings(ctx); ok {
@@ -7048,6 +8092,19 @@ func (to *RequestedClaims_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
 	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				// Recursively sync the fields of each Resources element by position.
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringCreateOrUpdate(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
+	}
 }
 
 func (to *RequestedClaims_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RequestedClaims_SdkV2) {
@@ -7056,6 +8113,18 @@ func (to *RequestedClaims_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for Resources, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Resources = from.Resources
+	}
+	if !from.Resources.IsNull() && !from.Resources.IsUnknown() {
+		if toResources, ok := to.GetResources(ctx); ok {
+			if fromResources, ok := from.GetResources(ctx); ok {
+				for i := range toResources {
+					if i < len(fromResources) {
+						toResources[i].SyncFieldsDuringRead(ctx, fromResources[i])
+					}
+				}
+				to.SetResources(ctx, toResources)
+			}
+		}
 	}
 }
 
@@ -8250,6 +9319,8 @@ type SyncedTableSyncedTableSpec_SdkV2 struct {
 	// The pipeline used for the synced table is returned via the top level
 	// pipeline_id attribute.
 	ExistingPipelineId types.String `tfsdk:"existing_pipeline_id"`
+	// Extra PostgreSQL-only columns to add to the synced table.
+	ExtraColumns types.List `tfsdk:"extra_columns"`
 	// Specification for creating a new pipeline. At most one of
 	// existing_pipeline_id and new_pipeline_spec should be defined.
 	//
@@ -8288,6 +9359,25 @@ type SyncedTableSyncedTableSpec_SdkV2 struct {
 }
 
 func (to *SyncedTableSyncedTableSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SyncedTableSyncedTableSpec_SdkV2) {
+	if !from.ExtraColumns.IsNull() && !from.ExtraColumns.IsUnknown() && to.ExtraColumns.IsNull() && len(from.ExtraColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ExtraColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ExtraColumns = from.ExtraColumns
+	}
+	if !from.ExtraColumns.IsNull() && !from.ExtraColumns.IsUnknown() {
+		if toExtraColumns, ok := to.GetExtraColumns(ctx); ok {
+			if fromExtraColumns, ok := from.GetExtraColumns(ctx); ok {
+				// Recursively sync the fields of each ExtraColumns element by position.
+				for i := range toExtraColumns {
+					if i < len(fromExtraColumns) {
+						toExtraColumns[i].SyncFieldsDuringCreateOrUpdate(ctx, fromExtraColumns[i])
+					}
+				}
+				to.SetExtraColumns(ctx, toExtraColumns)
+			}
+		}
+	}
 	if !from.NewPipelineSpec.IsNull() && !from.NewPipelineSpec.IsUnknown() {
 		if toNewPipelineSpec, ok := to.GetNewPipelineSpec(ctx); ok {
 			if fromNewPipelineSpec, ok := from.GetNewPipelineSpec(ctx); ok {
@@ -8309,9 +9399,40 @@ func (to *SyncedTableSyncedTableSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.TypeOverrides = from.TypeOverrides
 	}
+	if !from.TypeOverrides.IsNull() && !from.TypeOverrides.IsUnknown() {
+		if toTypeOverrides, ok := to.GetTypeOverrides(ctx); ok {
+			if fromTypeOverrides, ok := from.GetTypeOverrides(ctx); ok {
+				// Recursively sync the fields of each TypeOverrides element by position.
+				for i := range toTypeOverrides {
+					if i < len(fromTypeOverrides) {
+						toTypeOverrides[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTypeOverrides[i])
+					}
+				}
+				to.SetTypeOverrides(ctx, toTypeOverrides)
+			}
+		}
+	}
 }
 
 func (to *SyncedTableSyncedTableSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SyncedTableSyncedTableSpec_SdkV2) {
+	if !from.ExtraColumns.IsNull() && !from.ExtraColumns.IsUnknown() && to.ExtraColumns.IsNull() && len(from.ExtraColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ExtraColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ExtraColumns = from.ExtraColumns
+	}
+	if !from.ExtraColumns.IsNull() && !from.ExtraColumns.IsUnknown() {
+		if toExtraColumns, ok := to.GetExtraColumns(ctx); ok {
+			if fromExtraColumns, ok := from.GetExtraColumns(ctx); ok {
+				for i := range toExtraColumns {
+					if i < len(fromExtraColumns) {
+						toExtraColumns[i].SyncFieldsDuringRead(ctx, fromExtraColumns[i])
+					}
+				}
+				to.SetExtraColumns(ctx, toExtraColumns)
+			}
+		}
+	}
 	if !from.NewPipelineSpec.IsNull() && !from.NewPipelineSpec.IsUnknown() {
 		if toNewPipelineSpec, ok := to.GetNewPipelineSpec(ctx); ok {
 			if fromNewPipelineSpec, ok := from.GetNewPipelineSpec(ctx); ok {
@@ -8332,6 +9453,18 @@ func (to *SyncedTableSyncedTableSpec_SdkV2) SyncFieldsDuringRead(ctx context.Con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.TypeOverrides = from.TypeOverrides
 	}
+	if !from.TypeOverrides.IsNull() && !from.TypeOverrides.IsUnknown() {
+		if toTypeOverrides, ok := to.GetTypeOverrides(ctx); ok {
+			if fromTypeOverrides, ok := from.GetTypeOverrides(ctx); ok {
+				for i := range toTypeOverrides {
+					if i < len(fromTypeOverrides) {
+						toTypeOverrides[i].SyncFieldsDuringRead(ctx, fromTypeOverrides[i])
+					}
+				}
+				to.SetTypeOverrides(ctx, toTypeOverrides)
+			}
+		}
+	}
 }
 
 func (m SyncedTableSyncedTableSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -8339,6 +9472,7 @@ func (m SyncedTableSyncedTableSpec_SdkV2) ApplySchemaCustomizations(attrs map[st
 	attrs["branch"] = attrs["branch"].SetOptional()
 	attrs["create_database_objects_if_missing"] = attrs["create_database_objects_if_missing"].SetOptional()
 	attrs["existing_pipeline_id"] = attrs["existing_pipeline_id"].SetOptional()
+	attrs["extra_columns"] = attrs["extra_columns"].SetOptional()
 	attrs["new_pipeline_spec"] = attrs["new_pipeline_spec"].SetOptional()
 	attrs["new_pipeline_spec"] = attrs["new_pipeline_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["postgres_database"] = attrs["postgres_database"].SetOptional()
@@ -8360,6 +9494,7 @@ func (m SyncedTableSyncedTableSpec_SdkV2) ApplySchemaCustomizations(attrs map[st
 // SDK values.
 func (m SyncedTableSyncedTableSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"extra_columns":       reflect.TypeOf(SyncedTableSyncedTableSpecExtraColumn_SdkV2{}),
 		"new_pipeline_spec":   reflect.TypeOf(NewPipelineSpec_SdkV2{}),
 		"primary_key_columns": reflect.TypeOf(types.String{}),
 		"type_overrides":      reflect.TypeOf(SyncedTableSyncedTableSpecTypeOverride_SdkV2{}),
@@ -8377,6 +9512,7 @@ func (m SyncedTableSyncedTableSpec_SdkV2) ToObjectValue(ctx context.Context) bas
 			"branch":                             m.Branch,
 			"create_database_objects_if_missing": m.CreateDatabaseObjectsIfMissing,
 			"existing_pipeline_id":               m.ExistingPipelineId,
+			"extra_columns":                      m.ExtraColumns,
 			"new_pipeline_spec":                  m.NewPipelineSpec,
 			"postgres_database":                  m.PostgresDatabase,
 			"primary_key_columns":                m.PrimaryKeyColumns,
@@ -8395,6 +9531,9 @@ func (m SyncedTableSyncedTableSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"branch":                             types.StringType,
 			"create_database_objects_if_missing": types.BoolType,
 			"existing_pipeline_id":               types.StringType,
+			"extra_columns": basetypes.ListType{
+				ElemType: SyncedTableSyncedTableSpecExtraColumn_SdkV2{}.Type(ctx),
+			},
 			"new_pipeline_spec": basetypes.ListType{
 				ElemType: NewPipelineSpec_SdkV2{}.Type(ctx),
 			},
@@ -8410,6 +9549,32 @@ func (m SyncedTableSyncedTableSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetExtraColumns returns the value of the ExtraColumns field in SyncedTableSyncedTableSpec_SdkV2 as
+// a slice of SyncedTableSyncedTableSpecExtraColumn_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SyncedTableSyncedTableSpec_SdkV2) GetExtraColumns(ctx context.Context) ([]SyncedTableSyncedTableSpecExtraColumn_SdkV2, bool) {
+	if m.ExtraColumns.IsNull() || m.ExtraColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []SyncedTableSyncedTableSpecExtraColumn_SdkV2
+	d := m.ExtraColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExtraColumns sets the value of the ExtraColumns field in SyncedTableSyncedTableSpec_SdkV2.
+func (m *SyncedTableSyncedTableSpec_SdkV2) SetExtraColumns(ctx context.Context, v []SyncedTableSyncedTableSpecExtraColumn_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["extra_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ExtraColumns = types.ListValueMust(t, vs)
 }
 
 // GetNewPipelineSpec returns the value of the NewPipelineSpec field in SyncedTableSyncedTableSpec_SdkV2 as
@@ -8490,6 +9655,71 @@ func (m *SyncedTableSyncedTableSpec_SdkV2) SetTypeOverrides(ctx context.Context,
 	m.TypeOverrides = types.ListValueMust(t, vs)
 }
 
+// An extra PostgreSQL column to add to the synced table.
+type SyncedTableSyncedTableSpecExtraColumn_SdkV2 struct {
+	// Name of the column.
+	ColumnName types.String `tfsdk:"column_name"`
+	// PostgreSQL type of the column, for example "tsvector" or "vector(1024)".
+	ColumnType types.String `tfsdk:"column_type"`
+	// SQL expression used to compute the column's value, for example
+	// "to_tsvector('english', content)".
+	Compute types.String `tfsdk:"compute"`
+
+	Maintenance types.String `tfsdk:"maintenance"`
+}
+
+func (to *SyncedTableSyncedTableSpecExtraColumn_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SyncedTableSyncedTableSpecExtraColumn_SdkV2) {
+}
+
+func (to *SyncedTableSyncedTableSpecExtraColumn_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SyncedTableSyncedTableSpecExtraColumn_SdkV2) {
+}
+
+func (m SyncedTableSyncedTableSpecExtraColumn_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column_name"] = attrs["column_name"].SetRequired()
+	attrs["column_type"] = attrs["column_type"].SetRequired()
+	attrs["compute"] = attrs["compute"].SetOptional()
+	attrs["maintenance"] = attrs["maintenance"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SyncedTableSyncedTableSpecExtraColumn.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SyncedTableSyncedTableSpecExtraColumn_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SyncedTableSyncedTableSpecExtraColumn_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SyncedTableSyncedTableSpecExtraColumn_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"column_name": m.ColumnName,
+			"column_type": m.ColumnType,
+			"compute":     m.Compute,
+			"maintenance": m.Maintenance,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SyncedTableSyncedTableSpecExtraColumn_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"column_name": types.StringType,
+			"column_type": types.StringType,
+			"compute":     types.StringType,
+			"maintenance": types.StringType,
+		},
+	}
+}
+
 // Overrides the default Delta-to-PostgreSQL type mapping for a single column.
 type SyncedTableSyncedTableSpecTypeOverride_SdkV2 struct {
 	// Name of the source column whose target PostgreSQL type should be
@@ -8497,9 +9727,9 @@ type SyncedTableSyncedTableSpecTypeOverride_SdkV2 struct {
 	ColumnName types.String `tfsdk:"column_name"`
 	// PostgreSQL-specific target type to use for the column.
 	PgType types.String `tfsdk:"pg_type"`
-	// Size parameter for the target type. Required when pg_type is
-	// PG_SPECIFIC_TYPE_VECTOR or PG_SPECIFIC_TYPE_HALFVEC (specifies the vector
-	// dimension, e.g., 1024).
+	// Size parameter for the target type, for types that take one (e.g. vector
+	// dimension, varchar length). Required when the chosen pg_type needs a
+	// size.
 	Size types.Int64 `tfsdk:"size"`
 }
 

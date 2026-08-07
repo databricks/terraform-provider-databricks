@@ -6,6 +6,7 @@ import (
 	"log"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/useragent"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -96,6 +97,16 @@ func TestConfigure(t *testing.T) {
 				assert.Equal(t, "1234567890", dc.Config.WorkspaceID, "workspace_id should be set when provided")
 			},
 		},
+		{
+			name: "user_agent_extra can be set in provider config",
+			config: map[string]tftypes.Value{
+				"user_agent_extra": tftypes.NewValue(tftypes.String, "pluginfw-config-test/0.0.1"),
+			},
+			validateResourceData: func(dc *common.DatabricksClient) {
+				assert.Contains(t, useragent.FromContext(context.Background()), "pluginfw-config-test/0.0.1",
+					"user_agent_extra products should be appended to the user agent")
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -129,4 +140,28 @@ func TestConfigure(t *testing.T) {
 			tc.validateResourceData(client)
 		})
 	}
+}
+
+func TestConfigure_InvalidUserAgentExtra(t *testing.T) {
+	p := GetDatabricksProviderPluginFramework()
+
+	schema := providerSchemaPluginFramework()
+	schemaTfType := schema.Type().TerraformType(context.Background()).(tftypes.Object)
+	schemaTfType.OptionalAttributes = map[string]struct{}{}
+	for attr := range schemaTfType.AttributeTypes {
+		schemaTfType.OptionalAttributes[attr] = struct{}{}
+	}
+	req := provider.ConfigureRequest{
+		Config: tfsdk.Config{
+			Raw: tftypes.NewValue(schemaTfType, map[string]tftypes.Value{
+				"user_agent_extra": tftypes.NewValue(tftypes.String, "not a valid (product)"),
+			}),
+			Schema: schema,
+		},
+	}
+	resp := &provider.ConfigureResponse{}
+
+	p.Configure(context.Background(), req, resp)
+
+	assert.True(t, resp.Diagnostics.HasError(), "invalid user_agent_extra should return an error")
 }

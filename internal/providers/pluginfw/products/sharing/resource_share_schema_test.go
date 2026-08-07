@@ -50,8 +50,7 @@ func TestResourceShare_SchemaPreserved(t *testing.T) {
 	require.True(t, ok, "id must be string")
 	assert.True(t, idStr.Computed, "id should be computed")
 
-	// Verify comment is Optional+Computed with UseStateForUnknown so a comment set
-	// out-of-band is adopted rather than treated as an inconsistent apply result.
+	// Verify comment is optional+computed so a value set outside terraform is adopted
 	commentAttr, ok := s.Attributes["comment"]
 	require.True(t, ok, "comment must exist")
 	commentStr, ok := commentAttr.(schema.StringAttribute)

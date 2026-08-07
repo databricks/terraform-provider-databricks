@@ -140,14 +140,9 @@ func shareChanges(si sharing.ShareInfo, action string) sharing.UpdateShare {
 	}
 }
 
-// shareCommentChanged reports whether the planned comment carries a concrete change
-// that should be sent to the backend. comment is Optional+Computed, so the planned
-// value can legitimately be unknown (e.g. on an update that changes other attributes
-// before UseStateForUnknown resolves it); types.String.IsNull is false for an unknown
-// value, so a naive !IsNull check would call ValueString() on unknown and PATCH a
-// spurious "". We only send a comment when it is known, non-null, and differs from the
-// current state — which also means an omitted (null/unknown) comment never clears a
-// value set out-of-band, matching the legacy SDKv2 semantics.
+// shareCommentChanged reports whether the plan carries a concrete comment change to send.
+// comment is Optional+Computed, so the planned value can be unknown; IsNull is false for
+// unknown, and ValueString() on it would send a spurious "".
 func shareCommentChanged(planComment, stateComment types.String) bool {
 	return !planComment.IsNull() && !planComment.IsUnknown() && !planComment.Equal(stateComment)
 }
@@ -169,13 +164,9 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		c.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "created_at")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "created_by")
 
-		// comment is Optional+Computed so that a comment set out-of-band (e.g. in the
-		// UI) is adopted into state instead of failing the apply with "produced an
-		// unexpected new value". The Delta Sharing backend stores an empty string
-		// rather than omitting the field once a comment has ever been set, so a null
-		// config can never round-trip to a null server value. UseStateForUnknown keeps
-		// the refreshed value pinned on updates that change other attributes (the
-		// framework otherwise marks null-config computed attributes unknown).
+		// computed so a comment set outside terraform is adopted rather than failing the
+		// apply: the API stores "" instead of dropping the field, so a null config can
+		// never round-trip to a null server value
 		c.SetComputed("comment")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "comment")
 
@@ -430,8 +421,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			Updates: changes,
 		}
 		if commentChanged {
-			// ForceSendFields is required so an explicit `comment = ""` (clear the
-			// description) survives the SDK's omitempty and reaches the backend.
+			// force send so an explicit comment = "" survives omitempty and clears it
 			update.Comment = plan.Comment.ValueString()
 			update.ForceSendFields = append(update.ForceSendFields, "Comment")
 		}

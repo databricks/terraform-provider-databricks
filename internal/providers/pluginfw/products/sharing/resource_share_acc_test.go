@@ -614,11 +614,9 @@ func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 	})
 }
 
-// TestUcAccShareCommentSetOutsideTerraform reproduces ES-2090741: a share is managed
-// without a comment in config, then a comment is set out-of-band (e.g. in the UI). Before
-// the fix, the next plan/apply failed with "produced an unexpected new value: .comment:
-// was null, but now cty.StringVal(...)" because comment was Optional-not-Computed. With
-// comment Optional+Computed the out-of-band value is adopted and the plan stays empty.
+// TestUcAccShareCommentSetOutsideTerraform covers a share managed without a comment in
+// config when a comment is then set outside terraform: the value must be adopted into
+// state rather than failing the apply with "produced an unexpected new value".
 func TestUcAccShareCommentSetOutsideTerraform(t *testing.T) {
 	var shareName string
 	const outOfBandComment = "set outside terraform"
@@ -640,16 +638,14 @@ func TestUcAccShareCommentSetOutsideTerraform(t *testing.T) {
 			}
 			shareName = share.Primary.Attributes["name"]
 			assert.NotEmpty(t, shareName)
-			// Nothing was configured, so the share starts out without a comment.
-			assert.Empty(t, share.Primary.Attributes["comment"],
-				"comment should be absent before anything sets it")
+			assert.Empty(t, share.Primary.Attributes["comment"])
 			return nil
 		},
 	}, acceptance.Step{
 		PreConfig: func() {
 			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
 			require.NoError(t, err)
-			// Set a comment outside terraform, as a UI edit would.
+			// set a comment outside terraform, as a UI edit would
 			_, err = w.Shares.Update(context.Background(), sharing.UpdateShare{
 				Name:            shareName,
 				Comment:         outOfBandComment,
@@ -657,16 +653,13 @@ func TestUcAccShareCommentSetOutsideTerraform(t *testing.T) {
 			})
 			require.NoError(t, err)
 		},
-		// Same comment-less config: the out-of-band comment must be adopted into state
-		// with no inconsistent-result error and no lingering diff.
-		Template: shareConfig,
+		Template: shareConfig, // still no comment in config
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 		},
 		Check: resource.ComposeAggregateTestCheckFunc(
-			// State must hold exactly the value set out of band, not just "no error".
 			resource.TestCheckResourceAttr("databricks_share.myshare", "comment", outOfBandComment),
-			// ...and the provider must not have cleared it on the server.
+			// the comment must also survive on the server, not just in state
 			func(s *terraform.State) error {
 				w, err := databricks.NewWorkspaceClient(&databricks.Config{})
 				if err != nil {

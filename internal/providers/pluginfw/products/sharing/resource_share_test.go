@@ -18,16 +18,15 @@ func TestShareCommentChanged(t *testing.T) {
 		state types.String
 		want  bool
 	}{
-		// Omitted / deferred comment must never be sent (would clobber an
-		// out-of-band value or PATCH a spurious "" from ValueString() on unknown).
+		// omitted or deferred comment is never sent
 		{"null plan, value in state", types.StringNull(), types.StringValue("x"), false},
 		{"null plan, null state", types.StringNull(), types.StringNull(), false},
 		{"unknown plan, value in state", types.StringUnknown(), types.StringValue("x"), false},
-		// Concrete, differing comment is a real change.
+		// concrete, differing comment is a real change
 		{"set from null", types.StringValue("x"), types.StringNull(), true},
 		{"changed value", types.StringValue("y"), types.StringValue("x"), true},
 		{"explicit clear", types.StringValue(""), types.StringValue("x"), true},
-		// No-op when the known comment already matches state.
+		// no-op when the known comment already matches state
 		{"unchanged value", types.StringValue("x"), types.StringValue("x"), false},
 		{"unchanged empty", types.StringValue(""), types.StringValue(""), false},
 	} {
@@ -37,18 +36,8 @@ func TestShareCommentChanged(t *testing.T) {
 	}
 }
 
-// TestShareCommentConfigToState specifies the user-facing contract for `comment`:
-// what the practitioner writes in HCL versus what ends up in state, given what the
-// server holds. comment is Optional+Computed, so:
-//
-//   - an explicit value in config (including "") is authoritative: state must equal
-//     config regardless of what the server previously held, and the value is sent;
-//   - an omitted comment is not managed: state adopts the server value (null or not),
-//     and nothing is sent, so a value set outside Terraform survives.
-//
-// resolvePlannedComment models the plan value Terraform Core produces for an
-// Optional+Computed attribute (config wins when set; otherwise the prior/refreshed
-// state value carries forward, which is what UseStateForUnknown settles it to).
+// resolvePlannedComment models the plan value Core produces for an Optional+Computed
+// attribute: config wins when set, otherwise the refreshed state value carries forward.
 func resolvePlannedComment(config, refreshed types.String) types.String {
 	if !config.IsNull() {
 		return config
@@ -56,29 +45,27 @@ func resolvePlannedComment(config, refreshed types.String) types.String {
 	return refreshed
 }
 
+// TestShareCommentConfigToState covers what the user writes in HCL (null == omitted)
+// versus what ends up in state, given what the server already holds.
 func TestShareCommentConfigToState(t *testing.T) {
 	ctx := context.Background()
 
 	for _, tt := range []struct {
-		name string
-		// config is what the user writes in HCL (null == attribute omitted).
-		config types.String
-		// serverBefore is what the share already has (e.g. set in the UI).
+		name         string
+		config       types.String
 		serverBefore types.String
-		// wantSent is whether Update should put a comment on the wire.
-		wantSent bool
-		// wantState is the comment recorded in state after apply.
-		wantState types.String
+		wantSent     bool
+		wantState    types.String
 	}{
-		// Explicit value in config -> Terraform manages it, state mirrors config.
+		// explicit value: terraform manages it, state mirrors config
 		{"writes value, server empty", types.StringValue("x"), types.StringNull(), true, types.StringValue("x")},
 		{"writes value, server has different value", types.StringValue("x"), types.StringValue("other"), true, types.StringValue("x")},
 		{"writes value, server already matches", types.StringValue("x"), types.StringValue("x"), false, types.StringValue("x")},
-		// Explicit empty string in config -> clears the description, state is "".
+		// explicit "": clears the description
 		{"writes empty, server has value", types.StringValue(""), types.StringValue("other"), true, types.StringValue("")},
 		{"writes empty, server already empty", types.StringValue(""), types.StringValue(""), false, types.StringValue("")},
 		{"writes empty, server null", types.StringValue(""), types.StringNull(), true, types.StringValue("")},
-		// Omitted in config -> not managed, state adopts whatever the server holds.
+		// omitted: not managed, state adopts whatever the server holds
 		{"omits comment, server null", types.StringNull(), types.StringNull(), false, types.StringNull()},
 		{"omits comment, server has value", types.StringNull(), types.StringValue("set in UI"), false, types.StringValue("set in UI")},
 		{"omits comment, server empty string", types.StringNull(), types.StringValue(""), false, types.StringValue("")},
@@ -86,22 +73,18 @@ func TestShareCommentConfigToState(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			planned := resolvePlannedComment(tt.config, tt.serverBefore)
 
-			// What Update decides to send.
 			sent := shareCommentChanged(planned, tt.serverBefore)
 			assert.Equal(t, tt.wantSent, sent, "comment sent on the wire")
 
-			// Model the resulting server value, then round-trip it through the
-			// Go SDK -> TF conversion the way Create/Update/Read build state.
 			serverAfter := tt.serverBefore
 			if sent {
 				serverAfter = planned
 			}
 			apiShare := sharing.ShareInfo{Name: "s"}
 			if !serverAfter.IsNull() {
+				// a present comment lands in ForceSendFields on unmarshal, so "" converts
+				// to a known "" rather than null
 				apiShare.Comment = serverAfter.ValueString()
-				// The API echoes a present comment, which the SDK records in
-				// ForceSendFields on unmarshal; mirror that so an empty string
-				// converts to a known "" rather than null.
 				apiShare.ForceSendFields = append(apiShare.ForceSendFields, "Comment")
 			}
 
@@ -110,9 +93,7 @@ func TestShareCommentConfigToState(t *testing.T) {
 			assert.True(t, state.Comment.Equal(tt.wantState),
 				"state comment: got %v, want %v", state.Comment, tt.wantState)
 
-			// The contract that matters to Terraform Core: whatever we planned must
-			// match what we hand back, or the apply fails with
-			// "produced an unexpected new value".
+			// planned must equal post-apply state or core rejects the apply
 			assert.True(t, state.Comment.Equal(planned),
 				"planned %v must equal post-apply state %v", planned, state.Comment)
 		})

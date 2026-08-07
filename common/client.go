@@ -295,6 +295,46 @@ func (c *DatabricksClient) setCachedWorkspaceID(ctx context.Context, w *databric
 	return nil
 }
 
+// ReconcileWorkspaceIDFromHostMetadata reconciles a user-supplied workspace_id
+// against the one the host advertises via /.well-known/databricks-config, for
+// workspace-configured providers. It is called once during provider configuration,
+// after the SDK config has been resolved. On a mismatch it fails fast (surfacing
+// the error at plan rather than at apply); otherwise it seeds cachedWorkspaceID so
+// downstream resolution never issues the SCIM GET /api/2.0/preview/scim/v2/Me call.
+//
+// userWorkspaceID is the effective value from config/env/profile observed before
+// the SDK's host-metadata back-fill; hostWorkspaceID is meta.WorkspaceID. Either
+// may be empty.
+func (c *DatabricksClient) ReconcileWorkspaceIDFromHostMetadata(hostType config.HostType, userWorkspaceID, hostWorkspaceID string) error {
+	// Account and unified hosts multiplex workspaces, so a single cached
+	// workspace_id must never be seeded for them.
+	if hostType != config.WorkspaceHost {
+		return nil
+	}
+	// Normalize the "none" sentinel (see PrepareDatabricksClient) so it is not
+	// compared against the host's numeric workspace_id.
+	if userWorkspaceID == "none" {
+		userWorkspaceID = ""
+	}
+	// Older hosts omit workspace_id from metadata; leave the lazy SCIM /Me
+	// fallback in place.
+	if hostWorkspaceID == "" {
+		return nil
+	}
+	// Only a numeric user-supplied ID is comparable to the host's canonical numeric
+	// ID. A connection ID is left to validateWorkspaceIDFromProvider at apply time,
+	// which emits an actionable connection-ID message.
+	if userWorkspaceID != "" && isNumericWorkspaceID(userWorkspaceID) && userWorkspaceID != hostWorkspaceID {
+		return fmt.Errorf("workspace_id mismatch: the provider is configured with workspace_id %s "+
+			"but the host resolves to workspace %s. please check the workspace_id in the provider configuration",
+			userWorkspaceID, hostWorkspaceID)
+	}
+	if id, err := strconv.ParseInt(hostWorkspaceID, 10, 64); err == nil {
+		c.SetCachedWorkspaceID(id)
+	}
+	return nil
+}
+
 // GetWorkspaceClient returns the Databricks WorkspaceClient or a diagnostics if
 // that fails. This is used by resources and data sources that are developed
 // over plugin framework.

@@ -13,6 +13,8 @@
 
   This removes the authenticated `/Me` request on workspace hosts (avoiding false failures for service principals that can manage resources but cannot call `/Me`), and makes a `workspace_id` that disagrees with the host fail at plan time instead of at apply. Hosts whose metadata does not advertise a `workspace_id` fall back to the previous `/Me` behavior.
 
+ * Added `warehouse_id` support to `databricks_sql_permissions` resource, allowing `GRANT`/`REVOKE`/`SHOW GRANT` to execute via a SQL warehouse instead of a cluster.
+
 ### Bug Fixes
 
 ### Documentation

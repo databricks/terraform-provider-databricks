@@ -2,13 +2,65 @@ package mws
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"log"
 	"strings"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+// defaultPrivateEndpointRuleCreateTimeout is the default Create timeout for
+// polling a newly-submitted private endpoint rule to a cloud-provisioned
+// state. The NCC CreatePrivateEndpointRule API can return immediately with
+// connection_state=CREATING while the underlying cloud endpoint is still
+// being provisioned; the provider polls GetPrivateEndpointRule until the
+// rule reaches PENDING or ESTABLISHED (success) or CREATE_FAILED (failure).
+// Users can override via a `timeouts { create = "..." }` block on the
+// resource.
+const defaultPrivateEndpointRuleCreateTimeout = 30 * time.Minute
+
+// waitForPrivateEndpointRuleCreate polls Get until the rule leaves the
+// CREATING state. PENDING and ESTABLISHED are success terminal states; at
+// that point vpc_endpoint_id (AWS) / endpoint_name (Azure) / gcp_endpoint
+// (GCP) are populated. CREATE_FAILED is terminal failure and surfaces
+// ErrorMessage. REJECTED / DISCONNECTED / EXPIRED are not expected on a
+// fresh Create but are treated as terminal failures defensively.
+func waitForPrivateEndpointRuleCreate(ctx context.Context, acc *databricks.AccountClient, nccId, ruleId string, timeout time.Duration) (*settings.NccPrivateEndpointRule, error) {
+	var result *settings.NccPrivateEndpointRule
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
+		rule, err := acc.NetworkConnectivity.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(ctx, nccId, ruleId)
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+		switch rule.ConnectionState {
+		case settings.NccPrivateEndpointRulePrivateLinkConnectionStatePending,
+			settings.NccPrivateEndpointRulePrivateLinkConnectionStateEstablished:
+			result = rule
+			return nil
+		case settings.NccPrivateEndpointRulePrivateLinkConnectionStateCreateFailed:
+			return retry.NonRetryableError(fmt.Errorf("private endpoint rule %s creation failed: %s", ruleId, rule.ErrorMessage))
+		case settings.NccPrivateEndpointRulePrivateLinkConnectionStateRejected,
+			settings.NccPrivateEndpointRulePrivateLinkConnectionStateDisconnected,
+			settings.NccPrivateEndpointRulePrivateLinkConnectionStateExpired:
+			return retry.NonRetryableError(fmt.Errorf("private endpoint rule %s reached unexpected terminal state %s during creation", ruleId, rule.ConnectionState))
+		default:
+			msg := fmt.Sprintf("private endpoint rule %s is in state %s, waiting for cloud-side provisioning", ruleId, rule.ConnectionState)
+			log.Printf("[DEBUG] %s", msg)
+			return retry.RetryableError(errors.New(msg))
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
 
 func ResourceMwsNccPrivateEndpointRule() common.Resource {
 	s := common.StructToSchema(settings.NccPrivateEndpointRule{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -48,6 +100,9 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 	p := common.NewPairSeparatedID("network_connectivity_config_id", "rule_id", "/")
 	return common.Resource{
 		Schema: s,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(defaultPrivateEndpointRuleCreateTimeout),
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var create settings.CreatePrivateEndpointRuleRequest
 			common.DataToStructPointer(d, s, &create.PrivateEndpointRule)
@@ -60,9 +115,21 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 			if err != nil {
 				return err
 			}
+			// Pack the ID before polling so a polling failure or context cancellation
+			// still leaves a Read-able resource in state for `terraform destroy` to
+			// clean up the partially-created rule on the server.
 			common.StructToData(rule, s, d)
 			p.Pack(d)
-			return nil
+			// The NCC API can return immediately with connection_state=CREATING and an
+			// empty vpc_endpoint_id / endpoint_name while PLLM provisions the cloud
+			// endpoint. Poll until a terminal cloud-provisioned state (PENDING /
+			// ESTABLISHED) is reached. When the server returns a terminal state
+			// directly, the first Get exits the loop immediately.
+			final, err := waitForPrivateEndpointRuleCreate(ctx, acc, create.NetworkConnectivityConfigId, rule.RuleId, d.Timeout(schema.TimeoutCreate))
+			if err != nil {
+				return err
+			}
+			return common.StructToData(final, s, d)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			nccId, ruleId, err := p.Unpack(d)
@@ -92,6 +159,8 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 			// only enabled, domain names & resource names are updatable
 			// they do require update_mask to be set
 			// resource_names are not applicable to Azure, so we exclude them from the update
+			// Update does not poll: the server's update handler does not touch
+			// connection_state, so the rule never re-enters CREATING.
 			updateMask := []string{}
 			updatePrivateEndpointRule := settings.UpdatePrivateEndpointRule{}
 

@@ -22154,7 +22154,7 @@ type ListMcpServicesRequest struct {
 	// selective metadata.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Maximum number of MCP services to return. Defaults to 100 when unset or
-	// 0; the maximum is 1000. Use `next_page_token` to retrieve additional
+	// 0; the maximum is 100. Use `next_page_token` to retrieve additional
 	// pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from a previous request.
@@ -22531,7 +22531,7 @@ type ListModelProviderServicesRequest struct {
 	// access selective metadata.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Maximum number of provider services to return. Defaults to 100 when unset
-	// or 0; the maximum is 1000. Use `next_page_token` to retrieve additional
+	// or 0; the maximum is 100. Use `next_page_token` to retrieve additional
 	// pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from a previous request.
@@ -22725,7 +22725,7 @@ type ListModelServicesRequest struct {
 	// selective metadata.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Maximum number of model services to return. Defaults to 100 when unset or
-	// 0; the maximum is 1000. Use `next_page_token` to retrieve additional
+	// 0; the maximum is 100. Use `next_page_token` to retrieve additional
 	// pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from a previous request.
@@ -26924,46 +26924,37 @@ func (m *ModelProviderServiceConfigAmazonBedrockProviderConfig) SetDirect(ctx co
 // Direct form of Amazon Bedrock provider config.
 //
 // Authentication is one of two mutually exclusive modes, exactly one of which
-// must be supplied on Create: - Access keys: set both `aws_access_key_id` and
-// `aws_secret_access_key`, leave `service_credential` unset. - UC service
-// credential: set `service_credential.name` to the AIP-122 resource-name form
-// `credentials/{name}`, leave both access-key fields unset. The credential
-// value lives in UC and is referenced by name, not held on this message.
-// Setting `service_credential` alongside either access-key field is rejected by
-// service-side validation on Create; the proto itself allows any combination on
-// the wire.
+// must be supplied on Create: - Access keys: set `aws_access_key`, leave
+// `service_credential` unset. - UC service credential: set
+// `service_credential.name` to the AIP-122 resource-name form
+// `credentials/{name}`, leave `aws_access_key` unset. The credential value
+// lives in UC and is referenced by name, not held on this message. Setting more
+// than one mode is rejected.
 type ModelProviderServiceConfigAmazonBedrockProviderDirectConfig struct {
-	// AWS access key ID for Bedrock authentication. Required on Create when
-	// using access-key auth; must be paired with `aws_secret_access_key` and is
-	// mutually exclusive with `service_credential`. Treated as
-	// username-equivalent (not a secret value): round-trips on reads and is
-	// scrubbed from audit logs.
-	AwsAccessKeyId types.String `tfsdk:"aws_access_key_id"`
-	// AWS secret access key paired with `aws_access_key_id`. Required on Create
-	// when using access-key auth; mutually exclusive with `service_credential`.
-	// Supplied as inline plaintext via `ProviderSecret.plaintext`.
-	AwsSecretAccessKey types.Object `tfsdk:"aws_secret_access_key"`
+	// AWS access-key-pair auth. Mutually exclusive with `service_credential`.
+	// Supersedes the flat `aws_access_key_id` / `aws_secret_access_key` fields.
+	AwsAccessKey types.Object `tfsdk:"aws_access_key"`
 	// AWS region where the Bedrock endpoint is hosted (e.g., `us-east-1`).
 	// Required on Create.
 	Region types.String `tfsdk:"region"`
 	// Reference to a UC service credential authorizing Bedrock requests. On
 	// Create the caller supplies `service_credential.name` in the AIP-122
 	// resource-name form `credentials/{name}`. Required on Create when using
-	// UC-service-credential auth; mutually exclusive with the aws_access_key_id
-	// + aws_secret_access_key pair. The credential is referenced by name; its
-	// value is not carried here. On read the resolved `id` and `is_deleted` are
-	// also populated. Only supported on AWS-hosted workspaces; Create requests
-	// from other clouds are rejected with INVALID_PARAMETER_VALUE.
+	// UC-service-credential auth; mutually exclusive with `aws_access_key`. The
+	// credential is referenced by name; its value is not carried here. On read
+	// the resolved `id` and `is_deleted` are also populated. Only supported on
+	// AWS-hosted workspaces; Create requests from other clouds are rejected
+	// with INVALID_PARAMETER_VALUE.
 	ServiceCredential types.Object `tfsdk:"service_credential"`
 }
 
 func (to *ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) {
-	if !from.AwsSecretAccessKey.IsNull() && !from.AwsSecretAccessKey.IsUnknown() {
-		if toAwsSecretAccessKey, ok := to.GetAwsSecretAccessKey(ctx); ok {
-			if fromAwsSecretAccessKey, ok := from.GetAwsSecretAccessKey(ctx); ok {
-				// Recursively sync the fields of AwsSecretAccessKey
-				toAwsSecretAccessKey.SyncFieldsDuringCreateOrUpdate(ctx, fromAwsSecretAccessKey)
-				to.SetAwsSecretAccessKey(ctx, toAwsSecretAccessKey)
+	if !from.AwsAccessKey.IsNull() && !from.AwsAccessKey.IsUnknown() {
+		if toAwsAccessKey, ok := to.GetAwsAccessKey(ctx); ok {
+			if fromAwsAccessKey, ok := from.GetAwsAccessKey(ctx); ok {
+				// Recursively sync the fields of AwsAccessKey
+				toAwsAccessKey.SyncFieldsDuringCreateOrUpdate(ctx, fromAwsAccessKey)
+				to.SetAwsAccessKey(ctx, toAwsAccessKey)
 			}
 		}
 	}
@@ -26979,11 +26970,11 @@ func (to *ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) SyncField
 }
 
 func (to *ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) SyncFieldsDuringRead(ctx context.Context, from ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) {
-	if !from.AwsSecretAccessKey.IsNull() && !from.AwsSecretAccessKey.IsUnknown() {
-		if toAwsSecretAccessKey, ok := to.GetAwsSecretAccessKey(ctx); ok {
-			if fromAwsSecretAccessKey, ok := from.GetAwsSecretAccessKey(ctx); ok {
-				toAwsSecretAccessKey.SyncFieldsDuringRead(ctx, fromAwsSecretAccessKey)
-				to.SetAwsSecretAccessKey(ctx, toAwsSecretAccessKey)
+	if !from.AwsAccessKey.IsNull() && !from.AwsAccessKey.IsUnknown() {
+		if toAwsAccessKey, ok := to.GetAwsAccessKey(ctx); ok {
+			if fromAwsAccessKey, ok := from.GetAwsAccessKey(ctx); ok {
+				toAwsAccessKey.SyncFieldsDuringRead(ctx, fromAwsAccessKey)
+				to.SetAwsAccessKey(ctx, toAwsAccessKey)
 			}
 		}
 	}
@@ -26998,8 +26989,7 @@ func (to *ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) SyncField
 }
 
 func (m ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aws_access_key_id"] = attrs["aws_access_key_id"].SetOptional()
-	attrs["aws_secret_access_key"] = attrs["aws_secret_access_key"].SetOptional()
+	attrs["aws_access_key"] = attrs["aws_access_key"].SetOptional()
 	attrs["region"] = attrs["region"].SetOptional()
 	attrs["service_credential"] = attrs["service_credential"].SetOptional()
 
@@ -27015,8 +27005,8 @@ func (m ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) ApplySchema
 // SDK values.
 func (m ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"aws_secret_access_key": reflect.TypeOf(ModelProviderServiceConfigProviderSecret{}),
-		"service_credential":    reflect.TypeOf(ModelProviderServiceConfigServiceCredential{}),
+		"aws_access_key":     reflect.TypeOf(ModelProviderServiceConfigAwsAccessKey{}),
+		"service_credential": reflect.TypeOf(ModelProviderServiceConfigServiceCredential{}),
 	}
 }
 
@@ -27027,10 +27017,9 @@ func (m ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) ToObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"aws_access_key_id":     m.AwsAccessKeyId,
-			"aws_secret_access_key": m.AwsSecretAccessKey,
-			"region":                m.Region,
-			"service_credential":    m.ServiceCredential,
+			"aws_access_key":     m.AwsAccessKey,
+			"region":             m.Region,
+			"service_credential": m.ServiceCredential,
 		})
 }
 
@@ -27038,24 +27027,23 @@ func (m ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) ToObjectVal
 func (m ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_access_key_id":     types.StringType,
-			"aws_secret_access_key": ModelProviderServiceConfigProviderSecret{}.Type(ctx),
-			"region":                types.StringType,
-			"service_credential":    ModelProviderServiceConfigServiceCredential{}.Type(ctx),
+			"aws_access_key":     ModelProviderServiceConfigAwsAccessKey{}.Type(ctx),
+			"region":             types.StringType,
+			"service_credential": ModelProviderServiceConfigServiceCredential{}.Type(ctx),
 		},
 	}
 }
 
-// GetAwsSecretAccessKey returns the value of the AwsSecretAccessKey field in ModelProviderServiceConfigAmazonBedrockProviderDirectConfig as
-// a ModelProviderServiceConfigProviderSecret value.
+// GetAwsAccessKey returns the value of the AwsAccessKey field in ModelProviderServiceConfigAmazonBedrockProviderDirectConfig as
+// a ModelProviderServiceConfigAwsAccessKey value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) GetAwsSecretAccessKey(ctx context.Context) (ModelProviderServiceConfigProviderSecret, bool) {
-	var e ModelProviderServiceConfigProviderSecret
-	if m.AwsSecretAccessKey.IsNull() || m.AwsSecretAccessKey.IsUnknown() {
+func (m *ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) GetAwsAccessKey(ctx context.Context) (ModelProviderServiceConfigAwsAccessKey, bool) {
+	var e ModelProviderServiceConfigAwsAccessKey
+	if m.AwsAccessKey.IsNull() || m.AwsAccessKey.IsUnknown() {
 		return e, false
 	}
-	var v ModelProviderServiceConfigProviderSecret
-	d := m.AwsSecretAccessKey.As(ctx, &v, basetypes.ObjectAsOptions{
+	var v ModelProviderServiceConfigAwsAccessKey
+	d := m.AwsAccessKey.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -27065,10 +27053,10 @@ func (m *ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) GetAwsSecr
 	return v, true
 }
 
-// SetAwsSecretAccessKey sets the value of the AwsSecretAccessKey field in ModelProviderServiceConfigAmazonBedrockProviderDirectConfig.
-func (m *ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) SetAwsSecretAccessKey(ctx context.Context, v ModelProviderServiceConfigProviderSecret) {
+// SetAwsAccessKey sets the value of the AwsAccessKey field in ModelProviderServiceConfigAmazonBedrockProviderDirectConfig.
+func (m *ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) SetAwsAccessKey(ctx context.Context, v ModelProviderServiceConfigAwsAccessKey) {
 	vs := v.ToObjectValue(ctx)
-	m.AwsSecretAccessKey = vs
+	m.AwsAccessKey = vs
 }
 
 // GetServiceCredential returns the value of the ServiceCredential field in ModelProviderServiceConfigAmazonBedrockProviderDirectConfig as
@@ -27394,6 +27382,108 @@ func (m ModelProviderServiceConfigAnthropicProviderRelayedConfig) Type(ctx conte
 	}
 }
 
+// AWS access-key-pair auth for Amazon Bedrock: a SigV4-signing key pair.
+type ModelProviderServiceConfigAwsAccessKey struct {
+	// AWS access key ID. Required on Create when using access-key auth. Treated
+	// as username-equivalent (not a secret value): round-trips on reads and is
+	// scrubbed from audit logs.
+	AccessKeyId types.String `tfsdk:"access_key_id"`
+	// AWS secret access key paired with `access_key_id`. Required on Create
+	// when using access-key auth. Supplied as inline plaintext via
+	// `ProviderSecret.plaintext`.
+	SecretAccessKey types.Object `tfsdk:"secret_access_key"`
+}
+
+func (to *ModelProviderServiceConfigAwsAccessKey) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigAwsAccessKey) {
+	if !from.SecretAccessKey.IsNull() && !from.SecretAccessKey.IsUnknown() {
+		if toSecretAccessKey, ok := to.GetSecretAccessKey(ctx); ok {
+			if fromSecretAccessKey, ok := from.GetSecretAccessKey(ctx); ok {
+				// Recursively sync the fields of SecretAccessKey
+				toSecretAccessKey.SyncFieldsDuringCreateOrUpdate(ctx, fromSecretAccessKey)
+				to.SetSecretAccessKey(ctx, toSecretAccessKey)
+			}
+		}
+	}
+}
+
+func (to *ModelProviderServiceConfigAwsAccessKey) SyncFieldsDuringRead(ctx context.Context, from ModelProviderServiceConfigAwsAccessKey) {
+	if !from.SecretAccessKey.IsNull() && !from.SecretAccessKey.IsUnknown() {
+		if toSecretAccessKey, ok := to.GetSecretAccessKey(ctx); ok {
+			if fromSecretAccessKey, ok := from.GetSecretAccessKey(ctx); ok {
+				toSecretAccessKey.SyncFieldsDuringRead(ctx, fromSecretAccessKey)
+				to.SetSecretAccessKey(ctx, toSecretAccessKey)
+			}
+		}
+	}
+}
+
+func (m ModelProviderServiceConfigAwsAccessKey) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_key_id"] = attrs["access_key_id"].SetOptional()
+	attrs["secret_access_key"] = attrs["secret_access_key"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelProviderServiceConfigAwsAccessKey.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ModelProviderServiceConfigAwsAccessKey) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"secret_access_key": reflect.TypeOf(ModelProviderServiceConfigProviderSecret{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelProviderServiceConfigAwsAccessKey
+// only implements ToObjectValue() and Type().
+func (m ModelProviderServiceConfigAwsAccessKey) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"access_key_id":     m.AccessKeyId,
+			"secret_access_key": m.SecretAccessKey,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ModelProviderServiceConfigAwsAccessKey) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"access_key_id":     types.StringType,
+			"secret_access_key": ModelProviderServiceConfigProviderSecret{}.Type(ctx),
+		},
+	}
+}
+
+// GetSecretAccessKey returns the value of the SecretAccessKey field in ModelProviderServiceConfigAwsAccessKey as
+// a ModelProviderServiceConfigProviderSecret value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ModelProviderServiceConfigAwsAccessKey) GetSecretAccessKey(ctx context.Context) (ModelProviderServiceConfigProviderSecret, bool) {
+	var e ModelProviderServiceConfigProviderSecret
+	if m.SecretAccessKey.IsNull() || m.SecretAccessKey.IsUnknown() {
+		return e, false
+	}
+	var v ModelProviderServiceConfigProviderSecret
+	d := m.SecretAccessKey.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSecretAccessKey sets the value of the SecretAccessKey field in ModelProviderServiceConfigAwsAccessKey.
+func (m *ModelProviderServiceConfigAwsAccessKey) SetSecretAccessKey(ctx context.Context, v ModelProviderServiceConfigProviderSecret) {
+	vs := v.ToObjectValue(ctx)
+	m.SecretAccessKey = vs
+}
+
 // Azure OpenAI provider configuration.
 type ModelProviderServiceConfigAzureOpenAiProviderConfig struct {
 	Direct types.Object `tfsdk:"direct"`
@@ -27488,44 +27578,35 @@ func (m *ModelProviderServiceConfigAzureOpenAiProviderConfig) SetDirect(ctx cont
 
 // Direct form of Azure OpenAI provider config. Exactly one of three
 // mutually-exclusive auth modes must be supplied on Create: - API key: set
-// `api_key`, leave the Entra fields and `service_credential` unset. - Entra ID
-// (service principal): set all of `tenant_id`, `client_id`, and
-// `client_secret`, leave `api_key` and `service_credential` unset. - UC service
-// credential: set `service_credential.name` to the AIP-122 resource-name form
-// `credentials/{name}`, leave `api_key` and all Entra fields unset. The
-// credential value lives in UC and is referenced by name, not held on this
+// `api_key`, leave `entra_service_principal` and `service_credential` unset. -
+// Entra ID (service principal): set `entra_service_principal`, leave `api_key`
+// and `service_credential` unset. - UC service credential: set
+// `service_credential.name` to the AIP-122 resource-name form
+// `credentials/{name}`, leave `api_key` and `entra_service_principal` unset.
+// The credential value lives in UC and is referenced by name, not held on this
 // message. Only supported on Azure-hosted workspaces. Setting more than one
-// mode, or an incomplete Entra triple, is rejected.
+// mode is rejected.
 type ModelProviderServiceConfigAzureOpenAiProviderDirectConfig struct {
-	// Azure OpenAI API key. Mutually exclusive with the Entra fields. Supplied
-	// as inline plaintext via `ProviderSecret.plaintext`.
+	// Azure OpenAI API key. Mutually exclusive with the Entra and
+	// service-credential modes. Supplied as inline plaintext via
+	// `ProviderSecret.plaintext`.
 	ApiKey types.Object `tfsdk:"api_key"`
 	// Full Azure OpenAI endpoint base URL, e.g.
 	// `https://myresource.openai.azure.com`. Required on Create.
 	BaseUrl types.String `tfsdk:"base_url"`
-	// Entra ID client (application) ID for service-principal auth. Set together
-	// with `tenant_id` and `client_secret`; mutually exclusive with `api_key`
-	// and `service_credential`.
-	ClientId types.String `tfsdk:"client_id"`
-	// Entra ID client secret for service-principal auth. Set together with
-	// `tenant_id` and `client_id`; mutually exclusive with `api_key` and
-	// `service_credential`. Supplied as inline plaintext via
-	// `ProviderSecret.plaintext`.
-	ClientSecret types.Object `tfsdk:"client_secret"`
+	// Entra ID (service principal) auth. Mutually exclusive with `api_key` and
+	// `service_credential`. Supersedes the flat `tenant_id` / `client_id` /
+	// `client_secret` fields.
+	EntraServicePrincipal types.Object `tfsdk:"entra_service_principal"`
 	// Reference to a UC service credential authorizing Azure OpenAI requests.
 	// On Create the caller supplies `service_credential.name` in the AIP-122
 	// resource-name form `credentials/{name}`. Required on Create when using
-	// UC-service-credential auth; mutually exclusive with `api_key` and with
-	// the Entra triple (tenant_id + client_id + client_secret). The credential
-	// is referenced by name; its value is not carried here. On read the
-	// resolved `id` and `is_deleted` are also populated. Only supported on
-	// Azure-hosted workspaces; Create requests from other clouds are rejected
-	// with INVALID_PARAMETER_VALUE.
+	// UC-service-credential auth; mutually exclusive with `api_key` and
+	// `entra_service_principal`. The credential is referenced by name; its
+	// value is not carried here. On read the resolved `id` and `is_deleted` are
+	// also populated. Only supported on Azure-hosted workspaces; Create
+	// requests from other clouds are rejected with INVALID_PARAMETER_VALUE.
 	ServiceCredential types.Object `tfsdk:"service_credential"`
-	// Entra ID (Azure AD) tenant ID for service-principal auth. Set together
-	// with `client_id` and `client_secret`; mutually exclusive with `api_key`
-	// and `service_credential`.
-	TenantId types.String `tfsdk:"tenant_id"`
 }
 
 func (to *ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) {
@@ -27538,12 +27619,12 @@ func (to *ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) SyncFieldsD
 			}
 		}
 	}
-	if !from.ClientSecret.IsNull() && !from.ClientSecret.IsUnknown() {
-		if toClientSecret, ok := to.GetClientSecret(ctx); ok {
-			if fromClientSecret, ok := from.GetClientSecret(ctx); ok {
-				// Recursively sync the fields of ClientSecret
-				toClientSecret.SyncFieldsDuringCreateOrUpdate(ctx, fromClientSecret)
-				to.SetClientSecret(ctx, toClientSecret)
+	if !from.EntraServicePrincipal.IsNull() && !from.EntraServicePrincipal.IsUnknown() {
+		if toEntraServicePrincipal, ok := to.GetEntraServicePrincipal(ctx); ok {
+			if fromEntraServicePrincipal, ok := from.GetEntraServicePrincipal(ctx); ok {
+				// Recursively sync the fields of EntraServicePrincipal
+				toEntraServicePrincipal.SyncFieldsDuringCreateOrUpdate(ctx, fromEntraServicePrincipal)
+				to.SetEntraServicePrincipal(ctx, toEntraServicePrincipal)
 			}
 		}
 	}
@@ -27567,11 +27648,11 @@ func (to *ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) SyncFieldsD
 			}
 		}
 	}
-	if !from.ClientSecret.IsNull() && !from.ClientSecret.IsUnknown() {
-		if toClientSecret, ok := to.GetClientSecret(ctx); ok {
-			if fromClientSecret, ok := from.GetClientSecret(ctx); ok {
-				toClientSecret.SyncFieldsDuringRead(ctx, fromClientSecret)
-				to.SetClientSecret(ctx, toClientSecret)
+	if !from.EntraServicePrincipal.IsNull() && !from.EntraServicePrincipal.IsUnknown() {
+		if toEntraServicePrincipal, ok := to.GetEntraServicePrincipal(ctx); ok {
+			if fromEntraServicePrincipal, ok := from.GetEntraServicePrincipal(ctx); ok {
+				toEntraServicePrincipal.SyncFieldsDuringRead(ctx, fromEntraServicePrincipal)
+				to.SetEntraServicePrincipal(ctx, toEntraServicePrincipal)
 			}
 		}
 	}
@@ -27588,10 +27669,8 @@ func (to *ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) SyncFieldsD
 func (m ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["api_key"] = attrs["api_key"].SetOptional()
 	attrs["base_url"] = attrs["base_url"].SetOptional()
-	attrs["client_id"] = attrs["client_id"].SetOptional()
-	attrs["client_secret"] = attrs["client_secret"].SetOptional()
+	attrs["entra_service_principal"] = attrs["entra_service_principal"].SetOptional()
 	attrs["service_credential"] = attrs["service_credential"].SetOptional()
-	attrs["tenant_id"] = attrs["tenant_id"].SetOptional()
 
 	return attrs
 }
@@ -27605,9 +27684,9 @@ func (m ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) ApplySchemaCu
 // SDK values.
 func (m ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"api_key":            reflect.TypeOf(ModelProviderServiceConfigProviderSecret{}),
-		"client_secret":      reflect.TypeOf(ModelProviderServiceConfigProviderSecret{}),
-		"service_credential": reflect.TypeOf(ModelProviderServiceConfigServiceCredential{}),
+		"api_key":                 reflect.TypeOf(ModelProviderServiceConfigProviderSecret{}),
+		"entra_service_principal": reflect.TypeOf(ModelProviderServiceConfigEntraServicePrincipal{}),
+		"service_credential":      reflect.TypeOf(ModelProviderServiceConfigServiceCredential{}),
 	}
 }
 
@@ -27618,12 +27697,10 @@ func (m ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) ToObjectValue
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"api_key":            m.ApiKey,
-			"base_url":           m.BaseUrl,
-			"client_id":          m.ClientId,
-			"client_secret":      m.ClientSecret,
-			"service_credential": m.ServiceCredential,
-			"tenant_id":          m.TenantId,
+			"api_key":                 m.ApiKey,
+			"base_url":                m.BaseUrl,
+			"entra_service_principal": m.EntraServicePrincipal,
+			"service_credential":      m.ServiceCredential,
 		})
 }
 
@@ -27631,12 +27708,10 @@ func (m ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) ToObjectValue
 func (m ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"api_key":            ModelProviderServiceConfigProviderSecret{}.Type(ctx),
-			"base_url":           types.StringType,
-			"client_id":          types.StringType,
-			"client_secret":      ModelProviderServiceConfigProviderSecret{}.Type(ctx),
-			"service_credential": ModelProviderServiceConfigServiceCredential{}.Type(ctx),
-			"tenant_id":          types.StringType,
+			"api_key":                 ModelProviderServiceConfigProviderSecret{}.Type(ctx),
+			"base_url":                types.StringType,
+			"entra_service_principal": ModelProviderServiceConfigEntraServicePrincipal{}.Type(ctx),
+			"service_credential":      ModelProviderServiceConfigServiceCredential{}.Type(ctx),
 		},
 	}
 }
@@ -27666,16 +27741,16 @@ func (m *ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) SetApiKey(ct
 	m.ApiKey = vs
 }
 
-// GetClientSecret returns the value of the ClientSecret field in ModelProviderServiceConfigAzureOpenAiProviderDirectConfig as
-// a ModelProviderServiceConfigProviderSecret value.
+// GetEntraServicePrincipal returns the value of the EntraServicePrincipal field in ModelProviderServiceConfigAzureOpenAiProviderDirectConfig as
+// a ModelProviderServiceConfigEntraServicePrincipal value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) GetClientSecret(ctx context.Context) (ModelProviderServiceConfigProviderSecret, bool) {
-	var e ModelProviderServiceConfigProviderSecret
-	if m.ClientSecret.IsNull() || m.ClientSecret.IsUnknown() {
+func (m *ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) GetEntraServicePrincipal(ctx context.Context) (ModelProviderServiceConfigEntraServicePrincipal, bool) {
+	var e ModelProviderServiceConfigEntraServicePrincipal
+	if m.EntraServicePrincipal.IsNull() || m.EntraServicePrincipal.IsUnknown() {
 		return e, false
 	}
-	var v ModelProviderServiceConfigProviderSecret
-	d := m.ClientSecret.As(ctx, &v, basetypes.ObjectAsOptions{
+	var v ModelProviderServiceConfigEntraServicePrincipal
+	d := m.EntraServicePrincipal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -27685,10 +27760,10 @@ func (m *ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) GetClientSec
 	return v, true
 }
 
-// SetClientSecret sets the value of the ClientSecret field in ModelProviderServiceConfigAzureOpenAiProviderDirectConfig.
-func (m *ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) SetClientSecret(ctx context.Context, v ModelProviderServiceConfigProviderSecret) {
+// SetEntraServicePrincipal sets the value of the EntraServicePrincipal field in ModelProviderServiceConfigAzureOpenAiProviderDirectConfig.
+func (m *ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) SetEntraServicePrincipal(ctx context.Context, v ModelProviderServiceConfigEntraServicePrincipal) {
 	vs := v.ToObjectValue(ctx)
-	m.ClientSecret = vs
+	m.EntraServicePrincipal = vs
 }
 
 // GetServiceCredential returns the value of the ServiceCredential field in ModelProviderServiceConfigAzureOpenAiProviderDirectConfig as
@@ -27917,6 +27992,114 @@ func (m *ModelProviderServiceConfigCustomProviderDirectConfig) SetApiKey(ctx con
 	m.ApiKey = vs
 }
 
+// Entra ID (Azure AD) service-principal auth: AI Gateway exchanges the
+// `tenant_id` + `client_id` identify the service principal, and the
+// `credential` oneof proves that identity, exchanged for an Entra bearer token
+// on outbound requests via the OAuth2 client-credentials grant. Shared by the
+// Azure OpenAI and Microsoft Foundry provider configs.
+type ModelProviderServiceConfigEntraServicePrincipal struct {
+	// Entra ID client (application) ID. Required on Create.
+	ClientId types.String `tfsdk:"client_id"`
+	// Entra ID client secret. Supplied as inline plaintext via
+	// `ProviderSecret.plaintext`.
+	ClientSecret types.Object `tfsdk:"client_secret"`
+	// Entra ID (Azure AD) tenant ID. Required on Create.
+	TenantId types.String `tfsdk:"tenant_id"`
+}
+
+func (to *ModelProviderServiceConfigEntraServicePrincipal) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigEntraServicePrincipal) {
+	if !from.ClientSecret.IsNull() && !from.ClientSecret.IsUnknown() {
+		if toClientSecret, ok := to.GetClientSecret(ctx); ok {
+			if fromClientSecret, ok := from.GetClientSecret(ctx); ok {
+				// Recursively sync the fields of ClientSecret
+				toClientSecret.SyncFieldsDuringCreateOrUpdate(ctx, fromClientSecret)
+				to.SetClientSecret(ctx, toClientSecret)
+			}
+		}
+	}
+}
+
+func (to *ModelProviderServiceConfigEntraServicePrincipal) SyncFieldsDuringRead(ctx context.Context, from ModelProviderServiceConfigEntraServicePrincipal) {
+	if !from.ClientSecret.IsNull() && !from.ClientSecret.IsUnknown() {
+		if toClientSecret, ok := to.GetClientSecret(ctx); ok {
+			if fromClientSecret, ok := from.GetClientSecret(ctx); ok {
+				toClientSecret.SyncFieldsDuringRead(ctx, fromClientSecret)
+				to.SetClientSecret(ctx, toClientSecret)
+			}
+		}
+	}
+}
+
+func (m ModelProviderServiceConfigEntraServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["client_id"] = attrs["client_id"].SetOptional()
+	attrs["client_secret"] = attrs["client_secret"].SetOptional()
+	attrs["tenant_id"] = attrs["tenant_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelProviderServiceConfigEntraServicePrincipal.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ModelProviderServiceConfigEntraServicePrincipal) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"client_secret": reflect.TypeOf(ModelProviderServiceConfigProviderSecret{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelProviderServiceConfigEntraServicePrincipal
+// only implements ToObjectValue() and Type().
+func (m ModelProviderServiceConfigEntraServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"client_id":     m.ClientId,
+			"client_secret": m.ClientSecret,
+			"tenant_id":     m.TenantId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ModelProviderServiceConfigEntraServicePrincipal) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"client_id":     types.StringType,
+			"client_secret": ModelProviderServiceConfigProviderSecret{}.Type(ctx),
+			"tenant_id":     types.StringType,
+		},
+	}
+}
+
+// GetClientSecret returns the value of the ClientSecret field in ModelProviderServiceConfigEntraServicePrincipal as
+// a ModelProviderServiceConfigProviderSecret value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ModelProviderServiceConfigEntraServicePrincipal) GetClientSecret(ctx context.Context) (ModelProviderServiceConfigProviderSecret, bool) {
+	var e ModelProviderServiceConfigProviderSecret
+	if m.ClientSecret.IsNull() || m.ClientSecret.IsUnknown() {
+		return e, false
+	}
+	var v ModelProviderServiceConfigProviderSecret
+	d := m.ClientSecret.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetClientSecret sets the value of the ClientSecret field in ModelProviderServiceConfigEntraServicePrincipal.
+func (m *ModelProviderServiceConfigEntraServicePrincipal) SetClientSecret(ctx context.Context, v ModelProviderServiceConfigProviderSecret) {
+	vs := v.ToObjectValue(ctx)
+	m.ClientSecret = vs
+}
+
 // Gemini Enterprise provider configuration.
 type ModelProviderServiceConfigGeminiEnterpriseProviderConfig struct {
 	Direct types.Object `tfsdk:"direct"`
@@ -28010,8 +28193,14 @@ func (m *ModelProviderServiceConfigGeminiEnterpriseProviderConfig) SetDirect(ctx
 }
 
 // Direct form of Gemini Enterprise provider config.
+//
+// Authentication is one of two mutually exclusive modes; exactly one must be
+// supplied on Create: - API key: set `api_key`, leave `service_credential`
+// unset. - UC service credential: set `service_credential`, leave `api_key`
+// unset.
 type ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig struct {
-	// Google Gemini Enterprise API key. Required on Create. Supplied as inline
+	// Google Gemini Enterprise API key. Required on Create when using API-key
+	// auth; mutually exclusive with `service_credential`. Supplied as inline
 	// plaintext via `ProviderSecret.plaintext`.
 	ApiKey types.Object `tfsdk:"api_key"`
 	// GCP project ID hosting the Gemini Enterprise endpoint. Required on
@@ -28210,45 +28399,36 @@ func (m *ModelProviderServiceConfigMicrosoftFoundryProviderConfig) SetDirect(ctx
 // Direct form of Microsoft Foundry provider config.
 //
 // Authentication is one of three mutually exclusive modes, exactly one of which
-// must be supplied on Create: - API key: set `api_key`, leave the Entra fields
-// and `service_credential` unset. - Entra ID (service principal): set all of
-// `tenant_id`, `client_id`, and `client_secret`, leave `api_key` and
+// must be supplied on Create: - API key: set `api_key`, leave
+// `entra_service_principal` and `service_credential` unset. - Entra ID (service
+// principal): set `entra_service_principal`, leave `api_key` and
 // `service_credential` unset. AI Gateway exchanges these for an Entra bearer
 // token on outbound requests via the OAuth2 client-credentials grant. - UC
 // service credential: set `service_credential.name` to the AIP-122
-// resource-name form `credentials/{name}`, leave `api_key` and all Entra fields
-// unset. The credential value lives in UC and is referenced by name, not held
-// on this message. Only supported on Azure-hosted workspaces. Setting more than
-// one mode, or an incomplete Entra triple, is rejected.
+// resource-name form `credentials/{name}`, leave `api_key` and
+// `entra_service_principal` unset. The credential value lives in UC and is
+// referenced by name, not held on this message. Only supported on Azure-hosted
+// workspaces. Setting more than one mode is rejected.
 type ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig struct {
-	// Microsoft AI Foundry API key. Mutually exclusive with the Entra fields.
-	// Supplied as inline plaintext via `ProviderSecret.plaintext`.
+	// Microsoft AI Foundry API key. Mutually exclusive with the Entra and
+	// service-credential modes. Supplied as inline plaintext via
+	// `ProviderSecret.plaintext`.
 	ApiKey types.Object `tfsdk:"api_key"`
 	// Microsoft AI Foundry endpoint URL. Required on Create.
 	BaseUrl types.String `tfsdk:"base_url"`
-	// Entra ID client (application) ID for service-principal auth. Set together
-	// with `tenant_id` and `client_secret`; mutually exclusive with `api_key`
-	// and `service_credential`.
-	ClientId types.String `tfsdk:"client_id"`
-	// Entra ID client secret for service-principal auth. Set together with
-	// `tenant_id` and `client_id`; mutually exclusive with `api_key` and
-	// `service_credential`. Supplied as inline plaintext via
-	// `ProviderSecret.plaintext`.
-	ClientSecret types.Object `tfsdk:"client_secret"`
+	// Entra ID (service principal) auth. Mutually exclusive with `api_key` and
+	// `service_credential`. Supersedes the flat `tenant_id` / `client_id` /
+	// `client_secret` fields.
+	EntraServicePrincipal types.Object `tfsdk:"entra_service_principal"`
 	// Reference to a UC service credential authorizing Microsoft Foundry
 	// requests. On Create the caller supplies `service_credential.name` in the
 	// AIP-122 resource-name form `credentials/{name}`. Required on Create when
 	// using UC-service-credential auth; mutually exclusive with `api_key` and
-	// with the Entra triple (tenant_id + client_id + client_secret). The
-	// credential is referenced by name; its value is not carried here. On read
-	// the resolved `id` and `is_deleted` are also populated. Only supported on
-	// Azure-hosted workspaces; Create requests from other clouds are rejected
-	// with INVALID_PARAMETER_VALUE.
+	// `entra_service_principal`. The credential is referenced by name; its
+	// value is not carried here. On read the resolved `id` and `is_deleted` are
+	// also populated. Only supported on Azure-hosted workspaces; Create
+	// requests from other clouds are rejected with INVALID_PARAMETER_VALUE.
 	ServiceCredential types.Object `tfsdk:"service_credential"`
-	// Entra ID (Azure AD) tenant ID for service-principal auth. Set together
-	// with `client_id` and `client_secret`; mutually exclusive with `api_key`
-	// and `service_credential`.
-	TenantId types.String `tfsdk:"tenant_id"`
 }
 
 func (to *ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) {
@@ -28261,12 +28441,12 @@ func (to *ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) SyncFi
 			}
 		}
 	}
-	if !from.ClientSecret.IsNull() && !from.ClientSecret.IsUnknown() {
-		if toClientSecret, ok := to.GetClientSecret(ctx); ok {
-			if fromClientSecret, ok := from.GetClientSecret(ctx); ok {
-				// Recursively sync the fields of ClientSecret
-				toClientSecret.SyncFieldsDuringCreateOrUpdate(ctx, fromClientSecret)
-				to.SetClientSecret(ctx, toClientSecret)
+	if !from.EntraServicePrincipal.IsNull() && !from.EntraServicePrincipal.IsUnknown() {
+		if toEntraServicePrincipal, ok := to.GetEntraServicePrincipal(ctx); ok {
+			if fromEntraServicePrincipal, ok := from.GetEntraServicePrincipal(ctx); ok {
+				// Recursively sync the fields of EntraServicePrincipal
+				toEntraServicePrincipal.SyncFieldsDuringCreateOrUpdate(ctx, fromEntraServicePrincipal)
+				to.SetEntraServicePrincipal(ctx, toEntraServicePrincipal)
 			}
 		}
 	}
@@ -28290,11 +28470,11 @@ func (to *ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) SyncFi
 			}
 		}
 	}
-	if !from.ClientSecret.IsNull() && !from.ClientSecret.IsUnknown() {
-		if toClientSecret, ok := to.GetClientSecret(ctx); ok {
-			if fromClientSecret, ok := from.GetClientSecret(ctx); ok {
-				toClientSecret.SyncFieldsDuringRead(ctx, fromClientSecret)
-				to.SetClientSecret(ctx, toClientSecret)
+	if !from.EntraServicePrincipal.IsNull() && !from.EntraServicePrincipal.IsUnknown() {
+		if toEntraServicePrincipal, ok := to.GetEntraServicePrincipal(ctx); ok {
+			if fromEntraServicePrincipal, ok := from.GetEntraServicePrincipal(ctx); ok {
+				toEntraServicePrincipal.SyncFieldsDuringRead(ctx, fromEntraServicePrincipal)
+				to.SetEntraServicePrincipal(ctx, toEntraServicePrincipal)
 			}
 		}
 	}
@@ -28311,10 +28491,8 @@ func (to *ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) SyncFi
 func (m ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["api_key"] = attrs["api_key"].SetOptional()
 	attrs["base_url"] = attrs["base_url"].SetOptional()
-	attrs["client_id"] = attrs["client_id"].SetOptional()
-	attrs["client_secret"] = attrs["client_secret"].SetOptional()
+	attrs["entra_service_principal"] = attrs["entra_service_principal"].SetOptional()
 	attrs["service_credential"] = attrs["service_credential"].SetOptional()
-	attrs["tenant_id"] = attrs["tenant_id"].SetOptional()
 
 	return attrs
 }
@@ -28328,9 +28506,9 @@ func (m ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) ApplySch
 // SDK values.
 func (m ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"api_key":            reflect.TypeOf(ModelProviderServiceConfigProviderSecret{}),
-		"client_secret":      reflect.TypeOf(ModelProviderServiceConfigProviderSecret{}),
-		"service_credential": reflect.TypeOf(ModelProviderServiceConfigServiceCredential{}),
+		"api_key":                 reflect.TypeOf(ModelProviderServiceConfigProviderSecret{}),
+		"entra_service_principal": reflect.TypeOf(ModelProviderServiceConfigEntraServicePrincipal{}),
+		"service_credential":      reflect.TypeOf(ModelProviderServiceConfigServiceCredential{}),
 	}
 }
 
@@ -28341,12 +28519,10 @@ func (m ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) ToObject
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"api_key":            m.ApiKey,
-			"base_url":           m.BaseUrl,
-			"client_id":          m.ClientId,
-			"client_secret":      m.ClientSecret,
-			"service_credential": m.ServiceCredential,
-			"tenant_id":          m.TenantId,
+			"api_key":                 m.ApiKey,
+			"base_url":                m.BaseUrl,
+			"entra_service_principal": m.EntraServicePrincipal,
+			"service_credential":      m.ServiceCredential,
 		})
 }
 
@@ -28354,12 +28530,10 @@ func (m ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) ToObject
 func (m ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"api_key":            ModelProviderServiceConfigProviderSecret{}.Type(ctx),
-			"base_url":           types.StringType,
-			"client_id":          types.StringType,
-			"client_secret":      ModelProviderServiceConfigProviderSecret{}.Type(ctx),
-			"service_credential": ModelProviderServiceConfigServiceCredential{}.Type(ctx),
-			"tenant_id":          types.StringType,
+			"api_key":                 ModelProviderServiceConfigProviderSecret{}.Type(ctx),
+			"base_url":                types.StringType,
+			"entra_service_principal": ModelProviderServiceConfigEntraServicePrincipal{}.Type(ctx),
+			"service_credential":      ModelProviderServiceConfigServiceCredential{}.Type(ctx),
 		},
 	}
 }
@@ -28389,16 +28563,16 @@ func (m *ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) SetApiK
 	m.ApiKey = vs
 }
 
-// GetClientSecret returns the value of the ClientSecret field in ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig as
-// a ModelProviderServiceConfigProviderSecret value.
+// GetEntraServicePrincipal returns the value of the EntraServicePrincipal field in ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig as
+// a ModelProviderServiceConfigEntraServicePrincipal value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) GetClientSecret(ctx context.Context) (ModelProviderServiceConfigProviderSecret, bool) {
-	var e ModelProviderServiceConfigProviderSecret
-	if m.ClientSecret.IsNull() || m.ClientSecret.IsUnknown() {
+func (m *ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) GetEntraServicePrincipal(ctx context.Context) (ModelProviderServiceConfigEntraServicePrincipal, bool) {
+	var e ModelProviderServiceConfigEntraServicePrincipal
+	if m.EntraServicePrincipal.IsNull() || m.EntraServicePrincipal.IsUnknown() {
 		return e, false
 	}
-	var v ModelProviderServiceConfigProviderSecret
-	d := m.ClientSecret.As(ctx, &v, basetypes.ObjectAsOptions{
+	var v ModelProviderServiceConfigEntraServicePrincipal
+	d := m.EntraServicePrincipal.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -28408,10 +28582,10 @@ func (m *ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) GetClie
 	return v, true
 }
 
-// SetClientSecret sets the value of the ClientSecret field in ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig.
-func (m *ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) SetClientSecret(ctx context.Context, v ModelProviderServiceConfigProviderSecret) {
+// SetEntraServicePrincipal sets the value of the EntraServicePrincipal field in ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig.
+func (m *ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig) SetEntraServicePrincipal(ctx context.Context, v ModelProviderServiceConfigEntraServicePrincipal) {
 	vs := v.ToObjectValue(ctx)
-	m.ClientSecret = vs
+	m.EntraServicePrincipal = vs
 }
 
 // GetServiceCredential returns the value of the ServiceCredential field in ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig as

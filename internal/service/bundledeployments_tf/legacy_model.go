@@ -17,7 +17,6 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -1904,7 +1903,20 @@ type Operation_SdkV2 struct {
 	// delete operations. Mutable: may be updated after creation via
 	// UpdateOperation. When updating, the caller must echo the last-observed
 	// `sequence_id` as a concurrency precondition.
-	State jsontypes.Normalized `tfsdk:"state"`
+	//
+	// Opaque to this service: the string is stored and returned unchanged. This
+	// is deliberately not google.protobuf.Value, whose only numeric case is
+	// `double number_value`, so parsing the client's JSON into it rewrites
+	// every integer as a double - `1` reads back as `1.0`, which no longer
+	// deserializes into an integer field - and silently loses precision above
+	// 2^53, which is within range for IDs the client records.
+	//
+	// A string rather than bytes: the payload is always UTF-8 JSON, and proto3
+	// JSON maps bytes to base64, which inflates every request and response by a
+	// third and makes state unreadable in logs and API responses. Both generate
+	// the same OpenAPI schema ("type": "string"), so the SDKs are identical
+	// either way.
+	State types.String `tfsdk:"state"`
 	// Whether the operation succeeded or failed. Mutable: may be updated after
 	// creation via UpdateOperation, e.g. when an operation recorded as failed
 	// is retried and eventually succeeds. A succeeded operation cannot carry an
@@ -2010,7 +2022,7 @@ func (m Operation_SdkV2) Type(ctx context.Context) attr.Type {
 			"resource_key":  types.StringType,
 			"resource_type": types.StringType,
 			"sequence_id":   types.Int64Type,
-			"state":         jsontypes.NormalizedType{},
+			"state":         types.StringType,
 			"status":        types.StringType,
 			"update_time":   timetypes.RFC3339{}.Type(ctx),
 		},
@@ -2063,8 +2075,10 @@ type Resource_SdkV2 struct {
 	ResourceKey types.String `tfsdk:"resource_key"`
 	// The type of the deployment resource.
 	ResourceType types.String `tfsdk:"resource_type"`
-	// Serialized local config state (what the CLI deployed).
-	State jsontypes.Normalized `tfsdk:"state"`
+	// Serialized local config state (what the CLI deployed). Opaque to this
+	// service; see Operation.state for why this is a string and not
+	// google.protobuf.Value.
+	State types.String `tfsdk:"state"`
 	// When the last operation that updated this resource's recorded state was
 	// applied. Pairs with last_action_type and last_version_id (all three
 	// advance together on that write).
@@ -2156,7 +2170,7 @@ func (m Resource_SdkV2) Type(ctx context.Context) attr.Type {
 			"resource_id":      types.StringType,
 			"resource_key":     types.StringType,
 			"resource_type":    types.StringType,
-			"state":            jsontypes.NormalizedType{},
+			"state":            types.StringType,
 			"update_time":      timetypes.RFC3339{}.Type(ctx),
 		},
 	}

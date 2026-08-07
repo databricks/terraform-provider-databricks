@@ -1,5 +1,13 @@
 # Version changelog
 
+## Release v1.124.0 (2026-08-03)
+
+### New Features and Improvements
+* Add resource and data sources for `databricks_ai_gateway_model_service`.
+* Add resource and data sources for `databricks_ai_gateway_model_provider_service`.
+* Add resource and data sources for `databricks_ai_gateway_mcp_service`.
+
+
 ## Release v1.123.0 (2026-07-29)
 
 ### Important Changes

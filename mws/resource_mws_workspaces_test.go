@@ -1189,6 +1189,31 @@ func TestWorkspace_WaitForResolve(t *testing.T) {
 	})
 }
 
+func TestWorkspace_WaitForProvisioningWhenRunning(t *testing.T) {
+	// Test that when expected status is PROVISIONING but workspace is already RUNNING,
+	// it should be accepted as successful (RUNNING is a more advanced state)
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+			ReuseRequest: true,
+			Response: Workspace{
+				AccountID:       "abc",
+				WorkspaceID:     1234,
+				WorkspaceStatus: WorkspaceStatusRunning,
+				DeploymentName:  "test-workspace",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		a := NewWorkspacesAPI(ctx, client)
+		err := a.WaitForExpectedStatus(Workspace{
+			AccountID:   "abc",
+			WorkspaceID: 1234,
+		}, WorkspaceStatusProvisioning, 1*time.Second)
+		assert.NoError(t, err, "Should accept RUNNING state when expected status is PROVISIONING")
+	})
+}
+
 func updateWorkspaceScimFixture(t *testing.T, fixtures []qa.HTTPFixture, state map[string]string, hcl string) {
 	accountsAPI := []qa.HTTPFixture{
 		{

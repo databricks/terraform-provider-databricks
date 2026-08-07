@@ -614,6 +614,69 @@ func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 	})
 }
 
+// TestUcAccShareCommentSetOutsideTerraform covers a share managed without a comment in
+// config when a comment is then set outside terraform: the value must be adopted into
+// state rather than failing the apply with "produced an unexpected new value".
+func TestUcAccShareCommentSetOutsideTerraform(t *testing.T) {
+	var shareName string
+	const outOfBandComment = "set outside terraform"
+	shareConfig := preTestTemplateSchema + `
+	resource "databricks_share" "myshare" {
+		name  = "{var.STICKY_RANDOM}-terraform-delta-share-comment-oob"
+		object {
+			name = databricks_schema.schema1.id
+			data_object_type = "SCHEMA"
+		}
+	}`
+
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: shareConfig, // no comment in config
+		Check: func(s *terraform.State) error {
+			share := s.RootModule().Resources["databricks_share.myshare"]
+			if share == nil {
+				return fmt.Errorf("expected databricks_share.myshare in state")
+			}
+			shareName = share.Primary.Attributes["name"]
+			assert.NotEmpty(t, shareName)
+			assert.Empty(t, share.Primary.Attributes["comment"])
+			return nil
+		},
+	}, acceptance.Step{
+		PreConfig: func() {
+			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
+			require.NoError(t, err)
+			// set a comment outside terraform, as a UI edit would
+			_, err = w.Shares.Update(context.Background(), sharing.UpdateShare{
+				Name:            shareName,
+				Comment:         outOfBandComment,
+				ForceSendFields: []string{"Comment"},
+			})
+			require.NoError(t, err)
+		},
+		Template: shareConfig, // still no comment in config
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+		},
+		Check: resource.ComposeAggregateTestCheckFunc(
+			resource.TestCheckResourceAttr("databricks_share.myshare", "comment", outOfBandComment),
+			// the comment must also survive on the server, not just in state
+			func(s *terraform.State) error {
+				w, err := databricks.NewWorkspaceClient(&databricks.Config{})
+				if err != nil {
+					return err
+				}
+				share, err := w.Shares.Get(context.Background(), sharing.GetShareRequest{Name: shareName})
+				if err != nil {
+					return err
+				}
+				assert.Equal(t, outOfBandComment, share.Comment,
+					"out-of-band comment must be preserved on the server")
+				return nil
+			},
+		),
+	})
+}
+
 func shareTemplate(provider_config string) string {
 	return fmt.Sprintf(`
 	resource "databricks_share" "myshare" {

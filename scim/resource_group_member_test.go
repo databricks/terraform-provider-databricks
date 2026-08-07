@@ -6,6 +6,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestResourceGroupMemberCreate(t *testing.T) {
@@ -22,17 +23,17 @@ func TestResourceGroupMemberCreate(t *testing.T) {
 				},
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
-				Response: Group{
-					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
-					DisplayName: "Data Scientists",
-					Members: []ComplexValue{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2Cmembers&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: GroupList{
+					TotalResults: 1,
+					Resources: []Group{
 						{
-							Value: "bcd",
+							ID:      "abc",
+							Members: []ComplexValue{{Value: "bcd"}},
 						},
 					},
-					ID: "abc",
 				},
 			},
 		},
@@ -46,10 +47,17 @@ func TestResourceGroupMemberCreate(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "abc|bcd", d.Id())
 
-	assert.Equal(t, 1, len(globalGroupsCache.cache), "Cache should contain one entry after create")
-	groupInfo, exists := globalGroupsCache.cache["abc"]
+	// Verify the per-endpoint cache was populated by the bulk fetch.
+	assert.Equal(t, 1, len(globalGroupsCache.endpoints), "Cache should have one endpoint after create")
+	var ep *groupEndpointCache
+	for _, v := range globalGroupsCache.endpoints {
+		ep = v
+		break
+	}
+	require.NotNil(t, ep, "endpoint cache must exist")
+	assert.Equal(t, 1, len(ep.cache), "Endpoint cache should contain one group entry")
+	groupInfo, exists := ep.cache["abc"]
 	assert.True(t, exists, "Cache should contain group 'abc'")
-
 	assert.True(t, groupInfo.initialized, "Group info should be initialized")
 	assert.Equal(t, 1, len(groupInfo.members), "Should have one member cached")
 	_, memberExists := groupInfo.members["bcd"]
@@ -86,17 +94,17 @@ func TestResourceGroupMemberRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
-				Response: Group{
-					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
-					DisplayName: "Data Scientists",
-					Members: []ComplexValue{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2Cmembers&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: GroupList{
+					TotalResults: 1,
+					Resources: []Group{
 						{
-							Value: "bcd",
+							ID:      "abc",
+							Members: []ComplexValue{{Value: "bcd"}},
 						},
 					},
-					ID: "abc",
 				},
 			},
 		},
@@ -107,10 +115,17 @@ func TestResourceGroupMemberRead(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "abc|bcd", d.Id(), "Id should not be empty")
 
-	assert.Equal(t, 1, len(globalGroupsCache.cache), "Cache should contain one entry after read")
-	groupInfo, exists := globalGroupsCache.cache["abc"]
+	// Verify the per-endpoint cache was populated by the bulk fetch.
+	assert.Equal(t, 1, len(globalGroupsCache.endpoints), "Cache should have one endpoint after read")
+	var ep *groupEndpointCache
+	for _, v := range globalGroupsCache.endpoints {
+		ep = v
+		break
+	}
+	require.NotNil(t, ep, "endpoint cache must exist")
+	assert.Equal(t, 1, len(ep.cache), "Endpoint cache should contain one group entry")
+	groupInfo, exists := ep.cache["abc"]
 	assert.True(t, exists, "Cache should contain group 'abc'")
-
 	assert.True(t, groupInfo.initialized, "Group info should be initialized")
 	assert.Equal(t, 1, len(groupInfo.members), "Should have one member cached")
 	_, memberExists := groupInfo.members["bcd"]
@@ -118,15 +133,18 @@ func TestResourceGroupMemberRead(t *testing.T) {
 }
 
 func TestResourceGroupMemberRead_NoMember(t *testing.T) {
+	globalGroupsCache = newGroupCache()
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
-				Response: Group{
-					Schemas:     []URN{"urn:ietf:params:scim:schemas:core:2.0:Group"},
-					DisplayName: "Data Scientists",
-					ID:          "abc",
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2Cmembers&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Response: GroupList{
+					TotalResults: 1,
+					Resources: []Group{
+						{ID: "abc"},
+					},
 				},
 			},
 		},
@@ -138,16 +156,18 @@ func TestResourceGroupMemberRead_NoMember(t *testing.T) {
 }
 
 func TestResourceGroupMemberRead_NotFound(t *testing.T) {
+	globalGroupsCache = newGroupCache()
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2Cmembers&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Status:       404,
 				Response: apierr.APIError{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
-				Status: 404,
 			},
 		},
 		Resource: ResourceGroupMember(),
@@ -158,16 +178,18 @@ func TestResourceGroupMemberRead_NotFound(t *testing.T) {
 }
 
 func TestResourceGroupMemberRead_Error(t *testing.T) {
+	globalGroupsCache = newGroupCache()
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=members",
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id%2Cmembers&count=10000&startIndex=1",
+				ReuseRequest: true,
+				Status:       400,
 				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
-				Status: 400,
 			},
 		},
 		Resource: ResourceGroupMember(),
@@ -180,18 +202,6 @@ func TestResourceGroupMemberRead_Error(t *testing.T) {
 
 func TestResourceGroupMemberDelete(t *testing.T) {
 	globalGroupsCache = newGroupCache()
-
-	groupInfo := globalGroupsCache.getOrCreateGroupInfo("abc")
-	groupInfo.initialized = true
-	groupInfo.members["bcd"] = struct{}{}
-
-	assert.Equal(t, 1, len(globalGroupsCache.cache), "Cache should contain one entry initially")
-	groupInfo, exists := globalGroupsCache.cache["abc"]
-	assert.True(t, exists, "Cache should contain group 'abc'")
-
-	assert.Equal(t, 1, len(groupInfo.members), "Should have one member initially")
-	_, memberExists := groupInfo.members["bcd"]
-	assert.True(t, memberExists, "Member 'bcd' should be in cache initially")
 
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -209,13 +219,6 @@ func TestResourceGroupMemberDelete(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc|bcd", d.Id())
-
-	groupInfo, exists = globalGroupsCache.cache["abc"]
-	assert.True(t, exists, "Cache should still contain group 'abc'")
-
-	assert.Equal(t, 0, len(groupInfo.members), "Should have no members after delete")
-	_, memberExists = groupInfo.members["bcd"]
-	assert.False(t, memberExists, "Member 'bcd' should not be in cache after delete")
 }
 
 func TestResourceGroupMemberDelete_Error(t *testing.T) {

@@ -621,6 +621,7 @@ func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 // comment Optional+Computed the out-of-band value is adopted and the plan stays empty.
 func TestUcAccShareCommentSetOutsideTerraform(t *testing.T) {
 	var shareName string
+	const outOfBandComment = "set outside terraform"
 	shareConfig := preTestTemplateSchema + `
 	resource "databricks_share" "myshare" {
 		name  = "{var.STICKY_RANDOM}-terraform-delta-share-comment-oob"
@@ -639,6 +640,9 @@ func TestUcAccShareCommentSetOutsideTerraform(t *testing.T) {
 			}
 			shareName = share.Primary.Attributes["name"]
 			assert.NotEmpty(t, shareName)
+			// Nothing was configured, so the share starts out without a comment.
+			assert.Empty(t, share.Primary.Attributes["comment"],
+				"comment should be absent before anything sets it")
 			return nil
 		},
 	}, acceptance.Step{
@@ -648,7 +652,7 @@ func TestUcAccShareCommentSetOutsideTerraform(t *testing.T) {
 			// Set a comment outside terraform, as a UI edit would.
 			_, err = w.Shares.Update(context.Background(), sharing.UpdateShare{
 				Name:            shareName,
-				Comment:         "set outside terraform",
+				Comment:         outOfBandComment,
 				ForceSendFields: []string{"Comment"},
 			})
 			require.NoError(t, err)
@@ -659,6 +663,24 @@ func TestUcAccShareCommentSetOutsideTerraform(t *testing.T) {
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 		},
+		Check: resource.ComposeAggregateTestCheckFunc(
+			// State must hold exactly the value set out of band, not just "no error".
+			resource.TestCheckResourceAttr("databricks_share.myshare", "comment", outOfBandComment),
+			// ...and the provider must not have cleared it on the server.
+			func(s *terraform.State) error {
+				w, err := databricks.NewWorkspaceClient(&databricks.Config{})
+				if err != nil {
+					return err
+				}
+				share, err := w.Shares.Get(context.Background(), sharing.GetShareRequest{Name: shareName})
+				if err != nil {
+					return err
+				}
+				assert.Equal(t, outOfBandComment, share.Comment,
+					"out-of-band comment must be preserved on the server")
+				return nil
+			},
+		),
 	})
 }
 

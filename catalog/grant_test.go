@@ -184,6 +184,32 @@ func TestUcAccGrant_ProviderConfig_Mismatched(t *testing.T) {
 	})
 }
 
+func TestUcAccGrantSwapPrivilege(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: `
+		resource "databricks_schema" "this" {
+			catalog_name = "main"
+			name         = "swap-priv-{var.STICKY_RANDOM}"
+		}
+		resource "databricks_grant" "this" {
+			schema    = databricks_schema.this.id
+			principal = "{env.TEST_DATA_ENG_GROUP}"
+			privileges = ["SELECT"]
+		}`,
+	}, acceptance.Step{
+		Template: `
+		resource "databricks_schema" "this" {
+			catalog_name = "main"
+			name         = "swap-priv-{var.STICKY_RANDOM}"
+		}
+		resource "databricks_grant" "this" {
+			schema    = databricks_schema.this.id
+			principal = "{env.TEST_DATA_ENG_GROUP}"
+			privileges = ["MODIFY"]
+		}`,
+	})
+}
+
 func TestUcAccGrantForIdChange(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: grantTemplateForNamePermissionChange("-old", "ALL_PRIVILEGES"),

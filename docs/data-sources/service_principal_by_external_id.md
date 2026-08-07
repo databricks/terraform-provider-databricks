@@ -17,6 +17,10 @@ data "databricks_service_principal_by_external_id" "this" {
   external_id = "11111111-2222-3333-4444-555555555555"
 }
 
+resource "databricks_group" "this" {
+  display_name = "Data Engineers"
+}
+
 resource "databricks_group_member" "member" {
   group_id  = databricks_group.this.id
   member_id = data.databricks_service_principal_by_external_id.this.service_principal_id

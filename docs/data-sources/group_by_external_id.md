@@ -17,6 +17,10 @@ data "databricks_group_by_external_id" "this" {
   external_id = "11111111-2222-3333-4444-555555555555"
 }
 
+resource "databricks_user" "this" {
+  user_name = "me@example.com"
+}
+
 resource "databricks_group_member" "member" {
   group_id  = data.databricks_group_by_external_id.this.group_id
   member_id = databricks_user.this.id

@@ -33,7 +33,7 @@ type McpServicesData struct {
 	// selective metadata.
 	IncludeBrowse types.Bool `tfsdk:"include_browse"`
 	// Maximum number of MCP services to return. Defaults to 100 when unset or
-	// 0; the maximum is 1000. Use `next_page_token` to retrieve additional
+	// 0; the maximum is 100. Use `next_page_token` to retrieve additional
 	// pages.
 	PageSize types.Int64 `tfsdk:"page_size"`
 	// Resource name of the parent schema to list within, as

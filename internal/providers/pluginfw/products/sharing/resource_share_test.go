@@ -6,6 +6,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -139,6 +140,46 @@ func TestShareSyncEffectiveFields(t *testing.T) {
 			assert.False(t, diagnostics.HasError())
 		})
 	}
+}
+
+func TestShareSyncEffectiveFieldsCreateOrUpdateSyncsObjectsOnceByName(t *testing.T) {
+	ctx := context.Background()
+	planGoSDK := sharing.ShareInfo{
+		Name: "test-share-name",
+		Objects: []sharing.SharedDataObject{
+			{Name: "obj-1"},
+			{Name: "obj-2", SharedAs: "configured-alias"},
+		},
+	}
+	serverGoSDK := sharing.ShareInfo{
+		Name: "test-share-name",
+		Objects: []sharing.SharedDataObject{
+			{Name: "obj-2", SharedAs: "server-alias-2"},
+			{Name: "obj-1", SharedAs: "server-alias-1"},
+		},
+	}
+
+	var plan ShareInfoExtended
+	diagnostics := converters.GoSdkToTfSdkStruct(ctx, planGoSDK, &plan)
+	assert.False(t, diagnostics.HasError())
+	var serverState ShareInfoExtended
+	diagnostics = converters.GoSdkToTfSdkStruct(ctx, serverGoSDK, &serverState)
+	assert.False(t, diagnostics.HasError())
+
+	result, diagnostics := (&ShareResource{}).syncEffectiveFields(ctx, plan, serverState, effectiveFieldsActionCreateOrUpdate{})
+	assert.False(t, diagnostics.HasError())
+	objects, ok := result.GetObjects(ctx)
+	assert.True(t, ok)
+	assert.Len(t, objects, 2)
+	objectsByName := map[string]sharing_tf.SharedDataObject_SdkV2{}
+	for _, object := range objects {
+		objectsByName[object.Name.ValueString()] = object
+	}
+
+	assert.True(t, objectsByName["obj-1"].SharedAs.IsNull())
+	assert.Equal(t, "server-alias-1", objectsByName["obj-1"].EffectiveSharedAs.ValueString())
+	assert.Equal(t, "configured-alias", objectsByName["obj-2"].SharedAs.ValueString())
+	assert.Equal(t, "server-alias-2", objectsByName["obj-2"].EffectiveSharedAs.ValueString())
 }
 
 // TestDiff tests the diff function that compares two ShareInfo states

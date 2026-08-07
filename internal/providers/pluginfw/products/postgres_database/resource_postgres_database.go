@@ -113,15 +113,7 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 type Database struct {
 	// A timestamp indicating when the database was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The ID to use for the Database, which will become the final component of
-	// the database's resource name. This ID becomes the database name in
-	// postgres.
-	//
-	// This value should be 4-63 characters, and only use characters available
-	// in DNS names, as defined by RFC-1123
-	//
-	// If database_id is not specified in the request, it is generated
-	// automatically.
+	// The part of the name, chosen by the user when the resource was created.
 	DatabaseId types.String `tfsdk:"database_id"`
 	// The resource name of the database. Format:
 	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
@@ -129,6 +121,9 @@ type Database struct {
 	// The branch containing this database. Format:
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"parent"`
+	// If true, update the database if it already exists instead of returning an
+	// error.
+	ReplaceExisting types.Bool `tfsdk:"replace_existing"`
 	// The desired state of the Database.
 	Spec types.Object `tfsdk:"spec"`
 	// The observed state of the Database.
@@ -163,12 +158,13 @@ func (m Database) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"create_time": m.CreateTime,
-			"database_id": m.DatabaseId,
-			"name":        m.Name,
-			"parent":      m.Parent,
-			"spec":        m.Spec,
-			"status":      m.Status,
-			"update_time": m.UpdateTime,
+			"database_id":      m.DatabaseId,
+			"name":             m.Name,
+			"parent":           m.Parent,
+			"replace_existing": m.ReplaceExisting,
+			"spec":             m.Spec,
+			"status":           m.Status,
+			"update_time":      m.UpdateTime,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -180,12 +176,13 @@ func (m Database) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Database) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"create_time": timetypes.RFC3339{}.Type(ctx),
-			"database_id": types.StringType,
-			"name":        types.StringType,
-			"parent":      types.StringType,
-			"spec":        postgres_tf.DatabaseDatabaseSpec{}.Type(ctx),
-			"status":      postgres_tf.DatabaseDatabaseStatus{}.Type(ctx),
-			"update_time": timetypes.RFC3339{}.Type(ctx),
+			"database_id":      types.StringType,
+			"name":             types.StringType,
+			"parent":           types.StringType,
+			"replace_existing": types.BoolType,
+			"spec":             postgres_tf.DatabaseDatabaseSpec{}.Type(ctx),
+			"status":           postgres_tf.DatabaseDatabaseStatus{}.Type(ctx),
+			"update_time":      timetypes.RFC3339{}.Type(ctx),
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -196,8 +193,8 @@ func (m Database) Type(ctx context.Context) attr.Type {
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (to *Database) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Database) {
-	if !from.DatabaseId.IsUnknown() {
-		to.DatabaseId = from.DatabaseId
+	if !from.ReplaceExisting.IsUnknown() {
+		to.ReplaceExisting = from.ReplaceExisting
 	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
@@ -229,8 +226,8 @@ func (to *Database) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Dat
 // including both embedded model fields and additional fields. This method is called
 // during read.
 func (to *Database) SyncFieldsDuringRead(ctx context.Context, from Database) {
-	if !from.DatabaseId.IsUnknown() {
-		to.DatabaseId = from.DatabaseId
+	if !from.ReplaceExisting.IsUnknown() {
+		to.ReplaceExisting = from.ReplaceExisting
 	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
@@ -258,6 +255,10 @@ func (to *Database) SyncFieldsDuringRead(ctx context.Context, from Database) {
 
 func (m Database) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["database_id"] = attrs["database_id"].SetComputed()
+	attrs["database_id"] = attrs["database_id"].SetOptional()
+	attrs["database_id"] = attrs["database_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["database_id"] = attrs["database_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
@@ -266,10 +267,7 @@ func (m Database) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["database_id"] = attrs["database_id"].SetComputed()
-	attrs["database_id"] = attrs["database_id"].SetOptional()
-	attrs["database_id"] = attrs["database_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["database_id"] = attrs["database_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
+	attrs["replace_existing"] = attrs["replace_existing"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -380,6 +378,9 @@ func (r *DatabaseResource) Create(ctx context.Context, req resource.CreateReques
 		Database:   database,
 		Parent:     plan.Parent.ValueString(),
 		DatabaseId: plan.DatabaseId.ValueString(),
+	}
+	if !plan.ReplaceExisting.IsNull() && !plan.ReplaceExisting.IsUnknown() {
+		createRequest.ReplaceExisting = plan.ReplaceExisting.ValueBool()
 	}
 
 	var namespace ProviderConfig

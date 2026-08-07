@@ -29,6 +29,70 @@ Databases exist within the Lakebase Autoscaling resource hierarchy:
 
 
 ## Example Usage
+### Managing Implicitly Created Database
+
+A database named `databricks-postgres` (Postgres name `databricks_postgres`) is implicitly created on every branch. Since Terraform is declarative, managing an already-existing resource requires `replace_existing = true`: it lets Terraform represent the implicitly created database in Terraform state and immediately apply the provided configuration to it.
+
+`replace_existing = true` only affects the initial adoption. Once the database is in Terraform state, it is managed like any other resource: removing it from your configuration and applying **deletes the actual database** (and its data), not just the state entry. This is unlike `databricks_postgres_branch`, whose deletion is instead controlled by its parent project. To stop managing the database without deleting it, remove it from state with `terraform state rm` before removing it from your configuration.
+
+`spec.role` is optional: omit it to keep the database's existing owner (as shown below). When you do set it — to change ownership — it must reference a role in the same branch, written as `<branch-name>/roles/<role_id>`.
+
+```hcl
+resource "databricks_postgres_project" "this" {
+  project_id = "my-project"
+  spec = {
+    pg_version   = 17
+    display_name = "My Project"
+  }
+}
+
+resource "databricks_postgres_branch" "production" {
+  branch_id = "production"
+  parent    = databricks_postgres_project.this.name
+  spec = {
+    no_expiry = true
+  }
+  replace_existing = true
+}
+
+resource "databricks_postgres_database" "databricks_postgres" {
+  database_id = "databricks-postgres"
+  parent      = databricks_postgres_branch.production.name
+  spec = {
+    postgres_database = "databricks_postgres"
+    # spec.role is omitted, so the database keeps its existing owner. Set it only to change ownership.
+  }
+  replace_existing = true
+}
+```
+
+### Managing a Database Inherited by a Child Branch
+
+A child branch created from a source branch (via `spec.source_branch`) shares the source's storage through copy-on-write, so every database on the source branch — including the implicit `databricks-postgres` database — already exists on the child at the branch point. These inherited databases are not created by Terraform, so managing one requires `replace_existing = true`, exactly as for the implicitly created database above.
+
+You typically adopt an inherited database when you want to manage its configuration (for example, transfer ownership via `spec.role`) on the child branch independently of the source.
+
+```hcl
+resource "databricks_postgres_branch" "child" {
+  branch_id = "feature-x"
+  parent    = databricks_postgres_project.this.name
+  spec = {
+    source_branch = databricks_postgres_branch.production.name
+    no_expiry     = true
+  }
+}
+
+resource "databricks_postgres_database" "inherited" {
+  database_id = "databricks-postgres"
+  parent      = databricks_postgres_branch.child.name
+  spec = {
+    postgres_database = "databricks_postgres"
+    # spec.role is omitted, so the database keeps the owner inherited from the source branch.
+  }
+  replace_existing = true
+}
+```
+
 ### Database Owned by a Specific Role
 
 Assign ownership to a role you manage alongside the database. The Postgres database will be created with the specified role as its owner.
@@ -124,14 +188,8 @@ resource "databricks_postgres_database" "application2" {
 The following arguments are supported:
 * `parent` (string, required) - The branch containing this database.
   Format: projects/{project_id}/branches/{branch_id}
-* `database_id` (string, optional) - The ID to use for the Database, which will become the final component of
-  the database's resource name.
-  This ID becomes the database name in postgres.
-  
-  This value should be 4-63 characters, and only use characters available in DNS names,
-  as defined by RFC-1123
-  
-  If database_id is not specified in the request, it is generated automatically
+* `replace_existing` (boolean, optional) - If true, update the database if it already exists instead of returning an
+  error
 * `spec` (DatabaseDatabaseSpec, optional) - The desired state of the Database
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
@@ -139,6 +197,12 @@ The following arguments are supported:
 * `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### DatabaseDatabaseSpec
+* `role` (string, required) - The name of the role that owns the database.
+  Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
+  
+  To change the owner, pass valid existing Role name when updating the Database
+  
+  A database always has an owner
 * `postgres_database` (string, optional) - The name of the Postgres database.
   
   This expects a valid Postgres identifier as specified in the link below.
@@ -146,12 +210,6 @@ The following arguments are supported:
   Required when creating the Database.
   
   To rename, pass a valid postgres identifier when updating the Database
-* `role` (string, optional) - The name of the role that owns the database.
-  Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
-  
-  To change the owner, pass valid existing Role name when updating the Database
-  
-  A database always has an owner
 
 ### DatabaseDatabaseStatus
 * `postgres_database` (string, optional) - The name of the Postgres database
@@ -161,6 +219,7 @@ The following arguments are supported:
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 * `create_time` (string) - A timestamp indicating when the database was created
+* `database_id` (string) - The part of the name, chosen by the user when the resource was created
 * `name` (string) - The resource name of the database.
   Format: projects/{project_id}/branches/{branch_id}/databases/{database_id}
 * `status` (DatabaseDatabaseStatus) - The observed state of the Database

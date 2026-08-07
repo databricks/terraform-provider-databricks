@@ -4,6 +4,8 @@ subcategory: "Security"
 
 # databricks_service_principal Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/serviceprincipals)
+
 Directly manage [Service Principals](https://docs.databricks.com/administration-guide/users-groups/service-principals.html) that could be added to [databricks_group](group.md) in Databricks account or workspace.
 
 -> This resource can be used with an account or workspace-level provider.

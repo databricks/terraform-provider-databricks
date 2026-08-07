@@ -2,11 +2,22 @@
 subcategory: "Disaster Recovery"
 ---
 # databricks_disaster_recovery_failover_groups Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/account/disasterrecovery)
+
+This data source can be used to fetch the list of failover groups in the account.
+
+-> **Note** This data source can only be used with an account-level provider!
 
 
 ## Example Usage
+Getting a list of all failover groups in the account:
+
+```hcl
+data "databricks_disaster_recovery_failover_groups" "all" {
+}
+```
 
 
 ## Arguments
@@ -25,8 +36,7 @@ This data source exports a single attribute, `failover_groups`. It is a list of 
 * `create_time` (string) - Time at which this failover group was created
 * `effective_primary_region` (string) - Current effective primary region. Replication flows FROM workspaces in this region.
   Changes after a successful failover
-* `etag` (string) - Opaque version string for optimistic locking. Server-generated, returned in responses.
-  Must be provided on Update requests to prevent concurrent modifications
+* `etag` (string) - Opaque version string for optimistic locking. Server-generated and returned in responses
 * `initial_primary_region` (string) - Initial primary region. Used only in Create requests to set the starting
   primary region. Not returned in responses
 * `name` (string) - Fully qualified resource name in the format
@@ -58,9 +68,9 @@ This data source exports a single attribute, `failover_groups`. It is a list of 
 ### WorkspaceSet
 * `name` (string) - Resource name for this workspace set
 * `replicate_workspace_assets` (boolean) - Whether to enable control plane DR (notebooks, jobs, clusters, etc.) for this set.
-  Requires all workspaces in the set to be Mission Critical tier
+  Defaults to false
 * `stable_url_names` (list of string) - Resource names of stable URLs associated with this workspace set.
   Format: accounts/{account_id}/stable-urls/{stable_url_id}.
   The referenced stable URLs must already exist (via CreateStableUrl)
 * `workspace_ids` (list of string) - Workspace IDs in this set. The system derives and validates regions.
-  EA: exactly 2 workspaces (one per region)
+  All workspaces must be in the Mission Critical tier

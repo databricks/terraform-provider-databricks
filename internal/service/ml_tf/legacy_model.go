@@ -150,7 +150,15 @@ type AggregationFunction_SdkV2 struct {
 
 	First types.List `tfsdk:"first"`
 
+	FirstDistinct types.List `tfsdk:"first_distinct"`
+
+	FirstN types.List `tfsdk:"first_n"`
+
 	Last types.List `tfsdk:"last"`
+
+	LastDistinct types.List `tfsdk:"last_distinct"`
+
+	LastN types.List `tfsdk:"last_n"`
 
 	Max types.List `tfsdk:"max"`
 
@@ -215,12 +223,48 @@ func (to *AggregationFunction_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 			}
 		}
 	}
+	if !from.FirstDistinct.IsNull() && !from.FirstDistinct.IsUnknown() {
+		if toFirstDistinct, ok := to.GetFirstDistinct(ctx); ok {
+			if fromFirstDistinct, ok := from.GetFirstDistinct(ctx); ok {
+				// Recursively sync the fields of FirstDistinct
+				toFirstDistinct.SyncFieldsDuringCreateOrUpdate(ctx, fromFirstDistinct)
+				to.SetFirstDistinct(ctx, toFirstDistinct)
+			}
+		}
+	}
+	if !from.FirstN.IsNull() && !from.FirstN.IsUnknown() {
+		if toFirstN, ok := to.GetFirstN(ctx); ok {
+			if fromFirstN, ok := from.GetFirstN(ctx); ok {
+				// Recursively sync the fields of FirstN
+				toFirstN.SyncFieldsDuringCreateOrUpdate(ctx, fromFirstN)
+				to.SetFirstN(ctx, toFirstN)
+			}
+		}
+	}
 	if !from.Last.IsNull() && !from.Last.IsUnknown() {
 		if toLast, ok := to.GetLast(ctx); ok {
 			if fromLast, ok := from.GetLast(ctx); ok {
 				// Recursively sync the fields of Last
 				toLast.SyncFieldsDuringCreateOrUpdate(ctx, fromLast)
 				to.SetLast(ctx, toLast)
+			}
+		}
+	}
+	if !from.LastDistinct.IsNull() && !from.LastDistinct.IsUnknown() {
+		if toLastDistinct, ok := to.GetLastDistinct(ctx); ok {
+			if fromLastDistinct, ok := from.GetLastDistinct(ctx); ok {
+				// Recursively sync the fields of LastDistinct
+				toLastDistinct.SyncFieldsDuringCreateOrUpdate(ctx, fromLastDistinct)
+				to.SetLastDistinct(ctx, toLastDistinct)
+			}
+		}
+	}
+	if !from.LastN.IsNull() && !from.LastN.IsUnknown() {
+		if toLastN, ok := to.GetLastN(ctx); ok {
+			if fromLastN, ok := from.GetLastN(ctx); ok {
+				// Recursively sync the fields of LastN
+				toLastN.SyncFieldsDuringCreateOrUpdate(ctx, fromLastN)
+				to.SetLastN(ctx, toLastN)
 			}
 		}
 	}
@@ -339,11 +383,43 @@ func (to *AggregationFunction_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 			}
 		}
 	}
+	if !from.FirstDistinct.IsNull() && !from.FirstDistinct.IsUnknown() {
+		if toFirstDistinct, ok := to.GetFirstDistinct(ctx); ok {
+			if fromFirstDistinct, ok := from.GetFirstDistinct(ctx); ok {
+				toFirstDistinct.SyncFieldsDuringRead(ctx, fromFirstDistinct)
+				to.SetFirstDistinct(ctx, toFirstDistinct)
+			}
+		}
+	}
+	if !from.FirstN.IsNull() && !from.FirstN.IsUnknown() {
+		if toFirstN, ok := to.GetFirstN(ctx); ok {
+			if fromFirstN, ok := from.GetFirstN(ctx); ok {
+				toFirstN.SyncFieldsDuringRead(ctx, fromFirstN)
+				to.SetFirstN(ctx, toFirstN)
+			}
+		}
+	}
 	if !from.Last.IsNull() && !from.Last.IsUnknown() {
 		if toLast, ok := to.GetLast(ctx); ok {
 			if fromLast, ok := from.GetLast(ctx); ok {
 				toLast.SyncFieldsDuringRead(ctx, fromLast)
 				to.SetLast(ctx, toLast)
+			}
+		}
+	}
+	if !from.LastDistinct.IsNull() && !from.LastDistinct.IsUnknown() {
+		if toLastDistinct, ok := to.GetLastDistinct(ctx); ok {
+			if fromLastDistinct, ok := from.GetLastDistinct(ctx); ok {
+				toLastDistinct.SyncFieldsDuringRead(ctx, fromLastDistinct)
+				to.SetLastDistinct(ctx, toLastDistinct)
+			}
+		}
+	}
+	if !from.LastN.IsNull() && !from.LastN.IsUnknown() {
+		if toLastN, ok := to.GetLastN(ctx); ok {
+			if fromLastN, ok := from.GetLastN(ctx); ok {
+				toLastN.SyncFieldsDuringRead(ctx, fromLastN)
+				to.SetLastN(ctx, toLastN)
 			}
 		}
 	}
@@ -424,8 +500,16 @@ func (m AggregationFunction_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["count_function"] = attrs["count_function"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["first"] = attrs["first"].SetOptional()
 	attrs["first"] = attrs["first"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["first_distinct"] = attrs["first_distinct"].SetOptional()
+	attrs["first_distinct"] = attrs["first_distinct"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["first_n"] = attrs["first_n"].SetOptional()
+	attrs["first_n"] = attrs["first_n"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["last"] = attrs["last"].SetOptional()
 	attrs["last"] = attrs["last"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["last_distinct"] = attrs["last_distinct"].SetOptional()
+	attrs["last_distinct"] = attrs["last_distinct"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["last_n"] = attrs["last_n"].SetOptional()
+	attrs["last_n"] = attrs["last_n"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["max"] = attrs["max"].SetOptional()
 	attrs["max"] = attrs["max"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["min"] = attrs["min"].SetOptional()
@@ -460,7 +544,11 @@ func (m AggregationFunction_SdkV2) GetComplexFieldTypes(ctx context.Context) map
 		"avg":                   reflect.TypeOf(AvgFunction_SdkV2{}),
 		"count_function":        reflect.TypeOf(CountFunction_SdkV2{}),
 		"first":                 reflect.TypeOf(FirstFunction_SdkV2{}),
+		"first_distinct":        reflect.TypeOf(FirstDistinctFunction_SdkV2{}),
+		"first_n":               reflect.TypeOf(FirstNFunction_SdkV2{}),
 		"last":                  reflect.TypeOf(LastFunction_SdkV2{}),
+		"last_distinct":         reflect.TypeOf(LastDistinctFunction_SdkV2{}),
+		"last_n":                reflect.TypeOf(LastNFunction_SdkV2{}),
 		"max":                   reflect.TypeOf(MaxFunction_SdkV2{}),
 		"min":                   reflect.TypeOf(MinFunction_SdkV2{}),
 		"stddev_pop":            reflect.TypeOf(StddevPopFunction_SdkV2{}),
@@ -484,7 +572,11 @@ func (m AggregationFunction_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 			"avg":                   m.Avg,
 			"count_function":        m.CountFunction,
 			"first":                 m.First,
+			"first_distinct":        m.FirstDistinct,
+			"first_n":               m.FirstN,
 			"last":                  m.Last,
+			"last_distinct":         m.LastDistinct,
+			"last_n":                m.LastN,
 			"max":                   m.Max,
 			"min":                   m.Min,
 			"stddev_pop":            m.StddevPop,
@@ -515,8 +607,20 @@ func (m AggregationFunction_SdkV2) Type(ctx context.Context) attr.Type {
 			"first": basetypes.ListType{
 				ElemType: FirstFunction_SdkV2{}.Type(ctx),
 			},
+			"first_distinct": basetypes.ListType{
+				ElemType: FirstDistinctFunction_SdkV2{}.Type(ctx),
+			},
+			"first_n": basetypes.ListType{
+				ElemType: FirstNFunction_SdkV2{}.Type(ctx),
+			},
 			"last": basetypes.ListType{
 				ElemType: LastFunction_SdkV2{}.Type(ctx),
+			},
+			"last_distinct": basetypes.ListType{
+				ElemType: LastDistinctFunction_SdkV2{}.Type(ctx),
+			},
+			"last_n": basetypes.ListType{
+				ElemType: LastNFunction_SdkV2{}.Type(ctx),
 			},
 			"max": basetypes.ListType{
 				ElemType: MaxFunction_SdkV2{}.Type(ctx),
@@ -676,6 +780,58 @@ func (m *AggregationFunction_SdkV2) SetFirst(ctx context.Context, v FirstFunctio
 	m.First = types.ListValueMust(t, vs)
 }
 
+// GetFirstDistinct returns the value of the FirstDistinct field in AggregationFunction_SdkV2 as
+// a FirstDistinctFunction_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AggregationFunction_SdkV2) GetFirstDistinct(ctx context.Context) (FirstDistinctFunction_SdkV2, bool) {
+	var e FirstDistinctFunction_SdkV2
+	if m.FirstDistinct.IsNull() || m.FirstDistinct.IsUnknown() {
+		return e, false
+	}
+	var v []FirstDistinctFunction_SdkV2
+	d := m.FirstDistinct.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFirstDistinct sets the value of the FirstDistinct field in AggregationFunction_SdkV2.
+func (m *AggregationFunction_SdkV2) SetFirstDistinct(ctx context.Context, v FirstDistinctFunction_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["first_distinct"]
+	m.FirstDistinct = types.ListValueMust(t, vs)
+}
+
+// GetFirstN returns the value of the FirstN field in AggregationFunction_SdkV2 as
+// a FirstNFunction_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AggregationFunction_SdkV2) GetFirstN(ctx context.Context) (FirstNFunction_SdkV2, bool) {
+	var e FirstNFunction_SdkV2
+	if m.FirstN.IsNull() || m.FirstN.IsUnknown() {
+		return e, false
+	}
+	var v []FirstNFunction_SdkV2
+	d := m.FirstN.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFirstN sets the value of the FirstN field in AggregationFunction_SdkV2.
+func (m *AggregationFunction_SdkV2) SetFirstN(ctx context.Context, v FirstNFunction_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["first_n"]
+	m.FirstN = types.ListValueMust(t, vs)
+}
+
 // GetLast returns the value of the Last field in AggregationFunction_SdkV2 as
 // a LastFunction_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -700,6 +856,58 @@ func (m *AggregationFunction_SdkV2) SetLast(ctx context.Context, v LastFunction_
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["last"]
 	m.Last = types.ListValueMust(t, vs)
+}
+
+// GetLastDistinct returns the value of the LastDistinct field in AggregationFunction_SdkV2 as
+// a LastDistinctFunction_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AggregationFunction_SdkV2) GetLastDistinct(ctx context.Context) (LastDistinctFunction_SdkV2, bool) {
+	var e LastDistinctFunction_SdkV2
+	if m.LastDistinct.IsNull() || m.LastDistinct.IsUnknown() {
+		return e, false
+	}
+	var v []LastDistinctFunction_SdkV2
+	d := m.LastDistinct.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLastDistinct sets the value of the LastDistinct field in AggregationFunction_SdkV2.
+func (m *AggregationFunction_SdkV2) SetLastDistinct(ctx context.Context, v LastDistinctFunction_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["last_distinct"]
+	m.LastDistinct = types.ListValueMust(t, vs)
+}
+
+// GetLastN returns the value of the LastN field in AggregationFunction_SdkV2 as
+// a LastNFunction_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AggregationFunction_SdkV2) GetLastN(ctx context.Context) (LastNFunction_SdkV2, bool) {
+	var e LastNFunction_SdkV2
+	if m.LastN.IsNull() || m.LastN.IsUnknown() {
+		return e, false
+	}
+	var v []LastNFunction_SdkV2
+	d := m.LastN.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLastN sets the value of the LastN field in AggregationFunction_SdkV2.
+func (m *AggregationFunction_SdkV2) SetLastN(ctx context.Context, v LastNFunction_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["last_n"]
+	m.LastN = types.ListValueMust(t, vs)
 }
 
 // GetMax returns the value of the Max field in AggregationFunction_SdkV2 as
@@ -1306,7 +1514,7 @@ func (m *AuthConfig_SdkV2) SetMtlsConfig(ctx context.Context, v MtlsConfig_SdkV2
 type AvgFunction_SdkV2 struct {
 	// The input column from which the average is computed. For Kafka sources,
 	// use dot-prefixed path notation (e.g., "value.amount"). For nested fields,
-	// the leaf node name is used. TODO(FS-939): Colon-prefixed notation (e.g.,
+	// the leaf node name is used. Colon-prefixed notation (e.g.,
 	// "value:amount") is supported for backwards compatibility but is
 	// deprecated; migrate to dot notation.
 	Input types.String `tfsdk:"input"`
@@ -1466,9 +1674,34 @@ type BatchCreateMaterializedFeaturesRequest_SdkV2 struct {
 }
 
 func (to *BatchCreateMaterializedFeaturesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BatchCreateMaterializedFeaturesRequest_SdkV2) {
+	if !from.Requests.IsNull() && !from.Requests.IsUnknown() {
+		if toRequests, ok := to.GetRequests(ctx); ok {
+			if fromRequests, ok := from.GetRequests(ctx); ok {
+				// Recursively sync the fields of each Requests element by position.
+				for i := range toRequests {
+					if i < len(fromRequests) {
+						toRequests[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRequests[i])
+					}
+				}
+				to.SetRequests(ctx, toRequests)
+			}
+		}
+	}
 }
 
 func (to *BatchCreateMaterializedFeaturesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from BatchCreateMaterializedFeaturesRequest_SdkV2) {
+	if !from.Requests.IsNull() && !from.Requests.IsUnknown() {
+		if toRequests, ok := to.GetRequests(ctx); ok {
+			if fromRequests, ok := from.GetRequests(ctx); ok {
+				for i := range toRequests {
+					if i < len(fromRequests) {
+						toRequests[i].SyncFieldsDuringRead(ctx, fromRequests[i])
+					}
+				}
+				to.SetRequests(ctx, toRequests)
+			}
+		}
+	}
 }
 
 func (m BatchCreateMaterializedFeaturesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1550,6 +1783,19 @@ func (to *BatchCreateMaterializedFeaturesResponse_SdkV2) SyncFieldsDuringCreateO
 		// set the resulting resource state to the empty list to match the planned value.
 		to.MaterializedFeatures = from.MaterializedFeatures
 	}
+	if !from.MaterializedFeatures.IsNull() && !from.MaterializedFeatures.IsUnknown() {
+		if toMaterializedFeatures, ok := to.GetMaterializedFeatures(ctx); ok {
+			if fromMaterializedFeatures, ok := from.GetMaterializedFeatures(ctx); ok {
+				// Recursively sync the fields of each MaterializedFeatures element by position.
+				for i := range toMaterializedFeatures {
+					if i < len(fromMaterializedFeatures) {
+						toMaterializedFeatures[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMaterializedFeatures[i])
+					}
+				}
+				to.SetMaterializedFeatures(ctx, toMaterializedFeatures)
+			}
+		}
+	}
 }
 
 func (to *BatchCreateMaterializedFeaturesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from BatchCreateMaterializedFeaturesResponse_SdkV2) {
@@ -1558,6 +1804,18 @@ func (to *BatchCreateMaterializedFeaturesResponse_SdkV2) SyncFieldsDuringRead(ct
 		// If a user specified a non-Null, empty list for MaterializedFeatures, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.MaterializedFeatures = from.MaterializedFeatures
+	}
+	if !from.MaterializedFeatures.IsNull() && !from.MaterializedFeatures.IsUnknown() {
+		if toMaterializedFeatures, ok := to.GetMaterializedFeatures(ctx); ok {
+			if fromMaterializedFeatures, ok := from.GetMaterializedFeatures(ctx); ok {
+				for i := range toMaterializedFeatures {
+					if i < len(fromMaterializedFeatures) {
+						toMaterializedFeatures[i].SyncFieldsDuringRead(ctx, fromMaterializedFeatures[i])
+					}
+				}
+				to.SetMaterializedFeatures(ctx, toMaterializedFeatures)
+			}
+		}
 	}
 }
 
@@ -1907,9 +2165,9 @@ func (m ContinuousWindow_SdkV2) Type(ctx context.Context) attr.Type {
 type CountFunction_SdkV2 struct {
 	// The input column from which the count is computed. For Kafka sources, use
 	// dot-prefixed path notation (e.g., "value.amount"). For nested fields, the
-	// leaf node name is used. TODO(FS-939): Colon-prefixed notation (e.g.,
-	// "value:amount") is supported for backwards compatibility but is
-	// deprecated; migrate to dot notation.
+	// leaf node name is used. Colon-prefixed notation (e.g., "value:amount") is
+	// supported for backwards compatibility but is deprecated; migrate to dot
+	// notation.
 	Input types.String `tfsdk:"input"`
 }
 
@@ -2123,6 +2381,11 @@ type CreateExperiment_SdkV2 struct {
 	// tag values up to 5000 bytes in size. All storage backends are also
 	// guaranteed to support up to 20 tags per request.
 	Tags types.List `tfsdk:"tags"`
+	// The location where the experiment's traces are stored. When set, the
+	// underlying storage is provisioned and the experiment's traces are routed
+	// to it. When unset, traces are stored in the default MLflow backend. This
+	// field cannot be updated after the experiment is created.
+	TraceLocation types.List `tfsdk:"trace_location"`
 }
 
 func (to *CreateExperiment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateExperiment_SdkV2) {
@@ -2131,6 +2394,28 @@ func (to *CreateExperiment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
+	if !from.TraceLocation.IsNull() && !from.TraceLocation.IsUnknown() {
+		if toTraceLocation, ok := to.GetTraceLocation(ctx); ok {
+			if fromTraceLocation, ok := from.GetTraceLocation(ctx); ok {
+				// Recursively sync the fields of TraceLocation
+				toTraceLocation.SyncFieldsDuringCreateOrUpdate(ctx, fromTraceLocation)
+				to.SetTraceLocation(ctx, toTraceLocation)
+			}
+		}
 	}
 }
 
@@ -2141,12 +2426,35 @@ func (to *CreateExperiment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
+	if !from.TraceLocation.IsNull() && !from.TraceLocation.IsUnknown() {
+		if toTraceLocation, ok := to.GetTraceLocation(ctx); ok {
+			if fromTraceLocation, ok := from.GetTraceLocation(ctx); ok {
+				toTraceLocation.SyncFieldsDuringRead(ctx, fromTraceLocation)
+				to.SetTraceLocation(ctx, toTraceLocation)
+			}
+		}
+	}
 }
 
 func (m CreateExperiment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["artifact_location"] = attrs["artifact_location"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["trace_location"] = attrs["trace_location"].SetOptional()
+	attrs["trace_location"] = attrs["trace_location"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["trace_location"] = attrs["trace_location"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -2160,7 +2468,8 @@ func (m CreateExperiment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // SDK values.
 func (m CreateExperiment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"tags": reflect.TypeOf(ExperimentTag_SdkV2{}),
+		"tags":           reflect.TypeOf(ExperimentTag_SdkV2{}),
+		"trace_location": reflect.TypeOf(ExperimentTraceLocation_SdkV2{}),
 	}
 }
 
@@ -2174,6 +2483,7 @@ func (m CreateExperiment_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 			"artifact_location": m.ArtifactLocation,
 			"name":              m.Name,
 			"tags":              m.Tags,
+			"trace_location":    m.TraceLocation,
 		})
 }
 
@@ -2185,6 +2495,9 @@ func (m CreateExperiment_SdkV2) Type(ctx context.Context) attr.Type {
 			"name":              types.StringType,
 			"tags": basetypes.ListType{
 				ElemType: ExperimentTag_SdkV2{}.Type(ctx),
+			},
+			"trace_location": basetypes.ListType{
+				ElemType: ExperimentTraceLocation_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2214,6 +2527,32 @@ func (m *CreateExperiment_SdkV2) SetTags(ctx context.Context, v []ExperimentTag_
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Tags = types.ListValueMust(t, vs)
+}
+
+// GetTraceLocation returns the value of the TraceLocation field in CreateExperiment_SdkV2 as
+// a ExperimentTraceLocation_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateExperiment_SdkV2) GetTraceLocation(ctx context.Context) (ExperimentTraceLocation_SdkV2, bool) {
+	var e ExperimentTraceLocation_SdkV2
+	if m.TraceLocation.IsNull() || m.TraceLocation.IsUnknown() {
+		return e, false
+	}
+	var v []ExperimentTraceLocation_SdkV2
+	d := m.TraceLocation.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTraceLocation sets the value of the TraceLocation field in CreateExperiment_SdkV2.
+func (m *CreateExperiment_SdkV2) SetTraceLocation(ctx context.Context, v ExperimentTraceLocation_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["trace_location"]
+	m.TraceLocation = types.ListValueMust(t, vs)
 }
 
 type CreateExperimentResponse_SdkV2 struct {
@@ -2949,11 +3288,37 @@ func (to *CreateLoggedModelRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
 	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				// Recursively sync the fields of each Params element by position.
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringCreateOrUpdate(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -2964,11 +3329,35 @@ func (to *CreateLoggedModelRequest_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
 	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringRead(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -3291,6 +3680,19 @@ func (to *CreateModelRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 }
 
 func (to *CreateModelRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateModelRequest_SdkV2) {
@@ -3299,6 +3701,18 @@ func (to *CreateModelRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -3494,6 +3908,19 @@ func (to *CreateModelVersionRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 }
 
 func (to *CreateModelVersionRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateModelVersionRequest_SdkV2) {
@@ -3502,6 +3929,18 @@ func (to *CreateModelVersionRequest_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -4040,6 +4479,19 @@ func (to *CreateRun_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 }
 
 func (to *CreateRun_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateRun_SdkV2) {
@@ -4048,6 +4500,18 @@ func (to *CreateRun_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Create
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -4644,6 +5108,8 @@ type DataSource_SdkV2 struct {
 	KafkaSource types.List `tfsdk:"kafka_source"`
 	// A request-time data source.
 	RequestSource types.List `tfsdk:"request_source"`
+	// A Stream data source.
+	StreamSource types.List `tfsdk:"stream_source"`
 }
 
 func (to *DataSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DataSource_SdkV2) {
@@ -4674,6 +5140,15 @@ func (to *DataSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 			}
 		}
 	}
+	if !from.StreamSource.IsNull() && !from.StreamSource.IsUnknown() {
+		if toStreamSource, ok := to.GetStreamSource(ctx); ok {
+			if fromStreamSource, ok := from.GetStreamSource(ctx); ok {
+				// Recursively sync the fields of StreamSource
+				toStreamSource.SyncFieldsDuringCreateOrUpdate(ctx, fromStreamSource)
+				to.SetStreamSource(ctx, toStreamSource)
+			}
+		}
+	}
 }
 
 func (to *DataSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DataSource_SdkV2) {
@@ -4701,6 +5176,14 @@ func (to *DataSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DataS
 			}
 		}
 	}
+	if !from.StreamSource.IsNull() && !from.StreamSource.IsUnknown() {
+		if toStreamSource, ok := to.GetStreamSource(ctx); ok {
+			if fromStreamSource, ok := from.GetStreamSource(ctx); ok {
+				toStreamSource.SyncFieldsDuringRead(ctx, fromStreamSource)
+				to.SetStreamSource(ctx, toStreamSource)
+			}
+		}
+	}
 }
 
 func (m DataSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -4710,6 +5193,8 @@ func (m DataSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["kafka_source"] = attrs["kafka_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["request_source"] = attrs["request_source"].SetOptional()
 	attrs["request_source"] = attrs["request_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["stream_source"] = attrs["stream_source"].SetOptional()
+	attrs["stream_source"] = attrs["stream_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -4726,6 +5211,7 @@ func (m DataSource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]r
 		"delta_table_source": reflect.TypeOf(DeltaTableSource_SdkV2{}),
 		"kafka_source":       reflect.TypeOf(KafkaSource_SdkV2{}),
 		"request_source":     reflect.TypeOf(RequestSource_SdkV2{}),
+		"stream_source":      reflect.TypeOf(StreamSource_SdkV2{}),
 	}
 }
 
@@ -4739,6 +5225,7 @@ func (m DataSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"delta_table_source": m.DeltaTableSource,
 			"kafka_source":       m.KafkaSource,
 			"request_source":     m.RequestSource,
+			"stream_source":      m.StreamSource,
 		})
 }
 
@@ -4754,6 +5241,9 @@ func (m DataSource_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"request_source": basetypes.ListType{
 				ElemType: RequestSource_SdkV2{}.Type(ctx),
+			},
+			"stream_source": basetypes.ListType{
+				ElemType: StreamSource_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4835,6 +5325,32 @@ func (m *DataSource_SdkV2) SetRequestSource(ctx context.Context, v RequestSource
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["request_source"]
 	m.RequestSource = types.ListValueMust(t, vs)
+}
+
+// GetStreamSource returns the value of the StreamSource field in DataSource_SdkV2 as
+// a StreamSource_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataSource_SdkV2) GetStreamSource(ctx context.Context) (StreamSource_SdkV2, bool) {
+	var e StreamSource_SdkV2
+	if m.StreamSource.IsNull() || m.StreamSource.IsUnknown() {
+		return e, false
+	}
+	var v []StreamSource_SdkV2
+	d := m.StreamSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStreamSource sets the value of the StreamSource field in DataSource_SdkV2.
+func (m *DataSource_SdkV2) SetStreamSource(ctx context.Context, v StreamSource_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["stream_source"]
+	m.StreamSource = types.ListValueMust(t, vs)
 }
 
 // Dataset. Represents a reference to data used for training, testing, or
@@ -4945,6 +5461,19 @@ func (to *DatasetInput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 }
 
 func (to *DatasetInput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DatasetInput_SdkV2) {
@@ -4961,6 +5490,18 @@ func (to *DatasetInput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Dat
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -6831,8 +7372,7 @@ func (m *DeltaTableSource_SdkV2) SetEntityColumns(ctx context.Context, v []types
 }
 
 // Direct connection configs for mTLS, as Kafka Connections do not support mTLS
-// yet (XTA-18030). Temporarily used until UC Kafka Connections gain mTLS
-// support.
+// yet . Temporarily used until UC Kafka Connections gain mTLS support.
 type DirectMtlsConfig_SdkV2 struct {
 	// A comma-separated list of host:port pairs for the Kafka bootstrap
 	// servers.
@@ -6936,8 +7476,8 @@ func (m *DirectMtlsConfig_SdkV2) SetMtlsConfig(ctx context.Context, v MtlsConfig
 }
 
 // Schema definitions provided directly on the Stream, as opposed to referencing
-// a schema registry. In a future milestone, we will support schema registries
-// through a UC Connection.
+// a schema registry. To resolve schemas from a registry instead, use
+// SchemaRegistryConfig.
 type DirectSchemas_SdkV2 struct {
 	// Schema for the message key. This is only used for Kafka streams. For
 	// Kafka, at least one of payload_schema or key_schema must be specified.
@@ -7095,9 +7635,8 @@ type EntityColumn_SdkV2 struct {
 	// "value.user_id", "key.partition_key"). For nested fields, the leaf node
 	// name (e.g., "user_id" from "value.trip_details.user_id") is what will be
 	// present in materialized tables and expected to match at query time.
-	// TODO(FS-939): Colon-prefixed notation (e.g., "value:user_id") is
-	// supported for backwards compatibility but is deprecated; migrate to dot
-	// notation.
+	// Colon-prefixed notation (e.g., "value:user_id") is supported for
+	// backwards compatibility but is deprecated; migrate to dot notation.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -7161,6 +7700,10 @@ type Experiment_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// Tags: Additional metadata key-value pairs.
 	Tags types.List `tfsdk:"tags"`
+	// The location where the experiment's traces are stored. Unset when traces
+	// are stored in the default MLflow backend. This field cannot be updated
+	// after the experiment is created.
+	TraceLocation types.List `tfsdk:"trace_location"`
 }
 
 func (to *Experiment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Experiment_SdkV2) {
@@ -7170,6 +7713,28 @@ func (to *Experiment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
+	if !from.TraceLocation.IsNull() && !from.TraceLocation.IsUnknown() {
+		if toTraceLocation, ok := to.GetTraceLocation(ctx); ok {
+			if fromTraceLocation, ok := from.GetTraceLocation(ctx); ok {
+				// Recursively sync the fields of TraceLocation
+				toTraceLocation.SyncFieldsDuringCreateOrUpdate(ctx, fromTraceLocation)
+				to.SetTraceLocation(ctx, toTraceLocation)
+			}
+		}
+	}
 }
 
 func (to *Experiment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Experiment_SdkV2) {
@@ -7178,6 +7743,26 @@ func (to *Experiment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Exper
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
+	if !from.TraceLocation.IsNull() && !from.TraceLocation.IsUnknown() {
+		if toTraceLocation, ok := to.GetTraceLocation(ctx); ok {
+			if fromTraceLocation, ok := from.GetTraceLocation(ctx); ok {
+				toTraceLocation.SyncFieldsDuringRead(ctx, fromTraceLocation)
+				to.SetTraceLocation(ctx, toTraceLocation)
+			}
+		}
 	}
 }
 
@@ -7189,6 +7774,9 @@ func (m Experiment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["lifecycle_stage"] = attrs["lifecycle_stage"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["trace_location"] = attrs["trace_location"].SetOptional()
+	attrs["trace_location"] = attrs["trace_location"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["trace_location"] = attrs["trace_location"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -7202,7 +7790,8 @@ func (m Experiment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (m Experiment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"tags": reflect.TypeOf(ExperimentTag_SdkV2{}),
+		"tags":           reflect.TypeOf(ExperimentTag_SdkV2{}),
+		"trace_location": reflect.TypeOf(ExperimentTraceLocation_SdkV2{}),
 	}
 }
 
@@ -7220,6 +7809,7 @@ func (m Experiment_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"lifecycle_stage":   m.LifecycleStage,
 			"name":              m.Name,
 			"tags":              m.Tags,
+			"trace_location":    m.TraceLocation,
 		})
 }
 
@@ -7235,6 +7825,9 @@ func (m Experiment_SdkV2) Type(ctx context.Context) attr.Type {
 			"name":              types.StringType,
 			"tags": basetypes.ListType{
 				ElemType: ExperimentTag_SdkV2{}.Type(ctx),
+			},
+			"trace_location": basetypes.ListType{
+				ElemType: ExperimentTraceLocation_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7264,6 +7857,32 @@ func (m *Experiment_SdkV2) SetTags(ctx context.Context, v []ExperimentTag_SdkV2)
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Tags = types.ListValueMust(t, vs)
+}
+
+// GetTraceLocation returns the value of the TraceLocation field in Experiment_SdkV2 as
+// a ExperimentTraceLocation_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Experiment_SdkV2) GetTraceLocation(ctx context.Context) (ExperimentTraceLocation_SdkV2, bool) {
+	var e ExperimentTraceLocation_SdkV2
+	if m.TraceLocation.IsNull() || m.TraceLocation.IsUnknown() {
+		return e, false
+	}
+	var v []ExperimentTraceLocation_SdkV2
+	d := m.TraceLocation.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTraceLocation sets the value of the TraceLocation field in Experiment_SdkV2.
+func (m *Experiment_SdkV2) SetTraceLocation(ctx context.Context, v ExperimentTraceLocation_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["trace_location"]
+	m.TraceLocation = types.ListValueMust(t, vs)
 }
 
 type ExperimentAccessControlRequest_SdkV2 struct {
@@ -7349,6 +7968,19 @@ func (to *ExperimentAccessControlResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
 	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				// Recursively sync the fields of each AllPermissions element by position.
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
+	}
 }
 
 func (to *ExperimentAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ExperimentAccessControlResponse_SdkV2) {
@@ -7357,6 +7989,18 @@ func (to *ExperimentAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx contex
 		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
+	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringRead(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
 	}
 }
 
@@ -7553,6 +8197,19 @@ func (to *ExperimentPermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *ExperimentPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ExperimentPermissions_SdkV2) {
@@ -7561,6 +8218,18 @@ func (to *ExperimentPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -7702,6 +8371,19 @@ func (to *ExperimentPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *ExperimentPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ExperimentPermissionsRequest_SdkV2) {
@@ -7710,6 +8392,18 @@ func (to *ExperimentPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.C
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -7837,6 +8531,104 @@ func (m ExperimentTag_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The storage location for an experiment's traces.
+type ExperimentTraceLocation_SdkV2 struct {
+	// A Unity Catalog schema where the experiment's traces are stored as Delta
+	// tables.
+	UcTraceLocation types.List `tfsdk:"uc_trace_location"`
+}
+
+func (to *ExperimentTraceLocation_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExperimentTraceLocation_SdkV2) {
+	if !from.UcTraceLocation.IsNull() && !from.UcTraceLocation.IsUnknown() {
+		if toUcTraceLocation, ok := to.GetUcTraceLocation(ctx); ok {
+			if fromUcTraceLocation, ok := from.GetUcTraceLocation(ctx); ok {
+				// Recursively sync the fields of UcTraceLocation
+				toUcTraceLocation.SyncFieldsDuringCreateOrUpdate(ctx, fromUcTraceLocation)
+				to.SetUcTraceLocation(ctx, toUcTraceLocation)
+			}
+		}
+	}
+}
+
+func (to *ExperimentTraceLocation_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ExperimentTraceLocation_SdkV2) {
+	if !from.UcTraceLocation.IsNull() && !from.UcTraceLocation.IsUnknown() {
+		if toUcTraceLocation, ok := to.GetUcTraceLocation(ctx); ok {
+			if fromUcTraceLocation, ok := from.GetUcTraceLocation(ctx); ok {
+				toUcTraceLocation.SyncFieldsDuringRead(ctx, fromUcTraceLocation)
+				to.SetUcTraceLocation(ctx, toUcTraceLocation)
+			}
+		}
+	}
+}
+
+func (m ExperimentTraceLocation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["uc_trace_location"] = attrs["uc_trace_location"].SetOptional()
+	attrs["uc_trace_location"] = attrs["uc_trace_location"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExperimentTraceLocation.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ExperimentTraceLocation_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"uc_trace_location": reflect.TypeOf(UcTraceLocation_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExperimentTraceLocation_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ExperimentTraceLocation_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"uc_trace_location": m.UcTraceLocation,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ExperimentTraceLocation_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"uc_trace_location": basetypes.ListType{
+				ElemType: UcTraceLocation_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetUcTraceLocation returns the value of the UcTraceLocation field in ExperimentTraceLocation_SdkV2 as
+// a UcTraceLocation_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ExperimentTraceLocation_SdkV2) GetUcTraceLocation(ctx context.Context) (UcTraceLocation_SdkV2, bool) {
+	var e UcTraceLocation_SdkV2
+	if m.UcTraceLocation.IsNull() || m.UcTraceLocation.IsUnknown() {
+		return e, false
+	}
+	var v []UcTraceLocation_SdkV2
+	d := m.UcTraceLocation.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetUcTraceLocation sets the value of the UcTraceLocation field in ExperimentTraceLocation_SdkV2.
+func (m *ExperimentTraceLocation_SdkV2) SetUcTraceLocation(ctx context.Context, v UcTraceLocation_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["uc_trace_location"]
+	m.UcTraceLocation = types.ListValueMust(t, vs)
+}
+
 type Feature_SdkV2 struct {
 	// Name of parent catalog.
 	CatalogName types.String `tfsdk:"catalog_name"`
@@ -7892,6 +8684,19 @@ func (to *Feature_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 		// If a user specified a non-Null, empty list for Entities, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entities = from.Entities
+	}
+	if !from.Entities.IsNull() && !from.Entities.IsUnknown() {
+		if toEntities, ok := to.GetEntities(ctx); ok {
+			if fromEntities, ok := from.GetEntities(ctx); ok {
+				// Recursively sync the fields of each Entities element by position.
+				for i := range toEntities {
+					if i < len(fromEntities) {
+						toEntities[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEntities[i])
+					}
+				}
+				to.SetEntities(ctx, toEntities)
+			}
+		}
 	}
 	if !from.Function.IsNull() && !from.Function.IsUnknown() {
 		if toFunction, ok := to.GetFunction(ctx); ok {
@@ -7952,6 +8757,18 @@ func (to *Feature_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Feature_
 		// If a user specified a non-Null, empty list for Entities, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Entities = from.Entities
+	}
+	if !from.Entities.IsNull() && !from.Entities.IsUnknown() {
+		if toEntities, ok := to.GetEntities(ctx); ok {
+			if fromEntities, ok := from.GetEntities(ctx); ok {
+				for i := range toEntities {
+					if i < len(fromEntities) {
+						toEntities[i].SyncFieldsDuringRead(ctx, fromEntities[i])
+					}
+				}
+				to.SetEntities(ctx, toEntities)
+			}
+		}
 	}
 	if !from.Function.IsNull() && !from.Function.IsUnknown() {
 		if toFunction, ok := to.GetFunction(ctx); ok {
@@ -8310,17 +9127,56 @@ func (to *FeatureLineage_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FeatureSpecs = from.FeatureSpecs
 	}
+	if !from.FeatureSpecs.IsNull() && !from.FeatureSpecs.IsUnknown() {
+		if toFeatureSpecs, ok := to.GetFeatureSpecs(ctx); ok {
+			if fromFeatureSpecs, ok := from.GetFeatureSpecs(ctx); ok {
+				// Recursively sync the fields of each FeatureSpecs element by position.
+				for i := range toFeatureSpecs {
+					if i < len(fromFeatureSpecs) {
+						toFeatureSpecs[i].SyncFieldsDuringCreateOrUpdate(ctx, fromFeatureSpecs[i])
+					}
+				}
+				to.SetFeatureSpecs(ctx, toFeatureSpecs)
+			}
+		}
+	}
 	if !from.Models.IsNull() && !from.Models.IsUnknown() && to.Models.IsNull() && len(from.Models.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Models, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Models = from.Models
 	}
+	if !from.Models.IsNull() && !from.Models.IsUnknown() {
+		if toModels, ok := to.GetModels(ctx); ok {
+			if fromModels, ok := from.GetModels(ctx); ok {
+				// Recursively sync the fields of each Models element by position.
+				for i := range toModels {
+					if i < len(fromModels) {
+						toModels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromModels[i])
+					}
+				}
+				to.SetModels(ctx, toModels)
+			}
+		}
+	}
 	if !from.OnlineFeatures.IsNull() && !from.OnlineFeatures.IsUnknown() && to.OnlineFeatures.IsNull() && len(from.OnlineFeatures.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for OnlineFeatures, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnlineFeatures = from.OnlineFeatures
+	}
+	if !from.OnlineFeatures.IsNull() && !from.OnlineFeatures.IsUnknown() {
+		if toOnlineFeatures, ok := to.GetOnlineFeatures(ctx); ok {
+			if fromOnlineFeatures, ok := from.GetOnlineFeatures(ctx); ok {
+				// Recursively sync the fields of each OnlineFeatures element by position.
+				for i := range toOnlineFeatures {
+					if i < len(fromOnlineFeatures) {
+						toOnlineFeatures[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOnlineFeatures[i])
+					}
+				}
+				to.SetOnlineFeatures(ctx, toOnlineFeatures)
+			}
+		}
 	}
 }
 
@@ -8331,17 +9187,53 @@ func (to *FeatureLineage_SdkV2) SyncFieldsDuringRead(ctx context.Context, from F
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FeatureSpecs = from.FeatureSpecs
 	}
+	if !from.FeatureSpecs.IsNull() && !from.FeatureSpecs.IsUnknown() {
+		if toFeatureSpecs, ok := to.GetFeatureSpecs(ctx); ok {
+			if fromFeatureSpecs, ok := from.GetFeatureSpecs(ctx); ok {
+				for i := range toFeatureSpecs {
+					if i < len(fromFeatureSpecs) {
+						toFeatureSpecs[i].SyncFieldsDuringRead(ctx, fromFeatureSpecs[i])
+					}
+				}
+				to.SetFeatureSpecs(ctx, toFeatureSpecs)
+			}
+		}
+	}
 	if !from.Models.IsNull() && !from.Models.IsUnknown() && to.Models.IsNull() && len(from.Models.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Models, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Models = from.Models
 	}
+	if !from.Models.IsNull() && !from.Models.IsUnknown() {
+		if toModels, ok := to.GetModels(ctx); ok {
+			if fromModels, ok := from.GetModels(ctx); ok {
+				for i := range toModels {
+					if i < len(fromModels) {
+						toModels[i].SyncFieldsDuringRead(ctx, fromModels[i])
+					}
+				}
+				to.SetModels(ctx, toModels)
+			}
+		}
+	}
 	if !from.OnlineFeatures.IsNull() && !from.OnlineFeatures.IsUnknown() && to.OnlineFeatures.IsNull() && len(from.OnlineFeatures.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for OnlineFeatures, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnlineFeatures = from.OnlineFeatures
+	}
+	if !from.OnlineFeatures.IsNull() && !from.OnlineFeatures.IsUnknown() {
+		if toOnlineFeatures, ok := to.GetOnlineFeatures(ctx); ok {
+			if fromOnlineFeatures, ok := from.GetOnlineFeatures(ctx); ok {
+				for i := range toOnlineFeatures {
+					if i < len(fromOnlineFeatures) {
+						toOnlineFeatures[i].SyncFieldsDuringRead(ctx, fromOnlineFeatures[i])
+					}
+				}
+				to.SetOnlineFeatures(ctx, toOnlineFeatures)
+			}
+		}
 	}
 }
 
@@ -8642,6 +9534,19 @@ func (to *FeatureList_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Features = from.Features
 	}
+	if !from.Features.IsNull() && !from.Features.IsUnknown() {
+		if toFeatures, ok := to.GetFeatures(ctx); ok {
+			if fromFeatures, ok := from.GetFeatures(ctx); ok {
+				// Recursively sync the fields of each Features element by position.
+				for i := range toFeatures {
+					if i < len(fromFeatures) {
+						toFeatures[i].SyncFieldsDuringCreateOrUpdate(ctx, fromFeatures[i])
+					}
+				}
+				to.SetFeatures(ctx, toFeatures)
+			}
+		}
+	}
 }
 
 func (to *FeatureList_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FeatureList_SdkV2) {
@@ -8650,6 +9555,18 @@ func (to *FeatureList_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Feat
 		// If a user specified a non-Null, empty list for Features, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Features = from.Features
+	}
+	if !from.Features.IsNull() && !from.Features.IsUnknown() {
+		if toFeatures, ok := to.GetFeatures(ctx); ok {
+			if fromFeatures, ok := from.GetFeatures(ctx); ok {
+				for i := range toFeatures {
+					if i < len(fromFeatures) {
+						toFeatures[i].SyncFieldsDuringRead(ctx, fromFeatures[i])
+					}
+				}
+				to.SetFeatures(ctx, toFeatures)
+			}
+		}
 	}
 }
 
@@ -9039,6 +9956,61 @@ func (m *FinalizeLoggedModelResponse_SdkV2) SetModel(ctx context.Context, v Logg
 	m.Model = types.ListValueMust(t, vs)
 }
 
+// Returns the first N distinct values, ordered by the feature's timeseries
+// column.
+type FirstDistinctFunction_SdkV2 struct {
+	// The input column from which the first N distinct values are returned.
+	Input types.String `tfsdk:"input"`
+	// The number of distinct values to return.
+	N types.Int64 `tfsdk:"n"`
+}
+
+func (to *FirstDistinctFunction_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FirstDistinctFunction_SdkV2) {
+}
+
+func (to *FirstDistinctFunction_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FirstDistinctFunction_SdkV2) {
+}
+
+func (m FirstDistinctFunction_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["input"] = attrs["input"].SetRequired()
+	attrs["n"] = attrs["n"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FirstDistinctFunction.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m FirstDistinctFunction_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FirstDistinctFunction_SdkV2
+// only implements ToObjectValue() and Type().
+func (m FirstDistinctFunction_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"input": m.Input,
+			"n":     m.N,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m FirstDistinctFunction_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"input": types.StringType,
+			"n":     types.Int64Type,
+		},
+	}
+}
+
 // Returns the first value.
 type FirstFunction_SdkV2 struct {
 	// The input column from which the first value is returned.
@@ -9088,6 +10060,60 @@ func (m FirstFunction_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Returns the first N values, ordered by the feature's timeseries column.
+type FirstNFunction_SdkV2 struct {
+	// The input column from which the first N values are returned.
+	Input types.String `tfsdk:"input"`
+	// The number of values to return.
+	N types.Int64 `tfsdk:"n"`
+}
+
+func (to *FirstNFunction_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FirstNFunction_SdkV2) {
+}
+
+func (to *FirstNFunction_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FirstNFunction_SdkV2) {
+}
+
+func (m FirstNFunction_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["input"] = attrs["input"].SetRequired()
+	attrs["n"] = attrs["n"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FirstNFunction.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m FirstNFunction_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FirstNFunction_SdkV2
+// only implements ToObjectValue() and Type().
+func (m FirstNFunction_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"input": m.Input,
+			"n":     m.N,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m FirstNFunction_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"input": types.StringType,
+			"n":     types.Int64Type,
+		},
+	}
+}
+
 // A flat (non-nested) schema for request-time fields, defined as an ordered
 // list of field definitions. This schema only supports scalar types.
 type FlatSchema_SdkV2 struct {
@@ -9096,9 +10122,34 @@ type FlatSchema_SdkV2 struct {
 }
 
 func (to *FlatSchema_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FlatSchema_SdkV2) {
+	if !from.Fields.IsNull() && !from.Fields.IsUnknown() {
+		if toFields, ok := to.GetFields(ctx); ok {
+			if fromFields, ok := from.GetFields(ctx); ok {
+				// Recursively sync the fields of each Fields element by position.
+				for i := range toFields {
+					if i < len(fromFields) {
+						toFields[i].SyncFieldsDuringCreateOrUpdate(ctx, fromFields[i])
+					}
+				}
+				to.SetFields(ctx, toFields)
+			}
+		}
+	}
 }
 
 func (to *FlatSchema_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FlatSchema_SdkV2) {
+	if !from.Fields.IsNull() && !from.Fields.IsUnknown() {
+		if toFields, ok := to.GetFields(ctx); ok {
+			if fromFields, ok := from.GetFields(ctx); ok {
+				for i := range toFields {
+					if i < len(fromFields) {
+						toFields[i].SyncFieldsDuringRead(ctx, fromFields[i])
+					}
+				}
+				to.SetFields(ctx, toFields)
+			}
+		}
+	}
 }
 
 func (m FlatSchema_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9267,6 +10318,19 @@ func (to *Function_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ExtraParameters = from.ExtraParameters
 	}
+	if !from.ExtraParameters.IsNull() && !from.ExtraParameters.IsUnknown() {
+		if toExtraParameters, ok := to.GetExtraParameters(ctx); ok {
+			if fromExtraParameters, ok := from.GetExtraParameters(ctx); ok {
+				// Recursively sync the fields of each ExtraParameters element by position.
+				for i := range toExtraParameters {
+					if i < len(fromExtraParameters) {
+						toExtraParameters[i].SyncFieldsDuringCreateOrUpdate(ctx, fromExtraParameters[i])
+					}
+				}
+				to.SetExtraParameters(ctx, toExtraParameters)
+			}
+		}
+	}
 }
 
 func (to *Function_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Function_SdkV2) {
@@ -9291,6 +10355,18 @@ func (to *Function_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Functio
 		// If a user specified a non-Null, empty list for ExtraParameters, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ExtraParameters = from.ExtraParameters
+	}
+	if !from.ExtraParameters.IsNull() && !from.ExtraParameters.IsUnknown() {
+		if toExtraParameters, ok := to.GetExtraParameters(ctx); ok {
+			if fromExtraParameters, ok := from.GetExtraParameters(ctx); ok {
+				for i := range toExtraParameters {
+					if i < len(fromExtraParameters) {
+						toExtraParameters[i].SyncFieldsDuringRead(ctx, fromExtraParameters[i])
+					}
+				}
+				to.SetExtraParameters(ctx, toExtraParameters)
+			}
+		}
 	}
 }
 
@@ -9690,6 +10766,19 @@ func (to *GetExperimentPermissionLevelsResponse_SdkV2) SyncFieldsDuringCreateOrU
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
 	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				// Recursively sync the fields of each PermissionLevels element by position.
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
+	}
 }
 
 func (to *GetExperimentPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetExperimentPermissionLevelsResponse_SdkV2) {
@@ -9698,6 +10787,18 @@ func (to *GetExperimentPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx 
 		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
+	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringRead(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
 	}
 }
 
@@ -10394,6 +11495,19 @@ func (to *GetLatestVersionsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ModelVersions = from.ModelVersions
 	}
+	if !from.ModelVersions.IsNull() && !from.ModelVersions.IsUnknown() {
+		if toModelVersions, ok := to.GetModelVersions(ctx); ok {
+			if fromModelVersions, ok := from.GetModelVersions(ctx); ok {
+				// Recursively sync the fields of each ModelVersions element by position.
+				for i := range toModelVersions {
+					if i < len(fromModelVersions) {
+						toModelVersions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromModelVersions[i])
+					}
+				}
+				to.SetModelVersions(ctx, toModelVersions)
+			}
+		}
+	}
 }
 
 func (to *GetLatestVersionsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetLatestVersionsResponse_SdkV2) {
@@ -10402,6 +11516,18 @@ func (to *GetLatestVersionsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for ModelVersions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ModelVersions = from.ModelVersions
+	}
+	if !from.ModelVersions.IsNull() && !from.ModelVersions.IsUnknown() {
+		if toModelVersions, ok := to.GetModelVersions(ctx); ok {
+			if fromModelVersions, ok := from.GetModelVersions(ctx); ok {
+				for i := range toModelVersions {
+					if i < len(fromModelVersions) {
+						toModelVersions[i].SyncFieldsDuringRead(ctx, fromModelVersions[i])
+					}
+				}
+				to.SetModelVersions(ctx, toModelVersions)
+			}
+		}
 	}
 }
 
@@ -10683,6 +11809,19 @@ func (to *GetMetricHistoryResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Metrics = from.Metrics
 	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				// Recursively sync the fields of each Metrics element by position.
+				for i := range toMetrics {
+					if i < len(fromMetrics) {
+						toMetrics[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMetrics[i])
+					}
+				}
+				to.SetMetrics(ctx, toMetrics)
+			}
+		}
+	}
 }
 
 func (to *GetMetricHistoryResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetMetricHistoryResponse_SdkV2) {
@@ -10691,6 +11830,18 @@ func (to *GetMetricHistoryResponse_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 		// If a user specified a non-Null, empty list for Metrics, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Metrics = from.Metrics
+	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				for i := range toMetrics {
+					if i < len(fromMetrics) {
+						toMetrics[i].SyncFieldsDuringRead(ctx, fromMetrics[i])
+					}
+				}
+				to.SetMetrics(ctx, toMetrics)
+			}
+		}
 	}
 }
 
@@ -11264,6 +12415,19 @@ func (to *GetRegisteredModelPermissionLevelsResponse_SdkV2) SyncFieldsDuringCrea
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
 	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				// Recursively sync the fields of each PermissionLevels element by position.
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
+	}
 }
 
 func (to *GetRegisteredModelPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetRegisteredModelPermissionLevelsResponse_SdkV2) {
@@ -11272,6 +12436,18 @@ func (to *GetRegisteredModelPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead
 		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
+	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringRead(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
 	}
 }
 
@@ -12235,6 +13411,9 @@ type KafkaConfig_SdkV2 struct {
 	// Catch-all for miscellaneous options. Keys should be source options or
 	// Kafka consumer options (kafka.*)
 	ExtraOptions types.Map `tfsdk:"extra_options"`
+	// Configuration for ingesting Kafka data into a Databricks-managed Delta
+	// table.
+	IngestionConfig types.List `tfsdk:"ingestion_config"`
 	// Schema configuration for extracting message keys from topics. At least
 	// one of key_schema and value_schema must be provided.
 	KeySchema types.List `tfsdk:"key_schema"`
@@ -12265,6 +13444,15 @@ func (to *KafkaConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 				// Recursively sync the fields of BackfillSource
 				toBackfillSource.SyncFieldsDuringCreateOrUpdate(ctx, fromBackfillSource)
 				to.SetBackfillSource(ctx, toBackfillSource)
+			}
+		}
+	}
+	if !from.IngestionConfig.IsNull() && !from.IngestionConfig.IsUnknown() {
+		if toIngestionConfig, ok := to.GetIngestionConfig(ctx); ok {
+			if fromIngestionConfig, ok := from.GetIngestionConfig(ctx); ok {
+				// Recursively sync the fields of IngestionConfig
+				toIngestionConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromIngestionConfig)
+				to.SetIngestionConfig(ctx, toIngestionConfig)
 			}
 		}
 	}
@@ -12314,6 +13502,14 @@ func (to *KafkaConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Kafk
 			}
 		}
 	}
+	if !from.IngestionConfig.IsNull() && !from.IngestionConfig.IsUnknown() {
+		if toIngestionConfig, ok := to.GetIngestionConfig(ctx); ok {
+			if fromIngestionConfig, ok := from.GetIngestionConfig(ctx); ok {
+				toIngestionConfig.SyncFieldsDuringRead(ctx, fromIngestionConfig)
+				to.SetIngestionConfig(ctx, toIngestionConfig)
+			}
+		}
+	}
 	if !from.KeySchema.IsNull() && !from.KeySchema.IsUnknown() {
 		if toKeySchema, ok := to.GetKeySchema(ctx); ok {
 			if fromKeySchema, ok := from.GetKeySchema(ctx); ok {
@@ -12347,6 +13543,8 @@ func (m KafkaConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["backfill_source"] = attrs["backfill_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["bootstrap_servers"] = attrs["bootstrap_servers"].SetRequired()
 	attrs["extra_options"] = attrs["extra_options"].SetOptional()
+	attrs["ingestion_config"] = attrs["ingestion_config"].SetOptional()
+	attrs["ingestion_config"] = attrs["ingestion_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["key_schema"] = attrs["key_schema"].SetOptional()
 	attrs["key_schema"] = attrs["key_schema"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetRequired()
@@ -12370,6 +13568,7 @@ func (m KafkaConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]
 		"auth_config":       reflect.TypeOf(AuthConfig_SdkV2{}),
 		"backfill_source":   reflect.TypeOf(BackfillSource_SdkV2{}),
 		"extra_options":     reflect.TypeOf(types.String{}),
+		"ingestion_config":  reflect.TypeOf(IngestionConfig_SdkV2{}),
 		"key_schema":        reflect.TypeOf(SchemaConfig_SdkV2{}),
 		"subscription_mode": reflect.TypeOf(SubscriptionMode_SdkV2{}),
 		"value_schema":      reflect.TypeOf(SchemaConfig_SdkV2{}),
@@ -12387,6 +13586,7 @@ func (m KafkaConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"backfill_source":   m.BackfillSource,
 			"bootstrap_servers": m.BootstrapServers,
 			"extra_options":     m.ExtraOptions,
+			"ingestion_config":  m.IngestionConfig,
 			"key_schema":        m.KeySchema,
 			"name":              m.Name,
 			"subscription_mode": m.SubscriptionMode,
@@ -12407,6 +13607,9 @@ func (m KafkaConfig_SdkV2) Type(ctx context.Context) attr.Type {
 			"bootstrap_servers": types.StringType,
 			"extra_options": basetypes.MapType{
 				ElemType: types.StringType,
+			},
+			"ingestion_config": basetypes.ListType{
+				ElemType: IngestionConfig_SdkV2{}.Type(ctx),
 			},
 			"key_schema": basetypes.ListType{
 				ElemType: SchemaConfig_SdkV2{}.Type(ctx),
@@ -12498,6 +13701,32 @@ func (m *KafkaConfig_SdkV2) SetExtraOptions(ctx context.Context, v map[string]ty
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["extra_options"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.ExtraOptions = types.MapValueMust(t, vs)
+}
+
+// GetIngestionConfig returns the value of the IngestionConfig field in KafkaConfig_SdkV2 as
+// a IngestionConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KafkaConfig_SdkV2) GetIngestionConfig(ctx context.Context) (IngestionConfig_SdkV2, bool) {
+	var e IngestionConfig_SdkV2
+	if m.IngestionConfig.IsNull() || m.IngestionConfig.IsUnknown() {
+		return e, false
+	}
+	var v []IngestionConfig_SdkV2
+	d := m.IngestionConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetIngestionConfig sets the value of the IngestionConfig field in KafkaConfig_SdkV2.
+func (m *KafkaConfig_SdkV2) SetIngestionConfig(ctx context.Context, v IngestionConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["ingestion_config"]
+	m.IngestionConfig = types.ListValueMust(t, vs)
 }
 
 // GetKeySchema returns the value of the KeySchema field in KafkaConfig_SdkV2 as
@@ -12599,6 +13828,19 @@ func (to *KafkaSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.EntityColumnIdentifiers = from.EntityColumnIdentifiers
 	}
+	if !from.EntityColumnIdentifiers.IsNull() && !from.EntityColumnIdentifiers.IsUnknown() {
+		if toEntityColumnIdentifiers, ok := to.GetEntityColumnIdentifiers(ctx); ok {
+			if fromEntityColumnIdentifiers, ok := from.GetEntityColumnIdentifiers(ctx); ok {
+				// Recursively sync the fields of each EntityColumnIdentifiers element by position.
+				for i := range toEntityColumnIdentifiers {
+					if i < len(fromEntityColumnIdentifiers) {
+						toEntityColumnIdentifiers[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEntityColumnIdentifiers[i])
+					}
+				}
+				to.SetEntityColumnIdentifiers(ctx, toEntityColumnIdentifiers)
+			}
+		}
+	}
 	if !from.TimeseriesColumnIdentifier.IsNull() && !from.TimeseriesColumnIdentifier.IsUnknown() {
 		if toTimeseriesColumnIdentifier, ok := to.GetTimeseriesColumnIdentifier(ctx); ok {
 			if fromTimeseriesColumnIdentifier, ok := from.GetTimeseriesColumnIdentifier(ctx); ok {
@@ -12616,6 +13858,18 @@ func (to *KafkaSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Kafk
 		// If a user specified a non-Null, empty list for EntityColumnIdentifiers, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.EntityColumnIdentifiers = from.EntityColumnIdentifiers
+	}
+	if !from.EntityColumnIdentifiers.IsNull() && !from.EntityColumnIdentifiers.IsUnknown() {
+		if toEntityColumnIdentifiers, ok := to.GetEntityColumnIdentifiers(ctx); ok {
+			if fromEntityColumnIdentifiers, ok := from.GetEntityColumnIdentifiers(ctx); ok {
+				for i := range toEntityColumnIdentifiers {
+					if i < len(fromEntityColumnIdentifiers) {
+						toEntityColumnIdentifiers[i].SyncFieldsDuringRead(ctx, fromEntityColumnIdentifiers[i])
+					}
+				}
+				to.SetEntityColumnIdentifiers(ctx, toEntityColumnIdentifiers)
+			}
+		}
 	}
 	if !from.TimeseriesColumnIdentifier.IsNull() && !from.TimeseriesColumnIdentifier.IsUnknown() {
 		if toTimeseriesColumnIdentifier, ok := to.GetTimeseriesColumnIdentifier(ctx); ok {
@@ -12735,10 +13989,14 @@ func (m *KafkaSource_SdkV2) SetTimeseriesColumnIdentifier(ctx context.Context, v
 
 // Kafka-specific configuration for a Stream.
 type KafkaStreamConfig_SdkV2 struct {
-	// Miscellaneous source options. Accepted keys are source options or Kafka
-	// consumer options (kafka.*), validated against an allow-list at request
-	// time. All auth configuration goes through the underlying UC Connection(s)
-	// or configs and should not be stored here.
+	// Optional Kafka source or consumer options, validated against a
+	// server-side allowlist at request time. Allowed keys: -
+	// `maxOffsetsPerTrigger` - `startingOffsets` - `includeHeaders` -
+	// `kafka.request.timeout.ms` - `kafka.session.timeout.ms` -
+	// `kafka.max.partition.fetch.bytes` The following keys are ingestion-only
+	// and are stripped before being forwarded to the materialization pipeline:
+	// - `maxOffsetsPerTrigger` - `startingOffsets` Auth and connection details
+	// belong on the parent Stream's `connection_config`, not here.
 	ExtraOptions types.Map `tfsdk:"extra_options"`
 	// Options to configure which Kafka topics to pull data from.
 	SubscriptionMode types.List `tfsdk:"subscription_mode"`
@@ -12931,6 +14189,248 @@ func (m KafkaSubscriptionMode_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Kinesis-specific configuration for a Stream. For the underlying connector and
+// its source options, see the Databricks documentation on connecting to Amazon
+// Kinesis (https://docs.databricks.com/aws/en/connect/streaming/kinesis).
+type KinesisStreamConfig_SdkV2 struct {
+	// Optional Kinesis source options, validated against a server-side
+	// allowlist at request time. Auth and connection details belong on the
+	// parent Stream's `connection_config`, not here.
+	ExtraOptions types.Map `tfsdk:"extra_options"`
+	// Kinesis stream ARNs to read from.
+	StreamArns types.List `tfsdk:"stream_arns"`
+	// Kinesis stream names to read from.
+	StreamNames types.List `tfsdk:"stream_names"`
+}
+
+func (to *KinesisStreamConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from KinesisStreamConfig_SdkV2) {
+	if !from.StreamArns.IsNull() && !from.StreamArns.IsUnknown() {
+		if toStreamArns, ok := to.GetStreamArns(ctx); ok {
+			if fromStreamArns, ok := from.GetStreamArns(ctx); ok {
+				// Recursively sync the fields of StreamArns
+				toStreamArns.SyncFieldsDuringCreateOrUpdate(ctx, fromStreamArns)
+				to.SetStreamArns(ctx, toStreamArns)
+			}
+		}
+	}
+	if !from.StreamNames.IsNull() && !from.StreamNames.IsUnknown() {
+		if toStreamNames, ok := to.GetStreamNames(ctx); ok {
+			if fromStreamNames, ok := from.GetStreamNames(ctx); ok {
+				// Recursively sync the fields of StreamNames
+				toStreamNames.SyncFieldsDuringCreateOrUpdate(ctx, fromStreamNames)
+				to.SetStreamNames(ctx, toStreamNames)
+			}
+		}
+	}
+}
+
+func (to *KinesisStreamConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from KinesisStreamConfig_SdkV2) {
+	if !from.StreamArns.IsNull() && !from.StreamArns.IsUnknown() {
+		if toStreamArns, ok := to.GetStreamArns(ctx); ok {
+			if fromStreamArns, ok := from.GetStreamArns(ctx); ok {
+				toStreamArns.SyncFieldsDuringRead(ctx, fromStreamArns)
+				to.SetStreamArns(ctx, toStreamArns)
+			}
+		}
+	}
+	if !from.StreamNames.IsNull() && !from.StreamNames.IsUnknown() {
+		if toStreamNames, ok := to.GetStreamNames(ctx); ok {
+			if fromStreamNames, ok := from.GetStreamNames(ctx); ok {
+				toStreamNames.SyncFieldsDuringRead(ctx, fromStreamNames)
+				to.SetStreamNames(ctx, toStreamNames)
+			}
+		}
+	}
+}
+
+func (m KinesisStreamConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["extra_options"] = attrs["extra_options"].SetOptional()
+	attrs["stream_arns"] = attrs["stream_arns"].SetOptional()
+	attrs["stream_arns"] = attrs["stream_arns"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["stream_names"] = attrs["stream_names"].SetOptional()
+	attrs["stream_names"] = attrs["stream_names"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in KinesisStreamConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m KinesisStreamConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"extra_options": reflect.TypeOf(types.String{}),
+		"stream_arns":   reflect.TypeOf(StreamArnList_SdkV2{}),
+		"stream_names":  reflect.TypeOf(StreamNameList_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, KinesisStreamConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m KinesisStreamConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"extra_options": m.ExtraOptions,
+			"stream_arns":   m.StreamArns,
+			"stream_names":  m.StreamNames,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m KinesisStreamConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"extra_options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"stream_arns": basetypes.ListType{
+				ElemType: StreamArnList_SdkV2{}.Type(ctx),
+			},
+			"stream_names": basetypes.ListType{
+				ElemType: StreamNameList_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetExtraOptions returns the value of the ExtraOptions field in KinesisStreamConfig_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KinesisStreamConfig_SdkV2) GetExtraOptions(ctx context.Context) (map[string]types.String, bool) {
+	if m.ExtraOptions.IsNull() || m.ExtraOptions.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.ExtraOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExtraOptions sets the value of the ExtraOptions field in KinesisStreamConfig_SdkV2.
+func (m *KinesisStreamConfig_SdkV2) SetExtraOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["extra_options"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ExtraOptions = types.MapValueMust(t, vs)
+}
+
+// GetStreamArns returns the value of the StreamArns field in KinesisStreamConfig_SdkV2 as
+// a StreamArnList_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KinesisStreamConfig_SdkV2) GetStreamArns(ctx context.Context) (StreamArnList_SdkV2, bool) {
+	var e StreamArnList_SdkV2
+	if m.StreamArns.IsNull() || m.StreamArns.IsUnknown() {
+		return e, false
+	}
+	var v []StreamArnList_SdkV2
+	d := m.StreamArns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStreamArns sets the value of the StreamArns field in KinesisStreamConfig_SdkV2.
+func (m *KinesisStreamConfig_SdkV2) SetStreamArns(ctx context.Context, v StreamArnList_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["stream_arns"]
+	m.StreamArns = types.ListValueMust(t, vs)
+}
+
+// GetStreamNames returns the value of the StreamNames field in KinesisStreamConfig_SdkV2 as
+// a StreamNameList_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KinesisStreamConfig_SdkV2) GetStreamNames(ctx context.Context) (StreamNameList_SdkV2, bool) {
+	var e StreamNameList_SdkV2
+	if m.StreamNames.IsNull() || m.StreamNames.IsUnknown() {
+		return e, false
+	}
+	var v []StreamNameList_SdkV2
+	d := m.StreamNames.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStreamNames sets the value of the StreamNames field in KinesisStreamConfig_SdkV2.
+func (m *KinesisStreamConfig_SdkV2) SetStreamNames(ctx context.Context, v StreamNameList_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["stream_names"]
+	m.StreamNames = types.ListValueMust(t, vs)
+}
+
+// Returns the last N distinct values, ordered by the feature's timeseries
+// column.
+type LastDistinctFunction_SdkV2 struct {
+	// The input column from which the last N distinct values are returned.
+	Input types.String `tfsdk:"input"`
+	// The number of distinct values to return.
+	N types.Int64 `tfsdk:"n"`
+}
+
+func (to *LastDistinctFunction_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LastDistinctFunction_SdkV2) {
+}
+
+func (to *LastDistinctFunction_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LastDistinctFunction_SdkV2) {
+}
+
+func (m LastDistinctFunction_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["input"] = attrs["input"].SetRequired()
+	attrs["n"] = attrs["n"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LastDistinctFunction.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m LastDistinctFunction_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LastDistinctFunction_SdkV2
+// only implements ToObjectValue() and Type().
+func (m LastDistinctFunction_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"input": m.Input,
+			"n":     m.N,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m LastDistinctFunction_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"input": types.StringType,
+			"n":     types.Int64Type,
+		},
+	}
+}
+
 // Returns the last value.
 type LastFunction_SdkV2 struct {
 	// The input column from which the last value is returned.
@@ -12976,6 +14476,60 @@ func (m LastFunction_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"input": types.StringType,
+		},
+	}
+}
+
+// Returns the last N values, ordered by the feature's timeseries column.
+type LastNFunction_SdkV2 struct {
+	// The input column from which the last N values are returned.
+	Input types.String `tfsdk:"input"`
+	// The number of values to return.
+	N types.Int64 `tfsdk:"n"`
+}
+
+func (to *LastNFunction_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LastNFunction_SdkV2) {
+}
+
+func (to *LastNFunction_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LastNFunction_SdkV2) {
+}
+
+func (m LastNFunction_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["input"] = attrs["input"].SetRequired()
+	attrs["n"] = attrs["n"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LastNFunction.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m LastNFunction_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LastNFunction_SdkV2
+// only implements ToObjectValue() and Type().
+func (m LastNFunction_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"input": m.Input,
+			"n":     m.N,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m LastNFunction_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"input": types.StringType,
+			"n":     types.Int64Type,
 		},
 	}
 }
@@ -13084,7 +14638,7 @@ func (m *LineageContext_SdkV2) SetJobContext(ctx context.Context, v JobContext_S
 	m.JobContext = types.ListValueMust(t, vs)
 }
 
-// Feature for model version. ([ML-57150] Renamed from Feature to LinkedFeature)
+// Feature for model version.
 type LinkedFeature_SdkV2 struct {
 	// Feature name
 	FeatureName types.String `tfsdk:"feature_name"`
@@ -13229,6 +14783,19 @@ func (to *ListArtifactsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Files = from.Files
 	}
+	if !from.Files.IsNull() && !from.Files.IsUnknown() {
+		if toFiles, ok := to.GetFiles(ctx); ok {
+			if fromFiles, ok := from.GetFiles(ctx); ok {
+				// Recursively sync the fields of each Files element by position.
+				for i := range toFiles {
+					if i < len(fromFiles) {
+						toFiles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromFiles[i])
+					}
+				}
+				to.SetFiles(ctx, toFiles)
+			}
+		}
+	}
 }
 
 func (to *ListArtifactsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListArtifactsResponse_SdkV2) {
@@ -13237,6 +14804,18 @@ func (to *ListArtifactsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 		// If a user specified a non-Null, empty list for Files, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Files = from.Files
+	}
+	if !from.Files.IsNull() && !from.Files.IsUnknown() {
+		if toFiles, ok := to.GetFiles(ctx); ok {
+			if fromFiles, ok := from.GetFiles(ctx); ok {
+				for i := range toFiles {
+					if i < len(fromFiles) {
+						toFiles[i].SyncFieldsDuringRead(ctx, fromFiles[i])
+					}
+				}
+				to.SetFiles(ctx, toFiles)
+			}
+		}
 	}
 }
 
@@ -13392,6 +14971,19 @@ func (to *ListExperimentsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Experiments = from.Experiments
 	}
+	if !from.Experiments.IsNull() && !from.Experiments.IsUnknown() {
+		if toExperiments, ok := to.GetExperiments(ctx); ok {
+			if fromExperiments, ok := from.GetExperiments(ctx); ok {
+				// Recursively sync the fields of each Experiments element by position.
+				for i := range toExperiments {
+					if i < len(fromExperiments) {
+						toExperiments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromExperiments[i])
+					}
+				}
+				to.SetExperiments(ctx, toExperiments)
+			}
+		}
+	}
 }
 
 func (to *ListExperimentsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListExperimentsResponse_SdkV2) {
@@ -13400,6 +14992,18 @@ func (to *ListExperimentsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 		// If a user specified a non-Null, empty list for Experiments, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Experiments = from.Experiments
+	}
+	if !from.Experiments.IsNull() && !from.Experiments.IsUnknown() {
+		if toExperiments, ok := to.GetExperiments(ctx); ok {
+			if fromExperiments, ok := from.GetExperiments(ctx); ok {
+				for i := range toExperiments {
+					if i < len(fromExperiments) {
+						toExperiments[i].SyncFieldsDuringRead(ctx, fromExperiments[i])
+					}
+				}
+				to.SetExperiments(ctx, toExperiments)
+			}
+		}
 	}
 }
 
@@ -13549,6 +15153,19 @@ func (to *ListFeatureTagsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FeatureTags = from.FeatureTags
 	}
+	if !from.FeatureTags.IsNull() && !from.FeatureTags.IsUnknown() {
+		if toFeatureTags, ok := to.GetFeatureTags(ctx); ok {
+			if fromFeatureTags, ok := from.GetFeatureTags(ctx); ok {
+				// Recursively sync the fields of each FeatureTags element by position.
+				for i := range toFeatureTags {
+					if i < len(fromFeatureTags) {
+						toFeatureTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromFeatureTags[i])
+					}
+				}
+				to.SetFeatureTags(ctx, toFeatureTags)
+			}
+		}
+	}
 }
 
 func (to *ListFeatureTagsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListFeatureTagsResponse_SdkV2) {
@@ -13557,6 +15174,18 @@ func (to *ListFeatureTagsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 		// If a user specified a non-Null, empty list for FeatureTags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FeatureTags = from.FeatureTags
+	}
+	if !from.FeatureTags.IsNull() && !from.FeatureTags.IsUnknown() {
+		if toFeatureTags, ok := to.GetFeatureTags(ctx); ok {
+			if fromFeatureTags, ok := from.GetFeatureTags(ctx); ok {
+				for i := range toFeatureTags {
+					if i < len(fromFeatureTags) {
+						toFeatureTags[i].SyncFieldsDuringRead(ctx, fromFeatureTags[i])
+					}
+				}
+				to.SetFeatureTags(ctx, toFeatureTags)
+			}
+		}
 	}
 }
 
@@ -13707,6 +15336,19 @@ func (to *ListFeaturesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Features = from.Features
 	}
+	if !from.Features.IsNull() && !from.Features.IsUnknown() {
+		if toFeatures, ok := to.GetFeatures(ctx); ok {
+			if fromFeatures, ok := from.GetFeatures(ctx); ok {
+				// Recursively sync the fields of each Features element by position.
+				for i := range toFeatures {
+					if i < len(fromFeatures) {
+						toFeatures[i].SyncFieldsDuringCreateOrUpdate(ctx, fromFeatures[i])
+					}
+				}
+				to.SetFeatures(ctx, toFeatures)
+			}
+		}
+	}
 }
 
 func (to *ListFeaturesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListFeaturesResponse_SdkV2) {
@@ -13715,6 +15357,18 @@ func (to *ListFeaturesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for Features, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Features = from.Features
+	}
+	if !from.Features.IsNull() && !from.Features.IsUnknown() {
+		if toFeatures, ok := to.GetFeatures(ctx); ok {
+			if fromFeatures, ok := from.GetFeatures(ctx); ok {
+				for i := range toFeatures {
+					if i < len(fromFeatures) {
+						toFeatures[i].SyncFieldsDuringRead(ctx, fromFeatures[i])
+					}
+				}
+				to.SetFeatures(ctx, toFeatures)
+			}
+		}
 	}
 }
 
@@ -13849,9 +15503,34 @@ type ListKafkaConfigsResponse_SdkV2 struct {
 }
 
 func (to *ListKafkaConfigsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListKafkaConfigsResponse_SdkV2) {
+	if !from.KafkaConfigs.IsNull() && !from.KafkaConfigs.IsUnknown() {
+		if toKafkaConfigs, ok := to.GetKafkaConfigs(ctx); ok {
+			if fromKafkaConfigs, ok := from.GetKafkaConfigs(ctx); ok {
+				// Recursively sync the fields of each KafkaConfigs element by position.
+				for i := range toKafkaConfigs {
+					if i < len(fromKafkaConfigs) {
+						toKafkaConfigs[i].SyncFieldsDuringCreateOrUpdate(ctx, fromKafkaConfigs[i])
+					}
+				}
+				to.SetKafkaConfigs(ctx, toKafkaConfigs)
+			}
+		}
+	}
 }
 
 func (to *ListKafkaConfigsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListKafkaConfigsResponse_SdkV2) {
+	if !from.KafkaConfigs.IsNull() && !from.KafkaConfigs.IsUnknown() {
+		if toKafkaConfigs, ok := to.GetKafkaConfigs(ctx); ok {
+			if fromKafkaConfigs, ok := from.GetKafkaConfigs(ctx); ok {
+				for i := range toKafkaConfigs {
+					if i < len(fromKafkaConfigs) {
+						toKafkaConfigs[i].SyncFieldsDuringRead(ctx, fromKafkaConfigs[i])
+					}
+				}
+				to.SetKafkaConfigs(ctx, toKafkaConfigs)
+			}
+		}
+	}
 }
 
 func (m ListKafkaConfigsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -13998,6 +15677,19 @@ func (to *ListMaterializedFeaturesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate
 		// set the resulting resource state to the empty list to match the planned value.
 		to.MaterializedFeatures = from.MaterializedFeatures
 	}
+	if !from.MaterializedFeatures.IsNull() && !from.MaterializedFeatures.IsUnknown() {
+		if toMaterializedFeatures, ok := to.GetMaterializedFeatures(ctx); ok {
+			if fromMaterializedFeatures, ok := from.GetMaterializedFeatures(ctx); ok {
+				// Recursively sync the fields of each MaterializedFeatures element by position.
+				for i := range toMaterializedFeatures {
+					if i < len(fromMaterializedFeatures) {
+						toMaterializedFeatures[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMaterializedFeatures[i])
+					}
+				}
+				to.SetMaterializedFeatures(ctx, toMaterializedFeatures)
+			}
+		}
+	}
 }
 
 func (to *ListMaterializedFeaturesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListMaterializedFeaturesResponse_SdkV2) {
@@ -14006,6 +15698,18 @@ func (to *ListMaterializedFeaturesResponse_SdkV2) SyncFieldsDuringRead(ctx conte
 		// If a user specified a non-Null, empty list for MaterializedFeatures, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.MaterializedFeatures = from.MaterializedFeatures
+	}
+	if !from.MaterializedFeatures.IsNull() && !from.MaterializedFeatures.IsUnknown() {
+		if toMaterializedFeatures, ok := to.GetMaterializedFeatures(ctx); ok {
+			if fromMaterializedFeatures, ok := from.GetMaterializedFeatures(ctx); ok {
+				for i := range toMaterializedFeatures {
+					if i < len(fromMaterializedFeatures) {
+						toMaterializedFeatures[i].SyncFieldsDuringRead(ctx, fromMaterializedFeatures[i])
+					}
+				}
+				to.SetMaterializedFeatures(ctx, toMaterializedFeatures)
+			}
+		}
 	}
 }
 
@@ -14146,6 +15850,19 @@ func (to *ListModelsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RegisteredModels = from.RegisteredModels
 	}
+	if !from.RegisteredModels.IsNull() && !from.RegisteredModels.IsUnknown() {
+		if toRegisteredModels, ok := to.GetRegisteredModels(ctx); ok {
+			if fromRegisteredModels, ok := from.GetRegisteredModels(ctx); ok {
+				// Recursively sync the fields of each RegisteredModels element by position.
+				for i := range toRegisteredModels {
+					if i < len(fromRegisteredModels) {
+						toRegisteredModels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRegisteredModels[i])
+					}
+				}
+				to.SetRegisteredModels(ctx, toRegisteredModels)
+			}
+		}
+	}
 }
 
 func (to *ListModelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListModelsResponse_SdkV2) {
@@ -14154,6 +15871,18 @@ func (to *ListModelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 		// If a user specified a non-Null, empty list for RegisteredModels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RegisteredModels = from.RegisteredModels
+	}
+	if !from.RegisteredModels.IsNull() && !from.RegisteredModels.IsUnknown() {
+		if toRegisteredModels, ok := to.GetRegisteredModels(ctx); ok {
+			if fromRegisteredModels, ok := from.GetRegisteredModels(ctx); ok {
+				for i := range toRegisteredModels {
+					if i < len(fromRegisteredModels) {
+						toRegisteredModels[i].SyncFieldsDuringRead(ctx, fromRegisteredModels[i])
+					}
+				}
+				to.SetRegisteredModels(ctx, toRegisteredModels)
+			}
+		}
 	}
 }
 
@@ -14295,6 +16024,19 @@ func (to *ListOnlineStoresResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnlineStores = from.OnlineStores
 	}
+	if !from.OnlineStores.IsNull() && !from.OnlineStores.IsUnknown() {
+		if toOnlineStores, ok := to.GetOnlineStores(ctx); ok {
+			if fromOnlineStores, ok := from.GetOnlineStores(ctx); ok {
+				// Recursively sync the fields of each OnlineStores element by position.
+				for i := range toOnlineStores {
+					if i < len(fromOnlineStores) {
+						toOnlineStores[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOnlineStores[i])
+					}
+				}
+				to.SetOnlineStores(ctx, toOnlineStores)
+			}
+		}
+	}
 }
 
 func (to *ListOnlineStoresResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListOnlineStoresResponse_SdkV2) {
@@ -14303,6 +16045,18 @@ func (to *ListOnlineStoresResponse_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 		// If a user specified a non-Null, empty list for OnlineStores, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnlineStores = from.OnlineStores
+	}
+	if !from.OnlineStores.IsNull() && !from.OnlineStores.IsUnknown() {
+		if toOnlineStores, ok := to.GetOnlineStores(ctx); ok {
+			if fromOnlineStores, ok := from.GetOnlineStores(ctx); ok {
+				for i := range toOnlineStores {
+					if i < len(fromOnlineStores) {
+						toOnlineStores[i].SyncFieldsDuringRead(ctx, fromOnlineStores[i])
+					}
+				}
+				to.SetOnlineStores(ctx, toOnlineStores)
+			}
+		}
 	}
 }
 
@@ -14390,6 +16144,19 @@ func (to *ListRegistryWebhooks_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Webhooks = from.Webhooks
 	}
+	if !from.Webhooks.IsNull() && !from.Webhooks.IsUnknown() {
+		if toWebhooks, ok := to.GetWebhooks(ctx); ok {
+			if fromWebhooks, ok := from.GetWebhooks(ctx); ok {
+				// Recursively sync the fields of each Webhooks element by position.
+				for i := range toWebhooks {
+					if i < len(fromWebhooks) {
+						toWebhooks[i].SyncFieldsDuringCreateOrUpdate(ctx, fromWebhooks[i])
+					}
+				}
+				to.SetWebhooks(ctx, toWebhooks)
+			}
+		}
+	}
 }
 
 func (to *ListRegistryWebhooks_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListRegistryWebhooks_SdkV2) {
@@ -14398,6 +16165,18 @@ func (to *ListRegistryWebhooks_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for Webhooks, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Webhooks = from.Webhooks
+	}
+	if !from.Webhooks.IsNull() && !from.Webhooks.IsUnknown() {
+		if toWebhooks, ok := to.GetWebhooks(ctx); ok {
+			if fromWebhooks, ok := from.GetWebhooks(ctx); ok {
+				for i := range toWebhooks {
+					if i < len(fromWebhooks) {
+						toWebhooks[i].SyncFieldsDuringRead(ctx, fromWebhooks[i])
+					}
+				}
+				to.SetWebhooks(ctx, toWebhooks)
+			}
+		}
 	}
 }
 
@@ -14530,6 +16309,13 @@ func (m ListStreamsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 // Response to a ListStreamsRequest.
+//
+// NOTE: Results are post-filtered by access permission on each stream's
+// ingestion table. This means: - Returned results may be fewer than page_size
+// (including zero) - Page token points to next unfiltered batch, not next
+// filtered batch, and may point to an item that will be filtered out Callers
+// should paginate until next_page_token is empty to retrieve all accessible
+// streams.
 type ListStreamsResponse_SdkV2 struct {
 	// Pagination token to request the next page of results for this query.
 	NextPageToken types.String `tfsdk:"next_page_token"`
@@ -14544,6 +16330,19 @@ func (to *ListStreamsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Streams = from.Streams
 	}
+	if !from.Streams.IsNull() && !from.Streams.IsUnknown() {
+		if toStreams, ok := to.GetStreams(ctx); ok {
+			if fromStreams, ok := from.GetStreams(ctx); ok {
+				// Recursively sync the fields of each Streams element by position.
+				for i := range toStreams {
+					if i < len(fromStreams) {
+						toStreams[i].SyncFieldsDuringCreateOrUpdate(ctx, fromStreams[i])
+					}
+				}
+				to.SetStreams(ctx, toStreams)
+			}
+		}
+	}
 }
 
 func (to *ListStreamsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListStreamsResponse_SdkV2) {
@@ -14552,6 +16351,18 @@ func (to *ListStreamsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 		// If a user specified a non-Null, empty list for Streams, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Streams = from.Streams
+	}
+	if !from.Streams.IsNull() && !from.Streams.IsUnknown() {
+		if toStreams, ok := to.GetStreams(ctx); ok {
+			if fromStreams, ok := from.GetStreams(ctx); ok {
+				for i := range toStreams {
+					if i < len(fromStreams) {
+						toStreams[i].SyncFieldsDuringRead(ctx, fromStreams[i])
+					}
+				}
+				to.SetStreams(ctx, toStreams)
+			}
+		}
 	}
 }
 
@@ -14690,6 +16501,19 @@ func (to *ListTransitionRequestsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Requests = from.Requests
 	}
+	if !from.Requests.IsNull() && !from.Requests.IsUnknown() {
+		if toRequests, ok := to.GetRequests(ctx); ok {
+			if fromRequests, ok := from.GetRequests(ctx); ok {
+				// Recursively sync the fields of each Requests element by position.
+				for i := range toRequests {
+					if i < len(fromRequests) {
+						toRequests[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRequests[i])
+					}
+				}
+				to.SetRequests(ctx, toRequests)
+			}
+		}
+	}
 }
 
 func (to *ListTransitionRequestsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListTransitionRequestsResponse_SdkV2) {
@@ -14698,6 +16522,18 @@ func (to *ListTransitionRequestsResponse_SdkV2) SyncFieldsDuringRead(ctx context
 		// If a user specified a non-Null, empty list for Requests, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Requests = from.Requests
+	}
+	if !from.Requests.IsNull() && !from.Requests.IsUnknown() {
+		if toRequests, ok := to.GetRequests(ctx); ok {
+			if fromRequests, ok := from.GetRequests(ctx); ok {
+				for i := range toRequests {
+					if i < len(fromRequests) {
+						toRequests[i].SyncFieldsDuringRead(ctx, fromRequests[i])
+					}
+				}
+				to.SetRequests(ctx, toRequests)
+			}
+		}
 	}
 }
 
@@ -14931,17 +16767,56 @@ func (to *LogBatch_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Metrics = from.Metrics
 	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				// Recursively sync the fields of each Metrics element by position.
+				for i := range toMetrics {
+					if i < len(fromMetrics) {
+						toMetrics[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMetrics[i])
+					}
+				}
+				to.SetMetrics(ctx, toMetrics)
+			}
+		}
+	}
 	if !from.Params.IsNull() && !from.Params.IsUnknown() && to.Params.IsNull() && len(from.Params.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Params, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
 	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				// Recursively sync the fields of each Params element by position.
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringCreateOrUpdate(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -14952,17 +16827,53 @@ func (to *LogBatch_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LogBatc
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Metrics = from.Metrics
 	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				for i := range toMetrics {
+					if i < len(fromMetrics) {
+						toMetrics[i].SyncFieldsDuringRead(ctx, fromMetrics[i])
+					}
+				}
+				to.SetMetrics(ctx, toMetrics)
+			}
+		}
+	}
 	if !from.Params.IsNull() && !from.Params.IsUnknown() && to.Params.IsNull() && len(from.Params.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Params, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
 	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringRead(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -15157,11 +17068,37 @@ func (to *LogInputs_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Datasets = from.Datasets
 	}
+	if !from.Datasets.IsNull() && !from.Datasets.IsUnknown() {
+		if toDatasets, ok := to.GetDatasets(ctx); ok {
+			if fromDatasets, ok := from.GetDatasets(ctx); ok {
+				// Recursively sync the fields of each Datasets element by position.
+				for i := range toDatasets {
+					if i < len(fromDatasets) {
+						toDatasets[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDatasets[i])
+					}
+				}
+				to.SetDatasets(ctx, toDatasets)
+			}
+		}
+	}
 	if !from.Models.IsNull() && !from.Models.IsUnknown() && to.Models.IsNull() && len(from.Models.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Models, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Models = from.Models
+	}
+	if !from.Models.IsNull() && !from.Models.IsUnknown() {
+		if toModels, ok := to.GetModels(ctx); ok {
+			if fromModels, ok := from.GetModels(ctx); ok {
+				// Recursively sync the fields of each Models element by position.
+				for i := range toModels {
+					if i < len(fromModels) {
+						toModels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromModels[i])
+					}
+				}
+				to.SetModels(ctx, toModels)
+			}
+		}
 	}
 }
 
@@ -15172,11 +17109,35 @@ func (to *LogInputs_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LogInp
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Datasets = from.Datasets
 	}
+	if !from.Datasets.IsNull() && !from.Datasets.IsUnknown() {
+		if toDatasets, ok := to.GetDatasets(ctx); ok {
+			if fromDatasets, ok := from.GetDatasets(ctx); ok {
+				for i := range toDatasets {
+					if i < len(fromDatasets) {
+						toDatasets[i].SyncFieldsDuringRead(ctx, fromDatasets[i])
+					}
+				}
+				to.SetDatasets(ctx, toDatasets)
+			}
+		}
+	}
 	if !from.Models.IsNull() && !from.Models.IsUnknown() && to.Models.IsNull() && len(from.Models.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Models, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Models = from.Models
+	}
+	if !from.Models.IsNull() && !from.Models.IsUnknown() {
+		if toModels, ok := to.GetModels(ctx); ok {
+			if fromModels, ok := from.GetModels(ctx); ok {
+				for i := range toModels {
+					if i < len(fromModels) {
+						toModels[i].SyncFieldsDuringRead(ctx, fromModels[i])
+					}
+				}
+				to.SetModels(ctx, toModels)
+			}
+		}
 	}
 }
 
@@ -15337,6 +17298,19 @@ func (to *LogLoggedModelParamsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
 	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				// Recursively sync the fields of each Params element by position.
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringCreateOrUpdate(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
+	}
 }
 
 func (to *LogLoggedModelParamsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LogLoggedModelParamsRequest_SdkV2) {
@@ -15345,6 +17319,18 @@ func (to *LogLoggedModelParamsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Co
 		// If a user specified a non-Null, empty list for Params, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
+	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringRead(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
 	}
 }
 
@@ -15700,6 +17686,19 @@ func (to *LogOutputsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Models = from.Models
 	}
+	if !from.Models.IsNull() && !from.Models.IsUnknown() {
+		if toModels, ok := to.GetModels(ctx); ok {
+			if fromModels, ok := from.GetModels(ctx); ok {
+				// Recursively sync the fields of each Models element by position.
+				for i := range toModels {
+					if i < len(fromModels) {
+						toModels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromModels[i])
+					}
+				}
+				to.SetModels(ctx, toModels)
+			}
+		}
+	}
 }
 
 func (to *LogOutputsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LogOutputsRequest_SdkV2) {
@@ -15708,6 +17707,18 @@ func (to *LogOutputsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 		// If a user specified a non-Null, empty list for Models, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Models = from.Models
+	}
+	if !from.Models.IsNull() && !from.Models.IsUnknown() {
+		if toModels, ok := to.GetModels(ctx); ok {
+			if fromModels, ok := from.GetModels(ctx); ok {
+				for i := range toModels {
+					if i < len(fromModels) {
+						toModels[i].SyncFieldsDuringRead(ctx, fromModels[i])
+					}
+				}
+				to.SetModels(ctx, toModels)
+			}
+		}
 	}
 }
 
@@ -16092,11 +18103,37 @@ func (to *LoggedModelData_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Metrics = from.Metrics
 	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				// Recursively sync the fields of each Metrics element by position.
+				for i := range toMetrics {
+					if i < len(fromMetrics) {
+						toMetrics[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMetrics[i])
+					}
+				}
+				to.SetMetrics(ctx, toMetrics)
+			}
+		}
+	}
 	if !from.Params.IsNull() && !from.Params.IsUnknown() && to.Params.IsNull() && len(from.Params.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Params, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
+	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				// Recursively sync the fields of each Params element by position.
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringCreateOrUpdate(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
 	}
 }
 
@@ -16107,11 +18144,35 @@ func (to *LoggedModelData_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Metrics = from.Metrics
 	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				for i := range toMetrics {
+					if i < len(fromMetrics) {
+						toMetrics[i].SyncFieldsDuringRead(ctx, fromMetrics[i])
+					}
+				}
+				to.SetMetrics(ctx, toMetrics)
+			}
+		}
+	}
 	if !from.Params.IsNull() && !from.Params.IsUnknown() && to.Params.IsNull() && len(from.Params.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Params, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
+	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringRead(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
 	}
 }
 
@@ -16252,6 +18313,19 @@ func (to *LoggedModelInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 }
 
 func (to *LoggedModelInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LoggedModelInfo_SdkV2) {
@@ -16260,6 +18334,18 @@ func (to *LoggedModelInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -16476,6 +18562,8 @@ func (m LoggedModelTag_SdkV2) Type(ctx context.Context) attr.Type {
 type MaterializedFeature_SdkV2 struct {
 	// The quartz cron expression that defines the schedule of the
 	// materialization pipeline. The schedule is evaluated in the UTC timezone.
+	// Hidden from GraphQL: superseded by the `trigger` oneof
+	// (cron_schedule_trigger), so not exposed to Catalog Explorer.
 	CronSchedule types.String `tfsdk:"cron_schedule"`
 	// A cron-based schedule trigger for the materialization pipeline.
 	CronScheduleTrigger types.List `tfsdk:"cron_schedule_trigger"`
@@ -16493,7 +18581,8 @@ type MaterializedFeature_SdkV2 struct {
 	OfflineStoreConfig types.List `tfsdk:"offline_store_config"`
 	// Destination for writing feature values to an online Lakebase table.
 	OnlineStoreConfig types.List `tfsdk:"online_store_config"`
-	// The schedule state of the materialization pipeline.
+	// The schedule state of the materialization pipeline. Hidden from GraphQL:
+	// being deprecated, so not exposed to Catalog Explorer.
 	PipelineScheduleState types.String `tfsdk:"pipeline_schedule_state"`
 	// The Structured Streaming trigger mode used for materialization. Real-time
 	// mode (RTM) targets sub-second latency for operational workloads;
@@ -17032,11 +19121,37 @@ func (to *Model_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.LatestVersions = from.LatestVersions
 	}
+	if !from.LatestVersions.IsNull() && !from.LatestVersions.IsUnknown() {
+		if toLatestVersions, ok := to.GetLatestVersions(ctx); ok {
+			if fromLatestVersions, ok := from.GetLatestVersions(ctx); ok {
+				// Recursively sync the fields of each LatestVersions element by position.
+				for i := range toLatestVersions {
+					if i < len(fromLatestVersions) {
+						toLatestVersions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromLatestVersions[i])
+					}
+				}
+				to.SetLatestVersions(ctx, toLatestVersions)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -17047,11 +19162,35 @@ func (to *Model_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Model_SdkV
 		// set the resulting resource state to the empty list to match the planned value.
 		to.LatestVersions = from.LatestVersions
 	}
+	if !from.LatestVersions.IsNull() && !from.LatestVersions.IsUnknown() {
+		if toLatestVersions, ok := to.GetLatestVersions(ctx); ok {
+			if fromLatestVersions, ok := from.GetLatestVersions(ctx); ok {
+				for i := range toLatestVersions {
+					if i < len(fromLatestVersions) {
+						toLatestVersions[i].SyncFieldsDuringRead(ctx, fromLatestVersions[i])
+					}
+				}
+				to.SetLatestVersions(ctx, toLatestVersions)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -17197,11 +19336,37 @@ func (to *ModelDatabricks_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.LatestVersions = from.LatestVersions
 	}
+	if !from.LatestVersions.IsNull() && !from.LatestVersions.IsUnknown() {
+		if toLatestVersions, ok := to.GetLatestVersions(ctx); ok {
+			if fromLatestVersions, ok := from.GetLatestVersions(ctx); ok {
+				// Recursively sync the fields of each LatestVersions element by position.
+				for i := range toLatestVersions {
+					if i < len(fromLatestVersions) {
+						toLatestVersions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromLatestVersions[i])
+					}
+				}
+				to.SetLatestVersions(ctx, toLatestVersions)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -17212,11 +19377,35 @@ func (to *ModelDatabricks_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.LatestVersions = from.LatestVersions
 	}
+	if !from.LatestVersions.IsNull() && !from.LatestVersions.IsUnknown() {
+		if toLatestVersions, ok := to.GetLatestVersions(ctx); ok {
+			if fromLatestVersions, ok := from.GetLatestVersions(ctx); ok {
+				for i := range toLatestVersions {
+					if i < len(fromLatestVersions) {
+						toLatestVersions[i].SyncFieldsDuringRead(ctx, fromLatestVersions[i])
+					}
+				}
+				to.SetLatestVersions(ctx, toLatestVersions)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -17536,6 +19725,19 @@ func (to *ModelVersion_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 }
 
 func (to *ModelVersion_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ModelVersion_SdkV2) {
@@ -17544,6 +19746,18 @@ func (to *ModelVersion_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Mod
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -17711,11 +19925,37 @@ func (to *ModelVersionDatabricks_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OpenRequests = from.OpenRequests
 	}
+	if !from.OpenRequests.IsNull() && !from.OpenRequests.IsUnknown() {
+		if toOpenRequests, ok := to.GetOpenRequests(ctx); ok {
+			if fromOpenRequests, ok := from.GetOpenRequests(ctx); ok {
+				// Recursively sync the fields of each OpenRequests element by position.
+				for i := range toOpenRequests {
+					if i < len(fromOpenRequests) {
+						toOpenRequests[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOpenRequests[i])
+					}
+				}
+				to.SetOpenRequests(ctx, toOpenRequests)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -17734,11 +19974,35 @@ func (to *ModelVersionDatabricks_SdkV2) SyncFieldsDuringRead(ctx context.Context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OpenRequests = from.OpenRequests
 	}
+	if !from.OpenRequests.IsNull() && !from.OpenRequests.IsUnknown() {
+		if toOpenRequests, ok := to.GetOpenRequests(ctx); ok {
+			if fromOpenRequests, ok := from.GetOpenRequests(ctx); ok {
+				for i := range toOpenRequests {
+					if i < len(fromOpenRequests) {
+						toOpenRequests[i].SyncFieldsDuringRead(ctx, fromOpenRequests[i])
+					}
+				}
+				to.SetOpenRequests(ctx, toOpenRequests)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -18478,6 +20742,68 @@ func (m Param_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A Protocol Buffer schema paired with the name of the message within it that
+// describes the Kafka payload. A .proto file may declare multiple messages;
+// message_name disambiguates.
+type ProtoSchemaSpec_SdkV2 struct {
+	// The fully-qualified name of the message within schema_text that describes
+	// the Kafka payload (e.g. "Event" or "com.example.Event" if schema_text
+	// declares a package). Identifies which message is used to decode each
+	// Kafka record — a .proto file may declare multiple messages but only one
+	// represents the payload. Must not be empty.
+	MessageName types.String `tfsdk:"message_name"`
+	// The raw .proto file text (proto2 and proto3 syntax supported, see
+	// https://protobuf.dev/programming-guides/proto3/ and
+	// https://protobuf.dev/programming-guides/proto2/).
+	SchemaText types.String `tfsdk:"schema_text"`
+}
+
+func (to *ProtoSchemaSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ProtoSchemaSpec_SdkV2) {
+}
+
+func (to *ProtoSchemaSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ProtoSchemaSpec_SdkV2) {
+}
+
+func (m ProtoSchemaSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["message_name"] = attrs["message_name"].SetRequired()
+	attrs["schema_text"] = attrs["schema_text"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ProtoSchemaSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ProtoSchemaSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ProtoSchemaSpec_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ProtoSchemaSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"message_name": m.MessageName,
+			"schema_text":  m.SchemaText,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ProtoSchemaSpec_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"message_name": types.StringType,
+			"schema_text":  types.StringType,
+		},
+	}
+}
+
 type PublishSpec_SdkV2 struct {
 	// The name of the target online store.
 	OnlineStore types.String `tfsdk:"online_store"`
@@ -18774,6 +21100,19 @@ func (to *RegisteredModelAccessControlResponse_SdkV2) SyncFieldsDuringCreateOrUp
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
 	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				// Recursively sync the fields of each AllPermissions element by position.
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
+	}
 }
 
 func (to *RegisteredModelAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RegisteredModelAccessControlResponse_SdkV2) {
@@ -18782,6 +21121,18 @@ func (to *RegisteredModelAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx c
 		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
+	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringRead(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
 	}
 }
 
@@ -18978,6 +21329,19 @@ func (to *RegisteredModelPermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *RegisteredModelPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RegisteredModelPermissions_SdkV2) {
@@ -18986,6 +21350,18 @@ func (to *RegisteredModelPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Con
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -19127,6 +21503,19 @@ func (to *RegisteredModelPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdat
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *RegisteredModelPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RegisteredModelPermissionsRequest_SdkV2) {
@@ -19135,6 +21524,18 @@ func (to *RegisteredModelPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx cont
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -20174,7 +22575,8 @@ type RollingWindow_SdkV2 struct {
 	// non-negative). For example, delay=1d shifts the window end 1 day before
 	// the evaluation time.
 	Delay timetypes.GoDuration `tfsdk:"delay"`
-	// The duration of the rolling window (must be positive).
+	// The duration of the rolling window. Must be positive when set; absent
+	// means lifetime (aggregate over the entity's entire history).
 	WindowDuration timetypes.GoDuration `tfsdk:"window_duration"`
 }
 
@@ -20186,7 +22588,7 @@ func (to *RollingWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Ro
 
 func (m RollingWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["delay"] = attrs["delay"].SetOptional()
-	attrs["window_duration"] = attrs["window_duration"].SetRequired()
+	attrs["window_duration"] = attrs["window_duration"].SetOptional()
 
 	return attrs
 }
@@ -20442,17 +22844,56 @@ func (to *RunData_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Metrics = from.Metrics
 	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				// Recursively sync the fields of each Metrics element by position.
+				for i := range toMetrics {
+					if i < len(fromMetrics) {
+						toMetrics[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMetrics[i])
+					}
+				}
+				to.SetMetrics(ctx, toMetrics)
+			}
+		}
+	}
 	if !from.Params.IsNull() && !from.Params.IsUnknown() && to.Params.IsNull() && len(from.Params.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Params, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
 	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				// Recursively sync the fields of each Params element by position.
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringCreateOrUpdate(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -20463,17 +22904,53 @@ func (to *RunData_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunData_
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Metrics = from.Metrics
 	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() {
+		if toMetrics, ok := to.GetMetrics(ctx); ok {
+			if fromMetrics, ok := from.GetMetrics(ctx); ok {
+				for i := range toMetrics {
+					if i < len(fromMetrics) {
+						toMetrics[i].SyncFieldsDuringRead(ctx, fromMetrics[i])
+					}
+				}
+				to.SetMetrics(ctx, toMetrics)
+			}
+		}
+	}
 	if !from.Params.IsNull() && !from.Params.IsUnknown() && to.Params.IsNull() && len(from.Params.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Params, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Params = from.Params
 	}
+	if !from.Params.IsNull() && !from.Params.IsUnknown() {
+		if toParams, ok := to.GetParams(ctx); ok {
+			if fromParams, ok := from.GetParams(ctx); ok {
+				for i := range toParams {
+					if i < len(fromParams) {
+						toParams[i].SyncFieldsDuringRead(ctx, fromParams[i])
+					}
+				}
+				to.SetParams(ctx, toParams)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -20723,11 +23200,37 @@ func (to *RunInputs_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 		// set the resulting resource state to the empty list to match the planned value.
 		to.DatasetInputs = from.DatasetInputs
 	}
+	if !from.DatasetInputs.IsNull() && !from.DatasetInputs.IsUnknown() {
+		if toDatasetInputs, ok := to.GetDatasetInputs(ctx); ok {
+			if fromDatasetInputs, ok := from.GetDatasetInputs(ctx); ok {
+				// Recursively sync the fields of each DatasetInputs element by position.
+				for i := range toDatasetInputs {
+					if i < len(fromDatasetInputs) {
+						toDatasetInputs[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDatasetInputs[i])
+					}
+				}
+				to.SetDatasetInputs(ctx, toDatasetInputs)
+			}
+		}
+	}
 	if !from.ModelInputs.IsNull() && !from.ModelInputs.IsUnknown() && to.ModelInputs.IsNull() && len(from.ModelInputs.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ModelInputs, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ModelInputs = from.ModelInputs
+	}
+	if !from.ModelInputs.IsNull() && !from.ModelInputs.IsUnknown() {
+		if toModelInputs, ok := to.GetModelInputs(ctx); ok {
+			if fromModelInputs, ok := from.GetModelInputs(ctx); ok {
+				// Recursively sync the fields of each ModelInputs element by position.
+				for i := range toModelInputs {
+					if i < len(fromModelInputs) {
+						toModelInputs[i].SyncFieldsDuringCreateOrUpdate(ctx, fromModelInputs[i])
+					}
+				}
+				to.SetModelInputs(ctx, toModelInputs)
+			}
+		}
 	}
 }
 
@@ -20738,11 +23241,35 @@ func (to *RunInputs_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunInp
 		// set the resulting resource state to the empty list to match the planned value.
 		to.DatasetInputs = from.DatasetInputs
 	}
+	if !from.DatasetInputs.IsNull() && !from.DatasetInputs.IsUnknown() {
+		if toDatasetInputs, ok := to.GetDatasetInputs(ctx); ok {
+			if fromDatasetInputs, ok := from.GetDatasetInputs(ctx); ok {
+				for i := range toDatasetInputs {
+					if i < len(fromDatasetInputs) {
+						toDatasetInputs[i].SyncFieldsDuringRead(ctx, fromDatasetInputs[i])
+					}
+				}
+				to.SetDatasetInputs(ctx, toDatasetInputs)
+			}
+		}
+	}
 	if !from.ModelInputs.IsNull() && !from.ModelInputs.IsUnknown() && to.ModelInputs.IsNull() && len(from.ModelInputs.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ModelInputs, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ModelInputs = from.ModelInputs
+	}
+	if !from.ModelInputs.IsNull() && !from.ModelInputs.IsUnknown() {
+		if toModelInputs, ok := to.GetModelInputs(ctx); ok {
+			if fromModelInputs, ok := from.GetModelInputs(ctx); ok {
+				for i := range toModelInputs {
+					if i < len(fromModelInputs) {
+						toModelInputs[i].SyncFieldsDuringRead(ctx, fromModelInputs[i])
+					}
+				}
+				to.SetModelInputs(ctx, toModelInputs)
+			}
+		}
 	}
 }
 
@@ -20899,20 +23426,109 @@ func (m RunTag_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A sawtooth window served via the hybrid batch + streaming path. The batch
+// pipeline maintains daily partial aggregates for the bulk of the window while
+// the streaming pipeline maintains the most recent day(s), and serving merges
+// them on read. Same field shape as RollingWindow, but a distinct type so the
+// control plane can explicitly identify hybrid (sawtooth) features rather than
+// inferring hybrid behavior from window_duration.
+type SawtoothWindow_SdkV2 struct {
+	// The delay applied to the end of the window (must be non-negative). For
+	// example, delay=1d shifts the window end 1 day before the evaluation time.
+	Delay timetypes.GoDuration `tfsdk:"delay"`
+	// The duration of the window. Must be positive and span more than two days
+	// when set, so that both the batch (N-1 day) and stale-path (N-2 day)
+	// partial aggregates are well defined. The duration need not be a whole
+	// number of days (e.g. 3 days 15 minutes is allowed). Absent means lifetime
+	// (aggregate over the entity's entire history).
+	WindowDuration timetypes.GoDuration `tfsdk:"window_duration"`
+}
+
+func (to *SawtoothWindow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SawtoothWindow_SdkV2) {
+}
+
+func (to *SawtoothWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SawtoothWindow_SdkV2) {
+}
+
+func (m SawtoothWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delay"] = attrs["delay"].SetOptional()
+	attrs["window_duration"] = attrs["window_duration"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SawtoothWindow.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SawtoothWindow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SawtoothWindow_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SawtoothWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"delay":           m.Delay,
+			"window_duration": m.WindowDuration,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SawtoothWindow_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"delay":           timetypes.GoDuration{}.Type(ctx),
+			"window_duration": timetypes.GoDuration{}.Type(ctx),
+		},
+	}
+}
+
 type SchemaConfig_SdkV2 struct {
+	// Avro schema in JSON format
+	// (https://avro.apache.org/docs/current/specification/).
+	AvroSchema types.String `tfsdk:"avro_schema"`
 	// Schema of the JSON object in standard IETF JSON schema format
 	// (https://json-schema.org/).
 	JsonSchema types.String `tfsdk:"json_schema"`
+	// Protocol Buffer schema with its payload message name.
+	ProtoSchema types.List `tfsdk:"proto_schema"`
 }
 
 func (to *SchemaConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SchemaConfig_SdkV2) {
+	if !from.ProtoSchema.IsNull() && !from.ProtoSchema.IsUnknown() {
+		if toProtoSchema, ok := to.GetProtoSchema(ctx); ok {
+			if fromProtoSchema, ok := from.GetProtoSchema(ctx); ok {
+				// Recursively sync the fields of ProtoSchema
+				toProtoSchema.SyncFieldsDuringCreateOrUpdate(ctx, fromProtoSchema)
+				to.SetProtoSchema(ctx, toProtoSchema)
+			}
+		}
+	}
 }
 
 func (to *SchemaConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SchemaConfig_SdkV2) {
+	if !from.ProtoSchema.IsNull() && !from.ProtoSchema.IsUnknown() {
+		if toProtoSchema, ok := to.GetProtoSchema(ctx); ok {
+			if fromProtoSchema, ok := from.GetProtoSchema(ctx); ok {
+				toProtoSchema.SyncFieldsDuringRead(ctx, fromProtoSchema)
+				to.SetProtoSchema(ctx, toProtoSchema)
+			}
+		}
+	}
 }
 
 func (m SchemaConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["avro_schema"] = attrs["avro_schema"].SetOptional()
 	attrs["json_schema"] = attrs["json_schema"].SetOptional()
+	attrs["proto_schema"] = attrs["proto_schema"].SetOptional()
+	attrs["proto_schema"] = attrs["proto_schema"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -20925,7 +23541,9 @@ func (m SchemaConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m SchemaConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"proto_schema": reflect.TypeOf(ProtoSchemaSpec_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -20935,7 +23553,9 @@ func (m SchemaConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"json_schema": m.JsonSchema,
+			"avro_schema":  m.AvroSchema,
+			"json_schema":  m.JsonSchema,
+			"proto_schema": m.ProtoSchema,
 		})
 }
 
@@ -20943,9 +23563,408 @@ func (m SchemaConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (m SchemaConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"avro_schema": types.StringType,
 			"json_schema": types.StringType,
+			"proto_schema": basetypes.ListType{
+				ElemType: ProtoSchemaSpec_SdkV2{}.Type(ctx),
+			},
 		},
 	}
+}
+
+// GetProtoSchema returns the value of the ProtoSchema field in SchemaConfig_SdkV2 as
+// a ProtoSchemaSpec_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SchemaConfig_SdkV2) GetProtoSchema(ctx context.Context) (ProtoSchemaSpec_SdkV2, bool) {
+	var e ProtoSchemaSpec_SdkV2
+	if m.ProtoSchema.IsNull() || m.ProtoSchema.IsUnknown() {
+		return e, false
+	}
+	var v []ProtoSchemaSpec_SdkV2
+	d := m.ProtoSchema.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetProtoSchema sets the value of the ProtoSchema field in SchemaConfig_SdkV2.
+func (m *SchemaConfig_SdkV2) SetProtoSchema(ctx context.Context, v ProtoSchemaSpec_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["proto_schema"]
+	m.ProtoSchema = types.ListValueMust(t, vs)
+}
+
+// Schema locator for one side (payload or key) of a message. Identifies which
+// schema to use in the schema registry and the serialization format.
+type SchemaLocator_SdkV2 struct {
+	// Confluent Schema Registry schema locator.
+	ConfluentSchema types.List `tfsdk:"confluent_schema"`
+	// Serialization format for this schema.
+	Format types.String `tfsdk:"format"`
+}
+
+func (to *SchemaLocator_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SchemaLocator_SdkV2) {
+	if !from.ConfluentSchema.IsNull() && !from.ConfluentSchema.IsUnknown() {
+		if toConfluentSchema, ok := to.GetConfluentSchema(ctx); ok {
+			if fromConfluentSchema, ok := from.GetConfluentSchema(ctx); ok {
+				// Recursively sync the fields of ConfluentSchema
+				toConfluentSchema.SyncFieldsDuringCreateOrUpdate(ctx, fromConfluentSchema)
+				to.SetConfluentSchema(ctx, toConfluentSchema)
+			}
+		}
+	}
+}
+
+func (to *SchemaLocator_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SchemaLocator_SdkV2) {
+	if !from.ConfluentSchema.IsNull() && !from.ConfluentSchema.IsUnknown() {
+		if toConfluentSchema, ok := to.GetConfluentSchema(ctx); ok {
+			if fromConfluentSchema, ok := from.GetConfluentSchema(ctx); ok {
+				toConfluentSchema.SyncFieldsDuringRead(ctx, fromConfluentSchema)
+				to.SetConfluentSchema(ctx, toConfluentSchema)
+			}
+		}
+	}
+}
+
+func (m SchemaLocator_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["confluent_schema"] = attrs["confluent_schema"].SetOptional()
+	attrs["confluent_schema"] = attrs["confluent_schema"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["format"] = attrs["format"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SchemaLocator.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SchemaLocator_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"confluent_schema": reflect.TypeOf(SchemaLocatorConfluentSchema_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SchemaLocator_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SchemaLocator_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"confluent_schema": m.ConfluentSchema,
+			"format":           m.Format,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SchemaLocator_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"confluent_schema": basetypes.ListType{
+				ElemType: SchemaLocatorConfluentSchema_SdkV2{}.Type(ctx),
+			},
+			"format": types.StringType,
+		},
+	}
+}
+
+// GetConfluentSchema returns the value of the ConfluentSchema field in SchemaLocator_SdkV2 as
+// a SchemaLocatorConfluentSchema_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SchemaLocator_SdkV2) GetConfluentSchema(ctx context.Context) (SchemaLocatorConfluentSchema_SdkV2, bool) {
+	var e SchemaLocatorConfluentSchema_SdkV2
+	if m.ConfluentSchema.IsNull() || m.ConfluentSchema.IsUnknown() {
+		return e, false
+	}
+	var v []SchemaLocatorConfluentSchema_SdkV2
+	d := m.ConfluentSchema.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfluentSchema sets the value of the ConfluentSchema field in SchemaLocator_SdkV2.
+func (m *SchemaLocator_SdkV2) SetConfluentSchema(ctx context.Context, v SchemaLocatorConfluentSchema_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["confluent_schema"]
+	m.ConfluentSchema = types.ListValueMust(t, vs)
+}
+
+// Confluent Schema Registry schema locator. The value to provide for `subject`
+// depends on the naming strategy configured in your registry: -
+// TopicNameStrategy (default): "{topic}-key" or "{topic}-value" e.g. for topic
+// "transactions" use "transactions-value" for the payload and
+// "transactions-key" for the key. - RecordNameStrategy: the fully-qualified
+// record name e.g. "com.example.Payment" for Avro, the bare message name
+// (without package) for Protobuf, or the `title` field value for JSON. -
+// TopicRecordNameStrategy: "{topic}-{fully-qualified-record-name}" e.g.
+// "transactions-com.example.Payment".
+type SchemaLocatorConfluentSchema_SdkV2 struct {
+	// The Confluent schema registry subject name.
+	Subject types.String `tfsdk:"subject"`
+}
+
+func (to *SchemaLocatorConfluentSchema_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SchemaLocatorConfluentSchema_SdkV2) {
+}
+
+func (to *SchemaLocatorConfluentSchema_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SchemaLocatorConfluentSchema_SdkV2) {
+}
+
+func (m SchemaLocatorConfluentSchema_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["subject"] = attrs["subject"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SchemaLocatorConfluentSchema.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SchemaLocatorConfluentSchema_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SchemaLocatorConfluentSchema_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SchemaLocatorConfluentSchema_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"subject": m.Subject,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SchemaLocatorConfluentSchema_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"subject": types.StringType,
+		},
+	}
+}
+
+// Configuration for resolving a Stream's schema from an external schema
+// registry (e.g. Confluent).
+type SchemaRegistryConfig_SdkV2 struct {
+	// Reference to the schema registry API secret in a Databricks secret scope.
+	ApiSecretRef types.List `tfsdk:"api_secret_ref"`
+	// Schema locator for the message key. Only used for Kafka streams. At least
+	// one of payload_schema_locator or key_schema_locator must be set.
+	KeySchemaLocator types.List `tfsdk:"key_schema_locator"`
+	// Schema locator for the message payload. For Kafka this is the value. At
+	// least one of payload_schema_locator or key_schema_locator must be set.
+	PayloadSchemaLocator types.List `tfsdk:"payload_schema_locator"`
+	// A Schema Registry UC Connection object.
+	UcConnection types.String `tfsdk:"uc_connection"`
+}
+
+func (to *SchemaRegistryConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SchemaRegistryConfig_SdkV2) {
+	if !from.ApiSecretRef.IsNull() && !from.ApiSecretRef.IsUnknown() {
+		if toApiSecretRef, ok := to.GetApiSecretRef(ctx); ok {
+			if fromApiSecretRef, ok := from.GetApiSecretRef(ctx); ok {
+				// Recursively sync the fields of ApiSecretRef
+				toApiSecretRef.SyncFieldsDuringCreateOrUpdate(ctx, fromApiSecretRef)
+				to.SetApiSecretRef(ctx, toApiSecretRef)
+			}
+		}
+	}
+	if !from.KeySchemaLocator.IsNull() && !from.KeySchemaLocator.IsUnknown() {
+		if toKeySchemaLocator, ok := to.GetKeySchemaLocator(ctx); ok {
+			if fromKeySchemaLocator, ok := from.GetKeySchemaLocator(ctx); ok {
+				// Recursively sync the fields of KeySchemaLocator
+				toKeySchemaLocator.SyncFieldsDuringCreateOrUpdate(ctx, fromKeySchemaLocator)
+				to.SetKeySchemaLocator(ctx, toKeySchemaLocator)
+			}
+		}
+	}
+	if !from.PayloadSchemaLocator.IsNull() && !from.PayloadSchemaLocator.IsUnknown() {
+		if toPayloadSchemaLocator, ok := to.GetPayloadSchemaLocator(ctx); ok {
+			if fromPayloadSchemaLocator, ok := from.GetPayloadSchemaLocator(ctx); ok {
+				// Recursively sync the fields of PayloadSchemaLocator
+				toPayloadSchemaLocator.SyncFieldsDuringCreateOrUpdate(ctx, fromPayloadSchemaLocator)
+				to.SetPayloadSchemaLocator(ctx, toPayloadSchemaLocator)
+			}
+		}
+	}
+}
+
+func (to *SchemaRegistryConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SchemaRegistryConfig_SdkV2) {
+	if !from.ApiSecretRef.IsNull() && !from.ApiSecretRef.IsUnknown() {
+		if toApiSecretRef, ok := to.GetApiSecretRef(ctx); ok {
+			if fromApiSecretRef, ok := from.GetApiSecretRef(ctx); ok {
+				toApiSecretRef.SyncFieldsDuringRead(ctx, fromApiSecretRef)
+				to.SetApiSecretRef(ctx, toApiSecretRef)
+			}
+		}
+	}
+	if !from.KeySchemaLocator.IsNull() && !from.KeySchemaLocator.IsUnknown() {
+		if toKeySchemaLocator, ok := to.GetKeySchemaLocator(ctx); ok {
+			if fromKeySchemaLocator, ok := from.GetKeySchemaLocator(ctx); ok {
+				toKeySchemaLocator.SyncFieldsDuringRead(ctx, fromKeySchemaLocator)
+				to.SetKeySchemaLocator(ctx, toKeySchemaLocator)
+			}
+		}
+	}
+	if !from.PayloadSchemaLocator.IsNull() && !from.PayloadSchemaLocator.IsUnknown() {
+		if toPayloadSchemaLocator, ok := to.GetPayloadSchemaLocator(ctx); ok {
+			if fromPayloadSchemaLocator, ok := from.GetPayloadSchemaLocator(ctx); ok {
+				toPayloadSchemaLocator.SyncFieldsDuringRead(ctx, fromPayloadSchemaLocator)
+				to.SetPayloadSchemaLocator(ctx, toPayloadSchemaLocator)
+			}
+		}
+	}
+}
+
+func (m SchemaRegistryConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["api_secret_ref"] = attrs["api_secret_ref"].SetRequired()
+	attrs["api_secret_ref"] = attrs["api_secret_ref"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["key_schema_locator"] = attrs["key_schema_locator"].SetOptional()
+	attrs["key_schema_locator"] = attrs["key_schema_locator"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["payload_schema_locator"] = attrs["payload_schema_locator"].SetOptional()
+	attrs["payload_schema_locator"] = attrs["payload_schema_locator"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["uc_connection"] = attrs["uc_connection"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SchemaRegistryConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SchemaRegistryConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"api_secret_ref":         reflect.TypeOf(SecretScopeReference_SdkV2{}),
+		"key_schema_locator":     reflect.TypeOf(SchemaLocator_SdkV2{}),
+		"payload_schema_locator": reflect.TypeOf(SchemaLocator_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SchemaRegistryConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SchemaRegistryConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"api_secret_ref":         m.ApiSecretRef,
+			"key_schema_locator":     m.KeySchemaLocator,
+			"payload_schema_locator": m.PayloadSchemaLocator,
+			"uc_connection":          m.UcConnection,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SchemaRegistryConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"api_secret_ref": basetypes.ListType{
+				ElemType: SecretScopeReference_SdkV2{}.Type(ctx),
+			},
+			"key_schema_locator": basetypes.ListType{
+				ElemType: SchemaLocator_SdkV2{}.Type(ctx),
+			},
+			"payload_schema_locator": basetypes.ListType{
+				ElemType: SchemaLocator_SdkV2{}.Type(ctx),
+			},
+			"uc_connection": types.StringType,
+		},
+	}
+}
+
+// GetApiSecretRef returns the value of the ApiSecretRef field in SchemaRegistryConfig_SdkV2 as
+// a SecretScopeReference_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SchemaRegistryConfig_SdkV2) GetApiSecretRef(ctx context.Context) (SecretScopeReference_SdkV2, bool) {
+	var e SecretScopeReference_SdkV2
+	if m.ApiSecretRef.IsNull() || m.ApiSecretRef.IsUnknown() {
+		return e, false
+	}
+	var v []SecretScopeReference_SdkV2
+	d := m.ApiSecretRef.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetApiSecretRef sets the value of the ApiSecretRef field in SchemaRegistryConfig_SdkV2.
+func (m *SchemaRegistryConfig_SdkV2) SetApiSecretRef(ctx context.Context, v SecretScopeReference_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["api_secret_ref"]
+	m.ApiSecretRef = types.ListValueMust(t, vs)
+}
+
+// GetKeySchemaLocator returns the value of the KeySchemaLocator field in SchemaRegistryConfig_SdkV2 as
+// a SchemaLocator_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SchemaRegistryConfig_SdkV2) GetKeySchemaLocator(ctx context.Context) (SchemaLocator_SdkV2, bool) {
+	var e SchemaLocator_SdkV2
+	if m.KeySchemaLocator.IsNull() || m.KeySchemaLocator.IsUnknown() {
+		return e, false
+	}
+	var v []SchemaLocator_SdkV2
+	d := m.KeySchemaLocator.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetKeySchemaLocator sets the value of the KeySchemaLocator field in SchemaRegistryConfig_SdkV2.
+func (m *SchemaRegistryConfig_SdkV2) SetKeySchemaLocator(ctx context.Context, v SchemaLocator_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["key_schema_locator"]
+	m.KeySchemaLocator = types.ListValueMust(t, vs)
+}
+
+// GetPayloadSchemaLocator returns the value of the PayloadSchemaLocator field in SchemaRegistryConfig_SdkV2 as
+// a SchemaLocator_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SchemaRegistryConfig_SdkV2) GetPayloadSchemaLocator(ctx context.Context) (SchemaLocator_SdkV2, bool) {
+	var e SchemaLocator_SdkV2
+	if m.PayloadSchemaLocator.IsNull() || m.PayloadSchemaLocator.IsUnknown() {
+		return e, false
+	}
+	var v []SchemaLocator_SdkV2
+	d := m.PayloadSchemaLocator.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPayloadSchemaLocator sets the value of the PayloadSchemaLocator field in SchemaRegistryConfig_SdkV2.
+func (m *SchemaRegistryConfig_SdkV2) SetPayloadSchemaLocator(ctx context.Context, v SchemaLocator_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["payload_schema_locator"]
+	m.PayloadSchemaLocator = types.ListValueMust(t, vs)
 }
 
 type SearchExperiments_SdkV2 struct {
@@ -21078,6 +24097,19 @@ func (to *SearchExperimentsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Experiments = from.Experiments
 	}
+	if !from.Experiments.IsNull() && !from.Experiments.IsUnknown() {
+		if toExperiments, ok := to.GetExperiments(ctx); ok {
+			if fromExperiments, ok := from.GetExperiments(ctx); ok {
+				// Recursively sync the fields of each Experiments element by position.
+				for i := range toExperiments {
+					if i < len(fromExperiments) {
+						toExperiments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromExperiments[i])
+					}
+				}
+				to.SetExperiments(ctx, toExperiments)
+			}
+		}
+	}
 }
 
 func (to *SearchExperimentsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SearchExperimentsResponse_SdkV2) {
@@ -21086,6 +24118,18 @@ func (to *SearchExperimentsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for Experiments, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Experiments = from.Experiments
+	}
+	if !from.Experiments.IsNull() && !from.Experiments.IsUnknown() {
+		if toExperiments, ok := to.GetExperiments(ctx); ok {
+			if fromExperiments, ok := from.GetExperiments(ctx); ok {
+				for i := range toExperiments {
+					if i < len(fromExperiments) {
+						toExperiments[i].SyncFieldsDuringRead(ctx, fromExperiments[i])
+					}
+				}
+				to.SetExperiments(ctx, toExperiments)
+			}
+		}
 	}
 }
 
@@ -21313,6 +24357,19 @@ func (to *SearchLoggedModelsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Datasets = from.Datasets
 	}
+	if !from.Datasets.IsNull() && !from.Datasets.IsUnknown() {
+		if toDatasets, ok := to.GetDatasets(ctx); ok {
+			if fromDatasets, ok := from.GetDatasets(ctx); ok {
+				// Recursively sync the fields of each Datasets element by position.
+				for i := range toDatasets {
+					if i < len(fromDatasets) {
+						toDatasets[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDatasets[i])
+					}
+				}
+				to.SetDatasets(ctx, toDatasets)
+			}
+		}
+	}
 	if !from.ExperimentIds.IsNull() && !from.ExperimentIds.IsUnknown() && to.ExperimentIds.IsNull() && len(from.ExperimentIds.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ExperimentIds, and the deserialized field value is Null,
@@ -21324,6 +24381,19 @@ func (to *SearchLoggedModelsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// If a user specified a non-Null, empty list for OrderBy, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OrderBy = from.OrderBy
+	}
+	if !from.OrderBy.IsNull() && !from.OrderBy.IsUnknown() {
+		if toOrderBy, ok := to.GetOrderBy(ctx); ok {
+			if fromOrderBy, ok := from.GetOrderBy(ctx); ok {
+				// Recursively sync the fields of each OrderBy element by position.
+				for i := range toOrderBy {
+					if i < len(fromOrderBy) {
+						toOrderBy[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOrderBy[i])
+					}
+				}
+				to.SetOrderBy(ctx, toOrderBy)
+			}
+		}
 	}
 }
 
@@ -21334,6 +24404,18 @@ func (to *SearchLoggedModelsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Datasets = from.Datasets
 	}
+	if !from.Datasets.IsNull() && !from.Datasets.IsUnknown() {
+		if toDatasets, ok := to.GetDatasets(ctx); ok {
+			if fromDatasets, ok := from.GetDatasets(ctx); ok {
+				for i := range toDatasets {
+					if i < len(fromDatasets) {
+						toDatasets[i].SyncFieldsDuringRead(ctx, fromDatasets[i])
+					}
+				}
+				to.SetDatasets(ctx, toDatasets)
+			}
+		}
+	}
 	if !from.ExperimentIds.IsNull() && !from.ExperimentIds.IsUnknown() && to.ExperimentIds.IsNull() && len(from.ExperimentIds.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ExperimentIds, and the deserialized field value is Null,
@@ -21345,6 +24427,18 @@ func (to *SearchLoggedModelsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for OrderBy, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OrderBy = from.OrderBy
+	}
+	if !from.OrderBy.IsNull() && !from.OrderBy.IsUnknown() {
+		if toOrderBy, ok := to.GetOrderBy(ctx); ok {
+			if fromOrderBy, ok := from.GetOrderBy(ctx); ok {
+				for i := range toOrderBy {
+					if i < len(fromOrderBy) {
+						toOrderBy[i].SyncFieldsDuringRead(ctx, fromOrderBy[i])
+					}
+				}
+				to.SetOrderBy(ctx, toOrderBy)
+			}
+		}
 	}
 }
 
@@ -21502,6 +24596,19 @@ func (to *SearchLoggedModelsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Models = from.Models
 	}
+	if !from.Models.IsNull() && !from.Models.IsUnknown() {
+		if toModels, ok := to.GetModels(ctx); ok {
+			if fromModels, ok := from.GetModels(ctx); ok {
+				// Recursively sync the fields of each Models element by position.
+				for i := range toModels {
+					if i < len(fromModels) {
+						toModels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromModels[i])
+					}
+				}
+				to.SetModels(ctx, toModels)
+			}
+		}
+	}
 }
 
 func (to *SearchLoggedModelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SearchLoggedModelsResponse_SdkV2) {
@@ -21510,6 +24617,18 @@ func (to *SearchLoggedModelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Con
 		// If a user specified a non-Null, empty list for Models, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Models = from.Models
+	}
+	if !from.Models.IsNull() && !from.Models.IsUnknown() {
+		if toModels, ok := to.GetModels(ctx); ok {
+			if fromModels, ok := from.GetModels(ctx); ok {
+				for i := range toModels {
+					if i < len(fromModels) {
+						toModels[i].SyncFieldsDuringRead(ctx, fromModels[i])
+					}
+				}
+				to.SetModels(ctx, toModels)
+			}
+		}
 	}
 }
 
@@ -21707,6 +24826,19 @@ func (to *SearchModelVersionsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ModelVersions = from.ModelVersions
 	}
+	if !from.ModelVersions.IsNull() && !from.ModelVersions.IsUnknown() {
+		if toModelVersions, ok := to.GetModelVersions(ctx); ok {
+			if fromModelVersions, ok := from.GetModelVersions(ctx); ok {
+				// Recursively sync the fields of each ModelVersions element by position.
+				for i := range toModelVersions {
+					if i < len(fromModelVersions) {
+						toModelVersions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromModelVersions[i])
+					}
+				}
+				to.SetModelVersions(ctx, toModelVersions)
+			}
+		}
+	}
 }
 
 func (to *SearchModelVersionsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SearchModelVersionsResponse_SdkV2) {
@@ -21715,6 +24847,18 @@ func (to *SearchModelVersionsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Co
 		// If a user specified a non-Null, empty list for ModelVersions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ModelVersions = from.ModelVersions
+	}
+	if !from.ModelVersions.IsNull() && !from.ModelVersions.IsUnknown() {
+		if toModelVersions, ok := to.GetModelVersions(ctx); ok {
+			if fromModelVersions, ok := from.GetModelVersions(ctx); ok {
+				for i := range toModelVersions {
+					if i < len(fromModelVersions) {
+						toModelVersions[i].SyncFieldsDuringRead(ctx, fromModelVersions[i])
+					}
+				}
+				to.SetModelVersions(ctx, toModelVersions)
+			}
+		}
 	}
 }
 
@@ -21911,6 +25055,19 @@ func (to *SearchModelsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RegisteredModels = from.RegisteredModels
 	}
+	if !from.RegisteredModels.IsNull() && !from.RegisteredModels.IsUnknown() {
+		if toRegisteredModels, ok := to.GetRegisteredModels(ctx); ok {
+			if fromRegisteredModels, ok := from.GetRegisteredModels(ctx); ok {
+				// Recursively sync the fields of each RegisteredModels element by position.
+				for i := range toRegisteredModels {
+					if i < len(fromRegisteredModels) {
+						toRegisteredModels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRegisteredModels[i])
+					}
+				}
+				to.SetRegisteredModels(ctx, toRegisteredModels)
+			}
+		}
+	}
 }
 
 func (to *SearchModelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SearchModelsResponse_SdkV2) {
@@ -21919,6 +25076,18 @@ func (to *SearchModelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for RegisteredModels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RegisteredModels = from.RegisteredModels
+	}
+	if !from.RegisteredModels.IsNull() && !from.RegisteredModels.IsUnknown() {
+		if toRegisteredModels, ok := to.GetRegisteredModels(ctx); ok {
+			if fromRegisteredModels, ok := from.GetRegisteredModels(ctx); ok {
+				for i := range toRegisteredModels {
+					if i < len(fromRegisteredModels) {
+						toRegisteredModels[i].SyncFieldsDuringRead(ctx, fromRegisteredModels[i])
+					}
+				}
+				to.SetRegisteredModels(ctx, toRegisteredModels)
+			}
+		}
 	}
 }
 
@@ -22179,6 +25348,19 @@ func (to *SearchRunsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Runs = from.Runs
 	}
+	if !from.Runs.IsNull() && !from.Runs.IsUnknown() {
+		if toRuns, ok := to.GetRuns(ctx); ok {
+			if fromRuns, ok := from.GetRuns(ctx); ok {
+				// Recursively sync the fields of each Runs element by position.
+				for i := range toRuns {
+					if i < len(fromRuns) {
+						toRuns[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRuns[i])
+					}
+				}
+				to.SetRuns(ctx, toRuns)
+			}
+		}
+	}
 }
 
 func (to *SearchRunsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SearchRunsResponse_SdkV2) {
@@ -22187,6 +25369,18 @@ func (to *SearchRunsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 		// If a user specified a non-Null, empty list for Runs, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Runs = from.Runs
+	}
+	if !from.Runs.IsNull() && !from.Runs.IsUnknown() {
+		if toRuns, ok := to.GetRuns(ctx); ok {
+			if fromRuns, ok := from.GetRuns(ctx); ok {
+				for i := range toRuns {
+					if i < len(fromRuns) {
+						toRuns[i].SyncFieldsDuringRead(ctx, fromRuns[i])
+					}
+				}
+				to.SetRuns(ctx, toRuns)
+			}
+		}
 	}
 }
 
@@ -22430,6 +25624,19 @@ func (to *SetLoggedModelTagsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 }
 
 func (to *SetLoggedModelTagsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SetLoggedModelTagsRequest_SdkV2) {
@@ -22438,6 +25645,18 @@ func (to *SetLoggedModelTagsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -22875,7 +26094,8 @@ type SlidingWindow_SdkV2 struct {
 	// The slide duration (interval by which windows advance, must be positive
 	// and less than duration).
 	SlideDuration types.String `tfsdk:"slide_duration"`
-	// The duration of the sliding window.
+	// The duration of the sliding window. Must be positive when set; absent
+	// means lifetime (aggregate over the entity's entire history).
 	WindowDuration types.String `tfsdk:"window_duration"`
 }
 
@@ -22887,7 +26107,7 @@ func (to *SlidingWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Sl
 
 func (m SlidingWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["slide_duration"] = attrs["slide_duration"].SetRequired()
-	attrs["window_duration"] = attrs["window_duration"].SetRequired()
+	attrs["window_duration"] = attrs["window_duration"].SetOptional()
 
 	return attrs
 }
@@ -22930,8 +26150,8 @@ type StddevPopFunction_SdkV2 struct {
 	// The input column from which the population standard deviation is
 	// computed. For Kafka sources, use dot-prefixed path notation (e.g.,
 	// "value.amount"). For nested fields, the leaf node name is used.
-	// TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported
-	// for backwards compatibility but is deprecated; migrate to dot notation.
+	// Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+	// compatibility but is deprecated; migrate to dot notation.
 	Input types.String `tfsdk:"input"`
 }
 
@@ -23048,9 +26268,8 @@ type Stream_SdkV2 struct {
 	IngestionConfig types.List `tfsdk:"ingestion_config"`
 	// Full three-part (catalog.schema.stream) name of the stream.
 	Name types.String `tfsdk:"name"`
-	// Schema definitions for the stream. Currently only direct schemas are
-	// supported. In a future milestone, we will support schema registries
-	// through a UC Connection.
+	// Schema definitions for the stream, provided either directly on the Stream
+	// or resolved from an external schema registry through a UC Connection.
 	SchemaConfig types.List `tfsdk:"schema_config"`
 	// Source-specific configuration. Determines the streaming platform source.
 	SourceConfig types.List `tfsdk:"source_config"`
@@ -23322,15 +26541,107 @@ func (m *Stream_SdkV2) SetSourceConfig(ctx context.Context, v StreamSourceConfig
 	m.SourceConfig = types.ListValueMust(t, vs)
 }
 
+// A list of Kinesis stream ARNs to read from.
+type StreamArnList_SdkV2 struct {
+	// Kinesis stream ARNs to read from. For example,
+	// 'arn:aws:kinesis:us-west-2:111122223333:stream/stream-a'.
+	Arns types.List `tfsdk:"arns"`
+}
+
+func (to *StreamArnList_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamArnList_SdkV2) {
+	if !from.Arns.IsNull() && !from.Arns.IsUnknown() && to.Arns.IsNull() && len(from.Arns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Arns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Arns = from.Arns
+	}
+}
+
+func (to *StreamArnList_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StreamArnList_SdkV2) {
+	if !from.Arns.IsNull() && !from.Arns.IsUnknown() && to.Arns.IsNull() && len(from.Arns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Arns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Arns = from.Arns
+	}
+}
+
+func (m StreamArnList_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["arns"] = attrs["arns"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StreamArnList.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StreamArnList_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"arns": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StreamArnList_SdkV2
+// only implements ToObjectValue() and Type().
+func (m StreamArnList_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"arns": m.Arns,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StreamArnList_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"arns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetArns returns the value of the Arns field in StreamArnList_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StreamArnList_SdkV2) GetArns(ctx context.Context) ([]types.String, bool) {
+	if m.Arns.IsNull() || m.Arns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Arns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetArns sets the value of the Arns field in StreamArnList_SdkV2.
+func (m *StreamArnList_SdkV2) SetArns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["arns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Arns = types.ListValueMust(t, vs)
+}
+
 // Specifies how to connect and authenticate to the stream platform.
 type StreamConnectionConfig_SdkV2 struct {
 	// Direct mTLS configuration for stream platform access. This is only used
-	// in the short term until UC Kafka Connections support mTLS (XTA-18030).
-	// Once UC Kafka Connections support mTLS, this will be deprecated.
+	// in the short term until UC Kafka Connections support mTLS . Once UC Kafka
+	// Connections support mTLS, this will be deprecated.
 	DirectMtlsConfig types.List `tfsdk:"direct_mtls_config"`
 	// Name of an existing UC Connection for stream platform access. Must be the
 	// correct type for the streaming platform (e.g. a Kafka Connection for a
-	// Kafka Stream).
+	// Kafka Stream, or a Kinesis Connection for a Kinesis Stream).
 	UcConnectionName types.String `tfsdk:"uc_connection_name"`
 }
 
@@ -23428,12 +26739,104 @@ func (m *StreamConnectionConfig_SdkV2) SetDirectMtlsConfig(ctx context.Context, 
 	m.DirectMtlsConfig = types.ListValueMust(t, vs)
 }
 
-// Schema definitions for the stream. Currently only direct schemas are
-// supported. In a future milestone, we will support schema registries through a
-// UC Connection.
+// A list of Kinesis stream names to read from.
+type StreamNameList_SdkV2 struct {
+	// Kinesis stream names to read from.
+	Names types.List `tfsdk:"names"`
+}
+
+func (to *StreamNameList_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamNameList_SdkV2) {
+	if !from.Names.IsNull() && !from.Names.IsUnknown() && to.Names.IsNull() && len(from.Names.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Names, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Names = from.Names
+	}
+}
+
+func (to *StreamNameList_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StreamNameList_SdkV2) {
+	if !from.Names.IsNull() && !from.Names.IsUnknown() && to.Names.IsNull() && len(from.Names.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Names, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Names = from.Names
+	}
+}
+
+func (m StreamNameList_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["names"] = attrs["names"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StreamNameList.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StreamNameList_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"names": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StreamNameList_SdkV2
+// only implements ToObjectValue() and Type().
+func (m StreamNameList_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"names": m.Names,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StreamNameList_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"names": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetNames returns the value of the Names field in StreamNameList_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StreamNameList_SdkV2) GetNames(ctx context.Context) ([]types.String, bool) {
+	if m.Names.IsNull() || m.Names.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Names.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNames sets the value of the Names field in StreamNameList_SdkV2.
+func (m *StreamNameList_SdkV2) SetNames(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["names"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Names = types.ListValueMust(t, vs)
+}
+
+// Schema definitions for the stream. Feature store supports both direct schemas
+// and schema registries.
 type StreamSchemaConfig_SdkV2 struct {
 	// Schema definitions provided directly on the Stream.
 	DirectSchemas types.List `tfsdk:"direct_schemas"`
+	// Resolve schemas from an external schema registry.
+	SchemaRegistryConfig types.List `tfsdk:"schema_registry_config"`
 }
 
 func (to *StreamSchemaConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamSchemaConfig_SdkV2) {
@@ -23443,6 +26846,15 @@ func (to *StreamSchemaConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 				// Recursively sync the fields of DirectSchemas
 				toDirectSchemas.SyncFieldsDuringCreateOrUpdate(ctx, fromDirectSchemas)
 				to.SetDirectSchemas(ctx, toDirectSchemas)
+			}
+		}
+	}
+	if !from.SchemaRegistryConfig.IsNull() && !from.SchemaRegistryConfig.IsUnknown() {
+		if toSchemaRegistryConfig, ok := to.GetSchemaRegistryConfig(ctx); ok {
+			if fromSchemaRegistryConfig, ok := from.GetSchemaRegistryConfig(ctx); ok {
+				// Recursively sync the fields of SchemaRegistryConfig
+				toSchemaRegistryConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromSchemaRegistryConfig)
+				to.SetSchemaRegistryConfig(ctx, toSchemaRegistryConfig)
 			}
 		}
 	}
@@ -23457,11 +26869,21 @@ func (to *StreamSchemaConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 			}
 		}
 	}
+	if !from.SchemaRegistryConfig.IsNull() && !from.SchemaRegistryConfig.IsUnknown() {
+		if toSchemaRegistryConfig, ok := to.GetSchemaRegistryConfig(ctx); ok {
+			if fromSchemaRegistryConfig, ok := from.GetSchemaRegistryConfig(ctx); ok {
+				toSchemaRegistryConfig.SyncFieldsDuringRead(ctx, fromSchemaRegistryConfig)
+				to.SetSchemaRegistryConfig(ctx, toSchemaRegistryConfig)
+			}
+		}
+	}
 }
 
 func (m StreamSchemaConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["direct_schemas"] = attrs["direct_schemas"].SetOptional()
 	attrs["direct_schemas"] = attrs["direct_schemas"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["schema_registry_config"] = attrs["schema_registry_config"].SetOptional()
+	attrs["schema_registry_config"] = attrs["schema_registry_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -23475,7 +26897,8 @@ func (m StreamSchemaConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 // SDK values.
 func (m StreamSchemaConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"direct_schemas": reflect.TypeOf(DirectSchemas_SdkV2{}),
+		"direct_schemas":         reflect.TypeOf(DirectSchemas_SdkV2{}),
+		"schema_registry_config": reflect.TypeOf(SchemaRegistryConfig_SdkV2{}),
 	}
 }
 
@@ -23486,7 +26909,8 @@ func (m StreamSchemaConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"direct_schemas": m.DirectSchemas,
+			"direct_schemas":         m.DirectSchemas,
+			"schema_registry_config": m.SchemaRegistryConfig,
 		})
 }
 
@@ -23496,6 +26920,9 @@ func (m StreamSchemaConfig_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"direct_schemas": basetypes.ListType{
 				ElemType: DirectSchemas_SdkV2{}.Type(ctx),
+			},
+			"schema_registry_config": basetypes.ListType{
+				ElemType: SchemaRegistryConfig_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -23527,10 +26954,105 @@ func (m *StreamSchemaConfig_SdkV2) SetDirectSchemas(ctx context.Context, v Direc
 	m.DirectSchemas = types.ListValueMust(t, vs)
 }
 
+// GetSchemaRegistryConfig returns the value of the SchemaRegistryConfig field in StreamSchemaConfig_SdkV2 as
+// a SchemaRegistryConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StreamSchemaConfig_SdkV2) GetSchemaRegistryConfig(ctx context.Context) (SchemaRegistryConfig_SdkV2, bool) {
+	var e SchemaRegistryConfig_SdkV2
+	if m.SchemaRegistryConfig.IsNull() || m.SchemaRegistryConfig.IsUnknown() {
+		return e, false
+	}
+	var v []SchemaRegistryConfig_SdkV2
+	d := m.SchemaRegistryConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchemaRegistryConfig sets the value of the SchemaRegistryConfig field in StreamSchemaConfig_SdkV2.
+func (m *StreamSchemaConfig_SdkV2) SetSchemaRegistryConfig(ctx context.Context, v SchemaRegistryConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schema_registry_config"]
+	m.SchemaRegistryConfig = types.ListValueMust(t, vs)
+}
+
+// A Stream entity used as a data source for a feature.
+type StreamSource_SdkV2 struct {
+	// Schema of the resulting dataframe after transformations, in Spark
+	// StructType JSON format (from df.schema.json()). Any subsequent functions
+	// operate against this dataframe.
+	DataframeSchema types.String `tfsdk:"dataframe_schema"`
+	// The filter condition applied to the source data before aggregation.
+	FilterCondition types.String `tfsdk:"filter_condition"`
+	// Three-part full name of the Stream (catalog.schema.stream).
+	FullName types.String `tfsdk:"full_name"`
+	// The pipeline runs these SQL statements immediately after conversion into
+	// the schema specified on the Stream object.
+	TransformationSql types.String `tfsdk:"transformation_sql"`
+}
+
+func (to *StreamSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamSource_SdkV2) {
+}
+
+func (to *StreamSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StreamSource_SdkV2) {
+}
+
+func (m StreamSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dataframe_schema"] = attrs["dataframe_schema"].SetOptional()
+	attrs["filter_condition"] = attrs["filter_condition"].SetOptional()
+	attrs["full_name"] = attrs["full_name"].SetRequired()
+	attrs["transformation_sql"] = attrs["transformation_sql"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StreamSource.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StreamSource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StreamSource_SdkV2
+// only implements ToObjectValue() and Type().
+func (m StreamSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dataframe_schema":   m.DataframeSchema,
+			"filter_condition":   m.FilterCondition,
+			"full_name":          m.FullName,
+			"transformation_sql": m.TransformationSql,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StreamSource_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dataframe_schema":   types.StringType,
+			"filter_condition":   types.StringType,
+			"full_name":          types.StringType,
+			"transformation_sql": types.StringType,
+		},
+	}
+}
+
 // Source-specific configuration. Determines the streaming platform source.
 type StreamSourceConfig_SdkV2 struct {
 	// Configuration for Apache Kafka streams.
 	KafkaStreamConfig types.List `tfsdk:"kafka_stream_config"`
+	// Configuration for AWS Kinesis Data Streams.
+	KinesisStreamConfig types.List `tfsdk:"kinesis_stream_config"`
 }
 
 func (to *StreamSourceConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamSourceConfig_SdkV2) {
@@ -23540,6 +27062,15 @@ func (to *StreamSourceConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 				// Recursively sync the fields of KafkaStreamConfig
 				toKafkaStreamConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromKafkaStreamConfig)
 				to.SetKafkaStreamConfig(ctx, toKafkaStreamConfig)
+			}
+		}
+	}
+	if !from.KinesisStreamConfig.IsNull() && !from.KinesisStreamConfig.IsUnknown() {
+		if toKinesisStreamConfig, ok := to.GetKinesisStreamConfig(ctx); ok {
+			if fromKinesisStreamConfig, ok := from.GetKinesisStreamConfig(ctx); ok {
+				// Recursively sync the fields of KinesisStreamConfig
+				toKinesisStreamConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromKinesisStreamConfig)
+				to.SetKinesisStreamConfig(ctx, toKinesisStreamConfig)
 			}
 		}
 	}
@@ -23554,11 +27085,21 @@ func (to *StreamSourceConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 			}
 		}
 	}
+	if !from.KinesisStreamConfig.IsNull() && !from.KinesisStreamConfig.IsUnknown() {
+		if toKinesisStreamConfig, ok := to.GetKinesisStreamConfig(ctx); ok {
+			if fromKinesisStreamConfig, ok := from.GetKinesisStreamConfig(ctx); ok {
+				toKinesisStreamConfig.SyncFieldsDuringRead(ctx, fromKinesisStreamConfig)
+				to.SetKinesisStreamConfig(ctx, toKinesisStreamConfig)
+			}
+		}
+	}
 }
 
 func (m StreamSourceConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["kafka_stream_config"] = attrs["kafka_stream_config"].SetOptional()
 	attrs["kafka_stream_config"] = attrs["kafka_stream_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["kinesis_stream_config"] = attrs["kinesis_stream_config"].SetOptional()
+	attrs["kinesis_stream_config"] = attrs["kinesis_stream_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -23572,7 +27113,8 @@ func (m StreamSourceConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 // SDK values.
 func (m StreamSourceConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"kafka_stream_config": reflect.TypeOf(KafkaStreamConfig_SdkV2{}),
+		"kafka_stream_config":   reflect.TypeOf(KafkaStreamConfig_SdkV2{}),
+		"kinesis_stream_config": reflect.TypeOf(KinesisStreamConfig_SdkV2{}),
 	}
 }
 
@@ -23583,7 +27125,8 @@ func (m StreamSourceConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"kafka_stream_config": m.KafkaStreamConfig,
+			"kafka_stream_config":   m.KafkaStreamConfig,
+			"kinesis_stream_config": m.KinesisStreamConfig,
 		})
 }
 
@@ -23593,6 +27136,9 @@ func (m StreamSourceConfig_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"kafka_stream_config": basetypes.ListType{
 				ElemType: KafkaStreamConfig_SdkV2{}.Type(ctx),
+			},
+			"kinesis_stream_config": basetypes.ListType{
+				ElemType: KinesisStreamConfig_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -23624,8 +27170,37 @@ func (m *StreamSourceConfig_SdkV2) SetKafkaStreamConfig(ctx context.Context, v K
 	m.KafkaStreamConfig = types.ListValueMust(t, vs)
 }
 
+// GetKinesisStreamConfig returns the value of the KinesisStreamConfig field in StreamSourceConfig_SdkV2 as
+// a KinesisStreamConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StreamSourceConfig_SdkV2) GetKinesisStreamConfig(ctx context.Context) (KinesisStreamConfig_SdkV2, bool) {
+	var e KinesisStreamConfig_SdkV2
+	if m.KinesisStreamConfig.IsNull() || m.KinesisStreamConfig.IsUnknown() {
+		return e, false
+	}
+	var v []KinesisStreamConfig_SdkV2
+	d := m.KinesisStreamConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetKinesisStreamConfig sets the value of the KinesisStreamConfig field in StreamSourceConfig_SdkV2.
+func (m *StreamSourceConfig_SdkV2) SetKinesisStreamConfig(ctx context.Context, v KinesisStreamConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["kinesis_stream_config"]
+	m.KinesisStreamConfig = types.ListValueMust(t, vs)
+}
+
 // The streaming mode configuration for a streaming materialization pipeline.
 type StreamingMode_SdkV2 struct {
+	// The desired data freshness for feature materialization, expressed as a
+	// duration string (e.g. "1 minute").
+	FreshnessTarget types.String `tfsdk:"freshness_target"`
 	// The type of streaming mode used by the materialization pipeline.
 	Mode types.String `tfsdk:"mode"`
 }
@@ -23637,6 +27212,7 @@ func (to *StreamingMode_SdkV2) SyncFieldsDuringRead(ctx context.Context, from St
 }
 
 func (m StreamingMode_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["freshness_target"] = attrs["freshness_target"].SetOptional()
 	attrs["mode"] = attrs["mode"].SetOptional()
 
 	return attrs
@@ -23660,7 +27236,8 @@ func (m StreamingMode_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"mode": m.Mode,
+			"freshness_target": m.FreshnessTarget,
+			"mode":             m.Mode,
 		})
 }
 
@@ -23668,7 +27245,8 @@ func (m StreamingMode_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 func (m StreamingMode_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"mode": types.StringType,
+			"freshness_target": types.StringType,
+			"mode":             types.StringType,
 		},
 	}
 }
@@ -23740,9 +27318,9 @@ func (m SubscriptionMode_SdkV2) Type(ctx context.Context) attr.Type {
 type SumFunction_SdkV2 struct {
 	// The input column from which the sum is computed. For Kafka sources, use
 	// dot-prefixed path notation (e.g., "value.amount"). For nested fields, the
-	// leaf node name is used. TODO(FS-939): Colon-prefixed notation (e.g.,
-	// "value:amount") is supported for backwards compatibility but is
-	// deprecated; migrate to dot notation.
+	// leaf node name is used. Colon-prefixed notation (e.g., "value:amount") is
+	// supported for backwards compatibility but is deprecated; migrate to dot
+	// notation.
 	Input types.String `tfsdk:"input"`
 }
 
@@ -23944,6 +27522,8 @@ type TimeWindow_SdkV2 struct {
 	Continuous types.List `tfsdk:"continuous"`
 
 	Rolling types.List `tfsdk:"rolling"`
+	// A sawtooth window served via the hybrid batch + streaming path.
+	Sawtooth types.List `tfsdk:"sawtooth"`
 
 	Sliding types.List `tfsdk:"sliding"`
 
@@ -23966,6 +27546,15 @@ func (to *TimeWindow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 				// Recursively sync the fields of Rolling
 				toRolling.SyncFieldsDuringCreateOrUpdate(ctx, fromRolling)
 				to.SetRolling(ctx, toRolling)
+			}
+		}
+	}
+	if !from.Sawtooth.IsNull() && !from.Sawtooth.IsUnknown() {
+		if toSawtooth, ok := to.GetSawtooth(ctx); ok {
+			if fromSawtooth, ok := from.GetSawtooth(ctx); ok {
+				// Recursively sync the fields of Sawtooth
+				toSawtooth.SyncFieldsDuringCreateOrUpdate(ctx, fromSawtooth)
+				to.SetSawtooth(ctx, toSawtooth)
 			}
 		}
 	}
@@ -24006,6 +27595,14 @@ func (to *TimeWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TimeW
 			}
 		}
 	}
+	if !from.Sawtooth.IsNull() && !from.Sawtooth.IsUnknown() {
+		if toSawtooth, ok := to.GetSawtooth(ctx); ok {
+			if fromSawtooth, ok := from.GetSawtooth(ctx); ok {
+				toSawtooth.SyncFieldsDuringRead(ctx, fromSawtooth)
+				to.SetSawtooth(ctx, toSawtooth)
+			}
+		}
+	}
 	if !from.Sliding.IsNull() && !from.Sliding.IsUnknown() {
 		if toSliding, ok := to.GetSliding(ctx); ok {
 			if fromSliding, ok := from.GetSliding(ctx); ok {
@@ -24029,6 +27626,8 @@ func (m TimeWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["continuous"] = attrs["continuous"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["rolling"] = attrs["rolling"].SetOptional()
 	attrs["rolling"] = attrs["rolling"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["sawtooth"] = attrs["sawtooth"].SetOptional()
+	attrs["sawtooth"] = attrs["sawtooth"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["sliding"] = attrs["sliding"].SetOptional()
 	attrs["sliding"] = attrs["sliding"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["tumbling"] = attrs["tumbling"].SetOptional()
@@ -24048,6 +27647,7 @@ func (m TimeWindow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]r
 	return map[string]reflect.Type{
 		"continuous": reflect.TypeOf(ContinuousWindow_SdkV2{}),
 		"rolling":    reflect.TypeOf(RollingWindow_SdkV2{}),
+		"sawtooth":   reflect.TypeOf(SawtoothWindow_SdkV2{}),
 		"sliding":    reflect.TypeOf(SlidingWindow_SdkV2{}),
 		"tumbling":   reflect.TypeOf(TumblingWindow_SdkV2{}),
 	}
@@ -24062,6 +27662,7 @@ func (m TimeWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 		map[string]attr.Value{
 			"continuous": m.Continuous,
 			"rolling":    m.Rolling,
+			"sawtooth":   m.Sawtooth,
 			"sliding":    m.Sliding,
 			"tumbling":   m.Tumbling,
 		})
@@ -24076,6 +27677,9 @@ func (m TimeWindow_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"rolling": basetypes.ListType{
 				ElemType: RollingWindow_SdkV2{}.Type(ctx),
+			},
+			"sawtooth": basetypes.ListType{
+				ElemType: SawtoothWindow_SdkV2{}.Type(ctx),
 			},
 			"sliding": basetypes.ListType{
 				ElemType: SlidingWindow_SdkV2{}.Type(ctx),
@@ -24139,6 +27743,32 @@ func (m *TimeWindow_SdkV2) SetRolling(ctx context.Context, v RollingWindow_SdkV2
 	m.Rolling = types.ListValueMust(t, vs)
 }
 
+// GetSawtooth returns the value of the Sawtooth field in TimeWindow_SdkV2 as
+// a SawtoothWindow_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TimeWindow_SdkV2) GetSawtooth(ctx context.Context) (SawtoothWindow_SdkV2, bool) {
+	var e SawtoothWindow_SdkV2
+	if m.Sawtooth.IsNull() || m.Sawtooth.IsUnknown() {
+		return e, false
+	}
+	var v []SawtoothWindow_SdkV2
+	d := m.Sawtooth.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSawtooth sets the value of the Sawtooth field in TimeWindow_SdkV2.
+func (m *TimeWindow_SdkV2) SetSawtooth(ctx context.Context, v SawtoothWindow_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sawtooth"]
+	m.Sawtooth = types.ListValueMust(t, vs)
+}
+
 // GetSliding returns the value of the Sliding field in TimeWindow_SdkV2 as
 // a SlidingWindow_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -24197,9 +27827,9 @@ type TimeseriesColumn_SdkV2 struct {
 	// "value.event_timestamp"). For nested fields, the leaf node name (e.g.,
 	// "event_timestamp" from "value.event_details.event_timestamp") is what
 	// will be present in materialized tables and expected to match at query
-	// time. TODO(FS-939): Colon-prefixed notation (e.g.,
-	// "value:event_timestamp") is supported for backwards compatibility but is
-	// deprecated; migrate to dot notation.
+	// time. Colon-prefixed notation (e.g., "value:event_timestamp") is
+	// supported for backwards compatibility but is deprecated; migrate to dot
+	// notation.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -24588,6 +28218,80 @@ func (m TumblingWindow_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"window_duration": types.StringType,
+		},
+	}
+}
+
+// A Unity Catalog trace storage location. Traces are stored as Delta tables in
+// the specified catalog and schema.
+type UcTraceLocation_SdkV2 struct {
+	// The name of the Unity Catalog catalog.
+	Catalog types.String `tfsdk:"catalog"`
+	// The trace-table prefix actually in effect: `table_prefix` if it was set
+	// on creation, otherwise the server-generated default.
+	EffectiveTablePrefix types.String `tfsdk:"effective_table_prefix"`
+	// The name of the Unity Catalog schema within `catalog`.
+	Schema types.String `tfsdk:"schema"`
+	// The prefix for the trace tables, which are named
+	// `{catalog}.{schema}.{table_prefix}_otel_*`. May only contain letters,
+	// digits, and underscores, and may be at most 238 characters. When unset, a
+	// server-generated prefix derived from the experiment ID is used and this
+	// field stays empty on read; the resolved value is always available in
+	// `effective_table_prefix`.
+	TablePrefix types.String `tfsdk:"table_prefix"`
+}
+
+func (to *UcTraceLocation_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UcTraceLocation_SdkV2) {
+}
+
+func (to *UcTraceLocation_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UcTraceLocation_SdkV2) {
+}
+
+func (m UcTraceLocation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog"] = attrs["catalog"].SetRequired()
+	attrs["catalog"] = attrs["catalog"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["effective_table_prefix"] = attrs["effective_table_prefix"].SetComputed()
+	attrs["schema"] = attrs["schema"].SetRequired()
+	attrs["schema"] = attrs["schema"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["table_prefix"] = attrs["table_prefix"].SetOptional()
+	attrs["table_prefix"] = attrs["table_prefix"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UcTraceLocation.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UcTraceLocation_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UcTraceLocation_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UcTraceLocation_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog":                m.Catalog,
+			"effective_table_prefix": m.EffectiveTablePrefix,
+			"schema":                 m.Schema,
+			"table_prefix":           m.TablePrefix,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UcTraceLocation_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog":                types.StringType,
+			"effective_table_prefix": types.StringType,
+			"schema":                 types.StringType,
+			"table_prefix":           types.StringType,
 		},
 	}
 }

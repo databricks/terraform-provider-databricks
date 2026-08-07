@@ -41,6 +41,7 @@ The following arguments are supported:
 ## Attributes
 This data source exports a single attribute, `databases`. It is a list of resources, each with the following attributes:
 * `create_time` (string) - A timestamp indicating when the database was created
+* `database_id` (string) - The part of the name, chosen by the user when the resource was created
 * `name` (string) - The resource name of the database.
   Format: projects/{project_id}/branches/{branch_id}/databases/{database_id}
 * `parent` (string) - The branch containing this database.

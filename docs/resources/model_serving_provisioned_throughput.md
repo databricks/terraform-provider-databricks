@@ -3,6 +3,8 @@ subcategory: "Serving"
 ---
 # databricks_model_serving_provisioned_throughput Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/servingendpoints)
+
 This resource allows you to manage [Foundation Model provisioned throughput](https://docs.databricks.com/aws/en/machine-learning/foundation-model-apis/deploy-prov-throughput-foundation-model-apis) endpoints in Databricks.
 
 ~> This resource is currently in private preview, and only available for enrolled customers.

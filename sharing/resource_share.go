@@ -1,9 +1,10 @@
 package sharing
 
 import (
+	"cmp"
 	"context"
 	"reflect"
-	"sort"
+	"slices"
 
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -62,8 +63,8 @@ type Shares struct {
 }
 
 func (si *ShareInfo) sortSharesByName() {
-	sort.Slice(si.Objects, func(i, j int) bool {
-		return si.Objects[i].Name < si.Objects[j].Name
+	slices.SortFunc(si.Objects, func(a, b sharing.SharedDataObject) int {
+		return cmp.Compare(a.Name, b.Name)
 	})
 }
 

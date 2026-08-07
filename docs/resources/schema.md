@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_schema Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/schemas)
+
 Within a metastore, Unity Catalog provides a 3-level namespace for organizing data: Catalogs, Databases (also called Schemas), and Tables / Views.
 
 -> This resource can only be used with a workspace-level provider!

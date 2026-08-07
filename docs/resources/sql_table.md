@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_sql_table (Resource)
 
+[API Documentation](https://docs.databricks.com/api/workspace/tables)
+
 Within a metastore, Unity Catalog provides a 3-level namespace for organizing data: Catalogs, databases (also called schemas), and tables/views.
 
 A `databricks_sql_table` is contained within [databricks_schema](schema.md), and can represent either a managed table, an external table, or a view.

@@ -110,7 +110,7 @@ type DatabaseCatalog struct {
 	CreateDatabaseIfNotExists types.Bool `tfsdk:"create_database_if_not_exists"`
 	// The name of the DatabaseInstance housing the database.
 	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
-	// The name of the database (in a instance) associated with the catalog.
+	// The name of the database (in an instance) associated with the catalog.
 	DatabaseName types.String `tfsdk:"database_name"`
 	// The name of the catalog in UC.
 	Name types.String `tfsdk:"name"`

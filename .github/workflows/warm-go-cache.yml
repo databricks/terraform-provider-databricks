@@ -1,0 +1,113 @@
+name: Warm Go Cache
+
+# Pre-warms the Go module cache using JFrog as the module proxy.
+#
+# Fork PRs cannot mint OIDC tokens, so they cannot authenticate to JFrog.
+# Instead, the tests workflow restores the cache saved here and resolves
+# modules offline through Go's file:// proxy, which reads the same layout
+# that 'go mod vendor' writes to the module cache.
+#
+# This workflow is the sole writer of the go-modules-* cache. PR workflows
+# only ever restore it (actions/cache/restore).
+#
+# Fork PR with a go.mod/go.sum change:
+#   The PR's tests job fails because the new module is not in the cache.
+#   After reviewing the dependency change, run this workflow manually with
+#   pr_number set to the PR's number. It fetches only go.mod and go.sum from
+#   the fork (never source code), rebuilds the cache, and the contributor can
+#   then re-run the failed check.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - go.mod
+      - go.sum
+      - .github/workflows/warm-go-cache.yml
+  schedule:
+    - cron: "0 6 * * *" # Daily; GitHub evicts caches not accessed for 7 days
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Fork PR number to fetch go.mod/go.sum from. Leave empty to warm from main."
+        required: false
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: read
+
+jobs:
+  warm-cache:
+    runs-on:
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      # Overlay only the dependency manifests from the fork PR - never its
+      # source code - so nothing from the fork is executed in this privileged
+      # workflow.
+      - name: Fetch go.mod and go.sum from fork PR
+        if: inputs.pr_number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+        run: |
+          [[ "$PR_NUMBER" =~ ^[0-9]+$ ]] || { echo "pr_number must be a positive integer"; exit 1; }
+          pr_data=$(gh api "repos/${{ github.repository }}/pulls/${PR_NUMBER}")
+          fork_repo=$(echo "$pr_data" | jq -er '.head.repo.full_name | select(type == "string" and length > 0)')
+          fork_ref=$(echo "$pr_data" | jq -er '.head.ref | select(type == "string" and length > 0)')
+          # Both values come from the PR head and are attacker-controlled:
+          # restrict the repo to owner/name characters and reject refs that
+          # git itself considers invalid or that start with "-" (git fetch
+          # would parse those as options even when quoted).
+          [[ "$fork_repo" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9_.-]+$ ]] || { echo "unexpected fork repository name: $fork_repo"; exit 1; }
+          if [[ "$fork_ref" == -* ]] || ! git check-ref-format "refs/heads/$fork_ref"; then
+            echo "unexpected fork ref: $fork_ref"; exit 1
+          fi
+          echo "Warming cache for PR #${PR_NUMBER} from ${fork_repo}@${fork_ref}"
+          git remote add fork "https://github.com/${fork_repo}.git"
+          git fetch --depth=1 fork "refs/heads/${fork_ref}"
+          git checkout FETCH_HEAD -- go.mod go.sum
+
+      - name: Setup Go build environment
+        uses: ./.github/actions/setup-go-build-environment
+        with:
+          go-version-file: go.mod
+
+          # This workflow is the sole writer of the warmed module cache;
+          # don't let setup-go save its own.
+          go-cache: "false"
+
+      # Run the same command as the tests workflow's "Pull external libraries"
+      # step so the module cache ends up with the exact layout fork PR runs
+      # resolve from.
+      - name: Resolve module dependencies via JFrog
+        shell: bash
+        run: jf go mod vendor
+
+      - name: Verify offline resolution from the warmed cache
+        shell: bash
+        run: |
+          export GOPROXY=file://$(go env GOMODCACHE)/cache/download
+          export GONOSUMCHECK=*
+          export GONOSUMDB=*
+          go mod vendor
+
+      - name: Generate cache key
+        id: cache-key
+        shell: bash
+        run: |
+          # GitHub caches are immutable, so a timestamp suffix makes each run
+          # save a fresh entry. Restores prefix-match the latest entry via
+          # restore-keys.
+          echo "key=go-modules-${{ runner.os }}-${{ hashFiles('go.sum') }}-$(date -u +%Y%m%d%H%M%S)" >> "$GITHUB_OUTPUT"
+
+      - name: Save Go module cache
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/go/pkg/mod/cache/download
+          key: ${{ steps.cache-key.outputs.key }}

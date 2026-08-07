@@ -41,7 +41,11 @@ The following arguments are supported:
 * `avg` (AvgFunction, optional)
 * `count_function` (CountFunction, optional)
 * `first` (FirstFunction, optional)
+* `first_distinct` (FirstDistinctFunction, optional)
+* `first_n` (FirstNFunction, optional)
 * `last` (LastFunction, optional)
+* `last_distinct` (LastDistinctFunction, optional)
+* `last_n` (LastNFunction, optional)
 * `max` (MaxFunction, optional)
 * `min` (MinFunction, optional)
 * `stddev_pop` (StddevPopFunction, optional)
@@ -63,7 +67,7 @@ The following arguments are supported:
 ### AvgFunction
 * `input` (string, required) - The input column from which the average is computed. For Kafka sources, use dot-prefixed path
   notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### ColumnIdentifier
@@ -80,13 +84,14 @@ The following arguments are supported:
 ### CountFunction
 * `input` (string, required) - The input column from which the count is computed. For Kafka sources, use dot-prefixed path
   notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### DataSource
 * `delta_table_source` (DeltaTableSource, optional) - A Delta table data source
 * `kafka_source` (KafkaSource, optional) - A Kafka stream data source
 * `request_source` (RequestSource, optional) - A request-time data source
+* `stream_source` (StreamSource, optional) - A Stream data source
 
 ### DeltaTableSource
 * `full_name` (string, required) - The full three-part (catalog, schema, table) name of the Delta table
@@ -107,15 +112,23 @@ The following arguments are supported:
   fields within the key or value schema (e.g., "value.user_id", "key.partition_key"). For nested
   fields, the leaf node name (e.g., "user_id" from "value.trip_details.user_id") is what will
   be present in materialized tables and expected to match at query time.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:user_id") is supported for backwards
+  Colon-prefixed notation (e.g., "value:user_id") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### FieldDefinition
 * `data_type` (string, required) - The scalar data type of the field. Possible values are: `BINARY`, `BOOLEAN`, `DATE`, `DECIMAL`, `DOUBLE`, `FLOAT`, `INTEGER`, `LONG`, `SHORT`, `STRING`, `TIMESTAMP`
 * `name` (string, required) - The name of the field
 
+### FirstDistinctFunction
+* `input` (string, required) - The input column from which the first N distinct values are returned
+* `n` (integer, required) - The number of distinct values to return
+
 ### FirstFunction
 * `input` (string, required) - The input column from which the first value is returned
+
+### FirstNFunction
+* `input` (string, required) - The input column from which the first N values are returned
+* `n` (integer, required) - The number of values to return
 
 ### FlatSchema
 * `fields` (list of FieldDefinition, required) - The list of fields in this schema
@@ -144,8 +157,16 @@ The following arguments are supported:
 * `timeseries_column_identifier` (ColumnIdentifier, optional, deprecated) - Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility.
   The timeseries column identifier of the Kafka source
 
+### LastDistinctFunction
+* `input` (string, required) - The input column from which the last N distinct values are returned
+* `n` (integer, required) - The number of distinct values to return
+
 ### LastFunction
 * `input` (string, required) - The input column from which the last value is returned
+
+### LastNFunction
+* `input` (string, required) - The input column from which the last N values are returned
+* `n` (integer, required) - The number of values to return
 
 ### LineageContext
 * `job_context` (JobContext, optional) - Job context information including job ID and run ID
@@ -161,32 +182,52 @@ The following arguments are supported:
 * `flat_schema` (FlatSchema, optional) - A flat schema with scalar-typed fields only
 
 ### RollingWindow
-* `window_duration` (string, required) - The duration of the rolling window (must be positive)
 * `delay` (string, optional) - The delay applied to the end of the rolling window (must be non-negative).
   For example, delay=1d shifts the window end 1 day before the evaluation time
+* `window_duration` (string, optional) - The duration of the rolling window. Must be positive when set; absent means lifetime
+  (aggregate over the entity's entire history)
+
+### SawtoothWindow
+* `delay` (string, optional) - The delay applied to the end of the window (must be non-negative).
+  For example, delay=1d shifts the window end 1 day before the evaluation time
+* `window_duration` (string, optional) - The duration of the window. Must be positive and span more than two days when set, so that both
+  the batch (N-1 day) and stale-path (N-2 day) partial aggregates are well defined. The duration
+  need not be a whole number of days (e.g. 3 days 15 minutes is allowed). Absent means lifetime
+  (aggregate over the entity's entire history)
 
 ### SlidingWindow
 * `slide_duration` (string, required) - The slide duration (interval by which windows advance, must be positive and less than duration)
-* `window_duration` (string, required) - The duration of the sliding window
+* `window_duration` (string, optional) - The duration of the sliding window. Must be positive when set; absent means lifetime
+  (aggregate over the entity's entire history)
 
 ### StddevPopFunction
 * `input` (string, required) - The input column from which the population standard deviation is computed. For Kafka sources,
   use dot-prefixed path notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### StddevSampFunction
 * `input` (string, required) - The input column from which the sample standard deviation is computed
 
+### StreamSource
+* `full_name` (string, required) - Three-part full name of the Stream (catalog.schema.stream)
+* `dataframe_schema` (string, optional) - Schema of the resulting dataframe after transformations, in Spark StructType
+  JSON format (from df.schema.json()).
+  Any subsequent functions operate against this dataframe
+* `filter_condition` (string, optional) - The filter condition applied to the source data before aggregation
+* `transformation_sql` (string, optional) - The pipeline runs these SQL statements immediately after conversion into
+  the schema specified on the Stream object
+
 ### SumFunction
 * `input` (string, required) - The input column from which the sum is computed. For Kafka sources, use dot-prefixed path
   notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### TimeWindow
 * `continuous` (ContinuousWindow, optional, deprecated)
 * `rolling` (RollingWindow, optional)
+* `sawtooth` (SawtoothWindow, optional) - A sawtooth window served via the hybrid batch + streaming path
 * `sliding` (SlidingWindow, optional)
 * `tumbling` (TumblingWindow, optional)
 
@@ -195,7 +236,7 @@ The following arguments are supported:
   reference fields within the key or value schema (e.g., "value.event_timestamp"). For nested
   fields, the leaf node name (e.g., "event_timestamp" from "value.event_details.event_timestamp")
   is what will be present in materialized tables and expected to match at query time.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:event_timestamp") is supported for
+  Colon-prefixed notation (e.g., "value:event_timestamp") is supported for
   backwards compatibility but is deprecated; migrate to dot notation
 
 ### TumblingWindow

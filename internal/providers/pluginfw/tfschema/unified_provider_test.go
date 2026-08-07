@@ -327,8 +327,11 @@ func TestGetWorkspaceIDDataSource(t *testing.T) {
 // TestValidateWorkspaceID_ReadsFromRespPlan simulates the full ModifyPlan flow:
 // state has workspace_id "111", provider default changes to "999".
 // WorkspaceDriftDetection detects the drift and updates resp.Plan to "999".
-// ValidateWorkspaceID must read from resp.Plan (not req.Plan) to validate "999".
-// With old code (req.Plan), it would validate stale "111" and get a mismatch error.
+// ValidateWorkspaceID is now a no-op (plan-time reachability validation was
+// removed in favor of apply-time validation via GetWorkspaceClientForUnifiedProvider),
+// so it must not add diagnostics regardless of what is in the plan. This test
+// keeps exercising WorkspaceDriftDetection and asserts ValidateWorkspaceID stays
+// inert.
 func TestValidateWorkspaceID_ReadsFromRespPlan(t *testing.T) {
 	ctx := context.Background()
 
@@ -423,9 +426,8 @@ func TestValidateWorkspaceID_ReadsFromRespPlan(t *testing.T) {
 	require.False(t, resp.Diagnostics.HasError(),
 		"WorkspaceDriftDetection failed: %v", resp.Diagnostics.Errors())
 
-	// ValidateWorkspaceID should read "999" from resp.Plan (updated above),
-	// not "111" from req.Plan. With old code (req.Plan) this would fail with
-	// "workspace_id mismatch: provider is configured for workspace 999 but got 111".
+	// ValidateWorkspaceID is a no-op: it performs no plan-time reachability
+	// validation and must never add diagnostics.
 	ValidateWorkspaceID(ctx, databricksClient, modifyReq, resp)
 	assert.False(t, resp.Diagnostics.HasError(),
 		"expected no error, got: %v", resp.Diagnostics.Errors())

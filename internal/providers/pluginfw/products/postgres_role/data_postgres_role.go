@@ -106,6 +106,8 @@ type RoleData struct {
 	// The Branch where this Role exists. Format:
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"parent"`
+	// The part of the name, chosen by the user when the resource was created.
+	RoleId types.String `tfsdk:"role_id"`
 	// The spec contains the role configuration, including identity type,
 	// authentication method, and role attributes.
 	Spec types.Object `tfsdk:"spec"`
@@ -145,6 +147,7 @@ func (m RoleData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"create_time": m.CreateTime,
 			"name":        m.Name,
 			"parent":      m.Parent,
+			"role_id":     m.RoleId,
 			"spec":        m.Spec,
 			"status":      m.Status,
 			"update_time": m.UpdateTime,
@@ -162,6 +165,7 @@ func (m RoleData) Type(ctx context.Context) attr.Type {
 			"create_time": timetypes.RFC3339{}.Type(ctx),
 			"name":        types.StringType,
 			"parent":      types.StringType,
+			"role_id":     types.StringType,
 			"spec":        postgres_tf.RoleRoleSpec{}.Type(ctx),
 			"status":      postgres_tf.RoleRoleStatus{}.Type(ctx),
 			"update_time": timetypes.RFC3339{}.Type(ctx),
@@ -175,6 +179,7 @@ func (m RoleData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["role_id"] = attrs["role_id"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()

@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_credential Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/credentials)
+
 A credential represents an authentication and authorization mechanism for accessing services on your cloud tenant. Each credential is subject to Unity Catalog access-control policies that control which users and groups can access the credential.
 
 -> This resource can only be used with a workspace-level provider!

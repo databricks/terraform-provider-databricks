@@ -52,7 +52,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const testProviderWorkspaceID = "123456789"
+// testProviderWorkspaceID must match the workspace ID that the qa HTTP-fixture
+// client caches (see qa.HttpFixtureClientWithToken, which seeds
+// cachedWorkspaceID = 12345). Workspace-level Read now applies the provider's
+// workspace_id as a fallback and validates it against the cached workspace ID;
+// a value that disagreed with the cache would fail with a workspace_id mismatch.
+const testProviderWorkspaceID = "12345"
 
 // nolint
 func getJSONObject(filename string) any {
@@ -294,14 +299,14 @@ var emptyAlertsV2 = qa.HTTPFixture{
 
 var emptyExternalLocations = qa.HTTPFixture{
 	Method:   "GET",
-	Resource: "/api/2.1/unity-catalog/external-locations?",
+	Resource: "/api/2.1/unity-catalog/external-locations?max_results=0",
 	Status:   200,
 	Response: &sdk_uc.ListExternalLocationsResponse{},
 }
 
 var emptyStorageCredentials = qa.HTTPFixture{
 	Method:   "GET",
-	Resource: "/api/2.1/unity-catalog/storage-credentials?",
+	Resource: "/api/2.1/unity-catalog/storage-credentials?max_results=0",
 	Status:   200,
 	Response: &sdk_uc.ListStorageCredentialsResponse{},
 }
@@ -315,7 +320,7 @@ var emptyUcCredentials = qa.HTTPFixture{
 
 var emptyConnections = qa.HTTPFixture{
 	Method:   "GET",
-	Resource: "/api/2.1/unity-catalog/connections?",
+	Resource: "/api/2.1/unity-catalog/connections?max_results=0",
 	Response: sdk_uc.ListConnectionsResponse{},
 }
 
@@ -357,21 +362,21 @@ var emptySupervisorAgents = qa.HTTPFixture{
 var emptyShares = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.1/unity-catalog/shares?",
+	Resource:     "/api/2.1/unity-catalog/shares?max_results=0",
 	Response:     sharing.ListSharesResponse{},
 }
 
 var emptyRecipients = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.1/unity-catalog/recipients?",
+	Resource:     "/api/2.1/unity-catalog/recipients?max_results=0",
 	Response:     sharing.ListRecipientsResponse{},
 }
 
 var emptyProviders = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.1/unity-catalog/providers?",
+	Resource:     "/api/2.1/unity-catalog/providers?max_results=0",
 	Response:     sharing.ListProvidersResponse{},
 }
 
@@ -2983,8 +2988,8 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 			os.Mkdir(tmpDir, 0700)
 			os.WriteFile(tmpDir+"/import.sh", []byte(
-				`terraform import databricks_pipeline.abc "abc"
-terraform import databricks_pipeline.def "def"
+				`terraform import databricks_pipeline.abc 'abc'
+terraform import databricks_pipeline.def 'def'
 `), 0700)
 
 			os.WriteFile(tmpDir+"/import.tf", []byte(
@@ -3025,8 +3030,8 @@ resource "databricks_pipeline" "def" {
 			content, err := os.ReadFile(tmpDir + "/import.sh")
 			assert.NoError(t, err)
 			contentStr := string(content)
-			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.abc "abc"`))
-			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.def "def"`))
+			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.abc 'abc'`))
+			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.def 'def'`))
 
 			content, err = os.ReadFile(tmpDir + "/import.tf")
 			assert.NoError(t, err)

@@ -1,10 +1,11 @@
 package scim
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"log"
-	"sort"
+	"slices"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -65,9 +66,9 @@ func DataSourceServicePrincipals() common.Resource {
 					Repos:          fmt.Sprintf("/Repos/%s", sp.ApplicationID),
 				})
 			}
-			sort.Strings(response.ApplicationIDs)
-			sort.Slice(response.ServicePrincipals, func(i, j int) bool {
-				return response.ServicePrincipals[i].ApplicationID < response.ServicePrincipals[j].ApplicationID
+			slices.Sort(response.ApplicationIDs)
+			slices.SortFunc(response.ServicePrincipals, func(a, b servicePrincipalData) int {
+				return cmp.Compare(a.ApplicationID, b.ApplicationID)
 			})
 			if err := common.StructToData(&response, s, d); err != nil {
 				return err

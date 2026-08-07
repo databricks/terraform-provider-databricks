@@ -26,6 +26,8 @@ The following attributes are exported:
   The schema for this source must match exactly that of the key and value schemas specified for this Kafka config
 * `bootstrap_servers` (string) - A comma-separated list of host/port pairs pointing to Kafka cluster
 * `extra_options` (object) - Catch-all for miscellaneous options. Keys should be source options or Kafka consumer options (kafka.*)
+* `ingestion_config` (IngestionConfig) - Configuration for ingesting Kafka data into a Databricks-managed
+  Delta table
 * `key_schema` (SchemaConfig) - Schema configuration for extracting message keys from topics. At least one of key_schema and value_schema must be provided
 * `name` (string) - Name that uniquely identifies this Kafka config within the metastore. This will be the identifier used from the Feature object to reference these configs for a feature.
   Can be distinct from topic name
@@ -56,6 +58,24 @@ The following attributes are exported:
   Should contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
   If transformation_sql is not provided, all columns of the delta table are present in the DataSource dataframe
 
+### IngestionConfig
+* `backfill_job_id` (integer) - The ID of the Databricks Job that performs the historical backfill of the ingestion Delta table
+* `backfill_source` (BackfillSource) - A user-provided source for backfilling data. Historical data is used when creating a training set from streaming features linked to this Stream.
+  The backfill data stored in this location will be copied into the ingestion table for offline querying and training.
+  The schema for this source must match exactly that of the key and payload schemas specified for this Stream
+* `deduplication_columns` (list of string) - Column paths used to identify duplicate rows during ingestion; only one row per
+  distinct combination of these values is kept. Use dot notation for nested fields
+  (e.g. `value.user_id`). Empty list means every column is compared
+* `ingestion_destination` (IngestionDestination) - Destination for the Databricks-managed Delta table that holds an offline copy of the streaming data for querying and training.
+  This table contains both 1) forward-filled data from the Stream and 2) backfilled data from the BackfillSource (if provided).
+  This table is created and managed by Databricks and is deleted when the Stream is deleted
+* `ingestion_job_id` (integer) - The ID of the Databricks Job that performs the forward-fill ingestion
+* `ingestion_pipeline_id` (string) - The ID of the SDP pipeline that continuously copies new events from the streaming source
+  into the ingestion Delta table
+
+### IngestionDestination
+* `delta_table_name` (string) - The full three-part name (catalog, schema, name) of the Delta table to be created for ingestion
+
 ### MtlsConfig
 * `disable_hostname_verification` (boolean) - Set to true only when the broker certificate's SAN intentionally does not match
   the connection endpoint — for example when reaching the cluster through a
@@ -77,8 +97,18 @@ The following attributes are exported:
   e.g. "/Volumes/<catalog>/<schema>/<volume>/truststore.jks"
 * `truststore_password_ref` (SecretScopeReference) - Secret-scope reference for the JKS truststore password
 
+### ProtoSchemaSpec
+* `message_name` (string) - The fully-qualified name of the message within schema_text that describes the Kafka payload
+  (e.g. "Event" or "com.example.Event" if schema_text declares a package). Identifies which
+  message is used to decode each Kafka record — a .proto file may declare multiple messages
+  but only one represents the payload. Must not be empty
+* `schema_text` (string) - The raw .proto file text (proto2 and proto3 syntax supported, see
+  https://protobuf.dev/programming-guides/proto3/ and https://protobuf.dev/programming-guides/proto2/)
+
 ### SchemaConfig
+* `avro_schema` (string) - Avro schema in JSON format (https://avro.apache.org/docs/current/specification/)
 * `json_schema` (string) - Schema of the JSON object in standard IETF JSON schema format (https://json-schema.org/)
+* `proto_schema` (ProtoSchemaSpec) - Protocol Buffer schema with its payload message name
 
 ### SecretScopeReference
 * `key` (string) - The key within the scope

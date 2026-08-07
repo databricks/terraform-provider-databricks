@@ -134,10 +134,26 @@ All arguments are optional, and they tune what code is being generated.
 * `-updated-since` - timestamp (in ISO8601 format supported by Go language) for exporting of resources modified since a given timestamp. I.e., `2023-07-24T00:00:00Z`. If not specified, the exporter will try to load the last run timestamp from the `exporter-run-stats.json` file generated during the export and use it.
 * `-notebooksFormat` - optional format for exported notebooks. Supported values are `SOURCE` (default), `DBC`, `JUPYTER`.  This option could be used to export notebooks with embedded dashboards.
 * `-noformat` - optionally turn off the execution of `terraform fmt` on the exported files (enabled by default).
-* `-debug` - turn on debug output.
-* `-trace` - turn on trace output (includes debug level as well).
+* `-debug` - turn on debug output, including Databricks Go SDK HTTP request/response logs.
+* `-trace` - turn on trace output (includes debug level as well), including Databricks Go SDK HTTP request/response logs.
 * `-native-import` - turns on generation of [native import blocks](https://developer.hashicorp.com/terraform/language/import) (requires Terraform 1.5+).  This option is recommended for cases when you want to start managing an existing workspace.
 * `-export-secrets` - enables exporting of the secret values - they will be written into the `terraform.tfvars` file.  **Be very careful with this file!**
+
+### Logging
+
+The exporter also honors the standard `TF_LOG` environment variable:
+
+* `TF_LOG=DEBUG` - enables exporter debug output and Databricks Go SDK HTTP request/response logs.
+* `TF_LOG=TRACE` - enables trace output, debug output, and Databricks Go SDK HTTP request/response logs.
+* `TF_LOG=INFO`, `TF_LOG=WARN`, and `TF_LOG=ERROR` - restrict output to the corresponding level and above.
+
+The `-debug` and `-trace` flags take precedence over `TF_LOG` for backward compatibility. To increase the amount of request or response body included in SDK HTTP logs, set `DATABRICKS_DEBUG_TRUNCATE_BYTES`.
+
+```bash
+TF_LOG=DEBUG \
+DATABRICKS_DEBUG_TRUNCATE_BYTES=250000 \
+./terraform-provider-databricks exporter -skip-interactive -listing jobs -services jobs
+```
 
 ### Use of `-listing` and `-services` for granular resources selection
 

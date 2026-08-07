@@ -53,7 +53,11 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `avg` (AvgFunction)
 * `count_function` (CountFunction)
 * `first` (FirstFunction)
+* `first_distinct` (FirstDistinctFunction)
+* `first_n` (FirstNFunction)
 * `last` (LastFunction)
+* `last_distinct` (LastDistinctFunction)
+* `last_n` (LastNFunction)
 * `max` (MaxFunction)
 * `min` (MinFunction)
 * `stddev_pop` (StddevPopFunction)
@@ -75,7 +79,7 @@ This data source exports a single attribute, `features`. It is a list of resourc
 ### AvgFunction
 * `input` (string) - The input column from which the average is computed. For Kafka sources, use dot-prefixed path
   notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### ColumnIdentifier
@@ -92,13 +96,14 @@ This data source exports a single attribute, `features`. It is a list of resourc
 ### CountFunction
 * `input` (string) - The input column from which the count is computed. For Kafka sources, use dot-prefixed path
   notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### DataSource
 * `delta_table_source` (DeltaTableSource) - A Delta table data source
 * `kafka_source` (KafkaSource) - A Kafka stream data source
 * `request_source` (RequestSource) - A request-time data source
+* `stream_source` (StreamSource) - A Stream data source
 
 ### DeltaTableSource
 * `dataframe_schema` (string) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
@@ -119,15 +124,23 @@ This data source exports a single attribute, `features`. It is a list of resourc
   fields within the key or value schema (e.g., "value.user_id", "key.partition_key"). For nested
   fields, the leaf node name (e.g., "user_id" from "value.trip_details.user_id") is what will
   be present in materialized tables and expected to match at query time.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:user_id") is supported for backwards
+  Colon-prefixed notation (e.g., "value:user_id") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### FieldDefinition
 * `data_type` (string) - The scalar data type of the field. Possible values are: `BINARY`, `BOOLEAN`, `DATE`, `DECIMAL`, `DOUBLE`, `FLOAT`, `INTEGER`, `LONG`, `SHORT`, `STRING`, `TIMESTAMP`
 * `name` (string) - The name of the field
 
+### FirstDistinctFunction
+* `input` (string) - The input column from which the first N distinct values are returned
+* `n` (integer) - The number of distinct values to return
+
 ### FirstFunction
 * `input` (string) - The input column from which the first value is returned
+
+### FirstNFunction
+* `input` (string) - The input column from which the first N values are returned
+* `n` (integer) - The number of values to return
 
 ### FlatSchema
 * `fields` (list of FieldDefinition) - The list of fields in this schema
@@ -156,8 +169,16 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `timeseries_column_identifier` (ColumnIdentifier, deprecated) - Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility.
   The timeseries column identifier of the Kafka source
 
+### LastDistinctFunction
+* `input` (string) - The input column from which the last N distinct values are returned
+* `n` (integer) - The number of distinct values to return
+
 ### LastFunction
 * `input` (string) - The input column from which the last value is returned
+
+### LastNFunction
+* `input` (string) - The input column from which the last N values are returned
+* `n` (integer) - The number of values to return
 
 ### LineageContext
 * `job_context` (JobContext) - Job context information including job ID and run ID
@@ -175,30 +196,50 @@ This data source exports a single attribute, `features`. It is a list of resourc
 ### RollingWindow
 * `delay` (string) - The delay applied to the end of the rolling window (must be non-negative).
   For example, delay=1d shifts the window end 1 day before the evaluation time
-* `window_duration` (string) - The duration of the rolling window (must be positive)
+* `window_duration` (string) - The duration of the rolling window. Must be positive when set; absent means lifetime
+  (aggregate over the entity's entire history)
+
+### SawtoothWindow
+* `delay` (string) - The delay applied to the end of the window (must be non-negative).
+  For example, delay=1d shifts the window end 1 day before the evaluation time
+* `window_duration` (string) - The duration of the window. Must be positive and span more than two days when set, so that both
+  the batch (N-1 day) and stale-path (N-2 day) partial aggregates are well defined. The duration
+  need not be a whole number of days (e.g. 3 days 15 minutes is allowed). Absent means lifetime
+  (aggregate over the entity's entire history)
 
 ### SlidingWindow
 * `slide_duration` (string) - The slide duration (interval by which windows advance, must be positive and less than duration)
-* `window_duration` (string) - The duration of the sliding window
+* `window_duration` (string) - The duration of the sliding window. Must be positive when set; absent means lifetime
+  (aggregate over the entity's entire history)
 
 ### StddevPopFunction
 * `input` (string) - The input column from which the population standard deviation is computed. For Kafka sources,
   use dot-prefixed path notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### StddevSampFunction
 * `input` (string) - The input column from which the sample standard deviation is computed
 
+### StreamSource
+* `dataframe_schema` (string) - Schema of the resulting dataframe after transformations, in Spark StructType
+  JSON format (from df.schema.json()).
+  Any subsequent functions operate against this dataframe
+* `filter_condition` (string) - The filter condition applied to the source data before aggregation
+* `full_name` (string) - Three-part full name of the Stream (catalog.schema.stream)
+* `transformation_sql` (string) - The pipeline runs these SQL statements immediately after conversion into
+  the schema specified on the Stream object
+
 ### SumFunction
 * `input` (string) - The input column from which the sum is computed. For Kafka sources, use dot-prefixed path
   notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### TimeWindow
 * `continuous` (ContinuousWindow, deprecated)
 * `rolling` (RollingWindow)
+* `sawtooth` (SawtoothWindow) - A sawtooth window served via the hybrid batch + streaming path
 * `sliding` (SlidingWindow)
 * `tumbling` (TumblingWindow)
 
@@ -207,7 +248,7 @@ This data source exports a single attribute, `features`. It is a list of resourc
   reference fields within the key or value schema (e.g., "value.event_timestamp"). For nested
   fields, the leaf node name (e.g., "event_timestamp" from "value.event_details.event_timestamp")
   is what will be present in materialized tables and expected to match at query time.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:event_timestamp") is supported for
+  Colon-prefixed notation (e.g., "value:event_timestamp") is supported for
   backwards compatibility but is deprecated; migrate to dot notation
 
 ### TumblingWindow

@@ -108,10 +108,6 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 
 // Secret extends the main model with additional fields.
 type Secret struct {
-	// Indicates whether the principal is limited to retrieving metadata for the
-	// associated object through the **BROWSE** privilege when
-	// **include_browse** is enabled in the request.
-	BrowseOnly types.Bool `tfsdk:"browse_only"`
 	// The name of the catalog where the schema and the secret reside.
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// User-provided free-form text description of the secret.
@@ -132,8 +128,6 @@ type Secret struct {
 	// the UI. It is purely informational and does not trigger any automatic
 	// actions or affect the secret's lifecycle.
 	ExpireTime timetypes.RFC3339 `tfsdk:"expire_time"`
-
-	ExternalSecretId types.String `tfsdk:"external_secret_id"`
 	// The three-level (fully qualified) name of the secret, in the form of
 	// **catalog_name.schema_name.secret_name**.
 	FullName types.String `tfsdk:"full_name"`
@@ -181,23 +175,21 @@ func (m Secret) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Typ
 func (m Secret) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{"browse_only": m.BrowseOnly,
-			"catalog_name":       m.CatalogName,
-			"comment":            m.Comment,
-			"create_time":        m.CreateTime,
-			"created_by":         m.CreatedBy,
-			"effective_owner":    m.EffectiveOwner,
-			"effective_value":    m.EffectiveValue,
-			"expire_time":        m.ExpireTime,
-			"external_secret_id": m.ExternalSecretId,
-			"full_name":          m.FullName,
-			"metastore_id":       m.MetastoreId,
-			"name":               m.Name,
-			"owner":              m.Owner,
-			"schema_name":        m.SchemaName,
-			"update_time":        m.UpdateTime,
-			"updated_by":         m.UpdatedBy,
-			"value":              m.Value,
+		map[string]attr.Value{"catalog_name": m.CatalogName,
+			"comment":         m.Comment,
+			"create_time":     m.CreateTime,
+			"created_by":      m.CreatedBy,
+			"effective_owner": m.EffectiveOwner,
+			"effective_value": m.EffectiveValue,
+			"expire_time":     m.ExpireTime,
+			"full_name":       m.FullName,
+			"metastore_id":    m.MetastoreId,
+			"name":            m.Name,
+			"owner":           m.Owner,
+			"schema_name":     m.SchemaName,
+			"update_time":     m.UpdateTime,
+			"updated_by":      m.UpdatedBy,
+			"value":           m.Value,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -208,23 +200,21 @@ func (m Secret) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 // and contains additional fields.
 func (m Secret) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"browse_only": types.BoolType,
-			"catalog_name":       types.StringType,
-			"comment":            types.StringType,
-			"create_time":        timetypes.RFC3339{}.Type(ctx),
-			"created_by":         types.StringType,
-			"effective_owner":    types.StringType,
-			"effective_value":    types.StringType,
-			"expire_time":        timetypes.RFC3339{}.Type(ctx),
-			"external_secret_id": types.StringType,
-			"full_name":          types.StringType,
-			"metastore_id":       types.StringType,
-			"name":               types.StringType,
-			"owner":              types.StringType,
-			"schema_name":        types.StringType,
-			"update_time":        timetypes.RFC3339{}.Type(ctx),
-			"updated_by":         types.StringType,
-			"value":              types.StringType,
+		AttrTypes: map[string]attr.Type{"catalog_name": types.StringType,
+			"comment":         types.StringType,
+			"create_time":     timetypes.RFC3339{}.Type(ctx),
+			"created_by":      types.StringType,
+			"effective_owner": types.StringType,
+			"effective_value": types.StringType,
+			"expire_time":     timetypes.RFC3339{}.Type(ctx),
+			"full_name":       types.StringType,
+			"metastore_id":    types.StringType,
+			"name":            types.StringType,
+			"owner":           types.StringType,
+			"schema_name":     types.StringType,
+			"update_time":     timetypes.RFC3339{}.Type(ctx),
+			"updated_by":      types.StringType,
+			"value":           types.StringType,
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -264,7 +254,6 @@ func (to *Secret) SyncFieldsDuringRead(ctx context.Context, from Secret) {
 }
 
 func (m Secret) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
 	attrs["catalog_name"] = attrs["catalog_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["comment"] = attrs["comment"].SetOptional()
@@ -273,7 +262,6 @@ func (m Secret) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBui
 	attrs["effective_owner"] = attrs["effective_owner"].SetComputed()
 	attrs["effective_value"] = attrs["effective_value"].SetComputed()
 	attrs["expire_time"] = attrs["expire_time"].SetOptional()
-	attrs["external_secret_id"] = attrs["external_secret_id"].SetComputed()
 	attrs["full_name"] = attrs["full_name"].SetComputed()
 	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()

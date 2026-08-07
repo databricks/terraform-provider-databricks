@@ -50,9 +50,8 @@ type FailoverGroup struct {
 	// Current effective primary region. Replication flows FROM workspaces in
 	// this region. Changes after a successful failover.
 	EffectivePrimaryRegion types.String `tfsdk:"effective_primary_region"`
-	// Opaque version string for optimistic locking. Server-generated, returned
-	// in responses. Must be provided on Update requests to prevent concurrent
-	// modifications.
+	// Opaque version string for optimistic locking. Server-generated and
+	// returned in responses.
 	Etag types.String `tfsdk:"etag"`
 	// Client-provided identifier for the failover group. Used to construct the
 	// resource name as {parent}/failover-groups/{failover_group_id}.
@@ -168,6 +167,19 @@ func (to *FailoverGroup) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 			}
 		}
 	}
+	if !from.WorkspaceSets.IsNull() && !from.WorkspaceSets.IsUnknown() {
+		if toWorkspaceSets, ok := to.GetWorkspaceSets(ctx); ok {
+			if fromWorkspaceSets, ok := from.GetWorkspaceSets(ctx); ok {
+				// Recursively sync the fields of each WorkspaceSets element by position.
+				for i := range toWorkspaceSets {
+					if i < len(fromWorkspaceSets) {
+						toWorkspaceSets[i].SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceSets[i])
+					}
+				}
+				to.SetWorkspaceSets(ctx, toWorkspaceSets)
+			}
+		}
+	}
 }
 
 // SyncFieldsDuringRead copies values from the existing state into the receiver,
@@ -192,12 +204,24 @@ func (to *FailoverGroup) SyncFieldsDuringRead(ctx context.Context, from Failover
 			}
 		}
 	}
+	if !from.WorkspaceSets.IsNull() && !from.WorkspaceSets.IsUnknown() {
+		if toWorkspaceSets, ok := to.GetWorkspaceSets(ctx); ok {
+			if fromWorkspaceSets, ok := from.GetWorkspaceSets(ctx); ok {
+				for i := range toWorkspaceSets {
+					if i < len(fromWorkspaceSets) {
+						toWorkspaceSets[i].SyncFieldsDuringRead(ctx, fromWorkspaceSets[i])
+					}
+				}
+				to.SetWorkspaceSets(ctx, toWorkspaceSets)
+			}
+		}
+	}
 }
 
 func (m FailoverGroup) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["effective_primary_region"] = attrs["effective_primary_region"].SetComputed()
-	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["initial_primary_region"] = attrs["initial_primary_region"].SetRequired()
 	attrs["initial_primary_region"] = attrs["initial_primary_region"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()

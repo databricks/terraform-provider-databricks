@@ -13,6 +13,9 @@ jobs:
       labels: linux-ubuntu-latest
 
     permissions:
+      # Required for JFrog OIDC auth on same-repo runs. GitHub never issues
+      # OIDC tokens to fork PR runs, so the permission is inert there; GitHub
+      # offers no way to condition job-level permissions on the event.
       id-token: write
       contents: read
 
@@ -20,15 +23,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
+      # The runner injects ACTIONS_ID_TOKEN_REQUEST_URL only when id-token:write
+      # is effectively granted, which GitHub denies to fork and Dependabot PRs.
+      # Without it a run can't authenticate to JFrog, so it resolves modules
+      # offline from the cache pre-warmed by the "Warm Go Cache" workflow.
+      - name: Detect Go module proxy access
+        id: proxy-check
+        shell: bash
+        run: |
+          if [ -n "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+            echo "use_cache=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "use_cache=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Go build environment
         uses: ./.github/actions/setup-go-build-environment
         with:
           go-version-file: go.mod
+          use-cache: ${{ steps.proxy-check.outputs.use_cache }}
 
       - name: Pull external libraries
         shell: bash
+        env:
+          USE_CACHE: ${{ steps.proxy-check.outputs.use_cache }}
         run: |
-          jf go mod vendor
+          if [ "$USE_CACHE" = "true" ]; then
+            # Resolve modules offline from the pre-warmed cache. If this fails
+            # after a go.mod/go.sum change, a maintainer must run the
+            # "Warm Go Cache" workflow with this PR's number first.
+            go mod vendor
+          else
+            jf go mod vendor
+          fi
 
           # Point native go commands at the local module cache instead of
           # the network. go run pkg@version needs module lookups even when
@@ -48,6 +75,8 @@ jobs:
           make test
 
       - name: Publish test coverage
+        # No CODECOV_TOKEN on fork/Dependabot runs; skip the upload.
+        if: steps.proxy-check.outputs.use_cache != 'true'
         uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

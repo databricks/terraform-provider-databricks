@@ -32,9 +32,13 @@ type Block struct {
 // nested JSON array describing collection / object types. We keep it as
 // RawMessage and compare canonical JSON bytes; per the rule taxonomy any
 // type delta (including element-type widening) is breaking.
+//
+// `nested_type` (Plugin Framework attributes) is a structured object with its
+// own attributes and nesting_mode; we parse it so the diff can recurse into
+// nested attributes instead of comparing raw JSON.
 type Attribute struct {
 	Type            json.RawMessage `json:"type,omitempty"`
-	NestedType      json.RawMessage `json:"nested_type,omitempty"`
+	NestedType      *NestedType     `json:"nested_type,omitempty"`
 	Description     string          `json:"description,omitempty"`
 	DescriptionKind string          `json:"description_kind,omitempty"`
 	Required        bool            `json:"required,omitempty"`
@@ -49,6 +53,17 @@ type BlockType struct {
 	Block       Block  `json:"block"`
 	MinItems    int    `json:"min_items,omitempty"`
 	MaxItems    int    `json:"max_items,omitempty"`
+}
+
+// NestedType is the Plugin Framework's structured nested-attribute. Unlike a
+// BlockType (SDKv2-style block with both attributes and child block_types),
+// a NestedType only carries attributes (which may themselves be NestedType,
+// allowing recursion).
+type NestedType struct {
+	NestingMode string               `json:"nesting_mode"`
+	Attributes  map[string]Attribute `json:"attributes,omitempty"`
+	MinItems    int                  `json:"min_items,omitempty"`
+	MaxItems    int                  `json:"max_items,omitempty"`
 }
 
 // IsComputedOnly returns true when the attribute is computed-only (i.e. an

@@ -56,7 +56,7 @@ resource "databricks_database_database_catalog" "catalog" {
 ## Arguments
 The following arguments are supported:
 * `database_instance_name` (string, required) - The name of the DatabaseInstance housing the database
-* `database_name` (string, required) - The name of the database (in a instance) associated with the catalog
+* `database_name` (string, required) - The name of the database (in an instance) associated with the catalog
 * `name` (string, required) - The name of the catalog in UC
 * `create_database_if_not_exists` (boolean, optional)
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.

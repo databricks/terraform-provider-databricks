@@ -39,9 +39,8 @@ type FailoverGroupData struct {
 	// Current effective primary region. Replication flows FROM workspaces in
 	// this region. Changes after a successful failover.
 	EffectivePrimaryRegion types.String `tfsdk:"effective_primary_region"`
-	// Opaque version string for optimistic locking. Server-generated, returned
-	// in responses. Must be provided on Update requests to prevent concurrent
-	// modifications.
+	// Opaque version string for optimistic locking. Server-generated and
+	// returned in responses.
 	Etag types.String `tfsdk:"etag"`
 	// Initial primary region. Used only in Create requests to set the starting
 	// primary region. Not returned in responses.

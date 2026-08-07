@@ -18,10 +18,11 @@ Every rule below is encoded in `classify.go` and pinned by a unit test in `class
 | `AttributeRemoved` | An attribute disappears from a resource / data source / nested block | Configs setting it fail with `Unsupported argument` |
 | `RequiredAttributeAdded` | A new attribute appears with `required: true` | Existing configs that don't set it fail with `Missing required argument` |
 | `OptionalToRequired` | Attribute went from `optional: true` to `required: true` | Configs missing it now error |
+| `ComputedOnlyToRequired` | Attribute was computed-only (Computed=true, Optional=false, Required=false) and is now required | Users couldn't set it before; now they must. Existing configs that relied on the API default error |
 | `BecameComputedOnly` | A previously-settable attribute is now computed-only | Configs that set it fail (the schema rejects writes) |
 | `ComputedRemoved` | A still-settable attribute loses `computed: true` | Drift behavior changes — values previously sourced from the API now show as permanent diffs |
 | `SensitiveRemoved` | `sensitive: true` → `sensitive: false` | Un-masks previously hidden values in plan output; secrets may leak to CI logs / screenshots / session recordings |
-| `TypeChanged` | An attribute's cty `type` (or `nested_type`) JSON differs | HCL value coercion breaks (e.g. `string` → `number`, `list(string)` → `list(number)`) |
+| `TypeChanged` | An attribute's cty `type` JSON differs, OR `nested_type` is added/removed on an existing attribute | HCL value coercion breaks (e.g. `string` → `number`, `list(string)` → `list(number)`). Sub-attribute changes within an existing nested type recurse via the normal rules below — only an overall shape change emits `TypeChanged`. |
 | `BlockTypeRemoved` | A nested block disappears | Configs declaring the block fail with `Unsupported block type` |
 | `RequiredBlockTypeAdded` | A new nested block appears with `min_items > 0` | Required-by-definition; existing configs without it fail |
 | `NestingModeChanged` | `nesting_mode` changes (e.g. `list` → `set`, `single` → `list`) | Plan diffs and/or HCL syntax change |

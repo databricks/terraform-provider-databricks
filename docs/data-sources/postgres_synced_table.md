@@ -48,6 +48,7 @@ The following attributes are exported:
 * `spec` (SyncedTableSyncedTableSpec) - Configuration details of the synced table, such as the source table, scheduling policy, etc.
   This attribute is specified at creation time and most fields are returned as is on subsequent queries
 * `status` (SyncedTableSyncedTableStatus) - Synced Table data synchronization status
+* `synced_table_id` (string) - The part of the name, chosen by the user when the resource was created
 * `uid` (string) - The Unity Catalog table ID for this synced table
 
 ### DeltaTableSyncInfo
@@ -80,6 +81,9 @@ The following attributes are exported:
   E.g., for a batch, this is the time when the sync operation started
 
 ### SyncedTableSyncedTableSpec
+* `accelerated_sync` (boolean) - When true, enables accelerated sync mode for the initial data load.
+  This significantly improves performance for large tables.
+  Requires workspace-level enablement through Lakebase Accelerated Sync preview
 * `branch` (string) - The full resource name the branch associated with the table.
   
   Format: "projects/{project_id}/branches/{branch_id}"
@@ -92,6 +96,7 @@ The following attributes are exported:
   At most one of existing_pipeline_id and new_pipeline_spec should be defined.
   
   The pipeline used for the synced table is returned via the top level pipeline_id attribute
+* `extra_columns` (list of SyncedTableSyncedTableSpecExtraColumn) - Extra PostgreSQL-only columns to add to the synced table
 * `new_pipeline_spec` (NewPipelineSpec) - Specification for creating a new pipeline.
   At most one of existing_pipeline_id and new_pipeline_spec should be defined.
   
@@ -111,6 +116,21 @@ The following attributes are exported:
   * synced_table_id used at the creation of the SyncedTable
   * "name" consisting of "synced_tables/" prefix and the full name of the destination table
 * `timeseries_key` (string) - Time series key to deduplicate (tie-break) rows with the same primary key
+* `type_overrides` (list of SyncedTableSyncedTableSpecTypeOverride) - Override the default Delta->PG type mapping for specific columns.
+  A TypeOverride with PG_SPECIFIC_TYPE_UNSPECIFIED is rejected; a valid pg_type must be set
+
+### SyncedTableSyncedTableSpecExtraColumn
+* `column_name` (string) - Name of the column
+* `column_type` (string) - PostgreSQL type of the column, for example "tsvector" or "vector(1024)"
+* `compute` (string) - SQL expression used to compute the column's value, for example
+  "to_tsvector('english', content)"
+* `maintenance` (string) - Possible values are: `STORED_GENERATED`
+
+### SyncedTableSyncedTableSpecTypeOverride
+* `column_name` (string) - Name of the source column whose target PostgreSQL type should be overridden
+* `pg_type` (string) - PostgreSQL-specific target type to use for the column. Possible values are: `PG_SPECIFIC_TYPE_VECTOR`
+* `size` (integer) - Size parameter for the target type, for types that take one (e.g. vector
+  dimension, varchar length). Required when the chosen pg_type needs a size
 
 ### SyncedTableSyncedTableStatus
 * `detailed_state` (string) - The state of the synced table. Possible values are: `SYNCED_TABLE_OFFLINE`, `SYNCED_TABLE_OFFLINE_FAILED`, `SYNCED_TABLE_ONLINE`, `SYNCED_TABLE_ONLINE_CONTINUOUS_UPDATE`, `SYNCED_TABLE_ONLINE_NO_PENDING_UPDATE`, `SYNCED_TABLE_ONLINE_PIPELINE_FAILED`, `SYNCED_TABLE_ONLINE_TRIGGERED_UPDATE`, `SYNCED_TABLE_ONLINE_UPDATING_PIPELINE_RESOURCES`, `SYNCED_TABLE_PROVISIONING`, `SYNCED_TABLE_PROVISIONING_INITIAL_SNAPSHOT`, `SYNCED_TABLE_PROVISIONING_PIPELINE_RESOURCES`

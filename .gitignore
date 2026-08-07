@@ -354,3 +354,4 @@ CLAUDE.local.md
 
 # JFrog CLI config
 .jfrog/
+/exporter/LOGGING_MIGRATION.md

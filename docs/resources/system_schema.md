@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_system_schema Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/systemschemas)
+
 Manages system tables enablement. System tables are a Databricks-hosted analytical store of your account's operational data. System tables can be used for historical observability across your account. System tables must be enabled by an account admin.
 
 -> This resource can only be used with a workspace-level provider!

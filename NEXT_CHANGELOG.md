@@ -13,6 +13,8 @@
 
   This removes the authenticated `/Me` request on workspace hosts (avoiding false failures for service principals that can manage resources but cannot call `/Me`), and makes a `workspace_id` that disagrees with the host fail at plan time instead of at apply. Hosts whose metadata does not advertise a `workspace_id` fall back to the previous `/Me` behavior.
 
+* Added `databricks_workspace_file` data source to list workspace files under a given path with optional recursive listing ([#3437](https://github.com/databricks/terraform-provider-databricks/issues/3437)).
+
 ### Bug Fixes
 
 ### Documentation

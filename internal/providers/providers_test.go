@@ -11,11 +11,30 @@ import (
 	"testing"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// TestMain installs a host-metadata resolver factory for the whole package so
+// provider configuration does not perform network I/O against the fake hosts
+// these auth-resolution tests use. It reports a workspace host that already
+// advertises a workspace_id, so ReconcileWorkspaceIDFromHostMetadata seeds from
+// metadata and never attempts an eager SCIM /Me — while leaving host-type
+// inference as a workspace host (so OAuth/OIDC resolution is unaffected). Tests
+// here assert only auth/host/scopes, never workspace_id, so this weakens no
+// assertion. The resolver only fills empty fields, so it does not override a
+// host type an account/unified fixture sets.
+func TestMain(m *testing.M) {
+	config.DefaultHostMetadataResolverFactory = func(*config.Config) config.HostMetadataResolver {
+		return func(context.Context, string) (*config.HostMetadata, error) {
+			return &config.HostMetadata{HostType: config.WorkspaceHost, WorkspaceID: "12345"}, nil
+		}
+	}
+	os.Exit(m.Run())
+}
 
 func TestConfig_NoParams(t *testing.T) {
 	homeDir, err := os.UserHomeDir()

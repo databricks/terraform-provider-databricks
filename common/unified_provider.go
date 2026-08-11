@@ -156,9 +156,11 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 		// Config does not have provider_config; use workspace_id
 		newEffective = c.Config.WorkspaceID
 	}
-	// Lazy resolution from workspace host: if newEffective is still empty and
-	// there's an old value in state to compare against, resolve the workspace ID
-	// via the cached workspace ID or SCIM /Me API call.
+	// Resolution from workspace host: if newEffective is still empty and there's an
+	// old value in state to compare against, resolve the workspace ID via
+	// CurrentWorkspaceID. On workspace hosts this is a cache hit seeded during
+	// provider configuration (ReconcileWorkspaceIDFromHostMetadata), so no SCIM /Me
+	// is issued here; other host types still resolve (or fail) via this call.
 	if newEffective == "" && oldEffective != "" {
 		resolvedID, err := c.CurrentWorkspaceID(ctx)
 		if err != nil || resolvedID == 0 {

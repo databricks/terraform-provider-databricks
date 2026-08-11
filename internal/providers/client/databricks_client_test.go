@@ -2,6 +2,8 @@ package client
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"sync/atomic"
 	"testing"
 
@@ -34,8 +36,10 @@ func (noopLoader) Configure(*config.Config) error { return nil }
 //
 // The test is hermetic against ambient developer state: Loaders is set to a
 // single no-op to suppress env-var and databrickscfg reads, HostMetadataResolver
-// is stubbed so EnsureResolved does not fetch /.well-known/databricks-config
-// or mutate config fields from discovery, and the host is a fake .invalid TLD.
+// reports an account host so EnsureResolved does not fetch
+// /.well-known/databricks-config and reconcile does not attempt an eager /Me
+// (the "none" sentinel is itself an account-profile concern), and the host is a
+// fake .invalid TLD.
 func TestPrepareDatabricksClient_NormalizesNoneWorkspaceID(t *testing.T) {
 	tests := []struct {
 		name                string
@@ -62,7 +66,7 @@ func TestPrepareDatabricksClient_NormalizesNoneWorkspaceID(t *testing.T) {
 				WorkspaceID: tc.workspaceID,
 				Loaders:     []config.Loader{noopLoader{}},
 				HostMetadataResolver: func(context.Context, string) (*config.HostMetadata, error) {
-					return nil, nil
+					return &config.HostMetadata{HostType: config.AccountHost}, nil
 				},
 			}
 			pc, err := PrepareDatabricksClient(context.Background(), cfg, nil)
@@ -182,12 +186,13 @@ func TestPrepareDatabricksClient_HostMetadataUntouchedCases(t *testing.T) {
 		assert.Equal(t, config.UnifiedHost, pc.HostTypeForTerraform())
 	})
 
-	t.Run("host omitting workspace_id does not seed", func(t *testing.T) {
-		pc, err := prepareForWorkspaceHost(t, "", "")
+	t.Run("host omits workspace_id, connection-id user skips eager /Me", func(t *testing.T) {
+		// A connection-id provider workspace_id is rejected downstream without a
+		// /Me, so reconcile must not attempt the eager /Me (which would fail against
+		// this unreachable host). Configure succeeds with the cache left unseeded.
+		pc, err := prepareForWorkspaceHost(t, "my-connection-id", "")
 		require.NoError(t, err)
-		// No seed happened, so CurrentWorkspaceID would attempt a lookup. We only
-		// assert the config was left empty (no back-fill from empty metadata).
-		assert.Equal(t, "", pc.Config.WorkspaceID)
+		assert.Equal(t, "my-connection-id", pc.Config.WorkspaceID)
 	})
 }
 
@@ -243,4 +248,102 @@ func TestPrepareDatabricksClient_HonorsHostMetadataResolverFactory(t *testing.T)
 	id, err := pc.CurrentWorkspaceID(context.Background())
 	require.NoError(t, err)
 	assert.Equal(t, int64(778899), id)
+}
+
+// meServer stands up an httptest server that answers the SCIM /Me request the SDK
+// issues to resolve a workspace id: it returns orgID in the X-Databricks-Org-Id
+// response header (or a 403 when orgID is empty, to simulate a limited principal),
+// and counts how many times /Me was hit.
+func meServer(t *testing.T, orgID string) (*httptest.Server, *atomic.Int32) {
+	t.Helper()
+	var meCalls atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/2.0/preview/scim/v2/Me" {
+			meCalls.Add(1)
+			if orgID == "" {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			w.Header().Set("X-Databricks-Org-Id", orgID)
+			_, _ = w.Write([]byte(`{}`))
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(srv.Close)
+	return srv, &meCalls
+}
+
+// prepareOlderWorkspaceHost builds a client whose host metadata reports a workspace
+// host that omits workspace_id (an older control plane), so reconcile must resolve
+// it eagerly via /Me against the given test server.
+func prepareOlderWorkspaceHost(t *testing.T, serverURL, userWorkspaceID string) (*common.DatabricksClient, error) {
+	t.Helper()
+	cfg := &config.Config{
+		Host:        serverURL,
+		Token:       "test-token",
+		WorkspaceID: userWorkspaceID,
+		Loaders:     []config.Loader{noopLoader{}},
+		HostMetadataResolver: func(context.Context, string) (*config.HostMetadata, error) {
+			return &config.HostMetadata{HostType: config.WorkspaceHost, WorkspaceID: ""}, nil
+		},
+	}
+	return PrepareDatabricksClient(context.Background(), cfg, nil)
+}
+
+// TestPrepareDatabricksClient_EagerMeWhenMetadataOmitsWorkspaceID verifies that on
+// a workspace host whose metadata omits workspace_id, the workspace id is resolved
+// eagerly via a single /Me at provider configuration, and that failures are fatal.
+func TestPrepareDatabricksClient_EagerMeWhenMetadataOmitsWorkspaceID(t *testing.T) {
+	t.Run("user empty resolves via eager /Me and seeds", func(t *testing.T) {
+		srv, meCalls := meServer(t, "12345")
+		pc, err := prepareOlderWorkspaceHost(t, srv.URL, "")
+		require.NoError(t, err)
+		// Seeded at init: CurrentWorkspaceID is a cache hit, issuing no further /Me.
+		id, err := pc.CurrentWorkspaceID(context.Background())
+		require.NoError(t, err)
+		assert.Equal(t, int64(12345), id)
+		assert.Equal(t, int32(1), meCalls.Load(), "expected exactly one /Me at init and none afterwards")
+	})
+
+	t.Run("user matches eager /Me result", func(t *testing.T) {
+		srv, _ := meServer(t, "12345")
+		pc, err := prepareOlderWorkspaceHost(t, srv.URL, "12345")
+		require.NoError(t, err)
+		id, err := pc.CurrentWorkspaceID(context.Background())
+		require.NoError(t, err)
+		assert.Equal(t, int64(12345), id)
+	})
+
+	t.Run("user mismatches eager /Me result fails fast", func(t *testing.T) {
+		srv, _ := meServer(t, "12345")
+		_, err := prepareOlderWorkspaceHost(t, srv.URL, "99999")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "workspace_id mismatch")
+	})
+
+	t.Run("eager /Me failure is fatal at configure", func(t *testing.T) {
+		// orgID "" makes /Me return 403 — the limited-service-principal case.
+		srv, meCalls := meServer(t, "")
+		_, err := prepareOlderWorkspaceHost(t, srv.URL, "")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to resolve workspace_id from the workspace host")
+		assert.Equal(t, int32(1), meCalls.Load())
+	})
+
+	t.Run("no host does not attempt eager /Me", func(t *testing.T) {
+		// A host-less config (host defaults to a workspace host type) must not
+		// attempt /Me — there is nothing to resolve against. Configure succeeds.
+		cfg := &config.Config{
+			Token:       "test-token",
+			WorkspaceID: "1234567890",
+			Loaders:     []config.Loader{noopLoader{}},
+			HostMetadataResolver: func(context.Context, string) (*config.HostMetadata, error) {
+				return nil, nil
+			},
+		}
+		pc, err := PrepareDatabricksClient(context.Background(), cfg, nil)
+		require.NoError(t, err)
+		assert.Equal(t, "1234567890", pc.Config.WorkspaceID)
+	})
 }

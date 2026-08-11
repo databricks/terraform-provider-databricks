@@ -260,8 +260,9 @@ func (c *DatabricksClient) validateWorkspaceIDFromProvider(ctx context.Context, 
 			workspaceID)
 	}
 
-	// If the workspace ID is not cached, we make an API call to the workspace to get
-	// the current workspace ID and cache it.
+	// cachedWorkspaceID is normally seeded during provider configuration
+	// (ReconcileWorkspaceIDFromHostMetadata), so this is a no-op. It remains as a
+	// defensive fallback for the rare path where the cache was not seeded at init.
 	if c.cachedWorkspaceID == 0 {
 		err := c.setCachedWorkspaceID(ctx, w)
 		if err != nil {
@@ -302,10 +303,15 @@ func (c *DatabricksClient) setCachedWorkspaceID(ctx context.Context, w *databric
 // the error at plan rather than at apply); otherwise it seeds cachedWorkspaceID so
 // downstream resolution never issues the SCIM GET /api/2.0/preview/scim/v2/Me call.
 //
+// When the host metadata omits workspace_id (older control planes), it resolves the
+// id eagerly via a single /Me call here, so no downstream code path ever needs to.
+// That /Me is fatal on failure: it aborts provider configuration rather than
+// deferring resolution to the first resource operation.
+//
 // userWorkspaceID is the effective value from config/env/profile observed before
 // the SDK's host-metadata back-fill; hostWorkspaceID is meta.WorkspaceID. Either
 // may be empty.
-func (c *DatabricksClient) ReconcileWorkspaceIDFromHostMetadata(hostType config.HostType, userWorkspaceID, hostWorkspaceID string) error {
+func (c *DatabricksClient) ReconcileWorkspaceIDFromHostMetadata(ctx context.Context, hostType config.HostType, userWorkspaceID, hostWorkspaceID string) error {
 	// Account and unified hosts multiplex workspaces, so a single cached
 	// workspace_id must never be seeded for them.
 	if hostType != config.WorkspaceHost {
@@ -316,10 +322,27 @@ func (c *DatabricksClient) ReconcileWorkspaceIDFromHostMetadata(hostType config.
 	if userWorkspaceID == "none" {
 		userWorkspaceID = ""
 	}
-	// Older hosts omit workspace_id from metadata; leave the lazy SCIM /Me
-	// fallback in place.
+	// Older hosts omit workspace_id from metadata. Resolve it eagerly via /Me so
+	// downstream paths never have to.
 	if hostWorkspaceID == "" {
-		return nil
+		// Without a host there is nothing to resolve against — an unconfigured or
+		// host-less client (the SDK's resolveHostMetadata likewise no-ops on an
+		// empty host). Leave the cache unseeded.
+		if c.Config == nil || c.Config.Host == "" {
+			return nil
+		}
+		// A non-numeric (connection) user id is rejected downstream by
+		// validateWorkspaceIDFromProvider without a /Me; don't resolve here, or the
+		// user would see a network error before that actionable message.
+		if userWorkspaceID != "" && !isNumericWorkspaceID(userWorkspaceID) {
+			return nil
+		}
+		// CurrentWorkspaceID seeds cachedWorkspaceID from /Me. Fatal on failure.
+		id, err := c.CurrentWorkspaceID(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to resolve workspace_id from the workspace host: %w", err)
+		}
+		hostWorkspaceID = strconv.FormatInt(id, 10)
 	}
 	// Only a numeric user-supplied ID is comparable to the host's canonical numeric
 	// ID. A connection ID is left to validateWorkspaceIDFromProvider at apply time,

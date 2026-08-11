@@ -134,6 +134,47 @@ func TestUcAccCreateShare(t *testing.T) {
 	})
 }
 
+// TestUcAccShareConvergesAfterApply guards against the perpetual-diff regression:
+// a refresh runs before every plan, and if it fails to restore the share's computed
+// fields the next plan never settles (it re-marks id, storage_location, effective_*,
+// etc. as "known after apply") and the share id reads back null, breaking downstream
+// references. This asserts that re-planning the identical config after apply is a
+// no-op and that id keeps mirroring name across the refresh.
+func TestUcAccShareConvergesAfterApply(t *testing.T) {
+	template := preTestTemplate + `
+	resource "databricks_share" "myshare" {
+		name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+		owner = "account users"
+		object {
+			name                        = databricks_sql_table.mytable.id
+			data_object_type            = "TABLE"
+			history_data_sharing_status = "ENABLED"
+		}
+		object {
+			name                        = databricks_sql_table.mytable_2.id
+			data_object_type            = "TABLE"
+			history_data_sharing_status = "ENABLED"
+		}
+	}`
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: template,
+		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttrPair("databricks_share.myshare", "id", "databricks_share.myshare", "name"),
+		),
+	}, acceptance.Step{
+		// Re-plan the identical config after a refresh: it must be a no-op.
+		Template: template,
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				plancheck.ExpectEmptyPlan(),
+			},
+		},
+		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttrPair("databricks_share.myshare", "id", "databricks_share.myshare", "name"),
+		),
+	})
+}
+
 func shareTemplateWithOwner(comment string, owner string) string {
 	return fmt.Sprintf(`
 		resource "databricks_share" "myshare" {

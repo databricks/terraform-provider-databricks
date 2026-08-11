@@ -212,3 +212,38 @@ func TestPrepareDatabricksClient_SingleMetadataFetch(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, int32(1), calls.Load(), "expected exactly one .well-known/databricks-config fetch")
 }
+
+// TestPrepareDatabricksClient_HonorsHostMetadataResolverFactory verifies that the
+// resolver wrapper installed during configuration honors
+// config.DefaultHostMetadataResolverFactory. The wrapper always sets
+// cfg.HostMetadataResolver, so the SDK never consults the factory itself; the
+// wrapper must replicate the SDK's precedence and consult it. A resolver returning
+// the factory's metadata is proven by the config being back-filled from it. Without
+// the fix the wrapper falls through to the built-in HTTP fetch (against the fake
+// host), which yields no metadata and no back-fill.
+func TestPrepareDatabricksClient_HonorsHostMetadataResolverFactory(t *testing.T) {
+	var factoryCalls atomic.Int32
+	prevFactory := config.DefaultHostMetadataResolverFactory
+	t.Cleanup(func() { config.DefaultHostMetadataResolverFactory = prevFactory })
+	config.DefaultHostMetadataResolverFactory = func(*config.Config) config.HostMetadataResolver {
+		return func(context.Context, string) (*config.HostMetadata, error) {
+			factoryCalls.Add(1)
+			return &config.HostMetadata{WorkspaceID: "778899", HostType: config.WorkspaceHost}, nil
+		}
+	}
+
+	cfg := &config.Config{
+		Host:    "https://test.invalid",
+		Token:   "test-token",
+		Loaders: []config.Loader{noopLoader{}},
+		// HostMetadataResolver deliberately left nil so the factory is the source.
+	}
+	pc, err := PrepareDatabricksClient(context.Background(), cfg, nil)
+	require.NoError(t, err)
+	assert.Equal(t, int32(1), factoryCalls.Load(), "factory resolver must be consulted exactly once")
+	// Back-filled from the factory's metadata (empty on main, where the factory is bypassed).
+	assert.Equal(t, "778899", pc.Config.WorkspaceID)
+	id, err := pc.CurrentWorkspaceID(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, int64(778899), id)
+}

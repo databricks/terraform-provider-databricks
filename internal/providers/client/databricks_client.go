@@ -23,21 +23,33 @@ type capturedHostMeta struct {
 // installWorkspaceIDCapture wraps cfg.HostMetadataResolver so the provider can
 // observe both the user-supplied and host-advertised workspace_id from the single
 // metadata fetch the SDK already performs during EnsureResolved. It does NOT add a
-// /.well-known/databricks-config request: the wrapper delegates to any
-// pre-existing resolver, or to the SDK's own default fetcher, so the total number
-// of metadata fetches is unchanged.
+// /.well-known/databricks-config request: the wrapper delegates to whatever
+// resolver the SDK would otherwise have used, so the total number of metadata
+// fetches is unchanged.
 //
 // Must be installed after any configCustomizer (which may replace the config or
 // set its own resolver) and before EnsureResolved. Returns the capture struct the
 // wrapper writes into; the caller reads it only after EnsureResolved returns.
 func installWorkspaceIDCapture(cfg *config.Config) *capturedHostMeta {
 	captured := &capturedHostMeta{}
+	// A pre-existing resolver (set by a customizer) takes precedence, matching the
+	// SDK. Captured now because the wrapper overwrites cfg.HostMetadataResolver.
 	prev := cfg.HostMetadataResolver
 	cfg.HostMetadataResolver = func(ctx context.Context, host string) (*config.HostMetadata, error) {
 		// Observed post-loaders, pre-back-fill: the effective user value from
 		// config/env/profile (including any host query param promoted by the SDK).
 		captured.userWorkspaceID = cfg.WorkspaceID
+		// Delegate with the SAME precedence the SDK's resolveHostMetadata uses when
+		// HostMetadataResolver is nil: a pre-existing resolver, then the
+		// DefaultHostMetadataResolverFactory global, then the built-in HTTP fetch.
+		// Without the factory tier, installing this wrapper (which always sets
+		// HostMetadataResolver) would silently bypass a factory a caller installed.
 		delegate := prev
+		if delegate == nil {
+			if factory := config.DefaultHostMetadataResolverFactory; factory != nil {
+				delegate = factory(cfg)
+			}
+		}
 		if delegate == nil {
 			delegate = cfg.DefaultHostMetadataResolver()
 		}

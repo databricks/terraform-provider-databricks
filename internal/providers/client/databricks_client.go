@@ -32,8 +32,7 @@ type capturedHostMeta struct {
 // wrapper writes into; the caller reads it only after EnsureResolved returns.
 func installWorkspaceIDCapture(cfg *config.Config) *capturedHostMeta {
 	captured := &capturedHostMeta{}
-	// A pre-existing resolver (set by a customizer) takes precedence, matching the
-	// SDK. Captured now because the wrapper overwrites cfg.HostMetadataResolver.
+	// Captured before the wrapper overwrites cfg.HostMetadataResolver below.
 	prev := cfg.HostMetadataResolver
 	cfg.HostMetadataResolver = func(ctx context.Context, host string) (*config.HostMetadata, error) {
 		// Observed post-loaders, pre-back-fill: the effective user value from

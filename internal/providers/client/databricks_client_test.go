@@ -214,13 +214,10 @@ func TestPrepareDatabricksClient_SingleMetadataFetch(t *testing.T) {
 }
 
 // TestPrepareDatabricksClient_HonorsHostMetadataResolverFactory verifies that the
-// resolver wrapper installed during configuration honors
+// resolver wrapper installed during configuration consults
 // config.DefaultHostMetadataResolverFactory. The wrapper always sets
-// cfg.HostMetadataResolver, so the SDK never consults the factory itself; the
-// wrapper must replicate the SDK's precedence and consult it. A resolver returning
-// the factory's metadata is proven by the config being back-filled from it. Without
-// the fix the wrapper falls through to the built-in HTTP fetch (against the fake
-// host), which yields no metadata and no back-fill.
+// cfg.HostMetadataResolver, so it (not the SDK) must apply the factory; without the
+// fix it falls through to the built-in fetch and the factory is never used.
 func TestPrepareDatabricksClient_HonorsHostMetadataResolverFactory(t *testing.T) {
 	var factoryCalls atomic.Int32
 	prevFactory := config.DefaultHostMetadataResolverFactory

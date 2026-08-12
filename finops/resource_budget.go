@@ -16,7 +16,9 @@ func ResourceBudget() common.Resource {
 		for _, p := range []string{"account_id", "budget_configuration_id", "create_time", "update_time"} {
 			common.CustomizeSchemaPath(m, p).SetComputed()
 		}
+		common.CustomizeSchemaPath(m, "resource_type").SetOptional().SetComputed()
 		common.CustomizeSchemaPath(m, "alert_configurations", "alert_configuration_id").SetComputed()
+		common.CustomizeSchemaPath(m, "alert_configurations", "scope_type").SetOptional().SetComputed()
 		common.CustomizeSchemaPath(m, "alert_configurations", "action_configurations", "action_configuration_id").SetComputed()
 		// We need SuppressDiff because API returns a string representation of BigDecimal with a lot
 		// of trailing 0s, etc.

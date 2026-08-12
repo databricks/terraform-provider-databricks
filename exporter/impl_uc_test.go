@@ -103,6 +103,7 @@ func TestTagPolicyExport(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
+		client.Config.WorkspaceID = testProviderWorkspaceID
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 
@@ -133,7 +134,7 @@ func TestListCatalogs(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/catalogs?",
+			Resource:     "/api/2.1/unity-catalog/catalogs?max_results=0",
 			Response: sdk_uc.ListCatalogsResponse{
 				Catalogs: []sdk_uc.CatalogInfo{
 					{
@@ -162,7 +163,7 @@ func TestImportManagedCatalog(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/unity-catalog/schemas?catalog_name=ctest",
+			Resource: "/api/2.1/unity-catalog/schemas?catalog_name=ctest&max_results=0",
 			Response: sdk_uc.ListSchemasResponse{
 				Schemas: []sdk_uc.SchemaInfo{
 					{
@@ -224,12 +225,12 @@ func TestImportIsolatedManagedCatalog(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/unity-catalog/schemas?catalog_name=ctest",
+			Resource: "/api/2.1/unity-catalog/schemas?catalog_name=ctest&max_results=0",
 			Response: sdk_uc.ListSchemasResponse{},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/unity-catalog/bindings/catalog/ctest?",
+			Resource: "/api/2.1/unity-catalog/bindings/catalog/ctest?max_results=0",
 			Response: sdk_uc.UpdateWorkspaceBindingsResponse{
 				Bindings: []sdk_uc.WorkspaceBinding{
 					{
@@ -287,7 +288,7 @@ func TestImportSchema(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/unity-catalog/tables?catalog_name=ctest&schema_name=stest",
+			Resource: "/api/2.1/unity-catalog/tables?catalog_name=ctest&max_results=0&schema_name=stest",
 			Response: sdk_uc.ListTablesResponse{
 				Tables: []sdk_uc.TableInfo{
 					{
@@ -331,7 +332,7 @@ func TestConnections(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/connections?",
+			Resource:     "/api/2.1/unity-catalog/connections?max_results=0",
 			Response: sdk_uc.ListConnectionsResponse{
 				Connections: []sdk_uc.ConnectionInfo{
 					{
@@ -368,7 +369,7 @@ func TestListExternalLocations(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/external-locations?",
+			Resource:     "/api/2.1/unity-catalog/external-locations?max_results=0",
 			Response: sdk_uc.ListExternalLocationsResponse{
 				ExternalLocations: []sdk_uc.ExternalLocationInfo{
 					{
@@ -444,7 +445,7 @@ func TestStorageCredentials(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/storage-credentials?",
+			Resource:     "/api/2.1/unity-catalog/storage-credentials?max_results=0",
 			Response: sdk_uc.ListStorageCredentialsResponse{
 				StorageCredentials: []sdk_uc.StorageCredentialInfo{
 					{
@@ -477,7 +478,7 @@ func TestListRecipients(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/recipients?",
+			Resource:     "/api/2.1/unity-catalog/recipients?max_results=0",
 			Response: sdk_sharing.ListRecipientsResponse{
 				Recipients: []sdk_sharing.RecipientInfo{
 					{
@@ -763,7 +764,7 @@ func TestListSystemSchemasSuccess(t *testing.T) {
 		currentMetastoreSuccess,
 		{
 			Method:   "GET",
-			Resource: fmt.Sprintf("/api/2.1/unity-catalog/metastores/%s/systemschemas?", currentMetastoreResponse.MetastoreId),
+			Resource: fmt.Sprintf("/api/2.1/unity-catalog/metastores/%s/systemschemas?max_results=0", currentMetastoreResponse.MetastoreId),
 			Response: sdk_uc.ListSystemSchemasResponse{
 				Schemas: []sdk_uc.SystemSchemaInfo{
 					{
@@ -801,7 +802,7 @@ func TestListSystemSchemasErrorListing(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: fmt.Sprintf("/api/2.1/unity-catalog/metastores/%s/systemschemas?", currentMetastoreResponse.MetastoreId),
+			Resource: fmt.Sprintf("/api/2.1/unity-catalog/metastores/%s/systemschemas?max_results=0", currentMetastoreResponse.MetastoreId),
 			Status:   404,
 			Response: &apierr.APIError{
 				ErrorCode:  "NOT_FOUND",
@@ -864,7 +865,7 @@ func TestStorageCredentialListFails(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/unity-catalog/storage-credentials?",
+			Resource: "/api/2.1/unity-catalog/storage-credentials?max_results=0",
 			Status:   200,
 			Response: &sdk_uc.ListStorageCredentialsResponse{},
 		},
@@ -907,7 +908,7 @@ func TestExternalLocationListFails(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/unity-catalog/external-locations?",
+			Resource: "/api/2.1/unity-catalog/external-locations?max_results=0",
 			Status:   200,
 			Response: &sdk_uc.ListExternalLocationsResponse{},
 		},
@@ -948,6 +949,7 @@ func TestImportExternalLocationGrants(t *testing.T) {
 
 func TestListMetastores(t *testing.T) {
 	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
+		setupAwsAccountConfig(ma)
 		metastores := []sdk_uc.MetastoreInfo{
 			{
 				Name:        "test",

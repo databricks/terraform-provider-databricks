@@ -8,6 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -38,6 +39,7 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleCreate(t *testing.T) {
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		HCL: `
 		network_connectivity_config_id = "ncc_id"
 		resource_id = "resource_id"
@@ -61,6 +63,7 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleCreate_Error(t *testin
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		HCL: `
 		network_connectivity_config_id = "ncc_id"
 		resource_id = "resource_id"
@@ -81,6 +84,7 @@ func TestResourceNccPrivateEndpointRuleRead(t *testing.T) {
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		Read:      true,
 		New:       true,
 		ID:        "ncc_id/rule_id",
@@ -103,6 +107,7 @@ func TestResourceNccPrivateEndpointRuleRead_Error(t *testing.T) {
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		Read:      true,
 		ID:        "ncc_id/rule_id",
 	}.Apply(t)
@@ -135,6 +140,7 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleUpdateDomainName(t *te
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "ncc_id/rule_id",
 		InstanceState: map[string]string{
 			"network_connectivity_config_id": "ncc_id",
@@ -182,6 +188,7 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleUpdateResourceName(t *
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "ncc_id/rule_id",
 		InstanceState: map[string]string{
 			"network_connectivity_config_id": "ncc_id",
@@ -227,6 +234,7 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleUpdateEnabled(t *testi
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "ncc_id/rule_id",
 		InstanceState: map[string]string{
 			"network_connectivity_config_id": "ncc_id",
@@ -260,6 +268,7 @@ func TestResourceNccPrivateEndpointRuleDelete(t *testing.T) {
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		Delete:    true,
 		ID:        "ncc_id/rule_id",
 	}.ApplyAndExpectData(t, map[string]any{"id": "ncc_id/rule_id"})
@@ -274,6 +283,7 @@ func TestResourceNccPrivateEndpointRuleDelete_Error(t *testing.T) {
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "ncc_id/rule_id",
 		HCL: `
 		network_connectivity_config_id = "ncc_id"
@@ -284,4 +294,55 @@ func TestResourceNccPrivateEndpointRuleDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "error")
 	assert.Equal(t, "ncc_id/rule_id", d.Id())
+}
+
+// account_id must be Computed so that a value populated by the backend on Read
+// does not register as user-driven drift. The sibling
+// databricks_mws_network_connectivity_config marks account_id Computed for the
+// same reason; the omission here is the root cause of #5347.
+func TestResourceNccPrivateEndpointRule_AccountIdIsComputed(t *testing.T) {
+	s := ResourceMwsNccPrivateEndpointRule().Schema
+	accountID, ok := s["account_id"]
+	assert.True(t, ok, "account_id should be present in the schema")
+	assert.True(t, accountID.Computed,
+		"account_id must be Computed; otherwise a backend-populated value triggers spurious drift and an empty-update-mask error")
+}
+
+// Reproduces the customer-facing symptom of #5347: when a prior Read has
+// populated account_id into state (the backend intermittently returns it) but
+// HCL doesn't set it, no in-place update should be planned. Before the fix the
+// diff plans account_id = "..." -> null, which then triggers an Update API
+// call with an empty update_mask, which the backend rejects with
+// "Update mask must be specified".
+func TestResourceNccPrivateEndpointRule_NoDriftWhenBackendReturnsAccountId(t *testing.T) {
+	qa.ResourceFixture{
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
+		ID:        "ncc_id/rule_id",
+		InstanceState: map[string]string{
+			"network_connectivity_config_id": "ncc_id",
+			"rule_id":                        "rule_id",
+			"account_id":                     "abc",
+			"group_id":                       "blob",
+			"resource_id":                    "resource_id",
+			"endpoint_name":                  "endpoint_name",
+			"connection_state":               "PENDING",
+			"creation_time":                  "0",
+			"updated_time":                   "0",
+			"vpc_endpoint_id":                "",
+			"enabled":                        "false",
+			// Server-populated read-only fields a prior Read writes into state.
+			// Present here so the now-Computed attributes do not show as a diff.
+			"deactivated":    "false",
+			"deactivated_at": "0",
+			"error_message":  "",
+		},
+		HCL: `
+		network_connectivity_config_id = "ncc_id"
+		resource_id = "resource_id"
+		group_id = "blob"
+		`,
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{},
+	}.ApplyNoError(t)
 }

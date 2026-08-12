@@ -4,6 +4,8 @@ subcategory: "Quality Monitor"
 # databricks_quality_monitor_v2 Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/qualitymonitorv2)
+
 ~> **Deprecated** This resource is deprecated. Please use `databricks_data_quality_monitor` instead.
 
 Users with MANAGE Schema can use quality monitor v2 to set up data quality monitoring checks for UC objects, currently support schema. 
@@ -35,7 +37,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### AnomalyDetectionConfig
 * `excluded_table_full_names` (list of string, optional) - List of fully qualified table names to exclude from anomaly detection

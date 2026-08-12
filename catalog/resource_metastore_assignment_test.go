@@ -92,6 +92,7 @@ func TestMetastoreAssignmentAccount_Create(t *testing.T) {
 		HCL: `
 		workspace_id = 123
 		metastore_id = "a"
+		api = "account"
 		`,
 	}.ApplyNoError(t)
 }
@@ -132,6 +133,7 @@ func TestMetastoreAssignmentAccount_Update(t *testing.T) {
 		HCL: `
 		workspace_id = 123
 		metastore_id = "b"
+		api = "account"
 		`,
 	}.ApplyNoError(t)
 }
@@ -172,6 +174,7 @@ func TestMetastoreAssignmentWorskpace_Update(t *testing.T) {
 		HCL: `
 		workspace_id = 124
 		metastore_id = "a"
+		api = "account"
 		`,
 	}.ApplyNoError(t)
 }

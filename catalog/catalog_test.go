@@ -156,7 +156,7 @@ func TestUcAccCatalogHmsConnectionUpdate(t *testing.T) {
 	otherAuthorizedPath := fmt.Sprintf("s3://%s/path/to/authorized", qa.RandomName("hms-other-bucket-"))
 	otherInfra := fmt.Sprintf(`
 		resource "databricks_connection" "sandbox" {
-			name = "hms_connection{var.STICKY_RANDOM}"
+			name = "tf-test-hms-connection-{var.STICKY_RANDOM}"
 			connection_type = "HIVE_METASTORE"
 			comment         = "created in TestUcAccCatalogHmsConnectionUpdate"
 			options = {
@@ -260,29 +260,6 @@ func catalogProviderConfigTemplate(catalogName string, providerConfig string) st
 `, catalogName, providerConfig)
 }
 
-func TestAccCatalog_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: catalogProviderConfigTemplate("test_catalog_{var.STICKY_RANDOM}", `
-			provider_config {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
-		PlanOnly:    true,
-	})
-}
-
-func TestAccCatalog_ProviderConfig_Required(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: catalogProviderConfigTemplate("test_catalog_{var.STICKY_RANDOM}", `
-			provider_config {
-			}
-		`),
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccCatalog_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: catalogProviderConfigTemplate("test_catalog_{var.STICKY_RANDOM}", `
@@ -324,7 +301,7 @@ func TestAccCatalog_ProviderConfig_Match(t *testing.T) {
 		`, workspaceIDStr)),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionNoop),
 			},
 		},
 	})
@@ -354,7 +331,7 @@ func TestAccCatalog_ProviderConfig_Recreate(t *testing.T) {
 		`),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PostApplyPreRefresh: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionDestroyBeforeCreate),
 			},
 		},
 		PlanOnly:           true,
@@ -382,7 +359,7 @@ func TestAccCatalog_ProviderConfig_Remove(t *testing.T) {
 		Template: catalogProviderConfigTemplate(catalogName, ""),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_catalog.this", plancheck.ResourceActionNoop),
 			},
 		},
 	})

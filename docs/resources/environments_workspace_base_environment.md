@@ -2,7 +2,9 @@
 subcategory: "Environments"
 ---
 # databricks_environments_workspace_base_environment Resource
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/environments)
 
 A Workspace Base Environment is a shareable specification that defines a serverless environment version and additional Python dependencies for serverless notebooks and jobs.
 
@@ -69,7 +71,15 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
+### EnvironmentSpec
+* `dependencies` (list of string, optional) - List of pip dependencies, as supported by the version of pip in this environment.
+  Each dependency is a valid pip requirements file line per https://pip.pypa.io/en/stable/reference/requirements-file-format/.
+  Allowed dependencies include a requirement specifier, an archive URL, a local project path (such as WSFS or UC Volumes in Databricks), or a VCS project URL
+* `environment_version` (string, optional) - Environment version used by the environment.
+  Each version comes with a specific Python version and a set of Python packages.
+  The version is a string, consisting of an integer
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -80,6 +90,7 @@ In addition to the above arguments, the following attributes are exported:
 * `message` (string) - Status message providing additional details about the environment status
 * `name` (string) - The resource name of the workspace base environment.
   Format: workspace-base-environments/{workspace-base-environment}
+* `spec` (EnvironmentSpec) - The environment specification containing version and dependencies
 * `status` (string) - The status of the materialized workspace base environment. Possible values are: `CREATED`, `EXPIRED`, `FAILED`, `INVALID`, `PENDING`, `REFRESHING`
 * `update_time` (string) - Timestamp when the environment was last updated
 

@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -16,6 +15,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/postgres_tf"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -53,13 +53,11 @@ type ProviderConfig struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
-
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -115,8 +113,16 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 type Project struct {
 	// A timestamp indicating when the project was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// A timestamp indicating when the project was soft-deleted. Empty if the
+	// project is not deleted, otherwise set to a timestamp in the past.
+	DeleteTime timetypes.RFC3339 `tfsdk:"delete_time"`
+	// Configuration for the initial default branch created as part of project
+	// creation. Allows overriding branch protection. These settings only apply
+	// at creation time and do not affect resources created after project
+	// creation.
+	InitialBranchSpec types.Object `tfsdk:"initial_branch_spec"`
 	// Configuration settings for the initial Read/Write endpoint created inside
-	// the default branch for a newly created project. If omitted, the initial
+	// the initial branch for a newly created project. If omitted, the initial
 	// endpoint created will have default settings, without high availability
 	// configured. This field does not apply to any endpoints created after
 	// project creation. Use spec.default_endpoint_settings to configure default
@@ -125,11 +131,15 @@ type Project struct {
 	// Output only. The full resource path of the project. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
-	// The ID to use for the Project. This becomes the final component of the
-	// project's resource name. The ID is required and must be 1-63 characters
-	// long, start with a lowercase letter, and contain only lowercase letters,
-	// numbers, and hyphens. For example, `my-app` becomes `projects/my-app`.
+	// The part of the name, chosen by the user when the resource was created.
 	ProjectId types.String `tfsdk:"project_id"`
+	// If true, permanently deletes the project (hard delete). If false or
+	// unset, performs a soft delete.
+	PurgeOnDelete types.Bool `tfsdk:"purge_on_delete"`
+	// A timestamp indicating when the project is scheduled for permanent
+	// deletion. Empty if the project is not deleted, otherwise set to a
+	// timestamp in the future.
+	PurgeTime timetypes.RFC3339 `tfsdk:"purge_time"`
 	// The spec contains the project configuration, including display_name,
 	// pg_version (Postgres version), history_retention_duration, and
 	// default_endpoint_settings.
@@ -152,6 +162,7 @@ type Project struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m Project) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"initial_branch_spec":   reflect.TypeOf(postgres_tf.InitialBranchSpec{}),
 		"initial_endpoint_spec": reflect.TypeOf(postgres_tf.InitialEndpointSpec{}),
 		"spec":                  reflect.TypeOf(postgres_tf.ProjectSpec{}),
 		"status":                reflect.TypeOf(postgres_tf.ProjectStatus{}),
@@ -169,9 +180,13 @@ func (m Project) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"create_time": m.CreateTime,
+			"delete_time":           m.DeleteTime,
+			"initial_branch_spec":   m.InitialBranchSpec,
 			"initial_endpoint_spec": m.InitialEndpointSpec,
 			"name":                  m.Name,
 			"project_id":            m.ProjectId,
+			"purge_on_delete":       m.PurgeOnDelete,
+			"purge_time":            m.PurgeTime,
 			"spec":                  m.Spec,
 			"status":                m.Status,
 			"uid":                   m.Uid,
@@ -187,9 +202,13 @@ func (m Project) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Project) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"create_time": timetypes.RFC3339{}.Type(ctx),
+			"delete_time":           timetypes.RFC3339{}.Type(ctx),
+			"initial_branch_spec":   postgres_tf.InitialBranchSpec{}.Type(ctx),
 			"initial_endpoint_spec": postgres_tf.InitialEndpointSpec{}.Type(ctx),
 			"name":                  types.StringType,
 			"project_id":            types.StringType,
+			"purge_on_delete":       types.BoolType,
+			"purge_time":            timetypes.RFC3339{}.Type(ctx),
 			"spec":                  postgres_tf.ProjectSpec{}.Type(ctx),
 			"status":                postgres_tf.ProjectStatus{}.Type(ctx),
 			"uid":                   types.StringType,
@@ -204,6 +223,19 @@ func (m Project) Type(ctx context.Context) attr.Type {
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Project) {
+	if !from.InitialBranchSpec.IsUnknown() && !from.InitialBranchSpec.IsNull() {
+		// InitialBranchSpec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.InitialBranchSpec = from.InitialBranchSpec
+	}
+	if !from.InitialBranchSpec.IsNull() && !from.InitialBranchSpec.IsUnknown() {
+		if toInitialBranchSpec, ok := to.GetInitialBranchSpec(ctx); ok {
+			if fromInitialBranchSpec, ok := from.GetInitialBranchSpec(ctx); ok {
+				// Recursively sync the fields of InitialBranchSpec
+				toInitialBranchSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromInitialBranchSpec)
+				to.SetInitialBranchSpec(ctx, toInitialBranchSpec)
+			}
+		}
+	}
 	if !from.InitialEndpointSpec.IsUnknown() && !from.InitialEndpointSpec.IsNull() {
 		// InitialEndpointSpec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.InitialEndpointSpec = from.InitialEndpointSpec
@@ -217,8 +249,8 @@ func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Proj
 			}
 		}
 	}
-	if !from.ProjectId.IsUnknown() {
-		to.ProjectId = from.ProjectId
+	if !from.PurgeOnDelete.IsUnknown() {
+		to.PurgeOnDelete = from.PurgeOnDelete
 	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
@@ -250,6 +282,18 @@ func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Proj
 // including both embedded model fields and additional fields. This method is called
 // during read.
 func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
+	if !from.InitialBranchSpec.IsUnknown() && !from.InitialBranchSpec.IsNull() {
+		// InitialBranchSpec is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.InitialBranchSpec = from.InitialBranchSpec
+	}
+	if !from.InitialBranchSpec.IsNull() && !from.InitialBranchSpec.IsUnknown() {
+		if toInitialBranchSpec, ok := to.GetInitialBranchSpec(ctx); ok {
+			if fromInitialBranchSpec, ok := from.GetInitialBranchSpec(ctx); ok {
+				toInitialBranchSpec.SyncFieldsDuringRead(ctx, fromInitialBranchSpec)
+				to.SetInitialBranchSpec(ctx, toInitialBranchSpec)
+			}
+		}
+	}
 	if !from.InitialEndpointSpec.IsUnknown() && !from.InitialEndpointSpec.IsNull() {
 		// InitialEndpointSpec is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.InitialEndpointSpec = from.InitialEndpointSpec
@@ -262,8 +306,8 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 			}
 		}
 	}
-	if !from.ProjectId.IsUnknown() {
-		to.ProjectId = from.ProjectId
+	if !from.PurgeOnDelete.IsUnknown() {
+		to.PurgeOnDelete = from.PurgeOnDelete
 	}
 	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
 		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
@@ -291,25 +335,57 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 
 func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["delete_time"] = attrs["delete_time"].SetComputed()
+	attrs["initial_branch_spec"] = attrs["initial_branch_spec"].SetOptional()
+	attrs["initial_branch_spec"] = attrs["initial_branch_spec"].SetComputed()
+	attrs["initial_branch_spec"] = attrs["initial_branch_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetOptional()
-	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].SetComputed()
 	attrs["initial_endpoint_spec"] = attrs["initial_endpoint_spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
+	attrs["project_id"] = attrs["project_id"].SetRequired()
+	attrs["project_id"] = attrs["project_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["project_id"] = attrs["project_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
+	attrs["purge_time"] = attrs["purge_time"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["project_id"] = attrs["project_id"].SetRequired()
-	attrs["project_id"] = attrs["project_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["project_id"] = attrs["project_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["purge_on_delete"] = attrs["purge_on_delete"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+	attrs["provider_config"] = attrs["provider_config"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
 
 	return attrs
+}
+
+// GetInitialBranchSpec returns the value of the InitialBranchSpec field in Project as
+// a postgres_tf.InitialBranchSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Project) GetInitialBranchSpec(ctx context.Context) (postgres_tf.InitialBranchSpec, bool) {
+	var e postgres_tf.InitialBranchSpec
+	if m.InitialBranchSpec.IsNull() || m.InitialBranchSpec.IsUnknown() {
+		return e, false
+	}
+	var v postgres_tf.InitialBranchSpec
+	d := m.InitialBranchSpec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInitialBranchSpec sets the value of the InitialBranchSpec field in Project.
+func (m *Project) SetInitialBranchSpec(ctx context.Context, v postgres_tf.InitialBranchSpec) {
+	vs := v.ToObjectValue(ctx)
+	m.InitialBranchSpec = vs
 }
 
 // GetInitialEndpointSpec returns the value of the InitialEndpointSpec field in Project as
@@ -405,28 +481,18 @@ func (r *ProjectResource) Configure(ctx context.Context, req resource.ConfigureR
 }
 
 func (r *ProjectResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	// Skip validation on destroy plans (plan is null).
+	// Skip entirely on destroy (no plan state).
 	if req.Plan.Raw.IsNull() {
 		return
 	}
 	if r.Client == nil {
 		return
 	}
-	var plan Project
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var namespace ProviderConfig
-	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	resp.Diagnostics.Append(validateDiags...)
+	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -490,6 +556,7 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
 }
 
 func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -527,7 +594,6 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get postgres_project", err.Error())
 		return
 	}
@@ -541,6 +607,10 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, existingState.ProviderConfig, &resp.State)...)
 }
 
 func (r *ProjectResource) update(ctx context.Context, plan Project, diags *diag.Diagnostics, state *tfsdk.State) {
@@ -554,7 +624,7 @@ func (r *ProjectResource) update(ctx context.Context, plan Project, diags *diag.
 	updateRequest := postgres.UpdateProjectRequest{
 		Project:    project,
 		Name:       plan.Name.ValueString(),
-		UpdateMask: *fieldmask.New(strings.Split("spec", ",")),
+		UpdateMask: *fieldmask.New(strings.Split("initial_branch_spec,initial_endpoint_spec,spec", ",")),
 	}
 
 	var namespace ProviderConfig
@@ -621,6 +691,9 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if !state.PurgeOnDelete.IsNull() && !state.PurgeOnDelete.IsUnknown() {
+		deleteRequest.Purge = state.PurgeOnDelete.ValueBool()
+	}
 
 	var namespace ProviderConfig
 	resp.Diagnostics.Append(state.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
@@ -638,12 +711,23 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	response, err := client.Postgres.DeleteProject(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil {
 		resp.Diagnostics.AddError("failed to delete postgres_project", err.Error())
 		return
 	}
+	if response == nil {
+		// MANAGED_BY_PARENT suppressed the initial Delete: skip Wait
+		// to avoid a nil-deref on response.Wait(ctx).
+		return
+	}
 
 	err = response.Wait(ctx)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("error waiting for postgres_project delete", err.Error())
 		return

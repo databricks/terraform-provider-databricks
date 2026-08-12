@@ -39,3 +39,33 @@ func TestAccUserData(t *testing.T) {
 		Check:    checkUserDataSourcePopulated(t),
 	})
 }
+
+func TestMwsAccDataUserWithApiField(t *testing.T) {
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: `
+		resource "databricks_user" "this" {
+			user_name = "tf-{var.RANDOM}@example.com"
+			api = "account"
+		}
+		data "databricks_user" "this" {
+			user_name = databricks_user.this.user_name
+			api = "account"
+		}`,
+		Check: checkUserDataSourcePopulated(t),
+	})
+}
+
+func TestAccDataUserWithApiField(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+		resource "databricks_user" "this" {
+			user_name = "tf-{var.RANDOM}@example.com"
+			api = "workspace"
+		}
+		data "databricks_user" "this" {
+			user_name = databricks_user.this.user_name
+			api = "workspace"
+		}`,
+		Check: checkUserDataSourcePopulated(t),
+	})
+}

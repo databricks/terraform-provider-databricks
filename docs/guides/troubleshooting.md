@@ -28,6 +28,14 @@ Example: `export USE_SDK_V2_RESOURCES="databricks_library,databricks_quality_mon
 ### Data sources migrated
   - databricks_volumes
 
+## Plugin Framework Opt-In Resources
+The following resources and data sources have a plugin framework implementation available, but the SDK V2 implementation remains the default. To opt into the plugin framework implementation, set the `DATABRICKS_TF_ENABLED_PF_RESOURCES` or `DATABRICKS_TF_ENABLED_PF_DATA_SOURCES` environment variable to a comma-separated list of resource names.
+
+Example: `export DATABRICKS_TF_ENABLED_PF_RESOURCES="databricks_mws_ncc_private_endpoint_rule"`
+
+### Resources available behind opt-in
+  - databricks_mws_ncc_private_endpoint_rule
+
 
 ## Typical problems
 

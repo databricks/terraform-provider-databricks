@@ -161,6 +161,9 @@ func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
 }
 
 func TestAccUserResource(t *testing.T) {
+	if acceptance.IsAzure(t) {
+		t.Skip("flaky on Azure; covered by unit test TestResourceUserCreate_WithInstancePoolEntitlement and runs on AWS/GCP.")
+	}
 	differentUsers := `
 	resource "databricks_user" "first" {
 		user_name = "tf-eerste+{var.RANDOM}@example.com"

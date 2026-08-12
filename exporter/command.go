@@ -8,29 +8,12 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"golang.org/x/exp/maps"
 )
-
-type levelWriter []string
-
-var logLevel = levelWriter{"[INFO]", "[ERROR]", "[WARN]"}
-
-func (lw *levelWriter) Write(p []byte) (n int, err error) {
-	a := string(p)
-	for _, l := range *lw {
-		if strings.HasPrefix(a, l) {
-			timeStr := time.Now().Local().Format(time.RFC3339Nano)
-			logStr := a[0:len(l)] + " " + timeStr + ": " + strings.TrimLeft(a[len(l):len(a)-1], " ") + "\n"
-			return os.Stdout.WriteString(logStr)
-		}
-	}
-	return
-}
 
 func (ic *importContext) interactivePrompts() string {
 	req, _ := http.NewRequest("GET", "/", nil)
@@ -75,15 +58,8 @@ func (ic *importContext) interactivePrompts() string {
 
 // Run import according to flags
 func Run(args ...string) error {
-	log.SetOutput(&logLevel)
-	log.Printf("[WARN] This tooling is experimental and provided as is. It has an evolving interface, which may change or be removed in future versions of the provider.")
-	client, err := client.New(&config.Config{})
-	if err != nil {
-		return err
-	}
-	ic := newImportContext(&common.DatabricksClient{
-		DatabricksClient: client,
-	})
+	databricksClient := &common.DatabricksClient{}
+	ic := newImportContext(databricksClient)
 
 	flags := flag.NewFlagSet("exporter", flag.ExitOnError)
 	flags.StringVar(&ic.Module, "module", "",
@@ -112,8 +88,8 @@ func Run(args ...string) error {
 	flags.BoolVar(&ic.nativeImportSupported, "native-import", false, "Generate native import blocks (requires Terraform 1.5+)")
 	flags.StringVar(&ic.updatedSinceStr, "updated-since", "",
 		"Include only resources updated since a given timestamp (in ISO8601 format, i.e. 2023-07-01T00:00:00Z)")
-	flags.BoolVar(&debug, "debug", false, "Print extra debug information.")
-	flags.BoolVar(&trace, "trace", false, "Print full debug information.")
+	flags.BoolVar(&debug, "debug", false, "Print debug information, including Databricks Go SDK HTTP logs.")
+	flags.BoolVar(&trace, "trace", false, "Print trace information, including debug information and Databricks Go SDK HTTP logs.")
 	flags.BoolVar(&ic.mounts, "mounts", false, "List DBFS mount points.")
 	flags.BoolVar(&ic.generateDeclaration, "generateProviderDeclaration", true,
 		"Generate Databricks provider declaration.")
@@ -157,6 +133,16 @@ func Run(args ...string) error {
 	if err != nil {
 		return err
 	}
+
+	configureExporterLogging(debug, trace)
+	log.Printf("[WARN] This tooling is experimental and provided as is. It has an evolving interface, which may change or be removed in future versions of the provider.")
+
+	client, err := client.New(&config.Config{})
+	if err != nil {
+		return err
+	}
+	databricksClient.DatabricksClient = client
+
 	if !skipInteractive {
 		configuredListing = ic.interactivePrompts()
 	}
@@ -181,11 +167,6 @@ func Run(args ...string) error {
 		}
 		ic.nodeTypeMappings = mappings
 		log.Printf("[INFO] Loaded %d node type mappings from %s", len(mappings.Mappings), nodeTypeMappingFile)
-	}
-	if trace {
-		logLevel = append(logLevel, "[DEBUG]", "[TRACE]")
-	} else if debug {
-		logLevel = append(logLevel, "[DEBUG]")
 	}
 	ic.enableServices(configuredServices)
 	ic.enableListing(configuredListing)

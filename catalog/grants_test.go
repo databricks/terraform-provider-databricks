@@ -9,6 +9,11 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 )
 
+// grantsTemplate exercises databricks_grants, which is authoritative: applying it replaces the
+// securable's entire grant set, silently revoking any principal not listed here. It must only
+// target ephemeral securables this test owns, never a shared one such as the singleton metastore,
+// where it would wipe out grants belonging to others. Every securable below is created and
+// destroyed by the test and suffixed with {var.STICKY_RANDOM}.
 var grantsTemplate = `
 resource "databricks_catalog" "sandbox" {
 	name         = "sandbox{var.STICKY_RANDOM}"
@@ -74,13 +79,15 @@ resource "databricks_external_location" "some" {
 	comment         = "Managed by TF"
 }
 
-resource "databricks_grants" "metastore" {
-	metastore = "{env.TEST_METASTORE_ID}"
-	grant {
-		principal  = "%s"
-		privileges = ["CREATE_STORAGE_CREDENTIAL"]
-	}
-}
+# databricks_grants is authoritative over the whole securable, so applying it against the shared,
+# singleton metastore would revoke every other principal's metastore-level grants. Disabled for safety.
+# resource "databricks_grants" "metastore" {
+# 	metastore = "{env.TEST_METASTORE_ID}"
+# 	grant {
+# 		principal  = "%s"
+# 		privileges = ["CREATE_STORAGE_CREDENTIAL"]
+# 	}
+# }
 
 resource "databricks_grants" "catalog" {
 	catalog = databricks_catalog.sandbox.id
@@ -158,6 +165,42 @@ func grantsTemplateForNamePermissionChange(suffix string, permission string) str
 		}
 	}
 	`, suffix, permission)
+}
+
+func grantsProviderConfigTemplate(providerConfig string) string {
+	return fmt.Sprintf(`
+	resource "databricks_grants" "this" {
+		table = "main.default.test"
+		grant {
+			principal = "account users"
+			privileges = ["SELECT"]
+		}
+		%s
+	}
+	`, providerConfig)
+}
+
+func TestUcAccGrants_ProviderConfig_EmptyID(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: grantsProviderConfigTemplate(`
+			provider_config {
+				workspace_id = ""
+			}
+		`),
+		ExpectError: regexp.MustCompile(`expected "provider_config.0.workspace_id" to not be an empty string`),
+		PlanOnly:    true,
+	})
+}
+
+func TestUcAccGrants_ProviderConfig_Mismatched(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: grantsProviderConfigTemplate(`
+			provider_config {
+				workspace_id = "123"
+			}
+		`),
+		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+	})
 }
 
 func TestUcAccGrantsForIdChange(t *testing.T) {

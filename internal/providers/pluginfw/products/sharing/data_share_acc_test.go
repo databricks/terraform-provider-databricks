@@ -28,20 +28,6 @@ func dataSourceShareTemplate(provider_config string) string {
 `, provider_config)
 }
 
-func TestAccShareData_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: preTestTemplateSchema + dataSourceShareTemplate(`
-			provider_config = {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(
-			`Attribute provider_config\.workspace_id\s+workspace_id must be a valid integer`,
-		),
-		PlanOnly: true,
-	})
-}
-
 func TestAccShareData_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + dataSourceShareTemplate(`

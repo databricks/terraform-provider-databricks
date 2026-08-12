@@ -46,15 +46,16 @@ func ResourceServicePrincipalSecret() common.Resource {
 	common.AddNamespaceInSchema(spnSecretSchema)
 	common.NamespaceCustomizeSchemaMap(spnSecretSchema)
 	return common.Resource{
+		IsDual: true,
 		Schema: spnSecretSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-			return common.NamespaceCustomizeDiff(ctx, d, c)
+			return common.CustomizeDiffDualResources(ctx, d, c)
 		},
 		CanSkipReadAfterCreateAndUpdate: func(d *schema.ResourceData) bool {
 			return true
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			newClient, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -94,7 +95,7 @@ func ResourceServicePrincipalSecret() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			newClient, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -147,7 +148,7 @@ func ResourceServicePrincipalSecret() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			newClient, err := c.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}

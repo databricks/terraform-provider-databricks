@@ -4,6 +4,8 @@ subcategory: "Data Quality Monitoring"
 # databricks_data_quality_refresh Data Source
 [![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/dataquality)
+
 This data source can be used to fetch a data quality refresh on a Unity Catalog table.
 
 The caller must either:
@@ -40,12 +42,12 @@ The following arguments are supported:
   Find the `table_id` from either:
   1. The [table_id](https://docs.databricks.com/api/workspace/tables/get#table_id) of the `Tables` resource.
   2. In [Catalog Explorer](https://docs.databricks.com/aws/en/catalog-explorer/) > select the `table` > go to the `Details` tab > the `Table ID` field
-* `object_type` (string, required) - The type of the monitored object. Can be one of the following: `schema`or `table`
+* `object_type` (string, required) - The type of the monitored object. Can be one of the following: `schema` or `table`
 * `refresh_id` (integer, required) - Unique id of the refresh operation
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:
@@ -60,7 +62,7 @@ The following attributes are exported:
   Find the `table_id` from either:
   1. The [table_id](https://docs.databricks.com/api/workspace/tables/get#table_id) of the `Tables` resource.
   2. In [Catalog Explorer](https://docs.databricks.com/aws/en/catalog-explorer/) > select the `table` > go to the `Details` tab > the `Table ID` field
-* `object_type` (string) - The type of the monitored object. Can be one of the following: `schema`or `table`
+* `object_type` (string) - The type of the monitored object. Can be one of the following: `schema` or `table`
 * `refresh_id` (integer) - Unique id of the refresh operation
 * `start_time_ms` (integer) - Time when the refresh started (milliseconds since 1/1/1970 UTC)
 * `state` (string) - The current state of the refresh. Possible values are: `MONITOR_REFRESH_STATE_CANCELED`, `MONITOR_REFRESH_STATE_FAILED`, `MONITOR_REFRESH_STATE_PENDING`, `MONITOR_REFRESH_STATE_RUNNING`, `MONITOR_REFRESH_STATE_SUCCESS`, `MONITOR_REFRESH_STATE_UNKNOWN`

@@ -74,12 +74,12 @@ resource "databricks_external_location" "some" {
 	comment         = "Managed by TF"
 }
 
-# resource "databricks_grant" "metastore" {
-# 	metastore = "{env.TEST_METASTORE_ID}"
-#
-# 	principal  = "%s"
-# 	privileges = ["CREATE_STORAGE_CREDENTIAL"]
-# }
+resource "databricks_grant" "metastore" {
+	metastore = "{env.TEST_METASTORE_ID}"
+
+	principal  = "%s"
+	privileges = ["CREATE_STORAGE_CREDENTIAL"]
+}
 
 resource "databricks_grant" "catalog" {
 	catalog = databricks_catalog.sandbox.id
@@ -148,6 +148,40 @@ func grantTemplateForNamePermissionChange(suffix string, permission string) stri
 		privileges = ["%s"]
 	}
 	`, suffix, permission)
+}
+
+func grantProviderConfigTemplate(providerConfig string) string {
+	return fmt.Sprintf(`
+	resource "databricks_grant" "this" {
+		table = "main.default.test"
+		principal = "account users"
+		privileges = ["SELECT"]
+		%s
+	}
+	`, providerConfig)
+}
+
+func TestUcAccGrant_ProviderConfig_EmptyID(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: grantProviderConfigTemplate(`
+			provider_config {
+				workspace_id = ""
+			}
+		`),
+		ExpectError: regexp.MustCompile(`expected "provider_config.0.workspace_id" to not be an empty string`),
+		PlanOnly:    true,
+	})
+}
+
+func TestUcAccGrant_ProviderConfig_Mismatched(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: grantProviderConfigTemplate(`
+			provider_config {
+				workspace_id = "123"
+			}
+		`),
+		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
+	})
 }
 
 func TestUcAccGrantForIdChange(t *testing.T) {

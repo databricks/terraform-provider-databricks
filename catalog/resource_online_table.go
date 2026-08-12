@@ -48,11 +48,15 @@ func ResourceOnlineTable() common.Resource {
 			runTypes := []string{"spec.0.run_triggered", "spec.0.run_continuously"}
 			common.CustomizeSchemaPath(m, "spec", "run_triggered").SetAtLeastOneOf(runTypes).SetSuppressDiff()
 			common.CustomizeSchemaPath(m, "spec", "run_continuously").SetAtLeastOneOf(runTypes).SetSuppressDiff()
-			common.NamespaceCustomizeSchemaMap(m)
+			// online_table has no real Update API (immutable after Create).
+			// Use the *Immutable variant so workspace_id is ForceNew → switching
+			// the provider workspace_id destroys and recreates via the new workspace.
+			common.NamespaceCustomizeSchemaMapImmutable(m)
 			return m
 		})
 
 	return common.Resource{
+		CustomizeDiff: common.NamespaceCustomizeDiffNoForceNew,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {

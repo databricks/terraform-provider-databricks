@@ -3,6 +3,8 @@ subcategory: "Compute"
 ---
 # databricks_pipeline Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/pipelines)
+
 Use `databricks_pipeline` to deploy [Lakeflow Declarative Pipelines](https://docs.databricks.com/aws/en/dlt).
 
 -> This resource can only be used with a workspace-level provider!

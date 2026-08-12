@@ -248,6 +248,73 @@ func TestDeleteDisableLegacyAccess(t *testing.T) {
 	})
 }
 
+// TestDisableLegacyAccessSettingLifecycle mirrors TestAccDisableLegacyAccessSetting
+// (in settings/disable_legacy_access_setting_test.go) at the unit level: the
+// acceptance test applies value=true and then destroys; this exercises the
+// same two transitions against mocked SDK calls. Use this as the per-resource
+// expected-behavior check while the acceptance test is skipped.
+func TestDisableLegacyAccessSettingLifecycle(t *testing.T) {
+	t.Run("create with value=true persists into state", func(t *testing.T) {
+		d, err := qa.ResourceFixture{
+			MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+				e := w.GetMockDisableLegacyAccessAPI().EXPECT()
+				e.Update(mock.Anything, settings.UpdateDisableLegacyAccessRequest{
+					AllowMissing: true,
+					FieldMask:    "disable_legacy_access.value",
+					Setting: settings.DisableLegacyAccess{
+						DisableLegacyAccess: settings.BooleanMessage{Value: true},
+						SettingName:         "disable_legacy_access",
+					},
+				}).Return(&settings.DisableLegacyAccess{
+					Etag:                "etag-after-create",
+					DisableLegacyAccess: settings.BooleanMessage{Value: true},
+					SettingName:         "disable_legacy_access",
+				}, nil)
+				e.Get(mock.Anything, settings.GetDisableLegacyAccessRequest{
+					Etag: "etag-after-create",
+				}).Return(&settings.DisableLegacyAccess{
+					Etag:                "etag-after-create",
+					DisableLegacyAccess: settings.BooleanMessage{Value: true},
+					SettingName:         "disable_legacy_access",
+				}, nil)
+			},
+			Resource: testDisableLegacyAccess,
+			Create:   true,
+			HCL: `
+				disable_legacy_access {
+					value = "true"
+				}
+			`,
+		}.Apply(t)
+		assert.NoError(t, err)
+		assert.Equal(t, defaultSettingId, d.Id())
+		assert.Equal(t, "etag-after-create", d.Get(etagAttrName).(string))
+		assert.Equal(t, true, d.Get("disable_legacy_access.0.value"))
+	})
+
+	t.Run("destroy resets to default", func(t *testing.T) {
+		qa.ResourceFixture{
+			MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+				w.GetMockDisableLegacyAccessAPI().EXPECT().Delete(mock.Anything, settings.DeleteDisableLegacyAccessRequest{
+					Etag: "etag-after-create",
+				}).Return(&settings.DeleteDisableLegacyAccessResponse{Etag: "etag-after-delete"}, nil)
+			},
+			Resource: testDisableLegacyAccess,
+			Delete:   true,
+			HCL: `
+				disable_legacy_access {
+					value = "true"
+				}
+				etag = "etag-after-create"
+			`,
+			ID: defaultSettingId,
+		}.ApplyAndExpectData(t, map[string]any{
+			"id":         defaultSettingId,
+			etagAttrName: "etag-after-delete",
+		})
+	})
+}
+
 func TestDeleteDisableLegacyAccessWithConflict(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

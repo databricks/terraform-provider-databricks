@@ -74,6 +74,7 @@ func TestDataSourceMwsNetworkConnectivityConfigs_All(t *testing.T) {
 			)
 		},
 		AccountID:   "abc",
+		Host:        "https://accounts.cloud.databricks.com",
 		Read:        true,
 		NonWritable: true,
 		Resource:    DataSourceMwsNetworkConnectivityConfigs(),
@@ -117,6 +118,7 @@ func TestDataSourceMwsNetworkConnectivityConfigs_Filter(t *testing.T) {
 			)
 		},
 		AccountID:   "abc",
+		Host:        "https://accounts.cloud.databricks.com",
 		Read:        true,
 		NonWritable: true,
 		Resource:    DataSourceMwsNetworkConnectivityConfigs(),

@@ -22,6 +22,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/database"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
+	"github.com/databricks/databricks-sdk-go/service/knowledgeassistants"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/databricks-sdk-go/service/qualitymonitorv2"
@@ -30,6 +31,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settingsv2"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	sdk_sql "github.com/databricks/databricks-sdk-go/service/sql"
+	"github.com/databricks/databricks-sdk-go/service/supervisoragents"
 	"github.com/databricks/databricks-sdk-go/service/tags"
 	sdk_vs "github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
@@ -49,6 +51,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 )
+
+// testProviderWorkspaceID must match the workspace ID that the qa HTTP-fixture
+// client caches (see qa.HttpFixtureClientWithToken, which seeds
+// cachedWorkspaceID = 12345). Workspace-level Read now applies the provider's
+// workspace_id as a fallback and validates it against the cached workspace ID;
+// a value that disagreed with the cache would fail with a workspace_id mismatch.
+const testProviderWorkspaceID = "12345"
 
 // nolint
 func getJSONObject(filename string) any {
@@ -75,7 +84,7 @@ func workspaceConfKeysToURL() string {
 }
 
 func (ic *importContext) setClientsForTests() {
-	ic.accountLevel = ic.Client.Config.HostType() == config.AccountHost
+	ic.accountLevel = ic.Client.HostTypeForTerraform() == config.AccountHost
 	if ic.accountLevel {
 		ic.meAdmin = true
 		ic.accountClient, _ = ic.Client.AccountClient()
@@ -89,7 +98,7 @@ func TestImportingMounts(t *testing.T) {
 		[]qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Me",
+				Resource: "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				Response: scim.User{},
 			},
 			{
@@ -234,7 +243,7 @@ func TestImportingMounts(t *testing.T) {
 var meAdminFixture = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.0/preview/scim/v2/Me",
+	Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 	Response: scim.User{
 		Groups: []scim.ComplexValue{
 			{
@@ -290,14 +299,14 @@ var emptyAlertsV2 = qa.HTTPFixture{
 
 var emptyExternalLocations = qa.HTTPFixture{
 	Method:   "GET",
-	Resource: "/api/2.1/unity-catalog/external-locations?",
+	Resource: "/api/2.1/unity-catalog/external-locations?max_results=0",
 	Status:   200,
 	Response: &sdk_uc.ListExternalLocationsResponse{},
 }
 
 var emptyStorageCredentials = qa.HTTPFixture{
 	Method:   "GET",
-	Resource: "/api/2.1/unity-catalog/storage-credentials?",
+	Resource: "/api/2.1/unity-catalog/storage-credentials?max_results=0",
 	Status:   200,
 	Response: &sdk_uc.ListStorageCredentialsResponse{},
 }
@@ -311,7 +320,7 @@ var emptyUcCredentials = qa.HTTPFixture{
 
 var emptyConnections = qa.HTTPFixture{
 	Method:   "GET",
-	Resource: "/api/2.1/unity-catalog/connections?",
+	Resource: "/api/2.1/unity-catalog/connections?max_results=0",
 	Response: sdk_uc.ListConnectionsResponse{},
 }
 
@@ -336,24 +345,38 @@ var emptyVectorSearch = qa.HTTPFixture{
 	Response:     sdk_vs.ListEndpointResponse{},
 }
 
+var emptyKnowledgeAssistants = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.1/knowledge-assistants?",
+	Response:     knowledgeassistants.ListKnowledgeAssistantsResponse{},
+}
+
+var emptySupervisorAgents = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.1/supervisor-agents?",
+	Response:     supervisoragents.ListSupervisorAgentsResponse{},
+}
+
 var emptyShares = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.1/unity-catalog/shares?",
+	Resource:     "/api/2.1/unity-catalog/shares?max_results=0",
 	Response:     sharing.ListSharesResponse{},
 }
 
 var emptyRecipients = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.1/unity-catalog/recipients?",
+	Resource:     "/api/2.1/unity-catalog/recipients?max_results=0",
 	Response:     sharing.ListRecipientsResponse{},
 }
 
 var emptyProviders = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.1/unity-catalog/providers?",
+	Resource:     "/api/2.1/unity-catalog/providers?max_results=0",
 	Response:     sharing.ListProvidersResponse{},
 }
 
@@ -631,6 +654,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySqlAlerts,
 			emptyAlertsV2,
 			emptyVectorSearch,
+			emptyKnowledgeAssistants,
+			emptySupervisorAgents,
 			emptyPipelines,
 			emptyClusterPolicies,
 			emptyPolicyFamilies,
@@ -874,7 +899,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				Response: scim.User{
 					Groups: []scim.ComplexValue{},
 				},
@@ -913,6 +938,8 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyWorkspace,
 			emptySqlEndpoints,
 			emptyVectorSearch,
+			emptyKnowledgeAssistants,
+			emptySupervisorAgents,
 			emptySqlQueries,
 			emptySqlDashboards,
 			emptySqlAlerts,
@@ -1079,7 +1106,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				ReuseRequest: true,
 				Response:     scim.User{ID: "a", DisplayName: "test@test.com"},
 			},
@@ -1434,7 +1461,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=14",
+				Resource: "/api/2.2/jobs/get?job_id=14",
 				Response: sdk_jobs.Job{
 					JobId: 14,
 					Settings: &sdk_jobs.JobSettings{
@@ -2961,8 +2988,8 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 			os.Mkdir(tmpDir, 0700)
 			os.WriteFile(tmpDir+"/import.sh", []byte(
-				`terraform import databricks_pipeline.abc "abc"
-terraform import databricks_pipeline.def "def"
+				`terraform import databricks_pipeline.abc 'abc'
+terraform import databricks_pipeline.def 'def'
 `), 0700)
 
 			os.WriteFile(tmpDir+"/import.tf", []byte(
@@ -3003,8 +3030,8 @@ resource "databricks_pipeline" "def" {
 			content, err := os.ReadFile(tmpDir + "/import.sh")
 			assert.NoError(t, err)
 			contentStr := string(content)
-			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.abc "abc"`))
-			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.def "def"`))
+			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.abc 'abc'`))
+			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.def 'def'`))
 
 			content, err = os.ReadFile(tmpDir + "/import.tf")
 			assert.NoError(t, err)
@@ -3033,7 +3060,7 @@ func TestImportingRunJobTask(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				Response: scim.User{
 					Groups: []scim.ComplexValue{
 						{
@@ -3058,12 +3085,12 @@ func TestImportingRunJobTask(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=1047501313827425",
+				Resource: "/api/2.2/jobs/get?job_id=1047501313827425",
 				Response: getJSONObject("test-data/run-job-main.json"),
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=932035899730845",
+				Resource: "/api/2.2/jobs/get?job_id=932035899730845",
 				Response: getJSONObject("test-data/run-job-child.json"),
 			},
 		},
@@ -3101,7 +3128,7 @@ func TestImportingLakeviewDashboards(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				Response: scim.User{
 					Groups: []scim.ComplexValue{
 						{
@@ -3397,6 +3424,7 @@ func TestAlertsV2Export(t *testing.T) {
 			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
+		client.Config.WorkspaceID = testProviderWorkspaceID
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
 

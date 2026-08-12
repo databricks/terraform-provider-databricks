@@ -23,6 +23,301 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+type CreateWorkspaceAssignmentDetailProxyRequest struct {
+	// Required. Workspace assignment detail to be created in <Databricks>.
+	WorkspaceAssignmentDetail types.Object `tfsdk:"workspace_assignment_detail"`
+}
+
+func (to *CreateWorkspaceAssignmentDetailProxyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateWorkspaceAssignmentDetailProxyRequest) {
+	if !from.WorkspaceAssignmentDetail.IsNull() && !from.WorkspaceAssignmentDetail.IsUnknown() {
+		if toWorkspaceAssignmentDetail, ok := to.GetWorkspaceAssignmentDetail(ctx); ok {
+			if fromWorkspaceAssignmentDetail, ok := from.GetWorkspaceAssignmentDetail(ctx); ok {
+				// Recursively sync the fields of WorkspaceAssignmentDetail
+				toWorkspaceAssignmentDetail.SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceAssignmentDetail)
+				to.SetWorkspaceAssignmentDetail(ctx, toWorkspaceAssignmentDetail)
+			}
+		}
+	}
+}
+
+func (to *CreateWorkspaceAssignmentDetailProxyRequest) SyncFieldsDuringRead(ctx context.Context, from CreateWorkspaceAssignmentDetailProxyRequest) {
+	if !from.WorkspaceAssignmentDetail.IsNull() && !from.WorkspaceAssignmentDetail.IsUnknown() {
+		if toWorkspaceAssignmentDetail, ok := to.GetWorkspaceAssignmentDetail(ctx); ok {
+			if fromWorkspaceAssignmentDetail, ok := from.GetWorkspaceAssignmentDetail(ctx); ok {
+				toWorkspaceAssignmentDetail.SyncFieldsDuringRead(ctx, fromWorkspaceAssignmentDetail)
+				to.SetWorkspaceAssignmentDetail(ctx, toWorkspaceAssignmentDetail)
+			}
+		}
+	}
+}
+
+func (m CreateWorkspaceAssignmentDetailProxyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_assignment_detail"] = attrs["workspace_assignment_detail"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateWorkspaceAssignmentDetailProxyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateWorkspaceAssignmentDetailProxyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"workspace_assignment_detail": reflect.TypeOf(WorkspaceAssignmentDetail{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateWorkspaceAssignmentDetailProxyRequest
+// only implements ToObjectValue() and Type().
+func (m CreateWorkspaceAssignmentDetailProxyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_assignment_detail": m.WorkspaceAssignmentDetail,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateWorkspaceAssignmentDetailProxyRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_assignment_detail": WorkspaceAssignmentDetail{}.Type(ctx),
+		},
+	}
+}
+
+// GetWorkspaceAssignmentDetail returns the value of the WorkspaceAssignmentDetail field in CreateWorkspaceAssignmentDetailProxyRequest as
+// a WorkspaceAssignmentDetail value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateWorkspaceAssignmentDetailProxyRequest) GetWorkspaceAssignmentDetail(ctx context.Context) (WorkspaceAssignmentDetail, bool) {
+	var e WorkspaceAssignmentDetail
+	if m.WorkspaceAssignmentDetail.IsNull() || m.WorkspaceAssignmentDetail.IsUnknown() {
+		return e, false
+	}
+	var v WorkspaceAssignmentDetail
+	d := m.WorkspaceAssignmentDetail.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkspaceAssignmentDetail sets the value of the WorkspaceAssignmentDetail field in CreateWorkspaceAssignmentDetailProxyRequest.
+func (m *CreateWorkspaceAssignmentDetailProxyRequest) SetWorkspaceAssignmentDetail(ctx context.Context, v WorkspaceAssignmentDetail) {
+	vs := v.ToObjectValue(ctx)
+	m.WorkspaceAssignmentDetail = vs
+}
+
+type CreateWorkspaceAssignmentDetailRequest struct {
+	// Required. Workspace assignment detail to be created in <Databricks>.
+	WorkspaceAssignmentDetail types.Object `tfsdk:"workspace_assignment_detail"`
+	// Required. The workspace ID for which the workspace assignment detail is
+	// being created.
+	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (to *CreateWorkspaceAssignmentDetailRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateWorkspaceAssignmentDetailRequest) {
+	if !from.WorkspaceAssignmentDetail.IsNull() && !from.WorkspaceAssignmentDetail.IsUnknown() {
+		if toWorkspaceAssignmentDetail, ok := to.GetWorkspaceAssignmentDetail(ctx); ok {
+			if fromWorkspaceAssignmentDetail, ok := from.GetWorkspaceAssignmentDetail(ctx); ok {
+				// Recursively sync the fields of WorkspaceAssignmentDetail
+				toWorkspaceAssignmentDetail.SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceAssignmentDetail)
+				to.SetWorkspaceAssignmentDetail(ctx, toWorkspaceAssignmentDetail)
+			}
+		}
+	}
+}
+
+func (to *CreateWorkspaceAssignmentDetailRequest) SyncFieldsDuringRead(ctx context.Context, from CreateWorkspaceAssignmentDetailRequest) {
+	if !from.WorkspaceAssignmentDetail.IsNull() && !from.WorkspaceAssignmentDetail.IsUnknown() {
+		if toWorkspaceAssignmentDetail, ok := to.GetWorkspaceAssignmentDetail(ctx); ok {
+			if fromWorkspaceAssignmentDetail, ok := from.GetWorkspaceAssignmentDetail(ctx); ok {
+				toWorkspaceAssignmentDetail.SyncFieldsDuringRead(ctx, fromWorkspaceAssignmentDetail)
+				to.SetWorkspaceAssignmentDetail(ctx, toWorkspaceAssignmentDetail)
+			}
+		}
+	}
+}
+
+func (m CreateWorkspaceAssignmentDetailRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_assignment_detail"] = attrs["workspace_assignment_detail"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateWorkspaceAssignmentDetailRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateWorkspaceAssignmentDetailRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"workspace_assignment_detail": reflect.TypeOf(WorkspaceAssignmentDetail{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateWorkspaceAssignmentDetailRequest
+// only implements ToObjectValue() and Type().
+func (m CreateWorkspaceAssignmentDetailRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"workspace_assignment_detail": m.WorkspaceAssignmentDetail,
+			"workspace_id":                m.WorkspaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateWorkspaceAssignmentDetailRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"workspace_assignment_detail": WorkspaceAssignmentDetail{}.Type(ctx),
+			"workspace_id":                types.Int64Type,
+		},
+	}
+}
+
+// GetWorkspaceAssignmentDetail returns the value of the WorkspaceAssignmentDetail field in CreateWorkspaceAssignmentDetailRequest as
+// a WorkspaceAssignmentDetail value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateWorkspaceAssignmentDetailRequest) GetWorkspaceAssignmentDetail(ctx context.Context) (WorkspaceAssignmentDetail, bool) {
+	var e WorkspaceAssignmentDetail
+	if m.WorkspaceAssignmentDetail.IsNull() || m.WorkspaceAssignmentDetail.IsUnknown() {
+		return e, false
+	}
+	var v WorkspaceAssignmentDetail
+	d := m.WorkspaceAssignmentDetail.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkspaceAssignmentDetail sets the value of the WorkspaceAssignmentDetail field in CreateWorkspaceAssignmentDetailRequest.
+func (m *CreateWorkspaceAssignmentDetailRequest) SetWorkspaceAssignmentDetail(ctx context.Context, v WorkspaceAssignmentDetail) {
+	vs := v.ToObjectValue(ctx)
+	m.WorkspaceAssignmentDetail = vs
+}
+
+type DeleteWorkspaceAssignmentDetailProxyRequest struct {
+	// Required. ID of the principal in Databricks to delete workspace
+	// assignment for.
+	PrincipalId types.Int64 `tfsdk:"-"`
+}
+
+func (to *DeleteWorkspaceAssignmentDetailProxyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteWorkspaceAssignmentDetailProxyRequest) {
+}
+
+func (to *DeleteWorkspaceAssignmentDetailProxyRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteWorkspaceAssignmentDetailProxyRequest) {
+}
+
+func (m DeleteWorkspaceAssignmentDetailProxyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteWorkspaceAssignmentDetailProxyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteWorkspaceAssignmentDetailProxyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteWorkspaceAssignmentDetailProxyRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteWorkspaceAssignmentDetailProxyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"principal_id": m.PrincipalId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteWorkspaceAssignmentDetailProxyRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"principal_id": types.Int64Type,
+		},
+	}
+}
+
+type DeleteWorkspaceAssignmentDetailRequest struct {
+	// Required. ID of the principal in Databricks to delete workspace
+	// assignment for.
+	PrincipalId types.Int64 `tfsdk:"-"`
+	// The workspace ID where the principal has access.
+	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (to *DeleteWorkspaceAssignmentDetailRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteWorkspaceAssignmentDetailRequest) {
+}
+
+func (to *DeleteWorkspaceAssignmentDetailRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteWorkspaceAssignmentDetailRequest) {
+}
+
+func (m DeleteWorkspaceAssignmentDetailRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteWorkspaceAssignmentDetailRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteWorkspaceAssignmentDetailRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteWorkspaceAssignmentDetailRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteWorkspaceAssignmentDetailRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"principal_id": m.PrincipalId,
+			"workspace_id": m.WorkspaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteWorkspaceAssignmentDetailRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"principal_id": types.Int64Type,
+			"workspace_id": types.Int64Type,
+		},
+	}
+}
+
 type GetWorkspaceAccessDetailLocalRequest struct {
 	// Required. The internal ID of the principal (user/sp/group) for which the
 	// access details are being requested.
@@ -138,16 +433,121 @@ func (m GetWorkspaceAccessDetailRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetWorkspaceAssignmentDetailProxyRequest struct {
+	// Required. The internal ID of the principal (user/sp/group) for which the
+	// assignment details are being requested.
+	PrincipalId types.Int64 `tfsdk:"-"`
+}
+
+func (to *GetWorkspaceAssignmentDetailProxyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetWorkspaceAssignmentDetailProxyRequest) {
+}
+
+func (to *GetWorkspaceAssignmentDetailProxyRequest) SyncFieldsDuringRead(ctx context.Context, from GetWorkspaceAssignmentDetailProxyRequest) {
+}
+
+func (m GetWorkspaceAssignmentDetailProxyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWorkspaceAssignmentDetailProxyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetWorkspaceAssignmentDetailProxyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetWorkspaceAssignmentDetailProxyRequest
+// only implements ToObjectValue() and Type().
+func (m GetWorkspaceAssignmentDetailProxyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"principal_id": m.PrincipalId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetWorkspaceAssignmentDetailProxyRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"principal_id": types.Int64Type,
+		},
+	}
+}
+
+type GetWorkspaceAssignmentDetailRequest struct {
+	// Required. The internal ID of the principal (user/sp/group) for which the
+	// assignment details are being requested.
+	PrincipalId types.Int64 `tfsdk:"-"`
+	// Required. The workspace ID for which the assignment details are being
+	// requested.
+	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (to *GetWorkspaceAssignmentDetailRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetWorkspaceAssignmentDetailRequest) {
+}
+
+func (to *GetWorkspaceAssignmentDetailRequest) SyncFieldsDuringRead(ctx context.Context, from GetWorkspaceAssignmentDetailRequest) {
+}
+
+func (m GetWorkspaceAssignmentDetailRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWorkspaceAssignmentDetailRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetWorkspaceAssignmentDetailRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetWorkspaceAssignmentDetailRequest
+// only implements ToObjectValue() and Type().
+func (m GetWorkspaceAssignmentDetailRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"principal_id": m.PrincipalId,
+			"workspace_id": m.WorkspaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetWorkspaceAssignmentDetailRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"principal_id": types.Int64Type,
+			"workspace_id": types.Int64Type,
+		},
+	}
+}
+
 // The details of a Group resource.
 type Group struct {
 	// The parent account ID for group in Databricks.
 	AccountId types.String `tfsdk:"account_id"`
 	// ExternalId of the group in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
+	// Internal group ID of the group in Databricks.
+	GroupId types.String `tfsdk:"group_id"`
 	// Display name of the group.
 	GroupName types.String `tfsdk:"group_name"`
-	// Internal group ID of the group in Databricks.
-	InternalId types.Int64 `tfsdk:"internal_id"`
 }
 
 func (to *Group) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Group) {
@@ -159,8 +559,8 @@ func (to *Group) SyncFieldsDuringRead(ctx context.Context, from Group) {
 func (m Group) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
+	attrs["group_id"] = attrs["group_id"].SetComputed()
 	attrs["group_name"] = attrs["group_name"].SetOptional()
-	attrs["internal_id"] = attrs["internal_id"].SetComputed()
 
 	return attrs
 }
@@ -185,8 +585,8 @@ func (m Group) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"account_id":  m.AccountId,
 			"external_id": m.ExternalId,
+			"group_id":    m.GroupId,
 			"group_name":  m.GroupName,
-			"internal_id": m.InternalId,
 		})
 }
 
@@ -196,15 +596,254 @@ func (m Group) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"account_id":  types.StringType,
 			"external_id": types.StringType,
+			"group_id":    types.StringType,
 			"group_name":  types.StringType,
-			"internal_id": types.Int64Type,
 		},
 	}
 }
 
+type ListWorkspaceAssignmentDetailsProxyRequest struct {
+	// The maximum number of workspace assignment details to return. The service
+	// may return fewer than this value.
+	PageSize types.Int64 `tfsdk:"-"`
+	// A page token from a previous list call. Provide this to retrieve the
+	// subsequent page.
+	PageToken types.String `tfsdk:"-"`
+}
+
+func (to *ListWorkspaceAssignmentDetailsProxyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListWorkspaceAssignmentDetailsProxyRequest) {
+}
+
+func (to *ListWorkspaceAssignmentDetailsProxyRequest) SyncFieldsDuringRead(ctx context.Context, from ListWorkspaceAssignmentDetailsProxyRequest) {
+}
+
+func (m ListWorkspaceAssignmentDetailsProxyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListWorkspaceAssignmentDetailsProxyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListWorkspaceAssignmentDetailsProxyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListWorkspaceAssignmentDetailsProxyRequest
+// only implements ToObjectValue() and Type().
+func (m ListWorkspaceAssignmentDetailsProxyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListWorkspaceAssignmentDetailsProxyRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+type ListWorkspaceAssignmentDetailsRequest struct {
+	// The maximum number of workspace assignment details to return. The service
+	// may return fewer than this value.
+	PageSize types.Int64 `tfsdk:"-"`
+	// A page token, received from a previous ListWorkspaceAssignmentDetails
+	// call. Provide this to retrieve the subsequent page.
+	PageToken types.String `tfsdk:"-"`
+	// Required. The workspace ID for which the workspace assignment details are
+	// being fetched.
+	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (to *ListWorkspaceAssignmentDetailsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListWorkspaceAssignmentDetailsRequest) {
+}
+
+func (to *ListWorkspaceAssignmentDetailsRequest) SyncFieldsDuringRead(ctx context.Context, from ListWorkspaceAssignmentDetailsRequest) {
+}
+
+func (m ListWorkspaceAssignmentDetailsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListWorkspaceAssignmentDetailsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListWorkspaceAssignmentDetailsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListWorkspaceAssignmentDetailsRequest
+// only implements ToObjectValue() and Type().
+func (m ListWorkspaceAssignmentDetailsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":    m.PageSize,
+			"page_token":   m.PageToken,
+			"workspace_id": m.WorkspaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListWorkspaceAssignmentDetailsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":    types.Int64Type,
+			"page_token":   types.StringType,
+			"workspace_id": types.Int64Type,
+		},
+	}
+}
+
+// Response message for listing workspace assignment details.
+type ListWorkspaceAssignmentDetailsResponse struct {
+	// A token, which can be sent as page_token to retrieve the next page. If
+	// this field is omitted, there are no subsequent pages.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+
+	WorkspaceAssignmentDetails types.List `tfsdk:"workspace_assignment_details"`
+}
+
+func (to *ListWorkspaceAssignmentDetailsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListWorkspaceAssignmentDetailsResponse) {
+	if !from.WorkspaceAssignmentDetails.IsNull() && !from.WorkspaceAssignmentDetails.IsUnknown() && to.WorkspaceAssignmentDetails.IsNull() && len(from.WorkspaceAssignmentDetails.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for WorkspaceAssignmentDetails, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.WorkspaceAssignmentDetails = from.WorkspaceAssignmentDetails
+	}
+	if !from.WorkspaceAssignmentDetails.IsNull() && !from.WorkspaceAssignmentDetails.IsUnknown() {
+		if toWorkspaceAssignmentDetails, ok := to.GetWorkspaceAssignmentDetails(ctx); ok {
+			if fromWorkspaceAssignmentDetails, ok := from.GetWorkspaceAssignmentDetails(ctx); ok {
+				// Recursively sync the fields of each WorkspaceAssignmentDetails element by position.
+				for i := range toWorkspaceAssignmentDetails {
+					if i < len(fromWorkspaceAssignmentDetails) {
+						toWorkspaceAssignmentDetails[i].SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceAssignmentDetails[i])
+					}
+				}
+				to.SetWorkspaceAssignmentDetails(ctx, toWorkspaceAssignmentDetails)
+			}
+		}
+	}
+}
+
+func (to *ListWorkspaceAssignmentDetailsResponse) SyncFieldsDuringRead(ctx context.Context, from ListWorkspaceAssignmentDetailsResponse) {
+	if !from.WorkspaceAssignmentDetails.IsNull() && !from.WorkspaceAssignmentDetails.IsUnknown() && to.WorkspaceAssignmentDetails.IsNull() && len(from.WorkspaceAssignmentDetails.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for WorkspaceAssignmentDetails, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.WorkspaceAssignmentDetails = from.WorkspaceAssignmentDetails
+	}
+	if !from.WorkspaceAssignmentDetails.IsNull() && !from.WorkspaceAssignmentDetails.IsUnknown() {
+		if toWorkspaceAssignmentDetails, ok := to.GetWorkspaceAssignmentDetails(ctx); ok {
+			if fromWorkspaceAssignmentDetails, ok := from.GetWorkspaceAssignmentDetails(ctx); ok {
+				for i := range toWorkspaceAssignmentDetails {
+					if i < len(fromWorkspaceAssignmentDetails) {
+						toWorkspaceAssignmentDetails[i].SyncFieldsDuringRead(ctx, fromWorkspaceAssignmentDetails[i])
+					}
+				}
+				to.SetWorkspaceAssignmentDetails(ctx, toWorkspaceAssignmentDetails)
+			}
+		}
+	}
+}
+
+func (m ListWorkspaceAssignmentDetailsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["workspace_assignment_details"] = attrs["workspace_assignment_details"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListWorkspaceAssignmentDetailsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListWorkspaceAssignmentDetailsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"workspace_assignment_details": reflect.TypeOf(WorkspaceAssignmentDetail{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListWorkspaceAssignmentDetailsResponse
+// only implements ToObjectValue() and Type().
+func (m ListWorkspaceAssignmentDetailsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token":              m.NextPageToken,
+			"workspace_assignment_details": m.WorkspaceAssignmentDetails,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListWorkspaceAssignmentDetailsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"workspace_assignment_details": basetypes.ListType{
+				ElemType: WorkspaceAssignmentDetail{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetWorkspaceAssignmentDetails returns the value of the WorkspaceAssignmentDetails field in ListWorkspaceAssignmentDetailsResponse as
+// a slice of WorkspaceAssignmentDetail values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListWorkspaceAssignmentDetailsResponse) GetWorkspaceAssignmentDetails(ctx context.Context) ([]WorkspaceAssignmentDetail, bool) {
+	if m.WorkspaceAssignmentDetails.IsNull() || m.WorkspaceAssignmentDetails.IsUnknown() {
+		return nil, false
+	}
+	var v []WorkspaceAssignmentDetail
+	d := m.WorkspaceAssignmentDetails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkspaceAssignmentDetails sets the value of the WorkspaceAssignmentDetails field in ListWorkspaceAssignmentDetailsResponse.
+func (m *ListWorkspaceAssignmentDetailsResponse) SetWorkspaceAssignmentDetails(ctx context.Context, v []WorkspaceAssignmentDetail) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace_assignment_details"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.WorkspaceAssignmentDetails = types.ListValueMust(t, vs)
+}
+
 // Request message for resolving a group with the given external ID from the
 // customer's IdP into Databricks. Will resolve metadata such as the group's
-// groupname, and inherited parent groups.
+// name and inherited parent groups.
 type ResolveGroupProxyRequest struct {
 	// Required. The external ID of the group in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
@@ -255,7 +894,7 @@ func (m ResolveGroupProxyRequest) Type(ctx context.Context) attr.Type {
 
 // Request message for resolving a group with the given external ID from the
 // customer's IdP into Databricks. Will resolve metadata such as the group's
-// groupname, and inherited parent groups.
+// name and inherited parent groups.
 type ResolveGroupRequest struct {
 	// Required. The external ID of the group in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
@@ -399,7 +1038,7 @@ func (m *ResolveGroupResponse) SetGroup(ctx context.Context, v Group) {
 
 // Request message for resolving a service principal with the given external ID
 // from the customer's IdP into Databricks. Will resolve metadata such as the
-// service principal's displayname, status, and inherited parent groups.
+// service principal's display name, status, and inherited parent groups.
 type ResolveServicePrincipalProxyRequest struct {
 	// Required. The external ID of the service principal in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
@@ -450,7 +1089,7 @@ func (m ResolveServicePrincipalProxyRequest) Type(ctx context.Context) attr.Type
 
 // Request message for resolving a service principal with the given external ID
 // from the customer's IdP into Databricks. Will resolve metadata such as the
-// service principal's displayname, status, and inherited parent groups.
+// service principal's display name, status, and inherited parent groups.
 type ResolveServicePrincipalRequest struct {
 	// Required. The external ID of the service principal in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
@@ -594,7 +1233,7 @@ func (m *ResolveServicePrincipalResponse) SetServicePrincipal(ctx context.Contex
 
 // Request message for resolving a user with the given external ID from the
 // customer's IdP into Databricks. Will resolve metadata such as the user's
-// displayname, status, and inherited parent groups.
+// display name, status, and inherited parent groups.
 type ResolveUserProxyRequest struct {
 	// Required. The external ID of the user in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
@@ -645,7 +1284,7 @@ func (m ResolveUserProxyRequest) Type(ctx context.Context) attr.Type {
 
 // Request message for resolving a user with the given external ID from the
 // customer's IdP into Databricks. Will resolve metadata such as the user's
-// displayname, status, and inherited parent groups.
+// display name, status, and inherited parent groups.
 type ResolveUserRequest struct {
 	// Required. The external ID of the user in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
@@ -800,7 +1439,7 @@ type ServicePrincipal struct {
 	// ExternalId of the service principal in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
 	// Internal service principal ID of the service principal in Databricks.
-	InternalId types.Int64 `tfsdk:"internal_id"`
+	ServicePrincipalId types.String `tfsdk:"service_principal_id"`
 }
 
 func (to *ServicePrincipal) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ServicePrincipal) {
@@ -815,7 +1454,7 @@ func (m ServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["application_id"] = attrs["application_id"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["internal_id"] = attrs["internal_id"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
 
 	return attrs
 }
@@ -838,12 +1477,12 @@ func (m ServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":        m.AccountId,
-			"account_sp_status": m.AccountSpStatus,
-			"application_id":    m.ApplicationId,
-			"display_name":      m.DisplayName,
-			"external_id":       m.ExternalId,
-			"internal_id":       m.InternalId,
+			"account_id":           m.AccountId,
+			"account_sp_status":    m.AccountSpStatus,
+			"application_id":       m.ApplicationId,
+			"display_name":         m.DisplayName,
+			"external_id":          m.ExternalId,
+			"service_principal_id": m.ServicePrincipalId,
 		})
 }
 
@@ -851,14 +1490,225 @@ func (m ServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m ServicePrincipal) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":        types.StringType,
-			"account_sp_status": types.StringType,
-			"application_id":    types.StringType,
-			"display_name":      types.StringType,
-			"external_id":       types.StringType,
-			"internal_id":       types.Int64Type,
+			"account_id":           types.StringType,
+			"account_sp_status":    types.StringType,
+			"application_id":       types.StringType,
+			"display_name":         types.StringType,
+			"external_id":          types.StringType,
+			"service_principal_id": types.StringType,
 		},
 	}
+}
+
+type UpdateWorkspaceAssignmentDetailProxyRequest struct {
+	// Required. ID of the principal in Databricks.
+	PrincipalId types.Int64 `tfsdk:"-"`
+	// Required. The list of fields to update.
+	UpdateMask types.String `tfsdk:"-"`
+	// Required. Workspace assignment detail to be updated in <Databricks>.
+	WorkspaceAssignmentDetail types.Object `tfsdk:"workspace_assignment_detail"`
+}
+
+func (to *UpdateWorkspaceAssignmentDetailProxyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateWorkspaceAssignmentDetailProxyRequest) {
+	if !from.WorkspaceAssignmentDetail.IsNull() && !from.WorkspaceAssignmentDetail.IsUnknown() {
+		if toWorkspaceAssignmentDetail, ok := to.GetWorkspaceAssignmentDetail(ctx); ok {
+			if fromWorkspaceAssignmentDetail, ok := from.GetWorkspaceAssignmentDetail(ctx); ok {
+				// Recursively sync the fields of WorkspaceAssignmentDetail
+				toWorkspaceAssignmentDetail.SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceAssignmentDetail)
+				to.SetWorkspaceAssignmentDetail(ctx, toWorkspaceAssignmentDetail)
+			}
+		}
+	}
+}
+
+func (to *UpdateWorkspaceAssignmentDetailProxyRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateWorkspaceAssignmentDetailProxyRequest) {
+	if !from.WorkspaceAssignmentDetail.IsNull() && !from.WorkspaceAssignmentDetail.IsUnknown() {
+		if toWorkspaceAssignmentDetail, ok := to.GetWorkspaceAssignmentDetail(ctx); ok {
+			if fromWorkspaceAssignmentDetail, ok := from.GetWorkspaceAssignmentDetail(ctx); ok {
+				toWorkspaceAssignmentDetail.SyncFieldsDuringRead(ctx, fromWorkspaceAssignmentDetail)
+				to.SetWorkspaceAssignmentDetail(ctx, toWorkspaceAssignmentDetail)
+			}
+		}
+	}
+}
+
+func (m UpdateWorkspaceAssignmentDetailProxyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_assignment_detail"] = attrs["workspace_assignment_detail"].SetRequired()
+	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateWorkspaceAssignmentDetailProxyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateWorkspaceAssignmentDetailProxyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"workspace_assignment_detail": reflect.TypeOf(WorkspaceAssignmentDetail{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateWorkspaceAssignmentDetailProxyRequest
+// only implements ToObjectValue() and Type().
+func (m UpdateWorkspaceAssignmentDetailProxyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"principal_id":                m.PrincipalId,
+			"update_mask":                 m.UpdateMask,
+			"workspace_assignment_detail": m.WorkspaceAssignmentDetail,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateWorkspaceAssignmentDetailProxyRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"principal_id":                types.Int64Type,
+			"update_mask":                 types.StringType,
+			"workspace_assignment_detail": WorkspaceAssignmentDetail{}.Type(ctx),
+		},
+	}
+}
+
+// GetWorkspaceAssignmentDetail returns the value of the WorkspaceAssignmentDetail field in UpdateWorkspaceAssignmentDetailProxyRequest as
+// a WorkspaceAssignmentDetail value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateWorkspaceAssignmentDetailProxyRequest) GetWorkspaceAssignmentDetail(ctx context.Context) (WorkspaceAssignmentDetail, bool) {
+	var e WorkspaceAssignmentDetail
+	if m.WorkspaceAssignmentDetail.IsNull() || m.WorkspaceAssignmentDetail.IsUnknown() {
+		return e, false
+	}
+	var v WorkspaceAssignmentDetail
+	d := m.WorkspaceAssignmentDetail.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkspaceAssignmentDetail sets the value of the WorkspaceAssignmentDetail field in UpdateWorkspaceAssignmentDetailProxyRequest.
+func (m *UpdateWorkspaceAssignmentDetailProxyRequest) SetWorkspaceAssignmentDetail(ctx context.Context, v WorkspaceAssignmentDetail) {
+	vs := v.ToObjectValue(ctx)
+	m.WorkspaceAssignmentDetail = vs
+}
+
+type UpdateWorkspaceAssignmentDetailRequest struct {
+	// Required. ID of the principal in Databricks.
+	PrincipalId types.Int64 `tfsdk:"-"`
+	// Required. The list of fields to update.
+	UpdateMask types.String `tfsdk:"-"`
+	// Required. Workspace assignment detail to be updated in <Databricks>.
+	WorkspaceAssignmentDetail types.Object `tfsdk:"workspace_assignment_detail"`
+	// Required. The workspace ID for which the workspace assignment detail is
+	// being updated.
+	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (to *UpdateWorkspaceAssignmentDetailRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateWorkspaceAssignmentDetailRequest) {
+	if !from.WorkspaceAssignmentDetail.IsNull() && !from.WorkspaceAssignmentDetail.IsUnknown() {
+		if toWorkspaceAssignmentDetail, ok := to.GetWorkspaceAssignmentDetail(ctx); ok {
+			if fromWorkspaceAssignmentDetail, ok := from.GetWorkspaceAssignmentDetail(ctx); ok {
+				// Recursively sync the fields of WorkspaceAssignmentDetail
+				toWorkspaceAssignmentDetail.SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceAssignmentDetail)
+				to.SetWorkspaceAssignmentDetail(ctx, toWorkspaceAssignmentDetail)
+			}
+		}
+	}
+}
+
+func (to *UpdateWorkspaceAssignmentDetailRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateWorkspaceAssignmentDetailRequest) {
+	if !from.WorkspaceAssignmentDetail.IsNull() && !from.WorkspaceAssignmentDetail.IsUnknown() {
+		if toWorkspaceAssignmentDetail, ok := to.GetWorkspaceAssignmentDetail(ctx); ok {
+			if fromWorkspaceAssignmentDetail, ok := from.GetWorkspaceAssignmentDetail(ctx); ok {
+				toWorkspaceAssignmentDetail.SyncFieldsDuringRead(ctx, fromWorkspaceAssignmentDetail)
+				to.SetWorkspaceAssignmentDetail(ctx, toWorkspaceAssignmentDetail)
+			}
+		}
+	}
+}
+
+func (m UpdateWorkspaceAssignmentDetailRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspace_assignment_detail"] = attrs["workspace_assignment_detail"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateWorkspaceAssignmentDetailRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateWorkspaceAssignmentDetailRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"workspace_assignment_detail": reflect.TypeOf(WorkspaceAssignmentDetail{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateWorkspaceAssignmentDetailRequest
+// only implements ToObjectValue() and Type().
+func (m UpdateWorkspaceAssignmentDetailRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"principal_id":                m.PrincipalId,
+			"update_mask":                 m.UpdateMask,
+			"workspace_assignment_detail": m.WorkspaceAssignmentDetail,
+			"workspace_id":                m.WorkspaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateWorkspaceAssignmentDetailRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"principal_id":                types.Int64Type,
+			"update_mask":                 types.StringType,
+			"workspace_assignment_detail": WorkspaceAssignmentDetail{}.Type(ctx),
+			"workspace_id":                types.Int64Type,
+		},
+	}
+}
+
+// GetWorkspaceAssignmentDetail returns the value of the WorkspaceAssignmentDetail field in UpdateWorkspaceAssignmentDetailRequest as
+// a WorkspaceAssignmentDetail value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateWorkspaceAssignmentDetailRequest) GetWorkspaceAssignmentDetail(ctx context.Context) (WorkspaceAssignmentDetail, bool) {
+	var e WorkspaceAssignmentDetail
+	if m.WorkspaceAssignmentDetail.IsNull() || m.WorkspaceAssignmentDetail.IsUnknown() {
+		return e, false
+	}
+	var v WorkspaceAssignmentDetail
+	d := m.WorkspaceAssignmentDetail.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkspaceAssignmentDetail sets the value of the WorkspaceAssignmentDetail field in UpdateWorkspaceAssignmentDetailRequest.
+func (m *UpdateWorkspaceAssignmentDetailRequest) SetWorkspaceAssignmentDetail(ctx context.Context, v WorkspaceAssignmentDetail) {
+	vs := v.ToObjectValue(ctx)
+	m.WorkspaceAssignmentDetail = vs
 }
 
 // The details of a User resource.
@@ -869,32 +1719,32 @@ type User struct {
 	AccountUserStatus types.String `tfsdk:"account_user_status"`
 	// ExternalId of the user in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
-	// Internal userId of the user in Databricks.
-	InternalId types.Int64 `tfsdk:"internal_id"`
 
-	Name types.Object `tfsdk:"name"`
+	FullName types.Object `tfsdk:"full_name"`
+	// Internal userId of the user in Databricks.
+	UserId types.String `tfsdk:"user_id"`
 	// Username/email of the user.
 	Username types.String `tfsdk:"username"`
 }
 
 func (to *User) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from User) {
-	if !from.Name.IsNull() && !from.Name.IsUnknown() {
-		if toName, ok := to.GetName(ctx); ok {
-			if fromName, ok := from.GetName(ctx); ok {
-				// Recursively sync the fields of Name
-				toName.SyncFieldsDuringCreateOrUpdate(ctx, fromName)
-				to.SetName(ctx, toName)
+	if !from.FullName.IsNull() && !from.FullName.IsUnknown() {
+		if toFullName, ok := to.GetFullName(ctx); ok {
+			if fromFullName, ok := from.GetFullName(ctx); ok {
+				// Recursively sync the fields of FullName
+				toFullName.SyncFieldsDuringCreateOrUpdate(ctx, fromFullName)
+				to.SetFullName(ctx, toFullName)
 			}
 		}
 	}
 }
 
 func (to *User) SyncFieldsDuringRead(ctx context.Context, from User) {
-	if !from.Name.IsNull() && !from.Name.IsUnknown() {
-		if toName, ok := to.GetName(ctx); ok {
-			if fromName, ok := from.GetName(ctx); ok {
-				toName.SyncFieldsDuringRead(ctx, fromName)
-				to.SetName(ctx, toName)
+	if !from.FullName.IsNull() && !from.FullName.IsUnknown() {
+		if toFullName, ok := to.GetFullName(ctx); ok {
+			if fromFullName, ok := from.GetFullName(ctx); ok {
+				toFullName.SyncFieldsDuringRead(ctx, fromFullName)
+				to.SetFullName(ctx, toFullName)
 			}
 		}
 	}
@@ -904,8 +1754,8 @@ func (m User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["account_user_status"] = attrs["account_user_status"].SetOptional()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["internal_id"] = attrs["internal_id"].SetComputed()
-	attrs["name"] = attrs["name"].SetOptional()
+	attrs["full_name"] = attrs["full_name"].SetOptional()
+	attrs["user_id"] = attrs["user_id"].SetComputed()
 	attrs["username"] = attrs["username"].SetOptional()
 	attrs["username"] = attrs["username"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
@@ -921,7 +1771,7 @@ func (m User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 // SDK values.
 func (m User) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"name": reflect.TypeOf(UserName{}),
+		"full_name": reflect.TypeOf(UserFullName{}),
 	}
 }
 
@@ -935,8 +1785,8 @@ func (m User) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"account_id":          m.AccountId,
 			"account_user_status": m.AccountUserStatus,
 			"external_id":         m.ExternalId,
-			"internal_id":         m.InternalId,
-			"name":                m.Name,
+			"full_name":           m.FullName,
+			"user_id":             m.UserId,
 			"username":            m.Username,
 		})
 }
@@ -948,23 +1798,23 @@ func (m User) Type(ctx context.Context) attr.Type {
 			"account_id":          types.StringType,
 			"account_user_status": types.StringType,
 			"external_id":         types.StringType,
-			"internal_id":         types.Int64Type,
-			"name":                UserName{}.Type(ctx),
+			"full_name":           UserFullName{}.Type(ctx),
+			"user_id":             types.StringType,
 			"username":            types.StringType,
 		},
 	}
 }
 
-// GetName returns the value of the Name field in User as
-// a UserName value.
+// GetFullName returns the value of the FullName field in User as
+// a UserFullName value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *User) GetName(ctx context.Context) (UserName, bool) {
-	var e UserName
-	if m.Name.IsNull() || m.Name.IsUnknown() {
+func (m *User) GetFullName(ctx context.Context) (UserFullName, bool) {
+	var e UserFullName
+	if m.FullName.IsNull() || m.FullName.IsUnknown() {
 		return e, false
 	}
-	var v UserName
-	d := m.Name.As(ctx, &v, basetypes.ObjectAsOptions{
+	var v UserFullName
+	d := m.FullName.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
@@ -974,46 +1824,46 @@ func (m *User) GetName(ctx context.Context) (UserName, bool) {
 	return v, true
 }
 
-// SetName sets the value of the Name field in User.
-func (m *User) SetName(ctx context.Context, v UserName) {
+// SetFullName sets the value of the FullName field in User.
+func (m *User) SetFullName(ctx context.Context, v UserFullName) {
 	vs := v.ToObjectValue(ctx)
-	m.Name = vs
+	m.FullName = vs
 }
 
-type UserName struct {
+type UserFullName struct {
 	FamilyName types.String `tfsdk:"family_name"`
 
 	GivenName types.String `tfsdk:"given_name"`
 }
 
-func (to *UserName) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UserName) {
+func (to *UserFullName) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UserFullName) {
 }
 
-func (to *UserName) SyncFieldsDuringRead(ctx context.Context, from UserName) {
+func (to *UserFullName) SyncFieldsDuringRead(ctx context.Context, from UserFullName) {
 }
 
-func (m UserName) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+func (m UserFullName) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["family_name"] = attrs["family_name"].SetOptional()
 	attrs["given_name"] = attrs["given_name"].SetOptional()
 
 	return attrs
 }
 
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UserName.
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UserFullName.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
 // retrieve the type information of the elements in complex fields at runtime. The values of the map
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (m UserName) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (m UserFullName) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UserName
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UserFullName
 // only implements ToObjectValue() and Type().
-func (m UserName) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (m UserFullName) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1023,7 +1873,7 @@ func (m UserName) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 }
 
 // Type implements basetypes.ObjectValuable.
-func (m UserName) Type(ctx context.Context) attr.Type {
+func (m UserFullName) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"family_name": types.StringType,
@@ -1151,4 +2001,189 @@ func (m *WorkspaceAccessDetail) SetPermissions(ctx context.Context, v []types.St
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Permissions = types.ListValueMust(t, vs)
+}
+
+// The direct assignment of a provisioned account-level principal (user, service
+// principal, or group) to a workspace, together with the entitlements that
+// assignment grants in the workspace.
+//
+// This resource covers only principals assigned directly to the workspace.
+// Principals that inherit workspace access through a group are not represented
+// here. See WorkspaceAccessDetail and WorkspaceIdentityDetail for the
+// effective, direct-or-indirect view. Creating the resource assigns the
+// principal to the workspace, and deleting it removes the assignment.
+//
+// `entitlements` is the only client-settable field. It holds the entitlements
+// granted directly on this assignment, including any the principal also holds
+// through a group. `effective_entitlements` is the read-only union of those and
+// any granted through group membership.
+//
+// A direct assignment always carries at least one directly-assigned
+// entitlement, because the assignment is what grants it. Create and update both
+// reject an empty `entitlements` set. To remove a principal's assignment
+// entirely, delete the resource.
+//
+// This resource replaces workspace assignment previously managed through the
+// workspace SCIM and permission-assignment APIs, and is intended for account
+// and workspace admins.
+type WorkspaceAssignmentDetail struct {
+	// The account ID parent of the workspace where the principal is assigned
+	AccountId types.String `tfsdk:"account_id"`
+	// Every entitlement the principal holds in this workspace, whether granted
+	// directly or through group membership. Get responses populate this field.
+	// List responses leave it empty.
+	EffectiveEntitlements types.Set `tfsdk:"effective_entitlements"`
+	// Entitlements granted directly to the principal on this workspace. This is
+	// the only client-settable field. Create and update manage exactly this
+	// set, including entitlements the principal also holds through a group.
+	// List responses leave this field empty. Get a single principal to read its
+	// entitlements.
+	Entitlements types.Set `tfsdk:"entitlements"`
+	// The internal ID of the principal (user/sp/group) in Databricks.
+	PrincipalId types.Int64 `tfsdk:"principal_id"`
+
+	PrincipalType types.String `tfsdk:"principal_type"`
+	// The workspace ID where the principal is assigned
+	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
+}
+
+func (to *WorkspaceAssignmentDetail) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WorkspaceAssignmentDetail) {
+	if !from.EffectiveEntitlements.IsNull() && !from.EffectiveEntitlements.IsUnknown() && to.EffectiveEntitlements.IsNull() && len(from.EffectiveEntitlements.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EffectiveEntitlements, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EffectiveEntitlements = from.EffectiveEntitlements
+	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Entitlements = from.Entitlements
+	}
+}
+
+func (to *WorkspaceAssignmentDetail) SyncFieldsDuringRead(ctx context.Context, from WorkspaceAssignmentDetail) {
+	if !from.EffectiveEntitlements.IsNull() && !from.EffectiveEntitlements.IsUnknown() && to.EffectiveEntitlements.IsNull() && len(from.EffectiveEntitlements.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EffectiveEntitlements, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EffectiveEntitlements = from.EffectiveEntitlements
+	}
+	if !from.Entitlements.IsNull() && !from.Entitlements.IsUnknown() && to.Entitlements.IsNull() && len(from.Entitlements.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Entitlements, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Entitlements = from.Entitlements
+	}
+}
+
+func (m WorkspaceAssignmentDetail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["effective_entitlements"] = attrs["effective_entitlements"].SetComputed()
+	attrs["entitlements"] = attrs["entitlements"].SetOptional()
+	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["principal_type"] = attrs["principal_type"].SetComputed()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in WorkspaceAssignmentDetail.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m WorkspaceAssignmentDetail) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"effective_entitlements": reflect.TypeOf(types.String{}),
+		"entitlements":           reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, WorkspaceAssignmentDetail
+// only implements ToObjectValue() and Type().
+func (m WorkspaceAssignmentDetail) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"account_id":             m.AccountId,
+			"effective_entitlements": m.EffectiveEntitlements,
+			"entitlements":           m.Entitlements,
+			"principal_id":           m.PrincipalId,
+			"principal_type":         m.PrincipalType,
+			"workspace_id":           m.WorkspaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m WorkspaceAssignmentDetail) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"account_id": types.StringType,
+			"effective_entitlements": basetypes.SetType{
+				ElemType: types.StringType,
+			},
+			"entitlements": basetypes.SetType{
+				ElemType: types.StringType,
+			},
+			"principal_id":   types.Int64Type,
+			"principal_type": types.StringType,
+			"workspace_id":   types.Int64Type,
+		},
+	}
+}
+
+// GetEffectiveEntitlements returns the value of the EffectiveEntitlements field in WorkspaceAssignmentDetail as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *WorkspaceAssignmentDetail) GetEffectiveEntitlements(ctx context.Context) ([]types.String, bool) {
+	if m.EffectiveEntitlements.IsNull() || m.EffectiveEntitlements.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.EffectiveEntitlements.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectiveEntitlements sets the value of the EffectiveEntitlements field in WorkspaceAssignmentDetail.
+func (m *WorkspaceAssignmentDetail) SetEffectiveEntitlements(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_entitlements"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EffectiveEntitlements = types.SetValueMust(t, vs)
+}
+
+// GetEntitlements returns the value of the Entitlements field in WorkspaceAssignmentDetail as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *WorkspaceAssignmentDetail) GetEntitlements(ctx context.Context) ([]types.String, bool) {
+	if m.Entitlements.IsNull() || m.Entitlements.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Entitlements.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEntitlements sets the value of the Entitlements field in WorkspaceAssignmentDetail.
+func (m *WorkspaceAssignmentDetail) SetEntitlements(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Entitlements = types.SetValueMust(t, vs)
 }

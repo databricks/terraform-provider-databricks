@@ -282,7 +282,7 @@ func (aw accountWorkspaceSetting[T]) SettingStruct() T {
 	return aw.settingStruct
 }
 func (aw accountWorkspaceSetting[T]) Read(ctx context.Context, c *common.DatabricksClient, etag string) (*T, error) {
-	if c.Config.HostType() == config.AccountHost {
+	if c.HostTypeForTerraform() == config.AccountHost {
 		a, err := c.AccountClient()
 		if err != nil {
 			return nil, err
@@ -297,7 +297,7 @@ func (aw accountWorkspaceSetting[T]) Read(ctx context.Context, c *common.Databri
 	}
 }
 func (aw accountWorkspaceSetting[T]) Update(ctx context.Context, c *common.DatabricksClient, t T) (string, error) {
-	if c.Config.HostType() == config.AccountHost {
+	if c.HostTypeForTerraform() == config.AccountHost {
 		a, err := c.AccountClient()
 		if err != nil {
 			return "", err
@@ -312,7 +312,7 @@ func (aw accountWorkspaceSetting[T]) Update(ctx context.Context, c *common.Datab
 	}
 }
 func (aw accountWorkspaceSetting[T]) Delete(ctx context.Context, c *common.DatabricksClient, etag string) (string, error) {
-	if c.Config.HostType() == config.AccountHost {
+	if c.HostTypeForTerraform() == config.AccountHost {
 		a, err := c.AccountClient()
 		if err != nil {
 			return "", err
@@ -362,6 +362,17 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 		defn.GetCustomizeSchemaFunc())
 	common.AddNamespaceInSchema(resourceSchema)
 	common.NamespaceCustomizeSchemaMap(resourceSchema)
+	// Account-only settings have no workspace context; the post-Read
+	// populateProviderConfigInState hook would try to resolve a workspace_id
+	// that does not exist (account host) and fail. Mark these resources to
+	// skip the hook and deprecate the auto-injected provider_config block.
+	// See https://github.com/databricks/terraform-provider-databricks/issues/5672.
+	var isAccountOnly bool
+	switch defn.(type) {
+	case accountSettingDefinition[T]:
+		isAccountOnly = true
+		common.DeprecateProviderConfigInSchema(resourceSchema)
+	}
 	createOrUpdateRetriableErrors := []error{apierr.ErrNotFound, apierr.ErrResourceConflict}
 	deleteRetriableErrors := []error{apierr.ErrResourceConflict}
 	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, setting T) error {
@@ -419,8 +430,15 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 	}
 
 	return common.Resource{
-		Schema: resourceSchema,
+		Schema:                            resourceSchema,
+		SkipProviderConfigStatePopulation: isAccountOnly,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			// Account-only settings have no workspace context, so skip the
+			// workspace-tracking CustomizeDiff (ForceNew-on-workspace-change)
+			// entirely for these resources.
+			if isAccountOnly {
+				return nil
+			}
 			return common.NamespaceCustomizeDiff(ctx, d, c)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

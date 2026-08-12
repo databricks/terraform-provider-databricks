@@ -13,20 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccDataSourcesJob_InvalidID(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: `
-		data "databricks_jobs" "all" {
-			key = "id"
-			provider_config {
-				workspace_id = "invalid"
-			}
-		}`,
-		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccDataSourcesJob_MismatchedID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
@@ -53,6 +39,8 @@ func TestAccDataSourcesJob_EmptyID(t *testing.T) {
 	})
 }
 
+// TestAccDataSourcesJob_EmptyBlock verifies that an empty provider_config {}
+// block is valid (workspace_id is Optional+Computed).
 func TestAccDataSourcesJob_EmptyBlock(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
@@ -61,7 +49,6 @@ func TestAccDataSourcesJob_EmptyBlock(t *testing.T) {
 			provider_config {
 			}
 		}`,
-		ExpectError: regexp.MustCompile(`The argument "workspace_id" is required, but no definition was found.`),
 	})
 }
 

@@ -1,7 +1,9 @@
 package pluginfw
 
 import (
+	"bytes"
 	"context"
+	"log"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -10,6 +12,58 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/stretchr/testify/assert"
 )
+
+// captureFallbackWarnings rewires the package logger to a buffer for the
+// duration of the test, restoring the original writer on cleanup.
+func captureFallbackWarnings(t *testing.T) *bytes.Buffer {
+	t.Helper()
+	var buf bytes.Buffer
+	origWriter := log.Writer()
+	origFlags := log.Flags()
+	log.SetOutput(&buf)
+	log.SetFlags(0)
+	t.Cleanup(func() {
+		log.SetOutput(origWriter)
+		log.SetFlags(origFlags)
+	})
+	return &buf
+}
+
+func TestGetPluginFrameworkResources_EnvVarFallbackEmitsWarning(t *testing.T) {
+	buf := captureFallbackWarnings(t)
+	t.Setenv("USE_SDK_V2_RESOURCES", "databricks_library")
+
+	got := getPluginFrameworkResourcesToRegister(nil, nil)
+
+	for _, fn := range got {
+		assert.NotEqual(t, "databricks_library", getResourceName(fn),
+			"databricks_library must be excluded from PF when fallback is requested")
+	}
+	assert.Contains(t, buf.String(), `"databricks_library"`)
+	assert.Contains(t, buf.String(), "[WARN] resource")
+	assert.Contains(t, buf.String(), "next major release")
+}
+
+func TestGetPluginFrameworkDataSources_FallbackOptionEmitsWarning(t *testing.T) {
+	buf := captureFallbackWarnings(t)
+
+	got := getPluginFrameworkDataSourcesToRegister([]string{"databricks_volumes"}, nil)
+
+	for _, fn := range got {
+		assert.NotEqual(t, "databricks_volumes", getDataSourceName(fn),
+			"databricks_volumes must be excluded from PF when fallback is requested")
+	}
+	assert.Contains(t, buf.String(), `"databricks_volumes"`)
+	assert.Contains(t, buf.String(), "[WARN] data source")
+}
+
+func TestGetPluginFrameworkResources_NoFallbackNoWarning(t *testing.T) {
+	buf := captureFallbackWarnings(t)
+
+	_ = getPluginFrameworkResourcesToRegister(nil, nil)
+
+	assert.Empty(t, buf.String(), "no warning should be emitted when no fallback is configured")
+}
 
 func TestConfigure(t *testing.T) {
 	testCases := []struct {
@@ -34,15 +88,6 @@ func TestConfigure(t *testing.T) {
 			},
 		},
 		{
-			name: "experimental_is_unified_host can be set to true",
-			config: map[string]tftypes.Value{
-				"experimental_is_unified_host": tftypes.NewValue(tftypes.Bool, true),
-			},
-			validateResourceData: func(dc *common.DatabricksClient) {
-				assert.True(t, dc.Config.Experimental_IsUnifiedHost, "experimental_is_unified_host should be true when set")
-			},
-		},
-		{
 			name: "workspace_id can be set in provider config",
 			config: map[string]tftypes.Value{
 				"workspace_id": tftypes.NewValue(tftypes.String, "1234567890"),
@@ -51,20 +96,17 @@ func TestConfigure(t *testing.T) {
 				assert.Equal(t, "1234567890", dc.Config.WorkspaceID, "workspace_id should be set when provided")
 			},
 		},
-		{
-			name: "unified host configuration with workspace_id",
-			config: map[string]tftypes.Value{
-				"experimental_is_unified_host": tftypes.NewValue(tftypes.Bool, true),
-				"workspace_id":                 tftypes.NewValue(tftypes.String, "9876543210"),
-			},
-			validateResourceData: func(dc *common.DatabricksClient) {
-				assert.True(t, dc.Config.Experimental_IsUnifiedHost, "experimental_is_unified_host should be true")
-				assert.Equal(t, "9876543210", dc.Config.WorkspaceID, "workspace_id should be set")
-			},
-		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			// Keep the test hermetic against ambient developer state: point HOME at
+			// an empty temp dir so the SDK's ~/.databrickscfg loader finds no profile
+			// and no host is resolved. Without this, a developer's DEFAULT profile
+			// supplies a real host whose /.well-known/databricks-config workspace_id
+			// disagrees with the bogus workspace_id below, and PrepareDatabricksClient
+			// now fails fast on that mismatch (see ReconcileWorkspaceIDFromHostMetadata).
+			t.Setenv("HOME", t.TempDir())
+
 			// Create a provider instance
 			p := GetDatabricksProviderPluginFramework()
 

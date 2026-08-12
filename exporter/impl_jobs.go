@@ -101,6 +101,36 @@ func importTask(ic *importContext, task sdk_jobs.Task, jobName, rID string) {
 			ic.emitWorkspaceFileOrRepo(task.SqlTask.File.Path)
 		}
 	}
+	if task.AlertTask != nil {
+		if task.AlertTask.AlertId != "" {
+			ic.Emit(&resource{
+				Resource: "databricks_alert_v2",
+				ID:       task.AlertTask.AlertId,
+			})
+		}
+		if task.AlertTask.WarehouseId != "" {
+			ic.Emit(&resource{
+				Resource: "databricks_sql_endpoint",
+				ID:       task.AlertTask.WarehouseId,
+			})
+		}
+		ic.emitIfWsfsFile(task.AlertTask.WorkspacePath)
+		for _, sub := range task.AlertTask.Subscribers {
+			if sub.UserName != "" {
+				ic.Emit(&resource{
+					Resource:  "databricks_user",
+					Attribute: "user_name",
+					Value:     sub.UserName,
+				})
+			}
+			if sub.DestinationId != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_notification_destination",
+					ID:       sub.DestinationId,
+				})
+			}
+		}
+	}
 	if task.DashboardTask != nil {
 		ic.Emit(&resource{
 			Resource: "databricks_dashboard",
@@ -515,6 +545,13 @@ var (
 		{Path: "task.dbt_task.project_directory", Resource: "databricks_directory", Match: "path"},
 		{Path: "task.dbt_task.project_directory", Resource: "databricks_directory", Match: "workspace_path"},
 		{Path: "task.sql_task.alert.alert_id", Resource: "databricks_alert"},
+		{Path: "task.alert_task.alert_id", Resource: "databricks_alert_v2"},
+		{Path: "task.alert_task.warehouse_id", Resource: "databricks_sql_endpoint"},
+		{Path: "task.alert_task.workspace_path", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.alert_task.workspace_path", Resource: "databricks_workspace_file", Match: "path"},
+		{Path: "task.alert_task.subscribers.destination_id", Resource: "databricks_notification_destination"},
+		{Path: "task.alert_task.subscribers.user_name", Resource: "databricks_user", Match: "user_name",
+			MatchType: MatchCaseInsensitive},
 		{Path: "task.sql_task.alert.subscriptions.destination_id", Resource: "databricks_notification_destination"},
 		{Path: "task.sql_task.dashboard.dashboard_id", Resource: "databricks_sql_dashboard"},
 		{Path: "task.sql_task.query.query_id", Resource: "databricks_query"},
@@ -592,6 +629,8 @@ var (
 		{Path: "task.spark_jar_task.parameters", Resource: "databricks_repo", Match: "workspace_path",
 			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		{Path: "task.spark_submit_task.parameters", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "task.alert_task.workspace_path", Resource: "databricks_repo", Match: "workspace_path",
 			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		{Path: "job_cluster.new_cluster.init_scripts.workspace.destination",
 			Resource: "databricks_repo", Match: "workspace_path",

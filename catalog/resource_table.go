@@ -52,16 +52,16 @@ func (ti TableInfo) FullName() string {
 }
 
 func (a TablesAPI) createTable(ti *TableInfo) error {
-	return a.client.Post(a.context, "/unity-catalog/tables", ti, ti)
+	return a.client.Post(a.context, "/unity-catalog/tables", ti, ti, a.client.AddWorkspaceIdHeader)
 }
 
 func (a TablesAPI) getTable(name string) (ti TableInfo, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/tables/"+name, nil, &ti)
+	err = a.client.Get(a.context, "/unity-catalog/tables/"+name, nil, &ti, a.client.AddWorkspaceIdHeader)
 	return
 }
 
 func (a TablesAPI) deleteTable(name string) error {
-	return a.client.Delete(a.context, "/unity-catalog/tables/"+name, nil)
+	return a.client.Delete(a.context, "/unity-catalog/tables/"+name, nil, a.client.AddWorkspaceIdHeader)
 }
 
 type TableSchemaStruct struct {
@@ -85,7 +85,7 @@ func ResourceTable() common.Resource {
 	return common.Resource{
 		Schema: tableSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-			if err := common.NamespaceCustomizeDiff(ctx, d, c); err != nil {
+			if err := common.NamespaceCustomizeDiffNoForceNew(ctx, d, c); err != nil {
 				return err
 			}
 			if d.Get("table_type") != "EXTERNAL" {

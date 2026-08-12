@@ -59,14 +59,14 @@ func (a TokensAPI) Create(tokenLifetime time.Duration, comment string) (r TokenR
 		request.Comment = comment
 	}
 
-	err = a.client.Post(a.context, "/token/create", request, &r)
+	err = a.client.Post(a.context, "/token/create", request, &r, a.client.AddWorkspaceIdHeader)
 	return
 }
 
 // List will list all the token metadata and not the content of the tokens in the workspace
 func (a TokensAPI) List() ([]TokenInfo, error) {
 	var tokenListResult TokenList
-	err := a.client.Get(a.context, "/token/list", nil, &tokenListResult)
+	err := a.client.Get(a.context, "/token/list", nil, &tokenListResult, a.client.AddWorkspaceIdHeader)
 	return tokenListResult.TokenInfos, err
 }
 
@@ -93,7 +93,7 @@ func (a TokensAPI) Read(tokenID string) (TokenInfo, error) {
 func (a TokensAPI) Delete(tokenID string) error {
 	err := a.client.Post(a.context, "/token/delete", map[string]string{
 		"token_id": tokenID,
-	}, nil)
+	}, nil, a.client.AddWorkspaceIdHeader)
 	return common.IgnoreNotFoundError(err) // ignore not found error on delete, as it is idempotent
 }
 

@@ -125,4 +125,8 @@ func (r *TagAssignmentsDataSource) Read(ctx context.Context, req datasource.Read
 
 	config.WorkspaceEntityTagAssignments = types.ListValueMust(TagAssignmentData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

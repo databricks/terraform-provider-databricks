@@ -10,7 +10,7 @@ func DataSourceMwsCredentials() common.Resource {
 	type mwsCredentialsData struct {
 		Ids map[string]string `json:"ids,omitempty" tf:"computed"`
 	}
-	return common.DataResource(mwsCredentialsData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
+	r := common.DataResource(mwsCredentialsData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*mwsCredentialsData)
 		credentials, err := NewCredentialsAPI(ctx, c).List(c.Config.AccountID)
 		if err != nil {
@@ -22,4 +22,7 @@ func DataSourceMwsCredentials() common.Resource {
 		}
 		return nil
 	})
+	r.SkipProviderConfigStatePopulation = true
+	common.DeprecateProviderConfigInSchema(r.Schema)
+	return r
 }

@@ -7,6 +7,12 @@ Retrieves a list of [databricks_share](../resources/share.md) name, that were cr
 
 -> This data source can only be used with a workspace-level provider!
 
+## Plugin Framework Migration
+
+The shares data source has been migrated from sdkv2 to plugin framework. If you encounter any problem with this data source and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_DATA_SOURCES="databricks_shares"`.
+
+~> **Deprecation**: The SDKv2 fallback implementation, selectable via `USE_SDK_V2_DATA_SOURCES="databricks_shares"`, is **deprecated** and will be removed in the next major release of the provider. Setting the environment variable now emits a runtime warning; remove the override to use the default Plugin Framework implementation.
+
 ## Example Usage
 
 Getting all existing shares in the metastore

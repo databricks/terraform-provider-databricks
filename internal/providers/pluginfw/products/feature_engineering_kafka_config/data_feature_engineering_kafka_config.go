@@ -5,7 +5,6 @@ package feature_engineering_kafka_config
 import (
 	"context"
 	"reflect"
-	"regexp"
 
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
@@ -42,10 +41,10 @@ type ProviderConfigData struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -113,6 +112,9 @@ type KafkaConfigData struct {
 	// Catch-all for miscellaneous options. Keys should be source options or
 	// Kafka consumer options (kafka.*)
 	ExtraOptions types.Map `tfsdk:"extra_options"`
+	// Configuration for ingesting Kafka data into a Databricks-managed Delta
+	// table.
+	IngestionConfig types.Object `tfsdk:"ingestion_config"`
 	// Schema configuration for extracting message keys from topics. At least
 	// one of key_schema and value_schema must be provided.
 	KeySchema types.Object `tfsdk:"key_schema"`
@@ -140,6 +142,7 @@ func (m KafkaConfigData) GetComplexFieldTypes(ctx context.Context) map[string]re
 		"auth_config":       reflect.TypeOf(ml_tf.AuthConfig{}),
 		"backfill_source":   reflect.TypeOf(ml_tf.BackfillSource{}),
 		"extra_options":     reflect.TypeOf(types.String{}),
+		"ingestion_config":  reflect.TypeOf(ml_tf.IngestionConfig{}),
 		"key_schema":        reflect.TypeOf(ml_tf.SchemaConfig{}),
 		"subscription_mode": reflect.TypeOf(ml_tf.SubscriptionMode{}),
 		"value_schema":      reflect.TypeOf(ml_tf.SchemaConfig{}),
@@ -161,6 +164,7 @@ func (m KafkaConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"backfill_source":   m.BackfillSource,
 			"bootstrap_servers": m.BootstrapServers,
 			"extra_options":     m.ExtraOptions,
+			"ingestion_config":  m.IngestionConfig,
 			"key_schema":        m.KeySchema,
 			"name":              m.Name,
 			"subscription_mode": m.SubscriptionMode,
@@ -182,6 +186,7 @@ func (m KafkaConfigData) Type(ctx context.Context) attr.Type {
 			"extra_options": basetypes.MapType{
 				ElemType: types.StringType,
 			},
+			"ingestion_config":  ml_tf.IngestionConfig{}.Type(ctx),
 			"key_schema":        ml_tf.SchemaConfig{}.Type(ctx),
 			"name":              types.StringType,
 			"subscription_mode": ml_tf.SubscriptionMode{}.Type(ctx),
@@ -197,6 +202,7 @@ func (m KafkaConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["backfill_source"] = attrs["backfill_source"].SetComputed()
 	attrs["bootstrap_servers"] = attrs["bootstrap_servers"].SetComputed()
 	attrs["extra_options"] = attrs["extra_options"].SetComputed()
+	attrs["ingestion_config"] = attrs["ingestion_config"].SetComputed()
 	attrs["key_schema"] = attrs["key_schema"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["subscription_mode"] = attrs["subscription_mode"].SetComputed()
@@ -265,8 +271,12 @@ func (r *KafkaConfigDataSource) Read(ctx context.Context, req datasource.ReadReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// Preserve provider_config from config since it's not part of the API response
+	// Preserve provider_config from config so state.Set has the correct type info
 	newState.ProviderConfigData = config.ProviderConfigData
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

@@ -80,6 +80,7 @@ func TestResourceBudgetCreate(t *testing.T) {
 		},
 		Create:    true,
 		AccountID: "account_id",
+		Host:      "https://accounts.cloud.databricks.com",
 		HCL: `
 		display_name = "budget_name"
 
@@ -132,6 +133,7 @@ func TestResourceBudgetRead(t *testing.T) {
 		Read:      true,
 		New:       true,
 		AccountID: "account_id",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "account_id|budget_configuration_id",
 	}.ApplyAndExpectData(t, map[string]any{
 		"display_name":           "budget_name",
@@ -147,6 +149,7 @@ func TestResourceBudgetRead_UnpackError(t *testing.T) {
 		Read:      true,
 		New:       true,
 		AccountID: "account_id",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "budget_configuration_id",
 	}.ExpectError(t, "invalid ID: budget_configuration_id")
 }
@@ -223,6 +226,7 @@ func TestResourceBudgetUpdate(t *testing.T) {
 		}
 		`,
 		AccountID: "account_id",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "account_id|budget_configuration_id",
 	}.ApplyAndExpectData(t, map[string]any{
 		"display_name": "budget_name_update",
@@ -237,6 +241,7 @@ func TestResourceBudgetDelete(t *testing.T) {
 		},
 		Resource:  ResourceBudget(),
 		AccountID: "account_id",
+		Host:      "https://accounts.cloud.databricks.com",
 		Delete:    true,
 		ID:        "account_id|budget_configuration_id",
 	}.ApplyAndExpectData(t, nil)

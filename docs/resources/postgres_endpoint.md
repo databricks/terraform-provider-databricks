@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_endpoint Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 ### Lakebase Autoscaling Terraform Behavior
 
 This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
@@ -28,7 +30,11 @@ Endpoints exist within the Lakebase Autoscaling resource hierarchy:
 
 
 ## Example Usage
-### Basic Read-Write Endpoint
+### Managing Implicitly Created Read-Write Endpoint
+
+A read-write endpoint named `primary` is implicitly created for every branch. Since Terraform is declarative, managing an already-existing resource requires `replace_existing = true`: it lets Terraform represent the implicitly created endpoint in Terraform state and immediately apply the provided configuration to it. Support for providing a custom `endpoint_id` will be available in later versions.
+
+Terraform uses this resource exclusively for managing updates. It does not control creation or deletion of the endpoint itself. Removing the resource from your Terraform configuration only removes it from Terraform state; the actual endpoint is unaffected, because its lifecycle is controlled by the parent branch. The only way to remove the actual endpoint is to delete the branch it belongs to. If you don't want to delete the parent branch and are concerned about the cost, use the `disabled` or `suspend_timeout_duration` fields in `spec`.
 
 ```hcl
 resource "databricks_postgres_project" "this" {
@@ -51,8 +57,12 @@ resource "databricks_postgres_endpoint" "primary" {
   endpoint_id = "primary"
   parent      = databricks_postgres_branch.dev.name
   spec = {
-    endpoint_type = "ENDPOINT_TYPE_READ_WRITE"
+    endpoint_type            = "ENDPOINT_TYPE_READ_WRITE"
+    autoscaling_limit_min_cu = 0.5
+    autoscaling_limit_max_cu = 4.0
+    suspend_timeout_duration = "600s"
   }
+  replace_existing = true
 }
 ```
 
@@ -111,6 +121,58 @@ resource "databricks_postgres_endpoint" "always_on" {
 }
 ```
 
+### High Availability Endpoint
+
+Configure a single endpoint with multiple compute instances for high availability.
+One compute instance acts as the read-write primary, while the remaining secondary compute instances stand ready for automatic failover.
+
+High availability requires scale-to-zero to be disabled.
+Set `no_suspension = true` in `spec` as shown in the example below.
+
+```hcl
+resource "databricks_postgres_endpoint" "ha_primary" {
+  endpoint_id = "primary"
+  parent      = databricks_postgres_branch.dev.name
+  spec = {
+    endpoint_type            = "ENDPOINT_TYPE_READ_WRITE"
+    no_suspension            = true
+    autoscaling_limit_min_cu = 0.5
+    autoscaling_limit_max_cu = 4.0
+    group = {
+      min = 2
+      max = 2
+    }
+  }
+  replace_existing = true  # for managing implicitly created read-write endpoint
+}
+```
+
+### High Availability Endpoint with Readable Secondaries
+
+Enable readable secondaries to offload read traffic to replica computes via a
+dedicated read-only host, in addition to hot-standby failover. Only supported
+on read-write endpoints with more than one compute. The secondaries are optionally 
+exposed as read-only host via `enable_readable_secondaries`.
+
+```hcl
+resource "databricks_postgres_endpoint" "ha_readable" {
+  endpoint_id = "primary"
+  parent      = databricks_postgres_branch.dev.name
+  spec = {
+    endpoint_type            = "ENDPOINT_TYPE_READ_WRITE"
+    no_suspension            = true
+    autoscaling_limit_min_cu = 0.5
+    autoscaling_limit_max_cu = 4.0
+    group = {
+      min                         = 2
+      max                         = 2
+      enable_readable_secondaries = true
+    }
+  }
+  replace_existing = true  # for managing implicitly created read-write endpoint
+}
+```
+
 ### Complete Example
 
 ```hcl
@@ -124,7 +186,7 @@ resource "databricks_postgres_project" "prod" {
     default_endpoint_settings = {
       autoscaling_limit_min_cu = 1.0
       autoscaling_limit_max_cu = 8.0
-      suspend_timeout_duration = "300s"
+      suspend_timeout_duration = "86400s"  # 24 hours
     }
   }
 }
@@ -145,7 +207,13 @@ resource "databricks_postgres_endpoint" "primary" {
     autoscaling_limit_min_cu = 1.0
     autoscaling_limit_max_cu = 9.0
     no_suspension = true  # Never suspend
+    group = {
+      min                         = 2
+      max                         = 2
+      enable_readable_secondaries = true
+    }
   }
+  replace_existing = true
 }
 
 resource "databricks_postgres_endpoint" "read_replica" {
@@ -163,16 +231,15 @@ resource "databricks_postgres_endpoint" "read_replica" {
 
 ## Arguments
 The following arguments are supported:
-* `endpoint_id` (string, required) - The ID to use for the Endpoint. This becomes the final component of the endpoint's resource name.
-  The ID is required and must be 1-63 characters long, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens.
-  For example, `primary` becomes `projects/my-app/branches/development/endpoints/primary`
+* `endpoint_id` (string, required) - The part of the name, chosen by the user when the resource was created
 * `parent` (string, required) - The branch containing this endpoint (API resource hierarchy).
   Format: projects/{project_id}/branches/{branch_id}
+* `replace_existing` (boolean, optional) - If true, update the endpoint if it already exists instead of returning an error
 * `spec` (EndpointSpec, optional) - The spec contains the compute endpoint configuration, including autoscaling limits, suspend timeout, and disabled state
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### EndpointGroupSpec
 * `max` (integer, required) - The maximum number of computes in the endpoint group. Currently, this must be equal to min. Set to 1 for single
@@ -195,7 +262,8 @@ The following arguments are supported:
 
 ### EndpointSpec
 * `endpoint_type` (string, required) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `ENDPOINT_TYPE_READ_ONLY`, `ENDPOINT_TYPE_READ_WRITE`
-* `autoscaling_limit_max_cu` (number, optional) - The maximum number of Compute Units. Minimum value is 0.5
+* `autoscaling_limit_max_cu` (number, optional) - The maximum number of Compute Units. The maximum value is 64.
+  The difference between the minimum and maximum Compute Units (max - min) must not exceed 16
 * `autoscaling_limit_min_cu` (number, optional) - The minimum number of Compute Units. Minimum value is 0.5
 * `disabled` (boolean, optional) - Whether to restrict connections to the compute endpoint.
   Enabling this option schedules a suspend compute operation.
@@ -205,10 +273,12 @@ The following arguments are supported:
   to non HA settings, with a single compute backing the endpoint (and no readable secondaries
   for Read/Write endpoints)
 * `no_suspension` (boolean, optional) - When set to true, explicitly disables automatic suspension (never suspend).
-  Should be set to true when provided
+  Should be set to true when provided.
+  Mutually exclusive with `suspend_timeout_duration`. When updating, use `spec.suspension` in the update_mask
 * `settings` (EndpointSettings, optional)
 * `suspend_timeout_duration` (string, optional) - Duration of inactivity after which the compute endpoint is automatically suspended.
-  If specified should be between 60s and 604800s (1 minute to 1 week)
+  If specified should be between 60s and 604800s (1 minute to 1 week).
+  Mutually exclusive with `no_suspension`. When updating, use `spec.suspension` in the update_mask
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -229,18 +299,24 @@ In addition to the above arguments, the following attributes are exported:
 * `read_only_host` (string) - An optionally defined read-only host for the endpoint, without pooling. For read-only endpoints,
   this attribute is always defined and is equivalent to host. For read-write endpoints, this attribute is defined
   if the enclosing endpoint is a group with greater than 1 computes configured, and has readable secondaries enabled
+* `read_only_pooled_host` (string) - The read-only hostname of the compute endpoint, with pooling. This attribute is always defined for read-only endpoints,
+  and may be defined for read-write endpoints if configured with read replicas and allow read-only connections
+* `read_write_pooled_host` (string) - The read-write hostname of the compute endpoint, with pooling. This attribute is only defined for read-write endpoints
 
 ### EndpointStatus
-* `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units
+* `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units. The maximum value is 64.
+  The difference between the minimum and maximum Compute Units (max - min) must not exceed 16
 * `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units
 * `current_state` (string) - Possible values are: `ACTIVE`, `DEGRADED`, `IDLE`, `INIT`
 * `disabled` (boolean) - Whether to restrict connections to the compute endpoint.
   Enabling this option schedules a suspend compute operation.
   A disabled compute endpoint cannot be enabled by a connection or
   console action
+* `endpoint_id` (string) - Part of the resource name
 * `endpoint_type` (string) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `ENDPOINT_TYPE_READ_ONLY`, `ENDPOINT_TYPE_READ_WRITE`
 * `group` (EndpointGroupStatus) - Details on the HA configuration of the endpoint
 * `hosts` (EndpointHosts) - Contains host information for connecting to the endpoint
+* `last_active_time` (string) - A timestamp indicating when the compute endpoint was last active
 * `pending_state` (string) - Possible values are: `ACTIVE`, `DEGRADED`, `IDLE`, `INIT`
 * `settings` (EndpointSettings)
 * `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended

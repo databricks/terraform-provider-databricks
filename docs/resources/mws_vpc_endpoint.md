@@ -3,6 +3,8 @@ subcategory: "Deployment"
 ---
 # databricks_mws_vpc_endpoint Resource
 
+[API Documentation](https://docs.databricks.com/api/account/vpcendpoints)
+
 Enables you to register [aws_vpc_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) resources or gcp vpc_endpoint resources with Databricks such that they can be used as part of a [databricks_mws_networks](mws_networks.md) configuration.
 
 -> This resource can only be used with an account-level provider!
@@ -108,6 +110,8 @@ resource "databricks_mws_workspaces" "this" {
 ```
 
 ### Databricks on GCP usage
+
+~> On GCP, the provider must be authenticated with a Google-issued OIDC token (not a Databricks OAuth token), because creating or updating this resource triggers operations against your GCP project (such as validating the PSC endpoint). See [Authenticate with Databricks account API](../guides/gcp-workspace.md#authenticate-with-databricks-account-api) for setup instructions.
 
 Before using this resource, you will need to create the necessary Private Service Connect (PSC) connections on your Google Cloud VPC networks. You can see [Enable Private Service Connect for your workspace](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) for more details.
 

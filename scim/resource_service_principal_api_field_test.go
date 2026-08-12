@@ -60,8 +60,9 @@ func TestResourceServicePrincipalCreate_ApiFieldWorkspace(t *testing.T) {
 				},
 			},
 		},
-		Resource:  ResourceServicePrincipal(),
-		AccountID: "acc-123",
+		Resource:            ResourceServicePrincipal(),
+		AccountID:           "acc-123",
+		ProviderWorkspaceID: "12345",
 		HCL: `
 			display_name = "WS SP"
 			api = "workspace"
@@ -129,8 +130,9 @@ func TestResourceServicePrincipalDelete_ApiFieldWorkspace(t *testing.T) {
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
 			},
 		},
-		Resource:  ResourceServicePrincipal(),
-		AccountID: "acc-123",
+		Resource:            ResourceServicePrincipal(),
+		AccountID:           "acc-123",
+		ProviderWorkspaceID: "12345",
 		HCL: `
 			display_name = "SP WS"
 			api = "workspace"

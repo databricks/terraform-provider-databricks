@@ -335,8 +335,10 @@ func TestResourcePipelineRead(t *testing.T) {
 		},
 		"deployment": []any{
 			map[string]any{
+				"deployment_id":      "",
 				"kind":               "BUNDLE",
 				"metadata_file_path": "/foo/bar",
+				"version_id":         "",
 			},
 		},
 		"edition":    "ADVANCED",

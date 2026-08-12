@@ -20,6 +20,7 @@ data "databricks_apps" "all_apps" {}
 The following attributes are exported:
 
 * `apps` - A list of [databricks_app](../resources/app.md) resources.
+  * `id` - The unique identifier of the app.
   * `name` - The name of the app.
   * `description` - The description of the app.
   * `resources` - A list of resources that the app have access to.
@@ -29,7 +30,7 @@ The following attributes are exported:
   * `app_status` attribute
     * `state` - State of the application.
     * `message` - Application status message
-  * `compute_size` - (Optional) A string specifying compute size for the App.
+  * `compute_size` - A string specifying compute size for the App.
   * `url` - The URL of the app once it is deployed.
   * `create_time` - The creation time of the app.
   * `creator` - The email of the user that created the app.
@@ -41,7 +42,35 @@ The following attributes are exported:
   * `default_source_code_path` - The default workspace file system path of the source code from which app deployment are created. This field tracks the workspace source code path of the last active deployment.
   * `budget_policy_id` - The Budget Policy ID set for this resource.
   * `effective_budget_policy_id` - The effective budget policy ID.
+  * `usage_policy_id` - The Usage Policy ID set for this resource.
+  * `effective_usage_policy_id` - The effective usage policy ID.
+  * `user_api_scopes` - A list of api scopes granted to the user access token.
   * `effective_user_api_scopes` - A list of effective api scopes granted to the user access token.
+  * `oauth2_app_client_id` - The OAuth2 client ID of the app's integration, set when the app uses user authorization.
+  * `oauth2_app_integration_id` - The unique ID of the OAuth2 integration associated with the app.
+  * `thumbnail_url` - The URL of the thumbnail image for the app.
+  * `space` - Name of the [app space](app_space.md) this app belongs to.
+  * `git_repository` attribute - Git repository configuration for app deployments.
+    * `url` - URL of the Git repository.
+    * `provider` - Git provider (case insensitive). Supported values: `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`, `awsCodeCommit`.
+  * `telemetry_export_destinations` - A list of telemetry export destinations.
+    * `unity_catalog` attribute
+      * `logs_table` - Full name of the Unity Catalog table for OpenTelemetry logs.
+      * `metrics_table` - Full name of the Unity Catalog table for OpenTelemetry metrics.
+      * `traces_table` - Full name of the Unity Catalog table for OpenTelemetry traces (spans).
+  * `active_deployment` attribute - the active deployment of the app.
+    * `deployment_id` - The unique ID of the deployment.
+    * `source_code_path` - The workspace file system path of the source code used to create the deployment.
+    * `mode` - The deployment mode (`AUTO_SYNC` or `SNAPSHOT`).
+    * `create_time` - The creation time of the deployment.
+    * `creator` - The email of the user that created the deployment.
+    * `update_time` - The update time of the deployment.
+    * `status` attribute
+      * `state` - The state of the deployment.
+      * `message` - The status message of the deployment.
+    * `deployment_artifacts` attribute
+      * `source_code_path` - The snapshotted workspace file system path of the source code loaded by the deployed app.
+  * `pending_deployment` attribute - the pending deployment of the app. Schema is identical to `active_deployment`.
 
 ### resources Attribute
 
@@ -65,18 +94,28 @@ Exactly one of the following attributes will be provided:
 * `job` attribute
   * `id` - Id of the job to grant permission on.
   * `permission` - Permissions to grant on the Job. Supported permissions are: `CAN_MANAGE`, `IS_OWNER`, `CAN_MANAGE_RUN`, `CAN_VIEW`.
-* `uc_securable` attribute
-  * `securable_type` - the type of UC securable, i.e. `VOLUME`.
-  * `securable_full_name` - the full name of UC securable, i.e. `my-catalog.my-schema.my-volume`.
-  * `permission` - Permissions to grant on UC securable, i.e. `READ_VOLUME`, `WRITE_VOLUME`.
+* `uc_securable` attribute (see the [API docs](https://docs.databricks.com/api/workspace/apps/create#resources-uc_securable) for full list of supported UC objects)
+  * `securable_type` - The type of UC securable. Supported values are `CONNECTION`, `FUNCTION`, `TABLE`, `VOLUME`.
+  * `securable_full_name` - The full name of UC securable, i.e. `my-catalog.my-schema.my-volume`.
+  * `permission` - Permission to grant on UC securable. Supported values depend on `securable_type`: `READ_VOLUME` and `WRITE_VOLUME` for `VOLUME`, `SELECT` and `MODIFY` for `TABLE`, `EXECUTE` for `FUNCTION`, `USE_CONNECTION` for `CONNECTION`.
 * `database` attribute
   * `database_name` - The name of database.
   * `instance_name` - The name of database instance.
   * `permission` - Permission to grant on database. Supported permissions are: `CAN_CONNECT_AND_CREATE`.
+* `postgres` attribute
+  * `branch` - The resource path of the Lakebase Autoscaling branch (e.g. `projects/proj-abc123/branches/branch-xyz789`).
+  * `database` - The resource path of a specific database within the branch (e.g. `projects/proj-abc123/branches/branch-xyz789/databases/db-456`).
+  * `permission` - Permission to grant on the Lakebase Autoscaling branch or database. Supported permissions are: `CAN_CONNECT_AND_CREATE`.
 * `genie_space` attribute
   * `name` - The name of Genie Space.
-  * ``permission` - Permission to grant on Genie Space. Supported permissions are `CAN_MANAGE`, `CAN_EDIT`, `CAN_RUN`, `CAN_VIEW`.
+  * `permission` - Permission to grant on Genie Space. Supported permissions are `CAN_MANAGE`, `CAN_EDIT`, `CAN_RUN`, `CAN_VIEW`.
   * `space_id` - The unique ID of Genie Space.
+* `app` attribute - reference to another Databricks App.
+  * `name` - The name of the app to grant permission on.
+  * `permission` - Permission to grant on the app. Supported permissions are: `CAN_USE`.
+* `experiment` attribute
+  * `experiment_id` - The ID of the MLflow experiment to grant permission on.
+  * `permission` - Permission to grant on the experiment. Supported permissions are: `CAN_READ`, `CAN_EDIT`, `CAN_MANAGE`.
 
 ## Related Resources
 

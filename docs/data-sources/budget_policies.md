@@ -4,6 +4,8 @@ subcategory: "Billing"
 # databricks_budget_policies Data Source
 [![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/account/budgetpolicy)
+
 This data source can be used to fetch the list of budget policies.
 
 -> **Note** This data source can only be used with an account-level provider!
@@ -27,7 +29,9 @@ The following arguments are supported:
 ### Filter
 * `creator_user_id` (integer, optional, deprecated) - The policy creator user id to be filtered on.
   If unspecified, all policies will be returned
-* `creator_user_name` (string, optional) - The policy creator user name to be filtered on.
+* `creator_user_name` (string, optional, deprecated) - Deprecated: Do not use this field in new integrations. Creator filtering will be removed in a
+  future version.
+  The policy creator user name to be filtered on.
   If unspecified, all policies will be returned
 * `policy_name` (string, optional) - The partial name of policies to be filtered on.
   If unspecified, all policies will be returned

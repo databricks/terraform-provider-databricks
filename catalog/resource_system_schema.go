@@ -87,8 +87,9 @@ func ResourceSystemSchema() common.Resource {
 		return nil
 	}
 	return common.Resource{
-		Schema: systemSchema,
-		Create: createOrUpdate,
+		Schema:        systemSchema,
+		CustomizeDiff: common.NamespaceCustomizeDiffNoForceNew,
+		Create:        createOrUpdate,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			_, schemaName, err := pi.Unpack(d)
 			if err != nil {

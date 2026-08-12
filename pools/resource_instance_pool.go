@@ -89,7 +89,7 @@ type InstancePool struct {
 	GcpAttributes                      *InstancePoolGcpAttributes      `json:"gcp_attributes,omitempty" tf:"force_new,suppress_diff"`
 	NodeTypeID                         string                          `json:"node_type_id,omitempty" tf:"suppress_diff,force_new,conflicts:instance_pool_fleet_attributes"`
 	CustomTags                         map[string]string               `json:"custom_tags" tf:"optional"`
-	EnableElasticDisk                  bool                            `json:"enable_elastic_disk,omitempty" tf:"force_new,suppress_diff"`
+	EnableElasticDisk                  bool                            `json:"enable_elastic_disk" tf:"optional,force_new,suppress_diff"`
 	DiskSpec                           *InstancePoolDiskSpec           `json:"disk_spec,omitempty" tf:"force_new"`
 	PreloadedSparkVersions             []string                        `json:"preloaded_spark_versions,omitempty" tf:"force_new"`
 	PreloadedDockerImages              []clusters.DockerImage          `json:"preloaded_docker_images,omitempty" tf:"force_new,slice_set,alias:preloaded_docker_image"`
@@ -118,7 +118,7 @@ type InstancePoolAndStats struct {
 	DefaultTags                        map[string]string                `json:"default_tags,omitempty" tf:"computed"`
 	CustomTags                         map[string]string                `json:"custom_tags,omitempty"`
 	IdleInstanceAutoTerminationMinutes int32                            `json:"idle_instance_autotermination_minutes"`
-	EnableElasticDisk                  bool                             `json:"enable_elastic_disk,omitempty"`
+	EnableElasticDisk                  bool                             `json:"enable_elastic_disk" tf:"optional"`
 	DiskSpec                           *InstancePoolDiskSpec            `json:"disk_spec,omitempty"`
 	PreloadedSparkVersions             []string                         `json:"preloaded_spark_versions,omitempty"`
 	State                              string                           `json:"state,omitempty"`
@@ -146,26 +146,26 @@ type InstancePoolsAPI struct {
 // Create creates the instance pool to given the instance pool configuration
 func (a InstancePoolsAPI) Create(instancePool InstancePool) (InstancePoolAndStats, error) {
 	var instancePoolInfo InstancePoolAndStats
-	err := a.client.Post(a.context, "/instance-pools/create", instancePool, &instancePoolInfo)
+	err := a.client.Post(a.context, "/instance-pools/create", instancePool, &instancePoolInfo, a.client.AddWorkspaceIdHeader)
 	return instancePoolInfo, err
 }
 
 // Update edits the configuration of a instance pool to match the provided attributes and size
 func (a InstancePoolsAPI) Update(ip InstancePool) error {
-	return a.client.Post(a.context, "/instance-pools/edit", ip, nil)
+	return a.client.Post(a.context, "/instance-pools/edit", ip, nil, a.client.AddWorkspaceIdHeader)
 }
 
 // Read retrieves the information for a instance pool given its identifier
 func (a InstancePoolsAPI) Read(instancePoolID string) (ip InstancePool, err error) {
 	err = a.client.Get(a.context, "/instance-pools/get", map[string]string{
 		"instance_pool_id": instancePoolID,
-	}, &ip)
+	}, &ip, a.client.AddWorkspaceIdHeader)
 	return
 }
 
 // List retrieves the list of existing instance pools
 func (a InstancePoolsAPI) List() (ipl InstancePoolList, err error) {
-	err = a.client.Get(a.context, "/instance-pools/list", nil, &ipl)
+	err = a.client.Get(a.context, "/instance-pools/list", nil, &ipl, a.client.AddWorkspaceIdHeader)
 	return
 }
 
@@ -173,7 +173,7 @@ func (a InstancePoolsAPI) List() (ipl InstancePoolList, err error) {
 func (a InstancePoolsAPI) Delete(instancePoolID string) error {
 	return a.client.Post(a.context, "/instance-pools/delete", map[string]string{
 		"instance_pool_id": instancePoolID,
-	}, nil)
+	}, nil, a.client.AddWorkspaceIdHeader)
 }
 
 // ResourceInstancePool ...

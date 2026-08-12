@@ -155,6 +155,7 @@ func TestFailIfDifferentAccountIds(t *testing.T) {
 		},
 		Create:    true,
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 	}.ExpectError(t, "account ID is already set to abc")
 }
 

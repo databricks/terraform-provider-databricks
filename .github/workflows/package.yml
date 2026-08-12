@@ -1,0 +1,104 @@
+# This workflow lives in databricks/terraform-provider-databricks.
+# It builds and GPG-signs release artifacts for the release workflow in
+# secure-public-registry-releases-eng to consume. It does not need to be
+# triggered manually.
+name: Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The version tag to package (e.g. v1.113.0)."
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  package:
+    runs-on:
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Validate tag format
+        run: |
+          if [[ ! "${{ inputs.tag }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-.+)?$ ]]; then
+            echo "::error::Invalid tag format '${{ inputs.tag }}'. Expected vX.Y.Z or vX.Y.Z-suffix."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup Go build environment
+        uses: ./.github/actions/setup-go-build-environment
+        with:
+          go-version-file: go.mod
+          # .goreleaser.yml affects the cache because build inputs change
+          # when the goreleaser config changes.
+          cache-dependency-path: |
+            go.sum
+            .goreleaser.yml
+
+      - name: Download Go modules
+        run: |
+          jf go mod download
+          # Point native go commands (invoked by goreleaser) at the local
+          # module cache so they don't try to reach the network.
+          echo "GOPROXY=file://$(go env GOMODCACHE)/cache/download" >> "$GITHUB_ENV"
+          echo "GONOSUMCHECK=*" >> "$GITHUB_ENV"
+          echo "GONOSUMDB=*" >> "$GITHUB_ENV"
+
+      - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@4c65c687307523ba52326ed829da04bc892ce413 # v2.3.0
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.PASSPHRASE }}
+
+      - name: Run GoReleaser (build + sign, no publish)
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
+        with:
+          version: ~> v2
+          args: release --clean --skip=publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+
+      - name: Stage release artifacts
+        run: |
+          mkdir -p staging/dist
+          # Per-platform zips + SHA256SUMS + its GPG signature. Matches
+          # the asset set attached to prior releases (e.g. v1.113.0).
+          cp dist/*.zip        staging/dist/
+          cp dist/*SHA256SUMS* staging/dist/
+          echo "--- Staged artifacts ---"
+          ls -lh staging/dist/
+
+      - name: Upload dist
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: dist
+          path: staging/dist/
+          if-no-files-found: error
+
+      - name: Write release notes
+        run: |
+          mkdir -p staging/release-notes
+          git for-each-ref --format='%(body)' "refs/tags/${{ inputs.tag }}" > staging/release-notes/release-notes.md
+          echo "Release notes:"
+          cat staging/release-notes/release-notes.md
+
+      - name: Upload release notes
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: release-notes
+          path: staging/release-notes/
+          if-no-files-found: error

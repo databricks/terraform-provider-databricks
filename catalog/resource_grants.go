@@ -1,9 +1,10 @@
 package catalog
 
 import (
+	"cmp"
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -68,8 +69,8 @@ func diffPermissions(pl []catalog.PrivilegeAssignment, existing []catalog.Privil
 		})
 	}
 	// so that we can deterministic tests
-	sort.Slice(diff, func(i, j int) bool {
-		return diff[i].Principal < diff[j].Principal
+	slices.SortFunc(diff, func(a, b catalog.PermissionsChange) int {
+		return cmp.Compare(a.Principal, b.Principal)
 	})
 	return diff
 }
@@ -165,7 +166,8 @@ func ResourceGrants() common.Resource {
 			return s
 		})
 	return common.Resource{
-		Schema: s,
+		Schema:        s,
+		CustomizeDiff: common.NamespaceCustomizeDiffNoForceNew,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
@@ -178,11 +180,7 @@ func ResourceGrants() common.Resource {
 			var grants PermissionsList
 			common.DataToStructPointer(d, s, &grants)
 			securable, name := permissions.Mappings.KeyValue(d)
-			ws, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, ws)
+			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, w)
 			err = replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
 			if err != nil {
 				return err
@@ -195,11 +193,11 @@ func ResourceGrants() common.Resource {
 			if err != nil {
 				return err
 			}
-			ws, err := c.WorkspaceClient()
+			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
 				return err
 			}
-			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, ws)
+			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, w)
 			grants, err := unityCatalogPermissionsAPI.GetPermissions(permissions.Mappings.GetSecurableType(securable), name)
 			if err != nil {
 				return err
@@ -233,11 +231,7 @@ func ResourceGrants() common.Resource {
 			}
 			var grants PermissionsList
 			common.DataToStructPointer(d, s, &grants)
-			ws, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, ws)
+			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, w)
 			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, grants.toSdkPermissionsList())
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -253,11 +247,7 @@ func ResourceGrants() common.Resource {
 			if err != nil {
 				return err
 			}
-			ws, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, ws)
+			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, w)
 			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, catalog.GetPermissionsResponse{})
 		},
 	}

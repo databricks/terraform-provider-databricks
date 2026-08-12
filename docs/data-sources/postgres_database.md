@@ -2,11 +2,29 @@
 subcategory: "Postgres"
 ---
 # databricks_postgres_database Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
+This data source retrieves a single Postgres database.
 
 
 ## Example Usage
+### Retrieve Database by Name
+
+```hcl
+data "databricks_postgres_database" "this" {
+  name = "projects/my-project/branches/main/databases/app"
+}
+
+output "postgres_database_name" {
+  value = data.databricks_postgres_database.this.status.postgres_database
+}
+
+output "database_owner_role" {
+  value = data.databricks_postgres_database.this.status.role
+}
+```
 
 
 ## Arguments
@@ -16,11 +34,12 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:
 * `create_time` (string) - A timestamp indicating when the database was created
+* `database_id` (string) - The part of the name, chosen by the user when the resource was created
 * `name` (string) - The resource name of the database.
   Format: projects/{project_id}/branches/{branch_id}/databases/{database_id}
 * `parent` (string) - The branch containing this database.
@@ -45,6 +64,7 @@ The following attributes are exported:
   A database always has an owner
 
 ### DatabaseDatabaseStatus
+* `database_id` (string) - Part of the resource name
 * `postgres_database` (string) - The name of the Postgres database
 * `role` (string) - The name of the role that owns the database.
   Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}

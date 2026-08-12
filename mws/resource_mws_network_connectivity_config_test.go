@@ -35,6 +35,7 @@ func TestResourceNccCreate(t *testing.T) {
 		},
 		Resource:  ResourceMwsNetworkConnectivityConfig(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		HCL: `
 		name = "ncc_name"
 		region = "ar"
@@ -56,6 +57,7 @@ func TestResourceNccCreate_Error(t *testing.T) {
 		},
 		Resource:  ResourceMwsNetworkConnectivityConfig(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		HCL: `
 		name = "ncc_name"
 		region = "ar"
@@ -73,6 +75,7 @@ func TestResourceNccRead(t *testing.T) {
 		},
 		Resource:  ResourceMwsNetworkConnectivityConfig(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		Read:      true,
 		New:       true,
 		ID:        "abc/ncc_id",
@@ -92,6 +95,7 @@ func TestResourceNccRead_Error(t *testing.T) {
 		},
 		Resource:  ResourceMwsNetworkConnectivityConfig(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		Read:      true,
 		ID:        "abc/ncc_id",
 	}.Apply(t)
@@ -106,6 +110,7 @@ func TestResourceNccDelete(t *testing.T) {
 		},
 		Resource:  ResourceMwsNetworkConnectivityConfig(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		Delete:    true,
 		ID:        "abc/ncc_id",
 	}.ApplyAndExpectData(t, map[string]any{"id": "abc/ncc_id"})
@@ -118,6 +123,7 @@ func TestResourceNccDelete_Error(t *testing.T) {
 		},
 		Resource:  ResourceMwsNetworkConnectivityConfig(),
 		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
 		ID:        "abc/ncc_id",
 		HCL: `
 		name = "ncc_name"

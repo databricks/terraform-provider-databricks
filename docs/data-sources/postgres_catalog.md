@@ -4,9 +4,23 @@ subcategory: "Postgres"
 # databricks_postgres_catalog Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
+This data source retrieves a single Postgres catalog.
 
 
 ## Example Usage
+### Retrieve Catalog by Name
+
+```hcl
+data "databricks_postgres_catalog" "this" {
+  name = "catalogs/my_catalog"
+}
+
+output "catalog_postgres_database" {
+  value = data.databricks_postgres_catalog.this.status.postgres_database
+}
+```
 
 
 ## Arguments
@@ -17,10 +31,11 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ## Attributes
 The following attributes are exported:
+* `catalog_id` (string) - The part of the name, chosen by the user when the resource was created
 * `create_time` (string) - A timestamp indicating when the catalog was created
 * `name` (string) - Output only. The full resource path of the catalog.
   

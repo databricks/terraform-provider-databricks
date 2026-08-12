@@ -268,8 +268,6 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	newState.ID = newState.Name
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
@@ -502,7 +500,7 @@ type effectiveFieldsAction interface {
 type effectiveFieldsActionCreateOrUpdate struct{}
 
 func (effectiveFieldsActionCreateOrUpdate) resourceLevel(ctx context.Context, state *ShareInfoExtended, plan sharing_tf.ShareInfo_SdkV2) {
-	state.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	state.SyncFieldsDuringCreateOrUpdate(ctx, withoutObjectsForResourceSync(ctx, plan))
 }
 
 func (effectiveFieldsActionCreateOrUpdate) objectLevel(ctx context.Context, state *sharing_tf.SharedDataObject_SdkV2, plan sharing_tf.SharedDataObject_SdkV2) {
@@ -512,11 +510,18 @@ func (effectiveFieldsActionCreateOrUpdate) objectLevel(ctx context.Context, stat
 type effectiveFieldsActionRead struct{}
 
 func (effectiveFieldsActionRead) resourceLevel(ctx context.Context, state *ShareInfoExtended, plan sharing_tf.ShareInfo_SdkV2) {
-	state.SyncFieldsDuringRead(ctx, plan)
+	state.SyncFieldsDuringRead(ctx, withoutObjectsForResourceSync(ctx, plan))
 }
 
 func (effectiveFieldsActionRead) objectLevel(ctx context.Context, state *sharing_tf.SharedDataObject_SdkV2, plan sharing_tf.SharedDataObject_SdkV2) {
 	state.SyncFieldsDuringRead(ctx, plan)
+}
+
+func withoutObjectsForResourceSync(ctx context.Context, plan sharing_tf.ShareInfo_SdkV2) sharing_tf.ShareInfo_SdkV2 {
+	// Objects are synchronized by name below. Mark them unknown so the generated
+	// parent method does not also synchronize them by list position.
+	plan.Objects = types.ListUnknown(plan.Objects.ElementType(ctx))
+	return plan
 }
 
 // syncEffectiveFields syncs the effective fields between existingState and newState
@@ -548,5 +553,9 @@ func (r *ShareResource) syncEffectiveFields(ctx context.Context, existingState, 
 	}
 	newState.SetObjects(ctx, finalObjects)
 	newState.ProviderConfig = existingState.ProviderConfig // Preserve provider_config from existing state
+	// The synthetic id mirrors the share name. Restore it here so every CRUD path
+	// (notably Read and Update) keeps it set; otherwise a refresh drops id to null,
+	// producing a perpetual plan diff and null downstream references.
+	newState.ID = newState.Name
 	return newState, d
 }

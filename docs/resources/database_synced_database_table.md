@@ -4,6 +4,8 @@ subcategory: "Database Instances"
 # databricks_database_synced_database_table Resource
 [![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/database)
+
 Lakebase Synced Database Tables are Postgres tables automatically synced from a source table inside Unity Catalog.
 They can be used to serve realtime queries without the operational overhead of managing ETL pipelines. 
 
@@ -181,7 +183,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### NewPipelineSpec
 * `budget_policy_id` (string, optional) - Budget policy to set on the newly created pipeline
@@ -195,6 +197,9 @@ The following arguments are supported:
   This needs to be in the standard catalog where the user has permissions to create Delta tables
 
 ### SyncedTableSpec
+* `accelerated_sync` (boolean, optional) - When true, enables accelerated sync mode for the initial data load.
+  This significantly improves performance for large tables.
+  Requires workspace-level enablement
 * `create_database_objects_if_missing` (boolean, optional) - If true, the synced table's logical database and schema resources in PG
   will be created if they do not already exist
 * `existing_pipeline_id` (string, optional) - At most one of existing_pipeline_id and new_pipeline_spec should be defined.
@@ -212,6 +217,14 @@ The following arguments are supported:
 * `scheduling_policy` (string, optional) - Scheduling policy of the underlying pipeline. Possible values are: `CONTINUOUS`, `SNAPSHOT`, `TRIGGERED`
 * `source_table_full_name` (string, optional) - Three-part (catalog, schema, table) name of the source Delta table
 * `timeseries_key` (string, optional) - Time series key to deduplicate (tie-break) rows with the same primary key
+* `type_overrides` (list of SyncedTableSpecTypeOverride, optional) - Override the default Delta->PG type mapping for specific columns.
+  A TypeOverride with PG_SPECIFIC_TYPE_UNSPECIFIED is rejected; a valid pg_type must be set
+
+### SyncedTableSpecTypeOverride
+* `column_name` (string, required) - Name of the source column whose target PostgreSQL type should be overridden
+* `pg_type` (string, required) - PostgreSQL-specific target type to use for the column. Possible values are: `PG_SPECIFIC_TYPE_VECTOR`
+* `size` (integer, optional) - Size parameter for the target type, for types that take one (e.g. vector
+  dimension, varchar length). Required when the chosen pg_type needs a size
 
 ### SyncedTableStatus
 * `continuous_update_status` (SyncedTableContinuousUpdateStatus, optional)

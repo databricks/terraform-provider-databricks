@@ -110,7 +110,7 @@ func dbsqlListObjects(ic *importContext, path string) (events []map[string]any, 
 	// TODO: create API method & use it also for data resource
 	var listResponse dbsqlListResponse
 	page_size := 100
-	err = ic.Client.Get(ic.Context, path, map[string]any{"page_size": page_size}, &listResponse)
+	err = ic.Client.Get(ic.Context, path, map[string]any{"page_size": page_size}, &listResponse, ic.Client.AddWorkspaceIdHeader)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func dbsqlListObjects(ic *importContext, path string) (events []map[string]any, 
 		var listResponse dbsqlListResponse
 		err := ic.Client.Get(ic.Context, path,
 			map[string]any{"page_size": page_size, "page": page},
-			&listResponse)
+			&listResponse, ic.Client.AddWorkspaceIdHeader)
 		if err != nil {
 			return nil, err
 		}

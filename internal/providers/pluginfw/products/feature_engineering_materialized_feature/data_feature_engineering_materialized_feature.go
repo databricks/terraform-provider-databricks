@@ -5,7 +5,6 @@ package feature_engineering_materialized_feature
 import (
 	"context"
 	"reflect"
-	"regexp"
 
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
@@ -42,10 +41,10 @@ type ProviderConfigData struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -101,23 +100,38 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 type MaterializedFeatureData struct {
 	// The quartz cron expression that defines the schedule of the
 	// materialization pipeline. The schedule is evaluated in the UTC timezone.
+	// Hidden from GraphQL: superseded by the `trigger` oneof
+	// (cron_schedule_trigger), so not exposed to Catalog Explorer.
 	CronSchedule types.String `tfsdk:"cron_schedule"`
+	// A cron-based schedule trigger for the materialization pipeline.
+	CronScheduleTrigger types.Object `tfsdk:"cron_schedule_trigger"`
 	// The full name of the feature in Unity Catalog.
 	FeatureName types.String `tfsdk:"feature_name"`
+	// True if this is an online materialized feature. False if it is an offline
+	// materialized feature.
+	IsOnline types.Bool `tfsdk:"is_online"`
 	// The timestamp when the pipeline last ran and updated the materialized
 	// feature values. If the pipeline has not run yet, this field will be null.
 	LastMaterializationTime types.String `tfsdk:"last_materialization_time"`
-	// Unique identifier for the materialized feature.
+	// Server-assigned unique identifier for the materialized feature.
 	MaterializedFeatureId types.String `tfsdk:"materialized_feature_id"`
-
+	// Destination for writing feature values to an offline Delta table.
 	OfflineStoreConfig types.Object `tfsdk:"offline_store_config"`
-
+	// Destination for writing feature values to an online Lakebase table.
 	OnlineStoreConfig types.Object `tfsdk:"online_store_config"`
-	// The schedule state of the materialization pipeline.
+	// The schedule state of the materialization pipeline. Hidden from GraphQL:
+	// being deprecated, so not exposed to Catalog Explorer.
 	PipelineScheduleState types.String `tfsdk:"pipeline_schedule_state"`
+	// The Structured Streaming trigger mode used for materialization. Real-time
+	// mode (RTM) targets sub-second latency for operational workloads;
+	// micro-batch mode (MBM) favors cost efficiency for ETL and analytics
+	// workloads.
+	StreamingMode types.Object `tfsdk:"streaming_mode"`
 	// The fully qualified Unity Catalog path to the table containing the
 	// materialized feature (Delta table or Lakebase table). Output only.
-	TableName          types.String `tfsdk:"table_name"`
+	TableName types.String `tfsdk:"table_name"`
+	// A trigger that fires when the upstream source table changes.
+	TableTrigger       types.Object `tfsdk:"table_trigger"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
@@ -130,9 +144,12 @@ type MaterializedFeatureData struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m MaterializedFeatureData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"offline_store_config": reflect.TypeOf(ml_tf.OfflineStoreConfig{}),
-		"online_store_config":  reflect.TypeOf(ml_tf.OnlineStoreConfig{}),
-		"provider_config":      reflect.TypeOf(ProviderConfigData{}),
+		"cron_schedule_trigger": reflect.TypeOf(ml_tf.CronSchedule{}),
+		"offline_store_config":  reflect.TypeOf(ml_tf.OfflineStoreConfig{}),
+		"online_store_config":   reflect.TypeOf(ml_tf.OnlineStoreConfig{}),
+		"streaming_mode":        reflect.TypeOf(ml_tf.StreamingMode{}),
+		"table_trigger":         reflect.TypeOf(ml_tf.TableTrigger{}),
+		"provider_config":       reflect.TypeOf(ProviderConfigData{}),
 	}
 }
 
@@ -147,13 +164,17 @@ func (m MaterializedFeatureData) ToObjectValue(ctx context.Context) basetypes.Ob
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"cron_schedule":             m.CronSchedule,
+			"cron_schedule_trigger":     m.CronScheduleTrigger,
 			"feature_name":              m.FeatureName,
+			"is_online":                 m.IsOnline,
 			"last_materialization_time": m.LastMaterializationTime,
 			"materialized_feature_id":   m.MaterializedFeatureId,
 			"offline_store_config":      m.OfflineStoreConfig,
 			"online_store_config":       m.OnlineStoreConfig,
 			"pipeline_schedule_state":   m.PipelineScheduleState,
+			"streaming_mode":            m.StreamingMode,
 			"table_name":                m.TableName,
+			"table_trigger":             m.TableTrigger,
 
 			"provider_config": m.ProviderConfigData,
 		},
@@ -166,13 +187,17 @@ func (m MaterializedFeatureData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cron_schedule":             types.StringType,
+			"cron_schedule_trigger":     ml_tf.CronSchedule{}.Type(ctx),
 			"feature_name":              types.StringType,
+			"is_online":                 types.BoolType,
 			"last_materialization_time": types.StringType,
 			"materialized_feature_id":   types.StringType,
 			"offline_store_config":      ml_tf.OfflineStoreConfig{}.Type(ctx),
 			"online_store_config":       ml_tf.OnlineStoreConfig{}.Type(ctx),
 			"pipeline_schedule_state":   types.StringType,
+			"streaming_mode":            ml_tf.StreamingMode{}.Type(ctx),
 			"table_name":                types.StringType,
+			"table_trigger":             ml_tf.TableTrigger{}.Type(ctx),
 
 			"provider_config": ProviderConfigData{}.Type(ctx),
 		},
@@ -181,13 +206,17 @@ func (m MaterializedFeatureData) Type(ctx context.Context) attr.Type {
 
 func (m MaterializedFeatureData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["cron_schedule"] = attrs["cron_schedule"].SetComputed()
+	attrs["cron_schedule_trigger"] = attrs["cron_schedule_trigger"].SetComputed()
 	attrs["feature_name"] = attrs["feature_name"].SetComputed()
+	attrs["is_online"] = attrs["is_online"].SetComputed()
 	attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetRequired()
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetComputed()
 	attrs["online_store_config"] = attrs["online_store_config"].SetComputed()
 	attrs["pipeline_schedule_state"] = attrs["pipeline_schedule_state"].SetComputed()
+	attrs["streaming_mode"] = attrs["streaming_mode"].SetComputed()
 	attrs["table_name"] = attrs["table_name"].SetComputed()
+	attrs["table_trigger"] = attrs["table_trigger"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 
@@ -252,8 +281,12 @@ func (r *MaterializedFeatureDataSource) Read(ctx context.Context, req datasource
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// Preserve provider_config from config since it's not part of the API response
+	// Preserve provider_config from config so state.Set has the correct type info
 	newState.ProviderConfigData = config.ProviderConfigData
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

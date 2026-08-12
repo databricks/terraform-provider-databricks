@@ -12,6 +12,21 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/scim
       test_name: TestMwsAccServicePrincipalResourceOnAws
       comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsSomeTrueSomeFalse
+      comment: Failures due to read-after-write inconsistency in the SCIM API; tracked internally.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsSomeTrueSomeFalse/user
+      comment: Failures due to read-after-write inconsistency in the SCIM API; tracked internally.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsSomeTrueSomeFalse/service_principal
+      comment: Failures due to read-after-write inconsistency in the SCIM API; tracked internally.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsRemoveExisting
+      comment: Failures due to read-after-write inconsistency in the SCIM API; tracked internally.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsRemoveExisting/service_principal
+      comment: Failures due to read-after-write inconsistency in the SCIM API; tracked internally.
     - package: github.com/databricks/terraform-provider-databricks/mws
       test_name: TestUcAccAssignGroupToWorkspace
       comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
@@ -123,6 +138,10 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/serving
       test_name: TestUcAccModelServingProvisionedThroughputResource
       comment: Failure due to limited capacity in specific regions
+    - package: github.com/databricks/terraform-provider-databricks/serving
+      test_name: TestUcAccModelServingProvisionedThroughput
+      comment: Azure provisioned throughput endpoints remain in progress until the creation timeout.
+      cloud_env: azure
     - package: github.com/databricks/terraform-provider-databricks/secrets
       test_name: TestAccSecretAclResourceDefaultPrincipal
       comment: Failures due to 500s in secrets ACLs APIs.
@@ -135,3 +154,6 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/scim
       test_name: TestMwsAccServicePrincipalWithApiField
       comment: Failure due to API stopped returning the Display Name for the Service Principal. https://databricks.atlassian.net/browse/ES-1834234
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestMwsAccEntitlements_AccountProvider_ProviderConfig
+      comment: Failure due to read-after-write inconsistency in the entitlements/SCIM API; the workspace entitlement set on a freshly-federated service principal does not round-trip immediately, producing a non-empty plan. Fails on master independently of any PR.

@@ -129,6 +129,40 @@ func TestResourceRuleSetRead(t *testing.T) {
 	})
 }
 
+func TestResourceRuleSetReadEmptyGrantRulesClearsState(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
+				Response: iam.RuleSetResponse{
+					Name:       testServicePrincipalRuleSetName,
+					Etag:       "etagEx=",
+					GrantRules: []iam.GrantRule{},
+				},
+			},
+		},
+		Resource: ResourceAccessControlRuleSet(),
+		New:      true,
+		Read:     true,
+		ID:       testServicePrincipalRuleSetName,
+		HCL: fmt.Sprintf(`
+        name = "%s"
+
+        grant_rules {
+            principals = [
+                "users/abc@example.com"
+            ]
+            role = "roles/servicePrincipal.manager"
+        }`, testServicePrincipalRuleSetName),
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":        testServicePrincipalRuleSetName,
+		"etag":        "",
+		"id":          testServicePrincipalRuleSetName,
+		"grant_rules": []any{},
+	})
+}
+
 func TestResourceRuleSetUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -377,6 +411,10 @@ func TestResourceRuleSetReadAccountLevel(t *testing.T) {
 		New:       true,
 		Read:      true,
 		ID:        testServicePrincipalRuleSetName,
+		State: map[string]any{
+			"name": testServicePrincipalRuleSetName,
+			"api":  "account",
+		},
 	}.ApplyAndExpectData(t, map[string]any{
 		"name": testServicePrincipalRuleSetName,
 		"etag": "",
@@ -435,6 +473,7 @@ func TestResourceRuleSetCreateAccountLevel(t *testing.T) {
 		Create:    true,
 		HCL: fmt.Sprintf(`
 		name    = "%s"
+		api     = "account"
 		grant_rules {
 			principals = [
 				"users/abc@example.com"

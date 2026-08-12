@@ -3,7 +3,7 @@ package scim
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -21,6 +21,7 @@ func DataSourceGroup() common.Resource {
 		ServicePrincipals []string `json:"service_principals,omitempty" tf:"slice_set,computed"`
 		ChildGroups       []string `json:"child_groups,omitempty" tf:"slice_set,computed"`
 		Groups            []string `json:"groups,omitempty" tf:"slice_set,computed"`
+		Roles             []string `json:"roles,omitempty" tf:"slice_set,computed"`
 		InstanceProfiles  []string `json:"instance_profiles,omitempty" tf:"slice_set,computed"`
 		ExternalID        string   `json:"external_id,omitempty" tf:"computed"`
 		AclPrincipalID    string   `json:"acl_principal_id,omitempty" tf:"computed"`
@@ -32,6 +33,7 @@ func DataSourceGroup() common.Resource {
 		s["display_name"].ValidateFunc = validation.StringIsNotEmpty
 		s["recursive"].Default = true
 		s["members"].Deprecated = "Please use `users`, `service_principals`, and `child_groups` instead"
+		s["instance_profiles"].Deprecated = "Please use `roles` instead"
 		addEntitlementsToSchema(s)
 		common.AddApiField(s)
 		return s
@@ -40,9 +42,13 @@ func DataSourceGroup() common.Resource {
 	common.NamespaceCustomizeSchemaMap(s)
 
 	return common.Resource{
+		IsDual: true,
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
-			newClient, err := m.DatabricksClientForUnifiedProvider(ctx, d)
+			if err := common.ValidateApiLevelForUnifiedHostFromData(d, m); err != nil {
+				return err
+			}
+			newClient, err := m.DatabricksClientForDualResource(ctx, d)
 			if err != nil {
 				return err
 			}
@@ -77,34 +83,36 @@ func DataSourceGroup() common.Resource {
 					}
 					if strings.HasPrefix(x.Ref, "Groups/") {
 						this.ChildGroups = append(this.ChildGroups, x.Value)
+						if this.Recursive {
+							childGroup, err := groupsAPI.Read(x.Value, groupAttributes)
+							if err != nil {
+								return err
+							}
+							queue = append(queue, childGroup)
+						}
 					}
 					if strings.HasPrefix(x.Ref, "ServicePrincipals/") {
 						this.ServicePrincipals = append(this.ServicePrincipals, x.Value)
 					}
 				}
 				for _, x := range current.Roles {
+					this.Roles = append(this.Roles, x.Value)
 					this.InstanceProfiles = append(this.InstanceProfiles, x.Value)
 				}
 				current.Entitlements.readIntoData(d)
 				for _, x := range current.Groups {
 					this.Groups = append(this.Groups, x.Value)
-					if this.Recursive {
-						childGroup, err := groupsAPI.Read(x.Value, groupAttributes)
-						if err != nil {
-							return err
-						}
-						queue = append(queue, childGroup)
-					}
 				}
 			}
 			this.ExternalID = group.ExternalID
 			this.AclPrincipalID = fmt.Sprintf("groups/%s", this.DisplayName)
-			sort.Strings(this.Groups)
-			sort.Strings(this.Members)
-			sort.Strings(this.Users)
-			sort.Strings(this.ChildGroups)
-			sort.Strings(this.ServicePrincipals)
-			sort.Strings(this.InstanceProfiles)
+			slices.Sort(this.Groups)
+			slices.Sort(this.Members)
+			slices.Sort(this.Users)
+			slices.Sort(this.ChildGroups)
+			slices.Sort(this.ServicePrincipals)
+			slices.Sort(this.Roles)
+			slices.Sort(this.InstanceProfiles)
 			err = common.StructToData(this, s, d)
 			if err != nil {
 				return err

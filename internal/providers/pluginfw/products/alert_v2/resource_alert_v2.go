@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -15,6 +14,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -50,13 +50,11 @@ type ProviderConfig struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
-
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -131,10 +129,14 @@ type AlertV2 struct {
 	// The owner's username. This field is set to "Unavailable" if the user has
 	// been deleted.
 	OwnerUserName types.String `tfsdk:"owner_user_name"`
+	// Query parameters bound when executing the alert query, referenced in the
+	// query text with `:name` syntax. Static values only.
+	Parameters types.Set `tfsdk:"parameters"`
 	// The workspace path of the folder containing the alert. Can only be set on
 	// create, and cannot be updated.
 	ParentPath types.String `tfsdk:"parent_path"`
-	// Purge the resource on delete
+	// Whether to permanently delete the alert. If not set, the alert will only
+	// be soft deleted.
 	PurgeOnDelete types.Bool `tfsdk:"purge_on_delete"`
 	// Text of the query to be run.
 	QueryText types.String `tfsdk:"query_text"`
@@ -172,6 +174,7 @@ func (m AlertV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 	return map[string]reflect.Type{
 		"effective_run_as": reflect.TypeOf(sql_tf.AlertV2RunAs{}),
 		"evaluation":       reflect.TypeOf(sql_tf.AlertV2Evaluation{}),
+		"parameters":       reflect.TypeOf(sql_tf.AlertStatementParameter{}),
 		"run_as":           reflect.TypeOf(sql_tf.AlertV2RunAs{}),
 		"schedule":         reflect.TypeOf(sql_tf.CronSchedule{}),
 		"provider_config":  reflect.TypeOf(ProviderConfig{}),
@@ -196,6 +199,7 @@ func (m AlertV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"id":                 m.Id,
 			"lifecycle_state":    m.LifecycleState,
 			"owner_user_name":    m.OwnerUserName,
+			"parameters":         m.Parameters,
 			"parent_path":        m.ParentPath,
 			"purge_on_delete":    m.PurgeOnDelete,
 			"query_text":         m.QueryText,
@@ -223,14 +227,17 @@ func (m AlertV2) Type(ctx context.Context) attr.Type {
 			"id":                 types.StringType,
 			"lifecycle_state":    types.StringType,
 			"owner_user_name":    types.StringType,
-			"parent_path":        types.StringType,
-			"purge_on_delete":    types.BoolType,
-			"query_text":         types.StringType,
-			"run_as":             sql_tf.AlertV2RunAs{}.Type(ctx),
-			"run_as_user_name":   types.StringType,
-			"schedule":           sql_tf.CronSchedule{}.Type(ctx),
-			"update_time":        types.StringType,
-			"warehouse_id":       types.StringType,
+			"parameters": basetypes.SetType{
+				ElemType: sql_tf.AlertStatementParameter{}.Type(ctx),
+			},
+			"parent_path":      types.StringType,
+			"purge_on_delete":  types.BoolType,
+			"query_text":       types.StringType,
+			"run_as":           sql_tf.AlertV2RunAs{}.Type(ctx),
+			"run_as_user_name": types.StringType,
+			"schedule":         sql_tf.CronSchedule{}.Type(ctx),
+			"update_time":      types.StringType,
+			"warehouse_id":     types.StringType,
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -258,6 +265,12 @@ func (to *AlertV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Aler
 				to.SetEvaluation(ctx, toEvaluation)
 			}
 		}
+	}
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
 	}
 	if !from.PurgeOnDelete.IsUnknown() {
 		to.PurgeOnDelete = from.PurgeOnDelete
@@ -304,6 +317,12 @@ func (to *AlertV2) SyncFieldsDuringRead(ctx context.Context, from AlertV2) {
 			}
 		}
 	}
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Parameters = from.Parameters
+	}
 	if !from.PurgeOnDelete.IsUnknown() {
 		to.PurgeOnDelete = from.PurgeOnDelete
 	}
@@ -337,6 +356,7 @@ func (m AlertV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
 	attrs["owner_user_name"] = attrs["owner_user_name"].SetComputed()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["query_text"] = attrs["query_text"].SetRequired()
 	attrs["run_as"] = attrs["run_as"].SetOptional()
@@ -348,6 +368,8 @@ func (m AlertV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 
 	attrs["id"] = attrs["id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+	attrs["provider_config"] = attrs["provider_config"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
 
 	return attrs
 }
@@ -400,6 +422,32 @@ func (m *AlertV2) GetEvaluation(ctx context.Context) (sql_tf.AlertV2Evaluation, 
 func (m *AlertV2) SetEvaluation(ctx context.Context, v sql_tf.AlertV2Evaluation) {
 	vs := v.ToObjectValue(ctx)
 	m.Evaluation = vs
+}
+
+// GetParameters returns the value of the Parameters field in AlertV2 as
+// a slice of sql_tf.AlertStatementParameter values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AlertV2) GetParameters(ctx context.Context) ([]sql_tf.AlertStatementParameter, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []sql_tf.AlertStatementParameter
+	d := m.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in AlertV2.
+func (m *AlertV2) SetParameters(ctx context.Context, v []sql_tf.AlertStatementParameter) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Parameters = types.SetValueMust(t, vs)
 }
 
 // GetRunAs returns the value of the RunAs field in AlertV2 as
@@ -470,28 +518,18 @@ func (r *AlertV2Resource) Configure(ctx context.Context, req resource.ConfigureR
 }
 
 func (r *AlertV2Resource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	// Skip validation on destroy plans (plan is null).
+	// Skip entirely on destroy (no plan state).
 	if req.Plan.Raw.IsNull() {
 		return
 	}
 	if r.Client == nil {
 		return
 	}
-	var plan AlertV2
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var namespace ProviderConfig
-	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	resp.Diagnostics.Append(validateDiags...)
+	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *AlertV2Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -548,6 +586,7 @@ func (r *AlertV2Resource) Create(ctx context.Context, req resource.CreateRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
 }
 
 func (r *AlertV2Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -585,7 +624,6 @@ func (r *AlertV2Resource) Read(ctx context.Context, req resource.ReadRequest, re
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get alert_v2", err.Error())
 		return
 	}
@@ -599,6 +637,10 @@ func (r *AlertV2Resource) Read(ctx context.Context, req resource.ReadRequest, re
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, existingState.ProviderConfig, &resp.State)...)
 }
 
 func (r *AlertV2Resource) update(ctx context.Context, plan AlertV2, diags *diag.Diagnostics, state *tfsdk.State) {
@@ -612,7 +654,7 @@ func (r *AlertV2Resource) update(ctx context.Context, plan AlertV2, diags *diag.
 	updateRequest := sql.UpdateAlertV2Request{
 		Alert:      alert_v2,
 		Id:         plan.Id.ValueString(),
-		UpdateMask: "custom_description,custom_summary,display_name,evaluation,parent_path,query_text,run_as,run_as_user_name,schedule,warehouse_id",
+		UpdateMask: "custom_description,custom_summary,display_name,evaluation,parameters,parent_path,query_text,run_as,run_as_user_name,schedule,warehouse_id",
 	}
 
 	var namespace ProviderConfig
@@ -693,6 +735,9 @@ func (r *AlertV2Resource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	err := client.AlertsV2.TrashAlert(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete alert_v2", err.Error())
 		return

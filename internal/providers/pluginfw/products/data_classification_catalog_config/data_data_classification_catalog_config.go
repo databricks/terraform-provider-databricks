@@ -5,7 +5,6 @@ package data_classification_catalog_config
 import (
 	"context"
 	"reflect"
-	"regexp"
 
 	"github.com/databricks/databricks-sdk-go/service/dataclassification"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
@@ -42,10 +41,10 @@ type ProviderConfigData struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -102,8 +101,16 @@ type CatalogConfigData struct {
 	// List of auto-tagging configurations for this catalog. Empty list means no
 	// auto-tagging is enabled.
 	AutoTagConfigs types.List `tfsdk:"auto_tag_configs"`
-	// Schemas to include in the scan. Empty list is not supported as it results
-	// in a no-op scan. If `included_schemas` is not set, all schemas are
+	// Schemas to exclude from the scan, each named relative to the parent
+	// catalog. If specified, all schemas except the specified ones will be
+	// scanned. Mutually exclusive with `included_schemas`: only one may be set
+	// per request. If neither `included_schemas` nor `excluded_schemas` is set,
+	// all schemas are scanned.
+	ExcludedSchemas types.Object `tfsdk:"excluded_schemas"`
+	// Schemas to include in the scan, each named relative to the parent
+	// catalog. If specified, only listed schemas will be scanned. Mutually
+	// exclusive with `excluded_schemas`: only one may be set per request. If
+	// neither `included_schemas` nor `excluded_schemas` is set, all schemas are
 	// scanned.
 	IncludedSchemas types.Object `tfsdk:"included_schemas"`
 	// Resource name in the format: catalogs/{catalog_name}/config.
@@ -121,6 +128,7 @@ type CatalogConfigData struct {
 func (m CatalogConfigData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"auto_tag_configs": reflect.TypeOf(dataclassification_tf.AutoTaggingConfig{}),
+		"excluded_schemas": reflect.TypeOf(dataclassification_tf.CatalogConfigSchemaNames{}),
 		"included_schemas": reflect.TypeOf(dataclassification_tf.CatalogConfigSchemaNames{}),
 		"provider_config":  reflect.TypeOf(ProviderConfigData{}),
 	}
@@ -137,6 +145,7 @@ func (m CatalogConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"auto_tag_configs": m.AutoTagConfigs,
+			"excluded_schemas": m.ExcludedSchemas,
 			"included_schemas": m.IncludedSchemas,
 			"name":             m.Name,
 
@@ -153,6 +162,7 @@ func (m CatalogConfigData) Type(ctx context.Context) attr.Type {
 			"auto_tag_configs": basetypes.ListType{
 				ElemType: dataclassification_tf.AutoTaggingConfig{}.Type(ctx),
 			},
+			"excluded_schemas": dataclassification_tf.CatalogConfigSchemaNames{}.Type(ctx),
 			"included_schemas": dataclassification_tf.CatalogConfigSchemaNames{}.Type(ctx),
 			"name":             types.StringType,
 
@@ -163,6 +173,7 @@ func (m CatalogConfigData) Type(ctx context.Context) attr.Type {
 
 func (m CatalogConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["auto_tag_configs"] = attrs["auto_tag_configs"].SetComputed()
+	attrs["excluded_schemas"] = attrs["excluded_schemas"].SetComputed()
 	attrs["included_schemas"] = attrs["included_schemas"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 
@@ -229,8 +240,12 @@ func (r *CatalogConfigDataSource) Read(ctx context.Context, req datasource.ReadR
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// Preserve provider_config from config since it's not part of the API response
+	// Preserve provider_config from config so state.Set has the correct type info
 	newState.ProviderConfigData = config.ProviderConfigData
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

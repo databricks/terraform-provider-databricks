@@ -20,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -38,14 +40,24 @@ type Ai21LabsConfig_SdkV2 struct {
 }
 
 func (to *Ai21LabsConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Ai21LabsConfig_SdkV2) {
+	if !from.Ai21labsApiKeyPlaintext.IsUnknown() && !from.Ai21labsApiKeyPlaintext.IsNull() {
+		// Ai21labsApiKeyPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Ai21labsApiKeyPlaintext = from.Ai21labsApiKeyPlaintext
+	}
 }
 
 func (to *Ai21LabsConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Ai21LabsConfig_SdkV2) {
+	if !from.Ai21labsApiKeyPlaintext.IsUnknown() && !from.Ai21labsApiKeyPlaintext.IsNull() {
+		// Ai21labsApiKeyPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Ai21labsApiKeyPlaintext = from.Ai21labsApiKeyPlaintext
+	}
 }
 
 func (m Ai21LabsConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["ai21labs_api_key"] = attrs["ai21labs_api_key"].SetOptional()
 	attrs["ai21labs_api_key_plaintext"] = attrs["ai21labs_api_key_plaintext"].SetOptional()
+	attrs["ai21labs_api_key_plaintext"] = attrs["ai21labs_api_key_plaintext"].SetComputed()
+	attrs["ai21labs_api_key_plaintext"] = attrs["ai21labs_api_key_plaintext"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -137,6 +149,19 @@ func (to *AiGatewayConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RateLimits = from.RateLimits
 	}
+	if !from.RateLimits.IsNull() && !from.RateLimits.IsUnknown() {
+		if toRateLimits, ok := to.GetRateLimits(ctx); ok {
+			if fromRateLimits, ok := from.GetRateLimits(ctx); ok {
+				// Recursively sync the fields of each RateLimits element by position.
+				for i := range toRateLimits {
+					if i < len(fromRateLimits) {
+						toRateLimits[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRateLimits[i])
+					}
+				}
+				to.SetRateLimits(ctx, toRateLimits)
+			}
+		}
+	}
 	if !from.UsageTrackingConfig.IsNull() && !from.UsageTrackingConfig.IsUnknown() {
 		if toUsageTrackingConfig, ok := to.GetUsageTrackingConfig(ctx); ok {
 			if fromUsageTrackingConfig, ok := from.GetUsageTrackingConfig(ctx); ok {
@@ -178,6 +203,18 @@ func (to *AiGatewayConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for RateLimits, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RateLimits = from.RateLimits
+	}
+	if !from.RateLimits.IsNull() && !from.RateLimits.IsUnknown() {
+		if toRateLimits, ok := to.GetRateLimits(ctx); ok {
+			if fromRateLimits, ok := from.GetRateLimits(ctx); ok {
+				for i := range toRateLimits {
+					if i < len(fromRateLimits) {
+						toRateLimits[i].SyncFieldsDuringRead(ctx, fromRateLimits[i])
+					}
+				}
+				to.SetRateLimits(ctx, toRateLimits)
+			}
+		}
 	}
 	if !from.UsageTrackingConfig.IsNull() && !from.UsageTrackingConfig.IsUnknown() {
 		if toUsageTrackingConfig, ok := to.GetUsageTrackingConfig(ctx); ok {
@@ -1011,17 +1048,37 @@ type AmazonBedrockConfig_SdkV2 struct {
 }
 
 func (to *AmazonBedrockConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AmazonBedrockConfig_SdkV2) {
+	if !from.AwsAccessKeyIdPlaintext.IsUnknown() && !from.AwsAccessKeyIdPlaintext.IsNull() {
+		// AwsAccessKeyIdPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.AwsAccessKeyIdPlaintext = from.AwsAccessKeyIdPlaintext
+	}
+	if !from.AwsSecretAccessKeyPlaintext.IsUnknown() && !from.AwsSecretAccessKeyPlaintext.IsNull() {
+		// AwsSecretAccessKeyPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.AwsSecretAccessKeyPlaintext = from.AwsSecretAccessKeyPlaintext
+	}
 }
 
 func (to *AmazonBedrockConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AmazonBedrockConfig_SdkV2) {
+	if !from.AwsAccessKeyIdPlaintext.IsUnknown() && !from.AwsAccessKeyIdPlaintext.IsNull() {
+		// AwsAccessKeyIdPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.AwsAccessKeyIdPlaintext = from.AwsAccessKeyIdPlaintext
+	}
+	if !from.AwsSecretAccessKeyPlaintext.IsUnknown() && !from.AwsSecretAccessKeyPlaintext.IsNull() {
+		// AwsSecretAccessKeyPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.AwsSecretAccessKeyPlaintext = from.AwsSecretAccessKeyPlaintext
+	}
 }
 
 func (m AmazonBedrockConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["aws_access_key_id"] = attrs["aws_access_key_id"].SetOptional()
 	attrs["aws_access_key_id_plaintext"] = attrs["aws_access_key_id_plaintext"].SetOptional()
+	attrs["aws_access_key_id_plaintext"] = attrs["aws_access_key_id_plaintext"].SetComputed()
+	attrs["aws_access_key_id_plaintext"] = attrs["aws_access_key_id_plaintext"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["aws_region"] = attrs["aws_region"].SetRequired()
 	attrs["aws_secret_access_key"] = attrs["aws_secret_access_key"].SetOptional()
 	attrs["aws_secret_access_key_plaintext"] = attrs["aws_secret_access_key_plaintext"].SetOptional()
+	attrs["aws_secret_access_key_plaintext"] = attrs["aws_secret_access_key_plaintext"].SetComputed()
+	attrs["aws_secret_access_key_plaintext"] = attrs["aws_secret_access_key_plaintext"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["bedrock_provider"] = attrs["bedrock_provider"].SetRequired()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
 
@@ -1085,14 +1142,24 @@ type AnthropicConfig_SdkV2 struct {
 }
 
 func (to *AnthropicConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AnthropicConfig_SdkV2) {
+	if !from.AnthropicApiKeyPlaintext.IsUnknown() && !from.AnthropicApiKeyPlaintext.IsNull() {
+		// AnthropicApiKeyPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.AnthropicApiKeyPlaintext = from.AnthropicApiKeyPlaintext
+	}
 }
 
 func (to *AnthropicConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AnthropicConfig_SdkV2) {
+	if !from.AnthropicApiKeyPlaintext.IsUnknown() && !from.AnthropicApiKeyPlaintext.IsNull() {
+		// AnthropicApiKeyPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.AnthropicApiKeyPlaintext = from.AnthropicApiKeyPlaintext
+	}
 }
 
 func (m AnthropicConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["anthropic_api_key"] = attrs["anthropic_api_key"].SetOptional()
 	attrs["anthropic_api_key_plaintext"] = attrs["anthropic_api_key_plaintext"].SetOptional()
+	attrs["anthropic_api_key_plaintext"] = attrs["anthropic_api_key_plaintext"].SetComputed()
+	attrs["anthropic_api_key_plaintext"] = attrs["anthropic_api_key_plaintext"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -1142,15 +1209,25 @@ type ApiKeyAuth_SdkV2 struct {
 }
 
 func (to *ApiKeyAuth_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ApiKeyAuth_SdkV2) {
+	if !from.ValuePlaintext.IsUnknown() && !from.ValuePlaintext.IsNull() {
+		// ValuePlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.ValuePlaintext = from.ValuePlaintext
+	}
 }
 
 func (to *ApiKeyAuth_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ApiKeyAuth_SdkV2) {
+	if !from.ValuePlaintext.IsUnknown() && !from.ValuePlaintext.IsNull() {
+		// ValuePlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.ValuePlaintext = from.ValuePlaintext
+	}
 }
 
 func (m ApiKeyAuth_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["key"] = attrs["key"].SetRequired()
 	attrs["value"] = attrs["value"].SetOptional()
 	attrs["value_plaintext"] = attrs["value_plaintext"].SetOptional()
+	attrs["value_plaintext"] = attrs["value_plaintext"].SetComputed()
+	attrs["value_plaintext"] = attrs["value_plaintext"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -1190,6 +1267,9 @@ func (m ApiKeyAuth_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Deprecated: legacy inference table configuration. Please use AI Gateway
+// inference tables instead. See
+// https://docs.databricks.com/aws/en/ai-gateway/inference-tables.
 type AutoCaptureConfigInput_SdkV2 struct {
 	// The name of the catalog in Unity Catalog. NOTE: On update, you cannot
 	// change the catalog name if the inference table is already enabled.
@@ -1256,6 +1336,9 @@ func (m AutoCaptureConfigInput_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Deprecated: legacy inference table configuration. Please use AI Gateway
+// inference tables instead. See
+// https://docs.databricks.com/aws/en/ai-gateway/inference-tables.
 type AutoCaptureConfigOutput_SdkV2 struct {
 	// The name of the catalog in Unity Catalog. NOTE: On update, you cannot
 	// change the catalog name if the inference table is already enabled.
@@ -1480,14 +1563,24 @@ type BearerTokenAuth_SdkV2 struct {
 }
 
 func (to *BearerTokenAuth_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BearerTokenAuth_SdkV2) {
+	if !from.TokenPlaintext.IsUnknown() && !from.TokenPlaintext.IsNull() {
+		// TokenPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.TokenPlaintext = from.TokenPlaintext
+	}
 }
 
 func (to *BearerTokenAuth_SdkV2) SyncFieldsDuringRead(ctx context.Context, from BearerTokenAuth_SdkV2) {
+	if !from.TokenPlaintext.IsUnknown() && !from.TokenPlaintext.IsNull() {
+		// TokenPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.TokenPlaintext = from.TokenPlaintext
+	}
 }
 
 func (m BearerTokenAuth_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["token"] = attrs["token"].SetOptional()
 	attrs["token_plaintext"] = attrs["token_plaintext"].SetOptional()
+	attrs["token_plaintext"] = attrs["token_plaintext"].SetComputed()
+	attrs["token_plaintext"] = attrs["token_plaintext"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -1698,15 +1791,25 @@ type CohereConfig_SdkV2 struct {
 }
 
 func (to *CohereConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CohereConfig_SdkV2) {
+	if !from.CohereApiKeyPlaintext.IsUnknown() && !from.CohereApiKeyPlaintext.IsNull() {
+		// CohereApiKeyPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.CohereApiKeyPlaintext = from.CohereApiKeyPlaintext
+	}
 }
 
 func (to *CohereConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CohereConfig_SdkV2) {
+	if !from.CohereApiKeyPlaintext.IsUnknown() && !from.CohereApiKeyPlaintext.IsNull() {
+		// CohereApiKeyPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.CohereApiKeyPlaintext = from.CohereApiKeyPlaintext
+	}
 }
 
 func (m CohereConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["cohere_api_base"] = attrs["cohere_api_base"].SetOptional()
 	attrs["cohere_api_key"] = attrs["cohere_api_key"].SetOptional()
 	attrs["cohere_api_key_plaintext"] = attrs["cohere_api_key_plaintext"].SetOptional()
+	attrs["cohere_api_key_plaintext"] = attrs["cohere_api_key_plaintext"].SetComputed()
+	attrs["cohere_api_key_plaintext"] = attrs["cohere_api_key_plaintext"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -1798,6 +1901,19 @@ func (to *CreatePtEndpointRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 }
 
 func (to *CreatePtEndpointRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreatePtEndpointRequest_SdkV2) {
@@ -1830,6 +1946,18 @@ func (to *CreatePtEndpointRequest_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -2030,6 +2158,9 @@ type CreateServingEndpoint_SdkV2 struct {
 	// Tags to be attached to the serving endpoint and automatically propagated
 	// to billing logs.
 	Tags types.List `tfsdk:"tags"`
+	// Configuration for persisting endpoint telemetry (logs, traces, and
+	// metrics) to Unity Catalog tables.
+	TelemetryConfig types.List `tfsdk:"telemetry_config"`
 }
 
 func (to *CreateServingEndpoint_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateServingEndpoint_SdkV2) {
@@ -2066,11 +2197,46 @@ func (to *CreateServingEndpoint_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RateLimits = from.RateLimits
 	}
+	if !from.RateLimits.IsNull() && !from.RateLimits.IsUnknown() {
+		if toRateLimits, ok := to.GetRateLimits(ctx); ok {
+			if fromRateLimits, ok := from.GetRateLimits(ctx); ok {
+				// Recursively sync the fields of each RateLimits element by position.
+				for i := range toRateLimits {
+					if i < len(fromRateLimits) {
+						toRateLimits[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRateLimits[i])
+					}
+				}
+				to.SetRateLimits(ctx, toRateLimits)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
+	if !from.TelemetryConfig.IsNull() && !from.TelemetryConfig.IsUnknown() {
+		if toTelemetryConfig, ok := to.GetTelemetryConfig(ctx); ok {
+			if fromTelemetryConfig, ok := from.GetTelemetryConfig(ctx); ok {
+				// Recursively sync the fields of TelemetryConfig
+				toTelemetryConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromTelemetryConfig)
+				to.SetTelemetryConfig(ctx, toTelemetryConfig)
+			}
+		}
 	}
 }
 
@@ -2105,11 +2271,43 @@ func (to *CreateServingEndpoint_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RateLimits = from.RateLimits
 	}
+	if !from.RateLimits.IsNull() && !from.RateLimits.IsUnknown() {
+		if toRateLimits, ok := to.GetRateLimits(ctx); ok {
+			if fromRateLimits, ok := from.GetRateLimits(ctx); ok {
+				for i := range toRateLimits {
+					if i < len(fromRateLimits) {
+						toRateLimits[i].SyncFieldsDuringRead(ctx, fromRateLimits[i])
+					}
+				}
+				to.SetRateLimits(ctx, toRateLimits)
+			}
+		}
+	}
 	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
+	if !from.TelemetryConfig.IsNull() && !from.TelemetryConfig.IsUnknown() {
+		if toTelemetryConfig, ok := to.GetTelemetryConfig(ctx); ok {
+			if fromTelemetryConfig, ok := from.GetTelemetryConfig(ctx); ok {
+				toTelemetryConfig.SyncFieldsDuringRead(ctx, fromTelemetryConfig)
+				to.SetTelemetryConfig(ctx, toTelemetryConfig)
+			}
+		}
 	}
 }
 
@@ -2126,6 +2324,8 @@ func (m CreateServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]
 	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
 	attrs["route_optimized"] = attrs["route_optimized"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["telemetry_config"] = attrs["telemetry_config"].SetOptional()
+	attrs["telemetry_config"] = attrs["telemetry_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -2144,6 +2344,7 @@ func (m CreateServingEndpoint_SdkV2) GetComplexFieldTypes(ctx context.Context) m
 		"email_notifications": reflect.TypeOf(EmailNotifications_SdkV2{}),
 		"rate_limits":         reflect.TypeOf(RateLimit_SdkV2{}),
 		"tags":                reflect.TypeOf(EndpointTag_SdkV2{}),
+		"telemetry_config":    reflect.TypeOf(TelemetryConfig_SdkV2{}),
 	}
 }
 
@@ -2163,6 +2364,7 @@ func (m CreateServingEndpoint_SdkV2) ToObjectValue(ctx context.Context) basetype
 			"rate_limits":         m.RateLimits,
 			"route_optimized":     m.RouteOptimized,
 			"tags":                m.Tags,
+			"telemetry_config":    m.TelemetryConfig,
 		})
 }
 
@@ -2188,6 +2390,9 @@ func (m CreateServingEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 			"route_optimized": types.BoolType,
 			"tags": basetypes.ListType{
 				ElemType: EndpointTag_SdkV2{}.Type(ctx),
+			},
+			"telemetry_config": basetypes.ListType{
+				ElemType: TelemetryConfig_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2321,6 +2526,32 @@ func (m *CreateServingEndpoint_SdkV2) SetTags(ctx context.Context, v []EndpointT
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Tags = types.ListValueMust(t, vs)
+}
+
+// GetTelemetryConfig returns the value of the TelemetryConfig field in CreateServingEndpoint_SdkV2 as
+// a TelemetryConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateServingEndpoint_SdkV2) GetTelemetryConfig(ctx context.Context) (TelemetryConfig_SdkV2, bool) {
+	var e TelemetryConfig_SdkV2
+	if m.TelemetryConfig.IsNull() || m.TelemetryConfig.IsUnknown() {
+		return e, false
+	}
+	var v []TelemetryConfig_SdkV2
+	d := m.TelemetryConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTelemetryConfig sets the value of the TelemetryConfig field in CreateServingEndpoint_SdkV2.
+func (m *CreateServingEndpoint_SdkV2) SetTelemetryConfig(ctx context.Context, v TelemetryConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["telemetry_config"]
+	m.TelemetryConfig = types.ListValueMust(t, vs)
 }
 
 // Configs needed to create a custom provider model route.
@@ -2554,14 +2785,24 @@ type DatabricksModelServingConfig_SdkV2 struct {
 }
 
 func (to *DatabricksModelServingConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DatabricksModelServingConfig_SdkV2) {
+	if !from.DatabricksApiTokenPlaintext.IsUnknown() && !from.DatabricksApiTokenPlaintext.IsNull() {
+		// DatabricksApiTokenPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.DatabricksApiTokenPlaintext = from.DatabricksApiTokenPlaintext
+	}
 }
 
 func (to *DatabricksModelServingConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DatabricksModelServingConfig_SdkV2) {
+	if !from.DatabricksApiTokenPlaintext.IsUnknown() && !from.DatabricksApiTokenPlaintext.IsNull() {
+		// DatabricksApiTokenPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.DatabricksApiTokenPlaintext = from.DatabricksApiTokenPlaintext
+	}
 }
 
 func (m DatabricksModelServingConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["databricks_api_token"] = attrs["databricks_api_token"].SetOptional()
 	attrs["databricks_api_token_plaintext"] = attrs["databricks_api_token_plaintext"].SetOptional()
+	attrs["databricks_api_token_plaintext"] = attrs["databricks_api_token_plaintext"].SetComputed()
+	attrs["databricks_api_token_plaintext"] = attrs["databricks_api_token_plaintext"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["databricks_workspace_url"] = attrs["databricks_workspace_url"].SetRequired()
 
 	return attrs
@@ -3070,11 +3311,10 @@ func (m *EmbeddingsV1ResponseEmbeddingElement_SdkV2) SetEmbedding(ctx context.Co
 }
 
 type EndpointCoreConfigInput_SdkV2 struct {
-	// Configuration for Inference Tables which automatically logs requests and
-	// responses to Unity Catalog. Note: this field is deprecated for creating
-	// new provisioned throughput endpoints, or updating existing provisioned
-	// throughput endpoints that never have inference table configured; in these
-	// cases please use AI Gateway to manage inference tables.
+	// Configuration for legacy Inference Tables which automatically log
+	// requests and responses to Unity Catalog. Deprecated: please use AI
+	// Gateway inference tables instead. See
+	// https://docs.databricks.com/aws/en/ai-gateway/inference-tables.
 	AutoCaptureConfig types.List `tfsdk:"auto_capture_config"`
 	// The name of the serving endpoint to update. This field is required.
 	Name types.String `tfsdk:"-"`
@@ -3103,11 +3343,37 @@ func (to *EndpointCoreConfigInput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedEntities = from.ServedEntities
 	}
+	if !from.ServedEntities.IsNull() && !from.ServedEntities.IsUnknown() {
+		if toServedEntities, ok := to.GetServedEntities(ctx); ok {
+			if fromServedEntities, ok := from.GetServedEntities(ctx); ok {
+				// Recursively sync the fields of each ServedEntities element by position.
+				for i := range toServedEntities {
+					if i < len(fromServedEntities) {
+						toServedEntities[i].SyncFieldsDuringCreateOrUpdate(ctx, fromServedEntities[i])
+					}
+				}
+				to.SetServedEntities(ctx, toServedEntities)
+			}
+		}
+	}
 	if !from.ServedModels.IsNull() && !from.ServedModels.IsUnknown() && to.ServedModels.IsNull() && len(from.ServedModels.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ServedModels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedModels = from.ServedModels
+	}
+	if !from.ServedModels.IsNull() && !from.ServedModels.IsUnknown() {
+		if toServedModels, ok := to.GetServedModels(ctx); ok {
+			if fromServedModels, ok := from.GetServedModels(ctx); ok {
+				// Recursively sync the fields of each ServedModels element by position.
+				for i := range toServedModels {
+					if i < len(fromServedModels) {
+						toServedModels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromServedModels[i])
+					}
+				}
+				to.SetServedModels(ctx, toServedModels)
+			}
+		}
 	}
 	if !from.TrafficConfig.IsNull() && !from.TrafficConfig.IsUnknown() {
 		if toTrafficConfig, ok := to.GetTrafficConfig(ctx); ok {
@@ -3135,11 +3401,35 @@ func (to *EndpointCoreConfigInput_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedEntities = from.ServedEntities
 	}
+	if !from.ServedEntities.IsNull() && !from.ServedEntities.IsUnknown() {
+		if toServedEntities, ok := to.GetServedEntities(ctx); ok {
+			if fromServedEntities, ok := from.GetServedEntities(ctx); ok {
+				for i := range toServedEntities {
+					if i < len(fromServedEntities) {
+						toServedEntities[i].SyncFieldsDuringRead(ctx, fromServedEntities[i])
+					}
+				}
+				to.SetServedEntities(ctx, toServedEntities)
+			}
+		}
+	}
 	if !from.ServedModels.IsNull() && !from.ServedModels.IsUnknown() && to.ServedModels.IsNull() && len(from.ServedModels.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ServedModels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedModels = from.ServedModels
+	}
+	if !from.ServedModels.IsNull() && !from.ServedModels.IsUnknown() {
+		if toServedModels, ok := to.GetServedModels(ctx); ok {
+			if fromServedModels, ok := from.GetServedModels(ctx); ok {
+				for i := range toServedModels {
+					if i < len(fromServedModels) {
+						toServedModels[i].SyncFieldsDuringRead(ctx, fromServedModels[i])
+					}
+				}
+				to.SetServedModels(ctx, toServedModels)
+			}
+		}
 	}
 	if !from.TrafficConfig.IsNull() && !from.TrafficConfig.IsUnknown() {
 		if toTrafficConfig, ok := to.GetTrafficConfig(ctx); ok {
@@ -3320,11 +3610,10 @@ func (m *EndpointCoreConfigInput_SdkV2) SetTrafficConfig(ctx context.Context, v 
 }
 
 type EndpointCoreConfigOutput_SdkV2 struct {
-	// Configuration for Inference Tables which automatically logs requests and
-	// responses to Unity Catalog. Note: this field is deprecated for creating
-	// new provisioned throughput endpoints, or updating existing provisioned
-	// throughput endpoints that never have inference table configured; in these
-	// cases please use AI Gateway to manage inference tables.
+	// Configuration for legacy Inference Tables which automatically log
+	// requests and responses to Unity Catalog. Deprecated: please use AI
+	// Gateway inference tables instead. See
+	// https://docs.databricks.com/aws/en/ai-gateway/inference-tables.
 	AutoCaptureConfig types.List `tfsdk:"auto_capture_config"`
 	// The config version that the serving endpoint is currently serving.
 	ConfigVersion types.Int64 `tfsdk:"config_version"`
@@ -3353,11 +3642,37 @@ func (to *EndpointCoreConfigOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedEntities = from.ServedEntities
 	}
+	if !from.ServedEntities.IsNull() && !from.ServedEntities.IsUnknown() {
+		if toServedEntities, ok := to.GetServedEntities(ctx); ok {
+			if fromServedEntities, ok := from.GetServedEntities(ctx); ok {
+				// Recursively sync the fields of each ServedEntities element by position.
+				for i := range toServedEntities {
+					if i < len(fromServedEntities) {
+						toServedEntities[i].SyncFieldsDuringCreateOrUpdate(ctx, fromServedEntities[i])
+					}
+				}
+				to.SetServedEntities(ctx, toServedEntities)
+			}
+		}
+	}
 	if !from.ServedModels.IsNull() && !from.ServedModels.IsUnknown() && to.ServedModels.IsNull() && len(from.ServedModels.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ServedModels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedModels = from.ServedModels
+	}
+	if !from.ServedModels.IsNull() && !from.ServedModels.IsUnknown() {
+		if toServedModels, ok := to.GetServedModels(ctx); ok {
+			if fromServedModels, ok := from.GetServedModels(ctx); ok {
+				// Recursively sync the fields of each ServedModels element by position.
+				for i := range toServedModels {
+					if i < len(fromServedModels) {
+						toServedModels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromServedModels[i])
+					}
+				}
+				to.SetServedModels(ctx, toServedModels)
+			}
+		}
 	}
 	if !from.TrafficConfig.IsNull() && !from.TrafficConfig.IsUnknown() {
 		if toTrafficConfig, ok := to.GetTrafficConfig(ctx); ok {
@@ -3385,11 +3700,35 @@ func (to *EndpointCoreConfigOutput_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedEntities = from.ServedEntities
 	}
+	if !from.ServedEntities.IsNull() && !from.ServedEntities.IsUnknown() {
+		if toServedEntities, ok := to.GetServedEntities(ctx); ok {
+			if fromServedEntities, ok := from.GetServedEntities(ctx); ok {
+				for i := range toServedEntities {
+					if i < len(fromServedEntities) {
+						toServedEntities[i].SyncFieldsDuringRead(ctx, fromServedEntities[i])
+					}
+				}
+				to.SetServedEntities(ctx, toServedEntities)
+			}
+		}
+	}
 	if !from.ServedModels.IsNull() && !from.ServedModels.IsUnknown() && to.ServedModels.IsNull() && len(from.ServedModels.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ServedModels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedModels = from.ServedModels
+	}
+	if !from.ServedModels.IsNull() && !from.ServedModels.IsUnknown() {
+		if toServedModels, ok := to.GetServedModels(ctx); ok {
+			if fromServedModels, ok := from.GetServedModels(ctx); ok {
+				for i := range toServedModels {
+					if i < len(fromServedModels) {
+						toServedModels[i].SyncFieldsDuringRead(ctx, fromServedModels[i])
+					}
+				}
+				to.SetServedModels(ctx, toServedModels)
+			}
+		}
 	}
 	if !from.TrafficConfig.IsNull() && !from.TrafficConfig.IsUnknown() {
 		if toTrafficConfig, ok := to.GetTrafficConfig(ctx); ok {
@@ -3584,11 +3923,37 @@ func (to *EndpointCoreConfigSummary_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedEntities = from.ServedEntities
 	}
+	if !from.ServedEntities.IsNull() && !from.ServedEntities.IsUnknown() {
+		if toServedEntities, ok := to.GetServedEntities(ctx); ok {
+			if fromServedEntities, ok := from.GetServedEntities(ctx); ok {
+				// Recursively sync the fields of each ServedEntities element by position.
+				for i := range toServedEntities {
+					if i < len(fromServedEntities) {
+						toServedEntities[i].SyncFieldsDuringCreateOrUpdate(ctx, fromServedEntities[i])
+					}
+				}
+				to.SetServedEntities(ctx, toServedEntities)
+			}
+		}
+	}
 	if !from.ServedModels.IsNull() && !from.ServedModels.IsUnknown() && to.ServedModels.IsNull() && len(from.ServedModels.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ServedModels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedModels = from.ServedModels
+	}
+	if !from.ServedModels.IsNull() && !from.ServedModels.IsUnknown() {
+		if toServedModels, ok := to.GetServedModels(ctx); ok {
+			if fromServedModels, ok := from.GetServedModels(ctx); ok {
+				// Recursively sync the fields of each ServedModels element by position.
+				for i := range toServedModels {
+					if i < len(fromServedModels) {
+						toServedModels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromServedModels[i])
+					}
+				}
+				to.SetServedModels(ctx, toServedModels)
+			}
+		}
 	}
 }
 
@@ -3599,11 +3964,35 @@ func (to *EndpointCoreConfigSummary_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedEntities = from.ServedEntities
 	}
+	if !from.ServedEntities.IsNull() && !from.ServedEntities.IsUnknown() {
+		if toServedEntities, ok := to.GetServedEntities(ctx); ok {
+			if fromServedEntities, ok := from.GetServedEntities(ctx); ok {
+				for i := range toServedEntities {
+					if i < len(fromServedEntities) {
+						toServedEntities[i].SyncFieldsDuringRead(ctx, fromServedEntities[i])
+					}
+				}
+				to.SetServedEntities(ctx, toServedEntities)
+			}
+		}
+	}
 	if !from.ServedModels.IsNull() && !from.ServedModels.IsUnknown() && to.ServedModels.IsNull() && len(from.ServedModels.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ServedModels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedModels = from.ServedModels
+	}
+	if !from.ServedModels.IsNull() && !from.ServedModels.IsUnknown() {
+		if toServedModels, ok := to.GetServedModels(ctx); ok {
+			if fromServedModels, ok := from.GetServedModels(ctx); ok {
+				for i := range toServedModels {
+					if i < len(fromServedModels) {
+						toServedModels[i].SyncFieldsDuringRead(ctx, fromServedModels[i])
+					}
+				}
+				to.SetServedModels(ctx, toServedModels)
+			}
+		}
 	}
 }
 
@@ -3707,11 +4096,10 @@ func (m *EndpointCoreConfigSummary_SdkV2) SetServedModels(ctx context.Context, v
 }
 
 type EndpointPendingConfig_SdkV2 struct {
-	// Configuration for Inference Tables which automatically logs requests and
-	// responses to Unity Catalog. Note: this field is deprecated for creating
-	// new provisioned throughput endpoints, or updating existing provisioned
-	// throughput endpoints that never have inference table configured; in these
-	// cases please use AI Gateway to manage inference tables.
+	// Configuration for legacy Inference Tables which automatically log
+	// requests and responses to Unity Catalog. Deprecated: please use AI
+	// Gateway inference tables instead. See
+	// https://docs.databricks.com/aws/en/ai-gateway/inference-tables.
 	AutoCaptureConfig types.List `tfsdk:"auto_capture_config"`
 	// The config version that the serving endpoint is currently serving.
 	ConfigVersion types.Int64 `tfsdk:"config_version"`
@@ -3744,11 +4132,37 @@ func (to *EndpointPendingConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedEntities = from.ServedEntities
 	}
+	if !from.ServedEntities.IsNull() && !from.ServedEntities.IsUnknown() {
+		if toServedEntities, ok := to.GetServedEntities(ctx); ok {
+			if fromServedEntities, ok := from.GetServedEntities(ctx); ok {
+				// Recursively sync the fields of each ServedEntities element by position.
+				for i := range toServedEntities {
+					if i < len(fromServedEntities) {
+						toServedEntities[i].SyncFieldsDuringCreateOrUpdate(ctx, fromServedEntities[i])
+					}
+				}
+				to.SetServedEntities(ctx, toServedEntities)
+			}
+		}
+	}
 	if !from.ServedModels.IsNull() && !from.ServedModels.IsUnknown() && to.ServedModels.IsNull() && len(from.ServedModels.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ServedModels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedModels = from.ServedModels
+	}
+	if !from.ServedModels.IsNull() && !from.ServedModels.IsUnknown() {
+		if toServedModels, ok := to.GetServedModels(ctx); ok {
+			if fromServedModels, ok := from.GetServedModels(ctx); ok {
+				// Recursively sync the fields of each ServedModels element by position.
+				for i := range toServedModels {
+					if i < len(fromServedModels) {
+						toServedModels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromServedModels[i])
+					}
+				}
+				to.SetServedModels(ctx, toServedModels)
+			}
+		}
 	}
 	if !from.TrafficConfig.IsNull() && !from.TrafficConfig.IsUnknown() {
 		if toTrafficConfig, ok := to.GetTrafficConfig(ctx); ok {
@@ -3776,11 +4190,35 @@ func (to *EndpointPendingConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedEntities = from.ServedEntities
 	}
+	if !from.ServedEntities.IsNull() && !from.ServedEntities.IsUnknown() {
+		if toServedEntities, ok := to.GetServedEntities(ctx); ok {
+			if fromServedEntities, ok := from.GetServedEntities(ctx); ok {
+				for i := range toServedEntities {
+					if i < len(fromServedEntities) {
+						toServedEntities[i].SyncFieldsDuringRead(ctx, fromServedEntities[i])
+					}
+				}
+				to.SetServedEntities(ctx, toServedEntities)
+			}
+		}
+	}
 	if !from.ServedModels.IsNull() && !from.ServedModels.IsUnknown() && to.ServedModels.IsNull() && len(from.ServedModels.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ServedModels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedModels = from.ServedModels
+	}
+	if !from.ServedModels.IsNull() && !from.ServedModels.IsUnknown() {
+		if toServedModels, ok := to.GetServedModels(ctx); ok {
+			if fromServedModels, ok := from.GetServedModels(ctx); ok {
+				for i := range toServedModels {
+					if i < len(fromServedModels) {
+						toServedModels[i].SyncFieldsDuringRead(ctx, fromServedModels[i])
+					}
+				}
+				to.SetServedModels(ctx, toServedModels)
+			}
+		}
 	}
 	if !from.TrafficConfig.IsNull() && !from.TrafficConfig.IsUnknown() {
 		if toTrafficConfig, ok := to.GetTrafficConfig(ctx); ok {
@@ -4087,6 +4525,19 @@ func (to *EndpointTags_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
 }
 
 func (to *EndpointTags_SdkV2) SyncFieldsDuringRead(ctx context.Context, from EndpointTags_SdkV2) {
@@ -4095,6 +4546,18 @@ func (to *EndpointTags_SdkV2) SyncFieldsDuringRead(ctx context.Context, from End
 		// If a user specified a non-Null, empty list for Tags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
 	}
 }
 
@@ -5209,6 +5672,19 @@ func (to *GetServingEndpointPermissionLevelsResponse_SdkV2) SyncFieldsDuringCrea
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
 	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				// Recursively sync the fields of each PermissionLevels element by position.
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
+	}
 }
 
 func (to *GetServingEndpointPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetServingEndpointPermissionLevelsResponse_SdkV2) {
@@ -5217,6 +5693,18 @@ func (to *GetServingEndpointPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead
 		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
+	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringRead(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
 	}
 }
 
@@ -5417,14 +5905,24 @@ type GoogleCloudVertexAiConfig_SdkV2 struct {
 }
 
 func (to *GoogleCloudVertexAiConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GoogleCloudVertexAiConfig_SdkV2) {
+	if !from.PrivateKeyPlaintext.IsUnknown() && !from.PrivateKeyPlaintext.IsNull() {
+		// PrivateKeyPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.PrivateKeyPlaintext = from.PrivateKeyPlaintext
+	}
 }
 
 func (to *GoogleCloudVertexAiConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GoogleCloudVertexAiConfig_SdkV2) {
+	if !from.PrivateKeyPlaintext.IsUnknown() && !from.PrivateKeyPlaintext.IsNull() {
+		// PrivateKeyPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.PrivateKeyPlaintext = from.PrivateKeyPlaintext
+	}
 }
 
 func (m GoogleCloudVertexAiConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["private_key"] = attrs["private_key"].SetOptional()
 	attrs["private_key_plaintext"] = attrs["private_key_plaintext"].SetOptional()
+	attrs["private_key_plaintext"] = attrs["private_key_plaintext"].SetComputed()
+	attrs["private_key_plaintext"] = attrs["private_key_plaintext"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["project_id"] = attrs["project_id"].SetRequired()
 	attrs["region"] = attrs["region"].SetRequired()
 
@@ -5527,6 +6025,19 @@ func (to *ListEndpointsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Endpoints = from.Endpoints
 	}
+	if !from.Endpoints.IsNull() && !from.Endpoints.IsUnknown() {
+		if toEndpoints, ok := to.GetEndpoints(ctx); ok {
+			if fromEndpoints, ok := from.GetEndpoints(ctx); ok {
+				// Recursively sync the fields of each Endpoints element by position.
+				for i := range toEndpoints {
+					if i < len(fromEndpoints) {
+						toEndpoints[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEndpoints[i])
+					}
+				}
+				to.SetEndpoints(ctx, toEndpoints)
+			}
+		}
+	}
 }
 
 func (to *ListEndpointsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListEndpointsResponse_SdkV2) {
@@ -5535,6 +6046,18 @@ func (to *ListEndpointsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 		// If a user specified a non-Null, empty list for Endpoints, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Endpoints = from.Endpoints
+	}
+	if !from.Endpoints.IsNull() && !from.Endpoints.IsUnknown() {
+		if toEndpoints, ok := to.GetEndpoints(ctx); ok {
+			if fromEndpoints, ok := from.GetEndpoints(ctx); ok {
+				for i := range toEndpoints {
+					if i < len(fromEndpoints) {
+						toEndpoints[i].SyncFieldsDuringRead(ctx, fromEndpoints[i])
+					}
+				}
+				to.SetEndpoints(ctx, toEndpoints)
+			}
+		}
 	}
 }
 
@@ -5855,19 +6378,39 @@ type OpenAiConfig_SdkV2 struct {
 }
 
 func (to *OpenAiConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from OpenAiConfig_SdkV2) {
+	if !from.MicrosoftEntraClientSecretPlaintext.IsUnknown() && !from.MicrosoftEntraClientSecretPlaintext.IsNull() {
+		// MicrosoftEntraClientSecretPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.MicrosoftEntraClientSecretPlaintext = from.MicrosoftEntraClientSecretPlaintext
+	}
+	if !from.OpenaiApiKeyPlaintext.IsUnknown() && !from.OpenaiApiKeyPlaintext.IsNull() {
+		// OpenaiApiKeyPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.OpenaiApiKeyPlaintext = from.OpenaiApiKeyPlaintext
+	}
 }
 
 func (to *OpenAiConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from OpenAiConfig_SdkV2) {
+	if !from.MicrosoftEntraClientSecretPlaintext.IsUnknown() && !from.MicrosoftEntraClientSecretPlaintext.IsNull() {
+		// MicrosoftEntraClientSecretPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.MicrosoftEntraClientSecretPlaintext = from.MicrosoftEntraClientSecretPlaintext
+	}
+	if !from.OpenaiApiKeyPlaintext.IsUnknown() && !from.OpenaiApiKeyPlaintext.IsNull() {
+		// OpenaiApiKeyPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.OpenaiApiKeyPlaintext = from.OpenaiApiKeyPlaintext
+	}
 }
 
 func (m OpenAiConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["microsoft_entra_client_id"] = attrs["microsoft_entra_client_id"].SetOptional()
 	attrs["microsoft_entra_client_secret"] = attrs["microsoft_entra_client_secret"].SetOptional()
 	attrs["microsoft_entra_client_secret_plaintext"] = attrs["microsoft_entra_client_secret_plaintext"].SetOptional()
+	attrs["microsoft_entra_client_secret_plaintext"] = attrs["microsoft_entra_client_secret_plaintext"].SetComputed()
+	attrs["microsoft_entra_client_secret_plaintext"] = attrs["microsoft_entra_client_secret_plaintext"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["microsoft_entra_tenant_id"] = attrs["microsoft_entra_tenant_id"].SetOptional()
 	attrs["openai_api_base"] = attrs["openai_api_base"].SetOptional()
 	attrs["openai_api_key"] = attrs["openai_api_key"].SetOptional()
 	attrs["openai_api_key_plaintext"] = attrs["openai_api_key_plaintext"].SetOptional()
+	attrs["openai_api_key_plaintext"] = attrs["openai_api_key_plaintext"].SetComputed()
+	attrs["openai_api_key_plaintext"] = attrs["openai_api_key_plaintext"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["openai_api_type"] = attrs["openai_api_type"].SetOptional()
 	attrs["openai_api_version"] = attrs["openai_api_version"].SetOptional()
 	attrs["openai_deployment_name"] = attrs["openai_deployment_name"].SetOptional()
@@ -5941,14 +6484,24 @@ type PaLmConfig_SdkV2 struct {
 }
 
 func (to *PaLmConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PaLmConfig_SdkV2) {
+	if !from.PalmApiKeyPlaintext.IsUnknown() && !from.PalmApiKeyPlaintext.IsNull() {
+		// PalmApiKeyPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.PalmApiKeyPlaintext = from.PalmApiKeyPlaintext
+	}
 }
 
 func (to *PaLmConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PaLmConfig_SdkV2) {
+	if !from.PalmApiKeyPlaintext.IsUnknown() && !from.PalmApiKeyPlaintext.IsNull() {
+		// PalmApiKeyPlaintext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.PalmApiKeyPlaintext = from.PalmApiKeyPlaintext
+	}
 }
 
 func (m PaLmConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["palm_api_key"] = attrs["palm_api_key"].SetOptional()
 	attrs["palm_api_key_plaintext"] = attrs["palm_api_key_plaintext"].SetOptional()
+	attrs["palm_api_key_plaintext"] = attrs["palm_api_key_plaintext"].SetComputed()
+	attrs["palm_api_key_plaintext"] = attrs["palm_api_key_plaintext"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -6003,6 +6556,19 @@ func (to *PatchServingEndpointTags_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AddTags = from.AddTags
 	}
+	if !from.AddTags.IsNull() && !from.AddTags.IsUnknown() {
+		if toAddTags, ok := to.GetAddTags(ctx); ok {
+			if fromAddTags, ok := from.GetAddTags(ctx); ok {
+				// Recursively sync the fields of each AddTags element by position.
+				for i := range toAddTags {
+					if i < len(fromAddTags) {
+						toAddTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAddTags[i])
+					}
+				}
+				to.SetAddTags(ctx, toAddTags)
+			}
+		}
+	}
 	if !from.DeleteTags.IsNull() && !from.DeleteTags.IsUnknown() && to.DeleteTags.IsNull() && len(from.DeleteTags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for DeleteTags, and the deserialized field value is Null,
@@ -6017,6 +6583,18 @@ func (to *PatchServingEndpointTags_SdkV2) SyncFieldsDuringRead(ctx context.Conte
 		// If a user specified a non-Null, empty list for AddTags, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AddTags = from.AddTags
+	}
+	if !from.AddTags.IsNull() && !from.AddTags.IsUnknown() {
+		if toAddTags, ok := to.GetAddTags(ctx); ok {
+			if fromAddTags, ok := from.GetAddTags(ctx); ok {
+				for i := range toAddTags {
+					if i < len(fromAddTags) {
+						toAddTags[i].SyncFieldsDuringRead(ctx, fromAddTags[i])
+					}
+				}
+				to.SetAddTags(ctx, toAddTags)
+			}
+		}
 	}
 	if !from.DeleteTags.IsNull() && !from.DeleteTags.IsUnknown() && to.DeleteTags.IsNull() && len(from.DeleteTags.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -6128,6 +6706,113 @@ func (m *PatchServingEndpointTags_SdkV2) SetDeleteTags(ctx context.Context, v []
 	m.DeleteTags = types.ListValueMust(t, vs)
 }
 
+// Updates the telemetry configuration of a serving endpoint.
+type PatchTelemetryConfigRequest_SdkV2 struct {
+	// The name of the serving endpoint whose telemetry configuration is being
+	// updated. This field is required.
+	Name types.String `tfsdk:"-"`
+	// The telemetry configuration to be applied to the serving endpoint. Can
+	// specify either a telemetry_profile_id to use an existing profile, or
+	// table_names to create a new profile with the specified Unity Catalog
+	// tables. If not provided, the telemetry configuration will be removed from
+	// the endpoint.
+	TelemetryConfig types.List `tfsdk:"telemetry_config"`
+}
+
+func (to *PatchTelemetryConfigRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PatchTelemetryConfigRequest_SdkV2) {
+	if !from.TelemetryConfig.IsNull() && !from.TelemetryConfig.IsUnknown() {
+		if toTelemetryConfig, ok := to.GetTelemetryConfig(ctx); ok {
+			if fromTelemetryConfig, ok := from.GetTelemetryConfig(ctx); ok {
+				// Recursively sync the fields of TelemetryConfig
+				toTelemetryConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromTelemetryConfig)
+				to.SetTelemetryConfig(ctx, toTelemetryConfig)
+			}
+		}
+	}
+}
+
+func (to *PatchTelemetryConfigRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PatchTelemetryConfigRequest_SdkV2) {
+	if !from.TelemetryConfig.IsNull() && !from.TelemetryConfig.IsUnknown() {
+		if toTelemetryConfig, ok := to.GetTelemetryConfig(ctx); ok {
+			if fromTelemetryConfig, ok := from.GetTelemetryConfig(ctx); ok {
+				toTelemetryConfig.SyncFieldsDuringRead(ctx, fromTelemetryConfig)
+				to.SetTelemetryConfig(ctx, toTelemetryConfig)
+			}
+		}
+	}
+}
+
+func (m PatchTelemetryConfigRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["telemetry_config"] = attrs["telemetry_config"].SetOptional()
+	attrs["telemetry_config"] = attrs["telemetry_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchTelemetryConfigRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m PatchTelemetryConfigRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"telemetry_config": reflect.TypeOf(TelemetryConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PatchTelemetryConfigRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m PatchTelemetryConfigRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":             m.Name,
+			"telemetry_config": m.TelemetryConfig,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m PatchTelemetryConfigRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+			"telemetry_config": basetypes.ListType{
+				ElemType: TelemetryConfig_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetTelemetryConfig returns the value of the TelemetryConfig field in PatchTelemetryConfigRequest_SdkV2 as
+// a TelemetryConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PatchTelemetryConfigRequest_SdkV2) GetTelemetryConfig(ctx context.Context) (TelemetryConfig_SdkV2, bool) {
+	var e TelemetryConfig_SdkV2
+	if m.TelemetryConfig.IsNull() || m.TelemetryConfig.IsUnknown() {
+		return e, false
+	}
+	var v []TelemetryConfig_SdkV2
+	d := m.TelemetryConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTelemetryConfig sets the value of the TelemetryConfig field in PatchTelemetryConfigRequest_SdkV2.
+func (m *PatchTelemetryConfigRequest_SdkV2) SetTelemetryConfig(ctx context.Context, v TelemetryConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["telemetry_config"]
+	m.TelemetryConfig = types.ListValueMust(t, vs)
+}
+
 type PayloadTable_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 
@@ -6199,6 +6884,19 @@ func (to *PtEndpointCoreConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedEntities = from.ServedEntities
 	}
+	if !from.ServedEntities.IsNull() && !from.ServedEntities.IsUnknown() {
+		if toServedEntities, ok := to.GetServedEntities(ctx); ok {
+			if fromServedEntities, ok := from.GetServedEntities(ctx); ok {
+				// Recursively sync the fields of each ServedEntities element by position.
+				for i := range toServedEntities {
+					if i < len(fromServedEntities) {
+						toServedEntities[i].SyncFieldsDuringCreateOrUpdate(ctx, fromServedEntities[i])
+					}
+				}
+				to.SetServedEntities(ctx, toServedEntities)
+			}
+		}
+	}
 	if !from.TrafficConfig.IsNull() && !from.TrafficConfig.IsUnknown() {
 		if toTrafficConfig, ok := to.GetTrafficConfig(ctx); ok {
 			if fromTrafficConfig, ok := from.GetTrafficConfig(ctx); ok {
@@ -6216,6 +6914,18 @@ func (to *PtEndpointCoreConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for ServedEntities, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ServedEntities = from.ServedEntities
+	}
+	if !from.ServedEntities.IsNull() && !from.ServedEntities.IsUnknown() {
+		if toServedEntities, ok := to.GetServedEntities(ctx); ok {
+			if fromServedEntities, ok := from.GetServedEntities(ctx); ok {
+				for i := range toServedEntities {
+					if i < len(fromServedEntities) {
+						toServedEntities[i].SyncFieldsDuringRead(ctx, fromServedEntities[i])
+					}
+				}
+				to.SetServedEntities(ctx, toServedEntities)
+			}
+		}
 	}
 	if !from.TrafficConfig.IsNull() && !from.TrafficConfig.IsUnknown() {
 		if toTrafficConfig, ok := to.GetTrafficConfig(ctx); ok {
@@ -6463,6 +7173,19 @@ func (to *PutAiGatewayRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RateLimits = from.RateLimits
 	}
+	if !from.RateLimits.IsNull() && !from.RateLimits.IsUnknown() {
+		if toRateLimits, ok := to.GetRateLimits(ctx); ok {
+			if fromRateLimits, ok := from.GetRateLimits(ctx); ok {
+				// Recursively sync the fields of each RateLimits element by position.
+				for i := range toRateLimits {
+					if i < len(fromRateLimits) {
+						toRateLimits[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRateLimits[i])
+					}
+				}
+				to.SetRateLimits(ctx, toRateLimits)
+			}
+		}
+	}
 	if !from.UsageTrackingConfig.IsNull() && !from.UsageTrackingConfig.IsUnknown() {
 		if toUsageTrackingConfig, ok := to.GetUsageTrackingConfig(ctx); ok {
 			if fromUsageTrackingConfig, ok := from.GetUsageTrackingConfig(ctx); ok {
@@ -6504,6 +7227,18 @@ func (to *PutAiGatewayRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 		// If a user specified a non-Null, empty list for RateLimits, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RateLimits = from.RateLimits
+	}
+	if !from.RateLimits.IsNull() && !from.RateLimits.IsUnknown() {
+		if toRateLimits, ok := to.GetRateLimits(ctx); ok {
+			if fromRateLimits, ok := from.GetRateLimits(ctx); ok {
+				for i := range toRateLimits {
+					if i < len(fromRateLimits) {
+						toRateLimits[i].SyncFieldsDuringRead(ctx, fromRateLimits[i])
+					}
+				}
+				to.SetRateLimits(ctx, toRateLimits)
+			}
+		}
 	}
 	if !from.UsageTrackingConfig.IsNull() && !from.UsageTrackingConfig.IsUnknown() {
 		if toUsageTrackingConfig, ok := to.GetUsageTrackingConfig(ctx); ok {
@@ -6771,6 +7506,19 @@ func (to *PutAiGatewayResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RateLimits = from.RateLimits
 	}
+	if !from.RateLimits.IsNull() && !from.RateLimits.IsUnknown() {
+		if toRateLimits, ok := to.GetRateLimits(ctx); ok {
+			if fromRateLimits, ok := from.GetRateLimits(ctx); ok {
+				// Recursively sync the fields of each RateLimits element by position.
+				for i := range toRateLimits {
+					if i < len(fromRateLimits) {
+						toRateLimits[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRateLimits[i])
+					}
+				}
+				to.SetRateLimits(ctx, toRateLimits)
+			}
+		}
+	}
 	if !from.UsageTrackingConfig.IsNull() && !from.UsageTrackingConfig.IsUnknown() {
 		if toUsageTrackingConfig, ok := to.GetUsageTrackingConfig(ctx); ok {
 			if fromUsageTrackingConfig, ok := from.GetUsageTrackingConfig(ctx); ok {
@@ -6812,6 +7560,18 @@ func (to *PutAiGatewayResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for RateLimits, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RateLimits = from.RateLimits
+	}
+	if !from.RateLimits.IsNull() && !from.RateLimits.IsUnknown() {
+		if toRateLimits, ok := to.GetRateLimits(ctx); ok {
+			if fromRateLimits, ok := from.GetRateLimits(ctx); ok {
+				for i := range toRateLimits {
+					if i < len(fromRateLimits) {
+						toRateLimits[i].SyncFieldsDuringRead(ctx, fromRateLimits[i])
+					}
+				}
+				to.SetRateLimits(ctx, toRateLimits)
+			}
+		}
 	}
 	if !from.UsageTrackingConfig.IsNull() && !from.UsageTrackingConfig.IsUnknown() {
 		if toUsageTrackingConfig, ok := to.GetUsageTrackingConfig(ctx); ok {
@@ -7037,6 +7797,19 @@ func (to *PutRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RateLimits = from.RateLimits
 	}
+	if !from.RateLimits.IsNull() && !from.RateLimits.IsUnknown() {
+		if toRateLimits, ok := to.GetRateLimits(ctx); ok {
+			if fromRateLimits, ok := from.GetRateLimits(ctx); ok {
+				// Recursively sync the fields of each RateLimits element by position.
+				for i := range toRateLimits {
+					if i < len(fromRateLimits) {
+						toRateLimits[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRateLimits[i])
+					}
+				}
+				to.SetRateLimits(ctx, toRateLimits)
+			}
+		}
+	}
 }
 
 func (to *PutRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PutRequest_SdkV2) {
@@ -7045,6 +7818,18 @@ func (to *PutRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PutRe
 		// If a user specified a non-Null, empty list for RateLimits, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RateLimits = from.RateLimits
+	}
+	if !from.RateLimits.IsNull() && !from.RateLimits.IsUnknown() {
+		if toRateLimits, ok := to.GetRateLimits(ctx); ok {
+			if fromRateLimits, ok := from.GetRateLimits(ctx); ok {
+				for i := range toRateLimits {
+					if i < len(fromRateLimits) {
+						toRateLimits[i].SyncFieldsDuringRead(ctx, fromRateLimits[i])
+					}
+				}
+				to.SetRateLimits(ctx, toRateLimits)
+			}
+		}
 	}
 }
 
@@ -7130,6 +7915,19 @@ func (to *PutResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RateLimits = from.RateLimits
 	}
+	if !from.RateLimits.IsNull() && !from.RateLimits.IsUnknown() {
+		if toRateLimits, ok := to.GetRateLimits(ctx); ok {
+			if fromRateLimits, ok := from.GetRateLimits(ctx); ok {
+				// Recursively sync the fields of each RateLimits element by position.
+				for i := range toRateLimits {
+					if i < len(fromRateLimits) {
+						toRateLimits[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRateLimits[i])
+					}
+				}
+				to.SetRateLimits(ctx, toRateLimits)
+			}
+		}
+	}
 }
 
 func (to *PutResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PutResponse_SdkV2) {
@@ -7138,6 +7936,18 @@ func (to *PutResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from PutR
 		// If a user specified a non-Null, empty list for RateLimits, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RateLimits = from.RateLimits
+	}
+	if !from.RateLimits.IsNull() && !from.RateLimits.IsUnknown() {
+		if toRateLimits, ok := to.GetRateLimits(ctx); ok {
+			if fromRateLimits, ok := from.GetRateLimits(ctx); ok {
+				for i := range toRateLimits {
+					if i < len(fromRateLimits) {
+						toRateLimits[i].SyncFieldsDuringRead(ctx, fromRateLimits[i])
+					}
+				}
+				to.SetRateLimits(ctx, toRateLimits)
+			}
+		}
 	}
 }
 
@@ -7295,6 +8105,19 @@ func (to *QueryEndpointInput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Messages = from.Messages
 	}
+	if !from.Messages.IsNull() && !from.Messages.IsUnknown() {
+		if toMessages, ok := to.GetMessages(ctx); ok {
+			if fromMessages, ok := from.GetMessages(ctx); ok {
+				// Recursively sync the fields of each Messages element by position.
+				for i := range toMessages {
+					if i < len(fromMessages) {
+						toMessages[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMessages[i])
+					}
+				}
+				to.SetMessages(ctx, toMessages)
+			}
+		}
+	}
 	if !from.Stop.IsNull() && !from.Stop.IsUnknown() && to.Stop.IsNull() && len(from.Stop.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Stop, and the deserialized field value is Null,
@@ -7329,6 +8152,18 @@ func (to *QueryEndpointInput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 		// If a user specified a non-Null, empty list for Messages, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Messages = from.Messages
+	}
+	if !from.Messages.IsNull() && !from.Messages.IsUnknown() {
+		if toMessages, ok := to.GetMessages(ctx); ok {
+			if fromMessages, ok := from.GetMessages(ctx); ok {
+				for i := range toMessages {
+					if i < len(fromMessages) {
+						toMessages[i].SyncFieldsDuringRead(ctx, fromMessages[i])
+					}
+				}
+				to.SetMessages(ctx, toMessages)
+			}
+		}
 	}
 	if !from.Stop.IsNull() && !from.Stop.IsUnknown() && to.Stop.IsNull() && len(from.Stop.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -7665,11 +8500,37 @@ func (to *QueryEndpointResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Choices = from.Choices
 	}
+	if !from.Choices.IsNull() && !from.Choices.IsUnknown() {
+		if toChoices, ok := to.GetChoices(ctx); ok {
+			if fromChoices, ok := from.GetChoices(ctx); ok {
+				// Recursively sync the fields of each Choices element by position.
+				for i := range toChoices {
+					if i < len(fromChoices) {
+						toChoices[i].SyncFieldsDuringCreateOrUpdate(ctx, fromChoices[i])
+					}
+				}
+				to.SetChoices(ctx, toChoices)
+			}
+		}
+	}
 	if !from.Data.IsNull() && !from.Data.IsUnknown() && to.Data.IsNull() && len(from.Data.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Data, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Data = from.Data
+	}
+	if !from.Data.IsNull() && !from.Data.IsUnknown() {
+		if toData, ok := to.GetData(ctx); ok {
+			if fromData, ok := from.GetData(ctx); ok {
+				// Recursively sync the fields of each Data element by position.
+				for i := range toData {
+					if i < len(fromData) {
+						toData[i].SyncFieldsDuringCreateOrUpdate(ctx, fromData[i])
+					}
+				}
+				to.SetData(ctx, toData)
+			}
+		}
 	}
 	if !from.Outputs.IsNull() && !from.Outputs.IsUnknown() && to.Outputs.IsNull() && len(from.Outputs.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -7701,11 +8562,35 @@ func (to *QueryEndpointResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Choices = from.Choices
 	}
+	if !from.Choices.IsNull() && !from.Choices.IsUnknown() {
+		if toChoices, ok := to.GetChoices(ctx); ok {
+			if fromChoices, ok := from.GetChoices(ctx); ok {
+				for i := range toChoices {
+					if i < len(fromChoices) {
+						toChoices[i].SyncFieldsDuringRead(ctx, fromChoices[i])
+					}
+				}
+				to.SetChoices(ctx, toChoices)
+			}
+		}
+	}
 	if !from.Data.IsNull() && !from.Data.IsUnknown() && to.Data.IsNull() && len(from.Data.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Data, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Data = from.Data
+	}
+	if !from.Data.IsNull() && !from.Data.IsUnknown() {
+		if toData, ok := to.GetData(ctx); ok {
+			if fromData, ok := from.GetData(ctx); ok {
+				for i := range toData {
+					if i < len(fromData) {
+						toData[i].SyncFieldsDuringRead(ctx, fromData[i])
+					}
+				}
+				to.SetData(ctx, toData)
+			}
+		}
 	}
 	if !from.Outputs.IsNull() && !from.Outputs.IsUnknown() && to.Outputs.IsNull() && len(from.Outputs.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -8136,6 +9021,10 @@ type ServedEntityInput_SdkV2 struct {
 }
 
 func (to *ServedEntityInput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ServedEntityInput_SdkV2) {
+	if !from.BurstScalingEnabled.IsUnknown() && !from.BurstScalingEnabled.IsNull() {
+		// BurstScalingEnabled is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.BurstScalingEnabled = from.BurstScalingEnabled
+	}
 	if !from.ExternalModel.IsNull() && !from.ExternalModel.IsUnknown() {
 		if toExternalModel, ok := to.GetExternalModel(ctx); ok {
 			if fromExternalModel, ok := from.GetExternalModel(ctx); ok {
@@ -8148,6 +9037,10 @@ func (to *ServedEntityInput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 }
 
 func (to *ServedEntityInput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ServedEntityInput_SdkV2) {
+	if !from.BurstScalingEnabled.IsUnknown() && !from.BurstScalingEnabled.IsNull() {
+		// BurstScalingEnabled is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.BurstScalingEnabled = from.BurstScalingEnabled
+	}
 	if !from.ExternalModel.IsNull() && !from.ExternalModel.IsUnknown() {
 		if toExternalModel, ok := to.GetExternalModel(ctx); ok {
 			if fromExternalModel, ok := from.GetExternalModel(ctx); ok {
@@ -8160,6 +9053,8 @@ func (to *ServedEntityInput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 
 func (m ServedEntityInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].SetOptional()
+	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].SetComputed()
+	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["entity_name"] = attrs["entity_name"].SetOptional()
 	attrs["entity_version"] = attrs["entity_version"].SetOptional()
 	attrs["environment_vars"] = attrs["environment_vars"].SetOptional()
@@ -8381,6 +9276,10 @@ type ServedEntityOutput_SdkV2 struct {
 }
 
 func (to *ServedEntityOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ServedEntityOutput_SdkV2) {
+	if !from.BurstScalingEnabled.IsUnknown() && !from.BurstScalingEnabled.IsNull() {
+		// BurstScalingEnabled is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.BurstScalingEnabled = from.BurstScalingEnabled
+	}
 	if !from.ExternalModel.IsNull() && !from.ExternalModel.IsUnknown() {
 		if toExternalModel, ok := to.GetExternalModel(ctx); ok {
 			if fromExternalModel, ok := from.GetExternalModel(ctx); ok {
@@ -8411,6 +9310,10 @@ func (to *ServedEntityOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 }
 
 func (to *ServedEntityOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ServedEntityOutput_SdkV2) {
+	if !from.BurstScalingEnabled.IsUnknown() && !from.BurstScalingEnabled.IsNull() {
+		// BurstScalingEnabled is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.BurstScalingEnabled = from.BurstScalingEnabled
+	}
 	if !from.ExternalModel.IsNull() && !from.ExternalModel.IsUnknown() {
 		if toExternalModel, ok := to.GetExternalModel(ctx); ok {
 			if fromExternalModel, ok := from.GetExternalModel(ctx); ok {
@@ -8439,6 +9342,8 @@ func (to *ServedEntityOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 
 func (m ServedEntityOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].SetOptional()
+	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].SetComputed()
+	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
 	attrs["creator"] = attrs["creator"].SetOptional()
 	attrs["entity_name"] = attrs["entity_name"].SetOptional()
@@ -8873,13 +9778,23 @@ type ServedModelInput_SdkV2 struct {
 }
 
 func (to *ServedModelInput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ServedModelInput_SdkV2) {
+	if !from.BurstScalingEnabled.IsUnknown() && !from.BurstScalingEnabled.IsNull() {
+		// BurstScalingEnabled is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.BurstScalingEnabled = from.BurstScalingEnabled
+	}
 }
 
 func (to *ServedModelInput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ServedModelInput_SdkV2) {
+	if !from.BurstScalingEnabled.IsUnknown() && !from.BurstScalingEnabled.IsNull() {
+		// BurstScalingEnabled is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.BurstScalingEnabled = from.BurstScalingEnabled
+	}
 }
 
 func (m ServedModelInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].SetOptional()
+	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].SetComputed()
+	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["environment_vars"] = attrs["environment_vars"].SetOptional()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
 	attrs["max_provisioned_concurrency"] = attrs["max_provisioned_concurrency"].SetOptional()
@@ -9049,6 +9964,10 @@ type ServedModelOutput_SdkV2 struct {
 }
 
 func (to *ServedModelOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ServedModelOutput_SdkV2) {
+	if !from.BurstScalingEnabled.IsUnknown() && !from.BurstScalingEnabled.IsNull() {
+		// BurstScalingEnabled is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.BurstScalingEnabled = from.BurstScalingEnabled
+	}
 	if !from.State.IsNull() && !from.State.IsUnknown() {
 		if toState, ok := to.GetState(ctx); ok {
 			if fromState, ok := from.GetState(ctx); ok {
@@ -9061,6 +9980,10 @@ func (to *ServedModelOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 }
 
 func (to *ServedModelOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ServedModelOutput_SdkV2) {
+	if !from.BurstScalingEnabled.IsUnknown() && !from.BurstScalingEnabled.IsNull() {
+		// BurstScalingEnabled is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.BurstScalingEnabled = from.BurstScalingEnabled
+	}
 	if !from.State.IsNull() && !from.State.IsUnknown() {
 		if toState, ok := to.GetState(ctx); ok {
 			if fromState, ok := from.GetState(ctx); ok {
@@ -9073,6 +9996,8 @@ func (to *ServedModelOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 
 func (m ServedModelOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].SetOptional()
+	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].SetComputed()
+	attrs["burst_scaling_enabled"] = attrs["burst_scaling_enabled"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
 	attrs["creator"] = attrs["creator"].SetOptional()
 	attrs["environment_vars"] = attrs["environment_vars"].SetOptional()
@@ -9397,6 +10322,9 @@ type ServingEndpoint_SdkV2 struct {
 	Tags types.List `tfsdk:"tags"`
 	// The task type of the serving endpoint.
 	Task types.String `tfsdk:"task"`
+	// Telemetry configuration for the endpoint, including inference-table
+	// payload logging.
+	TelemetryConfig types.List `tfsdk:"telemetry_config"`
 	// The usage policy associated with serving endpoint.
 	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
@@ -9435,6 +10363,28 @@ func (to *ServingEndpoint_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
+	if !from.TelemetryConfig.IsNull() && !from.TelemetryConfig.IsUnknown() {
+		if toTelemetryConfig, ok := to.GetTelemetryConfig(ctx); ok {
+			if fromTelemetryConfig, ok := from.GetTelemetryConfig(ctx); ok {
+				// Recursively sync the fields of TelemetryConfig
+				toTelemetryConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromTelemetryConfig)
+				to.SetTelemetryConfig(ctx, toTelemetryConfig)
+			}
+		}
+	}
 }
 
 func (to *ServingEndpoint_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ServingEndpoint_SdkV2) {
@@ -9468,6 +10418,26 @@ func (to *ServingEndpoint_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
+	if !from.TelemetryConfig.IsNull() && !from.TelemetryConfig.IsUnknown() {
+		if toTelemetryConfig, ok := to.GetTelemetryConfig(ctx); ok {
+			if fromTelemetryConfig, ok := from.GetTelemetryConfig(ctx); ok {
+				toTelemetryConfig.SyncFieldsDuringRead(ctx, fromTelemetryConfig)
+				to.SetTelemetryConfig(ctx, toTelemetryConfig)
+			}
+		}
+	}
 }
 
 func (m ServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9486,6 +10456,8 @@ func (m ServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["state"] = attrs["state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["task"] = attrs["task"].SetOptional()
+	attrs["telemetry_config"] = attrs["telemetry_config"].SetOptional()
+	attrs["telemetry_config"] = attrs["telemetry_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["usage_policy_id"] = attrs["usage_policy_id"].SetOptional()
 
 	return attrs
@@ -9500,10 +10472,11 @@ func (m ServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 // SDK values.
 func (m ServingEndpoint_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ai_gateway": reflect.TypeOf(AiGatewayConfig_SdkV2{}),
-		"config":     reflect.TypeOf(EndpointCoreConfigSummary_SdkV2{}),
-		"state":      reflect.TypeOf(EndpointState_SdkV2{}),
-		"tags":       reflect.TypeOf(EndpointTag_SdkV2{}),
+		"ai_gateway":       reflect.TypeOf(AiGatewayConfig_SdkV2{}),
+		"config":           reflect.TypeOf(EndpointCoreConfigSummary_SdkV2{}),
+		"state":            reflect.TypeOf(EndpointState_SdkV2{}),
+		"tags":             reflect.TypeOf(EndpointTag_SdkV2{}),
+		"telemetry_config": reflect.TypeOf(TelemetryConfig_SdkV2{}),
 	}
 }
 
@@ -9526,6 +10499,7 @@ func (m ServingEndpoint_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 			"state":                  m.State,
 			"tags":                   m.Tags,
 			"task":                   m.Task,
+			"telemetry_config":       m.TelemetryConfig,
 			"usage_policy_id":        m.UsagePolicyId,
 		})
 }
@@ -9553,7 +10527,10 @@ func (m ServingEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 			"tags": basetypes.ListType{
 				ElemType: EndpointTag_SdkV2{}.Type(ctx),
 			},
-			"task":            types.StringType,
+			"task": types.StringType,
+			"telemetry_config": basetypes.ListType{
+				ElemType: TelemetryConfig_SdkV2{}.Type(ctx),
+			},
 			"usage_policy_id": types.StringType,
 		},
 	}
@@ -9663,6 +10640,32 @@ func (m *ServingEndpoint_SdkV2) SetTags(ctx context.Context, v []EndpointTag_Sdk
 	m.Tags = types.ListValueMust(t, vs)
 }
 
+// GetTelemetryConfig returns the value of the TelemetryConfig field in ServingEndpoint_SdkV2 as
+// a TelemetryConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ServingEndpoint_SdkV2) GetTelemetryConfig(ctx context.Context) (TelemetryConfig_SdkV2, bool) {
+	var e TelemetryConfig_SdkV2
+	if m.TelemetryConfig.IsNull() || m.TelemetryConfig.IsUnknown() {
+		return e, false
+	}
+	var v []TelemetryConfig_SdkV2
+	d := m.TelemetryConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTelemetryConfig sets the value of the TelemetryConfig field in ServingEndpoint_SdkV2.
+func (m *ServingEndpoint_SdkV2) SetTelemetryConfig(ctx context.Context, v TelemetryConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["telemetry_config"]
+	m.TelemetryConfig = types.ListValueMust(t, vs)
+}
+
 type ServingEndpointAccessControlRequest_SdkV2 struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name"`
@@ -9746,6 +10749,19 @@ func (to *ServingEndpointAccessControlResponse_SdkV2) SyncFieldsDuringCreateOrUp
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
 	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				// Recursively sync the fields of each AllPermissions element by position.
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
+	}
 }
 
 func (to *ServingEndpointAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ServingEndpointAccessControlResponse_SdkV2) {
@@ -9754,6 +10770,18 @@ func (to *ServingEndpointAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx c
 		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
+	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringRead(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
 	}
 }
 
@@ -9877,6 +10905,9 @@ type ServingEndpointDetailed_SdkV2 struct {
 	Tags types.List `tfsdk:"tags"`
 	// The task type of the serving endpoint.
 	Task types.String `tfsdk:"task"`
+	// Telemetry configuration for the endpoint, including inference-table
+	// payload logging.
+	TelemetryConfig types.List `tfsdk:"telemetry_config"`
 }
 
 func (to *ServingEndpointDetailed_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ServingEndpointDetailed_SdkV2) {
@@ -9940,6 +10971,28 @@ func (to *ServingEndpointDetailed_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				// Recursively sync the fields of each Tags element by position.
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
+	if !from.TelemetryConfig.IsNull() && !from.TelemetryConfig.IsUnknown() {
+		if toTelemetryConfig, ok := to.GetTelemetryConfig(ctx); ok {
+			if fromTelemetryConfig, ok := from.GetTelemetryConfig(ctx); ok {
+				// Recursively sync the fields of TelemetryConfig
+				toTelemetryConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromTelemetryConfig)
+				to.SetTelemetryConfig(ctx, toTelemetryConfig)
+			}
+		}
+	}
 }
 
 func (to *ServingEndpointDetailed_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ServingEndpointDetailed_SdkV2) {
@@ -9997,6 +11050,26 @@ func (to *ServingEndpointDetailed_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Tags = from.Tags
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() {
+		if toTags, ok := to.GetTags(ctx); ok {
+			if fromTags, ok := from.GetTags(ctx); ok {
+				for i := range toTags {
+					if i < len(fromTags) {
+						toTags[i].SyncFieldsDuringRead(ctx, fromTags[i])
+					}
+				}
+				to.SetTags(ctx, toTags)
+			}
+		}
+	}
+	if !from.TelemetryConfig.IsNull() && !from.TelemetryConfig.IsUnknown() {
+		if toTelemetryConfig, ok := to.GetTelemetryConfig(ctx); ok {
+			if fromTelemetryConfig, ok := from.GetTelemetryConfig(ctx); ok {
+				toTelemetryConfig.SyncFieldsDuringRead(ctx, fromTelemetryConfig)
+				to.SetTelemetryConfig(ctx, toTelemetryConfig)
+			}
+		}
+	}
 }
 
 func (m ServingEndpointDetailed_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -10024,6 +11097,8 @@ func (m ServingEndpointDetailed_SdkV2) ApplySchemaCustomizations(attrs map[strin
 	attrs["state"] = attrs["state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["task"] = attrs["task"].SetOptional()
+	attrs["telemetry_config"] = attrs["telemetry_config"].SetOptional()
+	attrs["telemetry_config"] = attrs["telemetry_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -10044,6 +11119,7 @@ func (m ServingEndpointDetailed_SdkV2) GetComplexFieldTypes(ctx context.Context)
 		"pending_config":      reflect.TypeOf(EndpointPendingConfig_SdkV2{}),
 		"state":               reflect.TypeOf(EndpointState_SdkV2{}),
 		"tags":                reflect.TypeOf(EndpointTag_SdkV2{}),
+		"telemetry_config":    reflect.TypeOf(TelemetryConfig_SdkV2{}),
 	}
 }
 
@@ -10072,6 +11148,7 @@ func (m ServingEndpointDetailed_SdkV2) ToObjectValue(ctx context.Context) basety
 			"state":                  m.State,
 			"tags":                   m.Tags,
 			"task":                   m.Task,
+			"telemetry_config":       m.TelemetryConfig,
 		})
 }
 
@@ -10111,6 +11188,9 @@ func (m ServingEndpointDetailed_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: EndpointTag_SdkV2{}.Type(ctx),
 			},
 			"task": types.StringType,
+			"telemetry_config": basetypes.ListType{
+				ElemType: TelemetryConfig_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -10297,6 +11377,32 @@ func (m *ServingEndpointDetailed_SdkV2) SetTags(ctx context.Context, v []Endpoin
 	m.Tags = types.ListValueMust(t, vs)
 }
 
+// GetTelemetryConfig returns the value of the TelemetryConfig field in ServingEndpointDetailed_SdkV2 as
+// a TelemetryConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ServingEndpointDetailed_SdkV2) GetTelemetryConfig(ctx context.Context) (TelemetryConfig_SdkV2, bool) {
+	var e TelemetryConfig_SdkV2
+	if m.TelemetryConfig.IsNull() || m.TelemetryConfig.IsUnknown() {
+		return e, false
+	}
+	var v []TelemetryConfig_SdkV2
+	d := m.TelemetryConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTelemetryConfig sets the value of the TelemetryConfig field in ServingEndpointDetailed_SdkV2.
+func (m *ServingEndpointDetailed_SdkV2) SetTelemetryConfig(ctx context.Context, v TelemetryConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["telemetry_config"]
+	m.TelemetryConfig = types.ListValueMust(t, vs)
+}
+
 type ServingEndpointPermission_SdkV2 struct {
 	Inherited types.Bool `tfsdk:"inherited"`
 
@@ -10411,6 +11517,19 @@ func (to *ServingEndpointPermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *ServingEndpointPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ServingEndpointPermissions_SdkV2) {
@@ -10419,6 +11538,18 @@ func (to *ServingEndpointPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Con
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -10560,6 +11691,19 @@ func (to *ServingEndpointPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdat
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *ServingEndpointPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ServingEndpointPermissionsRequest_SdkV2) {
@@ -10568,6 +11712,18 @@ func (to *ServingEndpointPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx cont
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -10641,6 +11797,218 @@ func (m *ServingEndpointPermissionsRequest_SdkV2) SetAccessControlList(ctx conte
 	m.AccessControlList = types.ListValueMust(t, vs)
 }
 
+type TelemetryConfig_SdkV2 struct {
+	// Configuration for inference table payload logging, including sampling.
+	InferenceTableConfig types.List `tfsdk:"inference_table_config"`
+	// The Unity Catalog tables to which endpoint telemetry (logs, traces, and
+	// metrics) is exported. Provide this to create a new telemetry profile for
+	// the endpoint from the given tables.
+	TableNames types.List `tfsdk:"table_names"`
+	// The ID of an existing telemetry profile to apply to this endpoint.
+	// Provide this to reuse a telemetry profile that has already been created,
+	// instead of specifying table_names.
+	TelemetryProfileId types.String `tfsdk:"telemetry_profile_id"`
+}
+
+func (to *TelemetryConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TelemetryConfig_SdkV2) {
+	if !from.InferenceTableConfig.IsNull() && !from.InferenceTableConfig.IsUnknown() {
+		if toInferenceTableConfig, ok := to.GetInferenceTableConfig(ctx); ok {
+			if fromInferenceTableConfig, ok := from.GetInferenceTableConfig(ctx); ok {
+				// Recursively sync the fields of InferenceTableConfig
+				toInferenceTableConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromInferenceTableConfig)
+				to.SetInferenceTableConfig(ctx, toInferenceTableConfig)
+			}
+		}
+	}
+	if !from.TableNames.IsNull() && !from.TableNames.IsUnknown() {
+		if toTableNames, ok := to.GetTableNames(ctx); ok {
+			if fromTableNames, ok := from.GetTableNames(ctx); ok {
+				// Recursively sync the fields of TableNames
+				toTableNames.SyncFieldsDuringCreateOrUpdate(ctx, fromTableNames)
+				to.SetTableNames(ctx, toTableNames)
+			}
+		}
+	}
+}
+
+func (to *TelemetryConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TelemetryConfig_SdkV2) {
+	if !from.InferenceTableConfig.IsNull() && !from.InferenceTableConfig.IsUnknown() {
+		if toInferenceTableConfig, ok := to.GetInferenceTableConfig(ctx); ok {
+			if fromInferenceTableConfig, ok := from.GetInferenceTableConfig(ctx); ok {
+				toInferenceTableConfig.SyncFieldsDuringRead(ctx, fromInferenceTableConfig)
+				to.SetInferenceTableConfig(ctx, toInferenceTableConfig)
+			}
+		}
+	}
+	if !from.TableNames.IsNull() && !from.TableNames.IsUnknown() {
+		if toTableNames, ok := to.GetTableNames(ctx); ok {
+			if fromTableNames, ok := from.GetTableNames(ctx); ok {
+				toTableNames.SyncFieldsDuringRead(ctx, fromTableNames)
+				to.SetTableNames(ctx, toTableNames)
+			}
+		}
+	}
+}
+
+func (m TelemetryConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inference_table_config"] = attrs["inference_table_config"].SetOptional()
+	attrs["inference_table_config"] = attrs["inference_table_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["table_names"] = attrs["table_names"].SetOptional()
+	attrs["table_names"] = attrs["table_names"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["telemetry_profile_id"] = attrs["telemetry_profile_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TelemetryConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TelemetryConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"inference_table_config": reflect.TypeOf(TelemetryInferenceTableConfig_SdkV2{}),
+		"table_names":            reflect.TypeOf(UnityCatalogTableNames_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TelemetryConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m TelemetryConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"inference_table_config": m.InferenceTableConfig,
+			"table_names":            m.TableNames,
+			"telemetry_profile_id":   m.TelemetryProfileId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TelemetryConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"inference_table_config": basetypes.ListType{
+				ElemType: TelemetryInferenceTableConfig_SdkV2{}.Type(ctx),
+			},
+			"table_names": basetypes.ListType{
+				ElemType: UnityCatalogTableNames_SdkV2{}.Type(ctx),
+			},
+			"telemetry_profile_id": types.StringType,
+		},
+	}
+}
+
+// GetInferenceTableConfig returns the value of the InferenceTableConfig field in TelemetryConfig_SdkV2 as
+// a TelemetryInferenceTableConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TelemetryConfig_SdkV2) GetInferenceTableConfig(ctx context.Context) (TelemetryInferenceTableConfig_SdkV2, bool) {
+	var e TelemetryInferenceTableConfig_SdkV2
+	if m.InferenceTableConfig.IsNull() || m.InferenceTableConfig.IsUnknown() {
+		return e, false
+	}
+	var v []TelemetryInferenceTableConfig_SdkV2
+	d := m.InferenceTableConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInferenceTableConfig sets the value of the InferenceTableConfig field in TelemetryConfig_SdkV2.
+func (m *TelemetryConfig_SdkV2) SetInferenceTableConfig(ctx context.Context, v TelemetryInferenceTableConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inference_table_config"]
+	m.InferenceTableConfig = types.ListValueMust(t, vs)
+}
+
+// GetTableNames returns the value of the TableNames field in TelemetryConfig_SdkV2 as
+// a UnityCatalogTableNames_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TelemetryConfig_SdkV2) GetTableNames(ctx context.Context) (UnityCatalogTableNames_SdkV2, bool) {
+	var e UnityCatalogTableNames_SdkV2
+	if m.TableNames.IsNull() || m.TableNames.IsUnknown() {
+		return e, false
+	}
+	var v []UnityCatalogTableNames_SdkV2
+	d := m.TableNames.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTableNames sets the value of the TableNames field in TelemetryConfig_SdkV2.
+func (m *TelemetryConfig_SdkV2) SetTableNames(ctx context.Context, v UnityCatalogTableNames_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["table_names"]
+	m.TableNames = types.ListValueMust(t, vs)
+}
+
+// Inference table payload logging configuration
+type TelemetryInferenceTableConfig_SdkV2 struct {
+	// The full name of the inference table created for this endpoint.
+	Name types.String `tfsdk:"name"`
+	// Fraction of requests sampled for payload logging, in the range [0.0,
+	// 1.0], where 1.0 logs all requests.
+	SamplingFraction types.Float64 `tfsdk:"sampling_fraction"`
+}
+
+func (to *TelemetryInferenceTableConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TelemetryInferenceTableConfig_SdkV2) {
+}
+
+func (to *TelemetryInferenceTableConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TelemetryInferenceTableConfig_SdkV2) {
+}
+
+func (m TelemetryInferenceTableConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["sampling_fraction"] = attrs["sampling_fraction"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TelemetryInferenceTableConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TelemetryInferenceTableConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TelemetryInferenceTableConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m TelemetryInferenceTableConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":              m.Name,
+			"sampling_fraction": m.SamplingFraction,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TelemetryInferenceTableConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":              types.StringType,
+			"sampling_fraction": types.Float64Type,
+		},
+	}
+}
+
 type TrafficConfig_SdkV2 struct {
 	// The list of routes that define traffic to each served entity.
 	Routes types.List `tfsdk:"routes"`
@@ -10653,6 +12021,19 @@ func (to *TrafficConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Routes = from.Routes
 	}
+	if !from.Routes.IsNull() && !from.Routes.IsUnknown() {
+		if toRoutes, ok := to.GetRoutes(ctx); ok {
+			if fromRoutes, ok := from.GetRoutes(ctx); ok {
+				// Recursively sync the fields of each Routes element by position.
+				for i := range toRoutes {
+					if i < len(fromRoutes) {
+						toRoutes[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRoutes[i])
+					}
+				}
+				to.SetRoutes(ctx, toRoutes)
+			}
+		}
+	}
 }
 
 func (to *TrafficConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TrafficConfig_SdkV2) {
@@ -10661,6 +12042,18 @@ func (to *TrafficConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Tr
 		// If a user specified a non-Null, empty list for Routes, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Routes = from.Routes
+	}
+	if !from.Routes.IsNull() && !from.Routes.IsUnknown() {
+		if toRoutes, ok := to.GetRoutes(ctx); ok {
+			if fromRoutes, ok := from.GetRoutes(ctx); ok {
+				for i := range toRoutes {
+					if i < len(fromRoutes) {
+						toRoutes[i].SyncFieldsDuringRead(ctx, fromRoutes[i])
+					}
+				}
+				to.SetRoutes(ctx, toRoutes)
+			}
+		}
 	}
 }
 
@@ -10729,6 +12122,73 @@ func (m *TrafficConfig_SdkV2) SetRoutes(ctx context.Context, v []Route_SdkV2) {
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["routes"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Routes = types.ListValueMust(t, vs)
+}
+
+type UnityCatalogTableNames_SdkV2 struct {
+	// The full three-level Unity Catalog name (catalog.schema.table) of the
+	// table that receives exported annotations.
+	AnnotationsTable types.String `tfsdk:"annotations_table"`
+	// The full three-level Unity Catalog name (catalog.schema.table) of the
+	// table that receives exported logs.
+	LogsTable types.String `tfsdk:"logs_table"`
+	// The full three-level Unity Catalog name (catalog.schema.table) of the
+	// table that receives exported metrics.
+	MetricsTable types.String `tfsdk:"metrics_table"`
+	// The full three-level Unity Catalog name (catalog.schema.table) of the
+	// table that receives exported traces (spans).
+	TracesTable types.String `tfsdk:"traces_table"`
+}
+
+func (to *UnityCatalogTableNames_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UnityCatalogTableNames_SdkV2) {
+}
+
+func (to *UnityCatalogTableNames_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UnityCatalogTableNames_SdkV2) {
+}
+
+func (m UnityCatalogTableNames_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["annotations_table"] = attrs["annotations_table"].SetOptional()
+	attrs["logs_table"] = attrs["logs_table"].SetOptional()
+	attrs["metrics_table"] = attrs["metrics_table"].SetOptional()
+	attrs["traces_table"] = attrs["traces_table"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UnityCatalogTableNames.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UnityCatalogTableNames_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UnityCatalogTableNames_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UnityCatalogTableNames_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"annotations_table": m.AnnotationsTable,
+			"logs_table":        m.LogsTable,
+			"metrics_table":     m.MetricsTable,
+			"traces_table":      m.TracesTable,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UnityCatalogTableNames_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"annotations_table": types.StringType,
+			"logs_table":        types.StringType,
+			"metrics_table":     types.StringType,
+			"traces_table":      types.StringType,
+		},
+	}
 }
 
 type UpdateInferenceEndpointNotifications_SdkV2 struct {

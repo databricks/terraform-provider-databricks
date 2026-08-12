@@ -31,8 +31,10 @@ func (a PermissionAssignmentAPI) CreateOrUpdate(assignment permissionAssignmentE
 	if assignment.PrincipalId != 0 {
 		var resp permissionAssignmentResponseItem
 		path := fmt.Sprintf("/api/2.0/preview/permissionassignments/principals/%d", assignment.PrincipalId)
+		// Bypass the c.Put wrapper because path is already /api/2.0-prefixed,
+		// but still inject the workspace_id routing header for unified hosts.
 		err := a.client.Do(a.context, http.MethodPut, path, nil, nil,
-			Permissions{Permissions: assignment.Permissions}, &resp)
+			Permissions{Permissions: assignment.Permissions}, &resp, a.client.AddWorkspaceIdHeader)
 		if err == nil && resp.Error != "" {
 			err = errors.New(resp.Error)
 		}
@@ -51,7 +53,7 @@ func (a PermissionAssignmentAPI) CreateOrUpdate(assignment permissionAssignmentE
 				},
 			},
 		}
-		err := a.client.Post(a.context, "/preview/permissionassignments", request, &principal)
+		err := a.client.Post(a.context, "/preview/permissionassignments", request, &principal, a.client.AddWorkspaceIdHeader)
 		if err != nil {
 			return principalInfo{}, err
 		}
@@ -67,7 +69,7 @@ func (a PermissionAssignmentAPI) CreateOrUpdate(assignment permissionAssignmentE
 
 func (a PermissionAssignmentAPI) Remove(principalId string) error {
 	path := fmt.Sprintf("/preview/permissionassignments/principals/%s", principalId)
-	return a.client.Delete(a.context, path, nil)
+	return a.client.Delete(a.context, path, nil, a.client.AddWorkspaceIdHeader)
 }
 
 type principalInfo struct {
@@ -119,7 +121,7 @@ func (l permissionAssignmentResponse) ForPrincipal(principalId int64) (res permi
 }
 
 func (a PermissionAssignmentAPI) List() (list permissionAssignmentResponse, err error) {
-	err = a.client.Get(a.context, "/preview/permissionassignments", nil, &list)
+	err = a.client.Get(a.context, "/preview/permissionassignments", nil, &list, a.client.AddWorkspaceIdHeader)
 	return
 }
 

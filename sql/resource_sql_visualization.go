@@ -75,7 +75,7 @@ type VisualizationAPI struct {
 
 // Create ...
 func (a VisualizationAPI) Create(v *api.Visualization) error {
-	return a.client.Post(a.context, "/preview/sql/visualizations", v, &v)
+	return a.client.Post(a.context, "/preview/sql/visualizations", v, &v, a.client.AddWorkspaceIdHeader)
 }
 
 // Read ...
@@ -110,12 +110,12 @@ func (a VisualizationAPI) Read(queryID, visualizationID string) (*api.Visualizat
 
 // Update ...
 func (a VisualizationAPI) Update(visualizationID string, v *api.Visualization) error {
-	return a.client.Post(a.context, fmt.Sprintf("/preview/sql/visualizations/%s", visualizationID), &v, nil)
+	return a.client.Post(a.context, fmt.Sprintf("/preview/sql/visualizations/%s", visualizationID), &v, nil, a.client.AddWorkspaceIdHeader)
 }
 
 // Delete ...
 func (a VisualizationAPI) Delete(visualizationID string) error {
-	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/visualizations/%s", visualizationID), nil)
+	return a.client.Delete(a.context, fmt.Sprintf("/preview/sql/visualizations/%s", visualizationID), nil, a.client.AddWorkspaceIdHeader)
 }
 
 func jsonRemarshal(in []byte) ([]byte, error) {

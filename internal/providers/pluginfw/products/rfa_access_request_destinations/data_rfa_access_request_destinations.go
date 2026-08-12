@@ -5,7 +5,6 @@ package rfa_access_request_destinations
 import (
 	"context"
 	"reflect"
-	"regexp"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
@@ -42,10 +41,10 @@ type ProviderConfigData struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -108,7 +107,7 @@ type AccessRequestDestinationsData struct {
 	// securable) or the nearest parent securable with destinations set.
 	DestinationSourceSecurable types.Object `tfsdk:"destination_source_securable"`
 	// The access request destinations for the securable.
-	Destinations types.List `tfsdk:"destinations"`
+	Destinations types.Set `tfsdk:"destinations"`
 	// The full name of the securable. Redundant with the name in the securable
 	// object, but necessary for Terraform integration
 	FullName types.String `tfsdk:"full_name"`
@@ -166,7 +165,7 @@ func (m AccessRequestDestinationsData) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"are_any_destinations_hidden":  types.BoolType,
 			"destination_source_securable": catalog_tf.Securable{}.Type(ctx),
-			"destinations": basetypes.ListType{
+			"destinations": basetypes.SetType{
 				ElemType: catalog_tf.NotificationDestination{}.Type(ctx),
 			},
 			"full_name":      types.StringType,
@@ -249,8 +248,12 @@ func (r *AccessRequestDestinationDataSource) Read(ctx context.Context, req datas
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// Preserve provider_config from config since it's not part of the API response
+	// Preserve provider_config from config so state.Set has the correct type info
 	newState.ProviderConfigData = config.ProviderConfigData
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

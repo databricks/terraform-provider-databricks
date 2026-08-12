@@ -3,132 +3,116 @@ package common
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/experimental/mocks"
-	"github.com/databricks/databricks-sdk-go/service/workspace"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
-func TestRetryOnTimeout_NoError(t *testing.T) {
-	w := mocks.NewMockWorkspaceClient(t)
-	expected := &workspace.ObjectInfo{}
-	api := w.GetMockWorkspaceAPI().EXPECT()
-	api.GetStatusByPath(mock.Anything, mock.Anything).Return(expected, nil)
-	res, err := RetryOnTimeout(context.Background(), func(ctx context.Context) (*workspace.ObjectInfo, error) {
-		return w.WorkspaceClient.Workspace.GetStatusByPath(ctx, "path")
-	})
-	assert.NoError(t, err)
-	assert.Equal(t, expected, res)
+func TestRetryOnTimeout(t *testing.T) {
+	timeoutErr := errors.New("request failed: request timed out after 1m0s of inactivity")
+	otherErr := errors.New("non-retriable")
+
+	testCases := []struct {
+		name      string
+		callErrs  []error
+		wantErr   error
+		wantCalls int
+	}{
+		{
+			name:      "success on first call",
+			callErrs:  []error{nil},
+			wantCalls: 1,
+		},
+		{
+			name:      "timeout then succeed",
+			callErrs:  []error{timeoutErr, nil},
+			wantCalls: 2,
+		},
+		{
+			name:      "non-timeout halts",
+			callErrs:  []error{otherErr},
+			wantErr:   otherErr,
+			wantCalls: 1,
+		},
+		{
+			name:      "timeout then non-timeout halts",
+			callErrs:  []error{timeoutErr, otherErr},
+			wantErr:   otherErr,
+			wantCalls: 2,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			calls := 0
+			_, err := RetryOnTimeout(context.Background(), func(ctx context.Context) (*struct{}, error) {
+				e := tc.callErrs[calls]
+				calls++
+				return nil, e
+			})
+			if calls != tc.wantCalls {
+				t.Errorf("call count = %d, want %d", calls, tc.wantCalls)
+			}
+			if !errors.Is(err, tc.wantErr) {
+				t.Errorf("err = %v, want %v", err, tc.wantErr)
+			}
+		})
+	}
 }
 
-func TestRetryOnTimeout_OneError(t *testing.T) {
-	w := mocks.NewMockWorkspaceClient(t)
-	expected := &workspace.ObjectInfo{}
-	api := w.GetMockWorkspaceAPI().EXPECT()
-	call1 := api.GetStatusByPath(mock.Anything, mock.Anything).Return(nil, errors.New("request failed: request timed out after 1m0s of inactivity"))
-	call1.Repeatability = 1
-	api.GetStatusByPath(mock.Anything, mock.Anything).Return(expected, nil)
-	res, err := RetryOnTimeout(context.Background(), func(ctx context.Context) (*workspace.ObjectInfo, error) {
-		return w.WorkspaceClient.Workspace.GetStatusByPath(ctx, "path")
-	})
-	assert.NoError(t, err)
-	assert.Equal(t, expected, res)
-}
+func TestRetryOn504(t *testing.T) {
+	otherErr := errors.New("not 504")
 
-func TestRetryOnTimeout_NonRetriableError(t *testing.T) {
-	w := mocks.NewMockWorkspaceClient(t)
-	expected := errors.New("request failed: non-retriable error")
-	api := w.GetMockWorkspaceAPI().EXPECT()
-	api.GetStatusByPath(mock.Anything, mock.Anything).Return(nil, expected)
-	_, err := RetryOnTimeout(context.Background(), func(ctx context.Context) (*workspace.ObjectInfo, error) {
-		return w.WorkspaceClient.Workspace.GetStatusByPath(ctx, "path")
-	})
-	assert.ErrorIs(t, err, expected)
-}
+	testCases := []struct {
+		name      string
+		callErrs  []error
+		wantErr   error
+		wantCalls int
+	}{
+		{
+			name:      "success on first call",
+			callErrs:  []error{nil},
+			wantCalls: 1,
+		},
+		{
+			name:      "504 then succeed",
+			callErrs:  []error{apierr.ErrDeadlineExceeded, nil},
+			wantCalls: 2,
+		},
+		{
+			name:      "wrapped 504 then succeed",
+			callErrs:  []error{fmt.Errorf("got 504: %w", apierr.ErrDeadlineExceeded), nil},
+			wantCalls: 2,
+		},
+		{
+			name:      "non-504 halts",
+			callErrs:  []error{otherErr},
+			wantErr:   otherErr,
+			wantCalls: 1,
+		},
+		{
+			name:      "504 then non-504 halts",
+			callErrs:  []error{apierr.ErrDeadlineExceeded, otherErr},
+			wantErr:   otherErr,
+			wantCalls: 2,
+		},
+	}
 
-func TestRetryOn504_noError(t *testing.T) {
-	wantErr := error(nil)
-	wantRes := (*workspace.ObjectInfo)(nil)
-	wantCalls := 1
-
-	w := mocks.NewMockWorkspaceClient(t)
-	api := w.GetMockWorkspaceAPI().EXPECT()
-	api.GetStatusByPath(mock.Anything, mock.Anything).Return(wantRes, wantErr)
-
-	gotCalls := 0
-	gotRes, gotErr := RetryOn504(context.Background(), func(ctx context.Context) (*workspace.ObjectInfo, error) {
-		gotCalls += 1
-		return w.WorkspaceClient.Workspace.GetStatusByPath(ctx, "path")
-	})
-
-	assert.ErrorIs(t, gotErr, wantErr)
-	assert.Equal(t, gotRes, wantRes)
-	assert.Equal(t, gotCalls, wantCalls)
-}
-
-func TestRetryOn504_errorNot504(t *testing.T) {
-	wantErr := errors.New("test error")
-	wantRes := (*workspace.ObjectInfo)(nil)
-	wantCalls := 1
-
-	w := mocks.NewMockWorkspaceClient(t)
-	api := w.GetMockWorkspaceAPI().EXPECT()
-	api.GetStatusByPath(mock.Anything, mock.Anything).Return(wantRes, wantErr)
-
-	gotCalls := 0
-	gotRes, gotErr := RetryOn504(context.Background(), func(ctx context.Context) (*workspace.ObjectInfo, error) {
-		gotCalls += 1
-		return w.WorkspaceClient.Workspace.GetStatusByPath(ctx, "path")
-	})
-
-	assert.ErrorIs(t, gotErr, wantErr)
-	assert.Equal(t, gotRes, wantRes)
-	assert.Equal(t, gotCalls, wantCalls)
-}
-
-func TestRetryOn504_error504ThenFail(t *testing.T) {
-	wantErr := errors.New("test error")
-	wantRes := (*workspace.ObjectInfo)(nil)
-	wantCalls := 2
-
-	w := mocks.NewMockWorkspaceClient(t)
-	api := w.GetMockWorkspaceAPI().EXPECT()
-	call := api.GetStatusByPath(mock.Anything, mock.Anything).Return(nil, apierr.ErrDeadlineExceeded)
-	call.Repeatability = 1
-	api.GetStatusByPath(mock.Anything, mock.Anything).Return(wantRes, wantErr)
-
-	gotCalls := 0
-	gotRes, gotErr := RetryOn504(context.Background(), func(ctx context.Context) (*workspace.ObjectInfo, error) {
-		gotCalls++
-		return w.WorkspaceClient.Workspace.GetStatusByPath(ctx, "path")
-	})
-
-	assert.ErrorIs(t, gotErr, wantErr)
-	assert.Equal(t, gotRes, wantRes)
-	assert.Equal(t, gotCalls, wantCalls)
-}
-
-func TestRetryOn504_error504ThenSuccess(t *testing.T) {
-	wantErr := error(nil)
-	wantRes := &workspace.ObjectInfo{}
-	wantCalls := 2
-
-	w := mocks.NewMockWorkspaceClient(t)
-	api := w.GetMockWorkspaceAPI().EXPECT()
-	call := api.GetStatusByPath(mock.Anything, mock.Anything).Return(nil, apierr.ErrDeadlineExceeded)
-	call.Repeatability = 1
-	api.GetStatusByPath(mock.Anything, mock.Anything).Return(wantRes, wantErr)
-
-	gotCalls := 0
-	gotRes, gotErr := RetryOn504(context.Background(), func(ctx context.Context) (*workspace.ObjectInfo, error) {
-		gotCalls++
-		return w.WorkspaceClient.Workspace.GetStatusByPath(ctx, "path")
-	})
-
-	assert.ErrorIs(t, gotErr, wantErr)
-	assert.Equal(t, gotRes, wantRes)
-	assert.Equal(t, gotCalls, wantCalls)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			calls := 0
+			_, err := RetryOn504(context.Background(), func(ctx context.Context) (*struct{}, error) {
+				e := tc.callErrs[calls]
+				calls++
+				return nil, e
+			})
+			if calls != tc.wantCalls {
+				t.Errorf("call count = %d, want %d", calls, tc.wantCalls)
+			}
+			if !errors.Is(err, tc.wantErr) {
+				t.Errorf("err = %v, want %v", err, tc.wantErr)
+			}
+		})
+	}
 }

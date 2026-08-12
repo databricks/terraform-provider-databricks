@@ -2,13 +2,23 @@ package tfschema
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWorkspaceIDPlanModifier(t *testing.T) {
@@ -312,4 +322,113 @@ func TestGetWorkspaceIDDataSource(t *testing.T) {
 			assert.Equal(t, tt.expectedWorkspaceID, workspaceID, "Workspace ID mismatch")
 		})
 	}
+}
+
+// TestValidateWorkspaceID_ReadsFromRespPlan simulates the full ModifyPlan flow:
+// state has workspace_id "111", provider default changes to "999".
+// WorkspaceDriftDetection detects the drift and updates resp.Plan to "999".
+// ValidateWorkspaceID is now a no-op (plan-time reachability validation was
+// removed in favor of apply-time validation via GetWorkspaceClientForUnifiedProvider),
+// so it must not add diagnostics regardless of what is in the plan. This test
+// keeps exercising WorkspaceDriftDetection and asserts ValidateWorkspaceID stays
+// inert.
+func TestValidateWorkspaceID_ReadsFromRespPlan(t *testing.T) {
+	ctx := context.Background()
+
+	// Server simulates a workspace with ID 999.
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		// Match on URL.Path (ignoring the query string) so the mock keeps
+		// matching even when the SDK appends query params like
+		// `?excludedAttributes=entitlements` on the SCIM /Me probe.
+		switch req.URL.Path {
+		case "/.well-known/databricks-config":
+			rw.WriteHeader(404)
+		case "/api/2.0/preview/scim/v2/Me":
+			// The server still emits the legacy X-Databricks-Org-Id response
+			// header on /Me; the SDK's CurrentWorkspaceID reads from it. The
+			// request-side header rename to X-Databricks-Workspace-Id is on a
+			// separate schedule from the response-side rename.
+			rw.Header().Set("X-Databricks-Org-Id", "999")
+			rw.WriteHeader(200)
+			rw.Write([]byte("{}"))
+		default:
+			rw.WriteHeader(404)
+		}
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		Host:        server.URL,
+		Token:       "test-token",
+		WorkspaceID: "999", // provider default changed to 999
+	}
+	c, err := client.New(cfg)
+	require.NoError(t, err)
+	databricksClient := &common.DatabricksClient{DatabricksClient: c}
+
+	testSchema := resourceschema.Schema{
+		Attributes: map[string]resourceschema.Attribute{
+			"provider_config": resourceschema.SingleNestedAttribute{
+				Optional: true,
+				Computed: true,
+				Attributes: map[string]resourceschema.Attribute{
+					"workspace_id": resourceschema.StringAttribute{
+						Optional: true,
+						Computed: true,
+					},
+				},
+			},
+		},
+	}
+
+	providerConfigTfType := tftypes.Object{
+		AttributeTypes: map[string]tftypes.Type{
+			"workspace_id": tftypes.String,
+		},
+	}
+	rootTfType := tftypes.Object{
+		AttributeTypes: map[string]tftypes.Type{
+			"provider_config": providerConfigTfType,
+		},
+	}
+
+	makeValue := func(workspaceID string) tftypes.Value {
+		return tftypes.NewValue(rootTfType, map[string]tftypes.Value{
+			"provider_config": tftypes.NewValue(providerConfigTfType, map[string]tftypes.Value{
+				"workspace_id": tftypes.NewValue(tftypes.String, workspaceID),
+			}),
+		})
+	}
+
+	// State has old workspace_id "111".
+	state := tfsdk.State{Schema: testSchema, Raw: makeValue("111")}
+	// Plan initially has "111" (ProviderConfigPlanModifier copied from state).
+	plan := tfsdk.Plan{Schema: testSchema, Raw: makeValue("111")}
+	// Config has null provider_config (user didn't set it in HCL).
+	tfConfig := tfsdk.Config{
+		Schema: testSchema,
+		Raw: tftypes.NewValue(rootTfType, map[string]tftypes.Value{
+			"provider_config": tftypes.NewValue(providerConfigTfType, nil),
+		}),
+	}
+
+	modifyReq := resource.ModifyPlanRequest{
+		State:  state,
+		Plan:   plan,
+		Config: tfConfig,
+	}
+	resp := &resource.ModifyPlanResponse{
+		Plan: plan,
+	}
+
+	// WorkspaceDriftDetection detects 111→999 drift, updates resp.Plan to "999".
+	WorkspaceDriftDetection(ctx, databricksClient, modifyReq, resp)
+	require.False(t, resp.Diagnostics.HasError(),
+		"WorkspaceDriftDetection failed: %v", resp.Diagnostics.Errors())
+
+	// ValidateWorkspaceID is a no-op: it performs no plan-time reachability
+	// validation and must never add diagnostics.
+	ValidateWorkspaceID(ctx, databricksClient, modifyReq, resp)
+	assert.False(t, resp.Diagnostics.HasError(),
+		"expected no error, got: %v", resp.Diagnostics.Errors())
 }

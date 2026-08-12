@@ -10,7 +10,7 @@ import (
 func connectionTemplateWithOwner(host string, owner string) string {
 	return fmt.Sprintf(`
 	resource "databricks_connection" "this" {
-		name = "name-{var.STICKY_RANDOM}"
+		name = "tf-test-connection-{var.STICKY_RANDOM}"
 		connection_type = "MYSQL"
 		comment         = "this is a connection to mysql db"
 		options         = {
@@ -27,7 +27,7 @@ func connectionTemplateWithOwner(host string, owner string) string {
 func connectionTemplateWithoutOwner() string {
 	return `
 	resource "databricks_connection" "this" {
-		name = "name-{var.STICKY_RANDOM}"
+		name = "tf-test-connection-{var.STICKY_RANDOM}"
 		connection_type = "BIGQUERY"
 		comment         = "test"
 		options = {

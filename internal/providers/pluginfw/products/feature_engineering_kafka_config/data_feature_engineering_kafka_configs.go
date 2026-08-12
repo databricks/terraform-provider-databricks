@@ -121,4 +121,8 @@ func (r *KafkaConfigsDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	config.FeatureEngineering = types.ListValueMust(KafkaConfigData{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInStateForDataSource(ctx, r.Client, config.ProviderConfigData, &resp.State)...)
 }

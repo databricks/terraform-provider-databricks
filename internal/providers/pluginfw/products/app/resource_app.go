@@ -125,6 +125,22 @@ func (a *resourceApp) ModifyPlan(ctx context.Context, req resource.ModifyPlanReq
 	tfschema.ValidateWorkspaceID(ctx, a.client, req, resp)
 }
 
+// reconcileEmptyUserApiScopes preserves a user-configured empty user_api_scopes list
+// when the Apps API omits the field from its response. The API only echoes
+// user_api_scopes back while OBO authorization is active, so an app created or updated
+// with `user_api_scopes = []` (to disable OBO) deserializes back to a null list.
+// Terraform treats a known empty list and null as distinct values, so without this the
+// provider reports "inconsistent result after apply" (and then a perpetual diff). An
+// empty list is indistinguishable from "unset" on the wire, so we only restore when the
+// configured value is a known, non-null, empty list. This mirrors the SyncFields
+// reconciliation generated for databricks_app_space.
+func reconcileEmptyUserApiScopes(configured, fromAPI types.List) types.List {
+	if !configured.IsNull() && !configured.IsUnknown() && fromAPI.IsNull() && len(configured.Elements()) == 0 {
+		return configured
+	}
+	return fromAPI
+}
+
 func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -175,6 +191,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 	newApp.NoCompute = app.NoCompute
 	newApp.ProviderConfig = app.ProviderConfig
+	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -193,6 +210,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 	newApp.ProviderConfig = app.ProviderConfig
+	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -279,6 +297,7 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 	}
 	newApp.NoCompute = app.NoCompute
 	newApp.ProviderConfig = app.ProviderConfig
+	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -331,6 +350,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	// Modifying no_compute after creation has no effect.
 	newApp.NoCompute = app.NoCompute
 	newApp.ProviderConfig = app.ProviderConfig
+	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	// No PopulateProviderConfigInState needed for Update: provider_config.workspace_id
 	// is already in state from a previous Create, and if the workspace ID had changed,

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -113,5 +114,23 @@ func TestMwsAccDataCurrentConfigCloudOverride(t *testing.T) {
 			cloud = "aws"
 		}`,
 		Check: checkCurrentConfigWithCloud(t, "aws", "true", "aws"),
+	})
+}
+
+func TestAccDataCurrentConfigWithApiField(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `data "databricks_current_config" "this" {
+			api = "workspace"
+		}`,
+		Check: resource.TestCheckResourceAttr("data.databricks_current_config.this", "is_account", "false"),
+	})
+}
+
+func TestMwsAccDataCurrentConfigWithApiField(t *testing.T) {
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: `data "databricks_current_config" "this" {
+			api = "account"
+		}`,
+		Check: resource.TestCheckResourceAttr("data.databricks_current_config.this", "is_account", "true"),
 	})
 }

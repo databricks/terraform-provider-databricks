@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -15,6 +14,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/declarative"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/qualitymonitorv2_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -51,13 +51,11 @@ type ProviderConfig struct {
 
 // ApplySchemaCustomizations applies the schema customizations to the ProviderConfig type.
 func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
-
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -194,6 +192,19 @@ func (to *QualityMonitor) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ValidityCheckConfigurations = from.ValidityCheckConfigurations
 	}
+	if !from.ValidityCheckConfigurations.IsNull() && !from.ValidityCheckConfigurations.IsUnknown() {
+		if toValidityCheckConfigurations, ok := to.GetValidityCheckConfigurations(ctx); ok {
+			if fromValidityCheckConfigurations, ok := from.GetValidityCheckConfigurations(ctx); ok {
+				// Recursively sync the fields of each ValidityCheckConfigurations element by position.
+				for i := range toValidityCheckConfigurations {
+					if i < len(fromValidityCheckConfigurations) {
+						toValidityCheckConfigurations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromValidityCheckConfigurations[i])
+					}
+				}
+				to.SetValidityCheckConfigurations(ctx, toValidityCheckConfigurations)
+			}
+		}
+	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -220,6 +231,18 @@ func (to *QualityMonitor) SyncFieldsDuringRead(ctx context.Context, from Quality
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ValidityCheckConfigurations = from.ValidityCheckConfigurations
 	}
+	if !from.ValidityCheckConfigurations.IsNull() && !from.ValidityCheckConfigurations.IsUnknown() {
+		if toValidityCheckConfigurations, ok := to.GetValidityCheckConfigurations(ctx); ok {
+			if fromValidityCheckConfigurations, ok := from.GetValidityCheckConfigurations(ctx); ok {
+				for i := range toValidityCheckConfigurations {
+					if i < len(fromValidityCheckConfigurations) {
+						toValidityCheckConfigurations[i].SyncFieldsDuringRead(ctx, fromValidityCheckConfigurations[i])
+					}
+				}
+				to.SetValidityCheckConfigurations(ctx, toValidityCheckConfigurations)
+			}
+		}
+	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -235,6 +258,8 @@ func (m QualityMonitor) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["object_type"] = attrs["object_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["object_id"] = attrs["object_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
+	attrs["provider_config"] = attrs["provider_config"].SetComputed()
+	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
 
 	return attrs
 }
@@ -308,28 +333,18 @@ func (r *QualityMonitorResource) Configure(ctx context.Context, req resource.Con
 }
 
 func (r *QualityMonitorResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	// Skip validation on destroy plans (plan is null).
+	// Skip entirely on destroy (no plan state).
 	if req.Plan.Raw.IsNull() {
 		return
 	}
 	if r.Client == nil {
 		return
 	}
-	var plan QualityMonitor
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var namespace ProviderConfig
-	resp.Diagnostics.Append(plan.ProviderConfig.As(ctx, &namespace, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, namespace.WorkspaceID.ValueString())
-	resp.Diagnostics.Append(validateDiags...)
+	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *QualityMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -386,6 +401,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
 }
 
 func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -423,7 +439,6 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get quality_monitor_v2", err.Error())
 		return
 	}
@@ -437,6 +452,10 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 	newState.SyncFieldsDuringRead(ctx, existingState)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, existingState.ProviderConfig, &resp.State)...)
 }
 
 func (r *QualityMonitorResource) update(ctx context.Context, plan QualityMonitor, diags *diag.Diagnostics, state *tfsdk.State) {
@@ -528,6 +547,9 @@ func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.Delete
 	}
 
 	err := client.QualityMonitorV2.DeleteQualityMonitor(ctx, deleteRequest)
+	if !declarative.IsDeleteError(err) {
+		err = nil
+	}
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete quality_monitor_v2", err.Error())
 		return

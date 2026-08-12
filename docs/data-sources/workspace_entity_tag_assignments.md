@@ -4,6 +4,8 @@ subcategory: "Tags"
 # databricks_workspace_entity_tag_assignments Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/workspaceentitytagassignments)
+
 This data source allows you to retrieve tag assignments that have been applied to a particular workspace scoped entity.
 
 ## Example Usage
@@ -38,7 +40,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes

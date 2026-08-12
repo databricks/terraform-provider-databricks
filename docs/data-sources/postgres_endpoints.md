@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_endpoints Data Source
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 This data source lists all Postgres endpoints in a branch.
 
 
@@ -33,12 +35,13 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 
 ## Attributes
 This data source exports a single attribute, `endpoints`. It is a list of resources, each with the following attributes:
 * `create_time` (string) - A timestamp indicating when the compute endpoint was created
+* `endpoint_id` (string) - The part of the name, chosen by the user when the resource was created
 * `name` (string) - Output only. The full resource path of the endpoint.
   Format: projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 * `parent` (string) - The branch containing this endpoint (API resource hierarchy).
@@ -72,12 +75,16 @@ This data source exports a single attribute, `endpoints`. It is a list of resour
 * `read_only_host` (string) - An optionally defined read-only host for the endpoint, without pooling. For read-only endpoints,
   this attribute is always defined and is equivalent to host. For read-write endpoints, this attribute is defined
   if the enclosing endpoint is a group with greater than 1 computes configured, and has readable secondaries enabled
+* `read_only_pooled_host` (string) - The read-only hostname of the compute endpoint, with pooling. This attribute is always defined for read-only endpoints,
+  and may be defined for read-write endpoints if configured with read replicas and allow read-only connections
+* `read_write_pooled_host` (string) - The read-write hostname of the compute endpoint, with pooling. This attribute is only defined for read-write endpoints
 
 ### EndpointSettings
 * `pg_settings` (object) - A raw representation of Postgres settings
 
 ### EndpointSpec
-* `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units. Minimum value is 0.5
+* `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units. The maximum value is 64.
+  The difference between the minimum and maximum Compute Units (max - min) must not exceed 16
 * `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units. Minimum value is 0.5
 * `disabled` (boolean) - Whether to restrict connections to the compute endpoint.
   Enabling this option schedules a suspend compute operation.
@@ -88,22 +95,27 @@ This data source exports a single attribute, `endpoints`. It is a list of resour
   to non HA settings, with a single compute backing the endpoint (and no readable secondaries
   for Read/Write endpoints)
 * `no_suspension` (boolean) - When set to true, explicitly disables automatic suspension (never suspend).
-  Should be set to true when provided
+  Should be set to true when provided.
+  Mutually exclusive with `suspend_timeout_duration`. When updating, use `spec.suspension` in the update_mask
 * `settings` (EndpointSettings)
 * `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended.
-  If specified should be between 60s and 604800s (1 minute to 1 week)
+  If specified should be between 60s and 604800s (1 minute to 1 week).
+  Mutually exclusive with `no_suspension`. When updating, use `spec.suspension` in the update_mask
 
 ### EndpointStatus
-* `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units
+* `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units. The maximum value is 64.
+  The difference between the minimum and maximum Compute Units (max - min) must not exceed 16
 * `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units
 * `current_state` (string) - Possible values are: `ACTIVE`, `DEGRADED`, `IDLE`, `INIT`
 * `disabled` (boolean) - Whether to restrict connections to the compute endpoint.
   Enabling this option schedules a suspend compute operation.
   A disabled compute endpoint cannot be enabled by a connection or
   console action
+* `endpoint_id` (string) - Part of the resource name
 * `endpoint_type` (string) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `ENDPOINT_TYPE_READ_ONLY`, `ENDPOINT_TYPE_READ_WRITE`
 * `group` (EndpointGroupStatus) - Details on the HA configuration of the endpoint
 * `hosts` (EndpointHosts) - Contains host information for connecting to the endpoint
+* `last_active_time` (string) - A timestamp indicating when the compute endpoint was last active
 * `pending_state` (string) - Possible values are: `ACTIVE`, `DEGRADED`, `IDLE`, `INIT`
 * `settings` (EndpointSettings)
 * `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended

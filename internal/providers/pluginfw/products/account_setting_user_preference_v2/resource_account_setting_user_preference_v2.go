@@ -352,7 +352,6 @@ func (r *UserPreferenceResource) Read(ctx context.Context, req resource.ReadRequ
 			resp.State.RemoveResource(ctx)
 			return
 		}
-
 		resp.Diagnostics.AddError("failed to get account_setting_user_preference_v2", err.Error())
 		return
 	}

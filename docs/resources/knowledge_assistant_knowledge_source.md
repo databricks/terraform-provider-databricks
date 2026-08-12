@@ -4,6 +4,8 @@ subcategory: "Agent Bricks"
 # databricks_knowledge_assistant_knowledge_source Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/knowledgeassistants)
+
 
 
 ## Example Usage
@@ -28,7 +30,7 @@ The following arguments are supported:
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
-* `workspace_id` (string,required) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+* `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### FileTableSpec
 * `file_col` (string, required) - The name of the column containing BINARY file content to be indexed

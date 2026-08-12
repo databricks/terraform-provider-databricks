@@ -268,8 +268,6 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	newState.ID = newState.Name
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
@@ -555,5 +553,9 @@ func (r *ShareResource) syncEffectiveFields(ctx context.Context, existingState, 
 	}
 	newState.SetObjects(ctx, finalObjects)
 	newState.ProviderConfig = existingState.ProviderConfig // Preserve provider_config from existing state
+	// The synthetic id mirrors the share name. Restore it here so every CRUD path
+	// (notably Read and Update) keeps it set; otherwise a refresh drops id to null,
+	// producing a perpetual plan diff and null downstream references.
+	newState.ID = newState.Name
 	return newState, d
 }

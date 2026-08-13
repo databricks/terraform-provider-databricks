@@ -246,3 +246,228 @@ func TestResourceBudgetDelete(t *testing.T) {
 		ID:        "account_id|budget_configuration_id",
 	}.ApplyAndExpectData(t, nil)
 }
+
+func genieFilter() *billing.BudgetConfigurationFilter {
+	return &billing.BudgetConfigurationFilter{
+		Tags: []billing.BudgetConfigurationFilterTagClause{
+			{
+				Key: "databricks-product",
+				Value: &billing.BudgetConfigurationFilterClause{
+					Operator: billing.BudgetConfigurationFilterOperatorIn,
+					Values:   []string{"genie"},
+				},
+			},
+		},
+	}
+}
+
+func getTestGenieSharedBudget() *billing.BudgetConfiguration {
+	return &billing.BudgetConfiguration{
+		AccountId: "account_id",
+		AlertConfigurations: []billing.AlertConfiguration{
+			{
+				ActionConfigurations: []billing.ActionConfiguration{
+					{
+						ActionType: billing.ActionConfigurationTypeEmailNotification,
+						Target:     "abc@gmail.com",
+					},
+				},
+				QuantityThreshold: "2000.000000000000000000",
+				QuantityType:      billing.AlertConfigurationQuantityTypeListPriceDollarsUsd,
+				ScopeType:         billing.AlertConfigurationScopeTypeAlertConfigurationScopeTypeShared,
+				TimePeriod:        billing.AlertConfigurationTimePeriodMonth,
+				TriggerType:       billing.AlertConfigurationTriggerTypeCumulativeSpendingExceeded,
+			},
+		},
+		BudgetConfigurationId: "budget_configuration_id",
+		DisplayName:           "genie-shared-budget",
+		Filter:                genieFilter(),
+		ResourceType:          billing.BudgetResourceTypeBudgetResourceTypeUnityAiGateway,
+	}
+}
+
+func getTestGeniePerUserBudget() *billing.BudgetConfiguration {
+	return &billing.BudgetConfiguration{
+		AccountId: "account_id",
+		AlertConfigurations: []billing.AlertConfiguration{
+			{
+				ActionConfigurations: []billing.ActionConfiguration{
+					{
+						ActionType: billing.ActionConfigurationTypeBlockUsage,
+					},
+				},
+				PrincipalOverrides: []billing.PrincipalOverride{
+					{
+						OverrideThreshold: "300",
+						PrincipalId:       1234567890123456,
+					},
+				},
+				QuantityThreshold: "100.000000000000000000",
+				QuantityType:      billing.AlertConfigurationQuantityTypeListPriceDollarsUsd,
+				ScopeType:         billing.AlertConfigurationScopeTypeAlertConfigurationScopeTypePerUser,
+				TimePeriod:        billing.AlertConfigurationTimePeriodMonth,
+				TriggerType:       billing.AlertConfigurationTriggerTypeCumulativeSpendingExceeded,
+			},
+		},
+		BudgetConfigurationId: "budget_configuration_id",
+		DisplayName:           "genie-per-user-budget",
+		Filter:                genieFilter(),
+		ResourceType:          billing.BudgetResourceTypeBudgetResourceTypeUnityAiGateway,
+	}
+}
+
+func TestResourceBudgetCreate_GenieShared(t *testing.T) {
+	qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			api := a.GetMockBudgetsAPI().EXPECT()
+			api.Create(mock.Anything, billing.CreateBudgetConfigurationRequest{
+				Budget: billing.CreateBudgetConfigurationBudget{
+					AlertConfigurations: []billing.CreateBudgetConfigurationBudgetAlertConfigurations{
+						{
+							ActionConfigurations: []billing.CreateBudgetConfigurationBudgetActionConfigurations{
+								{
+									ActionType: billing.ActionConfigurationTypeEmailNotification,
+									Target:     "abc@gmail.com",
+								},
+							},
+							QuantityThreshold: "2000",
+							QuantityType:      billing.AlertConfigurationQuantityTypeListPriceDollarsUsd,
+							ScopeType:         billing.AlertConfigurationScopeTypeAlertConfigurationScopeTypeShared,
+							TimePeriod:        billing.AlertConfigurationTimePeriodMonth,
+							TriggerType:       billing.AlertConfigurationTriggerTypeCumulativeSpendingExceeded,
+						},
+					},
+					DisplayName:  "genie-shared-budget",
+					Filter:       genieFilter(),
+					ResourceType: billing.BudgetResourceTypeBudgetResourceTypeUnityAiGateway,
+				},
+			}).Return(&billing.CreateBudgetConfigurationResponse{Budget: getTestGenieSharedBudget()}, nil)
+			api.GetByBudgetId(mock.Anything, "budget_configuration_id").Return(
+				&billing.GetBudgetConfigurationResponse{Budget: getTestGenieSharedBudget()}, nil,
+			)
+		},
+		Create:    true,
+		AccountID: "account_id",
+		Host:      "https://accounts.cloud.databricks.com",
+		HCL: `
+		display_name  = "genie-shared-budget"
+		resource_type = "BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY"
+
+		filter {
+			tags {
+				key = "databricks-product"
+				value {
+					operator = "IN"
+					values   = ["genie"]
+				}
+			}
+		}
+
+		alert_configurations {
+			time_period        = "MONTH"
+			trigger_type       = "CUMULATIVE_SPENDING_EXCEEDED"
+			quantity_type      = "LIST_PRICE_DOLLARS_USD"
+			quantity_threshold = "2000"
+			scope_type         = "ALERT_CONFIGURATION_SCOPE_TYPE_SHARED"
+
+			action_configurations {
+				action_type = "EMAIL_NOTIFICATION"
+				target      = "abc@gmail.com"
+			}
+		}
+		`,
+		Resource: ResourceBudget(),
+	}.ApplyAndExpectData(t, map[string]any{
+		"display_name":                      "genie-shared-budget",
+		"id":                                "account_id|budget_configuration_id",
+		"resource_type":                     "BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY",
+		"alert_configurations.#":            1,
+		"alert_configurations.0.scope_type": "ALERT_CONFIGURATION_SCOPE_TYPE_SHARED",
+		"filter.#":                          1,
+	})
+}
+
+func TestResourceBudgetCreate_GeniePerUserBlockUsage(t *testing.T) {
+	qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			api := a.GetMockBudgetsAPI().EXPECT()
+			api.Create(mock.Anything, billing.CreateBudgetConfigurationRequest{
+				Budget: billing.CreateBudgetConfigurationBudget{
+					AlertConfigurations: []billing.CreateBudgetConfigurationBudgetAlertConfigurations{
+						{
+							ActionConfigurations: []billing.CreateBudgetConfigurationBudgetActionConfigurations{
+								{
+									ActionType: billing.ActionConfigurationTypeBlockUsage,
+								},
+							},
+							PrincipalOverrides: []billing.PrincipalOverride{
+								{
+									OverrideThreshold: "300",
+									PrincipalId:       1234567890123456,
+								},
+							},
+							QuantityThreshold: "100",
+							QuantityType:      billing.AlertConfigurationQuantityTypeListPriceDollarsUsd,
+							ScopeType:         billing.AlertConfigurationScopeTypeAlertConfigurationScopeTypePerUser,
+							TimePeriod:        billing.AlertConfigurationTimePeriodMonth,
+							TriggerType:       billing.AlertConfigurationTriggerTypeCumulativeSpendingExceeded,
+						},
+					},
+					DisplayName:  "genie-per-user-budget",
+					Filter:       genieFilter(),
+					ResourceType: billing.BudgetResourceTypeBudgetResourceTypeUnityAiGateway,
+				},
+			}).Return(&billing.CreateBudgetConfigurationResponse{Budget: getTestGeniePerUserBudget()}, nil)
+			api.GetByBudgetId(mock.Anything, "budget_configuration_id").Return(
+				&billing.GetBudgetConfigurationResponse{Budget: getTestGeniePerUserBudget()}, nil,
+			)
+		},
+		Create:    true,
+		AccountID: "account_id",
+		Host:      "https://accounts.cloud.databricks.com",
+		HCL: `
+		display_name  = "genie-per-user-budget"
+		resource_type = "BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY"
+
+		filter {
+			tags {
+				key = "databricks-product"
+				value {
+					operator = "IN"
+					values   = ["genie"]
+				}
+			}
+		}
+
+		alert_configurations {
+			time_period        = "MONTH"
+			trigger_type       = "CUMULATIVE_SPENDING_EXCEEDED"
+			quantity_type      = "LIST_PRICE_DOLLARS_USD"
+			quantity_threshold = "100"
+			scope_type         = "ALERT_CONFIGURATION_SCOPE_TYPE_PER_USER"
+
+			principal_overrides {
+				principal_id       = 1234567890123456
+				override_threshold = "300"
+			}
+
+			action_configurations {
+				action_type = "BLOCK_USAGE"
+			}
+		}
+		`,
+		Resource: ResourceBudget(),
+	}.ApplyAndExpectData(t, map[string]any{
+		"display_name":                      "genie-per-user-budget",
+		"id":                                "account_id|budget_configuration_id",
+		"resource_type":                     "BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY",
+		"alert_configurations.#":            1,
+		"alert_configurations.0.scope_type": "ALERT_CONFIGURATION_SCOPE_TYPE_PER_USER",
+		"alert_configurations.0.principal_overrides.#":                    1,
+		"alert_configurations.0.principal_overrides.0.principal_id":       1234567890123456,
+		"alert_configurations.0.principal_overrides.0.override_threshold": "300",
+		"alert_configurations.0.action_configurations.#":                  1,
+		"alert_configurations.0.action_configurations.0.action_type":      "BLOCK_USAGE",
+		"filter.#": 1,
+	})
+}

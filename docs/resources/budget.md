@@ -58,14 +58,18 @@ resource "databricks_budget" "this" {
 
 ### Budgets for Genie
 
-Starting July 6, 2026, Genie products move to a pay-as-you-go pricing model with a per-user free monthly allowance. Account admins can begin [configuring budgets and cost controls](https://docs.databricks.com/aws/en/genie/budgets). For details, see [what's coming](https://docs.databricks.com/aws/en/release-notes/whats-coming#genie-paygo-pricing).
+Genie budgets use the Unity AI Gateway resource type and the `databricks-product: genie` tag. Do not add other resource tags to a Genie budget.
+
+-> Prerequisite: Enable AI Gateway Budget (Public Preview). See [requirements](https://docs.databricks.com/aws/en/genie/budgets#requirements).
+
+#### Shared Genie budget
+
+A shared Genie budget for all users. Spend is tracked in in aggregate.
 
 ```hcl
-// Create a Budget with resource tags matching the Genie AI Gateway resource.
-// Prerequisite: Enable AI Gateway Budget (Public Preview)
-// https://docs.databricks.com/aws/en/genie/budgets#requirements
 resource "databricks_budget" "genie_shared_budget" {
-  display_name = "genie-shared-budget"
+  display_name  = "genie-shared-budget"
+  resource_type = "BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY"
 
   // Apply the filter on databricks-product tag
   filter {
@@ -83,10 +87,58 @@ resource "databricks_budget" "genie_shared_budget" {
     quantity_type      = "LIST_PRICE_DOLLARS_USD"
     trigger_type       = "CUMULATIVE_SPENDING_EXCEEDED"
     time_period        = "MONTH"
+    scope_type         = "ALERT_CONFIGURATION_SCOPE_TYPE_SHARED"
 
     action_configurations {
       action_type = "EMAIL_NOTIFICATION"
       target      = "abc@gmail.com"
+    }
+  }
+}
+```
+
+#### Per-user Genie budget with block usage
+
+A per-user threshold applies to each user in the budget's scope. Use `principal_overrides` to override the threshold for specific users, groups, or service principals. `BLOCK_USAGE` prevents further requests through Unity AI Gateway when the threshold is reached.
+
+```hcl
+// Find a group we want to apply
+data "databricks_group" "genie-power-users" {
+  display_name = "genie-power-users"
+}
+
+// Create a budget for Genie of $100 per user, and override
+// the threshold to $300 per user for the genie-power-users group.
+resource "databricks_budget" "genie_per_user_budget" {
+  display_name  = "genie-tier-1-budget"
+  resource_type = "BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY"
+
+  filter {
+    tags {
+      key = "databricks-product"
+      value {
+        operator = "IN"
+        values   = ["genie"]
+      }
+    }
+  }
+
+  alert_configurations {
+    // Default the budget threshold to 100 per user
+    quantity_threshold = "100"
+    quantity_type      = "LIST_PRICE_DOLLARS_USD"
+    trigger_type       = "CUMULATIVE_SPENDING_EXCEEDED"
+    time_period        = "MONTH"
+    scope_type         = "ALERT_CONFIGURATION_SCOPE_TYPE_PER_USER"
+
+    // Override the threshold to 300 for a power user group
+    principal_overrides {
+      principal_id       = databricks_group.genie-power-users.id
+      override_threshold = "300"
+    }
+
+    action_configurations {
+      action_type = "BLOCK_USAGE"
     }
   }
 }
@@ -97,6 +149,7 @@ resource "databricks_budget" "genie_shared_budget" {
 The following arguments are available:
 
 * `display_name` - (Required) Name of the budget in Databricks Account.
+* `resource_type` - (Optional, String Enum) The resource scope for this budget. Determines whether the budget tracks all resources or a specific resource. (Enum: `BUDGET_RESOURCE_TYPE_ALL_RESOURCES`, `BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY`)
 
 ### alert_configurations Configuration Block (Required)
 
@@ -104,9 +157,13 @@ The following arguments are available:
 * `trigger_type` - (Required, String Enum) The evaluation method to determine when this budget alert is in a triggered state. (Enum: `CUMULATIVE_SPENDING_EXCEEDED`)
 * `quantity_type` - (Required, String Enum) The way to calculate cost for this budget alert. This is what quantity_threshold is measured in. (Enum: `LIST_PRICE_DOLLARS_USD`)
 * `quantity_threshold` - (Required, String) The threshold for the budget alert to determine if it is in a triggered state. The number is evaluated based on `quantity_type`.
+* `scope_type` - (Optional, String Enum) How the alert threshold is evaluated. Determines whether spend is tracked in aggregate or per individual user. (Enum: `ALERT_CONFIGURATION_SCOPE_TYPE_SHARED`, `ALERT_CONFIGURATION_SCOPE_TYPE_PER_USER`)
+* `principal_overrides` - (Optional) Per-principal threshold overrides for this alert. Only applies to per-user alerts (`scope_type` = `ALERT_CONFIGURATION_SCOPE_TYPE_PER_USER`); ignored for shared alerts. Consists of the following fields:
+  * `principal_id` - (Optional, Integer) Account-level principal id (user, group, or service principal).
+  * `override_threshold` - (Optional, String) Dollar amount that overrides the parent alert's `quantity_threshold` for this principal.
 * `action_configurations` - (Required) List of action configurations to take when the budget alert is triggered. Consists of the following fields:
-  * `action_type` - (Required, String Enum) The type of action to take when the budget alert is triggered. (Enum: `EMAIL_NOTIFICATION`)
-  * `target` - (Required, String) The target of the action. For `EMAIL_NOTIFICATION`, this is the email address to send the notification to.
+  * `action_type` - (Required, String Enum) The type of action to take when the budget alert is triggered. (Enum: `EMAIL_NOTIFICATION`, `BLOCK_USAGE`)
+  * `target` - (Optional, String) The target of the action. For `EMAIL_NOTIFICATION`, this is the email address to send the notification to. Omit for `BLOCK_USAGE`.
 
 ### filter Configuration Block (Optional)
 

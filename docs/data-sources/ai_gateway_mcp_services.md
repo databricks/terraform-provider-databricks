@@ -13,8 +13,6 @@ subcategory: "Unity Catalog"
 
 ## Arguments
 The following arguments are supported:
-* `include_browse` (boolean, optional) - Whether to include MCP services for which the principal can only access
-  selective metadata
 * `page_size` (integer, optional) - Maximum number of MCP services to return. Defaults to 100 when unset or 0;
   the maximum is 100. Use `next_page_token` to retrieve additional pages
 * `parent` (string, optional) - Resource name of the parent schema to list within, as
@@ -29,8 +27,6 @@ The following arguments are supported:
 
 ## Attributes
 This data source exports a single attribute, `mcp_services`. It is a list of resources, each with the following attributes:
-* `browse_only` (boolean) - Whether the caller sees only metadata available through the BROWSE
-  privilege
 * `comment` (string) - User-provided description
 * `config` (McpServiceConfig) - Operational configuration: connection, tool selectors, rate limit.
   Required on CreateMcpService; on

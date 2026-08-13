@@ -24,6 +24,165 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+// Top-level configuration for API Source connectors with arbitrary
+// configuration.
+type ApiSourceConnectorConfig_SdkV2 struct {
+	// Arbitrary key-value configuration values for the API Source connector.
+	Configs types.Map `tfsdk:"configs"`
+}
+
+func (to *ApiSourceConnectorConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ApiSourceConnectorConfig_SdkV2) {
+}
+
+func (to *ApiSourceConnectorConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ApiSourceConnectorConfig_SdkV2) {
+}
+
+func (m ApiSourceConnectorConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["configs"] = attrs["configs"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ApiSourceConnectorConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ApiSourceConnectorConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"configs": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ApiSourceConnectorConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ApiSourceConnectorConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"configs": m.Configs,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ApiSourceConnectorConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"configs": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetConfigs returns the value of the Configs field in ApiSourceConnectorConfig_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ApiSourceConnectorConfig_SdkV2) GetConfigs(ctx context.Context) (map[string]types.String, bool) {
+	if m.Configs.IsNull() || m.Configs.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Configs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetConfigs sets the value of the Configs field in ApiSourceConnectorConfig_SdkV2.
+func (m *ApiSourceConnectorConfig_SdkV2) SetConfigs(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["configs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Configs = types.MapValueMust(t, vs)
+}
+
+// Options for API Source connectors with arbitrary configuration.
+type ApiSourceConnectorOptions_SdkV2 struct {
+	// Arbitrary key-value configuration options for the API Source connector.
+	Options types.Map `tfsdk:"options"`
+}
+
+func (to *ApiSourceConnectorOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ApiSourceConnectorOptions_SdkV2) {
+}
+
+func (to *ApiSourceConnectorOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ApiSourceConnectorOptions_SdkV2) {
+}
+
+func (m ApiSourceConnectorOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["options"] = attrs["options"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ApiSourceConnectorOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ApiSourceConnectorOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"options": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ApiSourceConnectorOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ApiSourceConnectorOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"options": m.Options,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ApiSourceConnectorOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetOptions returns the value of the Options field in ApiSourceConnectorOptions_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ApiSourceConnectorOptions_SdkV2) GetOptions(ctx context.Context) (map[string]types.String, bool) {
+	if m.Options.IsNull() || m.Options.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOptions sets the value of the Options field in ApiSourceConnectorOptions_SdkV2.
+func (m *ApiSourceConnectorOptions_SdkV2) SetOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Options = types.MapValueMust(t, vs)
+}
+
 type ApplyEnvironmentRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 }
@@ -1218,6 +1377,9 @@ func (m ConnectionParameters_SdkV2) Type(ctx context.Context) attr.Type {
 // Wrapper message for source-specific options to support multiple connector
 // types
 type ConnectorOptions_SdkV2 struct {
+	// Connector-specific options for API Source connectors.
+	ApiSourceConnectorOptions types.List `tfsdk:"api_source_connector_options"`
+
 	ConfluenceOptions types.List `tfsdk:"confluence_options"`
 
 	GdriveOptions types.List `tfsdk:"gdrive_options"`
@@ -1244,6 +1406,15 @@ type ConnectorOptions_SdkV2 struct {
 }
 
 func (to *ConnectorOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ConnectorOptions_SdkV2) {
+	if !from.ApiSourceConnectorOptions.IsNull() && !from.ApiSourceConnectorOptions.IsUnknown() {
+		if toApiSourceConnectorOptions, ok := to.GetApiSourceConnectorOptions(ctx); ok {
+			if fromApiSourceConnectorOptions, ok := from.GetApiSourceConnectorOptions(ctx); ok {
+				// Recursively sync the fields of ApiSourceConnectorOptions
+				toApiSourceConnectorOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromApiSourceConnectorOptions)
+				to.SetApiSourceConnectorOptions(ctx, toApiSourceConnectorOptions)
+			}
+		}
+	}
 	if !from.ConfluenceOptions.IsNull() && !from.ConfluenceOptions.IsUnknown() {
 		if toConfluenceOptions, ok := to.GetConfluenceOptions(ctx); ok {
 			if fromConfluenceOptions, ok := from.GetConfluenceOptions(ctx); ok {
@@ -1355,6 +1526,14 @@ func (to *ConnectorOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 }
 
 func (to *ConnectorOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ConnectorOptions_SdkV2) {
+	if !from.ApiSourceConnectorOptions.IsNull() && !from.ApiSourceConnectorOptions.IsUnknown() {
+		if toApiSourceConnectorOptions, ok := to.GetApiSourceConnectorOptions(ctx); ok {
+			if fromApiSourceConnectorOptions, ok := from.GetApiSourceConnectorOptions(ctx); ok {
+				toApiSourceConnectorOptions.SyncFieldsDuringRead(ctx, fromApiSourceConnectorOptions)
+				to.SetApiSourceConnectorOptions(ctx, toApiSourceConnectorOptions)
+			}
+		}
+	}
 	if !from.ConfluenceOptions.IsNull() && !from.ConfluenceOptions.IsUnknown() {
 		if toConfluenceOptions, ok := to.GetConfluenceOptions(ctx); ok {
 			if fromConfluenceOptions, ok := from.GetConfluenceOptions(ctx); ok {
@@ -1454,6 +1633,8 @@ func (to *ConnectorOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m ConnectorOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["api_source_connector_options"] = attrs["api_source_connector_options"].SetOptional()
+	attrs["api_source_connector_options"] = attrs["api_source_connector_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["confluence_options"] = attrs["confluence_options"].SetOptional()
 	attrs["confluence_options"] = attrs["confluence_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["gdrive_options"] = attrs["gdrive_options"].SetOptional()
@@ -1491,18 +1672,19 @@ func (m ConnectorOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // SDK values.
 func (m ConnectorOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"confluence_options":      reflect.TypeOf(ConfluenceConnectorOptions_SdkV2{}),
-		"gdrive_options":          reflect.TypeOf(GoogleDriveOptions_SdkV2{}),
-		"google_ads_options":      reflect.TypeOf(GoogleAdsOptions_SdkV2{}),
-		"jira_options":            reflect.TypeOf(JiraConnectorOptions_SdkV2{}),
-		"kafka_options":           reflect.TypeOf(KafkaOptions_SdkV2{}),
-		"meta_ads_options":        reflect.TypeOf(MetaMarketingOptions_SdkV2{}),
-		"outlook_options":         reflect.TypeOf(OutlookOptions_SdkV2{}),
-		"reddit_ads_options":      reflect.TypeOf(RedditAdsOptions_SdkV2{}),
-		"sharepoint_options":      reflect.TypeOf(SharepointOptions_SdkV2{}),
-		"smartsheet_options":      reflect.TypeOf(SmartsheetOptions_SdkV2{}),
-		"tiktok_ads_options":      reflect.TypeOf(TikTokAdsOptions_SdkV2{}),
-		"zendesk_support_options": reflect.TypeOf(ZendeskSupportOptions_SdkV2{}),
+		"api_source_connector_options": reflect.TypeOf(ApiSourceConnectorOptions_SdkV2{}),
+		"confluence_options":           reflect.TypeOf(ConfluenceConnectorOptions_SdkV2{}),
+		"gdrive_options":               reflect.TypeOf(GoogleDriveOptions_SdkV2{}),
+		"google_ads_options":           reflect.TypeOf(GoogleAdsOptions_SdkV2{}),
+		"jira_options":                 reflect.TypeOf(JiraConnectorOptions_SdkV2{}),
+		"kafka_options":                reflect.TypeOf(KafkaOptions_SdkV2{}),
+		"meta_ads_options":             reflect.TypeOf(MetaMarketingOptions_SdkV2{}),
+		"outlook_options":              reflect.TypeOf(OutlookOptions_SdkV2{}),
+		"reddit_ads_options":           reflect.TypeOf(RedditAdsOptions_SdkV2{}),
+		"sharepoint_options":           reflect.TypeOf(SharepointOptions_SdkV2{}),
+		"smartsheet_options":           reflect.TypeOf(SmartsheetOptions_SdkV2{}),
+		"tiktok_ads_options":           reflect.TypeOf(TikTokAdsOptions_SdkV2{}),
+		"zendesk_support_options":      reflect.TypeOf(ZendeskSupportOptions_SdkV2{}),
 	}
 }
 
@@ -1513,18 +1695,19 @@ func (m ConnectorOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"confluence_options":      m.ConfluenceOptions,
-			"gdrive_options":          m.GdriveOptions,
-			"google_ads_options":      m.GoogleAdsOptions,
-			"jira_options":            m.JiraOptions,
-			"kafka_options":           m.KafkaOptions,
-			"meta_ads_options":        m.MetaAdsOptions,
-			"outlook_options":         m.OutlookOptions,
-			"reddit_ads_options":      m.RedditAdsOptions,
-			"sharepoint_options":      m.SharepointOptions,
-			"smartsheet_options":      m.SmartsheetOptions,
-			"tiktok_ads_options":      m.TiktokAdsOptions,
-			"zendesk_support_options": m.ZendeskSupportOptions,
+			"api_source_connector_options": m.ApiSourceConnectorOptions,
+			"confluence_options":           m.ConfluenceOptions,
+			"gdrive_options":               m.GdriveOptions,
+			"google_ads_options":           m.GoogleAdsOptions,
+			"jira_options":                 m.JiraOptions,
+			"kafka_options":                m.KafkaOptions,
+			"meta_ads_options":             m.MetaAdsOptions,
+			"outlook_options":              m.OutlookOptions,
+			"reddit_ads_options":           m.RedditAdsOptions,
+			"sharepoint_options":           m.SharepointOptions,
+			"smartsheet_options":           m.SmartsheetOptions,
+			"tiktok_ads_options":           m.TiktokAdsOptions,
+			"zendesk_support_options":      m.ZendeskSupportOptions,
 		})
 }
 
@@ -1532,6 +1715,9 @@ func (m ConnectorOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m ConnectorOptions_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"api_source_connector_options": basetypes.ListType{
+				ElemType: ApiSourceConnectorOptions_SdkV2{}.Type(ctx),
+			},
 			"confluence_options": basetypes.ListType{
 				ElemType: ConfluenceConnectorOptions_SdkV2{}.Type(ctx),
 			},
@@ -1570,6 +1756,32 @@ func (m ConnectorOptions_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetApiSourceConnectorOptions returns the value of the ApiSourceConnectorOptions field in ConnectorOptions_SdkV2 as
+// a ApiSourceConnectorOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions_SdkV2) GetApiSourceConnectorOptions(ctx context.Context) (ApiSourceConnectorOptions_SdkV2, bool) {
+	var e ApiSourceConnectorOptions_SdkV2
+	if m.ApiSourceConnectorOptions.IsNull() || m.ApiSourceConnectorOptions.IsUnknown() {
+		return e, false
+	}
+	var v []ApiSourceConnectorOptions_SdkV2
+	d := m.ApiSourceConnectorOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetApiSourceConnectorOptions sets the value of the ApiSourceConnectorOptions field in ConnectorOptions_SdkV2.
+func (m *ConnectorOptions_SdkV2) SetApiSourceConnectorOptions(ctx context.Context, v ApiSourceConnectorOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["api_source_connector_options"]
+	m.ApiSourceConnectorOptions = types.ListValueMust(t, vs)
 }
 
 // GetConfluenceOptions returns the value of the ConfluenceOptions field in ConnectorOptions_SdkV2 as
@@ -14503,6 +14715,8 @@ func (m *SourceCatalogConfig_SdkV2) SetPostgres(ctx context.Context, v PostgresC
 }
 
 type SourceConfig_SdkV2 struct {
+	// Connector-specific top-level configuration for API Source connectors.
+	ApiSourceConnectorConfig types.List `tfsdk:"api_source_connector_config"`
 	// Catalog-level source configuration parameters
 	Catalog types.List `tfsdk:"catalog"`
 
@@ -14510,6 +14724,15 @@ type SourceConfig_SdkV2 struct {
 }
 
 func (to *SourceConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SourceConfig_SdkV2) {
+	if !from.ApiSourceConnectorConfig.IsNull() && !from.ApiSourceConnectorConfig.IsUnknown() {
+		if toApiSourceConnectorConfig, ok := to.GetApiSourceConnectorConfig(ctx); ok {
+			if fromApiSourceConnectorConfig, ok := from.GetApiSourceConnectorConfig(ctx); ok {
+				// Recursively sync the fields of ApiSourceConnectorConfig
+				toApiSourceConnectorConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromApiSourceConnectorConfig)
+				to.SetApiSourceConnectorConfig(ctx, toApiSourceConnectorConfig)
+			}
+		}
+	}
 	if !from.Catalog.IsNull() && !from.Catalog.IsUnknown() {
 		if toCatalog, ok := to.GetCatalog(ctx); ok {
 			if fromCatalog, ok := from.GetCatalog(ctx); ok {
@@ -14531,6 +14754,14 @@ func (to *SourceConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 }
 
 func (to *SourceConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SourceConfig_SdkV2) {
+	if !from.ApiSourceConnectorConfig.IsNull() && !from.ApiSourceConnectorConfig.IsUnknown() {
+		if toApiSourceConnectorConfig, ok := to.GetApiSourceConnectorConfig(ctx); ok {
+			if fromApiSourceConnectorConfig, ok := from.GetApiSourceConnectorConfig(ctx); ok {
+				toApiSourceConnectorConfig.SyncFieldsDuringRead(ctx, fromApiSourceConnectorConfig)
+				to.SetApiSourceConnectorConfig(ctx, toApiSourceConnectorConfig)
+			}
+		}
+	}
 	if !from.Catalog.IsNull() && !from.Catalog.IsUnknown() {
 		if toCatalog, ok := to.GetCatalog(ctx); ok {
 			if fromCatalog, ok := from.GetCatalog(ctx); ok {
@@ -14550,6 +14781,8 @@ func (to *SourceConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Sou
 }
 
 func (m SourceConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["api_source_connector_config"] = attrs["api_source_connector_config"].SetOptional()
+	attrs["api_source_connector_config"] = attrs["api_source_connector_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["catalog"] = attrs["catalog"].SetOptional()
 	attrs["catalog"] = attrs["catalog"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["google_ads_config"] = attrs["google_ads_config"].SetOptional()
@@ -14567,8 +14800,9 @@ func (m SourceConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // SDK values.
 func (m SourceConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"catalog":           reflect.TypeOf(SourceCatalogConfig_SdkV2{}),
-		"google_ads_config": reflect.TypeOf(GoogleAdsConfig_SdkV2{}),
+		"api_source_connector_config": reflect.TypeOf(ApiSourceConnectorConfig_SdkV2{}),
+		"catalog":                     reflect.TypeOf(SourceCatalogConfig_SdkV2{}),
+		"google_ads_config":           reflect.TypeOf(GoogleAdsConfig_SdkV2{}),
 	}
 }
 
@@ -14579,8 +14813,9 @@ func (m SourceConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"catalog":           m.Catalog,
-			"google_ads_config": m.GoogleAdsConfig,
+			"api_source_connector_config": m.ApiSourceConnectorConfig,
+			"catalog":                     m.Catalog,
+			"google_ads_config":           m.GoogleAdsConfig,
 		})
 }
 
@@ -14588,6 +14823,9 @@ func (m SourceConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (m SourceConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"api_source_connector_config": basetypes.ListType{
+				ElemType: ApiSourceConnectorConfig_SdkV2{}.Type(ctx),
+			},
 			"catalog": basetypes.ListType{
 				ElemType: SourceCatalogConfig_SdkV2{}.Type(ctx),
 			},
@@ -14596,6 +14834,32 @@ func (m SourceConfig_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetApiSourceConnectorConfig returns the value of the ApiSourceConnectorConfig field in SourceConfig_SdkV2 as
+// a ApiSourceConnectorConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SourceConfig_SdkV2) GetApiSourceConnectorConfig(ctx context.Context) (ApiSourceConnectorConfig_SdkV2, bool) {
+	var e ApiSourceConnectorConfig_SdkV2
+	if m.ApiSourceConnectorConfig.IsNull() || m.ApiSourceConnectorConfig.IsUnknown() {
+		return e, false
+	}
+	var v []ApiSourceConnectorConfig_SdkV2
+	d := m.ApiSourceConnectorConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetApiSourceConnectorConfig sets the value of the ApiSourceConnectorConfig field in SourceConfig_SdkV2.
+func (m *SourceConfig_SdkV2) SetApiSourceConnectorConfig(ctx context.Context, v ApiSourceConnectorConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["api_source_connector_config"]
+	m.ApiSourceConnectorConfig = types.ListValueMust(t, vs)
 }
 
 // GetCatalog returns the value of the Catalog field in SourceConfig_SdkV2 as
@@ -16311,8 +16575,14 @@ func (m *TikTokAdsOptionsTikTokAdsCustomReportOptions_SdkV2) SetMetrics(ctx cont
 type Transformer_SdkV2 struct {
 	// Required: the wire format of the data.
 	Format types.String `tfsdk:"format"`
+	// Optional input column to transform. When set, the transformer reads from
+	// this column instead of the default source column.
+	InputColumn types.String `tfsdk:"input_column"`
 
 	JsonOptions types.List `tfsdk:"json_options"`
+	// Optional output column name. When set, the transformed result is written
+	// to this column instead of replacing the input column.
+	OutputColumn types.String `tfsdk:"output_column"`
 }
 
 func (to *Transformer_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Transformer_SdkV2) {
@@ -16340,8 +16610,10 @@ func (to *Transformer_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Tran
 
 func (m Transformer_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["format"] = attrs["format"].SetOptional()
+	attrs["input_column"] = attrs["input_column"].SetOptional()
 	attrs["json_options"] = attrs["json_options"].SetOptional()
 	attrs["json_options"] = attrs["json_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["output_column"] = attrs["output_column"].SetOptional()
 
 	return attrs
 }
@@ -16366,8 +16638,10 @@ func (m Transformer_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"format":       m.Format,
-			"json_options": m.JsonOptions,
+			"format":        m.Format,
+			"input_column":  m.InputColumn,
+			"json_options":  m.JsonOptions,
+			"output_column": m.OutputColumn,
 		})
 }
 
@@ -16375,10 +16649,12 @@ func (m Transformer_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (m Transformer_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"format": types.StringType,
+			"format":       types.StringType,
+			"input_column": types.StringType,
 			"json_options": basetypes.ListType{
 				ElemType: JsonTransformerOptions_SdkV2{}.Type(ctx),
 			},
+			"output_column": types.StringType,
 		},
 	}
 }

@@ -1432,7 +1432,8 @@ type ServicePrincipal struct {
 	AccountId types.String `tfsdk:"account_id"`
 	// The activity status of a service principal in a Databricks account.
 	AccountSpStatus types.String `tfsdk:"account_sp_status"`
-	// Application ID of the service principal.
+	// Application ID of the service principal. Set at creation time and cannot
+	// be changed afterwards; when omitted, the server generates one.
 	ApplicationId types.String `tfsdk:"application_id"`
 	// Display name of the service principal.
 	DisplayName types.String `tfsdk:"display_name"`
@@ -1450,9 +1451,10 @@ func (to *ServicePrincipal) SyncFieldsDuringRead(ctx context.Context, from Servi
 
 func (m ServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
-	attrs["account_sp_status"] = attrs["account_sp_status"].SetOptional()
-	attrs["application_id"] = attrs["application_id"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["account_sp_status"] = attrs["account_sp_status"].SetRequired()
+	attrs["application_id"] = attrs["application_id"].SetComputed()
+	attrs["application_id"] = attrs["application_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["display_name"] = attrs["display_name"].SetRequired()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
 
@@ -1752,11 +1754,11 @@ func (to *User) SyncFieldsDuringRead(ctx context.Context, from User) {
 
 func (m User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
-	attrs["account_user_status"] = attrs["account_user_status"].SetOptional()
+	attrs["account_user_status"] = attrs["account_user_status"].SetRequired()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
-	attrs["full_name"] = attrs["full_name"].SetOptional()
+	attrs["full_name"] = attrs["full_name"].SetRequired()
 	attrs["user_id"] = attrs["user_id"].SetComputed()
-	attrs["username"] = attrs["username"].SetOptional()
+	attrs["username"] = attrs["username"].SetRequired()
 	attrs["username"] = attrs["username"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	return attrs

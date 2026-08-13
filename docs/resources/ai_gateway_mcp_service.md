@@ -61,8 +61,6 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `browse_only` (boolean) - Whether the caller sees only metadata available through the BROWSE
-  privilege
 * `create_time` (string) - When the MCP service was created
 * `created_by` (string) - Creator identity
 * `effective_owner` (string) - The resolved owner of the MCP service. Falls back to the caller's identity

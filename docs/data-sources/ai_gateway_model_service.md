@@ -25,8 +25,6 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `browse_only` (boolean) - Whether the caller sees only metadata available through the BROWSE
-  privilege
 * `comment` (string) - User-provided description
 * `config` (ModelServiceConfig) - Operational configuration: destinations, routing, rate limits, inference
   table. Required on CreateModelService; on UpdateModelService it is

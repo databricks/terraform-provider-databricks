@@ -56,15 +56,41 @@ resource "databricks_budget" "this" {
 }
 ```
 
-### Budgets for Genie
+### Budgets for AI Gateway Resources
 
-Genie budgets use the Unity AI Gateway resource type and the `databricks-product: genie` tag. Do not add other resource tags to a Genie budget.
+Budgets can also be scoped to track only spend through Unity AI Gateway endpoints by setting `resource_type` to `BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY`.
 
--> Prerequisite: Enable AI Gateway Budget (Public Preview). See [requirements](https://docs.databricks.com/aws/en/genie/budgets#requirements).
+This includes Databricks products that may use Unity AI Gateway endpoints, such as Databricks Genie.
+
+#### AI Gateway Budget for all endpoints
+
+Create a shared budget tracking all costs for Unity AI Gateway endpoints, and send an email when the budget threshold is exceeded.
+
+```hcl
+resource "databricks_budget" "ai_gateway_shared_budget" {
+  display_name  = "aigw-shared-budget"
+  resource_type = "BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY"
+
+  alert_configurations {
+    quantity_threshold = "10000"
+    quantity_type      = "LIST_PRICE_DOLLARS_USD"
+    trigger_type       = "CUMULATIVE_SPENDING_EXCEEDED"
+    time_period        = "MONTH"
+    scope_type         = "ALERT_CONFIGURATION_SCOPE_TYPE_SHARED"
+
+    action_configurations {
+      action_type = "EMAIL_NOTIFICATION"
+      target      = "abc@gmail.com"
+    }
+  }
+}
+```
 
 #### Shared Genie budget
 
-A shared Genie budget for all users. Spend is tracked in in aggregate.
+Genie budgets use the Unity AI Gateway resource type and the `databricks-product: genie` tag. Do not add other resource tags to a Genie budget.
+
+A shared Genie budget for all users. Spend is tracked in aggregate.
 
 ```hcl
 resource "databricks_budget" "genie_shared_budget" {
@@ -97,7 +123,7 @@ resource "databricks_budget" "genie_shared_budget" {
 }
 ```
 
-#### Per-user Genie budget with block usage
+#### Per-user budget overrides with block usage
 
 A per-user threshold applies to each user in the budget's scope. Use `principal_overrides` to override the threshold for specific users, groups, or service principals. `BLOCK_USAGE` prevents further requests through Unity AI Gateway when the threshold is reached.
 

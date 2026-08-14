@@ -7,6 +7,7 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+* Added `disabled` field to `task` block in `databricks_job` resource, allowing individual tasks to be disabled ([#5486](https://github.com/databricks/terraform-provider-databricks/pull/5486)).
 
 * Add support for `model_service`, `mcp_service`, and `model_provider_service` securables in `databricks_grant` and `databricks_grants` ([#5941](https://github.com/databricks/terraform-provider-databricks/pull/5941)).
 

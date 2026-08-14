@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -243,45 +244,69 @@ func TestCreate_PersistsStateBeforePolling(t *testing.T) {
 	}
 }
 
-// TestCreate_SendsGcpEndpoint guards against silently dropping
-// gcp_endpoint.service_attachment from the create request. SDKv2 copied the
-// whole struct via DataToStructPointer; the PF translation must not regress.
-func TestCreate_SendsGcpEndpoint(t *testing.T) {
+// TestCreate_RoundTripsGcpEndpoint guards against silently dropping GCP
+// endpoint fields in either direction. SDKv2 copied the whole struct via
+// DataToStructPointer; the PF translation must not regress.
+func TestCreate_RoundTripsGcpEndpoint(t *testing.T) {
 	ctx := context.Background()
-	var sentReq *settings.CreatePrivateEndpointRuleRequest
-	api := &fakeAPI{
-		create: func(_ context.Context, req settings.CreatePrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
-			sentReq = &req
-			return &settings.NccPrivateEndpointRule{
-				RuleId:                      "rule-1",
-				NetworkConnectivityConfigId: req.NetworkConnectivityConfigId,
-				ConnectionState:             "PENDING",
-			}, nil
+	tests := []struct {
+		name string
+		plan gcpEndpointModel
+		want *settings.GcpEndpoint
+	}{
+		{
+			name: "service attachment",
+			plan: gcpEndpointModel{ServiceAttachment: types.StringValue("projects/p/regions/r/serviceAttachments/sa")},
+			want: &settings.GcpEndpoint{ServiceAttachment: "projects/p/regions/r/serviceAttachments/sa"},
 		},
-		get: func(context.Context, settings.GetPrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
-			return &settings.NccPrivateEndpointRule{RuleId: "rule-1", ConnectionState: "PENDING"}, nil
+		{
+			name: "selected Google APIs",
+			plan: gcpEndpointModel{GoogleApiEndpoints: []googleApiEndpointsModel{{
+				Endpoints: types.ListValueMust(types.StringType, []attr.Value{types.StringValue("storage.googleapis.com")}),
+			}}},
+			want: &settings.GcpEndpoint{GoogleApiEndpoints: &settings.GoogleApiEndpoints{Endpoints: []string{"storage.googleapis.com"}}},
+		},
+		{
+			name: "all VPC-SC services",
+			plan: gcpEndpointModel{AllVpcScServices: types.BoolValue(true)},
+			want: &settings.GcpEndpoint{AllVpcScServices: true},
 		},
 	}
-	r := &resourcePrivateEndpointRule{api: api, backoff: tightBackoff}
 
-	req := resource.CreateRequest{Plan: rawPlan(t, ctx, model{
-		NetworkConnectivityConfigId: types.StringValue("ncc-1"),
-		GcpEndpoint: []gcpEndpointModel{{
-			ServiceAttachment: types.StringValue("projects/p/regions/r/serviceAttachments/sa"),
-		}},
-	})}
-	resp := resource.CreateResponse{State: emptyState()}
-	r.Create(ctx, req, &resp)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var sentReq *settings.CreatePrivateEndpointRuleRequest
+			serverGcp := *tt.want
+			serverGcp.PscEndpointUri = "projects/p/regions/r/serviceAttachments/sa/endpoints/1"
+			api := &fakeAPI{
+				create: func(_ context.Context, req settings.CreatePrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
+					sentReq = &req
+					return &settings.NccPrivateEndpointRule{RuleId: "rule-1", ConnectionState: "PENDING", GcpEndpoint: &serverGcp}, nil
+				},
+				get: func(context.Context, settings.GetPrivateEndpointRuleRequest) (*settings.NccPrivateEndpointRule, error) {
+					return &settings.NccPrivateEndpointRule{RuleId: "rule-1", ConnectionState: "PENDING", GcpEndpoint: &serverGcp}, nil
+				},
+			}
+			r := &resourcePrivateEndpointRule{api: api, backoff: tightBackoff}
+			req := resource.CreateRequest{Plan: rawPlan(t, ctx, model{
+				NetworkConnectivityConfigId: types.StringValue("ncc-1"),
+				GcpEndpoint:                 []gcpEndpointModel{tt.plan},
+			})}
+			resp := resource.CreateResponse{State: emptyState()}
+			r.Create(ctx, req, &resp)
+			fatalIfDiag(t, resp.Diagnostics)
 
-	fatalIfDiag(t, resp.Diagnostics)
-	if sentReq == nil {
-		t.Fatal("Create never reached the API")
-	}
-	if sentReq.PrivateEndpointRule.GcpEndpoint == nil {
-		t.Fatal("GcpEndpoint dropped from create request")
-	}
-	if got, want := sentReq.PrivateEndpointRule.GcpEndpoint.ServiceAttachment, "projects/p/regions/r/serviceAttachments/sa"; got != want {
-		t.Errorf("ServiceAttachment: got %q, want %q", got, want)
+			if sentReq == nil || !reflect.DeepEqual(sentReq.PrivateEndpointRule.GcpEndpoint, tt.want) {
+				t.Fatalf("create GcpEndpoint: got %+v, want %+v", sentReq, tt.want)
+			}
+			final := readModel(t, ctx, resp.State)
+			stateGcp, diags := gcpEndpointToAPI(ctx, final.GcpEndpoint)
+			fatalIfDiag(t, diags)
+			stateGcp.PscEndpointUri = ""
+			if !reflect.DeepEqual(stateGcp, tt.want) {
+				t.Errorf("state GcpEndpoint: got %+v, want %+v", stateGcp, tt.want)
+			}
+		})
 	}
 }
 
@@ -527,6 +552,29 @@ func TestToUpdateRequest_ComputesMaskFromChangedFields(t *testing.T) {
 				t.Errorf("UpdateMask: got %q, want %q", req.UpdateMask, tt.wantMask)
 			}
 		})
+	}
+}
+
+func TestToUpdateRequest_UpdatesFirstPartyGcpTarget(t *testing.T) {
+	ctx := context.Background()
+	base := model{
+		ID:            types.StringValue(packID("ncc-id", "rule-id")),
+		DomainNames:   types.ListNull(types.StringType),
+		ResourceNames: types.ListNull(types.StringType),
+		GcpEndpoint: []gcpEndpointModel{{GoogleApiEndpoints: []googleApiEndpointsModel{{
+			Endpoints: types.ListValueMust(types.StringType, []attr.Value{types.StringValue("storage.googleapis.com")}),
+		}}}},
+	}
+	plan := base
+	plan.GcpEndpoint = []gcpEndpointModel{{AllVpcScServices: types.BoolValue(true)}}
+
+	req, diags := plan.toUpdateRequest(ctx, base)
+	fatalIfDiag(t, diags)
+	if req.UpdateMask != "gcp_endpoint" {
+		t.Fatalf("UpdateMask: got %q, want gcp_endpoint", req.UpdateMask)
+	}
+	if req.PrivateEndpointRule.GcpEndpoint == nil || !req.PrivateEndpointRule.GcpEndpoint.AllVpcScServices {
+		t.Fatalf("GcpEndpoint: got %+v, want AllVpcScServices=true", req.PrivateEndpointRule.GcpEndpoint)
 	}
 }
 
@@ -787,6 +835,28 @@ func TestSchema_MatchesSDKv2(t *testing.T) {
 			}
 			nested := s.Elem.(*sdkschema.Resource).Schema
 			for sub, subSchema := range nested {
+				if sub == "google_api_endpoints" {
+					pfBlock, ok := block.NestedObject.Blocks[sub].(schema.ListNestedBlock)
+					if !ok {
+						t.Errorf("gcp_endpoint.%s present in SDKv2 but missing from PF", sub)
+						continue
+					}
+					if !subSchema.Optional || subSchema.Computed || subSchema.Required {
+						t.Errorf("gcp_endpoint.%s flags: PF nested blocks are Optional; SDKv2 %s", sub, sdkFlags(subSchema))
+					}
+					sdkNested := subSchema.Elem.(*sdkschema.Resource).Schema
+					for nestedName, nestedSchema := range sdkNested {
+						pfNested, ok := pfBlock.NestedObject.Attributes[nestedName]
+						if !ok {
+							t.Errorf("gcp_endpoint.%s.%s present in SDKv2 but missing from PF", sub, nestedName)
+							continue
+						}
+						if got, want := flags(pfNested), sdkFlags(nestedSchema); got != want {
+							t.Errorf("gcp_endpoint.%s.%s flags: PF %s, SDKv2 %s", sub, nestedName, got, want)
+						}
+					}
+					continue
+				}
 				pfSub, ok := block.NestedObject.Attributes[sub]
 				if !ok {
 					t.Errorf("gcp_endpoint.%s present in SDKv2 but missing from PF", sub)

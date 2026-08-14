@@ -215,14 +215,8 @@ func isNumericWorkspaceID(id string) bool {
 
 // CurrentWorkspaceID returns the cached workspace ID for a workspace-level
 // provider. The cache is seeded once during provider configuration
-// (ReconcileWorkspaceIDFromHostMetadata) — from host metadata, or from a single
-// /Me for older hosts. Callers therefore never trigger a /Me here; an unseeded
-// cache is treated as an error rather than resolved lazily.
-//
-// Reaching this with an unseeded cache means either provider configuration did not
-// seed it (a workspace-host invariant violation) or the provider is not configured
-// against a workspace host — /Me is a workspace-level call and cannot resolve a
-// workspace id for an account host, so there is nothing to resolve here.
+// (ReconcileWorkspaceIDFromHostMetadata), so an unseeded cache is returned as an
+// error rather than resolved lazily via /Me.
 func (c *DatabricksClient) CurrentWorkspaceID(ctx context.Context) (int64, error) {
 	if c.cachedWorkspaceID != 0 {
 		return c.cachedWorkspaceID, nil

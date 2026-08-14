@@ -1373,8 +1373,9 @@ func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {
 		},
 		{
 			// Workspace host with old state value but no provider_config, no default,
-			// and no cached ID: lazy resolution attempts CurrentWorkspaceID which fails
-			// silently, then falls through to the "missing workspace_id" error.
+			// and no cached ID: CurrentWorkspaceID returns an error (the cache was not
+			// seeded at configuration), which falls through to the "missing
+			// workspace_id" error.
 			name: "workspace_id removed A to empty no default workspace host - error",
 			instanceState: map[string]string{
 				"name":                           "test",

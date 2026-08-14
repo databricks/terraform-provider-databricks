@@ -183,20 +183,12 @@ func (c *DatabricksClient) getWorkspaceClientForWorkspaceConfiguredProvider(
 		return nil, err
 	}
 
-	// Check if the workspace ID specified in the resource matches
-	// the workspace ID of the provider configured workspace client.
-	w, err := c.WorkspaceClient()
-	if err != nil {
-		return nil, err
-	}
-
-	err = c.validateWorkspaceIDFromProvider(ctx, parsedID, w)
-	if err != nil {
+	// Check that the workspace ID specified in the resource matches the provider's
+	// workspace (from the cache seeded at configuration), then return the client.
+	if err := c.validateWorkspaceIDFromProvider(parsedID); err != nil {
 		return nil, fmt.Errorf("failed to validate workspace_id: %w", err)
 	}
-	// The provider is configured at the workspace level and the
-	// workspace ID matches
-	return w, nil
+	return c.WorkspaceClient()
 }
 
 // parseWorkspaceID validates the workspace ID is non-empty and returns it verbatim.
@@ -221,21 +213,23 @@ func isNumericWorkspaceID(id string) bool {
 	return err == nil
 }
 
-// CurrentWorkspaceID returns the workspace ID for a workspace-level provider.
-// It uses the cached value if available, otherwise makes an API call to resolve it.
+// CurrentWorkspaceID returns the cached workspace ID for a workspace-level
+// provider. The cache is seeded once during provider configuration
+// (ReconcileWorkspaceIDFromHostMetadata) — from host metadata, or from a single
+// /Me for older hosts. Callers therefore never trigger a /Me here; an unseeded
+// cache is treated as an error rather than resolved lazily.
+//
+// Reaching this with an unseeded cache means either provider configuration did not
+// seed it (a workspace-host invariant violation) or the provider is not configured
+// against a workspace host — /Me is a workspace-level call and cannot resolve a
+// workspace id for an account host, so there is nothing to resolve here.
 func (c *DatabricksClient) CurrentWorkspaceID(ctx context.Context) (int64, error) {
 	if c.cachedWorkspaceID != 0 {
 		return c.cachedWorkspaceID, nil
 	}
-	w, err := c.WorkspaceClient()
-	if err != nil {
-		return 0, err
-	}
-	err = c.setCachedWorkspaceID(ctx, w)
-	if err != nil {
-		return 0, err
-	}
-	return c.cachedWorkspaceID, nil
+	return 0, fmt.Errorf("workspace_id is not available: it is resolved during provider " +
+		"configuration for workspace-level providers. Set workspace_id in the provider " +
+		"configuration, or configure the provider against a workspace host")
 }
 
 // validateWorkspaceIDFromProvider validates the workspace ID specified in the
@@ -243,8 +237,8 @@ func (c *DatabricksClient) CurrentWorkspaceID(ctx context.Context) (int64, error
 // Workspace-level providers (host+token scoped to one workspace) can only operate on that workspace;
 // connection IDs cannot be reconciled here because the server returns a canonical
 // numeric workspace ID via /Me that has no meaningful comparison with a connection ID.
-func (c *DatabricksClient) validateWorkspaceIDFromProvider(ctx context.Context, workspaceID string,
-	w *databricks.WorkspaceClient) error {
+// The comparison uses the cachedWorkspaceID seeded at provider configuration.
+func (c *DatabricksClient) validateWorkspaceIDFromProvider(workspaceID string) error {
 	// Reject connection IDs up-front. A workspace-level provider (host+token)
 	// is scoped to a single workspace; the server returns that workspace's
 	// canonical numeric workspace ID via /Me, which can never be compared
@@ -260,14 +254,13 @@ func (c *DatabricksClient) validateWorkspaceIDFromProvider(ctx context.Context, 
 			workspaceID)
 	}
 
-	// cachedWorkspaceID is normally seeded during provider configuration
-	// (ReconcileWorkspaceIDFromHostMetadata), so this is a no-op. It remains as a
-	// defensive fallback for the rare path where the cache was not seeded at init.
+	// cachedWorkspaceID is seeded during provider configuration
+	// (ReconcileWorkspaceIDFromHostMetadata) for workspace hosts. If it is unseeded
+	// here the workspace id could not be resolved at configure time, so there is
+	// nothing to validate against — error rather than issuing a lazy /Me.
 	if c.cachedWorkspaceID == 0 {
-		err := c.setCachedWorkspaceID(ctx, w)
-		if err != nil {
-			return err
-		}
+		return fmt.Errorf("workspace_id is not available to validate against: it is resolved " +
+			"during provider configuration for workspace-level providers")
 	}
 
 	cachedAsString := strconv.FormatInt(c.cachedWorkspaceID, 10)
@@ -337,12 +330,17 @@ func (c *DatabricksClient) ReconcileWorkspaceIDFromHostMetadata(ctx context.Cont
 		if userWorkspaceID != "" && !isNumericWorkspaceID(userWorkspaceID) {
 			return nil
 		}
-		// CurrentWorkspaceID seeds cachedWorkspaceID from /Me. Fatal on failure.
-		id, err := c.CurrentWorkspaceID(ctx)
+		// Seed the cache from /Me. This is the only place a /Me is issued to resolve
+		// the workspace id; downstream callers rely on the cache being seeded here
+		// and error rather than issuing their own /Me. Fatal on failure.
+		w, err := c.WorkspaceClient()
 		if err != nil {
 			return fmt.Errorf("failed to resolve workspace_id from the workspace host: %w", err)
 		}
-		hostWorkspaceID = strconv.FormatInt(id, 10)
+		if err := c.setCachedWorkspaceID(ctx, w); err != nil {
+			return fmt.Errorf("failed to resolve workspace_id from the workspace host: %w", err)
+		}
+		hostWorkspaceID = strconv.FormatInt(c.cachedWorkspaceID, 10)
 	}
 	// Only a numeric user-supplied ID is comparable to the host's canonical numeric
 	// ID. A connection ID is left to validateWorkspaceIDFromProvider at apply time,

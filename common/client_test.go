@@ -508,7 +508,7 @@ func TestValidateWorkspaceIDFromProvider_ConnectionIDOnWorkspaceLevelHardFails(t
 		},
 	}
 
-	err := dc.validateWorkspaceIDFromProvider(context.Background(), "cpdr-connection-id", nil)
+	err := dc.validateWorkspaceIDFromProvider("cpdr-connection-id")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(),
 		"Connection IDs are only supported when the provider is configured against an account-level")
@@ -789,4 +789,24 @@ func TestCurrentWorkspaceID_ReturnsCachedValue(t *testing.T) {
 	id2, err := c.CurrentWorkspaceID(context.Background())
 	require.NoError(t, err)
 	assert.Equal(t, int64(12345), id2)
+}
+
+// TestCurrentWorkspaceID_UnseededErrors verifies that CurrentWorkspaceID does not
+// resolve lazily via /Me: with an unseeded cache it returns an error instead of
+// making an API call. The cache is seeded once at provider configuration.
+func TestCurrentWorkspaceID_UnseededErrors(t *testing.T) {
+	c := &DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  "https://test.cloud.databricks.com",
+				Token: "test-token",
+			},
+		},
+		// cachedWorkspaceID left at 0 and no cachedWorkspaceClient: any /Me attempt
+		// would need a real network call, so a nil error would prove lazy resolution.
+	}
+
+	_, err := c.CurrentWorkspaceID(context.Background())
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "resolved during provider configuration")
 }

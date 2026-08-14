@@ -50,6 +50,15 @@ func TestResourceShare_SchemaPreserved(t *testing.T) {
 	require.True(t, ok, "id must be string")
 	assert.True(t, idStr.Computed, "id should be computed")
 
+	// Verify comment is optional+computed so a value set outside terraform is adopted
+	commentAttr, ok := s.Attributes["comment"]
+	require.True(t, ok, "comment must exist")
+	commentStr, ok := commentAttr.(schema.StringAttribute)
+	require.True(t, ok, "comment must be string")
+	assert.True(t, commentStr.Optional, "comment should be optional")
+	assert.True(t, commentStr.Computed, "comment should be computed")
+	assert.Len(t, commentStr.PlanModifiers, 1, "comment should have UseStateForUnknown plan modifier")
+
 	// Verify provider_config block (SdkV2 compatible)
 	pcBlock, ok := s.Blocks["provider_config"]
 	require.True(t, ok, "provider_config block must exist")

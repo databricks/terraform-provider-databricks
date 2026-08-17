@@ -29,9 +29,6 @@ func DataSourceModelServices() datasource.DataSource {
 // ModelServicesData extends the main model with additional fields.
 type ModelServicesData struct {
 	AiGateway types.List `tfsdk:"model_services"`
-	// Whether to include model services for which the principal can only access
-	// selective metadata.
-	IncludeBrowse types.Bool `tfsdk:"include_browse"`
 	// Maximum number of model services to return. Defaults to 100 when unset or
 	// 0; the maximum is 100. Use `next_page_token` to retrieve additional
 	// pages.
@@ -55,7 +52,6 @@ func (ModelServicesData) GetComplexFieldTypes(context.Context) map[string]reflec
 func (m ModelServicesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["parent"] = attrs["parent"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 	attrs["view"] = attrs["view"].SetOptional()
 
 	attrs["model_services"] = attrs["model_services"].SetComputed()

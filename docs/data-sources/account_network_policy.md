@@ -64,7 +64,7 @@ The following attributes are exported:
 ### CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess
 * `allow_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule)
 * `deny_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule)
-* `restriction_mode` (string) - Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
+* `restriction_mode` (string) - Possible values are: `FULL_ACCESS`, `LEGACY_MODE`, `RESTRICTED_ACCESS`
 
 ### CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule
 * `authentication` (CustomerFacingIngressNetworkPolicyAuthentication)

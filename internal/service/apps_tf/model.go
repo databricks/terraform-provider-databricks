@@ -57,6 +57,9 @@ type App struct {
 	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
 	// The effective api scopes granted to the user access token.
 	EffectiveUserApiScopes types.List `tfsdk:"effective_user_api_scopes"`
+	// Forward the user's access token to the app. Requires stopping and
+	// starting app compute to take effect.
+	ForwardUserAccessToken types.Bool `tfsdk:"forward_user_access_token"`
 	// Git repository configuration for app deployments. When specified,
 	// deployments can reference code from this repository by providing only the
 	// git reference (branch, tag, or commit).
@@ -303,6 +306,7 @@ func (m App) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilde
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
 	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["effective_user_api_scopes"] = attrs["effective_user_api_scopes"].SetComputed()
+	attrs["forward_user_access_token"] = attrs["forward_user_access_token"].SetOptional()
 	attrs["git_repository"] = attrs["git_repository"].SetOptional()
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
@@ -367,6 +371,7 @@ func (m App) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"effective_budget_policy_id":    m.EffectiveBudgetPolicyId,
 			"effective_usage_policy_id":     m.EffectiveUsagePolicyId,
 			"effective_user_api_scopes":     m.EffectiveUserApiScopes,
+			"forward_user_access_token":     m.ForwardUserAccessToken,
 			"git_repository":                m.GitRepository,
 			"id":                            m.Id,
 			"name":                          m.Name,
@@ -408,6 +413,7 @@ func (m App) Type(ctx context.Context) attr.Type {
 			"effective_user_api_scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"forward_user_access_token": types.BoolType,
 			"git_repository":            GitRepository{}.Type(ctx),
 			"id":                        types.StringType,
 			"name":                      types.StringType,
@@ -3625,6 +3631,9 @@ type AppUpdate struct {
 	ComputeSize types.String `tfsdk:"compute_size"`
 
 	Description types.String `tfsdk:"description"`
+	// Forward the user's access token to the app. Requires stopping and
+	// starting app compute to take effect.
+	ForwardUserAccessToken types.Bool `tfsdk:"forward_user_access_token"`
 
 	GitRepository types.Object `tfsdk:"git_repository"`
 
@@ -3732,6 +3741,7 @@ func (m AppUpdate) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["compute_min_instances"] = attrs["compute_min_instances"].SetOptional()
 	attrs["compute_size"] = attrs["compute_size"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["forward_user_access_token"] = attrs["forward_user_access_token"].SetOptional()
 	attrs["git_repository"] = attrs["git_repository"].SetOptional()
 	attrs["resources"] = attrs["resources"].SetOptional()
 	attrs["status"] = attrs["status"].SetComputed()
@@ -3764,16 +3774,17 @@ func (m AppUpdate) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"budget_policy_id":      m.BudgetPolicyId,
-			"compute_max_instances": m.ComputeMaxInstances,
-			"compute_min_instances": m.ComputeMinInstances,
-			"compute_size":          m.ComputeSize,
-			"description":           m.Description,
-			"git_repository":        m.GitRepository,
-			"resources":             m.Resources,
-			"status":                m.Status,
-			"usage_policy_id":       m.UsagePolicyId,
-			"user_api_scopes":       m.UserApiScopes,
+			"budget_policy_id":          m.BudgetPolicyId,
+			"compute_max_instances":     m.ComputeMaxInstances,
+			"compute_min_instances":     m.ComputeMinInstances,
+			"compute_size":              m.ComputeSize,
+			"description":               m.Description,
+			"forward_user_access_token": m.ForwardUserAccessToken,
+			"git_repository":            m.GitRepository,
+			"resources":                 m.Resources,
+			"status":                    m.Status,
+			"usage_policy_id":           m.UsagePolicyId,
+			"user_api_scopes":           m.UserApiScopes,
 		})
 }
 
@@ -3781,12 +3792,13 @@ func (m AppUpdate) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m AppUpdate) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"budget_policy_id":      types.StringType,
-			"compute_max_instances": types.Int64Type,
-			"compute_min_instances": types.Int64Type,
-			"compute_size":          types.StringType,
-			"description":           types.StringType,
-			"git_repository":        GitRepository{}.Type(ctx),
+			"budget_policy_id":          types.StringType,
+			"compute_max_instances":     types.Int64Type,
+			"compute_min_instances":     types.Int64Type,
+			"compute_size":              types.StringType,
+			"description":               types.StringType,
+			"forward_user_access_token": types.BoolType,
+			"git_repository":            GitRepository{}.Type(ctx),
 			"resources": basetypes.ListType{
 				ElemType: AppResource{}.Type(ctx),
 			},

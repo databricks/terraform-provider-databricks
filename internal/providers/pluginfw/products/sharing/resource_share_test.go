@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestShareCommentChanged(t *testing.T) {
@@ -230,6 +231,40 @@ func TestShareSyncEffectiveFields(t *testing.T) {
 			assert.False(t, diagnostics.HasError())
 		})
 	}
+}
+
+func TestReadShareStatePreservesUnsetCDF(t *testing.T) {
+	ctx := context.Background()
+	objectName := "catalog.schema.table"
+	apiShare := &sharing.ShareInfo{
+		Name: "share",
+		Objects: []sharing.SharedDataObject{
+			{
+				Name:                     objectName,
+				DataObjectType:           "TABLE",
+				CdfEnabled:               true,
+				HistoryDataSharingStatus: "ENABLED",
+			},
+		},
+	}
+
+	var existingState ShareInfoExtended
+	require.False(t, converters.GoSdkToTfSdkStruct(ctx, apiShare, &existingState).HasError())
+	existingObjects, ok := existingState.GetObjects(ctx)
+	require.True(t, ok)
+	existingObjects[0].CdfEnabled = types.BoolNull()
+	existingObjects[0].EffectiveCdfEnabled = types.BoolValue(true)
+	existingObjects[0].HistoryDataSharingStatus = types.StringNull()
+	existingObjects[0].EffectiveHistoryDataSharingStatus = types.StringValue("ENABLED")
+	existingState.SetObjects(ctx, existingObjects)
+
+	state, diagnostics := (&ShareResource{}).readShareState(ctx, existingState, apiShare)
+	require.False(t, diagnostics.HasError())
+	objects, ok := state.GetObjects(ctx)
+	require.True(t, ok)
+	require.Len(t, objects, 1)
+	assert.True(t, objects[0].CdfEnabled.IsNull(), "cdf_enabled should remain unset")
+	assert.True(t, objects[0].EffectiveCdfEnabled.ValueBool(), "effective_cdf_enabled should reflect the API")
 }
 
 func TestShareSyncEffectiveFieldsCreateOrUpdateSyncsObjectsOnceByName(t *testing.T) {

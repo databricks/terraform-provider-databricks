@@ -288,7 +288,14 @@ func (r *SecretResource) Metadata(ctx context.Context, req resource.MetadataRequ
 }
 
 func (r *SecretResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, Secret{}, nil)
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, Secret{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		// The secret payload must never be rendered in plan/apply output. `value` is the
+		// write path and `effective_value` the read path, so both carry secret material.
+		c.SetSensitive("value")
+		c.SetSensitive("effective_value")
+
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks secret_uc",
 		Attributes:  attrs,

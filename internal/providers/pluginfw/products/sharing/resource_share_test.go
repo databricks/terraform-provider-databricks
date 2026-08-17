@@ -258,7 +258,9 @@ func TestReadShareStatePreservesUnsetCDF(t *testing.T) {
 	existingObjects[0].EffectiveHistoryDataSharingStatus = types.StringValue("ENABLED")
 	existingState.SetObjects(ctx, existingObjects)
 
-	state, diagnostics := (&ShareResource{}).readShareState(ctx, existingState, apiShare)
+	var refreshedState ShareInfoExtended
+	require.False(t, converters.GoSdkToTfSdkStruct(ctx, apiShare, &refreshedState).HasError())
+	state, diagnostics := (&ShareResource{}).syncEffectiveFields(ctx, existingState, refreshedState, effectiveFieldsActionRead{})
 	require.False(t, diagnostics.HasError())
 	objects, ok := state.GetObjects(ctx)
 	require.True(t, ok)

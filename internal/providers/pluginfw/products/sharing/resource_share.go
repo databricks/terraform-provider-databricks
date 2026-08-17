@@ -293,6 +293,12 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
+	var stateGoSDK sharing.ShareInfo
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &stateGoSDK)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	var getShareRequest sharing.GetShareRequest
 	getShareRequest.IncludeSharedData = true
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &getShareRequest.Name)...)
@@ -322,34 +328,21 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	newState, d := r.readShareState(ctx, existingState, shareInfo)
+	matchOrder(shareInfo.Objects, stateGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
+
+	var newState ShareInfoExtended
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, shareInfo, &newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	newState, d := r.syncEffectiveFields(ctx, existingState, newState, effectiveFieldsActionRead{})
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
-}
-
-func (r *ShareResource) readShareState(ctx context.Context, existingState ShareInfoExtended, shareInfo *sharing.ShareInfo) (ShareInfoExtended, diag.Diagnostics) {
-	var d diag.Diagnostics
-	var existingGoSDK sharing.ShareInfo
-	d.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &existingGoSDK)...)
-	if d.HasError() {
-		return ShareInfoExtended{}, d
-	}
-
-	matchOrder(shareInfo.Objects, existingGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
-
-	var newState ShareInfoExtended
-	d.Append(converters.GoSdkToTfSdkStruct(ctx, shareInfo, &newState)...)
-	if d.HasError() {
-		return ShareInfoExtended{}, d
-	}
-
-	newState, syncDiags := r.syncEffectiveFields(ctx, existingState, newState, effectiveFieldsActionRead{})
-	d.Append(syncDiags...)
-	return newState, d
 }
 
 func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

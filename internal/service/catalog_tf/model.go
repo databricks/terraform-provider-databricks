@@ -18614,9 +18614,6 @@ func (m GetGrantRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetMcpServiceRequest struct {
-	// Whether to include MCP services for which the principal can only access
-	// selective metadata.
-	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Resource name of the MCP service. Format:
 	// `mcp-services/{catalog}.{schema}.{mcp_service}`. Each `{...}` component
 	// is capped at 255 characters individually.
@@ -18631,7 +18628,6 @@ func (to *GetMcpServiceRequest) SyncFieldsDuringRead(ctx context.Context, from G
 
 func (m GetMcpServiceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 
 	return attrs
 }
@@ -18654,8 +18650,7 @@ func (m GetMcpServiceRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"include_browse": m.IncludeBrowse,
-			"name":           m.Name,
+			"name": m.Name,
 		})
 }
 
@@ -18663,8 +18658,7 @@ func (m GetMcpServiceRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m GetMcpServiceRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"include_browse": types.BoolType,
-			"name":           types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -18860,9 +18854,6 @@ func (m GetMetastoreSummaryResponse) Type(ctx context.Context) attr.Type {
 }
 
 type GetModelProviderServiceRequest struct {
-	// Whether to include provider services for which the principal can only
-	// access selective metadata.
-	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Resource name of the model provider service. Format:
 	// `model-provider-services/{catalog}.{schema}.{model_provider_service}`.
 	// Each `{...}` component is capped at 255 characters individually.
@@ -18877,7 +18868,6 @@ func (to *GetModelProviderServiceRequest) SyncFieldsDuringRead(ctx context.Conte
 
 func (m GetModelProviderServiceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 
 	return attrs
 }
@@ -18900,8 +18890,7 @@ func (m GetModelProviderServiceRequest) ToObjectValue(ctx context.Context) baset
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"include_browse": m.IncludeBrowse,
-			"name":           m.Name,
+			"name": m.Name,
 		})
 }
 
@@ -18909,16 +18898,12 @@ func (m GetModelProviderServiceRequest) ToObjectValue(ctx context.Context) baset
 func (m GetModelProviderServiceRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"include_browse": types.BoolType,
-			"name":           types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
 
 type GetModelServiceRequest struct {
-	// Whether to include model services for which the principal can only access
-	// selective metadata.
-	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Resource name of the model service. Format:
 	// `model-services/{catalog}.{schema}.{model_service}`. Each `{...}`
 	// component is capped at 255 characters individually.
@@ -18933,7 +18918,6 @@ func (to *GetModelServiceRequest) SyncFieldsDuringRead(ctx context.Context, from
 
 func (m GetModelServiceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 
 	return attrs
 }
@@ -18956,8 +18940,7 @@ func (m GetModelServiceRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"include_browse": m.IncludeBrowse,
-			"name":           m.Name,
+			"name": m.Name,
 		})
 }
 
@@ -18965,8 +18948,7 @@ func (m GetModelServiceRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m GetModelServiceRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"include_browse": types.BoolType,
-			"name":           types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -19635,6 +19617,9 @@ type GetSecretRequest struct {
 	// The three-level (fully qualified) name of the secret (for example,
 	// **catalog_name.schema_name.secret_name**).
 	FullName types.String `tfsdk:"-"`
+	// Whether to include the secret value in the response. Defaults to false.
+	// Requires the **READ_SECRET** privilege.
+	IncludeValue types.Bool `tfsdk:"-"`
 }
 
 func (to *GetSecretRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetSecretRequest) {
@@ -19645,6 +19630,7 @@ func (to *GetSecretRequest) SyncFieldsDuringRead(ctx context.Context, from GetSe
 
 func (m GetSecretRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["full_name"] = attrs["full_name"].SetRequired()
+	attrs["include_value"] = attrs["include_value"].SetOptional()
 
 	return attrs
 }
@@ -19667,7 +19653,8 @@ func (m GetSecretRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"full_name": m.FullName,
+			"full_name":     m.FullName,
+			"include_value": m.IncludeValue,
 		})
 }
 
@@ -19675,7 +19662,8 @@ func (m GetSecretRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m GetSecretRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"full_name": types.StringType,
+			"full_name":     types.StringType,
+			"include_value": types.BoolType,
 		},
 	}
 }
@@ -22230,9 +22218,6 @@ func (m *ListFunctionsResponse) SetFunctions(ctx context.Context, v []FunctionIn
 }
 
 type ListMcpServicesRequest struct {
-	// Whether to include MCP services for which the principal can only access
-	// selective metadata.
-	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Maximum number of MCP services to return. Defaults to 100 when unset or
 	// 0; the maximum is 100. Use `next_page_token` to retrieve additional
 	// pages.
@@ -22257,7 +22242,6 @@ func (m ListMcpServicesRequest) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["parent"] = attrs["parent"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 	attrs["view"] = attrs["view"].SetOptional()
 
 	return attrs
@@ -22281,11 +22265,10 @@ func (m ListMcpServicesRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"include_browse": m.IncludeBrowse,
-			"page_size":      m.PageSize,
-			"page_token":     m.PageToken,
-			"parent":         m.Parent,
-			"view":           m.View,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+			"view":       m.View,
 		})
 }
 
@@ -22293,11 +22276,10 @@ func (m ListMcpServicesRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m ListMcpServicesRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"include_browse": types.BoolType,
-			"page_size":      types.Int64Type,
-			"page_token":     types.StringType,
-			"parent":         types.StringType,
-			"view":           types.StringType,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+			"view":       types.StringType,
 		},
 	}
 }
@@ -22607,9 +22589,6 @@ func (m *ListMetastoresResponse) SetMetastores(ctx context.Context, v []Metastor
 }
 
 type ListModelProviderServicesRequest struct {
-	// Whether to include provider services for which the principal can only
-	// access selective metadata.
-	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Maximum number of provider services to return. Defaults to 100 when unset
 	// or 0; the maximum is 100. Use `next_page_token` to retrieve additional
 	// pages.
@@ -22634,7 +22613,6 @@ func (m ListModelProviderServicesRequest) ApplySchemaCustomizations(attrs map[st
 	attrs["parent"] = attrs["parent"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 	attrs["view"] = attrs["view"].SetOptional()
 
 	return attrs
@@ -22658,11 +22636,10 @@ func (m ListModelProviderServicesRequest) ToObjectValue(ctx context.Context) bas
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"include_browse": m.IncludeBrowse,
-			"page_size":      m.PageSize,
-			"page_token":     m.PageToken,
-			"parent":         m.Parent,
-			"view":           m.View,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+			"view":       m.View,
 		})
 }
 
@@ -22670,11 +22647,10 @@ func (m ListModelProviderServicesRequest) ToObjectValue(ctx context.Context) bas
 func (m ListModelProviderServicesRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"include_browse": types.BoolType,
-			"page_size":      types.Int64Type,
-			"page_token":     types.StringType,
-			"parent":         types.StringType,
-			"view":           types.StringType,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+			"view":       types.StringType,
 		},
 	}
 }
@@ -22801,9 +22777,6 @@ func (m *ListModelProviderServicesResponse) SetModelProviderServices(ctx context
 }
 
 type ListModelServicesRequest struct {
-	// Whether to include model services for which the principal can only access
-	// selective metadata.
-	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Maximum number of model services to return. Defaults to 100 when unset or
 	// 0; the maximum is 100. Use `next_page_token` to retrieve additional
 	// pages.
@@ -22828,7 +22801,6 @@ func (m ListModelServicesRequest) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["parent"] = attrs["parent"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 	attrs["view"] = attrs["view"].SetOptional()
 
 	return attrs
@@ -22852,11 +22824,10 @@ func (m ListModelServicesRequest) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"include_browse": m.IncludeBrowse,
-			"page_size":      m.PageSize,
-			"page_token":     m.PageToken,
-			"parent":         m.Parent,
-			"view":           m.View,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+			"view":       m.View,
 		})
 }
 
@@ -22864,11 +22835,10 @@ func (m ListModelServicesRequest) ToObjectValue(ctx context.Context) basetypes.O
 func (m ListModelServicesRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"include_browse": types.BoolType,
-			"page_size":      types.Int64Type,
-			"page_token":     types.StringType,
-			"parent":         types.StringType,
-			"view":           types.StringType,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+			"view":       types.StringType,
 		},
 	}
 }
@@ -25454,9 +25424,6 @@ func (m MatchColumn) Type(ctx context.Context) attr.Type {
 // Connection, or Databricks-hosted via an internal server -- and exposes its
 // tools for discovery, authorization, and invocation.
 type McpService struct {
-	// Whether the caller sees only metadata available through the BROWSE
-	// privilege.
-	BrowseOnly types.Bool `tfsdk:"browse_only"`
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
 	// Operational configuration: connection, tool selectors, rate limit.
@@ -25523,7 +25490,6 @@ func (to *McpService) SyncFieldsDuringRead(ctx context.Context, from McpService)
 }
 
 func (m McpService) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["config"] = attrs["config"].SetOptional()
 	attrs["create_time"] = attrs["create_time"].SetComputed()
@@ -25562,7 +25528,6 @@ func (m McpService) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"browse_only":     m.BrowseOnly,
 			"comment":         m.Comment,
 			"config":          m.Config,
 			"create_time":     m.CreateTime,
@@ -25581,7 +25546,6 @@ func (m McpService) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m McpService) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"browse_only":     types.BoolType,
 			"comment":         types.StringType,
 			"config":          McpServiceConfig{}.Type(ctx),
 			"create_time":     timetypes.RFC3339{}.Type(ctx),
@@ -26108,9 +26072,6 @@ func (m MetastoreInfo) Type(ctx context.Context) attr.Type {
 // provider serving multiple models); a single ModelService can fan out across
 // multiple ModelProviderServices for traffic split or failover.
 type ModelProviderService struct {
-	// Whether the caller sees only metadata available through the BROWSE
-	// privilege.
-	BrowseOnly types.Bool `tfsdk:"browse_only"`
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
 	// Behavioral configuration: provider connection, model catalog, and
@@ -26181,7 +26142,6 @@ func (to *ModelProviderService) SyncFieldsDuringRead(ctx context.Context, from M
 }
 
 func (m ModelProviderService) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["config"] = attrs["config"].SetOptional()
 	attrs["create_time"] = attrs["create_time"].SetComputed()
@@ -26220,7 +26180,6 @@ func (m ModelProviderService) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"browse_only":     m.BrowseOnly,
 			"comment":         m.Comment,
 			"config":          m.Config,
 			"create_time":     m.CreateTime,
@@ -26239,7 +26198,6 @@ func (m ModelProviderService) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m ModelProviderService) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"browse_only":     types.BoolType,
 			"comment":         types.StringType,
 			"config":          ModelProviderServiceConfig{}.Type(ctx),
 			"create_time":     timetypes.RFC3339{}.Type(ctx),
@@ -27012,7 +26970,6 @@ func (m *ModelProviderServiceConfigAmazonBedrockProviderConfig) SetDirect(ctx co
 // than one mode is rejected.
 type ModelProviderServiceConfigAmazonBedrockProviderDirectConfig struct {
 	// AWS access-key-pair auth. Mutually exclusive with `service_credential`.
-	// Supersedes the flat `aws_access_key_id` / `aws_secret_access_key` fields.
 	AwsAccessKey types.Object `tfsdk:"aws_access_key"`
 	// AWS region where the Bedrock endpoint is hosted (e.g., `us-east-1`).
 	// Required on Create.
@@ -27675,8 +27632,7 @@ type ModelProviderServiceConfigAzureOpenAiProviderDirectConfig struct {
 	// `https://myresource.openai.azure.com`. Required on Create.
 	BaseUrl types.String `tfsdk:"base_url"`
 	// Entra ID (service principal) auth. Mutually exclusive with `api_key` and
-	// `service_credential`. Supersedes the flat `tenant_id` / `client_id` /
-	// `client_secret` fields.
+	// `service_credential`.
 	EntraServicePrincipal types.Object `tfsdk:"entra_service_principal"`
 	// Reference to a UC service credential authorizing Azure OpenAI requests.
 	// On Create the caller supplies `service_credential.name` in the AIP-122
@@ -28497,8 +28453,7 @@ type ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig struct {
 	// Microsoft AI Foundry endpoint URL. Required on Create.
 	BaseUrl types.String `tfsdk:"base_url"`
 	// Entra ID (service principal) auth. Mutually exclusive with `api_key` and
-	// `service_credential`. Supersedes the flat `tenant_id` / `client_id` /
-	// `client_secret` fields.
+	// `service_credential`.
 	EntraServicePrincipal types.Object `tfsdk:"entra_service_principal"`
 	// Reference to a UC service credential authorizing Microsoft Foundry
 	// requests. On Create the caller supplies `service_credential.name` in the
@@ -29118,9 +29073,6 @@ func (m ModelProviderServiceConfigServiceCredential) Type(ctx context.Context) a
 // access control, rate limits, guardrails, and auditing to the traffic it
 // serves.
 type ModelService struct {
-	// Whether the caller sees only metadata available through the BROWSE
-	// privilege.
-	BrowseOnly types.Bool `tfsdk:"browse_only"`
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
 	// Operational configuration: destinations, routing, rate limits, inference
@@ -29206,7 +29158,6 @@ func (to *ModelService) SyncFieldsDuringRead(ctx context.Context, from ModelServ
 }
 
 func (m ModelService) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["config"] = attrs["config"].SetOptional()
 	attrs["create_time"] = attrs["create_time"].SetComputed()
@@ -29247,7 +29198,6 @@ func (m ModelService) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"browse_only":         m.BrowseOnly,
 			"comment":             m.Comment,
 			"config":              m.Config,
 			"create_time":         m.CreateTime,
@@ -29267,7 +29217,6 @@ func (m ModelService) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m ModelService) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"browse_only":     types.BoolType,
 			"comment":         types.StringType,
 			"config":          ModelServiceConfig{}.Type(ctx),
 			"create_time":     timetypes.RFC3339{}.Type(ctx),
@@ -33300,8 +33249,8 @@ type PolicyInfo struct {
 	// Optional list of user or group names that should be excluded from the
 	// policy.
 	ExceptPrincipals types.List `tfsdk:"except_principals"`
-	// Type of securables that the policy should take effect on. Only `TABLE` is
-	// supported at this moment. Required on create and optional on update.
+	// Type of securables that the policy should take effect on. Required on
+	// create and optional on update.
 	ForSecurableType types.String `tfsdk:"for_securable_type"`
 	// Options for grant policies. Valid only if `policy_type` is
 	// `POLICY_TYPE_GRANT`. Required on create and optional on update. When

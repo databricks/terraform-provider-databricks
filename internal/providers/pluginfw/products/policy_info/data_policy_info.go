@@ -112,8 +112,8 @@ type PolicyInfoData struct {
 	// Optional list of user or group names that should be excluded from the
 	// policy.
 	ExceptPrincipals types.List `tfsdk:"except_principals"`
-	// Type of securables that the policy should take effect on. Only `TABLE` is
-	// supported at this moment. Required on create and optional on update.
+	// Type of securables that the policy should take effect on. Required on
+	// create and optional on update.
 	ForSecurableType types.String `tfsdk:"for_securable_type"`
 	// Options for grant policies. Valid only if `policy_type` is
 	// `POLICY_TYPE_GRANT`. Required on create and optional on update. When

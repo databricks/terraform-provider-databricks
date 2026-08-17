@@ -140,6 +140,13 @@ func shareChanges(si sharing.ShareInfo, action string) sharing.UpdateShare {
 	}
 }
 
+// shareCommentChanged reports whether the plan carries a concrete comment change to send.
+// comment is Optional+Computed, so the planned value can be unknown; IsNull is false for
+// unknown, and ValueString() on it would send a spurious "".
+func shareCommentChanged(planComment, stateComment types.String) bool {
+	return !planComment.IsNull() && !planComment.IsUnknown() && !planComment.Equal(stateComment)
+}
+
 type ShareResource struct {
 	Client *common.DatabricksClient
 }
@@ -156,6 +163,12 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name") // ForceNew
 		c.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "created_at")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "created_by")
+
+		// computed so a comment set outside terraform is adopted rather than failing the
+		// apply: the API stores "" instead of dropping the field, so a null config can
+		// never round-trip to a null server value
+		c.SetComputed("comment")
+		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "comment")
 
 		c.SetRequired("object", "data_object_type")
 		c.SetRequired("object", "partition", "value", "op")
@@ -398,14 +411,17 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	upToDateShareInfo := currentShareInfo
-	if len(changes) > 0 || !plan.Comment.IsNull() {
+	commentChanged := shareCommentChanged(plan.Comment, state.Comment)
+	if len(changes) > 0 || commentChanged {
 		// if there are any other changes, update the share with the changes
 		update := sharing.UpdateShare{
 			Name:    plan.Name.ValueString(),
 			Updates: changes,
 		}
-		if !plan.Comment.IsNull() {
+		if commentChanged {
+			// force send so an explicit comment = "" survives omitempty and clears it
 			update.Comment = plan.Comment.ValueString()
+			update.ForceSendFields = append(update.ForceSendFields, "Comment")
 		}
 		upToDateShareInfo, err = w.Shares.Update(ctx, update)
 

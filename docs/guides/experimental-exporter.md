@@ -126,7 +126,7 @@ All arguments are optional, and they tune what code is being generated.
   ```
 
   The script generates comprehensive three-way mappings (~99.5% coverage) using similarity scoring based on cores, memory, category, and disk configuration. See `exporter/AGENTS.md` for detailed algorithm documentation.
-* `-skip-interactive` - optionally run in a non-interactive mode.
+* `-skip-interactive` - run in a non-interactive mode.  *This option is enabled automatically when you specify either `-listing` or `-services` option.*
 * `-includeUserDomains` - optionally include the domain name in the generated resource name for `databricks_user` resource.
 * `-importAllUsers` - optionally includes all users and service principals even if they are only part of the `users` group.
 * `-exportDeletedUsersAssets` - optionally include assets of deleted users and service principals.

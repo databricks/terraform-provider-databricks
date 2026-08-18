@@ -133,6 +133,11 @@ func Run(args ...string) error {
 	if err != nil {
 		return err
 	}
+	flags.Visit(func(f *flag.Flag) {
+		if f.Name == "services" || f.Name == "listing" {
+			skipInteractive = true
+		}
+	})
 
 	configureExporterLogging(debug, trace)
 	log.Printf("[WARN] This tooling is experimental and provided as is. It has an evolving interface, which may change or be removed in future versions of the provider.")

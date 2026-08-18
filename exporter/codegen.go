@@ -28,6 +28,15 @@ import (
 // TODO: move to IC
 var dependsRe = regexp.MustCompile(`(\.[\d]+)`)
 
+// accountIdVariableName is the name of the shared Terraform variable holding the
+// Databricks account ID. It's referenced by account-level resources (and the
+// provider block) so that switching accounts only requires overriding a single
+// variable rather than editing every hardcoded occurrence.
+const accountIdVariableName = "databricks_account_id"
+
+// accountIdVariableDescription is the description emitted for accountIdVariableName.
+const accountIdVariableDescription = "Databricks account ID"
+
 func (ic *importContext) generateVariableName(attrName, name string) string {
 	return fmt.Sprintf("%s_%s", attrName, name)
 }
@@ -237,6 +246,13 @@ func (ic *importContext) getTraversalTokens(ref reference, value string, origRes
 func (ic *importContext) reference(i importable, path []string, value string, ctyValue cty.Value, origResource *resource) hclwrite.Tokens {
 	pathString := strings.Join(path, ".")
 	match := dependsRe.ReplaceAllString(pathString, "")
+	// If any reference for this field opts into ContinueMatch, combine substitutions
+	// from all matching references instead of returning after the first one.
+	for _, d := range i.Depends {
+		if d.Path == match && d.ContinueMatch {
+			return ic.combineReferences(i, match, path, value, ctyValue, origResource)
+		}
+	}
 	// get reference candidate, but if it's a `data`, then look for another non-data reference if possible..
 	var dataTokens hclwrite.Tokens
 	for _, d := range i.Depends {
@@ -255,7 +271,45 @@ func (ic *importContext) reference(i importable, path []string, value string, ct
 			}
 		}
 		if d.Variable {
-			varName := ic.generateVariableName(path[0], value)
+			varName := d.VariableName
+			if varName == "" {
+				varName = ic.generateVariableName(path[0], value)
+			}
+			// For a regexp match, substitute only the captured substring with a
+			// reference to the variable, keeping the surrounding literal text. The
+			// captured value becomes the variable's default so the generated code
+			// works out of the box (e.g. `accounts/${var.databricks_account_id}`).
+			if d.MatchType == MatchRegexp {
+				if d.Regexp == nil {
+					log.Printf("[WARN] you must provide regular expression for 'regexp' match type")
+					return hclwrite.TokensForValue(ctyValue)
+				}
+				indices := d.Regexp.FindStringSubmatchIndex(value)
+				if len(indices) != 4 {
+					log.Printf("[WARN] regexp variable reference for '%s' didn't match value '%s'; emitting literal",
+						pathString, value)
+					return hclwrite.TokensForValue(ctyValue)
+				}
+				ic.registerVariableWithDefault(varName, "", value[indices[2]:indices[3]])
+				tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}}}
+				tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(maybeAddQuoteCharacter(value[0:indices[2]]))})
+				tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'$', '{'}})
+				tokens = append(tokens, hclwrite.TokensForTraversal(hcl.Traversal{
+					hcl.TraverseRoot{Name: "var"},
+					hcl.TraverseAttr{Name: varName},
+				})...)
+				tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'}'}})
+				tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(maybeAddQuoteCharacter(value[indices[3]:]))})
+				tokens = append(tokens, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}})
+				return tokens
+			}
+			// Whole-field match. When a shared VariableName is used (e.g. the account
+			// ID), the entire value is the variable's default so the generated code
+			// works out of the box. Legacy per-field variables (VariableName empty,
+			// used for sensitive fields) intentionally have no default.
+			if d.VariableName != "" {
+				return ic.variableWithDefault(varName, "", value)
+			}
 			return ic.variable(varName, "")
 		}
 
@@ -275,10 +329,157 @@ func (ic *importContext) reference(i importable, path []string, value string, ct
 	return hclwrite.TokensForValue(ctyValue)
 }
 
-func (ic *importContext) variable(name, desc string) hclwrite.Tokens {
+// substitution describes replacing value[Start:End] with an interpolation of Inner.
+type substitution struct {
+	Start int
+	End   int
+	Inner hclwrite.Tokens
+}
+
+// varTraversalTokens returns the tokens for a `var.<name>` traversal.
+func varTraversalTokens(name string) hclwrite.Tokens {
+	return hclwrite.TokensForTraversal(hcl.Traversal{
+		hcl.TraverseRoot{Name: "var"},
+		hcl.TraverseAttr{Name: name},
+	})
+}
+
+// referenceSubstitution computes, for a single reference and value, the span of
+// the value it replaces and the traversal tokens to substitute in its place. It
+// returns ok=false when the reference doesn't apply to the value.
+func (ic *importContext) referenceSubstitution(d reference, path []string, value string,
+	origResource *resource, origPath string) (substitution, bool) {
+	if d.Variable {
+		varName := d.VariableName
+		if varName == "" {
+			varName = ic.generateVariableName(path[0], value)
+		}
+		if d.MatchType == MatchRegexp {
+			if d.Regexp == nil {
+				return substitution{}, false
+			}
+			idx := d.Regexp.FindStringSubmatchIndex(value)
+			if len(idx) != 4 {
+				return substitution{}, false
+			}
+			ic.registerVariableWithDefault(varName, "", value[idx[2]:idx[3]])
+			return substitution{Start: idx[2], End: idx[3], Inner: varTraversalTokens(varName)}, true
+		}
+		// Whole-field variable reference.
+		if d.VariableName != "" {
+			ic.registerVariableWithDefault(varName, "", value)
+		} else {
+			ic.registerVariable(varName, "")
+		}
+		return substitution{Start: 0, End: len(value), Inner: varTraversalTokens(varName)}, true
+	}
+	// Resource reference.
+	attr := d.MatchAttribute()
+	attrValue, traversal, _ := ic.Find(value, attr, d, origResource, origPath)
+	if traversal == nil {
+		return substitution{}, false
+	}
+	inner := hclwrite.TokensForTraversal(traversal)
+	switch d.MatchTypeValue() {
+	case MatchRegexp:
+		idx := d.Regexp.FindStringSubmatchIndex(value)
+		if len(idx) != 4 {
+			return substitution{}, false
+		}
+		return substitution{Start: idx[2], End: idx[3], Inner: inner}, true
+	case MatchPrefix, MatchLongestPrefix:
+		return substitution{Start: 0, End: len(attrValue), Inner: inner}, true
+	default: // MatchExact, MatchDefault, MatchCaseInsensitive
+		return substitution{Start: 0, End: len(value), Inner: inner}, true
+	}
+}
+
+// combineReferences applies every matching reference for a field, combining their
+// non-overlapping substitutions into a single interpolated string. Iteration
+// stops after the first matching reference that does not set ContinueMatch (the
+// terminal reference), matching the single-reference behavior for the rest.
+func (ic *importContext) combineReferences(i importable, match string, path []string,
+	value string, ctyValue cty.Value, origResource *resource) hclwrite.Tokens {
+	pathString := strings.Join(path, ".")
+	var subs []substitution
+	for _, d := range i.Depends {
+		if d.Path != match {
+			continue
+		}
+		sub, ok := ic.referenceSubstitution(d, path, value, origResource, pathString)
+		if ok {
+			overlaps := false
+			for _, existing := range subs {
+				if sub.Start < existing.End && sub.End > existing.Start {
+					overlaps = true
+					break
+				}
+			}
+			if !overlaps {
+				subs = append(subs, sub)
+			}
+			if !d.ContinueMatch {
+				break // terminal reference
+			}
+		}
+	}
+	if len(subs) == 0 {
+		return hclwrite.TokensForValue(ctyValue)
+	}
+	sort.Slice(subs, func(a, b int) bool { return subs[a].Start < subs[b].Start })
+	toks := hclwrite.Tokens{{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}}}
+	pos := 0
+	for _, sub := range subs {
+		toks = append(toks, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(maybeAddQuoteCharacter(value[pos:sub.Start]))})
+		toks = append(toks, &hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'$', '{'}})
+		toks = append(toks, sub.Inner...)
+		toks = append(toks, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'}'}})
+		pos = sub.End
+	}
+	toks = append(toks, &hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(maybeAddQuoteCharacter(value[pos:]))})
+	toks = append(toks, &hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}})
+	return toks
+}
+
+// registerVariable records a variable (by name) that should be emitted into
+// vars.tf. Registering the same name more than once is safe; the last
+// description wins.
+func (ic *importContext) registerVariable(name, desc string) {
 	ic.variablesLock.Lock()
+	defer ic.variablesLock.Unlock()
+	if ic.variables == nil {
+		ic.variables = map[string]string{}
+	}
 	ic.variables[name] = desc
-	ic.variablesLock.Unlock()
+}
+
+// registerVariableWithDefault registers a variable along with a default value
+// that will be emitted into the generated `variable` block. Used for structural,
+// non-secret values such as the account ID so the generated code works
+// out-of-the-box and stays overridable.
+func (ic *importContext) registerVariableWithDefault(name, desc, defaultValue string) {
+	ic.variablesLock.Lock()
+	defer ic.variablesLock.Unlock()
+	if ic.variables == nil {
+		ic.variables = map[string]string{}
+	}
+	if ic.variableDefaults == nil {
+		ic.variableDefaults = map[string]string{}
+	}
+	ic.variables[name] = desc
+	ic.variableDefaults[name] = defaultValue
+}
+
+func (ic *importContext) variable(name, desc string) hclwrite.Tokens {
+	ic.registerVariable(name, desc)
+	return hclwrite.TokensForTraversal(hcl.Traversal{
+		hcl.TraverseRoot{Name: "var"},
+		hcl.TraverseAttr{Name: name},
+	})
+}
+
+func (ic *importContext) variableWithDefault(name, desc, defaultValue string) hclwrite.Tokens {
+	ic.registerVariableWithDefault(name, desc, defaultValue)
 	return hclwrite.TokensForTraversal(hcl.Traversal{
 		hcl.TraverseRoot{Name: "var"},
 		hcl.TraverseAttr{Name: name},
@@ -400,6 +601,15 @@ func (ic *importContext) extractFieldsForGeneration(imp importable, path []strin
 		mpath := dependsRe.ReplaceAllString(pathString, "")
 		for _, ref := range imp.Depends {
 			if ref.Path == mpath && ref.Variable {
+				// Regexp variable references substitute only the matched substring
+				// (e.g. the account ID inside `accounts/<id>/...`), and references
+				// with an explicit VariableName use a fixed shared variable. In both
+				// cases the original attribute value must be preserved for reference()
+				// to process. Only the legacy per-field replacement (used for
+				// sensitive fields) rewrites the value with the resource name.
+				if ref.MatchType == MatchRegexp || ref.VariableName != "" {
+					continue
+				}
 				raw = ic.regexFix(ic.ResourceName(res), simpleNameFixes)
 				if varCnt > 0 {
 					raw = fmt.Sprintf("%s_%d", raw, varCnt)
@@ -617,6 +827,13 @@ func (ic *importContext) dataToHcl(imp importable, path []string,
 		mpath := dependsRe.ReplaceAllString(pathString, "")
 		for _, ref := range imp.Depends {
 			if ref.Path == mpath && ref.Variable {
+				// Regexp variable references substitute only the matched substring, and
+				// references with an explicit VariableName use a fixed shared variable.
+				// In both cases the original attribute value must be preserved for
+				// reference() to process; don't rewrite it with the resource name.
+				if ref.MatchType == MatchRegexp || ref.VariableName != "" {
+					continue
+				}
 				// sensitive fields are moved to variable depends, variable name is normalized
 				// TODO: handle a case when we have multiple blocks, so names won't be unique
 				raw = ic.regexFix(ic.ResourceName(res), simpleNameFixes)
@@ -918,7 +1135,9 @@ func (ic *importContext) pluginFrameworkFieldToHcl(imp importable, path []string
 				case int64:
 					num = v
 				}
-				toks = append(toks, hclwrite.TokensForValue(cty.NumberIntVal(num))...)
+				// Resolve references for integer list elements too (e.g. workspace IDs);
+				// reference() emits a bare number when no reference matches.
+				toks = append(toks, ic.reference(imp, append(path, fieldName), strconv.FormatInt(num, 10), cty.NumberIntVal(num), res)...)
 			default:
 				// For complex types, convert to string
 				toks = append(toks, hclwrite.TokensForValue(cty.StringVal(fmt.Sprintf("%v", x)))...)
@@ -1117,9 +1336,9 @@ func (ic *importContext) readListFromData(i importable, path []string, res *reso
 				value := raw.(string)
 				toks = append(toks, ic.reference(i, path, value, cty.StringVal(value), res)...)
 			case int:
-				// probably we don't even use integer lists?...
-				toks = append(toks, hclwrite.TokensForValue(
-					cty.NumberIntVal(int64(x)))...)
+				// Resolve references for integer list elements too (e.g. workspace IDs);
+				// reference() emits a bare number when no reference matches.
+				toks = append(toks, ic.reference(i, path, strconv.Itoa(x), cty.NumberIntVal(int64(x)), res)...)
 			default:
 				return fmt.Errorf("unsupported primitive list: %#v", path)
 			}
@@ -1200,6 +1419,9 @@ func (ic *importContext) generateVariables() error {
 	for k, v := range ic.variables {
 		b := body.AppendNewBlock("variable", []string{k}).Body()
 		b.SetAttributeValue("description", cty.StringVal(v))
+		if def, ok := ic.variableDefaults[k]; ok {
+			b.SetAttributeValue("default", cty.StringVal(def))
+		}
 	}
 	// nolint
 	vf.Write(f.Bytes())

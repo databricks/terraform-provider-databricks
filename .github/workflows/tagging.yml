@@ -44,6 +44,13 @@ jobs:
       # to main, preserving the pre-existing hardcoded-main behaviour and
       # blocking branch releases even via a manual non-main dispatch.
       RELEASE_REF: ${{ github.repository == 'databricks/terraform-provider-databricks' && github.ref_name || 'main' }}
+      # Changelog source. databricks/cli builds the release changelog from
+      # per-PR ``.nextchanges/<section>/*.md`` fragments and a
+      # ``.nextchanges/version`` file rather than a single hand-maintained
+      # ``NEXT_CHANGELOG.md`` (see tagging.py's nextchanges mode). Setting this
+      # to the fragment directory name opts that repo in; every other synced
+      # repo leaves it empty and keeps the ``NEXT_CHANGELOG.md`` flow unchanged.
+      NEXTCHANGES_DIR: ${{ github.repository == 'databricks/cli' && '.nextchanges' || '' }}
     environment: "release-is"
     runs-on:
       group: databricks-protected-runner-group
@@ -95,6 +102,10 @@ jobs:
           # checked out above (``RELEASE_REF``): the dispatched branch for
           # terraform, main everywhere else.
           DECO_TAGGING_REF: ${{ env.RELEASE_REF }}
+          # Non-empty only for databricks/cli (see job-level env). When set,
+          # tagging.py renders the changelog from ``$NEXTCHANGES_DIR/`` fragments
+          # instead of ``NEXT_CHANGELOG.md``.
+          NEXTCHANGES_DIR: ${{ env.NEXTCHANGES_DIR }}
         run: |
           if [ -n "$PACKAGES" ]; then
             uv run --locked tagging.py --package "$PACKAGES"

@@ -240,8 +240,9 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 			if wsID, parseErr := strconv.ParseInt(f.ProviderWorkspaceID, 10, 64); parseErr == nil {
 				client.SetCachedWorkspaceID(wsID)
 			}
-			// Pre-populate workspace client cache so that NamespaceValidateWorkspaceID
-			// and getDatabricksClientForUnifiedProvider find it without making API calls.
+			// Pre-populate workspace client cache so that the apply-time
+			// GetWorkspaceClientForUnifiedProvider / getDatabricksClientForUnifiedProvider
+			// routing finds it without making API calls.
 			// Create a workspace-scoped config (no AccountID) so NewWorkspaceClient
 			// accepts it without treating the host as an account host.
 			wsCfg, cfgErr := client.Config.NewWithWorkspaceHost(s.URL)
@@ -282,8 +283,9 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 	if f.ProviderWorkspaceID != "" {
 		c.Config.WorkspaceID = f.ProviderWorkspaceID
 		// Pre-populate the workspace client cache for this workspace ID so that
-		// NamespaceValidateWorkspaceID and getDatabricksClientForUnifiedProvider
-		// find the mock workspace client without making API calls.
+		// the apply-time GetWorkspaceClientForUnifiedProvider /
+		// getDatabricksClientForUnifiedProvider routing finds the mock workspace
+		// client without making API calls.
 		mw.WorkspaceClient.Config = (*config.Config)(c.DatabricksClient.Config)
 		c.SetWorkspaceClientForWorkspace(f.ProviderWorkspaceID, mw.WorkspaceClient)
 	}

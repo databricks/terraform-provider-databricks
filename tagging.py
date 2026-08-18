@@ -18,6 +18,26 @@ CHANGELOG_FILE_NAME = "CHANGELOG.md"
 PACKAGE_FILE_NAME = ".package.json"
 CODEGEN_FILE_NAME = ".codegen.json"
 CREATED_TAGS_FILE_NAME = "created_tags.json"
+
+# Presence of this env var switches the changelog source from a single
+# hand-maintained ``NEXT_CHANGELOG.md`` to per-PR ``<dir>/<section>/*.md``
+# fragments, and the release version from the ``## Release vX.Y.Z`` header to a
+# ``<dir>/version`` file. Its value is the fragment directory name (e.g.
+# ``.nextchanges``). Unset for every SDK repo, so their behavior is unchanged;
+# a repo opts in by setting it in the tagging workflow (see the databricks/cli
+# release workflow). The per-section ``(slug, header)`` mapping is read from
+# ``.codegen.json``'s ``nextchanges_sections`` key.
+NEXTCHANGES_DIR_ENV = "NEXTCHANGES_DIR"
+
+# File inside the fragment directory tracking the next release's version —
+# read at release time and bumped afterward, the role the ``## Release vX.Y.Z``
+# header plays in the ``NEXT_CHANGELOG.md`` flow.
+NEXTCHANGES_VERSION_FILE = "version"
+
+# ``README.md`` in a section slug is documentation (e.g. "put CLI changelog
+# fragments here"), not a changelog fragment. It is excluded from rendering and
+# preserved across releases, so teams can keep per-slug guidance in place.
+NEXTCHANGES_README_FILE = "README.md"
 """
 This script tags the release of the SDKs using a combination of the GitHub API and Git commands.
 It reads the local repository to determine necessary changes, updates changelogs, and creates tags.
@@ -183,6 +203,13 @@ class GitHubRepo:
         blob = self.repo.create_git_blob(content=content, encoding="utf-8")
         element = InputGitTreeElement(path=local_path, mode="100644", type="blob", sha=blob.sha)
         self.changed_files.append(element)
+
+    # Replaces "git rm file"
+    def delete_file(self, loc: str):
+        """``git rm`` equivalent for GitHubRepo: stage a tree deletion (sha=None)."""
+        local_path = os.path.relpath(loc, os.getcwd())
+        print(f"Deleting file {local_path}")
+        self.changed_files.append(InputGitTreeElement(path=local_path, mode="100644", type="blob", sha=None))
 
     # Replaces "git commit && git push"
     def commit_and_push(self, message: str):
@@ -459,23 +486,214 @@ def get_previous_tag_info(package: Package) -> Optional[TagInfo]:
     return TagInfo(package=package, version=version, content=latest_release)
 
 
-def _load_codegen_config() -> Dict:
+def _load_codegen_config(package_path: str = "") -> Dict:
     """
-    Loads ``.codegen.json`` from the repo root. Returns an empty dict when
-    the file is missing.
+    Loads ``.codegen.json`` for a package: prefers ``<package_path>/.codegen.json``
+    and falls back to the repo-root file, returning an empty dict when neither
+    exists. ``package_path=""`` (the default) reads the repo root, matching the
+    single-package / root-config layout.
+
+    Package-local lookup keeps the section taxonomy and other codegen options in
+    lockstep with the package-relative directories the nextchanges helpers
+    resolve, so a multi-package repo can give each package its own config
+    instead of every package sharing the root file.
     """
-    package_file_path = os.path.join(os.getcwd(), CODEGEN_FILE_NAME)
-    if not os.path.exists(package_file_path):
-        return {}
-    with open(package_file_path, "r") as file:
-        return json.load(file)
+    candidates = [os.path.join(os.getcwd(), package_path, CODEGEN_FILE_NAME)]
+    root_config = os.path.join(os.getcwd(), CODEGEN_FILE_NAME)
+    if root_config not in candidates:
+        candidates.append(root_config)
+    for candidate in candidates:
+        if os.path.exists(candidate):
+            with open(candidate, "r") as file:
+                return json.load(file)
+    return {}
+
+
+def _nextchanges_dir() -> Optional[str]:
+    """
+    Returns the fragment directory name when nextchanges mode is enabled
+    (``NEXTCHANGES_DIR`` set to a non-empty value), else ``None``. In the
+    ``None`` case the historical ``NEXT_CHANGELOG.md`` flow is used, so every
+    repo that doesn't set the env var is unaffected.
+    """
+    return os.environ.get(NEXTCHANGES_DIR_ENV, "").strip() or None
+
+
+def _nextchanges_sections(package_path: str = "") -> List[tuple]:
+    """
+    Returns the ordered ``(slug, header)`` section list from the package's
+    ``.codegen.json`` ``nextchanges_sections`` — the mapping of ``<dir>/<slug>/``
+    subdirectories to the ``### <header>`` blocks they render into, in changelog
+    order. Read via ``_load_codegen_config(package_path)`` so it matches the
+    package-relative fragment directories (a multi-package repo can scope the
+    taxonomy per package).
+
+    Declared as a JSON object ``{"<slug>": "<header>", ...}`` so the per-repo
+    section taxonomy stays out of this shared script; insertion order in the
+    object is the changelog order (JSON objects preserve order in Python 3.7+).
+    Raises when nextchanges mode is on but the key is absent/empty, or is not an
+    object, since there would be nothing sensible to render.
+    """
+    sections = _load_codegen_config(package_path).get("nextchanges_sections", {})
+    if not sections:
+        raise Exception(
+            f"nextchanges mode is enabled ({NEXTCHANGES_DIR_ENV} set) but "
+            f"`nextchanges_sections` is missing or empty in {CODEGEN_FILE_NAME}."
+        )
+    if not isinstance(sections, dict):
+        raise Exception(
+            f"`nextchanges_sections` in {CODEGEN_FILE_NAME} must be a JSON object "
+            f'mapping section slug to header (e.g. {{"cli": "CLI"}}), got '
+            f"{type(sections).__name__}."
+        )
+    return list(sections.items())
+
+
+def _render_fragment(text: str) -> str:
+    """
+    Render one fragment body into changelog bullets. Each line that starts with
+    a ``* ``/``- `` marker (ignoring leading whitespace) becomes its own `` * ``
+    bullet; a line without a marker is a continuation of the preceding bullet
+    and is kept as authored. A markerless first line is itself a single bullet.
+
+    So a fragment with multiple ``* ``/``- `` lines renders as multiple bullets,
+    while a bullet followed by plain lines stays one bullet spanning those
+    lines. Every bullet gets the leading-space ``*`` that matches CHANGELOG.md.
+    """
+    lines = []
+    for line in text.split("\n"):
+        marker = line.lstrip()
+        if marker.startswith(("* ", "- ")):
+            lines.append(f" * {marker[2:]}")
+        elif lines:
+            lines.append(line)
+        else:
+            lines.append(f" * {line}")
+    return "\n".join(lines)
+
+
+def render_nextchanges(package_path: str) -> Optional[str]:
+    """
+    Render ``<package_path>/<dir>/<section>/*.md`` fragments into the changelog
+    body: one ``### <Section>`` block per non-empty section in
+    ``nextchanges_sections`` order, fragments sorted by filename. Returns
+    ``None`` when there are no fragments.
+
+    Every ``.md`` file under a section directory is a fragment, except
+    ``README.md`` which is treated as per-slug documentation and skipped (see
+    ``NEXTCHANGES_README_FILE``). Empty/whitespace-only files contribute
+    nothing. Files at the ``<dir>`` root or under a slug not listed in
+    ``nextchanges_sections`` are ignored. Each fragment renders per
+    ``_render_fragment``. Link expansion (e.g. ``(#1234)`` → markdown link) is
+    assumed to have happened before release, so none here.
+    """
+    base = os.path.join(os.getcwd(), package_path, _nextchanges_dir())
+    if not os.path.isdir(base):
+        return None
+
+    blocks = []
+    for slug, header in _nextchanges_sections(package_path):
+        section_dir = os.path.join(base, slug)
+        if not os.path.isdir(section_dir):
+            continue
+        entries = []
+        for name in sorted(os.listdir(section_dir)):
+            if not name.endswith(".md") or name == NEXTCHANGES_README_FILE:
+                continue
+            with open(os.path.join(section_dir, name)) as f:
+                text = f.read().strip()
+            if not text:
+                continue
+            entries.append(_render_fragment(text))
+        if entries:
+            # Blank line after the heading, matching CHANGELOG.md.
+            blocks.append(f"### {header}\n\n" + "\n".join(entries))
+
+    if not blocks:
+        return None
+    return "\n\n".join(blocks)
+
+
+def _nextchanges_version_path(package_path: str) -> str:
+    return os.path.join(os.getcwd(), package_path, _nextchanges_dir(), NEXTCHANGES_VERSION_FILE)
+
+
+def read_nextchanges_version(package: Package) -> str:
+    """
+    Release version for this run, read from the package's own ``<dir>/version``
+    (resolved under ``package.path``, so each package in a multi-package repo
+    keeps its own version source). In nextchanges mode this file — not the
+    ``## Release v…`` changelog header — is the source of truth. To cut a patch
+    or major release, edit it in the PR; otherwise its default (bumped to the
+    next minor after the previous release by ``clean_nextchanges``) applies.
+
+    Raises with an actionable message when the file is absent, so a package that
+    opts into nextchanges mode without a version file fails loudly instead of
+    with a bare ``FileNotFoundError``.
+    """
+    version_path = _nextchanges_version_path(package.path)
+    if not os.path.exists(version_path):
+        raise Exception(
+            f"nextchanges mode is enabled ({NEXTCHANGES_DIR_ENV} set) but the version "
+            f"file {os.path.relpath(version_path, os.getcwd())} is missing; each package "
+            f"in nextchanges mode must provide its own <dir>/version file."
+        )
+    with open(version_path) as f:
+        return str(Version.parse(f.read().strip().lstrip("v")))
+
+
+def get_next_tag_info_from_nextchanges(package: Package) -> Optional[TagInfo]:
+    """
+    nextchanges-mode counterpart of ``get_next_tag_info``: build the release
+    TagInfo from ``<dir>/`` fragments. Returns ``None`` when there are no
+    entries (nothing to release), unless ``allow_empty_changelog`` is set in
+    ``.codegen.json`` — matching the ``NEXT_CHANGELOG.md`` skip behavior.
+    """
+    body = render_nextchanges(package.path)
+    if body is None and not _load_codegen_config(package.path).get("allow_empty_changelog", False):
+        print(f"No {_nextchanges_dir()}/ entries. No changes will be made to the changelog.")
+        return None
+
+    version = read_nextchanges_version(package)
+    # write_changelog() keys off the "## Release v…" header, so include it.
+    content = f"## Release v{version}\n" + (f"\n{body}\n" if body else "")
+    return TagInfo(package=package, version=version, content=content)
+
+
+def clean_nextchanges(package_path: str) -> None:
+    """
+    nextchanges-mode counterpart of ``clean_next_changelog``: stage deletion of
+    the ``<dir>/`` fragments consumed by this release and bump ``<dir>/version``
+    to the next minor (its post-release default; teams can still override it in
+    a PR). Deletes every ``.md`` under each section directory — the same set
+    ``render_nextchanges`` consumed, so ``README.md`` is preserved — leaving the
+    section directories in place.
+    """
+    base = os.path.join(os.getcwd(), package_path, _nextchanges_dir())
+    for slug, _ in _nextchanges_sections(package_path):
+        section_dir = os.path.join(base, slug)
+        if not os.path.isdir(section_dir):
+            continue
+        # Deletion order is irrelevant, so listdir as-is (no sort needed).
+        for name in os.listdir(section_dir):
+            if name.endswith(".md") and name != NEXTCHANGES_README_FILE:
+                gh.delete_file(os.path.join(section_dir, name))
+
+    version_path = _nextchanges_version_path(package_path)
+    with open(version_path) as f:
+        released = Version.parse(f.read().strip().lstrip("v"))
+    gh.add_file(version_path, f"{released.next_release_version()}\n")
 
 
 def get_next_tag_info(package: Package) -> Optional[TagInfo]:
     """
-    Extracts the changes from the "NEXT_CHANGELOG.md" file.
-    The result is already processed.
+    Extracts the changes for the next release. In nextchanges mode (see
+    ``_nextchanges_dir``) it reads ``<dir>/`` fragments; otherwise it reads the
+    package's ``NEXT_CHANGELOG.md``. The result is already processed.
     """
+    if _nextchanges_dir() is not None:
+        return get_next_tag_info_from_nextchanges(package)
+
     next_changelog_path = os.path.join(os.getcwd(), package.path, NEXT_CHANGELOG_FILE_NAME)
     # Read NEXT_CHANGELOG.md
     with open(next_changelog_path, "r") as f:
@@ -493,7 +711,9 @@ def get_next_tag_info(package: Package) -> Optional[TagInfo]:
     # sections are skipped — there's nothing meaningful to release.
     # Repos like sdk-js which are still in development can opt in
     # by setting ``allow_empty_changelog: true`` in .codegen.json.
-    if not re.search(r"###", next_changelog) and not _load_codegen_config().get("allow_empty_changelog", False):
+    if not re.search(r"###", next_changelog) and not _load_codegen_config(package.path).get(
+        "allow_empty_changelog", False
+    ):
         print("All sections are empty. No changes will be made to the changelog.")
         return None
 
@@ -539,7 +759,10 @@ def process_package(package: Package) -> TagInfo:
         return
 
     write_changelog(tag_info)
-    clean_next_changelog(package.path)
+    if _nextchanges_dir() is not None:
+        clean_nextchanges(package.path)
+    else:
+        clean_next_changelog(package.path)
     return tag_info
 
 
@@ -977,6 +1200,31 @@ def pull_last_release_commit() -> None:
     reset_repository(commit_hash)
 
 
+def _build_arg_parser() -> argparse.ArgumentParser:
+    """
+    Builds the CLI parser. Shared by ``get_packages_from_args`` and
+    ``args_request_preview`` so both accept the same flags — parsing either one
+    with an unknown flag present would otherwise error.
+    """
+    parser = argparse.ArgumentParser(description="Update changelogs and tag the release.")
+    parser.add_argument(
+        "--package",
+        "-p",
+        type=str,
+        default="",
+        help="Comma-separated list of packages to tag. Leave empty to tag all packages with pending releases.",
+    )
+    parser.add_argument(
+        "--preview",
+        action="store_true",
+        help=(
+            "Print the changelog section the next release would add, then exit "
+            "(no writes, no network). Only supported in nextchanges mode."
+        ),
+    )
+    return parser
+
+
 def get_packages_from_args() -> List[str]:
     """
     Retrieves the list of packages to tag.
@@ -987,16 +1235,55 @@ def get_packages_from_args() -> List[str]:
     Returns an empty list when --package is omitted, which means all packages
     with pending releases will be tagged.
     """
-    parser = argparse.ArgumentParser(description="Update changelogs and tag the release.")
-    parser.add_argument(
-        "--package",
-        "-p",
-        type=str,
-        default="",
-        help="Comma-separated list of packages to tag. Leave empty to tag all packages with pending releases.",
-    )
-    args = parser.parse_args()
+    args = _build_arg_parser().parse_args()
     return [name.strip() for name in args.package.split(",") if name.strip()]
+
+
+def _select_packages(all_packages: List[Package]) -> List[Package]:
+    """
+    Narrow ``all_packages`` to the ``--package`` selection, or return all of
+    them when ``--package`` is omitted. Shared by ``process`` and ``preview`` so
+    the read-only preview covers exactly the release scope the same CLI
+    arguments would execute — ``tagging.py --package foo --preview`` previews
+    only ``foo``, not every package in the repo.
+    """
+    package_names = get_packages_from_args()
+    if not package_names:
+        return all_packages
+    return [package for package in all_packages if package.name in package_names]
+
+
+def args_request_preview() -> bool:
+    """Returns whether ``--preview`` was passed."""
+    return _build_arg_parser().parse_args().preview
+
+
+def preview() -> None:
+    """
+    Print the ``## Release vX.Y.Z`` section(s) the next release would prepend to
+    CHANGELOG.md, rendered from the current ``<dir>/`` fragments — without
+    touching git, GitHub, or any file. Mirrors ``write_changelog``'s date stamp
+    so the output matches what would land. Read-only: safe to run anytime, no
+    credentials. Only meaningful in nextchanges mode.
+    """
+    if _nextchanges_dir() is None:
+        raise Exception(f"--preview requires nextchanges mode ({NEXTCHANGES_DIR_ENV} must be set).")
+
+    current_date = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")
+    printed = False
+    for package in _select_packages(find_packages()):
+        tag_info = get_next_tag_info(package)
+        if tag_info is None:
+            continue
+        dated = re.sub(
+            rf"## Release v({Version.PATTERN})",
+            rf"## Release v\1 ({current_date})",
+            tag_info.content.strip(),
+        )
+        print(dated)
+        printed = True
+    if not printed:
+        print(f"No {_nextchanges_dir()}/ entries — the next release would add no changelog section.")
 
 
 def init_github():
@@ -1041,10 +1328,8 @@ def process():
     all_packages = find_packages()
     # If packages are specified as an argument, only release those — but
     # dep rewrites and the freshness check still operate over the full
-    # set.
-    selected_packages = all_packages
-    if package_names:
-        selected_packages = [package for package in all_packages if package.name in package_names]
+    # set. Shared with preview() so both scope identically.
+    selected_packages = _select_packages(all_packages)
 
     # Run the freshness check against a read-only preview before the
     # retry loop, since the check is deterministic. A freshness
@@ -1069,7 +1354,15 @@ def validate_git_root():
         raise Exception("Please run this script from the root of the repository.")
 
 
-if __name__ == "__main__":
+def main():
     validate_git_root()
+    # Preview is read-only: no GitHub credentials, no network, no commits.
+    if args_request_preview():
+        preview()
+        return
     init_github()
     process()
+
+
+if __name__ == "__main__":
+    main()

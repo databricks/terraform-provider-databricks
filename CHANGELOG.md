@@ -1,5 +1,88 @@
 # Version changelog
 
+## Release v1.127.0 (2026-08-17)
+
+### New Features and Improvements
+
+* Add support for `model_service`, `mcp_service`, and `model_provider_service` securables in `databricks_grant` and `databricks_grants` ([#5941](https://github.com/databricks/terraform-provider-databricks/pull/5941)).
+
+### Bug Fixes
+* Fixed `databricks_share` failing with `produced an unexpected new value: .comment` when a share's comment is set or removed outside of Terraform (e.g. in the UI). The `comment` attribute is now `Optional`+`Computed`, so an out-of-band value is adopted into state instead of erroring, while `comment = ""` still explicitly clears the description.
+
+### Documentation
+
+* Document the `roles/group.assumer` role for group rule sets in `databricks_access_control_rule_set` ([#5924](https://github.com/databricks/terraform-provider-databricks/pull/5924)).
+
+
+## Release v1.126.0 (2026-08-12)
+
+### Bug Fixes
+* Honor `config.DefaultHostMetadataResolverFactory` during provider configuration ([#5940](https://github.com/databricks/terraform-provider-databricks/pull/5940)).
+* Fix perpetual `databricks_share` plan diff and null `id` by restoring the resource `id` on read and update ([#5934](https://github.com/databricks/terraform-provider-databricks/pull/5934)).
+
+
+## Release v1.125.0 (2026-08-10)
+
+### New Features and Improvements
+* Add optional `git_credential_id` attribute to `databricks_repo` resource to allow explicit credential selection ([#5877](https://github.com/databricks/terraform-provider-databricks/pull/5877)).
+
+* For workspace-level hosts, resolve and validate the provider's `workspace_id` from the host's `/.well-known/databricks-config` discovery metadata instead of a SCIM `/Me` call ([#5922](https://github.com/databricks/terraform-provider-databricks/pull/5922)).
+
+  This removes the authenticated `/Me` request on workspace hosts (avoiding false failures for service principals that can manage resources but cannot call `/Me`), and makes a `workspace_id` that disagrees with the host fail at plan time instead of at apply. Hosts whose metadata does not advertise a `workspace_id` fall back to the previous `/Me` behavior.
+
+
+## Release v1.124.0 (2026-08-03)
+
+### New Features and Improvements
+* Add resource and data sources for `databricks_ai_gateway_model_service`.
+* Add resource and data sources for `databricks_ai_gateway_model_provider_service`.
+* Add resource and data sources for `databricks_ai_gateway_mcp_service`.
+
+
+## Release v1.123.0 (2026-07-29)
+
+### Important Changes
+
+* Removed plan-time `workspace_id` reachability validation for unified-provider
+  resources ([#5887](https://github.com/databricks/terraform-provider-databricks/pull/5887)).
+
+  `workspace_id` reachability and mismatch errors (e.g. `workspace_id mismatch`,
+  `managing workspace-level resources requires a workspace_id`) are now reported
+  when the resource is applied instead of during `terraform plan`. Plans no longer
+  make workspace-resolution API calls for these checks. This fixes false-positive
+  plan failures for principals that can manage a resource but cannot call the
+  workspace `/Me` endpoint, and for `provider_config.workspace_id` values that are
+  only known after apply (for example a `workspace_id` sourced from another
+  resource that is created in the same run). For newly-created workspace-level
+  resources this removes plan-time workspace API calls entirely; existing
+  resources still refresh at plan (an unavoidable read), which validates the
+  workspace they already live in.
+
+### New Features and Improvements
+
+* Add `databricks_recipients` data source to list Delta Sharing recipient names.
+* Add `trace_location` to `databricks_mlflow_experiment` for storing experiment traces in a Unity Catalog schema ([#5869](https://github.com/databricks/terraform-provider-databricks/pull/5869)). The block is immutable (`ForceNew`); `table_prefix` is optional and, when omitted, server-defaulted, with the resolved value exposed on the read-only `effective_table_prefix`.
+
+### Bug Fixes
+
+* Fix updating a column comment on a `VIEW` in `databricks_sql_table` ([#5855](https://github.com/databricks/terraform-provider-databricks/pull/5855)). The provider emitted `ALTER VIEW ... ALTER COLUMN ... COMMENT`, which Databricks rejects with a `PARSE_SYNTAX_ERROR`, leaving the change stuck as a perpetual, un-appliable diff. Column comment changes on views are now applied in place via `COMMENT ON COLUMN`, matching how column comments on tables are updated.
+* Fix `databricks_access_control_rule_set` drift detection when all `grant_rules` are removed outside Terraform ([#5589](https://github.com/databricks/terraform-provider-databricks/issues/5589)).
+
+### Internal Changes
+
+* A provider-level `workspace_id` is now consistently validated when a
+  workspace-level resource acquires its client, regardless of whether the value
+  came from the resource's `provider_config` block or the provider configuration
+  ([#5887](https://github.com/databricks/terraform-provider-databricks/pull/5887)).
+
+  Previously a workspace-level provider silently ignored a mismatched
+  provider-level `workspace_id` when a resource omitted `provider_config`. It now
+  surfaces a `workspace_id mismatch` error at apply, matching the behavior when
+  `provider_config.workspace_id` is set explicitly. For the common case where the
+  provider-level `workspace_id` matches the configured workspace (including when
+  it is auto-resolved from host metadata) there is no change.
+
+
 ## Release v1.122.0 (2026-07-20)
 
 ### New Features and Improvements

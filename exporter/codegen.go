@@ -344,6 +344,43 @@ func varTraversalTokens(name string) hclwrite.Tokens {
 	})
 }
 
+// referenceSubstitutions computes all substitutions a single reference produces
+// for a value. Normally that's zero or one; for a MultiMatch regexp reference it's
+// one per occurrence, each captured token resolved independently to its own target
+// resource (e.g. several distinct `{{secrets/scope/key}}` tokens in one value).
+func (ic *importContext) referenceSubstitutions(d reference, path []string, value string,
+	origResource *resource, origPath string) []substitution {
+	if d.MultiMatch && d.MatchTypeValue() == MatchRegexp && !d.Variable {
+		if d.Regexp == nil {
+			return nil
+		}
+		attr := d.MatchAttribute()
+		// Resolve each captured token via an exact lookup so we don't re-run the
+		// reference regexp against the captured substring in isolation (which, for
+		// context-anchored regexps such as init-script destinations, wouldn't match).
+		lookup := d
+		lookup.MatchType = MatchExact
+		lookup.Regexp = nil
+		var subs []substitution
+		for _, idx := range d.Regexp.FindAllStringSubmatchIndex(value, -1) {
+			if len(idx) < 4 || idx[2] < 0 {
+				continue
+			}
+			captured := value[idx[2]:idx[3]]
+			_, traversal, _ := ic.Find(captured, attr, lookup, origResource, origPath)
+			if traversal == nil {
+				continue
+			}
+			subs = append(subs, substitution{Start: idx[2], End: idx[3], Inner: hclwrite.TokensForTraversal(traversal)})
+		}
+		return subs
+	}
+	if sub, ok := ic.referenceSubstitution(d, path, value, origResource, origPath); ok {
+		return []substitution{sub}
+	}
+	return nil
+}
+
 // referenceSubstitution computes, for a single reference and value, the span of
 // the value it replaces and the traversal tokens to substitute in its place. It
 // returns ok=false when the reference doesn't apply to the value.
@@ -406,8 +443,8 @@ func (ic *importContext) combineReferences(i importable, match string, path []st
 		if d.Path != match {
 			continue
 		}
-		sub, ok := ic.referenceSubstitution(d, path, value, origResource, pathString)
-		if ok {
+		refSubs := ic.referenceSubstitutions(d, path, value, origResource, pathString)
+		for _, sub := range refSubs {
 			overlaps := false
 			for _, existing := range subs {
 				if sub.Start < existing.End && sub.End > existing.Start {
@@ -418,9 +455,9 @@ func (ic *importContext) combineReferences(i importable, match string, path []st
 			if !overlaps {
 				subs = append(subs, sub)
 			}
-			if !d.ContinueMatch {
-				break // terminal reference
-			}
+		}
+		if len(refSubs) > 0 && !d.ContinueMatch {
+			break // terminal reference
 		}
 	}
 	if len(subs) == 0 {

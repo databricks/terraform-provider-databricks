@@ -42,8 +42,23 @@ var (
 	ignoreIdeFolderRegex             = regexp.MustCompile(`^/Users/[^/]+/\.ide/.*$`)
 	servedEntityFieldExtractionRegex = regexp.MustCompile(`^config\.[0-9]+\.served_entities\.([0-9]+)\.(.*)$`)
 	uc3LevelIdRegex                  = regexp.MustCompile(`^([^.]+\.[^.]+\.[^.]+)$`)
-	globIncludeDirectoryRegex        = regexp.MustCompile(`^(/.+)/\*\*$`)
-	fileExtensionLanguageMapping     = map[string]string{
+	policyInstancePoolIdRegex        = regexp.MustCompile(`"instance_pool_id":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
+	policyDriverInstancePoolIdRegex  = regexp.MustCompile(`"driver_instance_pool_id":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
+	policyInstanceProfileArnRegex    = regexp.MustCompile(`"aws_attributes\.instance_profile_arn":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
+	// policySecretRegex captures a whole `{{secrets/scope/key}}` token so it matches
+	// the computed `config_reference` attribute of a databricks_secret. Used with
+	// MultiMatch to substitute every secret reference embedded in a policy definition.
+	policySecretRegex = regexp.MustCompile(`(\{\{secrets/[^/]+/[^}]+\}\})`)
+	// policySecretScopeRegex captures just the scope of an embedded `{{secrets/scope/key}}`
+	// token. It's the fallback used when the specific secret can't be resolved to a
+	// databricks_secret resource (e.g. Azure Key Vault backed scopes, where individual
+	// secrets aren't managed by Databricks) - only the scope is substituted.
+	policySecretScopeRegex         = regexp.MustCompile(`\{\{secrets/([^/]+)/[^}]+\}\}`)
+	policyInitScriptDbfsRegex      = regexp.MustCompile(`"init_scripts\.\d+\.dbfs\.destination":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
+	policyInitScriptWorkspaceRegex = regexp.MustCompile(`"init_scripts\.\d+\.workspace\.destination":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
+	policyInitScriptVolumesRegex   = regexp.MustCompile(`"init_scripts\.\d+\.volumes\.destination":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
+	globIncludeDirectoryRegex      = regexp.MustCompile(`^(/.+)/\*\*$`)
+	fileExtensionLanguageMapping   = map[string]string{
 		"SCALA":  ".scala",
 		"PYTHON": ".py",
 		"SQL":    ".sql",
@@ -223,22 +238,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
 		},
-		Depends: []reference{
-			{Path: "libraries.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
-			{Path: "libraries.jar", Resource: "databricks_file"},
-			{Path: "libraries.jar", Resource: "databricks_workspace_file", Match: "workspace_path"},
-			{Path: "libraries.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
-			{Path: "libraries.whl", Resource: "databricks_file"},
-			{Path: "libraries.whl", Resource: "databricks_workspace_file", Match: "workspace_path"},
-			{Path: "libraries.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
-			{Path: "libraries.egg", Resource: "databricks_workspace_file", Match: "workspace_path"},
-			{Path: "libraries.whl", Resource: "databricks_repo", Match: "workspace_path",
-				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "libraries.egg", Resource: "databricks_repo", Match: "workspace_path",
-				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "libraries.jar", Resource: "databricks_repo", Match: "workspace_path",
-				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-		},
+		Depends: clusterPolicyReferences(),
 		// TODO: implement a custom Body that will write with special formatting, where
 		// JSON is written line by line so that we're able to do the references
 	},

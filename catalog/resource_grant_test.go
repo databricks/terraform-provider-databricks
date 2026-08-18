@@ -38,8 +38,19 @@ func TestResourceGrantCreate(t *testing.T) {
 					Changes: []catalog.PermissionsChange{
 						{
 							Principal: "me",
-							Add:       []catalog.Privilege{"MODIFY"},
 							Remove:    []catalog.Privilege{"SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
+						{
+							Principal: "me",
+							Add:       []catalog.Privilege{"MODIFY"},
 						},
 					},
 				},
@@ -121,8 +132,19 @@ func TestResourceGrantCreateMetastoreId(t *testing.T) {
 					Changes: []catalog.PermissionsChange{
 						{
 							Principal: "me",
-							Add:       []catalog.Privilege{"MODIFY"},
 							Remove:    []catalog.Privilege{"SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/metastore/metastore_id",
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
+						{
+							Principal: "me",
+							Add:       []catalog.Privilege{"MODIFY"},
 						},
 					},
 				},
@@ -218,8 +240,19 @@ func TestResourceGrantWaitUntilReady(t *testing.T) {
 					Changes: []catalog.PermissionsChange{
 						{
 							Principal: "me",
-							Add:       []catalog.Privilege{"MODIFY"},
 							Remove:    []catalog.Privilege{"SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/table/foo.bar.baz",
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
+						{
+							Principal: "me",
+							Add:       []catalog.Privilege{"MODIFY"},
 						},
 					},
 				},
@@ -358,6 +391,89 @@ func TestResourceGrantUpdate(t *testing.T) {
 
 		principal = "me"
 		privileges = ["MODIFY", "SELECT"]
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceGrantUpdateSwapPrivilege(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/schema/main.myschema?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"SELECT"},
+						},
+					},
+				},
+			},
+			// Removes come first, then adds — previously these were combined in one
+			// call which the Databricks API rejected.
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/schema/main.myschema",
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
+						{
+							Principal: "me",
+							Remove:    []catalog.Privilege{"SELECT"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/schema/main.myschema",
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
+						{
+							Principal: "me",
+							Add:       []catalog.Privilege{"MODIFY"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/schema/main.myschema?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"MODIFY"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/schema/main.myschema?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"MODIFY"},
+						},
+					},
+				},
+			},
+		},
+		Resource:    ResourceGrant(),
+		Update:      true,
+		RequiresNew: false,
+		ID:          "schema/main.myschema/me",
+		InstanceState: map[string]string{
+			"schema":    "main.myschema",
+			"principal": "me",
+		},
+		HCL: `
+		schema = "main.myschema"
+
+		principal = "me"
+		privileges = ["MODIFY"]
 		`,
 	}.ApplyNoError(t)
 }

@@ -64,9 +64,12 @@ func TestReconcileWorkspaceIDFromHostMetadata(t *testing.T) {
 			wantCachedID:    12345,
 		},
 		{
-			name:            "workspace host, host omits workspace_id, no seed no error",
+			// Workspace host + connection-id user + metadata omits workspace_id:
+			// eager /Me is skipped (connection IDs are rejected downstream), so no
+			// seed and no error even though the client has no usable /Me.
+			name:            "workspace host, host omits workspace_id, connection-id user, no seed no error",
 			hostType:        config.WorkspaceHost,
-			userWorkspaceID: "12345",
+			userWorkspaceID: "some-connection-id",
 			hostWorkspaceID: "",
 			wantCachedID:    0,
 		},
@@ -89,7 +92,7 @@ func TestReconcileWorkspaceIDFromHostMetadata(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			c := newTestClientForReconcile()
-			err := c.ReconcileWorkspaceIDFromHostMetadata(tc.hostType, tc.userWorkspaceID, tc.hostWorkspaceID)
+			err := c.ReconcileWorkspaceIDFromHostMetadata(context.Background(), tc.hostType, tc.userWorkspaceID, tc.hostWorkspaceID)
 			if tc.wantErr != "" {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tc.wantErr)
@@ -108,7 +111,7 @@ func TestReconcileWorkspaceIDFromHostMetadata(t *testing.T) {
 // skipped.
 func TestReconcileWorkspaceIDFromHostMetadataSeedsCacheHit(t *testing.T) {
 	c := newTestClientForReconcile()
-	require.NoError(t, c.ReconcileWorkspaceIDFromHostMetadata(config.WorkspaceHost, "", "678910"))
+	require.NoError(t, c.ReconcileWorkspaceIDFromHostMetadata(context.Background(), config.WorkspaceHost, "", "678910"))
 
 	id, err := c.CurrentWorkspaceID(context.Background())
 	require.NoError(t, err)

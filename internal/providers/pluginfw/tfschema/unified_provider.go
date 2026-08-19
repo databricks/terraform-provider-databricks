@@ -289,7 +289,9 @@ func WorkspaceDriftDetection(ctx context.Context, client UnifiedProviderClient, 
 	if newWsID == "" {
 		newWsID = client.GetProviderWorkspaceID()
 	}
-	// Fallback to cached workspace ID for workspace-level providers.
+	// Fallback to cached workspace ID for workspace-level providers. On workspace
+	// hosts this is a cache hit seeded during provider configuration
+	// (ReconcileWorkspaceIDFromHostMetadata), so no SCIM /Me is issued here.
 	if newWsID == "" {
 		if cachedID, err := client.CurrentWorkspaceID(ctx); err == nil && cachedID != 0 {
 			newWsID = strconv.FormatInt(cachedID, 10)
@@ -361,6 +363,9 @@ func PopulateProviderConfigInState(ctx context.Context, client UnifiedProviderCl
 	if wsID == "" {
 		wsID = client.GetProviderWorkspaceID()
 	}
+	// On workspace hosts CurrentWorkspaceID is a cache hit seeded during provider
+	// configuration (ReconcileWorkspaceIDFromHostMetadata), so no SCIM /Me is issued
+	// here; account/unified hosts still resolve via this call.
 	if wsID == "" {
 		id, err := client.CurrentWorkspaceID(ctx)
 		if err != nil {
@@ -391,6 +396,9 @@ func PopulateProviderConfigInStateForDataSource(ctx context.Context, client Unif
 	if wsID == "" {
 		wsID = client.GetProviderWorkspaceID()
 	}
+	// On workspace hosts CurrentWorkspaceID is a cache hit seeded during provider
+	// configuration (ReconcileWorkspaceIDFromHostMetadata), so no SCIM /Me is issued
+	// here; account/unified hosts still resolve via this call.
 	if wsID == "" {
 		id, err := client.CurrentWorkspaceID(ctx)
 		if err != nil {

@@ -64,7 +64,9 @@ func populateProviderConfigInState(ctx context.Context, d *schema.ResourceData, 
 	// Resolve from provider config to populate state for the first time:
 	// 1. provider_config.workspace_id from raw config
 	// 2. workspace_id from provider
-	// 3. Lazy resolution via CurrentWorkspaceID API call (GET /api/2.0/preview/scim/v2/Me)
+	// 3. CurrentWorkspaceID. On workspace hosts this is a cache hit seeded during
+	//    provider configuration (ReconcileWorkspaceIDFromHostMetadata), so no
+	//    SCIM /Me is issued here; account/unified hosts still resolve via this call.
 	//
 	// Account hosts without workspace_id never reach here: plan-time validation
 	// rejects them, and dual resources at account level are guarded by the api

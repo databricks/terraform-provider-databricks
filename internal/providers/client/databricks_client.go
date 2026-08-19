@@ -70,7 +70,8 @@ func installWorkspaceIDCapture(cfg *config.Config) *capturedHostMeta {
 //   - ensuring the config is resolved
 //   - setting a default retry timeout if not set
 //   - setting a default HTTP timeout if not set
-//   - for workspace hosts, reconciling and seeding the workspace_id from host metadata
+//   - for workspace hosts, reconciling and seeding the workspace_id from host metadata,
+//     resolving it eagerly via /Me when the metadata omits it — fatal on failure
 //     (see ReconcileWorkspaceIDFromHostMetadata)
 //
 // TODO: this should be colocated with the definition of DatabricksClient in common/client.go, but
@@ -126,8 +127,9 @@ func PrepareDatabricksClient(ctx context.Context, cfg *config.Config, configCust
 		DatabricksClient: client,
 	}
 	// For workspace hosts, reconcile the user-supplied workspace_id against the
-	// host's discovery metadata and seed the cache so the SCIM /Me call is avoided.
-	if err := pc.ReconcileWorkspaceIDFromHostMetadata(pc.HostTypeForTerraform(), captured.userWorkspaceID, captured.hostWorkspaceID); err != nil {
+	// host's discovery metadata and seed the cache so downstream SCIM /Me calls are
+	// avoided; when the metadata omits it, resolve eagerly via /Me here (fatal on failure).
+	if err := pc.ReconcileWorkspaceIDFromHostMetadata(ctx, pc.HostTypeForTerraform(), captured.userWorkspaceID, captured.hostWorkspaceID); err != nil {
 		return nil, err
 	}
 	pc.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {

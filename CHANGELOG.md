@@ -1,5 +1,30 @@
 # Version changelog
 
+## Release v1.128.0 (2026-08-19)
+
+### New Features and Improvements
+
+* Add resource and data sources for `databricks_account_iam_direct_group_member_v2`.
+* Add resource and data sources for `databricks_account_iam_group_v2`.
+* Add resource and data sources for `databricks_account_iam_service_principal_v2`.
+* Add resource and data sources for `databricks_account_iam_user_v2`.
+* Add resource and data sources for `databricks_account_iam_workspace_assignment_v2`.
+* Add resource and data sources for `databricks_workspace_iam_direct_group_member_v2`.
+* Add resource and data sources for `databricks_workspace_iam_group_v2`.
+* Add resource and data sources for `databricks_workspace_iam_service_principal_v2`.
+* Add resource and data sources for `databricks_workspace_iam_user_v2`.
+* Add resource and data sources for `databricks_workspace_iam_workspace_assignment_v2`.
+* Add resource and data source for `databricks_workspace_iam_workspace_identity_detail_v2`.
+
+### Documentation
+
+* Document Genie budgets on `databricks_budget` with shared vs per-user examples, and blocking usage ([#5946](https://github.com/databricks/terraform-provider-databricks/pull/5946))
+
+### Exporter
+
+* Automatically skip interactive mode when `-services` or `-listing` options is specified ([#5900](https://github.com/databricks/terraform-provider-databricks/issues/5900)).
+
+
 ## Release v1.127.0 (2026-08-17)
 
 ### New Features and Improvements

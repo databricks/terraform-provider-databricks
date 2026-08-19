@@ -199,6 +199,16 @@ type reference struct {
 	MatchType MatchType
 	// true if given reference denote a variable
 	Variable bool
+	// VariableName, if set, is used as the name of the generated variable instead
+	// of a unique per-field name. This lets multiple references (across resources)
+	// share a single variable, e.g. `databricks_account_id`.
+	VariableName string
+	// ContinueMatch, when true, tells the reference resolver not to stop after this
+	// reference matches: subsequent references for the same field are also evaluated
+	// and their (non-overlapping) substitutions are combined into a single value.
+	// Used, for example, to substitute both the account ID and a resource reference
+	// within one attribute like `accounts/<id>/budgetPolicies/<policy>/ruleSets/default`.
+	ContinueMatch bool
 	// true if given reference denote a reference to a generated file
 	File bool
 	// regular expression (if MatchType == "regexp") must define a group that will be used to extract value to match

@@ -229,6 +229,10 @@ Migration between Databricks accounts should be done in multiple steps:
 4. Adjust service principal IDs in the workspace export.
 5. Apply workspace export to a new workspace.
 
+### Account ID variable
+
+For account-level exports, the exporter emits a single `databricks_account_id` variable in `vars.tf` (with the current account ID as its default) and references it from the generated provider block and from account-scoped resource attributes (for example, `databricks_endpoint.parent` and `databricks_access_control_rule_set.name`).  To point the generated configuration at a different account, override this one variable (via `-var`, an environment variable, or `terraform.tfvars`) instead of editing every occurrence.
+
 ## Services
 
 Services are just logical groups of resources used for filtering and organization in files written in `-directory`. All resources are globally sorted by their resource name, which allows you to use generated files for compliance purposes. Nevertheless, managing the entire Databricks workspace with Terraform is the preferred way. Except for notebooks and possibly libraries, which may have their own CI/CD processes.

@@ -1512,6 +1512,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "grant_rules.principals", Resource: "databricks_user", Match: "acl_principal_id"},
 			{Path: "grant_rules.principals", Resource: "databricks_group", Match: "acl_principal_id"},
 			{Path: "grant_rules.principals", Resource: "databricks_service_principal", Match: "acl_principal_id"},
+			// Substitute the account ID with the shared variable. ContinueMatch lets
+			// the more-specific references below also apply, so both the account ID and
+			// a referenced resource are substituted within the same `name`.
+			{Path: "name", MatchType: MatchRegexp, Regexp: regexp.MustCompile(`^accounts/([^/]+)/.*$`),
+				Variable: true, VariableName: accountIdVariableName, ContinueMatch: true},
 			{Path: "name", Resource: "databricks_service_principal", Match: "application_id", MatchType: MatchRegexp,
 				Regexp: regexp.MustCompile("^accounts/[^/]+/servicePrincipals/([^/]+)/ruleSets/default$")},
 			{Path: "name", Resource: "databricks_group", MatchType: MatchRegexp,
@@ -2345,11 +2350,17 @@ var resourcesMap map[string]importable = map[string]importable{
 		AccountLevel: true,
 		Service:      "mws",
 		List:         listMwsCredentials,
+		Depends: []reference{
+			{Path: "account_id", Variable: true, VariableName: accountIdVariableName},
+		},
 	},
 	"databricks_mws_storage_configurations": {
 		AccountLevel: true,
 		Service:      "mws",
 		List:         listMwsStorageConfigurations,
+		Depends: []reference{
+			{Path: "account_id", Variable: true, VariableName: accountIdVariableName},
+		},
 	},
 	"databricks_endpoint": {
 		AccountLevel:    true,
@@ -2365,6 +2376,10 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		List:   listEndpoints,
 		Import: importEndpoint,
+		Depends: []reference{
+			{Path: "parent", MatchType: MatchRegexp, Regexp: regexp.MustCompile(`^accounts/([^/]+)$`),
+				Variable: true, VariableName: accountIdVariableName},
+		},
 	},
 	"databricks_mws_vpc_endpoint": {
 		AccountLevel: true,
@@ -2373,6 +2388,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Get("vpc_endpoint_name").(string)
 		},
 		List: listMwsVpcEndpoints,
+		Depends: []reference{
+			{Path: "account_id", Variable: true, VariableName: accountIdVariableName},
+		},
 	},
 	"databricks_mws_private_access_settings": {
 		AccountLevel: true,
@@ -2381,12 +2399,16 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import:       importMwsPrivateAccessSettings,
 		Depends: []reference{
 			{Path: "allowed_vpc_endpoint_ids", Resource: "databricks_mws_vpc_endpoint", Match: "vpc_endpoint_id"},
+			{Path: "account_id", Variable: true, VariableName: accountIdVariableName},
 		},
 	},
 	"databricks_mws_customer_managed_keys": {
 		AccountLevel: true,
 		Service:      "mws",
 		List:         listMwsCustomerManagedKeys,
+		Depends: []reference{
+			{Path: "account_id", Variable: true, VariableName: accountIdVariableName},
+		},
 	},
 	"databricks_mws_networks": {
 		AccountLevel: true,
@@ -2402,6 +2424,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "vpc_endpoints.dataplane_relay", Resource: "databricks_mws_vpc_endpoint", Match: "vpc_endpoint_id"},
 			{Path: "vpc_endpoints.rest_api", Resource: "databricks_mws_vpc_endpoint", Match: "vpc_endpoint_id"},
+			{Path: "account_id", Variable: true, VariableName: accountIdVariableName},
 		},
 	},
 	"databricks_mws_workspaces": {
@@ -2416,16 +2439,24 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "storage_customer_managed_key_id", Resource: "databricks_mws_customer_managed_keys", Match: "customer_managed_key_id"},
 			{Path: "managed_services_customer_managed_key_id", Resource: "databricks_mws_customer_managed_keys", Match: "customer_managed_key_id"},
 			{Path: "credentials_id", Resource: "databricks_mws_credentials", Match: "credentials_id"},
+			{Path: "account_id", Variable: true, VariableName: accountIdVariableName},
 		},
 	},
 	"databricks_budget_policy": {
 		AccountLevel:    true,
 		PluginFramework: true,
 		Service:         "billing",
-		Name:            func(ic *importContext, d *schema.ResourceData) string { return d.Id() },
-		List:            listBudgetPolicies,
-		Import:          importBudgetPolicy,
-		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_budget_policy", "policy_id"),
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			if v, ok := wrapper.GetOk("policy_name"); ok {
+				if name, ok := v.(string); ok && name != "" {
+					return name
+				}
+			}
+			return wrapper.Id()
+		},
+		List:   listBudgetPolicies,
+		Import: importBudgetPolicy,
+		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_budget_policy", "policy_id"),
 		Depends: []reference{
 			{Path: "binding_workspace_ids", Resource: "databricks_mws_workspaces", Match: "workspace_id"},
 		},

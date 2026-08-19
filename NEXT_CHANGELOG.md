@@ -17,5 +17,6 @@
 ### Exporter
 
 * Automatically skip interactive mode when `-services` or `-listing` options is specified ([#5900](https://github.com/databricks/terraform-provider-databricks/issues/5900)).
+* Preserve zero `value` fields when exporting `databricks_workspace_setting_v2` and `databricks_account_setting_v2` ([#5955](https://github.com/databricks/terraform-provider-databricks/issues/5955)).
 
 ### Internal Changes

@@ -1548,7 +1548,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 						JobClusters: []sdk_jobs.JobCluster{
 							{
 								JobClusterKey: "shared",
-								NewCluster: sdk_compute.ClusterSpec{
+								NewCluster: &sdk_compute.ClusterSpec{
 									InstancePoolId: "pool1",
 									NumWorkers:     2,
 									SparkVersion:   "6.4.x-scala2.11",

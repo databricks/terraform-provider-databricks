@@ -133,8 +133,7 @@ type ModelProviderService struct {
 	Etag types.String `tfsdk:"etag"`
 	// Metastore hosting the provider service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
-	// Leaf identifier for the provider service (the unqualified name within the
-	// parent schema, e.g. "openai_prod").
+	// Name for the model provider service, e.g. "openai_prod".
 	ModelProviderServiceId types.String `tfsdk:"model_provider_service_id"`
 	// Resource name of the provider service. Format:
 	// `model-provider-services/{catalog}.{schema}.{model_provider_service}`.
@@ -145,8 +144,8 @@ type ModelProviderService struct {
 	// The owner of the model provider service. Write-only; read owner via
 	// effective_owner.
 	Owner types.String `tfsdk:"owner"`
-	// Resource name of the parent schema. Format: `schemas/{catalog}.{schema}`.
-	// Each `{...}` component is capped at 255 characters individually.
+	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
+	// `{...}` component is capped at 255 characters individually.
 	Parent types.String `tfsdk:"parent"`
 	// When the provider service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`

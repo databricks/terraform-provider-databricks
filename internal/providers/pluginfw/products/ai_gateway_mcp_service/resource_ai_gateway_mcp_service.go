@@ -129,8 +129,7 @@ type McpService struct {
 	// field on the Update / Delete request; the server rejects the mutation if
 	// the stored etag differs.
 	Etag types.String `tfsdk:"etag"`
-	// Leaf identifier for the MCP service (the unqualified name within the
-	// parent schema, e.g. "my_mcp_service").
+	// Name for the MCP service, e.g. "my_mcp_service".
 	McpServiceId types.String `tfsdk:"mcp_service_id"`
 	// Metastore hosting the MCP service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
@@ -141,8 +140,8 @@ type McpService struct {
 	Name types.String `tfsdk:"name"`
 	// The owner of the MCP service. Write-only; read owner via effective_owner.
 	Owner types.String `tfsdk:"owner"`
-	// Resource name of the parent schema. Format: `schemas/{catalog}.{schema}`.
-	// Each `{...}` component is capped at 255 characters individually.
+	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
+	// `{...}` component is capped at 255 characters individually.
 	Parent types.String `tfsdk:"parent"`
 	// When the MCP service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`

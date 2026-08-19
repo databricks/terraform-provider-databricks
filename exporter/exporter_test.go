@@ -1166,10 +1166,22 @@ func TestImportingClusters(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=1",
 				ReuseRequest: true,
-				Response: scim.UserList{
-					Resources: []scim.User{
-						{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
+				Response: iam.ListUsersResponse{
+					Resources: []iam.User{
+						{Id: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
 					},
+					TotalResults: 1,
+					StartIndex:   1,
+				},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=2",
+				ReuseRequest: true,
+				Response: iam.ListUsersResponse{
+					Resources:    []iam.User{},
+					TotalResults: 1,
+					StartIndex:   2,
 				},
 			},
 		},

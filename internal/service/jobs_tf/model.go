@@ -2859,9 +2859,8 @@ type CreateJob struct {
 	Trigger types.Object `tfsdk:"trigger"`
 	// List of triggers attached to this job. A run starts when any active
 	// trigger evaluates to true. Cannot be set in the same request as the
-	// legacy `schedule`, `trigger`, or `continuous` fields. The 10-trigger cap
-	// is the design's hard limit; rollout steps the effective cap 3 -> 5 -> 10
-	// via internal validation during the preview.
+	// legacy `schedule`, `trigger`, or `continuous` fields. Gated behind the
+	// "Multiple Triggers" feature preview.
 	Triggers types.List `tfsdk:"triggers"`
 	// The id of the user specified usage policy to use for this job. If not
 	// specified, a default usage policy may be applied when creating or
@@ -7889,7 +7888,7 @@ func (to *JobCluster) SyncFieldsDuringRead(ctx context.Context, from JobCluster)
 
 func (m JobCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["job_cluster_key"] = attrs["job_cluster_key"].SetRequired()
-	attrs["new_cluster"] = attrs["new_cluster"].SetRequired()
+	attrs["new_cluster"] = attrs["new_cluster"].SetOptional()
 	attrs["serverless_compute_id"] = attrs["serverless_compute_id"].SetOptional()
 
 	return attrs
@@ -9260,9 +9259,8 @@ type JobSettings struct {
 	Trigger types.Object `tfsdk:"trigger"`
 	// List of triggers attached to this job. A run starts when any active
 	// trigger evaluates to true. Cannot be set in the same request as the
-	// legacy `schedule`, `trigger`, or `continuous` fields. The 10-trigger cap
-	// is the design's hard limit; rollout steps the effective cap 3 -> 5 -> 10
-	// via internal validation during the preview.
+	// legacy `schedule`, `trigger`, or `continuous` fields. Gated behind the
+	// "Multiple Triggers" feature preview.
 	Triggers types.List `tfsdk:"triggers"`
 	// The id of the user specified usage policy to use for this job. If not
 	// specified, a default usage policy may be applied when creating or
@@ -19337,6 +19335,10 @@ type RunTask struct {
 	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
 	// through rapid scaling and optimized cluster performance.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
+	// The id of the serverless compute this task ran on, either explicitly
+	// configured on the task or the workspace default. Only set once the
+	// compute has been resolved at run trigger.
+	EffectiveServerlessComputeId types.String `tfsdk:"effective_serverless_compute_id"`
 	// An optional set of email addresses notified when the task run begins or
 	// completes. The default behavior is to not send any emails.
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
@@ -20091,6 +20093,7 @@ func (m RunTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["disable_auto_optimization"] = attrs["disable_auto_optimization"].SetOptional()
 	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetComputed()
+	attrs["effective_serverless_compute_id"] = attrs["effective_serverless_compute_id"].SetComputed()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
 	attrs["environment_key"] = attrs["environment_key"].SetOptional()
@@ -20184,61 +20187,62 @@ func (m RunTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"ai_runtime_task":              m.AiRuntimeTask,
-			"alert_task":                   m.AlertTask,
-			"attempt_number":               m.AttemptNumber,
-			"clean_rooms_notebook_task":    m.CleanRoomsNotebookTask,
-			"cleanup_duration":             m.CleanupDuration,
-			"cluster_instance":             m.ClusterInstance,
-			"compute":                      m.Compute,
-			"condition_task":               m.ConditionTask,
-			"dashboard_task":               m.DashboardTask,
-			"dbt_cloud_task":               m.DbtCloudTask,
-			"dbt_platform_task":            m.DbtPlatformTask,
-			"dbt_task":                     m.DbtTask,
-			"depends_on":                   m.DependsOn,
-			"description":                  m.Description,
-			"disable_auto_optimization":    m.DisableAutoOptimization,
-			"disabled":                     m.Disabled,
-			"effective_performance_target": m.EffectivePerformanceTarget,
-			"email_notifications":          m.EmailNotifications,
-			"end_time":                     m.EndTime,
-			"environment_key":              m.EnvironmentKey,
-			"execution_duration":           m.ExecutionDuration,
-			"existing_cluster_id":          m.ExistingClusterId,
-			"for_each_task":                m.ForEachTask,
-			"gen_ai_compute_task":          m.GenAiComputeTask,
-			"git_source":                   m.GitSource,
-			"job_cluster_key":              m.JobClusterKey,
-			"library":                      m.Libraries,
-			"max_retries":                  m.MaxRetries,
-			"min_retry_interval_millis":    m.MinRetryIntervalMillis,
-			"new_cluster":                  m.NewCluster,
-			"notebook_task":                m.NotebookTask,
-			"notification_settings":        m.NotificationSettings,
-			"pipeline_task":                m.PipelineTask,
-			"power_bi_task":                m.PowerBiTask,
-			"python_operator_task":         m.PythonOperatorTask,
-			"python_wheel_task":            m.PythonWheelTask,
-			"queue_duration":               m.QueueDuration,
-			"resolved_values":              m.ResolvedValues,
-			"retry_on_timeout":             m.RetryOnTimeout,
-			"run_duration":                 m.RunDuration,
-			"run_id":                       m.RunId,
-			"run_if":                       m.RunIf,
-			"run_job_task":                 m.RunJobTask,
-			"run_page_url":                 m.RunPageUrl,
-			"setup_duration":               m.SetupDuration,
-			"spark_jar_task":               m.SparkJarTask,
-			"spark_python_task":            m.SparkPythonTask,
-			"spark_submit_task":            m.SparkSubmitTask,
-			"sql_task":                     m.SqlTask,
-			"start_time":                   m.StartTime,
-			"state":                        m.State,
-			"status":                       m.Status,
-			"task_key":                     m.TaskKey,
-			"timeout_seconds":              m.TimeoutSeconds,
-			"webhook_notifications":        m.WebhookNotifications,
+			"ai_runtime_task":                 m.AiRuntimeTask,
+			"alert_task":                      m.AlertTask,
+			"attempt_number":                  m.AttemptNumber,
+			"clean_rooms_notebook_task":       m.CleanRoomsNotebookTask,
+			"cleanup_duration":                m.CleanupDuration,
+			"cluster_instance":                m.ClusterInstance,
+			"compute":                         m.Compute,
+			"condition_task":                  m.ConditionTask,
+			"dashboard_task":                  m.DashboardTask,
+			"dbt_cloud_task":                  m.DbtCloudTask,
+			"dbt_platform_task":               m.DbtPlatformTask,
+			"dbt_task":                        m.DbtTask,
+			"depends_on":                      m.DependsOn,
+			"description":                     m.Description,
+			"disable_auto_optimization":       m.DisableAutoOptimization,
+			"disabled":                        m.Disabled,
+			"effective_performance_target":    m.EffectivePerformanceTarget,
+			"effective_serverless_compute_id": m.EffectiveServerlessComputeId,
+			"email_notifications":             m.EmailNotifications,
+			"end_time":                        m.EndTime,
+			"environment_key":                 m.EnvironmentKey,
+			"execution_duration":              m.ExecutionDuration,
+			"existing_cluster_id":             m.ExistingClusterId,
+			"for_each_task":                   m.ForEachTask,
+			"gen_ai_compute_task":             m.GenAiComputeTask,
+			"git_source":                      m.GitSource,
+			"job_cluster_key":                 m.JobClusterKey,
+			"library":                         m.Libraries,
+			"max_retries":                     m.MaxRetries,
+			"min_retry_interval_millis":       m.MinRetryIntervalMillis,
+			"new_cluster":                     m.NewCluster,
+			"notebook_task":                   m.NotebookTask,
+			"notification_settings":           m.NotificationSettings,
+			"pipeline_task":                   m.PipelineTask,
+			"power_bi_task":                   m.PowerBiTask,
+			"python_operator_task":            m.PythonOperatorTask,
+			"python_wheel_task":               m.PythonWheelTask,
+			"queue_duration":                  m.QueueDuration,
+			"resolved_values":                 m.ResolvedValues,
+			"retry_on_timeout":                m.RetryOnTimeout,
+			"run_duration":                    m.RunDuration,
+			"run_id":                          m.RunId,
+			"run_if":                          m.RunIf,
+			"run_job_task":                    m.RunJobTask,
+			"run_page_url":                    m.RunPageUrl,
+			"setup_duration":                  m.SetupDuration,
+			"spark_jar_task":                  m.SparkJarTask,
+			"spark_python_task":               m.SparkPythonTask,
+			"spark_submit_task":               m.SparkSubmitTask,
+			"sql_task":                        m.SqlTask,
+			"start_time":                      m.StartTime,
+			"state":                           m.State,
+			"status":                          m.Status,
+			"task_key":                        m.TaskKey,
+			"timeout_seconds":                 m.TimeoutSeconds,
+			"webhook_notifications":           m.WebhookNotifications,
 		})
 }
 
@@ -20261,19 +20265,20 @@ func (m RunTask) Type(ctx context.Context) attr.Type {
 			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency{}.Type(ctx),
 			},
-			"description":                  types.StringType,
-			"disable_auto_optimization":    types.BoolType,
-			"disabled":                     types.BoolType,
-			"effective_performance_target": types.StringType,
-			"email_notifications":          JobEmailNotifications{}.Type(ctx),
-			"end_time":                     types.Int64Type,
-			"environment_key":              types.StringType,
-			"execution_duration":           types.Int64Type,
-			"existing_cluster_id":          types.StringType,
-			"for_each_task":                RunForEachTask{}.Type(ctx),
-			"gen_ai_compute_task":          GenAiComputeTask{}.Type(ctx),
-			"git_source":                   GitSource{}.Type(ctx),
-			"job_cluster_key":              types.StringType,
+			"description":                     types.StringType,
+			"disable_auto_optimization":       types.BoolType,
+			"disabled":                        types.BoolType,
+			"effective_performance_target":    types.StringType,
+			"effective_serverless_compute_id": types.StringType,
+			"email_notifications":             JobEmailNotifications{}.Type(ctx),
+			"end_time":                        types.Int64Type,
+			"environment_key":                 types.StringType,
+			"execution_duration":              types.Int64Type,
+			"existing_cluster_id":             types.StringType,
+			"for_each_task":                   RunForEachTask{}.Type(ctx),
+			"gen_ai_compute_task":             GenAiComputeTask{}.Type(ctx),
+			"git_source":                      GitSource{}.Type(ctx),
+			"job_cluster_key":                 types.StringType,
 			"library": basetypes.ListType{
 				ElemType: compute_tf.Library{}.Type(ctx),
 			},

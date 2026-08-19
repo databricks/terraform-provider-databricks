@@ -62,7 +62,8 @@ The following attributes are exported:
 
 ### McpServiceConfigSourceConnection
 * `is_deleted` (boolean)
-* `name` (string)
+* `name` (string) - Name of the UC connection that hosts the MCP server, as
+  `connections/{catalog}.{schema}.{connection}`
 
 ### RateLimit
 * `key` (string) - Scope key. Determines whether `principal` is required. Possible values are: `RATE_LIMIT_KEY_REQUEST_TAG`, `RATE_LIMIT_KEY_SERVICE`, `RATE_LIMIT_KEY_SERVICE_PRINCIPAL`, `RATE_LIMIT_KEY_USER`, `RATE_LIMIT_KEY_USER_DEFAULT`, `RATE_LIMIT_KEY_USER_GROUP`

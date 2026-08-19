@@ -187,114 +187,6 @@ func (m *CreateDeploymentRequest_SdkV2) SetDeployment(ctx context.Context, v Dep
 	m.Deployment = types.ListValueMust(t, vs)
 }
 
-type CreateOperationRequest_SdkV2 struct {
-	// The resource operation to create.
-	Operation types.List `tfsdk:"operation"`
-	// The parent version where this operation will be recorded. Format:
-	// deployments/{deployment_id}/versions/{version_id}
-	Parent types.String `tfsdk:"-"`
-	// The key identifying the resource this operation applies to. Becomes the
-	// final component of the operation's name.
-	ResourceKey types.String `tfsdk:"-"`
-}
-
-func (to *CreateOperationRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateOperationRequest_SdkV2) {
-	if !from.Operation.IsNull() && !from.Operation.IsUnknown() {
-		if toOperation, ok := to.GetOperation(ctx); ok {
-			if fromOperation, ok := from.GetOperation(ctx); ok {
-				// Recursively sync the fields of Operation
-				toOperation.SyncFieldsDuringCreateOrUpdate(ctx, fromOperation)
-				to.SetOperation(ctx, toOperation)
-			}
-		}
-	}
-}
-
-func (to *CreateOperationRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateOperationRequest_SdkV2) {
-	if !from.Operation.IsNull() && !from.Operation.IsUnknown() {
-		if toOperation, ok := to.GetOperation(ctx); ok {
-			if fromOperation, ok := from.GetOperation(ctx); ok {
-				toOperation.SyncFieldsDuringRead(ctx, fromOperation)
-				to.SetOperation(ctx, toOperation)
-			}
-		}
-	}
-}
-
-func (m CreateOperationRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["operation"] = attrs["operation"].SetRequired()
-	attrs["operation"] = attrs["operation"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["parent"] = attrs["parent"].SetRequired()
-	attrs["resource_key"] = attrs["resource_key"].SetRequired()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateOperationRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (m CreateOperationRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"operation": reflect.TypeOf(Operation_SdkV2{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateOperationRequest_SdkV2
-// only implements ToObjectValue() and Type().
-func (m CreateOperationRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"operation":    m.Operation,
-			"parent":       m.Parent,
-			"resource_key": m.ResourceKey,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (m CreateOperationRequest_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"operation": basetypes.ListType{
-				ElemType: Operation_SdkV2{}.Type(ctx),
-			},
-			"parent":       types.StringType,
-			"resource_key": types.StringType,
-		},
-	}
-}
-
-// GetOperation returns the value of the Operation field in CreateOperationRequest_SdkV2 as
-// a Operation_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *CreateOperationRequest_SdkV2) GetOperation(ctx context.Context) (Operation_SdkV2, bool) {
-	var e Operation_SdkV2
-	if m.Operation.IsNull() || m.Operation.IsUnknown() {
-		return e, false
-	}
-	var v []Operation_SdkV2
-	d := m.Operation.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetOperation sets the value of the Operation field in CreateOperationRequest_SdkV2.
-func (m *CreateOperationRequest_SdkV2) SetOperation(ctx context.Context, v Operation_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operation"]
-	m.Operation = types.ListValueMust(t, vs)
-}
-
 type CreateVersionRequest_SdkV2 struct {
 	// The parent deployment where this version will be created. Format:
 	// deployments/{deployment_id}
@@ -1855,17 +1747,23 @@ func (m *ListVersionsResponse_SdkV2) SetVersions(ctx context.Context, v []Versio
 	m.Versions = types.ListValueMust(t, vs)
 }
 
-// An operation on a single resource performed during a version. Operations
-// record the result of applying a resource change to the workspace. Most fields
-// are immutable once recorded; `state`, `error_message`, `resource_id`, and
-// `status` may be updated afterwards (via UpdateOperation), guarded by
-// `sequence_id` for optimistic concurrency control.
+// An operation on a single resource performed during a version. The full set of
+// operations for a version is recorded when the version is created: each
+// carries its `resource_key` and `action_type` and starts in
+// `OPERATION_STATUS_PENDING`. As each resource is applied, its operation is
+// updated (via UpdateOperation) to record the result of applying the change to
+// the workspace. `state`, `error_message`, `resource_id`, `status`, and
+// `dashboard_metadata` may be updated afterwards, guarded by `sequence_id` for
+// optimistic concurrency control; all other fields are immutable once recorded.
 type Operation_SdkV2 struct {
-	// The type of operation performed on this resource.
+	// The type of operation performed on this resource. Set when the version is
+	// created and immutable thereafter.
 	ActionType types.String `tfsdk:"action_type"`
 	// When the operation was recorded.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Dashboard-specific metadata; set only for dashboard resources.
+	// Dashboard-specific metadata; set only for dashboard resources. Mutable:
+	// may be set or updated via UpdateOperation as the resource is applied, and
+	// is mirrored onto the corresponding deployment-level resource.
 	DashboardMetadata types.List `tfsdk:"dashboard_metadata"`
 	// Error message if the operation failed. Set when status is
 	// OPERATION_STATUS_FAILED. Captures the error encountered while applying
@@ -1886,7 +1784,8 @@ type Operation_SdkV2 struct {
 	// Resource identifier within the bundle (e.g. "jobs.foo", "pipelines.bar",
 	// "jobs.foo.permissions", "files.<rel-path>"). Can be an arbitrary UTF-8
 	// encoded string key. This key links the operation to the corresponding
-	// deployment-level Resource.
+	// deployment-level Resource. Set when the version is created and immutable
+	// thereafter.
 	ResourceKey types.String `tfsdk:"resource_key"`
 	// The type of the deployment resource this operation applies to. Derived
 	// from the `resource_key` prefix (e.g. "jobs" → JOB); the caller does not
@@ -1894,13 +1793,15 @@ type Operation_SdkV2 struct {
 	ResourceType types.String `tfsdk:"resource_type"`
 	// Monotonically increasing revision used for optimistic concurrency control
 	// (the AIP-154 concurrency token for this resource, realized as a sequence
-	// number rather than an opaque etag). The server assigns 1 on creation and
-	// increments it on every successful UpdateOperation. It is OPTIONAL rather
-	// than OUTPUT_ONLY because it is dual-purpose: CreateOperation/GetOperation
-	// return the current value, and UpdateOperation reads the caller-supplied
-	// value as a precondition. The caller must echo the value it last observed;
-	// if it no longer matches the server's value, the update is rejected with
-	// ABORTED so the caller can re-read and retry. Ignored on CreateOperation.
+	// number rather than an opaque etag). The server assigns 0 when the
+	// operation is created and increments it on every successful
+	// UpdateOperation, so a never-updated operation is at 0 and the first
+	// successful update makes it 1. It is OPTIONAL rather than OUTPUT_ONLY
+	// because it is dual-purpose: GetOperation returns the current value, and
+	// UpdateOperation reads the caller-supplied value as a precondition. The
+	// caller must echo the value it last observed; if it no longer matches the
+	// server's value, the update is rejected with ABORTED so the caller can
+	// re-read and retry.
 	SequenceId types.Int64 `tfsdk:"sequence_id"`
 	// Serialized local config state after the operation. Its presence records
 	// whether the resource still exists, so an operation that records no state
@@ -1926,10 +1827,11 @@ type Operation_SdkV2 struct {
 	// the same OpenAPI schema ("type": "string"), so the SDKs are identical
 	// either way.
 	State types.String `tfsdk:"state"`
-	// Whether the operation succeeded or failed. Mutable: may be updated after
-	// creation via UpdateOperation, e.g. when an operation recorded as failed
-	// is retried and eventually succeeds. A succeeded operation cannot carry an
-	// `error_message`.
+	// Status of the operation. Starts as OPERATION_STATUS_PENDING when the
+	// version is created and moves to a terminal status once the resource is
+	// applied. Mutable: updated via UpdateOperation, e.g. when an operation
+	// recorded as failed is retried and eventually succeeds. A succeeded
+	// operation cannot carry an `error_message`.
 	Status types.String `tfsdk:"status"`
 	// When the operation was last updated. Set to `create_time` when the
 	// operation is created and to the server timestamp on each successful
@@ -1961,11 +1863,10 @@ func (to *Operation_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Operat
 }
 
 func (m Operation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["action_type"] = attrs["action_type"].SetRequired()
+	attrs["action_type"] = attrs["action_type"].SetOptional()
 	attrs["action_type"] = attrs["action_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["dashboard_metadata"] = attrs["dashboard_metadata"].SetOptional()
-	attrs["dashboard_metadata"] = attrs["dashboard_metadata"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["dashboard_metadata"] = attrs["dashboard_metadata"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["error_message"] = attrs["error_message"].SetOptional()
 	attrs["name"] = attrs["name"].SetComputed()
@@ -1975,7 +1876,7 @@ func (m Operation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["resource_type"] = attrs["resource_type"].SetComputed()
 	attrs["sequence_id"] = attrs["sequence_id"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
-	attrs["status"] = attrs["status"].SetRequired()
+	attrs["status"] = attrs["status"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 
 	return attrs
@@ -2221,8 +2122,8 @@ type UpdateOperationRequest_SdkV2 struct {
 	// Operation). All other fields are ignored.
 	Operation types.List `tfsdk:"operation"`
 	// The set of fields to update. Required; supported paths are `state`,
-	// `error_message`, `resource_id`, and `status`. An empty mask or any other
-	// path is rejected with INVALID_PARAMETER_VALUE.
+	// `error_message`, `resource_id`, `status`, and `dashboard_metadata`. An
+	// empty mask or any other path is rejected with INVALID_PARAMETER_VALUE.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

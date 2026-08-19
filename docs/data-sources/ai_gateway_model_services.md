@@ -14,11 +14,13 @@ subcategory: "Unity Catalog"
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional) - Maximum number of model services to return. Defaults to 100 when unset or 0;
-  the maximum is 100. Use `next_page_token` to retrieve additional pages
-* `parent` (string, optional) - Resource name of the parent schema to list within, as
+  the maximum is 100. Use `page_token` to retrieve additional pages
+* `parent` (string, optional) - Name of the parent schema to list within, as
   `schemas/{catalog}.{schema}`. Each `{...}` component is capped at 255
   characters individually
-* `view` (string, optional) - View selector controlling which fields are populated per row. Possible values are: `BASIC`, `FULL`
+* `view` (string, optional) - View selector controlling which fields are populated per row. `FULL`
+  returns the full representation of the service; `BASIC` returns a more
+  compact version. Defaults to `BASIC` when unset. Possible values are: `BASIC`, `FULL`
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig

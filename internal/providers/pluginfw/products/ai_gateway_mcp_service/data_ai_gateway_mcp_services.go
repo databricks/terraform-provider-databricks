@@ -29,9 +29,6 @@ func DataSourceMcpServices() datasource.DataSource {
 // McpServicesData extends the main model with additional fields.
 type McpServicesData struct {
 	AiGateway types.List `tfsdk:"mcp_services"`
-	// Whether to include MCP services for which the principal can only access
-	// selective metadata.
-	IncludeBrowse types.Bool `tfsdk:"include_browse"`
 	// Maximum number of MCP services to return. Defaults to 100 when unset or
 	// 0; the maximum is 100. Use `next_page_token` to retrieve additional
 	// pages.
@@ -55,7 +52,6 @@ func (McpServicesData) GetComplexFieldTypes(context.Context) map[string]reflect.
 func (m McpServicesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["parent"] = attrs["parent"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 	attrs["view"] = attrs["view"].SetOptional()
 
 	attrs["mcp_services"] = attrs["mcp_services"].SetComputed()

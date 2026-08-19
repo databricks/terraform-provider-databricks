@@ -96,8 +96,7 @@ The following arguments are supported:
 * `direct` (ModelProviderServiceConfigAmazonBedrockProviderDirectConfig, optional)
 
 ### ModelProviderServiceConfigAmazonBedrockProviderDirectConfig
-* `aws_access_key` (ModelProviderServiceConfigAwsAccessKey, optional) - AWS access-key-pair auth. Mutually exclusive with `service_credential`.
-  Supersedes the flat `aws_access_key_id` / `aws_secret_access_key` fields
+* `aws_access_key` (ModelProviderServiceConfigAwsAccessKey, optional) - AWS access-key-pair auth. Mutually exclusive with `service_credential`
 * `region` (string, optional) - AWS region where the Bedrock endpoint is hosted (e.g., `us-east-1`).
   Required on Create
 * `service_credential` (ModelProviderServiceConfigServiceCredential, optional) - Reference to a UC service credential authorizing Bedrock requests. On
@@ -145,8 +144,7 @@ The following arguments are supported:
 * `base_url` (string, optional) - Full Azure OpenAI endpoint base URL, e.g.
   `https://myresource.openai.azure.com`. Required on Create
 * `entra_service_principal` (ModelProviderServiceConfigEntraServicePrincipal, optional) - Entra ID (service principal) auth. Mutually exclusive with `api_key` and
-  `service_credential`. Supersedes the flat `tenant_id` / `client_id` /
-  `client_secret` fields
+  `service_credential`
 * `service_credential` (ModelProviderServiceConfigServiceCredential, optional) - Reference to a UC service credential authorizing Azure OpenAI requests. On
   Create the caller supplies `service_credential.name` in the AIP-122
   resource-name form `credentials/{name}`. Required on Create when using
@@ -193,8 +191,7 @@ The following arguments are supported:
   `ProviderSecret.plaintext`
 * `base_url` (string, optional) - Microsoft AI Foundry endpoint URL. Required on Create
 * `entra_service_principal` (ModelProviderServiceConfigEntraServicePrincipal, optional) - Entra ID (service principal) auth. Mutually exclusive with `api_key` and
-  `service_credential`. Supersedes the flat `tenant_id` / `client_id` /
-  `client_secret` fields
+  `service_credential`
 * `service_credential` (ModelProviderServiceConfigServiceCredential, optional) - Reference to a UC service credential authorizing Microsoft Foundry requests.
   On Create the caller supplies `service_credential.name` in the AIP-122
   resource-name form `credentials/{name}`. Required on Create when using
@@ -256,8 +253,6 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `browse_only` (boolean) - Whether the caller sees only metadata available through the BROWSE
-  privilege
 * `create_time` (string) - When the provider service was created
 * `created_by` (string) - Creator identity
 * `effective_owner` (string) - The resolved owner of the model provider service. Falls back to the

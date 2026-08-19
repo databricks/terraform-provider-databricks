@@ -110,9 +110,6 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 
 // McpService extends the main model with additional fields.
 type McpService struct {
-	// Whether the caller sees only metadata available through the BROWSE
-	// privilege.
-	BrowseOnly types.Bool `tfsdk:"browse_only"`
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
 	// Operational configuration: connection, tool selectors, rate limit.
@@ -177,8 +174,7 @@ func (m McpService) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 func (m McpService) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{"browse_only": m.BrowseOnly,
-			"comment":         m.Comment,
+		map[string]attr.Value{"comment": m.Comment,
 			"config":          m.Config,
 			"create_time":     m.CreateTime,
 			"created_by":      m.CreatedBy,
@@ -201,8 +197,7 @@ func (m McpService) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 // and contains additional fields.
 func (m McpService) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"browse_only": types.BoolType,
-			"comment":         types.StringType,
+		AttrTypes: map[string]attr.Type{"comment": types.StringType,
 			"config":          catalog_tf.McpServiceConfig{}.Type(ctx),
 			"create_time":     timetypes.RFC3339{}.Type(ctx),
 			"created_by":      types.StringType,
@@ -275,7 +270,6 @@ func (to *McpService) SyncFieldsDuringRead(ctx context.Context, from McpService)
 }
 
 func (m McpService) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["config"] = attrs["config"].SetOptional()
 	attrs["create_time"] = attrs["create_time"].SetComputed()

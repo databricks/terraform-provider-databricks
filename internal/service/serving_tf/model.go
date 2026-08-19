@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -11545,7 +11546,10 @@ type TelemetryConfig struct {
 	InferenceTableConfig types.Object `tfsdk:"inference_table_config"`
 	// The Unity Catalog tables to which endpoint telemetry (logs, traces, and
 	// metrics) is exported. Provide this to create a new telemetry profile for
-	// the endpoint from the given tables.
+	// the endpoint from the given tables. This field selects the tables when
+	// writing a telemetry configuration; it is not returned when reading one.
+	// Responses identify the resulting profile with `telemetry_profile_id`
+	// instead.
 	TableNames types.Object `tfsdk:"table_names"`
 	// The ID of an existing telemetry profile to apply to this endpoint.
 	// Provide this to reuse a telemetry profile that has already been created,
@@ -11562,6 +11566,10 @@ func (to *TelemetryConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 				to.SetInferenceTableConfig(ctx, toInferenceTableConfig)
 			}
 		}
+	}
+	if !from.TableNames.IsUnknown() && !from.TableNames.IsNull() {
+		// TableNames is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.TableNames = from.TableNames
 	}
 	if !from.TableNames.IsNull() && !from.TableNames.IsUnknown() {
 		if toTableNames, ok := to.GetTableNames(ctx); ok {
@@ -11583,6 +11591,10 @@ func (to *TelemetryConfig) SyncFieldsDuringRead(ctx context.Context, from Teleme
 			}
 		}
 	}
+	if !from.TableNames.IsUnknown() && !from.TableNames.IsNull() {
+		// TableNames is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.TableNames = from.TableNames
+	}
 	if !from.TableNames.IsNull() && !from.TableNames.IsUnknown() {
 		if toTableNames, ok := to.GetTableNames(ctx); ok {
 			if fromTableNames, ok := from.GetTableNames(ctx); ok {
@@ -11596,6 +11608,8 @@ func (to *TelemetryConfig) SyncFieldsDuringRead(ctx context.Context, from Teleme
 func (m TelemetryConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["inference_table_config"] = attrs["inference_table_config"].SetOptional()
 	attrs["table_names"] = attrs["table_names"].SetOptional()
+	attrs["table_names"] = attrs["table_names"].SetComputed()
+	attrs["table_names"] = attrs["table_names"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["telemetry_profile_id"] = attrs["telemetry_profile_id"].SetOptional()
 
 	return attrs

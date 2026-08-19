@@ -49,7 +49,6 @@ The following attributes are exported:
 * `created_by` (string) - Username of the user who created the policy. Output only
 * `except_principals` (list of string) - Optional list of user or group names that should be excluded from the policy
 * `for_securable_type` (string) - Type of securables that the policy should take effect on.
-  Only `TABLE` is supported at this moment.
   Required on create and optional on update. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `METASTORE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
 * `grant` (GrantOptions) - Options for grant policies. Valid only if `policy_type` is `POLICY_TYPE_GRANT`.
   Required on create and optional on update. When specified on update,

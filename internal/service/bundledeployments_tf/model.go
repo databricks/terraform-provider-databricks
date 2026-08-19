@@ -512,7 +512,9 @@ func (m DeleteDeploymentRequest) Type(ctx context.Context) attr.Type {
 type Deployment struct {
 	// When the deployment was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The user who created the deployment (email or principal name).
+	// The user who created the deployment (email or principal name). Empty if
+	// authoritative deployment metadata does not identify a creator or the
+	// principal cannot be resolved.
 	CreatedBy types.String `tfsdk:"created_by"`
 	// Bundle target deployment mode (development or production), derived from
 	// the most recent version's mode.
@@ -557,7 +559,8 @@ type Deployment struct {
 	// When the deployment was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// The user who most recently updated the deployment (email or principal
-	// name).
+	// name). Empty if authoritative deployment metadata does not identify a
+	// modifier or the principal cannot be resolved.
 	UpdatedBy types.String `tfsdk:"updated_by"`
 	// Workspace location of the deployment, derived from the latest version.
 	WorkspaceInfo types.Object `tfsdk:"workspace_info"`
@@ -1106,7 +1109,7 @@ func (m HeartbeatResponse) Type(ctx context.Context) attr.Type {
 type ListDeploymentsRequest struct {
 	// The maximum number of deployments to return. The service may return fewer
 	// than this value. If unspecified, at most 20 deployments will be returned.
-	// The maximum value is 100; values above 100 will be coerced to 100.
+	// The maximum value is 1000; values above 1000 will be coerced to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token, received from a previous `ListDeployments` call. Provide
 	// this to retrieve the subsequent page.
@@ -1854,10 +1857,10 @@ type Operation struct {
 	// deployments/{deployment_id}/versions/{version_id}/operations/{resource_key}
 	Name types.String `tfsdk:"name"`
 	// ID of the actual resource in the workspace (e.g. the job ID, pipeline
-	// ID). Optional at creation: CREATE and RECREATE operations produce a new
-	// resource whose ID is not yet known when the operation is recorded.
-	// Mutable: may be filled in (or corrected) later via UpdateOperation once
-	// the ID is known.
+	// ID). Required whenever `state` is set, because state records a resource
+	// that exists. A CREATE or RECREATE that has not produced its resource yet
+	// records neither. Mutable: may be filled in (or corrected) later via
+	// UpdateOperation once the ID is known.
 	ResourceId types.String `tfsdk:"resource_id"`
 	// Resource identifier within the bundle (e.g. "jobs.foo", "pipelines.bar",
 	// "jobs.foo.permissions", "files.<rel-path>"). Can be an arbitrary UTF-8
@@ -1878,10 +1881,16 @@ type Operation struct {
 	// if it no longer matches the server's value, the update is rejected with
 	// ABORTED so the caller can re-read and retry. Ignored on CreateOperation.
 	SequenceId types.Int64 `tfsdk:"sequence_id"`
-	// Serialized local config state after the operation. Should be unset for
-	// delete operations. Mutable: may be updated after creation via
-	// UpdateOperation. When updating, the caller must echo the last-observed
-	// `sequence_id` as a concurrency precondition.
+	// Serialized local config state after the operation. Its presence records
+	// whether the resource still exists, so an operation that records no state
+	// removes its resource from the deployment. It may be unset only for an
+	// operation that left no resource behind: a `DELETE` that succeeded, or a
+	// `CREATE` or `RECREATE` that failed. It is required otherwise, including
+	// for a failed `DELETE`, whose resource survives.
+	//
+	// Mutable: may be updated after creation via UpdateOperation. When
+	// updating, the caller must echo the last-observed `sequence_id` as a
+	// concurrency precondition.
 	//
 	// Opaque to this service: the string is stored and returned unchanged. This
 	// is deliberately not google.protobuf.Value, whose only numeric case is

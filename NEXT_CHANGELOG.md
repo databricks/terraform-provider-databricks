@@ -17,5 +17,6 @@
 ### Exporter
 
 * Automatically skip interactive mode when `-services` or `-listing` options is specified ([#5900](https://github.com/databricks/terraform-provider-databricks/issues/5900)).
+* Skip system-managed jobs during export and add missing file references for job task parameters ([#5956](https://github.com/databricks/terraform-provider-databricks/issues/5956)).
 
 ### Internal Changes

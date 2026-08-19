@@ -98,6 +98,11 @@ The following attributes are exported:
   Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
+### CustomUdf
+* `function_path` (string) - Fully qualified 3-part Unity Catalog path of the function to apply
+* `input_bindings` (list of InputBinding) - Binds each UC function parameter to a source column.
+  May be empty for zero-argument functions (e.g. a timestamp generator)
+
 ### DataSource
 * `delta_table_source` (DeltaTableSource) - A Delta table data source
 * `kafka_source` (KafkaSource) - A Kafka stream data source
@@ -147,6 +152,7 @@ The following attributes are exported:
 ### Function
 * `aggregation_function` (AggregationFunction) - An aggregation function applied over a time window
 * `column_selection` (ColumnSelection) - Selects the latest value of a single column in a data source
+* `custom_udf` (CustomUdf) - Applies a registered Unity Catalog function row-wise to source columns
 * `extra_parameters` (list of FunctionExtraParameter, deprecated) - Deprecated: Use the function oneof with AggregationFunction instead. Kept for backwards compatibility.
   Extra parameters for parameterized functions
 * `function_type` (string, deprecated) - Deprecated: Use the function oneof with AggregationFunction instead. Kept for backwards compatibility.
@@ -155,6 +161,10 @@ The following attributes are exported:
 ### FunctionExtraParameter
 * `key` (string) - The name of the parameter
 * `value` (string) - The value of the parameter
+
+### InputBinding
+* `column` (string) - Source column whose value is passed for this parameter at execution time
+* `parameter` (string) - Name of the UC function parameter
 
 ### JobContext
 * `job_id` (integer) - The job ID where this API invoked
@@ -193,14 +203,14 @@ The following attributes are exported:
 * `flat_schema` (FlatSchema) - A flat schema with scalar-typed fields only
 
 ### RollingWindow
-* `delay` (string) - The delay applied to the end of the rolling window (must be non-negative).
-  For example, delay=1d shifts the window end 1 day before the evaluation time
+* `delay` (string) - Non-negative analytic lag that evaluates the window this far in the past. Use this for timing
+  variations unrelated to source lateness, such as a 30-day count as of one week ago. If unset,
+  the analytic lag is zero. It composes with source.lateness when both are set
 * `window_duration` (string) - The duration of the rolling window. Must be positive when set; absent means lifetime
   (aggregate over the entity's entire history)
 
 ### SawtoothWindow
-* `delay` (string) - The delay applied to the end of the window (must be non-negative).
-  For example, delay=1d shifts the window end 1 day before the evaluation time
+* `delay` (string) - Delay is not currently supported for Sawtooth windows
 * `window_duration` (string) - The duration of the window. Must be positive and span more than two days when set, so that both
   the batch (N-1 day) and stale-path (N-2 day) partial aggregates are well defined. The duration
   need not be a whole number of days (e.g. 3 days 15 minutes is allowed). Absent means lifetime

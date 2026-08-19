@@ -6943,11 +6943,10 @@ type CreateMcpServiceRequest_SdkV2 struct {
 	// The MCP service to create. The server populates `name` from `parent` +
 	// `mcp_service_id`; clients should leave it unset.
 	McpService types.List `tfsdk:"mcp_service"`
-	// Leaf identifier for the MCP service (the unqualified name within the
-	// parent schema, e.g. "my_mcp_service").
+	// Name for the MCP service, e.g. "my_mcp_service".
 	McpServiceId types.String `tfsdk:"-"`
-	// Resource name of the parent schema. Format: `schemas/{catalog}.{schema}`.
-	// Each `{...}` component is capped at 255 characters individually.
+	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
+	// `{...}` component is capped at 255 characters individually.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -7176,11 +7175,10 @@ type CreateModelProviderServiceRequest_SdkV2 struct {
 	// The model provider service to create. The server populates `name` from
 	// `parent` + `model_provider_service_id`; clients should leave it unset.
 	ModelProviderService types.List `tfsdk:"model_provider_service"`
-	// Leaf identifier for the provider service (the unqualified name within the
-	// parent schema, e.g. "openai_prod").
+	// Name for the model provider service, e.g. "openai_prod".
 	ModelProviderServiceId types.String `tfsdk:"-"`
-	// Resource name of the parent schema. Format: `schemas/{catalog}.{schema}`.
-	// Each `{...}` component is capped at 255 characters individually.
+	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
+	// `{...}` component is capped at 255 characters individually.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -7285,11 +7283,10 @@ type CreateModelServiceRequest_SdkV2 struct {
 	// The model service to create. The server populates `name` from `parent` +
 	// `model_service_id`; clients should leave it unset.
 	ModelService types.List `tfsdk:"model_service"`
-	// Leaf identifier for the model service (the unqualified name within the
-	// parent schema, e.g. "my_model_service").
+	// Name for the model service, e.g. "my_model_service".
 	ModelServiceId types.String `tfsdk:"-"`
-	// Resource name of the parent schema. Format: `schemas/{catalog}.{schema}`.
-	// Each `{...}` component is capped at 255 characters individually.
+	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
+	// `{...}` component is capped at 255 characters individually.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -22708,16 +22705,17 @@ func (m *ListFunctionsResponse_SdkV2) SetFunctions(ctx context.Context, v []Func
 
 type ListMcpServicesRequest_SdkV2 struct {
 	// Maximum number of MCP services to return. Defaults to 100 when unset or
-	// 0; the maximum is 100. Use `next_page_token` to retrieve additional
-	// pages.
+	// 0; the maximum is 100. Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from a previous request.
 	PageToken types.String `tfsdk:"-"`
-	// Resource name of the parent schema to list within, as
+	// Name of the parent schema to list within, as
 	// `schemas/{catalog}.{schema}`. Each `{...}` component is capped at 255
 	// characters individually.
 	Parent types.String `tfsdk:"-"`
-	// View selector controlling which fields are populated per row.
+	// View selector controlling which fields are populated per row. `FULL`
+	// returns the full representation of the service; `BASIC` returns a more
+	// compact version. Defaults to `BASIC` when unset.
 	View types.String `tfsdk:"-"`
 }
 
@@ -23079,16 +23077,17 @@ func (m *ListMetastoresResponse_SdkV2) SetMetastores(ctx context.Context, v []Me
 
 type ListModelProviderServicesRequest_SdkV2 struct {
 	// Maximum number of provider services to return. Defaults to 100 when unset
-	// or 0; the maximum is 100. Use `next_page_token` to retrieve additional
-	// pages.
+	// or 0; the maximum is 100. Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from a previous request.
 	PageToken types.String `tfsdk:"-"`
-	// Resource name of the parent schema to list within, as
+	// Name of the parent schema to list within, as
 	// `schemas/{catalog}.{schema}`. Each `{...}` component is capped at 255
 	// characters individually.
 	Parent types.String `tfsdk:"-"`
-	// View selector controlling which fields are populated per row.
+	// View selector controlling which fields are populated per row. `FULL`
+	// returns the full representation of the service; `BASIC` returns a more
+	// compact version. Defaults to `BASIC` when unset.
 	View types.String `tfsdk:"-"`
 }
 
@@ -23267,16 +23266,17 @@ func (m *ListModelProviderServicesResponse_SdkV2) SetModelProviderServices(ctx c
 
 type ListModelServicesRequest_SdkV2 struct {
 	// Maximum number of model services to return. Defaults to 100 when unset or
-	// 0; the maximum is 100. Use `next_page_token` to retrieve additional
-	// pages.
+	// 0; the maximum is 100. Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from a previous request.
 	PageToken types.String `tfsdk:"-"`
-	// Resource name of the parent schema to list within, as
+	// Name of the parent schema to list within, as
 	// `schemas/{catalog}.{schema}`. Each `{...}` component is capped at 255
 	// characters individually.
 	Parent types.String `tfsdk:"-"`
-	// View selector controlling which fields are populated per row.
+	// View selector controlling which fields are populated per row. `FULL`
+	// returns the full representation of the service; `BASIC` returns a more
+	// compact version. Defaults to `BASIC` when unset.
 	View types.String `tfsdk:"-"`
 }
 
@@ -26307,7 +26307,8 @@ func (m *McpServiceConfig_SdkV2) SetSourceConnection(ctx context.Context, v McpS
 // dangling source so callers can diagnose a deleted backing connection.
 type McpServiceConfigSourceConnection_SdkV2 struct {
 	IsDeleted types.Bool `tfsdk:"is_deleted"`
-
+	// Name of the UC connection that hosts the MCP server, as
+	// `connections/{catalog}.{schema}.{connection}`.
 	Name types.String `tfsdk:"name"`
 }
 

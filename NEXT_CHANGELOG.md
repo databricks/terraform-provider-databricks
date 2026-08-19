@@ -11,6 +11,7 @@
 ### Bug Fixes
 
 ### Documentation
+* Fixed the formatting of databricks mws_network_connectivity_config terraform resource
 
 * Document Genie budgets on `databricks_budget` with shared vs per-user examples, and blocking usage ([#5946](https://github.com/databricks/terraform-provider-databricks/pull/5946))
 

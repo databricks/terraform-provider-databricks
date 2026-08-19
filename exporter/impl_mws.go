@@ -4,6 +4,7 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/databricks/databricks-sdk-go/service/networking"
 	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/mws"
@@ -223,6 +224,41 @@ func listMwsWorkspaces(ic *importContext) error {
 		})
 	}
 	return nil
+}
+
+func listEndpoints(ic *importContext) error {
+	parent := "accounts/" + ic.accountClient.Config.AccountID
+	it := ic.accountClient.Endpoints.ListEndpoints(ic.Context, networking.ListEndpointsRequest{
+		Parent: parent,
+	})
+	for it.HasNext(ic.Context) {
+		endpoint, err := it.Next(ic.Context)
+		if err != nil {
+			return err
+		}
+		if endpoint.Name == "" {
+			continue
+		}
+		if !ic.MatchesName(endpoint.DisplayName) {
+			log.Printf("[INFO] Skipping endpoint %s because it doesn't match %s", endpoint.DisplayName, ic.match)
+			continue
+		}
+		ic.Emit(&resource{
+			Resource: "databricks_endpoint",
+			ID:       endpoint.Name,
+		})
+	}
+	return nil
+}
+
+// importEndpoint populates the required `parent` field which is not returned by
+// the read API. It's always `accounts/{account_id}` for the account being exported.
+func importEndpoint(ic *importContext, r *resource) error {
+	accountID := ic.accountClient.Config.AccountID
+	if accountID == "" {
+		return nil
+	}
+	return r.DataWrapper.Set("parent", "accounts/"+accountID)
 }
 
 func importMwsWorkspaces(ic *importContext, r *resource) error {

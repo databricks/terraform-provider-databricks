@@ -2349,6 +2349,21 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:      "mws",
 		List:         listMwsStorageConfigurations,
 	},
+	"databricks_endpoint": {
+		AccountLevel:    true,
+		PluginFramework: true,
+		Service:         "mws",
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			if v, ok := wrapper.GetOk("display_name"); ok {
+				if name, ok := v.(string); ok && name != "" {
+					return name
+				}
+			}
+			return wrapper.Id()
+		},
+		List:   listEndpoints,
+		Import: importEndpoint,
+	},
 	"databricks_mws_vpc_endpoint": {
 		AccountLevel: true,
 		Service:      "mws",

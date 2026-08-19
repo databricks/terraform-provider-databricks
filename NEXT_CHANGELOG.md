@@ -14,4 +14,6 @@
 
 ### Exporter
 
+* Add an `exporter` dimension to the user agent ([#5954](https://github.com/databricks/terraform-provider-databricks/pull/5954)).
+
 ### Internal Changes

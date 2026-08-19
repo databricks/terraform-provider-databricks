@@ -13,9 +13,8 @@ subcategory: "Unity Catalog"
 
 ## Arguments
 The following arguments are supported:
-* `model_provider_service_id` (string, required) - Leaf identifier for the provider service (the unqualified name within the
-  parent schema, e.g. "openai_prod")
-* `parent` (string, required) - Resource name of the parent schema.
+* `model_provider_service_id` (string, required) - Name for the model provider service, e.g. "openai_prod"
+* `parent` (string, required) - Name of the parent schema.
   Format: `schemas/{catalog}.{schema}`.
   Each `{...}` component is capped at 255 characters individually
 * `comment` (string, optional) - User-provided description

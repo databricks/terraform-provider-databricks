@@ -8,6 +8,18 @@
 
 ### New Features and Improvements
 
+* Add resource and data sources for `databricks_account_iam_direct_group_member_v2`.
+* Add resource and data sources for `databricks_account_iam_group_v2`.
+* Add resource and data sources for `databricks_account_iam_service_principal_v2`.
+* Add resource and data sources for `databricks_account_iam_user_v2`.
+* Add resource and data sources for `databricks_account_iam_workspace_assignment_v2`.
+* Add resource and data sources for `databricks_workspace_iam_direct_group_member_v2`.
+* Add resource and data sources for `databricks_workspace_iam_group_v2`.
+* Add resource and data sources for `databricks_workspace_iam_service_principal_v2`.
+* Add resource and data sources for `databricks_workspace_iam_user_v2`.
+* Add resource and data sources for `databricks_workspace_iam_workspace_assignment_v2`.
+* Add resource and data source for `databricks_workspace_iam_workspace_identity_detail_v2`.
+
 ### Bug Fixes
 
 ### Documentation

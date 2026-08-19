@@ -132,8 +132,7 @@ type ModelService struct {
 	Etag types.String `tfsdk:"etag"`
 	// Metastore hosting the model service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
-	// Leaf identifier for the model service (the unqualified name within the
-	// parent schema, e.g. "my_model_service").
+	// Name for the model service, e.g. "my_model_service".
 	ModelServiceId types.String `tfsdk:"model_service_id"`
 	// Resource name of the model service. Format:
 	// `model-services/{catalog}.{schema}.{model_service}`. Each `{...}`
@@ -144,8 +143,8 @@ type ModelService struct {
 	// The owner of the model service. Write-only; read owner via
 	// effective_owner.
 	Owner types.String `tfsdk:"owner"`
-	// Resource name of the parent schema. Format: `schemas/{catalog}.{schema}`.
-	// Each `{...}` component is capped at 255 characters individually.
+	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
+	// `{...}` component is capped at 255 characters individually.
 	Parent types.String `tfsdk:"parent"`
 	// Unified API types this endpoint supports (e.g. "chat", "embeddings",
 	// "completions"). Derived from the destinations' backing models / providers

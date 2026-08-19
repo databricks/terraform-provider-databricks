@@ -1166,10 +1166,22 @@ func TestImportingClusters(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=1",
 				ReuseRequest: true,
-				Response: scim.UserList{
-					Resources: []scim.User{
-						{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
+				Response: iam.ListUsersResponse{
+					Resources: []iam.User{
+						{Id: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
 					},
+					TotalResults: 1,
+					StartIndex:   1,
+				},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=2",
+				ReuseRequest: true,
+				Response: iam.ListUsersResponse{
+					Resources:    []iam.User{},
+					TotalResults: 1,
+					StartIndex:   2,
 				},
 			},
 		},
@@ -1548,7 +1560,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 						JobClusters: []sdk_jobs.JobCluster{
 							{
 								JobClusterKey: "shared",
-								NewCluster: sdk_compute.ClusterSpec{
+								NewCluster: &sdk_compute.ClusterSpec{
 									InstancePoolId: "pool1",
 									NumWorkers:     2,
 									SparkVersion:   "6.4.x-scala2.11",

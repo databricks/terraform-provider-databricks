@@ -260,7 +260,7 @@ func importJob(ic *importContext, r *resource) error {
 		importTask(ic, task, job.Name, r.ID)
 	}
 	for _, jc := range job.JobClusters {
-		ic.importCluster(&jc.NewCluster)
+		ic.importCluster(jc.NewCluster)
 	}
 	if job.RunAs != nil {
 		if job.RunAs.UserName != "" {

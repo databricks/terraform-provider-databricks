@@ -1390,6 +1390,10 @@ type ConnectorOptions_SdkV2 struct {
 
 	KafkaOptions types.List `tfsdk:"kafka_options"`
 
+	LinkedinAdsOptions types.List `tfsdk:"linkedin_ads_options"`
+
+	MarketoOptions types.List `tfsdk:"marketo_options"`
+
 	MetaAdsOptions types.List `tfsdk:"meta_ads_options"`
 
 	OutlookOptions types.List `tfsdk:"outlook_options"`
@@ -1457,6 +1461,24 @@ func (to *ConnectorOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 				// Recursively sync the fields of KafkaOptions
 				toKafkaOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromKafkaOptions)
 				to.SetKafkaOptions(ctx, toKafkaOptions)
+			}
+		}
+	}
+	if !from.LinkedinAdsOptions.IsNull() && !from.LinkedinAdsOptions.IsUnknown() {
+		if toLinkedinAdsOptions, ok := to.GetLinkedinAdsOptions(ctx); ok {
+			if fromLinkedinAdsOptions, ok := from.GetLinkedinAdsOptions(ctx); ok {
+				// Recursively sync the fields of LinkedinAdsOptions
+				toLinkedinAdsOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromLinkedinAdsOptions)
+				to.SetLinkedinAdsOptions(ctx, toLinkedinAdsOptions)
+			}
+		}
+	}
+	if !from.MarketoOptions.IsNull() && !from.MarketoOptions.IsUnknown() {
+		if toMarketoOptions, ok := to.GetMarketoOptions(ctx); ok {
+			if fromMarketoOptions, ok := from.GetMarketoOptions(ctx); ok {
+				// Recursively sync the fields of MarketoOptions
+				toMarketoOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromMarketoOptions)
+				to.SetMarketoOptions(ctx, toMarketoOptions)
 			}
 		}
 	}
@@ -1574,6 +1596,22 @@ func (to *ConnectorOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 			}
 		}
 	}
+	if !from.LinkedinAdsOptions.IsNull() && !from.LinkedinAdsOptions.IsUnknown() {
+		if toLinkedinAdsOptions, ok := to.GetLinkedinAdsOptions(ctx); ok {
+			if fromLinkedinAdsOptions, ok := from.GetLinkedinAdsOptions(ctx); ok {
+				toLinkedinAdsOptions.SyncFieldsDuringRead(ctx, fromLinkedinAdsOptions)
+				to.SetLinkedinAdsOptions(ctx, toLinkedinAdsOptions)
+			}
+		}
+	}
+	if !from.MarketoOptions.IsNull() && !from.MarketoOptions.IsUnknown() {
+		if toMarketoOptions, ok := to.GetMarketoOptions(ctx); ok {
+			if fromMarketoOptions, ok := from.GetMarketoOptions(ctx); ok {
+				toMarketoOptions.SyncFieldsDuringRead(ctx, fromMarketoOptions)
+				to.SetMarketoOptions(ctx, toMarketoOptions)
+			}
+		}
+	}
 	if !from.MetaAdsOptions.IsNull() && !from.MetaAdsOptions.IsUnknown() {
 		if toMetaAdsOptions, ok := to.GetMetaAdsOptions(ctx); ok {
 			if fromMetaAdsOptions, ok := from.GetMetaAdsOptions(ctx); ok {
@@ -1645,6 +1683,10 @@ func (m ConnectorOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["jira_options"] = attrs["jira_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["kafka_options"] = attrs["kafka_options"].SetOptional()
 	attrs["kafka_options"] = attrs["kafka_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["linkedin_ads_options"] = attrs["linkedin_ads_options"].SetOptional()
+	attrs["linkedin_ads_options"] = attrs["linkedin_ads_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["marketo_options"] = attrs["marketo_options"].SetOptional()
+	attrs["marketo_options"] = attrs["marketo_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["meta_ads_options"] = attrs["meta_ads_options"].SetOptional()
 	attrs["meta_ads_options"] = attrs["meta_ads_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["outlook_options"] = attrs["outlook_options"].SetOptional()
@@ -1678,6 +1720,8 @@ func (m ConnectorOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[st
 		"google_ads_options":           reflect.TypeOf(GoogleAdsOptions_SdkV2{}),
 		"jira_options":                 reflect.TypeOf(JiraConnectorOptions_SdkV2{}),
 		"kafka_options":                reflect.TypeOf(KafkaOptions_SdkV2{}),
+		"linkedin_ads_options":         reflect.TypeOf(LinkedInAdsOptions_SdkV2{}),
+		"marketo_options":              reflect.TypeOf(MarketoOptions_SdkV2{}),
 		"meta_ads_options":             reflect.TypeOf(MetaMarketingOptions_SdkV2{}),
 		"outlook_options":              reflect.TypeOf(OutlookOptions_SdkV2{}),
 		"reddit_ads_options":           reflect.TypeOf(RedditAdsOptions_SdkV2{}),
@@ -1701,6 +1745,8 @@ func (m ConnectorOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 			"google_ads_options":           m.GoogleAdsOptions,
 			"jira_options":                 m.JiraOptions,
 			"kafka_options":                m.KafkaOptions,
+			"linkedin_ads_options":         m.LinkedinAdsOptions,
+			"marketo_options":              m.MarketoOptions,
 			"meta_ads_options":             m.MetaAdsOptions,
 			"outlook_options":              m.OutlookOptions,
 			"reddit_ads_options":           m.RedditAdsOptions,
@@ -1732,6 +1778,12 @@ func (m ConnectorOptions_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"kafka_options": basetypes.ListType{
 				ElemType: KafkaOptions_SdkV2{}.Type(ctx),
+			},
+			"linkedin_ads_options": basetypes.ListType{
+				ElemType: LinkedInAdsOptions_SdkV2{}.Type(ctx),
+			},
+			"marketo_options": basetypes.ListType{
+				ElemType: MarketoOptions_SdkV2{}.Type(ctx),
 			},
 			"meta_ads_options": basetypes.ListType{
 				ElemType: MetaMarketingOptions_SdkV2{}.Type(ctx),
@@ -1912,6 +1964,58 @@ func (m *ConnectorOptions_SdkV2) SetKafkaOptions(ctx context.Context, v KafkaOpt
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["kafka_options"]
 	m.KafkaOptions = types.ListValueMust(t, vs)
+}
+
+// GetLinkedinAdsOptions returns the value of the LinkedinAdsOptions field in ConnectorOptions_SdkV2 as
+// a LinkedInAdsOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions_SdkV2) GetLinkedinAdsOptions(ctx context.Context) (LinkedInAdsOptions_SdkV2, bool) {
+	var e LinkedInAdsOptions_SdkV2
+	if m.LinkedinAdsOptions.IsNull() || m.LinkedinAdsOptions.IsUnknown() {
+		return e, false
+	}
+	var v []LinkedInAdsOptions_SdkV2
+	d := m.LinkedinAdsOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLinkedinAdsOptions sets the value of the LinkedinAdsOptions field in ConnectorOptions_SdkV2.
+func (m *ConnectorOptions_SdkV2) SetLinkedinAdsOptions(ctx context.Context, v LinkedInAdsOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["linkedin_ads_options"]
+	m.LinkedinAdsOptions = types.ListValueMust(t, vs)
+}
+
+// GetMarketoOptions returns the value of the MarketoOptions field in ConnectorOptions_SdkV2 as
+// a MarketoOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions_SdkV2) GetMarketoOptions(ctx context.Context) (MarketoOptions_SdkV2, bool) {
+	var e MarketoOptions_SdkV2
+	if m.MarketoOptions.IsNull() || m.MarketoOptions.IsUnknown() {
+		return e, false
+	}
+	var v []MarketoOptions_SdkV2
+	d := m.MarketoOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMarketoOptions sets the value of the MarketoOptions field in ConnectorOptions_SdkV2.
+func (m *ConnectorOptions_SdkV2) SetMarketoOptions(ctx context.Context, v MarketoOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["marketo_options"]
+	m.MarketoOptions = types.ListValueMust(t, vs)
 }
 
 // GetMetaAdsOptions returns the value of the MetaAdsOptions field in ConnectorOptions_SdkV2 as
@@ -5273,6 +5377,8 @@ type GetPipelineResponse_SdkV2 struct {
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 	// Publishing mode of the pipeline
 	EffectivePublishingMode types.String `tfsdk:"effective_publishing_mode"`
+	// Serverless compute ID resolved for the pipeline.
+	EffectiveServerlessComputeId types.String `tfsdk:"effective_serverless_compute_id"`
 	// The health of a pipeline.
 	Health types.String `tfsdk:"health"`
 	// The last time the pipeline settings were modified or created.
@@ -5384,6 +5490,7 @@ func (m GetPipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetOptional()
 	attrs["effective_publishing_mode"] = attrs["effective_publishing_mode"].SetOptional()
+	attrs["effective_serverless_compute_id"] = attrs["effective_serverless_compute_id"].SetOptional()
 	attrs["health"] = attrs["health"].SetOptional()
 	attrs["last_modified"] = attrs["last_modified"].SetOptional()
 	attrs["latest_updates"] = attrs["latest_updates"].SetOptional()
@@ -5423,21 +5530,22 @@ func (m GetPipelineResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"cause":                      m.Cause,
-			"cluster_id":                 m.ClusterId,
-			"creator_user_name":          m.CreatorUserName,
-			"effective_budget_policy_id": m.EffectiveBudgetPolicyId,
-			"effective_publishing_mode":  m.EffectivePublishingMode,
-			"health":                     m.Health,
-			"last_modified":              m.LastModified,
-			"latest_updates":             m.LatestUpdates,
-			"name":                       m.Name,
-			"parameters":                 m.Parameters,
-			"pipeline_id":                m.PipelineId,
-			"run_as":                     m.RunAs,
-			"run_as_user_name":           m.RunAsUserName,
-			"spec":                       m.Spec,
-			"state":                      m.State,
+			"cause":                           m.Cause,
+			"cluster_id":                      m.ClusterId,
+			"creator_user_name":               m.CreatorUserName,
+			"effective_budget_policy_id":      m.EffectiveBudgetPolicyId,
+			"effective_publishing_mode":       m.EffectivePublishingMode,
+			"effective_serverless_compute_id": m.EffectiveServerlessComputeId,
+			"health":                          m.Health,
+			"last_modified":                   m.LastModified,
+			"latest_updates":                  m.LatestUpdates,
+			"name":                            m.Name,
+			"parameters":                      m.Parameters,
+			"pipeline_id":                     m.PipelineId,
+			"run_as":                          m.RunAs,
+			"run_as_user_name":                m.RunAsUserName,
+			"spec":                            m.Spec,
+			"state":                           m.State,
 		})
 }
 
@@ -5445,13 +5553,14 @@ func (m GetPipelineResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 func (m GetPipelineResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cause":                      types.StringType,
-			"cluster_id":                 types.StringType,
-			"creator_user_name":          types.StringType,
-			"effective_budget_policy_id": types.StringType,
-			"effective_publishing_mode":  types.StringType,
-			"health":                     types.StringType,
-			"last_modified":              types.Int64Type,
+			"cause":                           types.StringType,
+			"cluster_id":                      types.StringType,
+			"creator_user_name":               types.StringType,
+			"effective_budget_policy_id":      types.StringType,
+			"effective_publishing_mode":       types.StringType,
+			"effective_serverless_compute_id": types.StringType,
+			"health":                          types.StringType,
+			"last_modified":                   types.Int64Type,
 			"latest_updates": basetypes.ListType{
 				ElemType: UpdateStateInfo_SdkV2{}.Type(ctx),
 			},
@@ -7817,6 +7926,281 @@ func (m *KafkaOptions_SdkV2) SetValueTransformer(ctx context.Context, v Transfor
 	m.ValueTransformer = types.ListValueMust(t, vs)
 }
 
+// LinkedIn Ads specific options for ingestion. sync_start_date and
+// lookback_window_days apply to both the prebuilt analytics tables and custom
+// reports. custom_report_options defines a custom (user-defined) adAnalytics
+// report and is only valid on a table object.
+type LinkedInAdsOptions_SdkV2 struct {
+	// (Optional) Custom report definition. Only valid on a table object. When
+	// set, the table is synthesized from /rest/adAnalytics using the finder,
+	// pivots, time granularity and metrics here. When unset, the table must
+	// match one of the connector's prebuilt sources.
+	CustomReportOptions types.List `tfsdk:"custom_report_options"`
+	// (Optional) Days to look back during incremental sync for late-arriving
+	// data. If not specified, defaults to 30 days.
+	LookbackWindowDays types.Int64 `tfsdk:"lookback_window_days"`
+	// (Optional) Start date for the initial sync of report tables, YYYY-MM-DD.
+	// Earliest date from which to sync historical data; overrides the default
+	// when set. For finder attributedRevenueMetrics, this must be between 30
+	// and 366 days before today. If not specified, defaults to 1 year of
+	// history.
+	SyncStartDate types.String `tfsdk:"sync_start_date"`
+}
+
+func (to *LinkedInAdsOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LinkedInAdsOptions_SdkV2) {
+	if !from.CustomReportOptions.IsNull() && !from.CustomReportOptions.IsUnknown() {
+		if toCustomReportOptions, ok := to.GetCustomReportOptions(ctx); ok {
+			if fromCustomReportOptions, ok := from.GetCustomReportOptions(ctx); ok {
+				// Recursively sync the fields of CustomReportOptions
+				toCustomReportOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromCustomReportOptions)
+				to.SetCustomReportOptions(ctx, toCustomReportOptions)
+			}
+		}
+	}
+}
+
+func (to *LinkedInAdsOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LinkedInAdsOptions_SdkV2) {
+	if !from.CustomReportOptions.IsNull() && !from.CustomReportOptions.IsUnknown() {
+		if toCustomReportOptions, ok := to.GetCustomReportOptions(ctx); ok {
+			if fromCustomReportOptions, ok := from.GetCustomReportOptions(ctx); ok {
+				toCustomReportOptions.SyncFieldsDuringRead(ctx, fromCustomReportOptions)
+				to.SetCustomReportOptions(ctx, toCustomReportOptions)
+			}
+		}
+	}
+}
+
+func (m LinkedInAdsOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["custom_report_options"] = attrs["custom_report_options"].SetOptional()
+	attrs["custom_report_options"] = attrs["custom_report_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["lookback_window_days"] = attrs["lookback_window_days"].SetOptional()
+	attrs["sync_start_date"] = attrs["sync_start_date"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LinkedInAdsOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m LinkedInAdsOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"custom_report_options": reflect.TypeOf(LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LinkedInAdsOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m LinkedInAdsOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"custom_report_options": m.CustomReportOptions,
+			"lookback_window_days":  m.LookbackWindowDays,
+			"sync_start_date":       m.SyncStartDate,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m LinkedInAdsOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"custom_report_options": basetypes.ListType{
+				ElemType: LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2{}.Type(ctx),
+			},
+			"lookback_window_days": types.Int64Type,
+			"sync_start_date":      types.StringType,
+		},
+	}
+}
+
+// GetCustomReportOptions returns the value of the CustomReportOptions field in LinkedInAdsOptions_SdkV2 as
+// a LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *LinkedInAdsOptions_SdkV2) GetCustomReportOptions(ctx context.Context) (LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2, bool) {
+	var e LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2
+	if m.CustomReportOptions.IsNull() || m.CustomReportOptions.IsUnknown() {
+		return e, false
+	}
+	var v []LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2
+	d := m.CustomReportOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCustomReportOptions sets the value of the CustomReportOptions field in LinkedInAdsOptions_SdkV2.
+func (m *LinkedInAdsOptions_SdkV2) SetCustomReportOptions(ctx context.Context, v LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_report_options"]
+	m.CustomReportOptions = types.ListValueMust(t, vs)
+}
+
+// User-defined custom report for the LinkedIn Ads connector. The destination
+// table name comes from the enclosing TableSpec.destination_table, the start
+// date from the enclosing LinkedInAdsOptions.sync_start_date, and the account
+// it runs against from the source schema (namespace) -- none are repeated here.
+type LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2 struct {
+	// (Required) Entity pivots to group by; count/constraints depend on finder.
+	EntityGranularity types.List `tfsdk:"entity_granularity"`
+	// (Required) adAnalytics finder. See LinkedInAdsFinder.
+	Finder types.String `tfsdk:"finder"`
+	// (Optional) LinkedIn metric names for the report. Open vocabulary (not an
+	// enum): the valid set is large (~100) and evolves with the LinkedIn
+	// adAnalytics API, so values are passed through verbatim. If empty, a
+	// pivot-safe default core set is ingested: impressions, clicks,
+	// costInLocalCurrency, externalWebsiteConversions (valid for every pivot).
+	// Ignored for attributedRevenueMetrics (always returns the full
+	// RevenueAttributionMetrics struct).
+	Metrics types.List `tfsdk:"metrics"`
+	// (Optional) Time aggregation. Defaults to DAILY when unspecified. Used by
+	// analytics/statistics; ignored for attributedRevenueMetrics.
+	TimeGranularity types.String `tfsdk:"time_granularity"`
+}
+
+func (to *LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2) {
+	if !from.EntityGranularity.IsNull() && !from.EntityGranularity.IsUnknown() && to.EntityGranularity.IsNull() && len(from.EntityGranularity.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EntityGranularity, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EntityGranularity = from.EntityGranularity
+	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() && to.Metrics.IsNull() && len(from.Metrics.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Metrics, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Metrics = from.Metrics
+	}
+}
+
+func (to *LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2) {
+	if !from.EntityGranularity.IsNull() && !from.EntityGranularity.IsUnknown() && to.EntityGranularity.IsNull() && len(from.EntityGranularity.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EntityGranularity, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EntityGranularity = from.EntityGranularity
+	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() && to.Metrics.IsNull() && len(from.Metrics.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Metrics, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Metrics = from.Metrics
+	}
+}
+
+func (m LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_granularity"] = attrs["entity_granularity"].SetOptional()
+	attrs["finder"] = attrs["finder"].SetRequired()
+	attrs["metrics"] = attrs["metrics"].SetOptional()
+	attrs["time_granularity"] = attrs["time_granularity"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LinkedInAdsOptionsLinkedInAdsCustomReportOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"entity_granularity": reflect.TypeOf(types.String{}),
+		"metrics":            reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entity_granularity": m.EntityGranularity,
+			"finder":             m.Finder,
+			"metrics":            m.Metrics,
+			"time_granularity":   m.TimeGranularity,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entity_granularity": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"finder": types.StringType,
+			"metrics": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"time_granularity": types.StringType,
+		},
+	}
+}
+
+// GetEntityGranularity returns the value of the EntityGranularity field in LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2) GetEntityGranularity(ctx context.Context) ([]types.String, bool) {
+	if m.EntityGranularity.IsNull() || m.EntityGranularity.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.EntityGranularity.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEntityGranularity sets the value of the EntityGranularity field in LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2.
+func (m *LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2) SetEntityGranularity(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entity_granularity"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EntityGranularity = types.ListValueMust(t, vs)
+}
+
+// GetMetrics returns the value of the Metrics field in LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2) GetMetrics(ctx context.Context) ([]types.String, bool) {
+	if m.Metrics.IsNull() || m.Metrics.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Metrics.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMetrics sets the value of the Metrics field in LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2.
+func (m *LinkedInAdsOptionsLinkedInAdsCustomReportOptions_SdkV2) SetMetrics(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["metrics"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Metrics = types.ListValueMust(t, vs)
+}
+
 type ListPipelineEventsRequest_SdkV2 struct {
 	// Criteria to select a subset of results, expressed using a SQL-like
 	// syntax. The supported filters are: 1. level='INFO' (or WARN or ERROR) 2.
@@ -8531,6 +8915,57 @@ func (m ManualTrigger_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 func (m ManualTrigger_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+// Marketo specific options for ingestion
+type MarketoOptions_SdkV2 struct {
+	// (Optional) Start date for the initial sync in YYYY-MM-DD format. This
+	// determines the earliest date from which to sync historical data. If not
+	// specified, complete history is ingested.
+	SyncStartDate types.String `tfsdk:"sync_start_date"`
+}
+
+func (to *MarketoOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MarketoOptions_SdkV2) {
+}
+
+func (to *MarketoOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from MarketoOptions_SdkV2) {
+}
+
+func (m MarketoOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["sync_start_date"] = attrs["sync_start_date"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MarketoOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m MarketoOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MarketoOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m MarketoOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"sync_start_date": m.SyncStartDate,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m MarketoOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"sync_start_date": types.StringType,
+		},
 	}
 }
 
@@ -14014,7 +14449,12 @@ type SchemaSpec_SdkV2 struct {
 	// The source catalog name. Might be optional depending on the type of
 	// source.
 	SourceCatalog types.String `tfsdk:"source_catalog"`
-	// Required. Schema name in the source database.
+	// Schema name in the source database. Currently required; this field will
+	// become optional in an upcoming release, since some source types (for
+	// example streaming / message-bus connectors) do not use it. When that
+	// change ships, this field's type in the generated SDKs and CLI will change
+	// from required to optional (nullable); clients that assume it is always
+	// present should handle its absence.
 	SourceSchema types.String `tfsdk:"source_schema"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// are applied to all tables in this schema and override the
@@ -15498,7 +15938,12 @@ type TableSpec_SdkV2 struct {
 	// Schema name in the source database. Might be optional depending on the
 	// type of source.
 	SourceSchema types.String `tfsdk:"source_schema"`
-	// Required. Table name in the source database.
+	// Table name in the source database. Currently required; this field will
+	// become optional in an upcoming release, since some source types (for
+	// example streaming / message-bus connectors) do not use it. When that
+	// change ships, this field's type in the generated SDKs and CLI will change
+	// from required to optional (nullable); clients that assume it is always
+	// present should handle its absence.
 	SourceTable types.String `tfsdk:"source_table"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// override the table_configuration defined in the

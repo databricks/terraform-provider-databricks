@@ -2168,20 +2168,22 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_workspace_setting_v2": {
-		WorkspaceLevel:         true,
-		Service:                "settings",
-		PluginFramework:        true,
-		List:                   listWorkspaceSettingsV2,
-		Import:                 importWorkspaceSettingV2,
-		ShouldOmitFieldUnified: shouldOmitWithEffectiveFields,
+		WorkspaceLevel:             true,
+		Service:                    "settings",
+		PluginFramework:            true,
+		List:                       listWorkspaceSettingsV2,
+		Import:                     importWorkspaceSettingV2,
+		ShouldOmitFieldUnified:     shouldOmitWithEffectiveFields,
+		ShouldGenerateFieldUnified: shouldGenerateForSettingV2,
 	},
 	"databricks_account_setting_v2": {
-		AccountLevel:           true,
-		Service:                "settings",
-		PluginFramework:        true,
-		List:                   listAccountSettingsV2,
-		Import:                 importAccountSettingV2,
-		ShouldOmitFieldUnified: shouldOmitWithEffectiveFields,
+		AccountLevel:               true,
+		Service:                    "settings",
+		PluginFramework:            true,
+		List:                       listAccountSettingsV2,
+		Import:                     importAccountSettingV2,
+		ShouldOmitFieldUnified:     shouldOmitWithEffectiveFields,
+		ShouldGenerateFieldUnified: shouldGenerateForSettingV2,
 	},
 	"databricks_online_table": {
 		WorkspaceLevel: true,
@@ -2348,6 +2350,21 @@ var resourcesMap map[string]importable = map[string]importable{
 		AccountLevel: true,
 		Service:      "mws",
 		List:         listMwsStorageConfigurations,
+	},
+	"databricks_endpoint": {
+		AccountLevel:    true,
+		PluginFramework: true,
+		Service:         "mws",
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			if v, ok := wrapper.GetOk("display_name"); ok {
+				if name, ok := v.(string); ok && name != "" {
+					return name
+				}
+			}
+			return wrapper.Id()
+		},
+		List:   listEndpoints,
+		Import: importEndpoint,
 	},
 	"databricks_mws_vpc_endpoint": {
 		AccountLevel: true,

@@ -220,6 +220,7 @@ func (m SecretData) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["effective_owner"] = attrs["effective_owner"].SetComputed()
 	attrs["effective_value"] = attrs["effective_value"].SetComputed()
+	attrs["effective_value"] = attrs["effective_value"].SetSensitive()
 	attrs["expire_time"] = attrs["expire_time"].SetComputed()
 	attrs["full_name"] = attrs["full_name"].SetRequired()
 	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
@@ -229,6 +230,7 @@ func (m SecretData) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updated_by"] = attrs["updated_by"].SetComputed()
 	attrs["value"] = attrs["value"].SetComputed()
+	attrs["value"] = attrs["value"].SetSensitive()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 

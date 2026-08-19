@@ -29,6 +29,8 @@ github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22r
 github.com/cyphar/filepath-securejoin v0.4.1/go.mod h1:Sdj7gXlvMcPZsbhwhQ33GguGLDGQL7h7bg04C/+u9jI=
 github.com/databricks/databricks-sdk-go v0.171.0 h1:5Of+RBTSyIH7Sn5NeAzg/um64eh3UeX92stuJyP4Hxk=
 github.com/databricks/databricks-sdk-go v0.171.0/go.mod h1:C5LNgGe6hGuRrTwoxFmuup3XtQQEaqtq0e+K8IFDIS4=
+github.com/databricks/databricks-sdk-go v0.175.0 h1:XJKS5dqV23fADlEgo/PTYo74+lhzR8sUXJZv8qoNr50=
+github.com/databricks/databricks-sdk-go v0.175.0/go.mod h1:udBw6nxkaqa0fgPQ7ZW1kGFkltQncYx+qFJeVFmxtz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=

@@ -17,5 +17,6 @@
 ### Exporter
 
 * Automatically skip interactive mode when `-services` or `-listing` options is specified ([#5900](https://github.com/databricks/terraform-provider-databricks/issues/5900)).
+* Add an `exporter` dimension to the user agent ([#5954](https://github.com/databricks/terraform-provider-databricks/pull/5954)).
 
 ### Internal Changes

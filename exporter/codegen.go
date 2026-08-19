@@ -1031,10 +1031,37 @@ func (ic *importContext) pluginFrameworkNestedObjectToTokens(imp importable, pat
 			}
 		}
 
-		// Check if ShouldGenerateField forces generation
-		if shouldSkip && (imp.ShouldGenerateField == nil || !imp.ShouldGenerateField(ic, pathString, nil, nil, res)) {
-			log.Printf("[DEBUG] Skipping field %s with zero value in path %v", fieldName, path)
-			continue
+		// Check if ShouldGenerateFieldUnified / ShouldGenerateField forces generation
+		if shouldSkip {
+			forceGenerate := false
+			if imp.ShouldGenerateFieldUnified != nil {
+				dataWrapper := wrapper
+				if dataWrapper == nil && res != nil {
+					dataWrapper = res.DataWrapper
+				}
+				forceGenerate = imp.ShouldGenerateFieldUnified(ic, pathString, fieldSchema, dataWrapper, res)
+			} else if imp.ShouldGenerateField != nil {
+				forceGenerate = imp.ShouldGenerateField(ic, pathString, nil, nil, res)
+			}
+			if !forceGenerate {
+				log.Printf("[DEBUG] Skipping field %s with zero value in path %v", fieldName, path)
+				continue
+			}
+			// Force generation: when raw is nil (e.g. a zero value lost in Go-SDK -> TF-SDK
+			// conversion because the OpenAPI spec marks the field with `omitempty`),
+			// fall back to the type's zero value so the field is emitted.
+			if raw == nil {
+				switch {
+				case fieldSchema.IsBool():
+					raw = false
+				case fieldSchema.IsString():
+					raw = ""
+				case fieldSchema.IsInt():
+					raw = int64(0)
+				case fieldSchema.IsFloat():
+					raw = float64(0)
+				}
+			}
 		}
 
 		log.Printf("[DEBUG] Processing field %s in path %v, value type: %T", fieldName, path, raw)

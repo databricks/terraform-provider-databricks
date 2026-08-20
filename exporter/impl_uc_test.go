@@ -328,6 +328,35 @@ func TestImportSchema(t *testing.T) {
 	})
 }
 
+func TestImportSchemaWithSecrets(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockSecretsUcAPI().EXPECT().ListSecrets(mock.Anything, sdk_uc.ListSecretsRequest{
+			CatalogName: "ctest",
+			SchemaName:  "stest",
+		}).Return(createIteratorFromSlice([]sdk_uc.Secret{
+			{FullName: "ctest.stest.secret1"},
+			{FullName: "ctest.stest.secret2"},
+		}))
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-catalogs,uc-grants,uc-schemas,uc-secrets")
+		// Only uc-secrets is in the listing, so models/volumes/tables are not listed.
+		ic.enableListing("uc-secrets")
+		ic.currentMetastore = currentMetastoreResponse
+		d := tf_uc.ResourceSchema().ToResource().TestResourceData()
+		d.SetId("ctest.stest")
+		d.Set("catalog_name", "ctest")
+		d.Set("name", "stest")
+		err := resourcesMap["databricks_schema"].Import(ic, &resource{
+			ID:   "ctest.stest",
+			Data: d,
+		})
+		assert.NoError(t, err)
+		assert.True(t, ic.testEmits["databricks_secret_uc[<unknown>] (id: ctest.stest.secret1)"])
+		assert.True(t, ic.testEmits["databricks_secret_uc[<unknown>] (id: ctest.stest.secret2)"])
+	})
+}
+
 func TestConnections(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
@@ -1286,6 +1315,59 @@ func TestEmitRfaAccessRequestDestinations_MultipleSecurableTypes(t *testing.T) {
 		assert.True(t, ic.testEmits["databricks_rfa_access_request_destinations[<unknown>] (id: CATALOG,main)"])
 		assert.True(t, ic.testEmits["databricks_rfa_access_request_destinations[<unknown>] (id: SCHEMA,main.default)"])
 		assert.True(t, ic.testEmits["databricks_rfa_access_request_destinations[<unknown>] (id: TABLE,main.default.users)"])
+	})
+}
+
+func TestImportUcSecretExportSecrets(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockSecretsUcAPI().EXPECT().GetSecret(mock.Anything, sdk_uc.GetSecretRequest{
+			FullName:     "main.default.my_secret",
+			IncludeValue: true,
+		}).Return(&sdk_uc.Secret{
+			FullName:       "main.default.my_secret",
+			EffectiveValue: "super-secret-value",
+		}, nil)
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-secrets")
+		ic.exportSecrets = true
+
+		r := &resource{Resource: "databricks_secret_uc", ID: "main.default.my_secret", Name: "my_secret"}
+		err := importUcSecret(ic, r)
+		assert.NoError(t, err)
+		// The variable name is derived from the field name and the resource name.
+		assert.Equal(t, "super-secret-value", ic.tfvars["value_my_secret"])
+	})
+}
+
+func TestImportUcSecretNoExportSecrets(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("uc-secrets")
+
+	// Without the -export-secrets flag, the value isn't fetched and no tfvar is added.
+	r := &resource{Resource: "databricks_secret_uc", ID: "main.default.my_secret", Name: "my_secret"}
+	err := importUcSecret(ic, r)
+	assert.NoError(t, err)
+	assert.Empty(t, ic.tfvars)
+}
+
+func TestImportUcSecretExportSecretsReadError(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockSecretsUcAPI().EXPECT().GetSecret(mock.Anything, sdk_uc.GetSecretRequest{
+			FullName:     "main.default.my_secret",
+			IncludeValue: true,
+		}).Return(nil, errors.New("PERMISSION_DENIED: no READ_SECRET privilege"))
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-secrets")
+		ic.exportSecrets = true
+
+		// A failure to read the value must NOT drop the resource - it should only skip
+		// populating the tfvar, so the resource is still exported with an empty variable.
+		r := &resource{Resource: "databricks_secret_uc", ID: "main.default.my_secret", Name: "my_secret"}
+		err := importUcSecret(ic, r)
+		assert.NoError(t, err)
+		assert.Empty(t, ic.tfvars)
 	})
 }
 

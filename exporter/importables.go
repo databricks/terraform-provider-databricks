@@ -1659,6 +1659,25 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
+	"databricks_secret_uc": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "uc-secrets",
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			// The ID is the three-level full name `catalog.schema.secret`.
+			return nameNormalizationRegex.ReplaceAllString(wrapper.Id(), "_")
+		},
+		// No List function - this resource is emitted as a dependency from the Import
+		// function of databricks_schema when the `uc-secrets` service is in the listing.
+		Import: importUcSecret,
+		Depends: []reference{
+			{Path: "value", Variable: true},
+			{Path: "catalog_name", Resource: "databricks_catalog"},
+			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog_name", "schema_name"),
+				SkipDirectLookup:     true},
+		},
+	},
 	"databricks_volume": {
 		WorkspaceLevel: true,
 		Service:        "uc-volumes",

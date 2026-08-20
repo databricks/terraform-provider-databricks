@@ -484,6 +484,13 @@ var emptySqlEndpoints = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var emptyWarehouseDefaultOverrides = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/warehouses/v1/default-warehouse-overrides?",
+	Response:     sdk_sql.ListDefaultWarehouseOverridesResponse{},
+	ReuseRequest: true,
+}
+
 var emptyInstancePools = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/instance-pools/list",
@@ -665,6 +672,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyMlflowWebhooks,
 			emptySqlDashboards,
 			emptySqlEndpoints,
+			emptyWarehouseDefaultOverrides,
 			emptySqlQueries,
 			emptySqlAlerts,
 			emptyAlertsV2,
@@ -956,6 +964,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyIpAccessLIst,
 			emptyWorkspace,
 			emptySqlEndpoints,
+			emptyWarehouseDefaultOverrides,
 			emptyVectorSearch,
 			emptyKnowledgeAssistants,
 			emptySupervisorAgents,
@@ -2089,6 +2098,12 @@ func TestImportingSqlObjects(t *testing.T) {
 				Response: getJSONObject("test-data/get-sql-endpoint.json"),
 			},
 			{
+				Method:       "GET",
+				Resource:     "/api/warehouses/v1/default-warehouse-overrides?",
+				Response:     sdk_sql.ListDefaultWarehouseOverridesResponse{},
+				ReuseRequest: true,
+			},
+			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/sql/data_sources",
 				Response: []sdk_sql.DataSource{
@@ -2516,6 +2531,7 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 				Resource: "/api/2.0/sql/warehouses?",
 				Response: sdk_sql.ListWarehousesResponse{},
 			},
+			emptyWarehouseDefaultOverrides,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/sql/config/warehouses",

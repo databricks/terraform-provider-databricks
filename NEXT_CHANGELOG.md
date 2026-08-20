@@ -15,6 +15,7 @@
 ### Exporter
 
 * Added support for exporting `databricks_data_classification_catalog_config` resource ([#5961](https://github.com/databricks/terraform-provider-databricks/pull/5961)).
+* Added support for exporting `databricks_warehouses_default_warehouse_override` resource ([#5962](https://github.com/databricks/terraform-provider-databricks/pull/5962)).
 * Skip system-managed jobs during export and add missing file references for job task parameters ([#5956](https://github.com/databricks/terraform-provider-databricks/issues/5956)).
 * Added support for exporting `databricks_endpoint` resource ([#5951](https://github.com/databricks/terraform-provider-databricks/pull/5951)).
 * Added support for exporting `databricks_environments_workspace_base_environment` and `databricks_environments_default_workspace_base_environment` resources ([#5960](https://github.com/databricks/terraform-provider-databricks/pull/5960)).

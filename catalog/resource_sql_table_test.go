@@ -115,11 +115,115 @@ func TestResourceSqlTableCreateStatement_ViewWithComments(t *testing.T) {
 	}
 	stmt := ti.buildTableCreateStatement()
 	assert.Contains(t, stmt, "CREATE VIEW `main`.`foo`.`bar`")
-	assert.Contains(t, stmt, "(`id`  NOT NULL, `name`  NOT NULL COMMENT 'a comment')")
+	// Views don't support NOT NULL column constraints, so it must not be emitted.
+	assert.Contains(t, stmt, "(`id` , `name`  COMMENT 'a comment')")
+	assert.NotContains(t, stmt, "NOT NULL")
 	assert.NotContains(t, stmt, "USING DELTA")
 	assert.NotContains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH CREDENTIAL somecred")
 	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
 	assert.Contains(t, stmt, "'one'='two'")
+}
+
+// newViewInfo builds a VIEW SqlTableInfo for the column-handling tests below.
+func newViewInfo(definition string, columns ...SqlColumnInfo) *SqlTableInfo {
+	return &SqlTableInfo{
+		Name:           "v",
+		CatalogName:    "main",
+		SchemaName:     "foo",
+		TableType:      "VIEW",
+		ViewDefinition: definition,
+		ColumnInfos:    columns,
+	}
+}
+
+func TestResourceSqlTableView_NullabilityIsNotManaged(t *testing.T) {
+	view := newViewInfo("SELECT 1 AS id", SqlColumnInfo{Name: "id", Nullable: false})
+
+	// CREATE VIEW must not emit a NOT NULL constraint, which views don't support.
+	create := view.buildTableCreateStatement()
+	assert.Contains(t, create, "CREATE VIEW `main`.`foo`.`v`")
+	assert.NotContains(t, create, "NOT NULL")
+
+	// A change in a view column's nullability must not emit
+	// ALTER VIEW ... ALTER COLUMN ..., which Databricks rejects.
+	old := newViewInfo("SELECT 1 AS id", SqlColumnInfo{Name: "id", Nullable: true})
+	statements, err := view.diff(old)
+	assert.NoError(t, err)
+	assert.NotContains(t, strings.Join(statements, "\n"), "ALTER COLUMN")
+}
+
+func TestResourceSqlTableView_ColumnCommentsRestoredAfterDefinitionChange(t *testing.T) {
+	// ALTER VIEW ... AS drops every column comment as a side effect, so a definition
+	// change must re-emit the configured comments in the same apply.
+	old := newViewInfo("SELECT id, name FROM main.foo.bar",
+		SqlColumnInfo{Name: "id", Comment: "identifier"},
+		SqlColumnInfo{Name: "name", Comment: "display name"},
+	)
+	view := newViewInfo("SELECT id, name FROM main.foo.baz",
+		SqlColumnInfo{Name: "id", Comment: "identifier"},
+		SqlColumnInfo{Name: "name", Comment: "display name"},
+	)
+
+	statements, err := view.diff(old)
+	assert.NoError(t, err)
+	joined := strings.Join(statements, "\n")
+	assert.Contains(t, joined, "ALTER VIEW `main`.`foo`.`v` AS SELECT id, name FROM main.foo.baz")
+	assert.Contains(t, joined, "COMMENT ON COLUMN `main`.`foo`.`v`.`id` IS 'identifier'")
+	assert.Contains(t, joined, "COMMENT ON COLUMN `main`.`foo`.`v`.`name` IS 'display name'")
+}
+
+func TestResourceSqlTableView_ColumnMembershipChangeEmitsNoDDL(t *testing.T) {
+	// A view's columns follow its query, so a column appearing or disappearing must
+	// not produce ALTER VIEW ... ADD/DROP COLUMN, which Databricks rejects. Only the
+	// comments of the configured columns are applied.
+	old := newViewInfo("SELECT id FROM main.foo.bar",
+		SqlColumnInfo{Name: "id", Comment: "identifier"},
+	)
+	view := newViewInfo("SELECT id, extra FROM main.foo.bar",
+		SqlColumnInfo{Name: "id", Comment: "identifier"},
+		SqlColumnInfo{Name: "extra", Comment: "added by the new query"},
+	)
+
+	statements, err := view.diff(old)
+	assert.NoError(t, err)
+	joined := strings.Join(statements, "\n")
+	assert.NotContains(t, joined, "ADD COLUMN")
+	assert.NotContains(t, joined, "DROP COLUMN")
+	assert.Contains(t, joined, "COMMENT ON COLUMN `main`.`foo`.`v`.`extra` IS 'added by the new query'")
+}
+
+func TestResourceSqlTableView_ColumnsMatchedByNameNotPosition(t *testing.T) {
+	// Reordering the columns of a view is not a rename: the column list comes from
+	// the server, so matching by position would emit a bogus RENAME COLUMN.
+	old := newViewInfo("SELECT id, name FROM main.foo.bar",
+		SqlColumnInfo{Name: "id", Comment: "identifier"},
+		SqlColumnInfo{Name: "name", Comment: "display name"},
+	)
+	view := newViewInfo("SELECT id, name FROM main.foo.bar",
+		SqlColumnInfo{Name: "name", Comment: "display name"},
+		SqlColumnInfo{Name: "id", Comment: "identifier"},
+	)
+
+	statements, err := view.diff(old)
+	assert.NoError(t, err)
+	assert.NotContains(t, strings.Join(statements, "\n"), "RENAME COLUMN")
+	// Nothing changed but the order, so there is nothing to apply.
+	assert.Empty(t, statements)
+}
+
+func TestResourceSqlTableView_UnknownColumnIsNotCommented(t *testing.T) {
+	// Commenting on a column the view does not have would fail the whole apply.
+	old := newViewInfo("SELECT id FROM main.foo.bar",
+		SqlColumnInfo{Name: "id", Comment: "identifier"},
+	)
+	view := newViewInfo("SELECT id FROM main.foo.bar",
+		SqlColumnInfo{Name: "id", Comment: "identifier"},
+		SqlColumnInfo{Name: "stale", Comment: "no longer selected"},
+	)
+
+	statements, err := view.diff(old)
+	assert.NoError(t, err)
+	assert.NotContains(t, strings.Join(statements, "\n"), "`stale`")
 }
 
 func TestResourceSqlTableCreateStatement_Partition(t *testing.T) {

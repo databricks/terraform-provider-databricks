@@ -11,6 +11,47 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// userListAttrs are the SCIM attributes fetched when bulk-listing users for the read cache.
+const userListAttrs = "id,userName,displayName,active,externalId,entitlements"
+
+// globalUsersListCache caches a ListAll result per (host, apiLevel, accountID) so
+// that N concurrent reads for N distinct databricks_user resources only issue one
+// SCIM list call instead of N individual GET-by-ID calls.
+//
+// The cache key includes accountID so that two provider instances targeting the
+// same API host but different Databricks accounts never share cached users.
+var globalUsersListCache = newUsersListCache()
+
+func newUsersListCache() *common.KeyedCache[string, map[string]User] {
+	return common.NewKeyedCache[string, map[string]User]()
+}
+
+func usersCacheKey(api UsersAPI) string {
+	return api.client.Config.Host + "|" + api.ApiLevel + "|" + api.client.Config.AccountID
+}
+
+func usersListCacheLookup(api UsersAPI, userID string) (User, error) {
+	byID, err := globalUsersListCache.Get(usersCacheKey(api), func() (map[string]User, error) {
+		users, err := api.ListAll(userListAttrs)
+		if err != nil {
+			return nil, err
+		}
+		m := make(map[string]User, len(users))
+		for _, u := range users {
+			m[u.ID] = u
+		}
+		return m, nil
+	})
+	if err != nil {
+		return User{}, err
+	}
+	if u, ok := byID[userID]; ok {
+		return u, nil
+	}
+	// Cache populated but user absent (e.g. created concurrently); fall back to a direct read.
+	return api.Read(userID, userAttributes)
+}
+
 func userExistsErrorMessage(userName string, isAccount bool) string {
 	if isAccount {
 		return strings.ToLower(fmt.Sprintf("User with email %s already exists in this account", userName))
@@ -103,11 +144,12 @@ func ResourceUser() common.Resource {
 			if err != nil {
 				return err
 			}
+			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
+			defer globalUsersListCache.Invalidate(usersCacheKey(usersAPI))
 			u, err := scimUserFromData(d)
 			if err != nil {
 				return err
 			}
-			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
 			user, err := usersAPI.Create(u)
 			if err != nil {
 				return createForceOverridesManuallyAddedUser(err, d, usersAPI, u)
@@ -121,7 +163,7 @@ func ResourceUser() common.Resource {
 				return err
 			}
 			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
-			user, err := usersAPI.Read(d.Id(), userAttributes)
+			user, err := usersListCacheLookup(usersAPI, d.Id())
 			if err != nil {
 				return err
 			}
@@ -135,11 +177,12 @@ func ResourceUser() common.Resource {
 			if err != nil {
 				return err
 			}
+			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
+			defer globalUsersListCache.Invalidate(usersCacheKey(usersAPI))
 			u, err := scimUserFromData(d)
 			if err != nil {
 				return err
 			}
-			usersAPI := NewUsersAPI(ctx, c, common.GetApiLevel(d))
 			return usersAPI.Update(d.Id(), u)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -147,7 +190,9 @@ func ResourceUser() common.Resource {
 			if err != nil {
 				return err
 			}
-			user := NewUsersAPI(ctx, c, common.GetApiLevel(d))
+			usersAPIForDelete := NewUsersAPI(ctx, c, common.GetApiLevel(d))
+			defer globalUsersListCache.Invalidate(usersCacheKey(usersAPIForDelete))
+			user := usersAPIForDelete
 			userName := d.Get("user_name").(string)
 			isAccount := common.IsAccountLevel(d, c)
 			isForceDeleteRepos := d.Get("force_delete_repos").(bool)

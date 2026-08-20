@@ -58,7 +58,10 @@ var (
 	policyInitScriptWorkspaceRegex = regexp.MustCompile(`"init_scripts\.\d+\.workspace\.destination":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
 	policyInitScriptVolumesRegex   = regexp.MustCompile(`"init_scripts\.\d+\.volumes\.destination":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
 	globIncludeDirectoryRegex      = regexp.MustCompile(`^(/.+)/\*\*$`)
-	fileExtensionLanguageMapping   = map[string]string{
+	// dataClassificationParentRegex captures the catalog name from the `parent`
+	// field of databricks_data_classification_catalog_config (format `catalogs/{name}`).
+	dataClassificationParentRegex = regexp.MustCompile(`^catalogs/([^/]+)$`)
+	fileExtensionLanguageMapping  = map[string]string{
 		"SCALA":  ".scala",
 		"PYTHON": ".py",
 		"SQL":    ".sql",
@@ -1864,6 +1867,26 @@ var resourcesMap map[string]importable = map[string]importable{
 			// Notification destination IDs - EMAIL destinations may reference users' emails
 			{Path: "destinations.destination_id", Resource: "databricks_user", Match: "user_name",
 				MatchType: MatchCaseInsensitive},
+		},
+	},
+	"databricks_data_classification_catalog_config": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "uc-data-classification",
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			// The resource name is in the format `catalogs/{catalog_name}/config`,
+			// so we generate a Terraform name from the catalog name.
+			if catalogName := dataClassificationCatalogName(wrapper.Id()); catalogName != "" {
+				return catalogName
+			}
+			return generateUniqueID(wrapper.Id())
+		},
+		Import: importDataClassificationCatalogConfig,
+		// No List function - this resource is emitted as a dependency from the Import
+		// function of databricks_catalog when a data classification config exists.
+		Depends: []reference{
+			{Path: "parent", Resource: "databricks_catalog", MatchType: MatchRegexp,
+				Regexp: dataClassificationParentRegex},
 		},
 	},
 	"databricks_storage_credential": {

@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/tags"
 
 	sdk_uc "github.com/databricks/databricks-sdk-go/service/catalog"
+	sdk_dc "github.com/databricks/databricks-sdk-go/service/dataclassification"
 	sdk_sharing "github.com/databricks/databricks-sdk-go/service/sharing"
 	sdk_vs "github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	tf_uc "github.com/databricks/terraform-provider-databricks/catalog"
@@ -1286,6 +1287,81 @@ func TestEmitRfaAccessRequestDestinations_MultipleSecurableTypes(t *testing.T) {
 		assert.True(t, ic.testEmits["databricks_rfa_access_request_destinations[<unknown>] (id: SCHEMA,main.default)"])
 		assert.True(t, ic.testEmits["databricks_rfa_access_request_destinations[<unknown>] (id: TABLE,main.default.users)"])
 	})
+}
+
+func TestDataClassificationCatalogName(t *testing.T) {
+	assert.Equal(t, "main", dataClassificationCatalogName("catalogs/main/config"))
+	assert.Equal(t, "my_catalog", dataClassificationCatalogName("catalogs/my_catalog/config"))
+	assert.Equal(t, "", dataClassificationCatalogName("main"))
+	assert.Equal(t, "", dataClassificationCatalogName("catalogs/main"))
+	assert.Equal(t, "", dataClassificationCatalogName("schemas/main/config"))
+}
+
+func TestEmitDataClassificationCatalogConfig_Exists(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockDataClassificationAPI().EXPECT().GetCatalogConfig(mock.Anything,
+			sdk_dc.GetCatalogConfigRequest{Name: "catalogs/main/config"}).
+			Return(&sdk_dc.CatalogConfig{Name: "catalogs/main/config"}, nil)
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-data-classification")
+
+		ic.emitDataClassificationCatalogConfig("main")
+
+		assert.True(t, ic.testEmits["databricks_data_classification_catalog_config[<unknown>] (id: catalogs/main/config)"],
+			"Should emit data classification config when it exists")
+	})
+}
+
+func TestEmitDataClassificationCatalogConfig_NotConfigured(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockDataClassificationAPI().EXPECT().GetCatalogConfig(mock.Anything,
+			sdk_dc.GetCatalogConfigRequest{Name: "catalogs/no_config/config"}).
+			Return(nil, errors.New("RESOURCE_DOES_NOT_EXIST: config does not exist"))
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-data-classification")
+
+		ic.emitDataClassificationCatalogConfig("no_config")
+
+		assert.False(t, ic.testEmits["databricks_data_classification_catalog_config[<unknown>] (id: catalogs/no_config/config)"],
+			"Should not emit data classification config when the API returns an error")
+	})
+}
+
+func TestEmitDataClassificationCatalogConfig_ServiceNotEnabled(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		// No DataClassification API calls should be made when the service is not enabled.
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		// Note: NOT enabling the 'uc-data-classification' service.
+
+		ic.emitDataClassificationCatalogConfig("main")
+
+		assert.False(t, ic.testEmits["databricks_data_classification_catalog_config[<unknown>] (id: catalogs/main/config)"],
+			"Should not emit data classification config when the service is not enabled")
+	})
+}
+
+func TestImportDataClassificationCatalogConfig(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("uc-data-classification")
+
+	// A valid name is accepted. The parent catalog is not re-emitted here because the
+	// config is only ever emitted from the catalog's own Import function.
+	err := importDataClassificationCatalogConfig(ic, &resource{
+		Resource: "databricks_data_classification_catalog_config",
+		ID:       "catalogs/main/config",
+	})
+	assert.NoError(t, err)
+	assert.Empty(t, ic.testEmits, "Import should not emit any additional resources")
+
+	// An unexpected name format returns an error.
+	err = importDataClassificationCatalogConfig(ic, &resource{
+		Resource: "databricks_data_classification_catalog_config",
+		ID:       "invalid-id",
+	})
+	assert.Error(t, err)
 }
 
 func TestCreateIsMatchingSecurableType(t *testing.T) {

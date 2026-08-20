@@ -276,6 +276,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `uc-catalogs` - **listing** [databricks_catalog](../resources/catalog.md) and [databricks_workspace_binding](../resources/workspace_binding.md)
 * `uc-connections` - **listing** [databricks_connection](../resources/connection.md).  *Please note that because the API doesn't return sensitive fields, such as passwords, tokens, ..., the generated `options` block could be incomplete!*
 * `uc-credentials` - **listing** exports [databricks_credential](../resources/credential.md) resources on workspace or account level.  *Please note that it will skip storage credentials! Use the `uc-storage-credentials` service for them*
+* `uc-data-classification` - [databricks_data_classification_catalog_config](../resources/data_classification_catalog_config.md) (*emitted as a dependency from [databricks_catalog](../resources/catalog.md) when a data classification configuration is set for the catalog*).
 * `uc-external-locations` - **listing** exports [databricks_external_location](../resources/external_location.md) resource.
 * `uc-grants` -  [databricks_grants](../resources/grants.md). *Please note that during export, the list of grants is expanded to include the identity that does the export! This is done to allow to creation of objects in case when catalogs/schemas have different owners than the current identity*.
 * `uc-metastores` - **listing** [databricks_metastore](../resources/metastore.md) and [databricks_metastore_assignment](../resource/metastore_assignment.md) (only on account-level).  *Please note that when using workspace-level configuration, only the metastores from the workspace's region are listed!*
@@ -333,6 +334,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_custom_app_integration](../resources/custom_app_integration.md) | Yes | No | No | Yes |
 | [databricks_dashboard](../resources/dashboard.md) | Yes | No | Yes | No |
 | [databricks_database_instance](../resources/database_instance.md) | Yes | No | Yes | No |
+| [databricks_data_classification_catalog_config](../resources/data_classification_catalog_config.md) | Yes | No | Yes | No |
 | [databricks_data_quality_monitor](../resources/data_quality_monitor.md) | Yes | Yes | Yes | No |
 | [databricks_dbfs_file](../resources/dbfs_file.md) | Yes | No | Yes | No |
 | [databricks_endpoint](../resources/endpoint.md) | Yes | No | No | Yes |

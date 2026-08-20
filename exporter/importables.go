@@ -37,7 +37,7 @@ var (
 	secretPathRegex                  = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 	secretScopePathRegex             = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/[^}]+\}\}$`)
 	sqlParentRegexp                  = regexp.MustCompile(`^folders/(\d+)$`)
-	requirementsFileRegexp           = regexp.MustCompile(`-r\s+(/.*)$`)
+	requirementsFileRegexp           = regexp.MustCompile(`-r\s+["']?(/[^"']+)["']?\s*$`)
 	dltDefaultStorageRegex           = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 	ignoreIdeFolderRegex             = regexp.MustCompile(`^/Users/[^/]+/\.ide/.*$`)
 	servedEntityFieldExtractionRegex = regexp.MustCompile(`^config\.[0-9]+\.served_entities\.([0-9]+)\.(.*)$`)
@@ -241,6 +241,38 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: clusterPolicyReferences(),
 		// TODO: implement a custom Body that will write with special formatting, where
 		// JSON is written line by line so that we're able to do the references
+	},
+	"databricks_environments_workspace_base_environment": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "compute",
+		NameUnified:     makeNamePlusIdFuncUnified("display_name"),
+		List:            listWorkspaceBaseEnvironments,
+		Import:          importWorkspaceBaseEnvironment,
+		Depends: []reference{
+			{Path: "filepath", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "filepath", Resource: "databricks_workspace_file", Match: "path"},
+			{Path: "filepath", Resource: "databricks_file"},
+			{Path: "spec.dependencies", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "spec.dependencies", Resource: "databricks_workspace_file", Match: "path"},
+			{Path: "spec.dependencies", Resource: "databricks_file"},
+			{Path: "spec.dependencies", Resource: "databricks_workspace_file", Match: "workspace_path",
+				MatchType: MatchRegexp, Regexp: requirementsFileRegexp},
+			{Path: "spec.dependencies", Resource: "databricks_file", MatchType: MatchRegexp,
+				Regexp: requirementsFileRegexp},
+		},
+	},
+	"databricks_environments_default_workspace_base_environment": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "compute",
+		List:            listDefaultWorkspaceBaseEnvironment,
+		Import:          importDefaultWorkspaceBaseEnvironment,
+		Ignore:          ignoreDefaultWorkspaceBaseEnvironment,
+		Depends: []reference{
+			{Path: "cpu_workspace_base_environment", Resource: "databricks_environments_workspace_base_environment", Match: "name"},
+			{Path: "gpu_workspace_base_environment", Resource: "databricks_environments_workspace_base_environment", Match: "name"},
+		},
 	},
 	"databricks_group": {
 		Service:        "groups",

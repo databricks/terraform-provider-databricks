@@ -209,6 +209,13 @@ type reference struct {
 	// Used, for example, to substitute both the account ID and a resource reference
 	// within one attribute like `accounts/<id>/budgetPolicies/<policy>/ruleSets/default`.
 	ContinueMatch bool
+	// MultiMatch, when true together with MatchType == MatchRegexp, tells the
+	// reference resolver to substitute every occurrence of the regexp in the value
+	// (not just the first), resolving each captured group independently to its own
+	// target resource. Used for values that embed several references to different
+	// objects, such as multiple `{{secrets/scope/key}}` tokens inside a cluster
+	// policy definition. Only supported on the ContinueMatch (combine) path.
+	MultiMatch bool
 	// true if given reference denote a reference to a generated file
 	File bool
 	// regular expression (if MatchType == "regexp") must define a group that will be used to extract value to match

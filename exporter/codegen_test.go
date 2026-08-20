@@ -303,6 +303,119 @@ func TestCombineReferencesChain(t *testing.T) {
 	assert.Equal(t, `"a/${var.v1}/b/${var.v2}/c/${var.v3}"`, renderTokens(t, toks))
 }
 
+// TestCombineReferencesMultiMatchSecrets verifies that a single MultiMatch regexp
+// reference substitutes every occurrence in the value, resolving each captured
+// token to its own resource (two different secrets, in this case).
+func TestCombineReferencesMultiMatchSecrets(t *testing.T) {
+	ic := importContextForTest()
+	ic.State.Append(resourceApproximation{
+		Type: "databricks_secret", Name: "s_a",
+		Instances: []instanceApproximation{
+			{Attributes: map[string]any{"config_reference": "{{secrets/scopeA/keyA}}"}},
+		},
+	})
+	ic.State.Append(resourceApproximation{
+		Type: "databricks_secret", Name: "s_b",
+		Instances: []instanceApproximation{
+			{Attributes: map[string]any{"config_reference": "{{secrets/scopeB/keyB}}"}},
+		},
+	})
+	value := `x={{secrets/scopeA/keyA}};y={{secrets/scopeB/keyB}}`
+	imp := importable{Depends: []reference{
+		{Path: "f", Resource: "databricks_secret", Match: "config_reference",
+			MatchType: MatchRegexp, Regexp: regexp.MustCompile(`(\{\{secrets/[^/]+/[^}]+\}\})`),
+			MultiMatch: true, ContinueMatch: true},
+	}}
+	toks := ic.reference(imp, []string{"f"}, value, cty.StringVal(value), &resource{})
+	assert.Equal(t,
+		`"x=${databricks_secret.s_a.config_reference};y=${databricks_secret.s_b.config_reference}"`,
+		renderTokens(t, toks))
+}
+
+// TestCombineReferencesMultiMatchSkipsUnresolved verifies that occurrences whose
+// captured value doesn't resolve to a resource are left as literal text, while
+// resolvable ones are still substituted.
+func TestCombineReferencesMultiMatchSkipsUnresolved(t *testing.T) {
+	ic := importContextForTest()
+	ic.State.Append(resourceApproximation{
+		Type: "databricks_secret", Name: "s_a",
+		Instances: []instanceApproximation{
+			{Attributes: map[string]any{"config_reference": "{{secrets/scopeA/keyA}}"}},
+		},
+	})
+	value := `x={{secrets/scopeA/keyA}};y={{secrets/unknown/key}}`
+	imp := importable{Depends: []reference{
+		{Path: "f", Resource: "databricks_secret", Match: "config_reference",
+			MatchType: MatchRegexp, Regexp: regexp.MustCompile(`(\{\{secrets/[^/]+/[^}]+\}\})`),
+			MultiMatch: true, ContinueMatch: true},
+	}}
+	toks := ic.reference(imp, []string{"f"}, value, cty.StringVal(value), &resource{})
+	assert.Equal(t,
+		`"x=${databricks_secret.s_a.config_reference};y={{secrets/unknown/key}}"`,
+		renderTokens(t, toks))
+}
+
+// TestClusterPolicyDefinitionReferences exercises the full set of references the
+// cluster-policy importable extracts from a definition JSON string: instance pools,
+// instance profile ARN, multiple distinct secrets, and an init-script destination.
+func TestClusterPolicyDefinitionReferences(t *testing.T) {
+	ic := importContextForTest()
+	ic.State.Append(resourceApproximation{Type: "databricks_instance_pool", Name: "pool_a",
+		Instances: []instanceApproximation{{Attributes: map[string]any{"id": "pool1"}}}})
+	ic.State.Append(resourceApproximation{Type: "databricks_instance_pool", Name: "pool_b",
+		Instances: []instanceApproximation{{Attributes: map[string]any{"id": "pool2"}}}})
+	ic.State.Append(resourceApproximation{Type: "databricks_instance_profile", Name: "ip",
+		Instances: []instanceApproximation{{Attributes: map[string]any{"id": "arn:aws:iam::123:instance-profile/my"}}}})
+	ic.State.Append(resourceApproximation{Type: "databricks_secret", Name: "s_a",
+		Instances: []instanceApproximation{{Attributes: map[string]any{"config_reference": "{{secrets/scopeA/keyA}}"}}}})
+	ic.State.Append(resourceApproximation{Type: "databricks_secret", Name: "s_b",
+		Instances: []instanceApproximation{{Attributes: map[string]any{"config_reference": "{{secrets/scopeB/keyB}}"}}}})
+	ic.State.Append(resourceApproximation{Type: "databricks_dbfs_file", Name: "init",
+		Instances: []instanceApproximation{{Attributes: map[string]any{"dbfs_path": "dbfs:/FileStore/init.sh"}}}})
+
+	definition := `{"instance_pool_id":{"type":"fixed","value":"pool1"},` +
+		`"driver_instance_pool_id":{"type":"fixed","value":"pool2"},` +
+		`"aws_attributes.instance_profile_arn":{"type":"fixed","value":"arn:aws:iam::123:instance-profile/my"},` +
+		`"spark_conf.k1":{"type":"fixed","value":"{{secrets/scopeA/keyA}}"},` +
+		`"spark_conf.k2":{"type":"fixed","value":"{{secrets/scopeB/keyB}}"},` +
+		`"init_scripts.0.dbfs.destination":{"type":"fixed","value":"dbfs:/FileStore/init.sh"}}`
+
+	imp := ic.Importables["databricks_cluster_policy"]
+	toks := ic.reference(imp, []string{"definition"}, definition, cty.StringVal(definition), &resource{})
+	out := renderTokens(t, toks)
+	assert.Contains(t, out, "${databricks_instance_pool.pool_a.id}")
+	assert.Contains(t, out, "${databricks_instance_pool.pool_b.id}")
+	assert.Contains(t, out, "${databricks_instance_profile.ip.id}")
+	assert.Contains(t, out, "${databricks_secret.s_a.config_reference}")
+	assert.Contains(t, out, "${databricks_secret.s_b.config_reference}")
+	assert.Contains(t, out, "${databricks_dbfs_file.init.dbfs_path}")
+}
+
+// TestClusterPolicySecretScopeFallback verifies that a secret whose specific
+// databricks_secret resource is available resolves to config_reference, while a
+// token backed only by a secret scope (e.g. Azure Key Vault) falls back to
+// substituting just the scope and keeping the key literal.
+func TestClusterPolicySecretScopeFallback(t *testing.T) {
+	ic := importContextForTest()
+	// Databricks-managed secret: both the secret and its scope exist.
+	ic.State.Append(resourceApproximation{Type: "databricks_secret", Name: "s_managed",
+		Instances: []instanceApproximation{{Attributes: map[string]any{"config_reference": "{{secrets/managed/key1}}"}}}})
+	// AKV-backed scope: only the scope exists, no per-secret resource.
+	ic.State.Append(resourceApproximation{Type: "databricks_secret_scope", Name: "akv",
+		Instances: []instanceApproximation{{Attributes: map[string]any{"id": "akv_scope"}}}})
+
+	definition := `{"spark_conf.a":{"type":"fixed","value":"{{secrets/managed/key1}}"},` +
+		`"spark_conf.b":{"type":"fixed","value":"{{secrets/akv_scope/key2}}"}}`
+
+	imp := ic.Importables["databricks_cluster_policy"]
+	toks := ic.reference(imp, []string{"definition"}, definition, cty.StringVal(definition), &resource{})
+	out := renderTokens(t, toks)
+	assert.Contains(t, out, "${databricks_secret.s_managed.config_reference}")
+	assert.Contains(t, out, "{{secrets/${databricks_secret_scope.akv.id}/key2}}")
+	// The AKV token must NOT be resolved to a databricks_secret.
+	assert.NotContains(t, out, "databricks_secret.akv")
+}
+
 func renderTokens(t *testing.T, tokens hclwrite.Tokens) string {
 	t.Helper()
 	f := hclwrite.NewEmptyFile()

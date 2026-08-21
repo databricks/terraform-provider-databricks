@@ -4,6 +4,8 @@ subcategory: "Workspace"
 
 # databricks_workspace_conf Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/workspaceconf)
+
 Manages workspace configuration for expert usage. Currently, more than one instance of resource can exist in Terraform state, though there's no deterministic behavior, when they manage the same property. We strongly recommend to use a single `databricks_workspace_conf` per workspace.
 
 -> This resource can only be used with a workspace-level provider!

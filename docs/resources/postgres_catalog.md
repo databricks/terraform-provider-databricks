@@ -76,8 +76,7 @@ resource "databricks_postgres_catalog" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `catalog_id` (string, required) - The ID in the Unity Catalog.
-  It becomes the full resource name, for example "my_catalog" becomes "catalogs/my_catalog"
+* `catalog_id` (string, required) - The part of the name, chosen by the user when the resource was created
 * `spec` (CatalogCatalogSpec, optional) - The desired state of the Catalog
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 

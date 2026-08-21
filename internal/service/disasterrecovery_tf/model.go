@@ -356,7 +356,7 @@ type FailoverFailoverGroupRequest struct {
 	// The fully qualified resource name of the failover group to failover.
 	// Format: accounts/{account_id}/failover-groups/{failover_group_id}.
 	Name types.String `tfsdk:"-"`
-	// The target primary region. Must be one of the derived regions and
+	// The target primary region. Must be one of the participating regions and
 	// different from the current effective_primary_region. Serves as an
 	// idempotency check.
 	TargetPrimaryRegion types.String `tfsdk:"target_primary_region"`
@@ -415,16 +415,15 @@ func (m FailoverFailoverGroupRequest) Type(ctx context.Context) attr.Type {
 }
 
 // A failover group manages disaster recovery across workspace sets,
-// coordinating UCDR and CPDR replication.
+// coordinating Unity Catalog and workspace assets replication.
 type FailoverGroup struct {
 	// Time at which this failover group was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Current effective primary region. Replication flows FROM workspaces in
 	// this region. Changes after a successful failover.
 	EffectivePrimaryRegion types.String `tfsdk:"effective_primary_region"`
-	// Opaque version string for optimistic locking. Server-generated, returned
-	// in responses. Must be provided on Update requests to prevent concurrent
-	// modifications.
+	// Opaque version string for optimistic locking. Server-generated and
+	// returned in responses.
 	Etag types.String `tfsdk:"etag"`
 	// Initial primary region. Used only in Create requests to set the starting
 	// primary region. Not returned in responses.
@@ -460,6 +459,19 @@ func (to *FailoverGroup) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 			}
 		}
 	}
+	if !from.WorkspaceSets.IsNull() && !from.WorkspaceSets.IsUnknown() {
+		if toWorkspaceSets, ok := to.GetWorkspaceSets(ctx); ok {
+			if fromWorkspaceSets, ok := from.GetWorkspaceSets(ctx); ok {
+				// Recursively sync the fields of each WorkspaceSets element by position.
+				for i := range toWorkspaceSets {
+					if i < len(fromWorkspaceSets) {
+						toWorkspaceSets[i].SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceSets[i])
+					}
+				}
+				to.SetWorkspaceSets(ctx, toWorkspaceSets)
+			}
+		}
+	}
 }
 
 func (to *FailoverGroup) SyncFieldsDuringRead(ctx context.Context, from FailoverGroup) {
@@ -475,12 +487,24 @@ func (to *FailoverGroup) SyncFieldsDuringRead(ctx context.Context, from Failover
 			}
 		}
 	}
+	if !from.WorkspaceSets.IsNull() && !from.WorkspaceSets.IsUnknown() {
+		if toWorkspaceSets, ok := to.GetWorkspaceSets(ctx); ok {
+			if fromWorkspaceSets, ok := from.GetWorkspaceSets(ctx); ok {
+				for i := range toWorkspaceSets {
+					if i < len(fromWorkspaceSets) {
+						toWorkspaceSets[i].SyncFieldsDuringRead(ctx, fromWorkspaceSets[i])
+					}
+				}
+				to.SetWorkspaceSets(ctx, toWorkspaceSets)
+			}
+		}
+	}
 }
 
 func (m FailoverGroup) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["effective_primary_region"] = attrs["effective_primary_region"].SetComputed()
-	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["initial_primary_region"] = attrs["initial_primary_region"].SetRequired()
 	attrs["initial_primary_region"] = attrs["initial_primary_region"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
@@ -809,6 +833,19 @@ func (to *ListFailoverGroupsResponse) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FailoverGroups = from.FailoverGroups
 	}
+	if !from.FailoverGroups.IsNull() && !from.FailoverGroups.IsUnknown() {
+		if toFailoverGroups, ok := to.GetFailoverGroups(ctx); ok {
+			if fromFailoverGroups, ok := from.GetFailoverGroups(ctx); ok {
+				// Recursively sync the fields of each FailoverGroups element by position.
+				for i := range toFailoverGroups {
+					if i < len(fromFailoverGroups) {
+						toFailoverGroups[i].SyncFieldsDuringCreateOrUpdate(ctx, fromFailoverGroups[i])
+					}
+				}
+				to.SetFailoverGroups(ctx, toFailoverGroups)
+			}
+		}
+	}
 }
 
 func (to *ListFailoverGroupsResponse) SyncFieldsDuringRead(ctx context.Context, from ListFailoverGroupsResponse) {
@@ -817,6 +854,18 @@ func (to *ListFailoverGroupsResponse) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for FailoverGroups, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FailoverGroups = from.FailoverGroups
+	}
+	if !from.FailoverGroups.IsNull() && !from.FailoverGroups.IsUnknown() {
+		if toFailoverGroups, ok := to.GetFailoverGroups(ctx); ok {
+			if fromFailoverGroups, ok := from.GetFailoverGroups(ctx); ok {
+				for i := range toFailoverGroups {
+					if i < len(fromFailoverGroups) {
+						toFailoverGroups[i].SyncFieldsDuringRead(ctx, fromFailoverGroups[i])
+					}
+				}
+				to.SetFailoverGroups(ctx, toFailoverGroups)
+			}
+		}
 	}
 }
 
@@ -969,6 +1018,19 @@ func (to *ListStableUrlsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.StableUrls = from.StableUrls
 	}
+	if !from.StableUrls.IsNull() && !from.StableUrls.IsUnknown() {
+		if toStableUrls, ok := to.GetStableUrls(ctx); ok {
+			if fromStableUrls, ok := from.GetStableUrls(ctx); ok {
+				// Recursively sync the fields of each StableUrls element by position.
+				for i := range toStableUrls {
+					if i < len(fromStableUrls) {
+						toStableUrls[i].SyncFieldsDuringCreateOrUpdate(ctx, fromStableUrls[i])
+					}
+				}
+				to.SetStableUrls(ctx, toStableUrls)
+			}
+		}
+	}
 }
 
 func (to *ListStableUrlsResponse) SyncFieldsDuringRead(ctx context.Context, from ListStableUrlsResponse) {
@@ -977,6 +1039,18 @@ func (to *ListStableUrlsResponse) SyncFieldsDuringRead(ctx context.Context, from
 		// If a user specified a non-Null, empty list for StableUrls, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.StableUrls = from.StableUrls
+	}
+	if !from.StableUrls.IsNull() && !from.StableUrls.IsUnknown() {
+		if toStableUrls, ok := to.GetStableUrls(ctx); ok {
+			if fromStableUrls, ok := from.GetStableUrls(ctx); ok {
+				for i := range toStableUrls {
+					if i < len(fromStableUrls) {
+						toStableUrls[i].SyncFieldsDuringRead(ctx, fromStableUrls[i])
+					}
+				}
+				to.SetStableUrls(ctx, toStableUrls)
+			}
+		}
 	}
 }
 
@@ -1060,9 +1134,34 @@ type LocationMapping struct {
 }
 
 func (to *LocationMapping) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LocationMapping) {
+	if !from.UriByRegion.IsNull() && !from.UriByRegion.IsUnknown() {
+		if toUriByRegion, ok := to.GetUriByRegion(ctx); ok {
+			if fromUriByRegion, ok := from.GetUriByRegion(ctx); ok {
+				// Recursively sync the fields of each UriByRegion element by position.
+				for i := range toUriByRegion {
+					if i < len(fromUriByRegion) {
+						toUriByRegion[i].SyncFieldsDuringCreateOrUpdate(ctx, fromUriByRegion[i])
+					}
+				}
+				to.SetUriByRegion(ctx, toUriByRegion)
+			}
+		}
+	}
 }
 
 func (to *LocationMapping) SyncFieldsDuringRead(ctx context.Context, from LocationMapping) {
+	if !from.UriByRegion.IsNull() && !from.UriByRegion.IsUnknown() {
+		if toUriByRegion, ok := to.GetUriByRegion(ctx); ok {
+			if fromUriByRegion, ok := from.GetUriByRegion(ctx); ok {
+				for i := range toUriByRegion {
+					if i < len(fromUriByRegion) {
+						toUriByRegion[i].SyncFieldsDuringRead(ctx, fromUriByRegion[i])
+					}
+				}
+				to.SetUriByRegion(ctx, toUriByRegion)
+			}
+		}
+	}
 }
 
 func (m LocationMapping) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -1193,23 +1292,33 @@ func (m LocationMappingEntry) Type(ctx context.Context) attr.Type {
 // A stable URL provides a failover-aware endpoint for accessing a workspace.
 // Its lifecycle is independent of any failover group.
 type StableUrl struct {
+	// The workspace this stable URL currently routes to. Set to
+	// `initial_workspace_id` at creation, advanced to the failover group's
+	// primary while attached (including across a failover), and preserved when
+	// the stable URL is detached from its failover group. Read this to see
+	// where an unattached stable URL points: after a failover followed by a
+	// detach it reflects the post-failover primary, not `initial_workspace_id`.
+	EffectiveWorkspaceId types.String `tfsdk:"effective_workspace_id"`
 	// Fully qualified resource name of the FailoverGroup this stable URL is
 	// currently linked to, in the format
 	// `accounts/{account_id}/failover-groups/{failover_group_id}`. Empty when
-	// the stable URL is not attached to any failover group. Server-controlled:
-	// written by CreateFailoverGroup / UpdateFailoverGroup on link, cleared by
-	// DeleteFailoverGroup / UpdateFailoverGroup on unlink.
+	// the stable URL is not attached to any failover group.
 	FailoverGroupName types.String `tfsdk:"failover_group_name"`
 	// The workspace this stable URL is initially bound to. Used only in Create
 	// requests to associate the stable URL with a workspace. Not returned in
-	// responses. Mirrors FailoverGroup.initial_primary_region semantics.
+	// responses.
 	InitialWorkspaceId types.String `tfsdk:"initial_workspace_id"`
 	// Fully qualified resource name. Format:
 	// accounts/{account_id}/stable-urls/{stable_url_id}.
 	Name types.String `tfsdk:"name"`
-	// The stable URL endpoint. Generated by the backend on creation and
-	// immutable thereafter. For non-Private-Link workspaces this is
-	// `https://<spog_host>/?c=<connection_id>`. For Private-Link workspaces
+	// The stable workspace ID for this stable URL. Generated on creation and
+	// immutable thereafter; identifies the URL across failovers and is the same
+	// value embedded in the `url` (as the `w=` query parameter for SPOG URLs,
+	// or in the `conn-<id>` hostname for Private-Link URLs).
+	StableWorkspaceId types.String `tfsdk:"stable_workspace_id"`
+	// The stable URL endpoint. Generated on creation and immutable thereafter.
+	// For non-Private-Link workspaces this is
+	// `https://<spog_host>/?w=<connection_id>`. For Private-Link workspaces
 	// this is the per-connection hostname.
 	Url types.String `tfsdk:"url"`
 }
@@ -1229,11 +1338,14 @@ func (to *StableUrl) SyncFieldsDuringRead(ctx context.Context, from StableUrl) {
 }
 
 func (m StableUrl) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["effective_workspace_id"] = attrs["effective_workspace_id"].SetComputed()
 	attrs["failover_group_name"] = attrs["failover_group_name"].SetComputed()
 	attrs["initial_workspace_id"] = attrs["initial_workspace_id"].SetRequired()
 	attrs["initial_workspace_id"] = attrs["initial_workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["stable_workspace_id"] = attrs["stable_workspace_id"].SetComputed()
+	attrs["stable_workspace_id"] = attrs["stable_workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["url"] = attrs["url"].SetComputed()
 	attrs["url"] = attrs["url"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
@@ -1258,10 +1370,12 @@ func (m StableUrl) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"failover_group_name":  m.FailoverGroupName,
-			"initial_workspace_id": m.InitialWorkspaceId,
-			"name":                 m.Name,
-			"url":                  m.Url,
+			"effective_workspace_id": m.EffectiveWorkspaceId,
+			"failover_group_name":    m.FailoverGroupName,
+			"initial_workspace_id":   m.InitialWorkspaceId,
+			"name":                   m.Name,
+			"stable_workspace_id":    m.StableWorkspaceId,
+			"url":                    m.Url,
 		})
 }
 
@@ -1269,10 +1383,12 @@ func (m StableUrl) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m StableUrl) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"failover_group_name":  types.StringType,
-			"initial_workspace_id": types.StringType,
-			"name":                 types.StringType,
-			"url":                  types.StringType,
+			"effective_workspace_id": types.StringType,
+			"failover_group_name":    types.StringType,
+			"initial_workspace_id":   types.StringType,
+			"name":                   types.StringType,
+			"stable_workspace_id":    types.StringType,
+			"url":                    types.StringType,
 		},
 	}
 }
@@ -1338,26 +1454,75 @@ type UcReplicationConfig struct {
 }
 
 func (to *UcReplicationConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UcReplicationConfig) {
+	if !from.Catalogs.IsNull() && !from.Catalogs.IsUnknown() {
+		if toCatalogs, ok := to.GetCatalogs(ctx); ok {
+			if fromCatalogs, ok := from.GetCatalogs(ctx); ok {
+				// Recursively sync the fields of each Catalogs element by position.
+				for i := range toCatalogs {
+					if i < len(fromCatalogs) {
+						toCatalogs[i].SyncFieldsDuringCreateOrUpdate(ctx, fromCatalogs[i])
+					}
+				}
+				to.SetCatalogs(ctx, toCatalogs)
+			}
+		}
+	}
 	if !from.LocationMappings.IsNull() && !from.LocationMappings.IsUnknown() && to.LocationMappings.IsNull() && len(from.LocationMappings.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for LocationMappings, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.LocationMappings = from.LocationMappings
 	}
+	if !from.LocationMappings.IsNull() && !from.LocationMappings.IsUnknown() {
+		if toLocationMappings, ok := to.GetLocationMappings(ctx); ok {
+			if fromLocationMappings, ok := from.GetLocationMappings(ctx); ok {
+				// Recursively sync the fields of each LocationMappings element by position.
+				for i := range toLocationMappings {
+					if i < len(fromLocationMappings) {
+						toLocationMappings[i].SyncFieldsDuringCreateOrUpdate(ctx, fromLocationMappings[i])
+					}
+				}
+				to.SetLocationMappings(ctx, toLocationMappings)
+			}
+		}
+	}
 }
 
 func (to *UcReplicationConfig) SyncFieldsDuringRead(ctx context.Context, from UcReplicationConfig) {
+	if !from.Catalogs.IsNull() && !from.Catalogs.IsUnknown() {
+		if toCatalogs, ok := to.GetCatalogs(ctx); ok {
+			if fromCatalogs, ok := from.GetCatalogs(ctx); ok {
+				for i := range toCatalogs {
+					if i < len(fromCatalogs) {
+						toCatalogs[i].SyncFieldsDuringRead(ctx, fromCatalogs[i])
+					}
+				}
+				to.SetCatalogs(ctx, toCatalogs)
+			}
+		}
+	}
 	if !from.LocationMappings.IsNull() && !from.LocationMappings.IsUnknown() && to.LocationMappings.IsNull() && len(from.LocationMappings.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for LocationMappings, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.LocationMappings = from.LocationMappings
+	}
+	if !from.LocationMappings.IsNull() && !from.LocationMappings.IsUnknown() {
+		if toLocationMappings, ok := to.GetLocationMappings(ctx); ok {
+			if fromLocationMappings, ok := from.GetLocationMappings(ctx); ok {
+				for i := range toLocationMappings {
+					if i < len(fromLocationMappings) {
+						toLocationMappings[i].SyncFieldsDuringRead(ctx, fromLocationMappings[i])
+					}
+				}
+				to.SetLocationMappings(ctx, toLocationMappings)
+			}
+		}
 	}
 }
 
 func (m UcReplicationConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["catalogs"] = attrs["catalogs"].SetRequired()
-	attrs["catalogs"] = attrs["catalogs"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["data_replication_workspace_set"] = attrs["data_replication_workspace_set"].SetRequired()
 	attrs["location_mappings"] = attrs["location_mappings"].SetOptional()
 
@@ -1459,6 +1624,11 @@ func (m *UcReplicationConfig) SetLocationMappings(ctx context.Context, v []Locat
 }
 
 type UpdateFailoverGroupRequest struct {
+	// Optional opaque version string for optimistic locking, obtained from a
+	// prior read of the failover group. If provided, the update is rejected
+	// unless it matches the failover group's current etag. If omitted, the
+	// update proceeds without an optimistic-lock check.
+	Etag types.String `tfsdk:"-"`
 	// The failover group with updated fields. The name field identifies the
 	// resource and is populated from the URL path.
 	FailoverGroup types.Object `tfsdk:"failover_group"`
@@ -1497,6 +1667,7 @@ func (m UpdateFailoverGroupRequest) ApplySchemaCustomizations(attrs map[string]t
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+	attrs["etag"] = attrs["etag"].SetOptional()
 
 	return attrs
 }
@@ -1521,6 +1692,7 @@ func (m UpdateFailoverGroupRequest) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"etag":           m.Etag,
 			"failover_group": m.FailoverGroup,
 			"name":           m.Name,
 			"update_mask":    m.UpdateMask,
@@ -1531,6 +1703,7 @@ func (m UpdateFailoverGroupRequest) ToObjectValue(ctx context.Context) basetypes
 func (m UpdateFailoverGroupRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"etag":           types.StringType,
 			"failover_group": FailoverGroup{}.Type(ctx),
 			"name":           types.StringType,
 			"update_mask":    types.StringType,
@@ -1568,14 +1741,14 @@ type WorkspaceSet struct {
 	// Resource name for this workspace set.
 	Name types.String `tfsdk:"name"`
 	// Whether to enable control plane DR (notebooks, jobs, clusters, etc.) for
-	// this set. Requires all workspaces in the set to be Mission Critical tier.
+	// this set. Defaults to false.
 	ReplicateWorkspaceAssets types.Bool `tfsdk:"replicate_workspace_assets"`
 	// Resource names of stable URLs associated with this workspace set. Format:
 	// accounts/{account_id}/stable-urls/{stable_url_id}. The referenced stable
 	// URLs must already exist (via CreateStableUrl).
 	StableUrlNames types.List `tfsdk:"stable_url_names"`
-	// Workspace IDs in this set. The system derives and validates regions. EA:
-	// exactly 2 workspaces (one per region).
+	// Workspace IDs in this set. The system derives and validates regions. All
+	// workspaces must be in the Mission Critical tier.
 	WorkspaceIds types.List `tfsdk:"workspace_ids"`
 }
 
@@ -1599,7 +1772,7 @@ func (to *WorkspaceSet) SyncFieldsDuringRead(ctx context.Context, from Workspace
 
 func (m WorkspaceSet) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["replicate_workspace_assets"] = attrs["replicate_workspace_assets"].SetRequired()
+	attrs["replicate_workspace_assets"] = attrs["replicate_workspace_assets"].SetOptional()
 	attrs["stable_url_names"] = attrs["stable_url_names"].SetOptional()
 	attrs["workspace_ids"] = attrs["workspace_ids"].SetRequired()
 

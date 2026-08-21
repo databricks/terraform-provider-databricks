@@ -231,9 +231,7 @@ resource "databricks_postgres_endpoint" "read_replica" {
 
 ## Arguments
 The following arguments are supported:
-* `endpoint_id` (string, required) - The ID to use for the Endpoint. This becomes the final component of the endpoint's resource name.
-  The ID is required and must be 1-63 characters long, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens.
-  For example, `primary` becomes `projects/my-app/branches/development/endpoints/primary`
+* `endpoint_id` (string, required) - The part of the name, chosen by the user when the resource was created
 * `parent` (string, required) - The branch containing this endpoint (API resource hierarchy).
   Format: projects/{project_id}/branches/{branch_id}
 * `replace_existing` (boolean, optional) - If true, update the endpoint if it already exists instead of returning an error
@@ -301,6 +299,9 @@ In addition to the above arguments, the following attributes are exported:
 * `read_only_host` (string) - An optionally defined read-only host for the endpoint, without pooling. For read-only endpoints,
   this attribute is always defined and is equivalent to host. For read-write endpoints, this attribute is defined
   if the enclosing endpoint is a group with greater than 1 computes configured, and has readable secondaries enabled
+* `read_only_pooled_host` (string) - The read-only hostname of the compute endpoint, with pooling. This attribute is always defined for read-only endpoints,
+  and may be defined for read-write endpoints if configured with read replicas and allow read-only connections
+* `read_write_pooled_host` (string) - The read-write hostname of the compute endpoint, with pooling. This attribute is only defined for read-write endpoints
 
 ### EndpointStatus
 * `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units. The maximum value is 64.
@@ -315,6 +316,7 @@ In addition to the above arguments, the following attributes are exported:
 * `endpoint_type` (string) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `ENDPOINT_TYPE_READ_ONLY`, `ENDPOINT_TYPE_READ_WRITE`
 * `group` (EndpointGroupStatus) - Details on the HA configuration of the endpoint
 * `hosts` (EndpointHosts) - Contains host information for connecting to the endpoint
+* `last_active_time` (string) - A timestamp indicating when the compute endpoint was last active
 * `pending_state` (string) - Possible values are: `ACTIVE`, `DEGRADED`, `IDLE`, `INIT`
 * `settings` (EndpointSettings)
 * `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended

@@ -25,6 +25,6 @@ The following arguments are supported:
 This data source exports a single attribute, `database_catalogs`. It is a list of resources, each with the following attributes:
 * `create_database_if_not_exists` (boolean)
 * `database_instance_name` (string) - The name of the DatabaseInstance housing the database
-* `database_name` (string) - The name of the database (in a instance) associated with the catalog
+* `database_name` (string) - The name of the database (in an instance) associated with the catalog
 * `name` (string) - The name of the catalog in UC
 * `uid` (string)

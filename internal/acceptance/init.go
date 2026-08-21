@@ -179,6 +179,22 @@ func ProvidersWithResourceFallbacks(resourceFallbacks []string) (*schema.Provide
 	return sdkV2Provider, pluginFrameworkProvider
 }
 
+// ProvidersWithPluginFrameworkOverrides is the mirror of
+// ProvidersWithResourceFallbacks for opt-in plugin framework resources: it
+// forces the named resources through the plugin framework implementation
+// (registering them with the PF provider and dropping them from the SDKv2
+// map), without relying on the DATABRICKS_TF_ENABLED_PF_RESOURCES env var
+// (which would race across parallel acceptance tests).
+func ProvidersWithPluginFrameworkOverrides(resourceOptIns []string) (*schema.Provider, provider.Provider) {
+	pluginfwOpt := pluginfw.WithPluginFrameworkResources(resourceOptIns)
+	pluginFrameworkProvider := PluginFrameworkProviderForTest(pluginfwOpt)
+
+	sdkV2Opt := sdkv2.WithPluginFrameworkResources(resourceOptIns)
+	sdkV2Provider := SdkV2ProviderForTest(sdkV2Opt)
+
+	return sdkV2Provider, pluginFrameworkProvider
+}
+
 // SdkV2ProviderForTest creates a test provider with the default config customizer.
 func SdkV2ProviderForTest(sdkV2Options ...sdkv2.SdkV2ProviderOption) *schema.Provider {
 	opts := append(sdkV2Options, sdkv2.WithConfigCustomizer(DefaultConfigCustomizer), sdkv2.WithConfigCustomizer(OidcConfigCustomizer))
@@ -306,13 +322,18 @@ func OidcConfigCustomizer(cfg *config.Config) error {
 	if !slices.Contains([]string{"MWS", "ucws", "ucacct"}, os.Getenv("CLOUD_ENV")) {
 		return nil
 	}
-	if _, err := os.Stat("/tmp/ACTIONS_ID_TOKEN_REQUEST_URL"); err == nil {
-		bs, err := os.ReadFile("/tmp/ACTIONS_ID_TOKEN_REQUEST_URL")
-		if err != nil {
-			return fmt.Errorf("cannot read /tmp/ACTIONS_ID_TOKEN_REQUEST_URL: %w", err)
-		}
-		cfg.ActionsIDTokenRequestURL = strings.TrimSpace(string(bs))
+	// The OIDC token files are only written when running in Github Actions. When they are
+	// absent (e.g. running acceptance tests locally against injected credentials), this is a
+	// no-op: leave AuthType untouched so the SDK's default credential chain resolves normally,
+	// rather than pinning auth to github-oidc, which can only work from within a Github action.
+	if _, err := os.Stat("/tmp/ACTIONS_ID_TOKEN_REQUEST_URL"); err != nil {
+		return nil
 	}
+	bs, err := os.ReadFile("/tmp/ACTIONS_ID_TOKEN_REQUEST_URL")
+	if err != nil {
+		return fmt.Errorf("cannot read /tmp/ACTIONS_ID_TOKEN_REQUEST_URL: %w", err)
+	}
+	cfg.ActionsIDTokenRequestURL = strings.TrimSpace(string(bs))
 	if _, err := os.Stat("/tmp/ACTIONS_ID_TOKEN_REQUEST_TOKEN"); err == nil {
 		bs, err := os.ReadFile("/tmp/ACTIONS_ID_TOKEN_REQUEST_TOKEN")
 		if err != nil {

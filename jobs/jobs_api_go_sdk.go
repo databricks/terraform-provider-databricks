@@ -1,10 +1,11 @@
 package jobs
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -20,32 +21,32 @@ import (
 func (js *JobSettingsResource) adjustTasks() {
 	js.sortTasksByKey()
 	for _, task := range js.Tasks {
-		sort.Slice(task.DependsOn, func(i, j int) bool {
-			return task.DependsOn[i].TaskKey < task.DependsOn[j].TaskKey
+		slices.SortFunc(task.DependsOn, func(a, b jobs.TaskDependency) int {
+			return cmp.Compare(a.TaskKey, b.TaskKey)
 		})
 		sortWebhookNotifications(task.WebhookNotifications)
 	}
 }
 
 func (js *JobSettingsResource) sortTasksByKey() {
-	sort.Slice(js.Tasks, func(i, j int) bool {
-		return js.Tasks[i].TaskKey < js.Tasks[j].TaskKey
+	slices.SortFunc(js.Tasks, func(a, b jobs.Task) int {
+		return cmp.Compare(a.TaskKey, b.TaskKey)
 	})
 }
 
 func adjustTasks(cj *jobs.CreateJob) {
 	sortTasksByKey(cj)
 	for _, task := range cj.Tasks {
-		sort.Slice(task.DependsOn, func(i, j int) bool {
-			return task.DependsOn[i].TaskKey < task.DependsOn[j].TaskKey
+		slices.SortFunc(task.DependsOn, func(a, b jobs.TaskDependency) int {
+			return cmp.Compare(a.TaskKey, b.TaskKey)
 		})
 		sortWebhookNotifications(task.WebhookNotifications)
 	}
 }
 
 func sortTasksByKey(cj *jobs.CreateJob) {
-	sort.Slice(cj.Tasks, func(i, j int) bool {
-		return cj.Tasks[i].TaskKey < cj.Tasks[j].TaskKey
+	slices.SortFunc(cj.Tasks, func(a, b jobs.Task) int {
+		return cmp.Compare(a.TaskKey, b.TaskKey)
 	})
 }
 
@@ -232,9 +233,11 @@ func prepareJobSettingsForUpdateGoSdk(d *schema.ResourceData, js *JobSettingsRes
 		}
 	}
 	for i := range js.JobClusters {
-		err := updateJobClusterSpec(d, fmt.Sprintf("job_cluster.%d.new_cluster.0", i), &js.JobClusters[i].NewCluster)
-		if err != nil {
-			return err
+		if js.JobClusters[i].NewCluster != nil {
+			err := updateJobClusterSpec(d, fmt.Sprintf("job_cluster.%d.new_cluster.0", i), js.JobClusters[i].NewCluster)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -252,9 +255,11 @@ func prepareJobSettingsForCreateGoSdk(d *schema.ResourceData, jc *JobCreateStruc
 		}
 	}
 	for i := range jc.JobClusters {
-		err := updateJobClusterSpec(d, fmt.Sprintf("job_cluster.%d.new_cluster.0", i), &jc.JobClusters[i].NewCluster)
-		if err != nil {
-			return err
+		if jc.JobClusters[i].NewCluster != nil {
+			err := updateJobClusterSpec(d, fmt.Sprintf("job_cluster.%d.new_cluster.0", i), jc.JobClusters[i].NewCluster)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

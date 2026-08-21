@@ -3,6 +3,8 @@ subcategory: "Workspace"
 ---
 # databricks_notebook Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/workspace)
+
 This resource allows you to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html). You can also work with [databricks_notebook](../data-sources/notebook.md) and [databricks_notebook_paths](../data-sources/notebook_paths.md) data sources.
 
 -> This resource can only be used with a workspace-level provider!

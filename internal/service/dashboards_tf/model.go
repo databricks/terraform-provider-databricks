@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf" // .tmpl
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -46,6 +47,19 @@ func (to *AuthorizationDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.GrantRules = from.GrantRules
 	}
+	if !from.GrantRules.IsNull() && !from.GrantRules.IsUnknown() {
+		if toGrantRules, ok := to.GetGrantRules(ctx); ok {
+			if fromGrantRules, ok := from.GetGrantRules(ctx); ok {
+				// Recursively sync the fields of each GrantRules element by position.
+				for i := range toGrantRules {
+					if i < len(fromGrantRules) {
+						toGrantRules[i].SyncFieldsDuringCreateOrUpdate(ctx, fromGrantRules[i])
+					}
+				}
+				to.SetGrantRules(ctx, toGrantRules)
+			}
+		}
+	}
 }
 
 func (to *AuthorizationDetails) SyncFieldsDuringRead(ctx context.Context, from AuthorizationDetails) {
@@ -54,6 +68,18 @@ func (to *AuthorizationDetails) SyncFieldsDuringRead(ctx context.Context, from A
 		// If a user specified a non-Null, empty list for GrantRules, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.GrantRules = from.GrantRules
+	}
+	if !from.GrantRules.IsNull() && !from.GrantRules.IsUnknown() {
+		if toGrantRules, ok := to.GetGrantRules(ctx); ok {
+			if fromGrantRules, ok := from.GetGrantRules(ctx); ok {
+				for i := range toGrantRules {
+					if i < len(fromGrantRules) {
+						toGrantRules[i].SyncFieldsDuringRead(ctx, fromGrantRules[i])
+					}
+				}
+				to.SetGrantRules(ctx, toGrantRules)
+			}
+		}
 	}
 }
 
@@ -778,6 +804,102 @@ func (m DeleteSubscriptionRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type DownloadMessageAttachmentVisualizationRequest struct {
+	// The resource name of the attachment to render, in the format
+	// `spaces/{space_id}/conversations/{conversation_id}/messages/{message_id}/attachments/{attachment_id}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DownloadMessageAttachmentVisualizationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DownloadMessageAttachmentVisualizationRequest) {
+}
+
+func (to *DownloadMessageAttachmentVisualizationRequest) SyncFieldsDuringRead(ctx context.Context, from DownloadMessageAttachmentVisualizationRequest) {
+}
+
+func (m DownloadMessageAttachmentVisualizationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DownloadMessageAttachmentVisualizationRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DownloadMessageAttachmentVisualizationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DownloadMessageAttachmentVisualizationRequest
+// only implements ToObjectValue() and Type().
+func (m DownloadMessageAttachmentVisualizationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DownloadMessageAttachmentVisualizationRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type DownloadMessageAttachmentVisualizationResponse struct {
+	Contents types.Object `tfsdk:"-"`
+}
+
+func (to *DownloadMessageAttachmentVisualizationResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DownloadMessageAttachmentVisualizationResponse) {
+}
+
+func (to *DownloadMessageAttachmentVisualizationResponse) SyncFieldsDuringRead(ctx context.Context, from DownloadMessageAttachmentVisualizationResponse) {
+}
+
+func (m DownloadMessageAttachmentVisualizationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["contents"] = attrs["contents"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DownloadMessageAttachmentVisualizationResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DownloadMessageAttachmentVisualizationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DownloadMessageAttachmentVisualizationResponse
+// only implements ToObjectValue() and Type().
+func (m DownloadMessageAttachmentVisualizationResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"contents": m.Contents,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DownloadMessageAttachmentVisualizationResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"contents": types.ObjectType{},
+		},
+	}
+}
+
 // Genie AI Response
 type GenieAttachment struct {
 	// Attachment ID
@@ -789,6 +911,8 @@ type GenieAttachment struct {
 	// Text Attachment if Genie responds with text This also contains the final
 	// summary when available.
 	Text types.Object `tfsdk:"text"`
+	// Visualization generated by Genie, if requested via `enable_visualization`
+	Viz types.Object `tfsdk:"viz"`
 }
 
 func (to *GenieAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenieAttachment) {
@@ -819,6 +943,15 @@ func (to *GenieAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 			}
 		}
 	}
+	if !from.Viz.IsNull() && !from.Viz.IsUnknown() {
+		if toViz, ok := to.GetViz(ctx); ok {
+			if fromViz, ok := from.GetViz(ctx); ok {
+				// Recursively sync the fields of Viz
+				toViz.SyncFieldsDuringCreateOrUpdate(ctx, fromViz)
+				to.SetViz(ctx, toViz)
+			}
+		}
+	}
 }
 
 func (to *GenieAttachment) SyncFieldsDuringRead(ctx context.Context, from GenieAttachment) {
@@ -846,6 +979,14 @@ func (to *GenieAttachment) SyncFieldsDuringRead(ctx context.Context, from GenieA
 			}
 		}
 	}
+	if !from.Viz.IsNull() && !from.Viz.IsUnknown() {
+		if toViz, ok := to.GetViz(ctx); ok {
+			if fromViz, ok := from.GetViz(ctx); ok {
+				toViz.SyncFieldsDuringRead(ctx, fromViz)
+				to.SetViz(ctx, toViz)
+			}
+		}
+	}
 }
 
 func (m GenieAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -853,6 +994,7 @@ func (m GenieAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["query"] = attrs["query"].SetComputed()
 	attrs["suggested_questions"] = attrs["suggested_questions"].SetComputed()
 	attrs["text"] = attrs["text"].SetComputed()
+	attrs["viz"] = attrs["viz"].SetComputed()
 
 	return attrs
 }
@@ -869,6 +1011,7 @@ func (m GenieAttachment) GetComplexFieldTypes(ctx context.Context) map[string]re
 		"query":               reflect.TypeOf(GenieQueryAttachment{}),
 		"suggested_questions": reflect.TypeOf(GenieSuggestedQuestionsAttachment{}),
 		"text":                reflect.TypeOf(TextAttachment{}),
+		"viz":                 reflect.TypeOf(GenieVizAttachment{}),
 	}
 }
 
@@ -883,6 +1026,7 @@ func (m GenieAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"query":               m.Query,
 			"suggested_questions": m.SuggestedQuestions,
 			"text":                m.Text,
+			"viz":                 m.Viz,
 		})
 }
 
@@ -894,6 +1038,7 @@ func (m GenieAttachment) Type(ctx context.Context) attr.Type {
 			"query":               GenieQueryAttachment{}.Type(ctx),
 			"suggested_questions": GenieSuggestedQuestionsAttachment{}.Type(ctx),
 			"text":                TextAttachment{}.Type(ctx),
+			"viz":                 GenieVizAttachment{}.Type(ctx),
 		},
 	}
 }
@@ -971,6 +1116,31 @@ func (m *GenieAttachment) GetText(ctx context.Context) (TextAttachment, bool) {
 func (m *GenieAttachment) SetText(ctx context.Context, v TextAttachment) {
 	vs := v.ToObjectValue(ctx)
 	m.Text = vs
+}
+
+// GetViz returns the value of the Viz field in GenieAttachment as
+// a GenieVizAttachment value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GenieAttachment) GetViz(ctx context.Context) (GenieVizAttachment, bool) {
+	var e GenieVizAttachment
+	if m.Viz.IsNull() || m.Viz.IsUnknown() {
+		return e, false
+	}
+	var v GenieVizAttachment
+	d := m.Viz.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetViz sets the value of the Viz field in GenieAttachment.
+func (m *GenieAttachment) SetViz(ctx context.Context, v GenieVizAttachment) {
+	vs := v.ToObjectValue(ctx)
+	m.Viz = vs
 }
 
 type GenieConversation struct {
@@ -1052,6 +1222,11 @@ func (m GenieConversation) Type(ctx context.Context) attr.Type {
 }
 
 type GenieConversationSummary struct {
+	// Whether this is a classic chat or an agent-mode conversation. Allows
+	// callers to route message retrieval (chat vs. agent endpoint) without an
+	// extra lookup.
+	AgentType types.String `tfsdk:"agent_type"`
+
 	ConversationId types.String `tfsdk:"conversation_id"`
 
 	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
@@ -1066,6 +1241,7 @@ func (to *GenieConversationSummary) SyncFieldsDuringRead(ctx context.Context, fr
 }
 
 func (m GenieConversationSummary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["agent_type"] = attrs["agent_type"].SetComputed()
 	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
 	attrs["created_timestamp"] = attrs["created_timestamp"].SetComputed()
 	attrs["title"] = attrs["title"].SetComputed()
@@ -1091,6 +1267,7 @@ func (m GenieConversationSummary) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"agent_type":        m.AgentType,
 			"conversation_id":   m.ConversationId,
 			"created_timestamp": m.CreatedTimestamp,
 			"title":             m.Title,
@@ -1101,6 +1278,7 @@ func (m GenieConversationSummary) ToObjectValue(ctx context.Context) basetypes.O
 func (m GenieConversationSummary) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"agent_type":        types.StringType,
 			"conversation_id":   types.StringType,
 			"created_timestamp": types.Int64Type,
 			"title":             types.StringType,
@@ -1113,6 +1291,8 @@ type GenieCreateConversationMessageRequest struct {
 	Content types.String `tfsdk:"content"`
 	// The ID associated with the conversation.
 	ConversationId types.String `tfsdk:"-"`
+	// Enable visualization generation.
+	EnableVisualization types.Bool `tfsdk:"enable_visualization"`
 	// The ID associated with the Genie space where the conversation is started.
 	SpaceId types.String `tfsdk:"-"`
 }
@@ -1125,6 +1305,7 @@ func (to *GenieCreateConversationMessageRequest) SyncFieldsDuringRead(ctx contex
 
 func (m GenieCreateConversationMessageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["content"] = attrs["content"].SetRequired()
+	attrs["enable_visualization"] = attrs["enable_visualization"].SetOptional()
 	attrs["space_id"] = attrs["space_id"].SetRequired()
 	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
 
@@ -1149,9 +1330,10 @@ func (m GenieCreateConversationMessageRequest) ToObjectValue(ctx context.Context
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"content":         m.Content,
-			"conversation_id": m.ConversationId,
-			"space_id":        m.SpaceId,
+			"content":              m.Content,
+			"conversation_id":      m.ConversationId,
+			"enable_visualization": m.EnableVisualization,
+			"space_id":             m.SpaceId,
 		})
 }
 
@@ -1159,9 +1341,10 @@ func (m GenieCreateConversationMessageRequest) ToObjectValue(ctx context.Context
 func (m GenieCreateConversationMessageRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"content":         types.StringType,
-			"conversation_id": types.StringType,
-			"space_id":        types.StringType,
+			"content":              types.StringType,
+			"conversation_id":      types.StringType,
+			"enable_visualization": types.BoolType,
+			"space_id":             types.StringType,
 		},
 	}
 }
@@ -1772,6 +1955,19 @@ func (to *GenieEvalResultDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ActualResponse = from.ActualResponse
 	}
+	if !from.ActualResponse.IsNull() && !from.ActualResponse.IsUnknown() {
+		if toActualResponse, ok := to.GetActualResponse(ctx); ok {
+			if fromActualResponse, ok := from.GetActualResponse(ctx); ok {
+				// Recursively sync the fields of each ActualResponse element by position.
+				for i := range toActualResponse {
+					if i < len(fromActualResponse) {
+						toActualResponse[i].SyncFieldsDuringCreateOrUpdate(ctx, fromActualResponse[i])
+					}
+				}
+				to.SetActualResponse(ctx, toActualResponse)
+			}
+		}
+	}
 	if !from.AssessmentReasons.IsNull() && !from.AssessmentReasons.IsUnknown() && to.AssessmentReasons.IsNull() && len(from.AssessmentReasons.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for AssessmentReasons, and the deserialized field value is Null,
@@ -1783,6 +1979,19 @@ func (to *GenieEvalResultDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 		// If a user specified a non-Null, empty list for ExpectedResponse, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ExpectedResponse = from.ExpectedResponse
+	}
+	if !from.ExpectedResponse.IsNull() && !from.ExpectedResponse.IsUnknown() {
+		if toExpectedResponse, ok := to.GetExpectedResponse(ctx); ok {
+			if fromExpectedResponse, ok := from.GetExpectedResponse(ctx); ok {
+				// Recursively sync the fields of each ExpectedResponse element by position.
+				for i := range toExpectedResponse {
+					if i < len(fromExpectedResponse) {
+						toExpectedResponse[i].SyncFieldsDuringCreateOrUpdate(ctx, fromExpectedResponse[i])
+					}
+				}
+				to.SetExpectedResponse(ctx, toExpectedResponse)
+			}
+		}
 	}
 }
 
@@ -1793,6 +2002,18 @@ func (to *GenieEvalResultDetails) SyncFieldsDuringRead(ctx context.Context, from
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ActualResponse = from.ActualResponse
 	}
+	if !from.ActualResponse.IsNull() && !from.ActualResponse.IsUnknown() {
+		if toActualResponse, ok := to.GetActualResponse(ctx); ok {
+			if fromActualResponse, ok := from.GetActualResponse(ctx); ok {
+				for i := range toActualResponse {
+					if i < len(fromActualResponse) {
+						toActualResponse[i].SyncFieldsDuringRead(ctx, fromActualResponse[i])
+					}
+				}
+				to.SetActualResponse(ctx, toActualResponse)
+			}
+		}
+	}
 	if !from.AssessmentReasons.IsNull() && !from.AssessmentReasons.IsUnknown() && to.AssessmentReasons.IsNull() && len(from.AssessmentReasons.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for AssessmentReasons, and the deserialized field value is Null,
@@ -1804,6 +2025,18 @@ func (to *GenieEvalResultDetails) SyncFieldsDuringRead(ctx context.Context, from
 		// If a user specified a non-Null, empty list for ExpectedResponse, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ExpectedResponse = from.ExpectedResponse
+	}
+	if !from.ExpectedResponse.IsNull() && !from.ExpectedResponse.IsUnknown() {
+		if toExpectedResponse, ok := to.GetExpectedResponse(ctx); ok {
+			if fromExpectedResponse, ok := from.GetExpectedResponse(ctx); ok {
+				for i := range toExpectedResponse {
+					if i < len(fromExpectedResponse) {
+						toExpectedResponse[i].SyncFieldsDuringRead(ctx, fromExpectedResponse[i])
+					}
+				}
+				to.SetExpectedResponse(ctx, toExpectedResponse)
+			}
+		}
 	}
 }
 
@@ -3086,6 +3319,19 @@ func (to *GenieListConversationCommentsResponse) SyncFieldsDuringCreateOrUpdate(
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Comments = from.Comments
 	}
+	if !from.Comments.IsNull() && !from.Comments.IsUnknown() {
+		if toComments, ok := to.GetComments(ctx); ok {
+			if fromComments, ok := from.GetComments(ctx); ok {
+				// Recursively sync the fields of each Comments element by position.
+				for i := range toComments {
+					if i < len(fromComments) {
+						toComments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromComments[i])
+					}
+				}
+				to.SetComments(ctx, toComments)
+			}
+		}
+	}
 }
 
 func (to *GenieListConversationCommentsResponse) SyncFieldsDuringRead(ctx context.Context, from GenieListConversationCommentsResponse) {
@@ -3094,6 +3340,18 @@ func (to *GenieListConversationCommentsResponse) SyncFieldsDuringRead(ctx contex
 		// If a user specified a non-Null, empty list for Comments, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Comments = from.Comments
+	}
+	if !from.Comments.IsNull() && !from.Comments.IsUnknown() {
+		if toComments, ok := to.GetComments(ctx); ok {
+			if fromComments, ok := from.GetComments(ctx); ok {
+				for i := range toComments {
+					if i < len(fromComments) {
+						toComments[i].SyncFieldsDuringRead(ctx, fromComments[i])
+					}
+				}
+				to.SetComments(ctx, toComments)
+			}
+		}
 	}
 }
 
@@ -3244,6 +3502,19 @@ func (to *GenieListConversationMessagesResponse) SyncFieldsDuringCreateOrUpdate(
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Messages = from.Messages
 	}
+	if !from.Messages.IsNull() && !from.Messages.IsUnknown() {
+		if toMessages, ok := to.GetMessages(ctx); ok {
+			if fromMessages, ok := from.GetMessages(ctx); ok {
+				// Recursively sync the fields of each Messages element by position.
+				for i := range toMessages {
+					if i < len(fromMessages) {
+						toMessages[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMessages[i])
+					}
+				}
+				to.SetMessages(ctx, toMessages)
+			}
+		}
+	}
 }
 
 func (to *GenieListConversationMessagesResponse) SyncFieldsDuringRead(ctx context.Context, from GenieListConversationMessagesResponse) {
@@ -3252,6 +3523,18 @@ func (to *GenieListConversationMessagesResponse) SyncFieldsDuringRead(ctx contex
 		// If a user specified a non-Null, empty list for Messages, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Messages = from.Messages
+	}
+	if !from.Messages.IsNull() && !from.Messages.IsUnknown() {
+		if toMessages, ok := to.GetMessages(ctx); ok {
+			if fromMessages, ok := from.GetMessages(ctx); ok {
+				for i := range toMessages {
+					if i < len(fromMessages) {
+						toMessages[i].SyncFieldsDuringRead(ctx, fromMessages[i])
+					}
+				}
+				to.SetMessages(ctx, toMessages)
+			}
+		}
 	}
 }
 
@@ -3403,6 +3686,19 @@ func (to *GenieListConversationsResponse) SyncFieldsDuringCreateOrUpdate(ctx con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Conversations = from.Conversations
 	}
+	if !from.Conversations.IsNull() && !from.Conversations.IsUnknown() {
+		if toConversations, ok := to.GetConversations(ctx); ok {
+			if fromConversations, ok := from.GetConversations(ctx); ok {
+				// Recursively sync the fields of each Conversations element by position.
+				for i := range toConversations {
+					if i < len(fromConversations) {
+						toConversations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromConversations[i])
+					}
+				}
+				to.SetConversations(ctx, toConversations)
+			}
+		}
+	}
 }
 
 func (to *GenieListConversationsResponse) SyncFieldsDuringRead(ctx context.Context, from GenieListConversationsResponse) {
@@ -3411,6 +3707,18 @@ func (to *GenieListConversationsResponse) SyncFieldsDuringRead(ctx context.Conte
 		// If a user specified a non-Null, empty list for Conversations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Conversations = from.Conversations
+	}
+	if !from.Conversations.IsNull() && !from.Conversations.IsUnknown() {
+		if toConversations, ok := to.GetConversations(ctx); ok {
+			if fromConversations, ok := from.GetConversations(ctx); ok {
+				for i := range toConversations {
+					if i < len(fromConversations) {
+						toConversations[i].SyncFieldsDuringRead(ctx, fromConversations[i])
+					}
+				}
+				to.SetConversations(ctx, toConversations)
+			}
+		}
 	}
 }
 
@@ -3562,6 +3870,19 @@ func (to *GenieListEvalResultsResponse) SyncFieldsDuringCreateOrUpdate(ctx conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.EvalResults = from.EvalResults
 	}
+	if !from.EvalResults.IsNull() && !from.EvalResults.IsUnknown() {
+		if toEvalResults, ok := to.GetEvalResults(ctx); ok {
+			if fromEvalResults, ok := from.GetEvalResults(ctx); ok {
+				// Recursively sync the fields of each EvalResults element by position.
+				for i := range toEvalResults {
+					if i < len(fromEvalResults) {
+						toEvalResults[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEvalResults[i])
+					}
+				}
+				to.SetEvalResults(ctx, toEvalResults)
+			}
+		}
+	}
 }
 
 func (to *GenieListEvalResultsResponse) SyncFieldsDuringRead(ctx context.Context, from GenieListEvalResultsResponse) {
@@ -3570,6 +3891,18 @@ func (to *GenieListEvalResultsResponse) SyncFieldsDuringRead(ctx context.Context
 		// If a user specified a non-Null, empty list for EvalResults, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.EvalResults = from.EvalResults
+	}
+	if !from.EvalResults.IsNull() && !from.EvalResults.IsUnknown() {
+		if toEvalResults, ok := to.GetEvalResults(ctx); ok {
+			if fromEvalResults, ok := from.GetEvalResults(ctx); ok {
+				for i := range toEvalResults {
+					if i < len(fromEvalResults) {
+						toEvalResults[i].SyncFieldsDuringRead(ctx, fromEvalResults[i])
+					}
+				}
+				to.SetEvalResults(ctx, toEvalResults)
+			}
+		}
 	}
 }
 
@@ -3716,6 +4049,19 @@ func (to *GenieListEvalRunsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.
 		// set the resulting resource state to the empty list to match the planned value.
 		to.EvalRuns = from.EvalRuns
 	}
+	if !from.EvalRuns.IsNull() && !from.EvalRuns.IsUnknown() {
+		if toEvalRuns, ok := to.GetEvalRuns(ctx); ok {
+			if fromEvalRuns, ok := from.GetEvalRuns(ctx); ok {
+				// Recursively sync the fields of each EvalRuns element by position.
+				for i := range toEvalRuns {
+					if i < len(fromEvalRuns) {
+						toEvalRuns[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEvalRuns[i])
+					}
+				}
+				to.SetEvalRuns(ctx, toEvalRuns)
+			}
+		}
+	}
 }
 
 func (to *GenieListEvalRunsResponse) SyncFieldsDuringRead(ctx context.Context, from GenieListEvalRunsResponse) {
@@ -3724,6 +4070,18 @@ func (to *GenieListEvalRunsResponse) SyncFieldsDuringRead(ctx context.Context, f
 		// If a user specified a non-Null, empty list for EvalRuns, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.EvalRuns = from.EvalRuns
+	}
+	if !from.EvalRuns.IsNull() && !from.EvalRuns.IsUnknown() {
+		if toEvalRuns, ok := to.GetEvalRuns(ctx); ok {
+			if fromEvalRuns, ok := from.GetEvalRuns(ctx); ok {
+				for i := range toEvalRuns {
+					if i < len(fromEvalRuns) {
+						toEvalRuns[i].SyncFieldsDuringRead(ctx, fromEvalRuns[i])
+					}
+				}
+				to.SetEvalRuns(ctx, toEvalRuns)
+			}
+		}
 	}
 }
 
@@ -3879,6 +4237,19 @@ func (to *GenieListMessageCommentsResponse) SyncFieldsDuringCreateOrUpdate(ctx c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Comments = from.Comments
 	}
+	if !from.Comments.IsNull() && !from.Comments.IsUnknown() {
+		if toComments, ok := to.GetComments(ctx); ok {
+			if fromComments, ok := from.GetComments(ctx); ok {
+				// Recursively sync the fields of each Comments element by position.
+				for i := range toComments {
+					if i < len(fromComments) {
+						toComments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromComments[i])
+					}
+				}
+				to.SetComments(ctx, toComments)
+			}
+		}
+	}
 }
 
 func (to *GenieListMessageCommentsResponse) SyncFieldsDuringRead(ctx context.Context, from GenieListMessageCommentsResponse) {
@@ -3887,6 +4258,18 @@ func (to *GenieListMessageCommentsResponse) SyncFieldsDuringRead(ctx context.Con
 		// If a user specified a non-Null, empty list for Comments, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Comments = from.Comments
+	}
+	if !from.Comments.IsNull() && !from.Comments.IsUnknown() {
+		if toComments, ok := to.GetComments(ctx); ok {
+			if fromComments, ok := from.GetComments(ctx); ok {
+				for i := range toComments {
+					if i < len(fromComments) {
+						toComments[i].SyncFieldsDuringRead(ctx, fromComments[i])
+					}
+				}
+				to.SetComments(ctx, toComments)
+			}
+		}
 	}
 }
 
@@ -4027,6 +4410,19 @@ func (to *GenieListSpacesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Spaces = from.Spaces
 	}
+	if !from.Spaces.IsNull() && !from.Spaces.IsUnknown() {
+		if toSpaces, ok := to.GetSpaces(ctx); ok {
+			if fromSpaces, ok := from.GetSpaces(ctx); ok {
+				// Recursively sync the fields of each Spaces element by position.
+				for i := range toSpaces {
+					if i < len(fromSpaces) {
+						toSpaces[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSpaces[i])
+					}
+				}
+				to.SetSpaces(ctx, toSpaces)
+			}
+		}
+	}
 }
 
 func (to *GenieListSpacesResponse) SyncFieldsDuringRead(ctx context.Context, from GenieListSpacesResponse) {
@@ -4035,6 +4431,18 @@ func (to *GenieListSpacesResponse) SyncFieldsDuringRead(ctx context.Context, fro
 		// If a user specified a non-Null, empty list for Spaces, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Spaces = from.Spaces
+	}
+	if !from.Spaces.IsNull() && !from.Spaces.IsUnknown() {
+		if toSpaces, ok := to.GetSpaces(ctx); ok {
+			if fromSpaces, ok := from.GetSpaces(ctx); ok {
+				for i := range toSpaces {
+					if i < len(fromSpaces) {
+						toSpaces[i].SyncFieldsDuringRead(ctx, fromSpaces[i])
+					}
+				}
+				to.SetSpaces(ctx, toSpaces)
+			}
+		}
 	}
 }
 
@@ -4146,6 +4554,19 @@ func (to *GenieMessage) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Attachments = from.Attachments
 	}
+	if !from.Attachments.IsNull() && !from.Attachments.IsUnknown() {
+		if toAttachments, ok := to.GetAttachments(ctx); ok {
+			if fromAttachments, ok := from.GetAttachments(ctx); ok {
+				// Recursively sync the fields of each Attachments element by position.
+				for i := range toAttachments {
+					if i < len(fromAttachments) {
+						toAttachments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAttachments[i])
+					}
+				}
+				to.SetAttachments(ctx, toAttachments)
+			}
+		}
+	}
 	if !from.Error.IsNull() && !from.Error.IsUnknown() {
 		if toError, ok := to.GetError(ctx); ok {
 			if fromError, ok := from.GetError(ctx); ok {
@@ -4181,6 +4602,18 @@ func (to *GenieMessage) SyncFieldsDuringRead(ctx context.Context, from GenieMess
 		// If a user specified a non-Null, empty list for Attachments, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Attachments = from.Attachments
+	}
+	if !from.Attachments.IsNull() && !from.Attachments.IsUnknown() {
+		if toAttachments, ok := to.GetAttachments(ctx); ok {
+			if fromAttachments, ok := from.GetAttachments(ctx); ok {
+				for i := range toAttachments {
+					if i < len(fromAttachments) {
+						toAttachments[i].SyncFieldsDuringRead(ctx, fromAttachments[i])
+					}
+				}
+				to.SetAttachments(ctx, toAttachments)
+			}
+		}
 	}
 	if !from.Error.IsNull() && !from.Error.IsUnknown() {
 		if toError, ok := to.GetError(ctx); ok {
@@ -4498,6 +4931,19 @@ func (to *GenieQueryAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Parameters = from.Parameters
 	}
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() {
+		if toParameters, ok := to.GetParameters(ctx); ok {
+			if fromParameters, ok := from.GetParameters(ctx); ok {
+				// Recursively sync the fields of each Parameters element by position.
+				for i := range toParameters {
+					if i < len(fromParameters) {
+						toParameters[i].SyncFieldsDuringCreateOrUpdate(ctx, fromParameters[i])
+					}
+				}
+				to.SetParameters(ctx, toParameters)
+			}
+		}
+	}
 	if !from.QueryResultMetadata.IsNull() && !from.QueryResultMetadata.IsUnknown() {
 		if toQueryResultMetadata, ok := to.GetQueryResultMetadata(ctx); ok {
 			if fromQueryResultMetadata, ok := from.GetQueryResultMetadata(ctx); ok {
@@ -4513,6 +4959,19 @@ func (to *GenieQueryAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Thoughts = from.Thoughts
 	}
+	if !from.Thoughts.IsNull() && !from.Thoughts.IsUnknown() {
+		if toThoughts, ok := to.GetThoughts(ctx); ok {
+			if fromThoughts, ok := from.GetThoughts(ctx); ok {
+				// Recursively sync the fields of each Thoughts element by position.
+				for i := range toThoughts {
+					if i < len(fromThoughts) {
+						toThoughts[i].SyncFieldsDuringCreateOrUpdate(ctx, fromThoughts[i])
+					}
+				}
+				to.SetThoughts(ctx, toThoughts)
+			}
+		}
+	}
 }
 
 func (to *GenieQueryAttachment) SyncFieldsDuringRead(ctx context.Context, from GenieQueryAttachment) {
@@ -4521,6 +4980,18 @@ func (to *GenieQueryAttachment) SyncFieldsDuringRead(ctx context.Context, from G
 		// If a user specified a non-Null, empty list for Parameters, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Parameters = from.Parameters
+	}
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() {
+		if toParameters, ok := to.GetParameters(ctx); ok {
+			if fromParameters, ok := from.GetParameters(ctx); ok {
+				for i := range toParameters {
+					if i < len(fromParameters) {
+						toParameters[i].SyncFieldsDuringRead(ctx, fromParameters[i])
+					}
+				}
+				to.SetParameters(ctx, toParameters)
+			}
+		}
 	}
 	if !from.QueryResultMetadata.IsNull() && !from.QueryResultMetadata.IsUnknown() {
 		if toQueryResultMetadata, ok := to.GetQueryResultMetadata(ctx); ok {
@@ -4535,6 +5006,18 @@ func (to *GenieQueryAttachment) SyncFieldsDuringRead(ctx context.Context, from G
 		// If a user specified a non-Null, empty list for Thoughts, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Thoughts = from.Thoughts
+	}
+	if !from.Thoughts.IsNull() && !from.Thoughts.IsUnknown() {
+		if toThoughts, ok := to.GetThoughts(ctx); ok {
+			if fromThoughts, ok := from.GetThoughts(ctx); ok {
+				for i := range toThoughts {
+					if i < len(fromThoughts) {
+						toThoughts[i].SyncFieldsDuringRead(ctx, fromThoughts[i])
+					}
+				}
+				to.SetThoughts(ctx, toThoughts)
+			}
+		}
 	}
 }
 
@@ -4806,6 +5289,8 @@ func (m GenieSendMessageFeedbackRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GenieSpace struct {
+	// Time when the Genie space was created.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Description of the Genie Space
 	Description types.String `tfsdk:"description"`
 	// ETag for this space. Pass this value back in the update request to
@@ -4823,6 +5308,9 @@ type GenieSpace struct {
 	SpaceId types.String `tfsdk:"space_id"`
 	// Title of the Genie Space
 	Title types.String `tfsdk:"title"`
+	// Time when the Genie space was last modified, matching the value shown in
+	// the Genie Agent UI.
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// Warehouse associated with the Genie Space
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
@@ -4834,12 +5322,14 @@ func (to *GenieSpace) SyncFieldsDuringRead(ctx context.Context, from GenieSpace)
 }
 
 func (m GenieSpace) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["serialized_space"] = attrs["serialized_space"].SetOptional()
 	attrs["space_id"] = attrs["space_id"].SetRequired()
 	attrs["title"] = attrs["title"].SetRequired()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
 	return attrs
@@ -4863,12 +5353,14 @@ func (m GenieSpace) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"create_time":      m.CreateTime,
 			"description":      m.Description,
 			"etag":             m.Etag,
 			"parent_path":      m.ParentPath,
 			"serialized_space": m.SerializedSpace,
 			"space_id":         m.SpaceId,
 			"title":            m.Title,
+			"update_time":      m.UpdateTime,
 			"warehouse_id":     m.WarehouseId,
 		})
 }
@@ -4877,12 +5369,14 @@ func (m GenieSpace) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m GenieSpace) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"create_time":      timetypes.RFC3339{}.Type(ctx),
 			"description":      types.StringType,
 			"etag":             types.StringType,
 			"parent_path":      types.StringType,
 			"serialized_space": types.StringType,
 			"space_id":         types.StringType,
 			"title":            types.StringType,
+			"update_time":      timetypes.RFC3339{}.Type(ctx),
 			"warehouse_id":     types.StringType,
 		},
 	}
@@ -4891,6 +5385,8 @@ func (m GenieSpace) Type(ctx context.Context) attr.Type {
 type GenieStartConversationMessageRequest struct {
 	// The text of the message that starts the conversation.
 	Content types.String `tfsdk:"content"`
+	// Enable visualization generation.
+	EnableVisualization types.Bool `tfsdk:"enable_visualization"`
 	// The ID associated with the Genie space where you want to start a
 	// conversation.
 	SpaceId types.String `tfsdk:"-"`
@@ -4904,6 +5400,7 @@ func (to *GenieStartConversationMessageRequest) SyncFieldsDuringRead(ctx context
 
 func (m GenieStartConversationMessageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["content"] = attrs["content"].SetRequired()
+	attrs["enable_visualization"] = attrs["enable_visualization"].SetOptional()
 	attrs["space_id"] = attrs["space_id"].SetRequired()
 
 	return attrs
@@ -4927,8 +5424,9 @@ func (m GenieStartConversationMessageRequest) ToObjectValue(ctx context.Context)
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"content":  m.Content,
-			"space_id": m.SpaceId,
+			"content":              m.Content,
+			"enable_visualization": m.EnableVisualization,
+			"space_id":             m.SpaceId,
 		})
 }
 
@@ -4936,8 +5434,9 @@ func (m GenieStartConversationMessageRequest) ToObjectValue(ctx context.Context)
 func (m GenieStartConversationMessageRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"content":  types.StringType,
-			"space_id": types.StringType,
+			"content":              types.StringType,
+			"enable_visualization": types.BoolType,
+			"space_id":             types.StringType,
 		},
 	}
 }
@@ -5237,6 +5736,8 @@ type GenieUpdateSpaceRequest struct {
 	// if the space has been modified since. Omit to apply the update
 	// unconditionally.
 	Etag types.String `tfsdk:"etag"`
+	// Parent workspace folder path to move this Genie space under.
+	ParentPath types.String `tfsdk:"parent_path"`
 	// The contents of the Genie Space in serialized string form (full
 	// replacement). Use the [Get Genie Space](:method:genie/getspace) API to
 	// retrieve an example response, which includes the `serialized_space`
@@ -5260,6 +5761,7 @@ func (to *GenieUpdateSpaceRequest) SyncFieldsDuringRead(ctx context.Context, fro
 func (m GenieUpdateSpaceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["serialized_space"] = attrs["serialized_space"].SetOptional()
 	attrs["title"] = attrs["title"].SetOptional()
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
@@ -5288,6 +5790,7 @@ func (m GenieUpdateSpaceRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 		map[string]attr.Value{
 			"description":      m.Description,
 			"etag":             m.Etag,
+			"parent_path":      m.ParentPath,
 			"serialized_space": m.SerializedSpace,
 			"space_id":         m.SpaceId,
 			"title":            m.Title,
@@ -5301,10 +5804,66 @@ func (m GenieUpdateSpaceRequest) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"description":      types.StringType,
 			"etag":             types.StringType,
+			"parent_path":      types.StringType,
 			"serialized_space": types.StringType,
 			"space_id":         types.StringType,
 			"title":            types.StringType,
 			"warehouse_id":     types.StringType,
+		},
+	}
+}
+
+// Visualization generated by Genie for a query result. Use the attachment ID
+// with the download visualization API to retrieve the rendered image.
+type GenieVizAttachment struct {
+	// The ID of the query attachment the visualization was generated from
+	QueryAttachmentId types.String `tfsdk:"query_attachment_id"`
+	// Name of the visualization
+	Title types.String `tfsdk:"title"`
+}
+
+func (to *GenieVizAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenieVizAttachment) {
+}
+
+func (to *GenieVizAttachment) SyncFieldsDuringRead(ctx context.Context, from GenieVizAttachment) {
+}
+
+func (m GenieVizAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["query_attachment_id"] = attrs["query_attachment_id"].SetComputed()
+	attrs["title"] = attrs["title"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieVizAttachment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenieVizAttachment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieVizAttachment
+// only implements ToObjectValue() and Type().
+func (m GenieVizAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"query_attachment_id": m.QueryAttachmentId,
+			"title":               m.Title,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenieVizAttachment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"query_attachment_id": types.StringType,
+			"title":               types.StringType,
 		},
 	}
 }
@@ -5483,6 +6042,19 @@ func (to *GetPublishedDashboardTokenInfoResponse) SyncFieldsDuringCreateOrUpdate
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AuthorizationDetails = from.AuthorizationDetails
 	}
+	if !from.AuthorizationDetails.IsNull() && !from.AuthorizationDetails.IsUnknown() {
+		if toAuthorizationDetails, ok := to.GetAuthorizationDetails(ctx); ok {
+			if fromAuthorizationDetails, ok := from.GetAuthorizationDetails(ctx); ok {
+				// Recursively sync the fields of each AuthorizationDetails element by position.
+				for i := range toAuthorizationDetails {
+					if i < len(fromAuthorizationDetails) {
+						toAuthorizationDetails[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAuthorizationDetails[i])
+					}
+				}
+				to.SetAuthorizationDetails(ctx, toAuthorizationDetails)
+			}
+		}
+	}
 }
 
 func (to *GetPublishedDashboardTokenInfoResponse) SyncFieldsDuringRead(ctx context.Context, from GetPublishedDashboardTokenInfoResponse) {
@@ -5491,6 +6063,18 @@ func (to *GetPublishedDashboardTokenInfoResponse) SyncFieldsDuringRead(ctx conte
 		// If a user specified a non-Null, empty list for AuthorizationDetails, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AuthorizationDetails = from.AuthorizationDetails
+	}
+	if !from.AuthorizationDetails.IsNull() && !from.AuthorizationDetails.IsUnknown() {
+		if toAuthorizationDetails, ok := to.GetAuthorizationDetails(ctx); ok {
+			if fromAuthorizationDetails, ok := from.GetAuthorizationDetails(ctx); ok {
+				for i := range toAuthorizationDetails {
+					if i < len(fromAuthorizationDetails) {
+						toAuthorizationDetails[i].SyncFieldsDuringRead(ctx, fromAuthorizationDetails[i])
+					}
+				}
+				to.SetAuthorizationDetails(ctx, toAuthorizationDetails)
+			}
+		}
 	}
 }
 
@@ -5687,7 +6271,7 @@ type ListDashboardsRequest struct {
 	// The flag to include dashboards located in the trash. If unspecified, only
 	// active dashboards will be returned.
 	ShowTrashed types.Bool `tfsdk:"-"`
-	// `DASHBOARD_VIEW_BASIC`only includes summary metadata from the dashboard.
+	// `DASHBOARD_VIEW_BASIC` only includes summary metadata from the dashboard.
 	View types.String `tfsdk:"-"`
 }
 
@@ -5757,6 +6341,19 @@ func (to *ListDashboardsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Dashboards = from.Dashboards
 	}
+	if !from.Dashboards.IsNull() && !from.Dashboards.IsUnknown() {
+		if toDashboards, ok := to.GetDashboards(ctx); ok {
+			if fromDashboards, ok := from.GetDashboards(ctx); ok {
+				// Recursively sync the fields of each Dashboards element by position.
+				for i := range toDashboards {
+					if i < len(fromDashboards) {
+						toDashboards[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDashboards[i])
+					}
+				}
+				to.SetDashboards(ctx, toDashboards)
+			}
+		}
+	}
 }
 
 func (to *ListDashboardsResponse) SyncFieldsDuringRead(ctx context.Context, from ListDashboardsResponse) {
@@ -5765,6 +6362,18 @@ func (to *ListDashboardsResponse) SyncFieldsDuringRead(ctx context.Context, from
 		// If a user specified a non-Null, empty list for Dashboards, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Dashboards = from.Dashboards
+	}
+	if !from.Dashboards.IsNull() && !from.Dashboards.IsUnknown() {
+		if toDashboards, ok := to.GetDashboards(ctx); ok {
+			if fromDashboards, ok := from.GetDashboards(ctx); ok {
+				for i := range toDashboards {
+					if i < len(fromDashboards) {
+						toDashboards[i].SyncFieldsDuringRead(ctx, fromDashboards[i])
+					}
+				}
+				to.SetDashboards(ctx, toDashboards)
+			}
+		}
 	}
 }
 
@@ -5913,6 +6522,19 @@ func (to *ListSchedulesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Schedules = from.Schedules
 	}
+	if !from.Schedules.IsNull() && !from.Schedules.IsUnknown() {
+		if toSchedules, ok := to.GetSchedules(ctx); ok {
+			if fromSchedules, ok := from.GetSchedules(ctx); ok {
+				// Recursively sync the fields of each Schedules element by position.
+				for i := range toSchedules {
+					if i < len(fromSchedules) {
+						toSchedules[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSchedules[i])
+					}
+				}
+				to.SetSchedules(ctx, toSchedules)
+			}
+		}
+	}
 }
 
 func (to *ListSchedulesResponse) SyncFieldsDuringRead(ctx context.Context, from ListSchedulesResponse) {
@@ -5921,6 +6543,18 @@ func (to *ListSchedulesResponse) SyncFieldsDuringRead(ctx context.Context, from 
 		// If a user specified a non-Null, empty list for Schedules, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Schedules = from.Schedules
+	}
+	if !from.Schedules.IsNull() && !from.Schedules.IsUnknown() {
+		if toSchedules, ok := to.GetSchedules(ctx); ok {
+			if fromSchedules, ok := from.GetSchedules(ctx); ok {
+				for i := range toSchedules {
+					if i < len(fromSchedules) {
+						toSchedules[i].SyncFieldsDuringRead(ctx, fromSchedules[i])
+					}
+				}
+				to.SetSchedules(ctx, toSchedules)
+			}
+		}
 	}
 }
 
@@ -6074,6 +6708,19 @@ func (to *ListSubscriptionsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Subscriptions = from.Subscriptions
 	}
+	if !from.Subscriptions.IsNull() && !from.Subscriptions.IsUnknown() {
+		if toSubscriptions, ok := to.GetSubscriptions(ctx); ok {
+			if fromSubscriptions, ok := from.GetSubscriptions(ctx); ok {
+				// Recursively sync the fields of each Subscriptions element by position.
+				for i := range toSubscriptions {
+					if i < len(fromSubscriptions) {
+						toSubscriptions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSubscriptions[i])
+					}
+				}
+				to.SetSubscriptions(ctx, toSubscriptions)
+			}
+		}
+	}
 }
 
 func (to *ListSubscriptionsResponse) SyncFieldsDuringRead(ctx context.Context, from ListSubscriptionsResponse) {
@@ -6082,6 +6729,18 @@ func (to *ListSubscriptionsResponse) SyncFieldsDuringRead(ctx context.Context, f
 		// If a user specified a non-Null, empty list for Subscriptions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Subscriptions = from.Subscriptions
+	}
+	if !from.Subscriptions.IsNull() && !from.Subscriptions.IsUnknown() {
+		if toSubscriptions, ok := to.GetSubscriptions(ctx); ok {
+			if fromSubscriptions, ok := from.GetSubscriptions(ctx); ok {
+				for i := range toSubscriptions {
+					if i < len(fromSubscriptions) {
+						toSubscriptions[i].SyncFieldsDuringRead(ctx, fromSubscriptions[i])
+					}
+				}
+				to.SetSubscriptions(ctx, toSubscriptions)
+			}
+		}
 	}
 }
 
@@ -6517,6 +7176,154 @@ func (m Result) Type(ctx context.Context) attr.Type {
 			"statement_id_signature": types.StringType,
 		},
 	}
+}
+
+// Request to revert a dashboard draft to its last published state.
+type RevertDashboardRequest struct {
+	// UUID identifying the dashboard.
+	DashboardId types.String `tfsdk:"-"`
+	// The etag for the dashboard. Optionally, it can be provided to verify that
+	// the dashboard has not been modified from its last retrieval.
+	Etag types.String `tfsdk:"etag"`
+}
+
+func (to *RevertDashboardRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RevertDashboardRequest) {
+}
+
+func (to *RevertDashboardRequest) SyncFieldsDuringRead(ctx context.Context, from RevertDashboardRequest) {
+}
+
+func (m RevertDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetComputed()
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RevertDashboardRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RevertDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RevertDashboardRequest
+// only implements ToObjectValue() and Type().
+func (m RevertDashboardRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dashboard_id": m.DashboardId,
+			"etag":         m.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RevertDashboardRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dashboard_id": types.StringType,
+			"etag":         types.StringType,
+		},
+	}
+}
+
+// Response to revert a dashboard draft to its last published state.
+type RevertDashboardResponse struct {
+	// The reverted dashboard.
+	Dashboard types.Object `tfsdk:"dashboard"`
+}
+
+func (to *RevertDashboardResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RevertDashboardResponse) {
+	if !from.Dashboard.IsNull() && !from.Dashboard.IsUnknown() {
+		if toDashboard, ok := to.GetDashboard(ctx); ok {
+			if fromDashboard, ok := from.GetDashboard(ctx); ok {
+				// Recursively sync the fields of Dashboard
+				toDashboard.SyncFieldsDuringCreateOrUpdate(ctx, fromDashboard)
+				to.SetDashboard(ctx, toDashboard)
+			}
+		}
+	}
+}
+
+func (to *RevertDashboardResponse) SyncFieldsDuringRead(ctx context.Context, from RevertDashboardResponse) {
+	if !from.Dashboard.IsNull() && !from.Dashboard.IsUnknown() {
+		if toDashboard, ok := to.GetDashboard(ctx); ok {
+			if fromDashboard, ok := from.GetDashboard(ctx); ok {
+				toDashboard.SyncFieldsDuringRead(ctx, fromDashboard)
+				to.SetDashboard(ctx, toDashboard)
+			}
+		}
+	}
+}
+
+func (m RevertDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard"] = attrs["dashboard"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RevertDashboardResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RevertDashboardResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"dashboard": reflect.TypeOf(Dashboard{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RevertDashboardResponse
+// only implements ToObjectValue() and Type().
+func (m RevertDashboardResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dashboard": m.Dashboard,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RevertDashboardResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dashboard": Dashboard{}.Type(ctx),
+		},
+	}
+}
+
+// GetDashboard returns the value of the Dashboard field in RevertDashboardResponse as
+// a Dashboard value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *RevertDashboardResponse) GetDashboard(ctx context.Context) (Dashboard, bool) {
+	var e Dashboard
+	if m.Dashboard.IsNull() || m.Dashboard.IsUnknown() {
+		return e, false
+	}
+	var v Dashboard
+	d := m.Dashboard.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDashboard sets the value of the Dashboard field in RevertDashboardResponse.
+func (m *RevertDashboardResponse) SetDashboard(ctx context.Context, v Dashboard) {
+	vs := v.ToObjectValue(ctx)
+	m.Dashboard = vs
 }
 
 type Schedule struct {
@@ -7031,12 +7838,19 @@ func (m SubscriptionSubscriberUser) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A text response on a conversation message: the answer, the final summary, or
+// a clarifying follow-up question, along with optional phase and verification
+// metadata.
 type TextAttachment struct {
 	// AI generated message
 	Content types.String `tfsdk:"content"`
 
 	Id types.String `tfsdk:"id"`
-	// Purpose/intent of this text attachment
+	// Purpose of this text attachment. A completed message may contain more
+	// than one text attachment (for example a clarifying follow-up question
+	// alongside the final answer); use this field to tell them apart.
+	// `TEXT_ATTACHMENT_PURPOSE_ANSWER` marks the final answer/summary and
+	// `FOLLOW_UP_QUESTION` marks a clarifying question.
 	Purpose types.String `tfsdk:"purpose"`
 }
 

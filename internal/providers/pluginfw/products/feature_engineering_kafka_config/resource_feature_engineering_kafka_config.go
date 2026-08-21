@@ -123,6 +123,9 @@ type KafkaConfig struct {
 	// Catch-all for miscellaneous options. Keys should be source options or
 	// Kafka consumer options (kafka.*)
 	ExtraOptions types.Map `tfsdk:"extra_options"`
+	// Configuration for ingesting Kafka data into a Databricks-managed Delta
+	// table.
+	IngestionConfig types.Object `tfsdk:"ingestion_config"`
 	// Schema configuration for extracting message keys from topics. At least
 	// one of key_schema and value_schema must be provided.
 	KeySchema types.Object `tfsdk:"key_schema"`
@@ -150,6 +153,7 @@ func (m KafkaConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 		"auth_config":       reflect.TypeOf(ml_tf.AuthConfig{}),
 		"backfill_source":   reflect.TypeOf(ml_tf.BackfillSource{}),
 		"extra_options":     reflect.TypeOf(types.String{}),
+		"ingestion_config":  reflect.TypeOf(ml_tf.IngestionConfig{}),
 		"key_schema":        reflect.TypeOf(ml_tf.SchemaConfig{}),
 		"subscription_mode": reflect.TypeOf(ml_tf.SubscriptionMode{}),
 		"value_schema":      reflect.TypeOf(ml_tf.SchemaConfig{}),
@@ -170,6 +174,7 @@ func (m KafkaConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"backfill_source":   m.BackfillSource,
 			"bootstrap_servers": m.BootstrapServers,
 			"extra_options":     m.ExtraOptions,
+			"ingestion_config":  m.IngestionConfig,
 			"key_schema":        m.KeySchema,
 			"name":              m.Name,
 			"subscription_mode": m.SubscriptionMode,
@@ -190,6 +195,7 @@ func (m KafkaConfig) Type(ctx context.Context) attr.Type {
 			"extra_options": basetypes.MapType{
 				ElemType: types.StringType,
 			},
+			"ingestion_config":  ml_tf.IngestionConfig{}.Type(ctx),
 			"key_schema":        ml_tf.SchemaConfig{}.Type(ctx),
 			"name":              types.StringType,
 			"subscription_mode": ml_tf.SubscriptionMode{}.Type(ctx),
@@ -219,6 +225,15 @@ func (to *KafkaConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 				// Recursively sync the fields of BackfillSource
 				toBackfillSource.SyncFieldsDuringCreateOrUpdate(ctx, fromBackfillSource)
 				to.SetBackfillSource(ctx, toBackfillSource)
+			}
+		}
+	}
+	if !from.IngestionConfig.IsNull() && !from.IngestionConfig.IsUnknown() {
+		if toIngestionConfig, ok := to.GetIngestionConfig(ctx); ok {
+			if fromIngestionConfig, ok := from.GetIngestionConfig(ctx); ok {
+				// Recursively sync the fields of IngestionConfig
+				toIngestionConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromIngestionConfig)
+				to.SetIngestionConfig(ctx, toIngestionConfig)
 			}
 		}
 	}
@@ -273,6 +288,14 @@ func (to *KafkaConfig) SyncFieldsDuringRead(ctx context.Context, from KafkaConfi
 			}
 		}
 	}
+	if !from.IngestionConfig.IsNull() && !from.IngestionConfig.IsUnknown() {
+		if toIngestionConfig, ok := to.GetIngestionConfig(ctx); ok {
+			if fromIngestionConfig, ok := from.GetIngestionConfig(ctx); ok {
+				toIngestionConfig.SyncFieldsDuringRead(ctx, fromIngestionConfig)
+				to.SetIngestionConfig(ctx, toIngestionConfig)
+			}
+		}
+	}
 	if !from.KeySchema.IsNull() && !from.KeySchema.IsUnknown() {
 		if toKeySchema, ok := to.GetKeySchema(ctx); ok {
 			if fromKeySchema, ok := from.GetKeySchema(ctx); ok {
@@ -306,6 +329,7 @@ func (m KafkaConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["backfill_source"] = attrs["backfill_source"].SetOptional()
 	attrs["bootstrap_servers"] = attrs["bootstrap_servers"].SetRequired()
 	attrs["extra_options"] = attrs["extra_options"].SetOptional()
+	attrs["ingestion_config"] = attrs["ingestion_config"].SetOptional()
 	attrs["key_schema"] = attrs["key_schema"].SetOptional()
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["subscription_mode"] = attrs["subscription_mode"].SetRequired()
@@ -393,6 +417,31 @@ func (m *KafkaConfig) SetExtraOptions(ctx context.Context, v map[string]types.St
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["extra_options"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.ExtraOptions = types.MapValueMust(t, vs)
+}
+
+// GetIngestionConfig returns the value of the IngestionConfig field in KafkaConfig as
+// a ml_tf.IngestionConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *KafkaConfig) GetIngestionConfig(ctx context.Context) (ml_tf.IngestionConfig, bool) {
+	var e ml_tf.IngestionConfig
+	if m.IngestionConfig.IsNull() || m.IngestionConfig.IsUnknown() {
+		return e, false
+	}
+	var v ml_tf.IngestionConfig
+	d := m.IngestionConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIngestionConfig sets the value of the IngestionConfig field in KafkaConfig.
+func (m *KafkaConfig) SetIngestionConfig(ctx context.Context, v ml_tf.IngestionConfig) {
+	vs := v.ToObjectValue(ctx)
+	m.IngestionConfig = vs
 }
 
 // GetKeySchema returns the value of the KeySchema field in KafkaConfig as
@@ -624,7 +673,7 @@ func (r *KafkaConfigResource) update(ctx context.Context, plan KafkaConfig, diag
 	updateRequest := ml.UpdateKafkaConfigRequest{
 		KafkaConfig: kafka_config,
 		Name:        plan.Name.ValueString(),
-		UpdateMask:  *fieldmask.New(strings.Split("auth_config,backfill_source,bootstrap_servers,extra_options,key_schema,subscription_mode,value_schema", ",")),
+		UpdateMask:  *fieldmask.New(strings.Split("auth_config,backfill_source,bootstrap_servers,extra_options,ingestion_config,key_schema,subscription_mode,value_schema", ",")),
 	}
 
 	var namespace ProviderConfig

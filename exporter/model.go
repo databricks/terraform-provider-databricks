@@ -5,6 +5,7 @@ import (
 	"log"
 	"regexp"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -198,6 +199,23 @@ type reference struct {
 	MatchType MatchType
 	// true if given reference denote a variable
 	Variable bool
+	// VariableName, if set, is used as the name of the generated variable instead
+	// of a unique per-field name. This lets multiple references (across resources)
+	// share a single variable, e.g. `databricks_account_id`.
+	VariableName string
+	// ContinueMatch, when true, tells the reference resolver not to stop after this
+	// reference matches: subsequent references for the same field are also evaluated
+	// and their (non-overlapping) substitutions are combined into a single value.
+	// Used, for example, to substitute both the account ID and a resource reference
+	// within one attribute like `accounts/<id>/budgetPolicies/<policy>/ruleSets/default`.
+	ContinueMatch bool
+	// MultiMatch, when true together with MatchType == MatchRegexp, tells the
+	// reference resolver to substitute every occurrence of the regexp in the value
+	// (not just the first), resolving each captured group independently to its own
+	// target resource. Used for values that embed several references to different
+	// objects, such as multiple `{{secrets/scope/key}}` tokens inside a cluster
+	// policy definition. Only supported on the ContinueMatch (combine) path.
+	MultiMatch bool
 	// true if given reference denote a reference to a generated file
 	File bool
 	// regular expression (if MatchType == "regexp") must define a group that will be used to extract value to match
@@ -290,12 +308,26 @@ func (r *resource) String() string {
 	return fmt.Sprintf("%s[%s] (%s: %s)", r.Resource, n, k, v)
 }
 
+// shellQuote wraps s in POSIX single quotes so that a shell treats it as a
+// literal string. This prevents command substitution ($(...), backticks),
+// variable expansion (${...}) and interpretation of any other metacharacters
+// when the generated import.sh is executed. Embedded single quotes are escaped
+// as '\”. Attacker-controlled values (e.g. workspace object paths) end up in
+// r.ID, so the ID must always be quoted before it is written to import.sh.
+func shellQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
 func (r *resource) ImportCommand(ic *importContext) string {
 	m := ""
 	if ic.Module != "" {
 		m = ic.Module + "."
 	}
-	return fmt.Sprintf(`terraform import %s%s.%s "%s"`, m, r.Resource, r.Name, r.ID)
+	// r.Resource and r.Name are normalized identifiers (see nameNormalizationRegex),
+	// so only r.ID is attacker-controlled and needs shell escaping. Keeping the
+	// resource address unquoted also preserves the whitespace-split parsing in
+	// writeShellImports used for incremental/deleted-resource handling.
+	return fmt.Sprintf("terraform import %s%s.%s %s", m, r.Resource, r.Name, shellQuote(r.ID))
 }
 
 func (r *resource) ImportResource(ic *importContext) {

@@ -663,3 +663,23 @@ func TestRfaAccessRequestDestinationsIgnore(t *testing.T) {
 		assert.False(t, ignore, "Resource should not be ignored when securable is missing")
 	})
 }
+
+// TestBudgetPolicyNameFromPolicyName verifies that the Plugin Framework
+// databricks_budget_policy resource derives its Terraform name from the
+// policy_name attribute (via NameUnified) instead of the default ID-based name.
+func TestBudgetPolicyNameFromPolicyName(t *testing.T) {
+	ic := importContextForTest()
+	ctx := context.Background()
+	pfSchema := ic.PluginFrameworkSchemas["databricks_budget_policy"]
+	attrTypes := map[string]attr.Type{}
+	for name, a := range pfSchema.GetAttributes() {
+		attrTypes[name] = a.GetType()
+	}
+	raw, err := basetypes.NewObjectNull(attrTypes).ToTerraformValue(ctx)
+	require.NoError(t, err)
+	state := tfsdk.State{Schema: pfSchema, Raw: raw}
+	state.SetAttribute(ctx, path.Root("policy_name"), basetypes.NewStringValue("My Budget Policy"))
+	wrapper := &PluginFrameworkResourceData{state: &state, schema: pfSchema, resourceId: "26e7bb32-d51f"}
+	r := &resource{Resource: "databricks_budget_policy", ID: "26e7bb32-d51f", DataWrapper: wrapper}
+	assert.Equal(t, "my_budget_policy", ic.ResourceName(r))
+}

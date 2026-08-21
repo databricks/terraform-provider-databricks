@@ -126,7 +126,7 @@ All arguments are optional, and they tune what code is being generated.
   ```
 
   The script generates comprehensive three-way mappings (~99.5% coverage) using similarity scoring based on cores, memory, category, and disk configuration. See `exporter/AGENTS.md` for detailed algorithm documentation.
-* `-skip-interactive` - optionally run in a non-interactive mode.
+* `-skip-interactive` - run in a non-interactive mode.  *This option is enabled automatically when you specify either `-listing` or `-services` option.*
 * `-includeUserDomains` - optionally include the domain name in the generated resource name for `databricks_user` resource.
 * `-importAllUsers` - optionally includes all users and service principals even if they are only part of the `users` group.
 * `-exportDeletedUsersAssets` - optionally include assets of deleted users and service principals.
@@ -134,10 +134,26 @@ All arguments are optional, and they tune what code is being generated.
 * `-updated-since` - timestamp (in ISO8601 format supported by Go language) for exporting of resources modified since a given timestamp. I.e., `2023-07-24T00:00:00Z`. If not specified, the exporter will try to load the last run timestamp from the `exporter-run-stats.json` file generated during the export and use it.
 * `-notebooksFormat` - optional format for exported notebooks. Supported values are `SOURCE` (default), `DBC`, `JUPYTER`.  This option could be used to export notebooks with embedded dashboards.
 * `-noformat` - optionally turn off the execution of `terraform fmt` on the exported files (enabled by default).
-* `-debug` - turn on debug output.
-* `-trace` - turn on trace output (includes debug level as well).
+* `-debug` - turn on debug output, including Databricks Go SDK HTTP request/response logs.
+* `-trace` - turn on trace output (includes debug level as well), including Databricks Go SDK HTTP request/response logs.
 * `-native-import` - turns on generation of [native import blocks](https://developer.hashicorp.com/terraform/language/import) (requires Terraform 1.5+).  This option is recommended for cases when you want to start managing an existing workspace.
 * `-export-secrets` - enables exporting of the secret values - they will be written into the `terraform.tfvars` file.  **Be very careful with this file!**
+
+### Logging
+
+The exporter also honors the standard `TF_LOG` environment variable:
+
+* `TF_LOG=DEBUG` - enables exporter debug output and Databricks Go SDK HTTP request/response logs.
+* `TF_LOG=TRACE` - enables trace output, debug output, and Databricks Go SDK HTTP request/response logs.
+* `TF_LOG=INFO`, `TF_LOG=WARN`, and `TF_LOG=ERROR` - restrict output to the corresponding level and above.
+
+The `-debug` and `-trace` flags take precedence over `TF_LOG` for backward compatibility. To increase the amount of request or response body included in SDK HTTP logs, set `DATABRICKS_DEBUG_TRUNCATE_BYTES`.
+
+```bash
+TF_LOG=DEBUG \
+DATABRICKS_DEBUG_TRUNCATE_BYTES=250000 \
+./terraform-provider-databricks exporter -skip-interactive -listing jobs -services jobs
+```
 
 ### Use of `-listing` and `-services` for granular resources selection
 
@@ -212,6 +228,10 @@ Migration between Databricks accounts should be done in multiple steps:
 3. Apply account-level export to a new account.  Extract application IDs of newly created service principals.
 4. Adjust service principal IDs in the workspace export.
 5. Apply workspace export to a new workspace.
+
+### Account ID variable
+
+For account-level exports, the exporter emits a single `databricks_account_id` variable in `vars.tf` (with the current account ID as its default) and references it from the generated provider block and from account-scoped resource attributes (for example, `databricks_endpoint.parent` and `databricks_access_control_rule_set.name`).  To point the generated configuration at a different account, override this one variable (via `-var`, an environment variable, or `terraform.tfvars`) instead of editing every occurrence.
 
 ## Services
 
@@ -315,6 +335,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_database_instance](../resources/database_instance.md) | Yes | No | Yes | No |
 | [databricks_data_quality_monitor](../resources/data_quality_monitor.md) | Yes | Yes | Yes | No |
 | [databricks_dbfs_file](../resources/dbfs_file.md) | Yes | No | Yes | No |
+| [databricks_endpoint](../resources/endpoint.md) | Yes | No | No | Yes |
 | [databricks_external_location](../resources/external_location.md) | Yes | Yes | Yes | No |
 | [databricks_file](../resources/file.md) | Yes | No | Yes | No |
 | [databricks_global_init_script](../resources/global_init_script.md) | Yes | Yes | Yes\*\* | No |

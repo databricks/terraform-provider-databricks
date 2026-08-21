@@ -2,7 +2,7 @@
 subcategory: "Databricks SQL"
 ---
 # databricks_alert_v2 Data Source
-[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/alertsv2)
 
@@ -46,6 +46,8 @@ The following attributes are exported:
 * `id` (string) - UUID identifying the alert
 * `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: `ACTIVE`, `DELETED`
 * `owner_user_name` (string) - The owner's username. This field is set to "Unavailable" if the user has been deleted
+* `parameters` (list of AlertStatementParameter) - Query parameters bound when executing the alert query, referenced in the
+  query text with `:name` syntax. Static values only
 * `parent_path` (string) - The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated
 * `query_text` (string) - Text of the query to be run
 * `run_as` (AlertV2RunAs) - Specifies the identity that will be used to run the alert.
@@ -59,6 +61,13 @@ The following attributes are exported:
 * `schedule` (CronSchedule)
 * `update_time` (string) - The timestamp indicating when the alert was updated
 * `warehouse_id` (string) - ID of the SQL warehouse attached to the alert
+
+### AlertStatementParameter
+* `name` (string) - The name of the parameter, referenced in the query as `:name`
+* `type` (string) - The SQL data type of the parameter, e.g. STRING, INT, or DATE. Defaults to STRING. This is a
+  string rather than an enum because scalar subtypes such as DECIMAL(10, 4) cannot be enumerated.
+  Complex types such as ARRAY, MAP, and STRUCT are not supported
+* `value` (string) - The bound value for the parameter, given as a string. If omitted, the value is interpreted as NULL
 
 ### AlertV2Evaluation
 * `comparison_operator` (string) - Operator used for comparison in alert evaluation. Possible values are: `EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `IS_NOT_NULL`, `IS_NULL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`

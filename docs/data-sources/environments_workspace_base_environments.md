@@ -42,5 +42,14 @@ This data source exports a single attribute, `workspace_base_environments`. It i
 * `message` (string) - Status message providing additional details about the environment status
 * `name` (string) - The resource name of the workspace base environment.
   Format: workspace-base-environments/{workspace-base-environment}
+* `spec` (EnvironmentSpec) - The environment specification containing version and dependencies
 * `status` (string) - The status of the materialized workspace base environment. Possible values are: `CREATED`, `EXPIRED`, `FAILED`, `INVALID`, `PENDING`, `REFRESHING`
 * `update_time` (string) - Timestamp when the environment was last updated
+
+### EnvironmentSpec
+* `dependencies` (list of string) - List of pip dependencies, as supported by the version of pip in this environment.
+  Each dependency is a valid pip requirements file line per https://pip.pypa.io/en/stable/reference/requirements-file-format/.
+  Allowed dependencies include a requirement specifier, an archive URL, a local project path (such as WSFS or UC Volumes in Databricks), or a VCS project URL
+* `environment_version` (string) - Environment version used by the environment.
+  Each version comes with a specific Python version and a set of Python packages.
+  The version is a string, consisting of an integer

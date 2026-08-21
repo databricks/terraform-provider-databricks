@@ -3,6 +3,8 @@ subcategory: "Deployment"
 ---
 # databricks_mws_customer_managed_keys Resource
 
+[API Documentation](https://docs.databricks.com/api/account/encryptionkeys)
+
 This resource to configure KMS keys for new workspaces within AWS or GCP. This is to support the following features:
 
 * [Customer-managed keys for managed services](https://docs.databricks.com/security/keys/customer-managed-keys-managed-services-aws.html): Encrypt the workspace's managed services data in the control plane, including notebooks, secrets, Databricks SQL queries, and Databricks SQL query history  with a CMK.

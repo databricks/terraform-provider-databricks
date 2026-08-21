@@ -1,9 +1,10 @@
 package catalog
 
 import (
+	"cmp"
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -59,8 +60,8 @@ func diffPermissionsForPrincipal(principal string, desired []catalog.PrivilegeAs
 		})
 	}
 	// so that we can deterministic tests
-	sort.Slice(diff, func(i, j int) bool {
-		return diff[i].Principal < diff[j].Principal
+	slices.SortFunc(diff, func(a, b catalog.PermissionsChange) int {
+		return cmp.Compare(a.Principal, b.Principal)
 	})
 	return diff
 }

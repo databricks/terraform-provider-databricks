@@ -3,6 +3,8 @@ subcategory: "Deployment"
 ---
 # databricks_mws_workspaces resource
 
+[API Documentation](https://docs.databricks.com/api/account/workspaces)
+
 This resource allows you to set up [workspaces on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1) or [workspaces on GCP](https://docs.gcp.databricks.com/administration-guide/account-settings-gcp/workspaces.html). Please follow this complete runnable example on [AWS](../guides/aws-workspace.md) or [GCP](../guides/gcp-workspace.md) with new VPC and new workspace setup.
 
 -> This resource can only be used with an account-level provider!

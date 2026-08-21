@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_grants Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/grants)
+
 -> This article refers to the privileges and inheritance model in Privilege Model version 1.0. If you created your metastore during the public preview (before August 25, 2022), you can upgrade to Privilege Model version 1.0 following [Upgrade to privilege inheritance](https://docs.databricks.com/data-governance/unity-catalog/hive-metastore.html)
 
 -> Most of Unity Catalog APIs are only accessible via **workspace-level APIs**. This design may change in the future. Account-level principal grants can be assigned with any valid workspace as the Unity Catalog is decoupled from specific workspaces. More information in [the official documentation](https://docs.databricks.com/data-governance/unity-catalog/index.html).
@@ -224,6 +226,48 @@ resource "databricks_grants" "udf" {
   }
   grant {
     principal  = "Data Analysts"
+    privileges = ["EXECUTE"]
+  }
+}
+```
+
+## Model service grants
+
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `EXECUTE`, `MANAGE`, and `READ_METADATA` privileges to a Unity AI Gateway model service ([databricks_ai_gateway_model_service](ai_gateway_model_service.md)) specified in the `model_service` attribute.
+
+```hcl
+resource "databricks_grants" "model_service" {
+  model_service = "main.default.my_model_service"
+  grant {
+    principal  = "account users"
+    privileges = ["EXECUTE"]
+  }
+}
+```
+
+## Model provider service grants
+
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `EXECUTE`, `MANAGE`, and `READ_METADATA` privileges to a Unity AI Gateway model provider service ([databricks_ai_gateway_model_provider_service](ai_gateway_model_provider_service.md)) specified in the `model_provider_service` attribute.
+
+```hcl
+resource "databricks_grants" "model_provider_service" {
+  model_provider_service = "main.default.my_provider"
+  grant {
+    principal  = "account users"
+    privileges = ["EXECUTE"]
+  }
+}
+```
+
+## MCP service grants
+
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `EXECUTE`, `MANAGE`, and `READ_METADATA` privileges to a Unity AI Gateway MCP service ([databricks_ai_gateway_mcp_service](ai_gateway_mcp_service.md)) specified in the `mcp_service` attribute.
+
+```hcl
+resource "databricks_grants" "mcp_service" {
+  mcp_service = "main.default.my_mcp_service"
+  grant {
+    principal  = "account users"
     privileges = ["EXECUTE"]
   }
 }

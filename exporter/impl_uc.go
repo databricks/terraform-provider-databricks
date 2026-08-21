@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/databricks-sdk-go/service/dataclassification"
 	"github.com/databricks/databricks-sdk-go/service/dataquality"
 	"github.com/databricks/databricks-sdk-go/service/tags"
 	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
@@ -92,6 +93,9 @@ func importUcCatalog(ic *importContext, r *resource) error {
 
 	// Emit RFA access request destinations if configured
 	ic.emitRfaAccessRequestDestinations("CATALOG", cat.Name)
+
+	// Emit data classification catalog config if configured
+	ic.emitDataClassificationCatalogConfig(cat.Name)
 
 	return nil
 }
@@ -798,6 +802,56 @@ func importRfaAccessRequestDestinations(ic *importContext, r *resource) error {
 		}
 	}
 
+	return nil
+}
+
+// dataClassificationCatalogName extracts the catalog name from a data classification
+// catalog config resource name in the format `catalogs/{catalog_name}/config`.
+// It returns an empty string if the name doesn't match the expected format.
+func dataClassificationCatalogName(name string) string {
+	if strings.HasPrefix(name, "catalogs/") && strings.HasSuffix(name, "/config") {
+		return strings.TrimSuffix(strings.TrimPrefix(name, "catalogs/"), "/config")
+	}
+	return ""
+}
+
+// emitDataClassificationCatalogConfig emits databricks_data_classification_catalog_config
+// resource for a given catalog if a data classification configuration exists for it.
+// There is no list API, so this is called from the databricks_catalog Import function.
+func (ic *importContext) emitDataClassificationCatalogConfig(catalogName string) {
+	if !ic.isServiceEnabled("uc-data-classification") {
+		return
+	}
+	name := fmt.Sprintf("catalogs/%s/config", catalogName)
+	_, err := ic.workspaceClient.DataClassification.GetCatalogConfig(ic.Context,
+		dataclassification.GetCatalogConfigRequest{Name: name})
+	if err != nil {
+		// Most catalogs won't have a data classification config configured.
+		log.Printf("[DEBUG] No data classification config for catalog %s: %v", catalogName, err)
+		return
+	}
+	ic.Emit(&resource{
+		Resource: "databricks_data_classification_catalog_config",
+		ID:       name,
+	})
+}
+
+func importDataClassificationCatalogConfig(ic *importContext, r *resource) error {
+	// The read API doesn't return the `parent` field (it's only part of the create
+	// request), so we derive it from the resource name (`catalogs/{catalog_name}/config`)
+	// and set it explicitly. This also lets the `parent` -> databricks_catalog reference
+	// resolve during code generation. The parent catalog itself doesn't need to be emitted
+	// here: this resource is only emitted from the databricks_catalog Import function, so
+	// the catalog is always already in scope.
+	catalogName := dataClassificationCatalogName(r.ID)
+	if catalogName == "" {
+		return fmt.Errorf("unexpected data classification config name: %s", r.ID)
+	}
+	if r.DataWrapper != nil {
+		if err := r.DataWrapper.Set("parent", "catalogs/"+catalogName); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

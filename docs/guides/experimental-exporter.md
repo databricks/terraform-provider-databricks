@@ -336,6 +336,8 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_data_quality_monitor](../resources/data_quality_monitor.md) | Yes | Yes | Yes | No |
 | [databricks_dbfs_file](../resources/dbfs_file.md) | Yes | No | Yes | No |
 | [databricks_endpoint](../resources/endpoint.md) | Yes | No | No | Yes |
+| [databricks_environments_default_workspace_base_environment](../resources/environments_default_workspace_base_environment.md) | Yes | No | Yes | No |
+| [databricks_environments_workspace_base_environment](../resources/environments_workspace_base_environment.md) | Yes | No | Yes | No |
 | [databricks_external_location](../resources/external_location.md) | Yes | Yes | Yes | No |
 | [databricks_file](../resources/file.md) | Yes | No | Yes | No |
 | [databricks_global_init_script](../resources/global_init_script.md) | Yes | Yes | Yes\*\* | No |

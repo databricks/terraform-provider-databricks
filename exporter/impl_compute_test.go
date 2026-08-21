@@ -3,12 +3,17 @@ package exporter
 import (
 	"context"
 	"encoding/json"
+	"io"
+	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/environments"
+	"github.com/databricks/databricks-sdk-go/service/files"
 	sdk_pipelines "github.com/databricks/databricks-sdk-go/service/pipelines"
 	tf_dlt "github.com/databricks/terraform-provider-databricks/pipelines"
 
@@ -17,7 +22,12 @@ import (
 	"github.com/databricks/terraform-provider-databricks/policies"
 	"github.com/databricks/terraform-provider-databricks/pools"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -820,4 +830,312 @@ func TestIncrementalListDLT(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(ic.testEmits))
 	})
+}
+
+// newPluginFrameworkTestState builds an empty Plugin Framework state for the
+// given exported resource, so individual attributes can be set for Import/Name
+// tests without going through a full apply.
+func newPluginFrameworkTestState(t *testing.T, ic *importContext, ctx context.Context, resourceName, resourceID string) (*PluginFrameworkResourceData, *tfsdk.State) {
+	pfSchema := ic.PluginFrameworkSchemas[resourceName]
+	attrTypes := map[string]attr.Type{}
+	for name, a := range pfSchema.GetAttributes() {
+		attrTypes[name] = a.GetType()
+	}
+	raw, err := basetypes.NewObjectNull(attrTypes).ToTerraformValue(ctx)
+	require.NoError(t, err)
+	state := &tfsdk.State{Schema: pfSchema, Raw: raw}
+	wrapper := &PluginFrameworkResourceData{state: state, schema: pfSchema, resourceId: resourceID}
+	return wrapper, state
+}
+
+func TestListWorkspaceBaseEnvironments(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockEnvironmentsAPI().EXPECT().ListWorkspaceBaseEnvironments(mock.Anything,
+			environments.ListWorkspaceBaseEnvironmentsRequest{}).Return(
+			createIteratorFromSlice([]environments.WorkspaceBaseEnvironment{
+				{
+					Name:        "workspace-base-environments/abc123",
+					DisplayName: "My Environment",
+				},
+				{
+					Name:        "workspace-base-environments/def456",
+					DisplayName: "Another Environment",
+				},
+				// Databricks-provided base environments must be skipped.
+				{
+					Name:        "workspace-base-environments/databricks_ml_v5",
+					DisplayName: "Databricks ML",
+				},
+				// Empty name must be skipped.
+				{
+					Name:        "",
+					DisplayName: "No Name",
+				},
+			}))
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("compute")
+
+		err := resourcesMap["databricks_environments_workspace_base_environment"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 2, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_environments_workspace_base_environment[<unknown>] (id: workspace-base-environments/abc123)"])
+		assert.True(t, ic.testEmits["databricks_environments_workspace_base_environment[<unknown>] (id: workspace-base-environments/def456)"])
+		assert.False(t, ic.testEmits["databricks_environments_workspace_base_environment[<unknown>] (id: workspace-base-environments/databricks_ml_v5)"])
+	})
+}
+
+func TestListWorkspaceBaseEnvironmentsWithMatch(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockEnvironmentsAPI().EXPECT().ListWorkspaceBaseEnvironments(mock.Anything,
+			environments.ListWorkspaceBaseEnvironmentsRequest{}).Return(
+			createIteratorFromSlice([]environments.WorkspaceBaseEnvironment{
+				{
+					Name:        "workspace-base-environments/abc123",
+					DisplayName: "Test Environment",
+				},
+				{
+					Name:        "workspace-base-environments/def456",
+					DisplayName: "Production Environment",
+				},
+			}))
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("compute")
+		ic.match = "Test"
+
+		err := resourcesMap["databricks_environments_workspace_base_environment"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_environments_workspace_base_environment[<unknown>] (id: workspace-base-environments/abc123)"])
+		assert.False(t, ic.testEmits["databricks_environments_workspace_base_environment[<unknown>] (id: workspace-base-environments/def456)"])
+	})
+}
+
+// TestWorkspaceBaseEnvironmentName verifies the Terraform name is derived from
+// the display_name plus the resource ID.
+func TestWorkspaceBaseEnvironmentName(t *testing.T) {
+	ic := importContextForTest()
+	ctx := context.Background()
+	wrapper, state := newPluginFrameworkTestState(t, ic, ctx,
+		"databricks_environments_workspace_base_environment", "workspace-base-environments/abc123")
+	state.SetAttribute(ctx, path.Root("display_name"), basetypes.NewStringValue("My Environment"))
+	r := &resource{Resource: "databricks_environments_workspace_base_environment", ID: "workspace-base-environments/abc123", DataWrapper: wrapper}
+	assert.Equal(t, "my_environment_workspace_base_environments_abc123", ic.ResourceName(r))
+}
+
+// TestImportWorkspaceBaseEnvironmentSpecDependencies verifies that Volume library
+// paths and quoted/unquoted `-r requirements.txt` entries in spec.dependencies are
+// emitted, while requirement specifiers, index URLs and VCS URLs are ignored.
+func TestImportWorkspaceBaseEnvironmentSpecDependencies(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("compute,storage")
+	ctx := context.Background()
+	ic.Context = ctx
+	wrapper, state := newPluginFrameworkTestState(t, ic, ctx,
+		"databricks_environments_workspace_base_environment", "workspace-base-environments/abc123")
+
+	deps, diags := basetypes.NewListValue(basetypes.StringType{}, []attr.Value{
+		basetypes.NewStringValue("--index-url https://pypi.org/simple"),
+		basetypes.NewStringValue(`-r "/Volumes/cybersecurity/default/libs/requirements.txt"`),
+		basetypes.NewStringValue("-r /Volumes/cybersecurity/default/libs/requirements-extra.txt"),
+		basetypes.NewStringValue("databricks-sdk"),
+		basetypes.NewStringValue("/Volumes/cybersecurity/default/libs/cyberspark-0.3.6-py3-none-any.whl"),
+		basetypes.NewStringValue("git+https://github.com/databricks/databricks-cli"),
+	})
+	require.False(t, diags.HasError())
+	spec, diags := basetypes.NewObjectValue(map[string]attr.Type{
+		"dependencies":        basetypes.ListType{ElemType: basetypes.StringType{}},
+		"environment_version": basetypes.StringType{},
+	}, map[string]attr.Value{
+		"dependencies":        deps,
+		"environment_version": basetypes.NewStringValue("4"),
+	})
+	require.False(t, diags.HasError())
+	state.SetAttribute(ctx, path.Root("spec"), spec)
+	r := &resource{Resource: "databricks_environments_workspace_base_environment", ID: "workspace-base-environments/abc123", DataWrapper: wrapper}
+
+	err := resourcesMap["databricks_environments_workspace_base_environment"].Import(ic, r)
+	assert.NoError(t, err)
+	// The direct Volume library and both quoted and unquoted `-r` requirements
+	// files are emitted.
+	assert.True(t, ic.testEmits["databricks_file[<unknown>] (id: /Volumes/cybersecurity/default/libs/cyberspark-0.3.6-py3-none-any.whl)"])
+	assert.True(t, ic.testEmits["databricks_file[<unknown>] (id: /Volumes/cybersecurity/default/libs/requirements.txt)"])
+	assert.True(t, ic.testEmits["databricks_file[<unknown>] (id: /Volumes/cybersecurity/default/libs/requirements-extra.txt)"])
+	// Non-file dependencies produce no emissions.
+	assert.Equal(t, 3, len(ic.testEmits))
+}
+
+// TestImportWorkspaceBaseEnvironmentFileDependencies verifies that when a base
+// environment is defined via `filepath`, the referenced YAML file is downloaded,
+// parsed, and the files referenced by its `dependencies` are emitted too.
+func TestImportWorkspaceBaseEnvironmentFileDependencies(t *testing.T) {
+	yamlContent := `environment_version: "4"
+dependencies:
+  - --index-url https://pypi.org/simple
+  - -r "/Volumes/cybersecurity/default/libs/requirements.txt"
+  - databricks-sdk
+  - /Volumes/cybersecurity/default/libs/cyberspark-0.3.6-py3-none-any.whl
+  - git+https://github.com/databricks/databricks-cli
+`
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockFilesAPI().EXPECT().DownloadByFilePath(mock.Anything,
+			"/Volumes/main/default/vol/env.yaml").Return(&files.DownloadResponse{
+			Contents: io.NopCloser(strings.NewReader(yamlContent)),
+		}, nil)
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("compute,storage")
+		wrapper, state := newPluginFrameworkTestState(t, ic, ctx,
+			"databricks_environments_workspace_base_environment", "workspace-base-environments/abc123")
+		state.SetAttribute(ctx, path.Root("filepath"), basetypes.NewStringValue("/Volumes/main/default/vol/env.yaml"))
+		r := &resource{Resource: "databricks_environments_workspace_base_environment", ID: "workspace-base-environments/abc123", DataWrapper: wrapper}
+
+		err := resourcesMap["databricks_environments_workspace_base_environment"].Import(ic, r)
+		assert.NoError(t, err)
+		// The YAML file itself is emitted.
+		assert.True(t, ic.testEmits["databricks_file[<unknown>] (id: /Volumes/main/default/vol/env.yaml)"])
+		// Files referenced inside the YAML are emitted too.
+		assert.True(t, ic.testEmits["databricks_file[<unknown>] (id: /Volumes/cybersecurity/default/libs/cyberspark-0.3.6-py3-none-any.whl)"])
+		assert.True(t, ic.testEmits["databricks_file[<unknown>] (id: /Volumes/cybersecurity/default/libs/requirements.txt)"])
+	})
+}
+
+func TestListDefaultWorkspaceBaseEnvironment(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockEnvironmentsAPI().EXPECT().GetDefaultWorkspaceBaseEnvironment(mock.Anything,
+			environments.GetDefaultWorkspaceBaseEnvironmentRequest{Name: "default-workspace-base-environment"}).Return(
+			&environments.DefaultWorkspaceBaseEnvironment{
+				Name:                        "default-workspace-base-environment",
+				CpuWorkspaceBaseEnvironment: "workspace-base-environments/abc123",
+			}, nil)
+		// The referenced environment is user-managed (has a filepath).
+		mw.GetMockEnvironmentsAPI().EXPECT().GetWorkspaceBaseEnvironment(mock.Anything,
+			environments.GetWorkspaceBaseEnvironmentRequest{Name: "workspace-base-environments/abc123"}).Return(
+			&environments.WorkspaceBaseEnvironment{
+				Name:     "workspace-base-environments/abc123",
+				Filepath: "/Workspace/Users/me/env.yaml",
+			}, nil)
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("compute")
+
+		err := resourcesMap["databricks_environments_default_workspace_base_environment"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_environments_default_workspace_base_environment[<unknown>] (id: default-workspace-base-environment)"])
+	})
+}
+
+// TestListDefaultWorkspaceBaseEnvironmentSkipsWithoutFilepath verifies the default
+// is skipped when the referenced environment has no filepath, even if its name is
+// not the Databricks-provided prefix (names can change; filepath is the robust
+// signal for a user-managed environment).
+func TestListDefaultWorkspaceBaseEnvironmentSkipsWithoutFilepath(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockEnvironmentsAPI().EXPECT().GetDefaultWorkspaceBaseEnvironment(mock.Anything,
+			environments.GetDefaultWorkspaceBaseEnvironmentRequest{Name: "default-workspace-base-environment"}).Return(
+			&environments.DefaultWorkspaceBaseEnvironment{
+				Name:                        "default-workspace-base-environment",
+				CpuWorkspaceBaseEnvironment: "workspace-base-environments/abc123",
+			}, nil)
+		mw.GetMockEnvironmentsAPI().EXPECT().GetWorkspaceBaseEnvironment(mock.Anything,
+			environments.GetWorkspaceBaseEnvironmentRequest{Name: "workspace-base-environments/abc123"}).Return(
+			&environments.WorkspaceBaseEnvironment{Name: "workspace-base-environments/abc123"}, nil)
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("compute")
+
+		err := resourcesMap["databricks_environments_default_workspace_base_environment"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 0, len(ic.testEmits))
+	})
+}
+
+func TestListDefaultWorkspaceBaseEnvironmentSkipsEmpty(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockEnvironmentsAPI().EXPECT().GetDefaultWorkspaceBaseEnvironment(mock.Anything,
+			environments.GetDefaultWorkspaceBaseEnvironmentRequest{Name: "default-workspace-base-environment"}).Return(
+			&environments.DefaultWorkspaceBaseEnvironment{
+				Name: "default-workspace-base-environment",
+			}, nil)
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("compute")
+
+		err := resourcesMap["databricks_environments_default_workspace_base_environment"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 0, len(ic.testEmits))
+	})
+}
+
+// TestListDefaultWorkspaceBaseEnvironmentSkipsDatabricksManaged verifies the
+// default is not emitted when it only references Databricks-managed base
+// environments (e.g. `workspace-base-environments/databricks_ai`).
+func TestListDefaultWorkspaceBaseEnvironmentSkipsDatabricksManaged(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockEnvironmentsAPI().EXPECT().GetDefaultWorkspaceBaseEnvironment(mock.Anything,
+			environments.GetDefaultWorkspaceBaseEnvironmentRequest{Name: "default-workspace-base-environment"}).Return(
+			&environments.DefaultWorkspaceBaseEnvironment{
+				Name:                        "default-workspace-base-environment",
+				GpuWorkspaceBaseEnvironment: "workspace-base-environments/databricks_ai",
+			}, nil)
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("compute")
+
+		err := resourcesMap["databricks_environments_default_workspace_base_environment"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 0, len(ic.testEmits))
+	})
+}
+
+// TestIgnoreDefaultWorkspaceBaseEnvironment verifies the default is ignored when it
+// doesn't reference any user-managed base environment: a Databricks-provided name is
+// ignored without a lookup, a referenced environment without a filepath is ignored,
+// and a referenced environment with a filepath is kept.
+func TestIgnoreDefaultWorkspaceBaseEnvironment(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockEnvironmentsAPI().EXPECT().GetWorkspaceBaseEnvironment(mock.Anything,
+			environments.GetWorkspaceBaseEnvironmentRequest{Name: "workspace-base-environments/user_with_file"}).Return(
+			&environments.WorkspaceBaseEnvironment{Filepath: "/Workspace/Users/me/env.yaml"}, nil)
+		mw.GetMockEnvironmentsAPI().EXPECT().GetWorkspaceBaseEnvironment(mock.Anything,
+			environments.GetWorkspaceBaseEnvironmentRequest{Name: "workspace-base-environments/user_no_file"}).Return(
+			&environments.WorkspaceBaseEnvironment{}, nil)
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		imp := resourcesMap["databricks_environments_default_workspace_base_environment"]
+
+		mkResource := func(field, value string) *resource {
+			wrapper, state := newPluginFrameworkTestState(t, ic, ctx,
+				"databricks_environments_default_workspace_base_environment", "default-workspace-base-environment")
+			state.SetAttribute(ctx, path.Root(field), basetypes.NewStringValue(value))
+			return &resource{Resource: "databricks_environments_default_workspace_base_environment", ID: "default-workspace-base-environment", DataWrapper: wrapper}
+		}
+
+		// Databricks-provided name -> ignored (short-circuits, no lookup).
+		assert.True(t, imp.Ignore(ic, mkResource("gpu_workspace_base_environment", "workspace-base-environments/databricks_ai")))
+		// User-named reference without a filepath -> ignored.
+		assert.True(t, imp.Ignore(ic, mkResource("cpu_workspace_base_environment", "workspace-base-environments/user_no_file")))
+		// User-managed reference with a filepath -> kept.
+		assert.False(t, imp.Ignore(ic, mkResource("cpu_workspace_base_environment", "workspace-base-environments/user_with_file")))
+	})
+}
+
+// TestImportDefaultWorkspaceBaseEnvironment verifies the referenced user-managed
+// base environments are emitted while Databricks-provided ones are skipped.
+func TestImportDefaultWorkspaceBaseEnvironment(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("compute")
+	ctx := context.Background()
+	wrapper, state := newPluginFrameworkTestState(t, ic, ctx,
+		"databricks_environments_default_workspace_base_environment", "default-workspace-base-environment")
+	state.SetAttribute(ctx, path.Root("cpu_workspace_base_environment"), basetypes.NewStringValue("workspace-base-environments/abc123"))
+	state.SetAttribute(ctx, path.Root("gpu_workspace_base_environment"), basetypes.NewStringValue("workspace-base-environments/databricks_ai_v5"))
+	r := &resource{Resource: "databricks_environments_default_workspace_base_environment", ID: "default-workspace-base-environment", DataWrapper: wrapper}
+
+	err := resourcesMap["databricks_environments_default_workspace_base_environment"].Import(ic, r)
+	assert.NoError(t, err)
+	assert.True(t, ic.testEmits["databricks_environments_workspace_base_environment[<unknown>] (id: workspace-base-environments/abc123)"])
+	assert.False(t, ic.testEmits["databricks_environments_workspace_base_environment[<unknown>] (id: workspace-base-environments/databricks_ai_v5)"])
 }

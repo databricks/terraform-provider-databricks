@@ -20,6 +20,7 @@ import (
 	sdk_compute "github.com/databricks/databricks-sdk-go/service/compute"
 	sdk_dashboards "github.com/databricks/databricks-sdk-go/service/dashboards"
 	"github.com/databricks/databricks-sdk-go/service/database"
+	"github.com/databricks/databricks-sdk-go/service/environments"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/knowledgeassistants"
@@ -272,6 +273,20 @@ var emptyClusterPolicies = qa.HTTPFixture{
 	ReuseRequest: true,
 	Resource:     "/api/2.0/policies/clusters/list?",
 	Response:     sdk_compute.ListPoliciesResponse{},
+}
+
+var emptyWorkspaceBaseEnvironments = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/environments/v1/workspace-base-environments?",
+	Response:     environments.ListWorkspaceBaseEnvironmentsResponse{},
+}
+
+var emptyDefaultWorkspaceBaseEnvironment = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/environments/v1/default-workspace-base-environment?",
+	Response:     environments.DefaultWorkspaceBaseEnvironment{},
 }
 
 var emptyPolicyFamilies = qa.HTTPFixture{
@@ -658,6 +673,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySupervisorAgents,
 			emptyPipelines,
 			emptyClusterPolicies,
+			emptyWorkspaceBaseEnvironments,
+			emptyDefaultWorkspaceBaseEnvironment,
 			emptyPolicyFamilies,
 			emptyWorkspaceConf,
 			allKnownWorkspaceConfsNoData,
@@ -931,6 +948,8 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyWorkspaceConf,
 			emptyInstancePools,
 			emptyClusterPolicies,
+			emptyWorkspaceBaseEnvironments,
+			emptyDefaultWorkspaceBaseEnvironment,
 			allKnownWorkspaceConfsNoData,
 			qa.ListGroupsFixtures([]iam.Group{})[0],
 			emptyGitCredentials,
@@ -1015,6 +1034,8 @@ func TestImportingClusters(t *testing.T) {
 				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: sdk_jobs.ListJobsResponse{},
 			},
+			emptyWorkspaceBaseEnvironments,
+			emptyDefaultWorkspaceBaseEnvironment,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",

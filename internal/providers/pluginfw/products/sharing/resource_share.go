@@ -140,6 +140,13 @@ func shareChanges(si sharing.ShareInfo, action string) sharing.UpdateShare {
 	}
 }
 
+// shareCommentChanged reports whether the plan carries a concrete comment change to send.
+// comment is Optional+Computed, so the planned value can be unknown; IsNull is false for
+// unknown, and ValueString() on it would send a spurious "".
+func shareCommentChanged(planComment, stateComment types.String) bool {
+	return !planComment.IsNull() && !planComment.IsUnknown() && !planComment.Equal(stateComment)
+}
+
 type ShareResource struct {
 	Client *common.DatabricksClient
 }
@@ -156,6 +163,12 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name") // ForceNew
 		c.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "created_at")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "created_by")
+
+		// computed so a comment set outside terraform is adopted rather than failing the
+		// apply: the API stores "" instead of dropping the field, so a null config can
+		// never round-trip to a null server value
+		c.SetComputed("comment")
+		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "comment")
 
 		c.SetRequired("object", "data_object_type")
 		c.SetRequired("object", "partition", "value", "op")
@@ -267,8 +280,6 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	newState.ID = newState.Name
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
@@ -400,14 +411,17 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	upToDateShareInfo := currentShareInfo
-	if len(changes) > 0 || !plan.Comment.IsNull() {
+	commentChanged := shareCommentChanged(plan.Comment, state.Comment)
+	if len(changes) > 0 || commentChanged {
 		// if there are any other changes, update the share with the changes
 		update := sharing.UpdateShare{
 			Name:    plan.Name.ValueString(),
 			Updates: changes,
 		}
-		if !plan.Comment.IsNull() {
+		if commentChanged {
+			// force send so an explicit comment = "" survives omitempty and clears it
 			update.Comment = plan.Comment.ValueString()
+			update.ForceSendFields = append(update.ForceSendFields, "Comment")
 		}
 		upToDateShareInfo, err = w.Shares.Update(ctx, update)
 
@@ -502,7 +516,7 @@ type effectiveFieldsAction interface {
 type effectiveFieldsActionCreateOrUpdate struct{}
 
 func (effectiveFieldsActionCreateOrUpdate) resourceLevel(ctx context.Context, state *ShareInfoExtended, plan sharing_tf.ShareInfo_SdkV2) {
-	state.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	state.SyncFieldsDuringCreateOrUpdate(ctx, withoutObjectsForResourceSync(ctx, plan))
 }
 
 func (effectiveFieldsActionCreateOrUpdate) objectLevel(ctx context.Context, state *sharing_tf.SharedDataObject_SdkV2, plan sharing_tf.SharedDataObject_SdkV2) {
@@ -512,11 +526,18 @@ func (effectiveFieldsActionCreateOrUpdate) objectLevel(ctx context.Context, stat
 type effectiveFieldsActionRead struct{}
 
 func (effectiveFieldsActionRead) resourceLevel(ctx context.Context, state *ShareInfoExtended, plan sharing_tf.ShareInfo_SdkV2) {
-	state.SyncFieldsDuringRead(ctx, plan)
+	state.SyncFieldsDuringRead(ctx, withoutObjectsForResourceSync(ctx, plan))
 }
 
 func (effectiveFieldsActionRead) objectLevel(ctx context.Context, state *sharing_tf.SharedDataObject_SdkV2, plan sharing_tf.SharedDataObject_SdkV2) {
 	state.SyncFieldsDuringRead(ctx, plan)
+}
+
+func withoutObjectsForResourceSync(ctx context.Context, plan sharing_tf.ShareInfo_SdkV2) sharing_tf.ShareInfo_SdkV2 {
+	// Objects are synchronized by name below. Mark them unknown so the generated
+	// parent method does not also synchronize them by list position.
+	plan.Objects = types.ListUnknown(plan.Objects.ElementType(ctx))
+	return plan
 }
 
 // syncEffectiveFields syncs the effective fields between existingState and newState
@@ -548,5 +569,9 @@ func (r *ShareResource) syncEffectiveFields(ctx context.Context, existingState, 
 	}
 	newState.SetObjects(ctx, finalObjects)
 	newState.ProviderConfig = existingState.ProviderConfig // Preserve provider_config from existing state
+	// The synthetic id mirrors the share name. Restore it here so every CRUD path
+	// (notably Read and Update) keeps it set; otherwise a refresh drops id to null,
+	// producing a perpetual plan diff and null downstream references.
+	newState.ID = newState.Name
 	return newState, d
 }

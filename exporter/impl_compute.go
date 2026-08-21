@@ -179,6 +179,61 @@ func listClusterPolicies(ic *importContext) error {
 	return nil
 }
 
+// clusterPolicyReferences builds the Depends references for databricks_cluster_policy.
+// The policy JSON is stored escaped in a single string attribute (either `definition`
+// or `policy_family_definition_overrides`), so references to other objects embedded in
+// it are extracted with regexps. The same set of references applies to both fields.
+// All definition references set ContinueMatch so every one is evaluated and their
+// non-overlapping substitutions are combined; secret and init-script references also
+// set MultiMatch because a single definition can embed several of them, each pointing
+// to a different object.
+func clusterPolicyReferences() []reference {
+	var refs []reference
+	for _, f := range []string{"definition", "policy_family_definition_overrides"} {
+		refs = append(refs,
+			reference{Path: f, Resource: "databricks_instance_pool", ContinueMatch: true,
+				MatchType: MatchRegexp, Regexp: policyInstancePoolIdRegex},
+			reference{Path: f, Resource: "databricks_instance_pool", ContinueMatch: true,
+				MatchType: MatchRegexp, Regexp: policyDriverInstancePoolIdRegex},
+			reference{Path: f, Resource: "databricks_instance_profile", ContinueMatch: true,
+				MatchType: MatchRegexp, Regexp: policyInstanceProfileArnRegex},
+			reference{Path: f, Resource: "databricks_secret", Match: "config_reference",
+				ContinueMatch: true, MultiMatch: true, MatchType: MatchRegexp, Regexp: policySecretRegex},
+			// Fallback for scopes without per-secret resources (e.g. Azure Key Vault
+			// backed scopes): substitute only the scope, keeping the key literal. It
+			// runs after the databricks_secret reference, so tokens already resolved to
+			// a secret are left untouched (their span overlaps and is skipped).
+			reference{Path: f, Resource: "databricks_secret_scope",
+				ContinueMatch: true, MultiMatch: true, MatchType: MatchRegexp, Regexp: policySecretScopeRegex},
+			reference{Path: f, Resource: "databricks_dbfs_file", Match: "dbfs_path",
+				ContinueMatch: true, MultiMatch: true, MatchType: MatchRegexp, Regexp: policyInitScriptDbfsRegex},
+			reference{Path: f, Resource: "databricks_workspace_file", Match: "workspace_path",
+				ContinueMatch: true, MultiMatch: true, MatchType: MatchRegexp, Regexp: policyInitScriptWorkspaceRegex},
+			reference{Path: f, Resource: "databricks_workspace_file", Match: "path",
+				ContinueMatch: true, MultiMatch: true, MatchType: MatchRegexp, Regexp: policyInitScriptWorkspaceRegex},
+			reference{Path: f, Resource: "databricks_file", Match: "path",
+				ContinueMatch: true, MultiMatch: true, MatchType: MatchRegexp, Regexp: policyInitScriptVolumesRegex},
+		)
+	}
+	refs = append(refs,
+		reference{Path: "libraries.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		reference{Path: "libraries.jar", Resource: "databricks_file"},
+		reference{Path: "libraries.jar", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		reference{Path: "libraries.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		reference{Path: "libraries.whl", Resource: "databricks_file"},
+		reference{Path: "libraries.whl", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		reference{Path: "libraries.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		reference{Path: "libraries.egg", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		reference{Path: "libraries.whl", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		reference{Path: "libraries.egg", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		reference{Path: "libraries.jar", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+	)
+	return refs
+}
+
 func importClusterPolicy(ic *importContext, r *resource) error {
 	ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/cluster-policies/%s", r.ID),
 		"cluster_policy_"+ic.Importables["databricks_cluster_policy"].Name(ic, r.Data))
@@ -263,9 +318,11 @@ func importClusterPolicy(ic *importContext, r *resource) error {
 			strings.HasSuffix(k, ".workspace.destination") {
 			ic.emitWorkspaceFileOrRepo(eitherString(value, defaultValue))
 		}
-		if typ == "fixed" && (strings.HasPrefix(k, "spark_conf.") || strings.HasPrefix(k, "spark_env_vars.")) {
-			ic.emitSecretsFromSecretPathString(eitherString(value, defaultValue))
-		}
+		// Secret references may appear in any attribute (spark_conf, spark_env_vars,
+		// docker_image credentials, ...) and with any type - notably policy families
+		// often store them in `defaultValue` with a non-fixed type - so emit the scope
+		// for every `{{secrets/scope/key}}` token regardless of key or type.
+		ic.emitSecretScopesFromString(eitherString(value, defaultValue))
 	}
 
 	for _, lib := range clusterPolicy.Libraries {

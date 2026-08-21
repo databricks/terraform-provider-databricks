@@ -2,7 +2,7 @@
 subcategory: "Postgres"
 ---
 # databricks_postgres_data_api Resource
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/postgres)
 
@@ -25,7 +25,7 @@ Data APIs exist within the Lakebase Autoscaling resource hierarchy:
 
 ### Configuration
 
-`spec` holds the desired Data API configuration. All fields are optional and have reasonable defaults.
+`spec` holds the desired Data API configuration. Each individual field is optional and has a reasonable default, but `spec` itself must be present and set at least one non-default field on create. The natural minimum is `db_schemas = ["public"]`. Creating the resource with an empty or absent `spec` fails with `Field 'data_api' is required and must contain at least one subfield with a non-default value`.
 
 The Data API is wire-compatible with PostgREST and most spec fields are named after the corresponding PostgREST configuration parameter. Where a setting maps to PostgREST, the upstream documentation link is provided and semantics match it unless explicitly noted otherwise. Settings marked **Currently not honored** are accepted, validated, and round-tripped through the API but are ignored by the runtime — they are reserved so configuration set today does not need to be migrated when the behavior is implemented.
 
@@ -69,14 +69,16 @@ Enable the Data API on a Lakebase database with default settings. The `parent` i
 resource "databricks_postgres_project" "this" {
   project_id = "my-project"
   spec = {
-    pg_version   = 17
+    pg_version   = 18
     display_name = "My Project"
   }
 }
 
-resource "databricks_postgres_branch" "main" {
-  branch_id = "main"
-  parent    = databricks_postgres_project.this.name
+# "production" is the implicitly-created default branch; adopt it with replace_existing.
+resource "databricks_postgres_branch" "production" {
+  branch_id        = "production"
+  parent           = databricks_postgres_project.this.name
+  replace_existing = true
   spec = {
     no_expiry = true
   }
@@ -84,27 +86,32 @@ resource "databricks_postgres_branch" "main" {
 
 resource "databricks_postgres_role" "app_owner" {
   role_id = "app-owner"
-  parent  = databricks_postgres_branch.main.name
+  parent  = databricks_postgres_branch.production.name
   spec = {
     postgres_role = "app_owner"
   }
 }
 
-resource "databricks_postgres_database" "app" {
-  database_id = "app"
-  parent      = databricks_postgres_branch.main.name
+resource "databricks_postgres_database" "app_db" {
+  database_id = "app-db"
+  parent      = databricks_postgres_branch.production.name
   spec = {
-    postgres_database = "app"
+    postgres_database = "app_db"
     role              = databricks_postgres_role.app_owner.name
   }
 }
 
-resource "databricks_postgres_data_api" "app" {
-  parent = databricks_postgres_database.app.name
+resource "databricks_postgres_data_api" "app_db" {
+  parent = databricks_postgres_database.app_db.name
+  spec = {
+    # spec must be present with at least one non-default field on create.
+    # db_schemas is the natural minimum; the listed schemas must already exist.
+    db_schemas = ["public"]
+  }
 }
 
 output "data_api_url" {
-  value = databricks_postgres_data_api.app.status.url
+  value = databricks_postgres_data_api.app_db.status.url
 }
 ```
 

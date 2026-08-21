@@ -790,6 +790,19 @@ func (to *GetKnowledgeAssistantPermissionLevelsResponse) SyncFieldsDuringCreateO
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
 	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				// Recursively sync the fields of each PermissionLevels element by position.
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
+	}
 }
 
 func (to *GetKnowledgeAssistantPermissionLevelsResponse) SyncFieldsDuringRead(ctx context.Context, from GetKnowledgeAssistantPermissionLevelsResponse) {
@@ -798,6 +811,18 @@ func (to *GetKnowledgeAssistantPermissionLevelsResponse) SyncFieldsDuringRead(ct
 		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
+	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringRead(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
 	}
 }
 
@@ -1266,6 +1291,19 @@ func (to *KnowledgeAssistantAccessControlResponse) SyncFieldsDuringCreateOrUpdat
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
 	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				// Recursively sync the fields of each AllPermissions element by position.
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
+	}
 }
 
 func (to *KnowledgeAssistantAccessControlResponse) SyncFieldsDuringRead(ctx context.Context, from KnowledgeAssistantAccessControlResponse) {
@@ -1274,6 +1312,18 @@ func (to *KnowledgeAssistantAccessControlResponse) SyncFieldsDuringRead(ctx cont
 		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
+	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringRead(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
 	}
 }
 
@@ -1470,6 +1520,19 @@ func (to *KnowledgeAssistantPermissions) SyncFieldsDuringCreateOrUpdate(ctx cont
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *KnowledgeAssistantPermissions) SyncFieldsDuringRead(ctx context.Context, from KnowledgeAssistantPermissions) {
@@ -1478,6 +1541,18 @@ func (to *KnowledgeAssistantPermissions) SyncFieldsDuringRead(ctx context.Contex
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -1619,6 +1694,19 @@ func (to *KnowledgeAssistantPermissionsRequest) SyncFieldsDuringCreateOrUpdate(c
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *KnowledgeAssistantPermissionsRequest) SyncFieldsDuringRead(ctx context.Context, from KnowledgeAssistantPermissionsRequest) {
@@ -1627,6 +1715,18 @@ func (to *KnowledgeAssistantPermissionsRequest) SyncFieldsDuringRead(ctx context
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -2017,6 +2117,19 @@ func (to *ListExamplesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Examples = from.Examples
 	}
+	if !from.Examples.IsNull() && !from.Examples.IsUnknown() {
+		if toExamples, ok := to.GetExamples(ctx); ok {
+			if fromExamples, ok := from.GetExamples(ctx); ok {
+				// Recursively sync the fields of each Examples element by position.
+				for i := range toExamples {
+					if i < len(fromExamples) {
+						toExamples[i].SyncFieldsDuringCreateOrUpdate(ctx, fromExamples[i])
+					}
+				}
+				to.SetExamples(ctx, toExamples)
+			}
+		}
+	}
 }
 
 func (to *ListExamplesResponse) SyncFieldsDuringRead(ctx context.Context, from ListExamplesResponse) {
@@ -2025,6 +2138,18 @@ func (to *ListExamplesResponse) SyncFieldsDuringRead(ctx context.Context, from L
 		// If a user specified a non-Null, empty list for Examples, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Examples = from.Examples
+	}
+	if !from.Examples.IsNull() && !from.Examples.IsUnknown() {
+		if toExamples, ok := to.GetExamples(ctx); ok {
+			if fromExamples, ok := from.GetExamples(ctx); ok {
+				for i := range toExamples {
+					if i < len(fromExamples) {
+						toExamples[i].SyncFieldsDuringRead(ctx, fromExamples[i])
+					}
+				}
+				to.SetExamples(ctx, toExamples)
+			}
+		}
 	}
 }
 
@@ -2170,6 +2295,19 @@ func (to *ListKnowledgeAssistantsResponse) SyncFieldsDuringCreateOrUpdate(ctx co
 		// set the resulting resource state to the empty list to match the planned value.
 		to.KnowledgeAssistants = from.KnowledgeAssistants
 	}
+	if !from.KnowledgeAssistants.IsNull() && !from.KnowledgeAssistants.IsUnknown() {
+		if toKnowledgeAssistants, ok := to.GetKnowledgeAssistants(ctx); ok {
+			if fromKnowledgeAssistants, ok := from.GetKnowledgeAssistants(ctx); ok {
+				// Recursively sync the fields of each KnowledgeAssistants element by position.
+				for i := range toKnowledgeAssistants {
+					if i < len(fromKnowledgeAssistants) {
+						toKnowledgeAssistants[i].SyncFieldsDuringCreateOrUpdate(ctx, fromKnowledgeAssistants[i])
+					}
+				}
+				to.SetKnowledgeAssistants(ctx, toKnowledgeAssistants)
+			}
+		}
+	}
 }
 
 func (to *ListKnowledgeAssistantsResponse) SyncFieldsDuringRead(ctx context.Context, from ListKnowledgeAssistantsResponse) {
@@ -2178,6 +2316,18 @@ func (to *ListKnowledgeAssistantsResponse) SyncFieldsDuringRead(ctx context.Cont
 		// If a user specified a non-Null, empty list for KnowledgeAssistants, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.KnowledgeAssistants = from.KnowledgeAssistants
+	}
+	if !from.KnowledgeAssistants.IsNull() && !from.KnowledgeAssistants.IsUnknown() {
+		if toKnowledgeAssistants, ok := to.GetKnowledgeAssistants(ctx); ok {
+			if fromKnowledgeAssistants, ok := from.GetKnowledgeAssistants(ctx); ok {
+				for i := range toKnowledgeAssistants {
+					if i < len(fromKnowledgeAssistants) {
+						toKnowledgeAssistants[i].SyncFieldsDuringRead(ctx, fromKnowledgeAssistants[i])
+					}
+				}
+				to.SetKnowledgeAssistants(ctx, toKnowledgeAssistants)
+			}
+		}
 	}
 }
 
@@ -2322,6 +2472,19 @@ func (to *ListKnowledgeSourcesResponse) SyncFieldsDuringCreateOrUpdate(ctx conte
 		// set the resulting resource state to the empty list to match the planned value.
 		to.KnowledgeSources = from.KnowledgeSources
 	}
+	if !from.KnowledgeSources.IsNull() && !from.KnowledgeSources.IsUnknown() {
+		if toKnowledgeSources, ok := to.GetKnowledgeSources(ctx); ok {
+			if fromKnowledgeSources, ok := from.GetKnowledgeSources(ctx); ok {
+				// Recursively sync the fields of each KnowledgeSources element by position.
+				for i := range toKnowledgeSources {
+					if i < len(fromKnowledgeSources) {
+						toKnowledgeSources[i].SyncFieldsDuringCreateOrUpdate(ctx, fromKnowledgeSources[i])
+					}
+				}
+				to.SetKnowledgeSources(ctx, toKnowledgeSources)
+			}
+		}
+	}
 }
 
 func (to *ListKnowledgeSourcesResponse) SyncFieldsDuringRead(ctx context.Context, from ListKnowledgeSourcesResponse) {
@@ -2330,6 +2493,18 @@ func (to *ListKnowledgeSourcesResponse) SyncFieldsDuringRead(ctx context.Context
 		// If a user specified a non-Null, empty list for KnowledgeSources, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.KnowledgeSources = from.KnowledgeSources
+	}
+	if !from.KnowledgeSources.IsNull() && !from.KnowledgeSources.IsUnknown() {
+		if toKnowledgeSources, ok := to.GetKnowledgeSources(ctx); ok {
+			if fromKnowledgeSources, ok := from.GetKnowledgeSources(ctx); ok {
+				for i := range toKnowledgeSources {
+					if i < len(fromKnowledgeSources) {
+						toKnowledgeSources[i].SyncFieldsDuringRead(ctx, fromKnowledgeSources[i])
+					}
+				}
+				to.SetKnowledgeSources(ctx, toKnowledgeSources)
+			}
+		}
 	}
 }
 

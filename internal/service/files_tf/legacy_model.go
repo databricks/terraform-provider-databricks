@@ -729,7 +729,7 @@ func (m DownloadResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type FileInfo_SdkV2 struct {
-	// The length of the file in bytes. This field is omitted for directories.
+	// The length of the file in bytes. Set to 0 for directories.
 	FileSize types.Int64 `tfsdk:"file_size"`
 	// True if the path is a directory.
 	IsDir types.Bool `tfsdk:"is_dir"`
@@ -1131,6 +1131,19 @@ func (to *ListDirectoryResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Contents = from.Contents
 	}
+	if !from.Contents.IsNull() && !from.Contents.IsUnknown() {
+		if toContents, ok := to.GetContents(ctx); ok {
+			if fromContents, ok := from.GetContents(ctx); ok {
+				// Recursively sync the fields of each Contents element by position.
+				for i := range toContents {
+					if i < len(fromContents) {
+						toContents[i].SyncFieldsDuringCreateOrUpdate(ctx, fromContents[i])
+					}
+				}
+				to.SetContents(ctx, toContents)
+			}
+		}
+	}
 }
 
 func (to *ListDirectoryResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListDirectoryResponse_SdkV2) {
@@ -1139,6 +1152,18 @@ func (to *ListDirectoryResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 		// If a user specified a non-Null, empty list for Contents, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Contents = from.Contents
+	}
+	if !from.Contents.IsNull() && !from.Contents.IsUnknown() {
+		if toContents, ok := to.GetContents(ctx); ok {
+			if fromContents, ok := from.GetContents(ctx); ok {
+				for i := range toContents {
+					if i < len(fromContents) {
+						toContents[i].SyncFieldsDuringRead(ctx, fromContents[i])
+					}
+				}
+				to.SetContents(ctx, toContents)
+			}
+		}
 	}
 }
 
@@ -1225,6 +1250,19 @@ func (to *ListStatusResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Files = from.Files
 	}
+	if !from.Files.IsNull() && !from.Files.IsUnknown() {
+		if toFiles, ok := to.GetFiles(ctx); ok {
+			if fromFiles, ok := from.GetFiles(ctx); ok {
+				// Recursively sync the fields of each Files element by position.
+				for i := range toFiles {
+					if i < len(fromFiles) {
+						toFiles[i].SyncFieldsDuringCreateOrUpdate(ctx, fromFiles[i])
+					}
+				}
+				to.SetFiles(ctx, toFiles)
+			}
+		}
+	}
 }
 
 func (to *ListStatusResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListStatusResponse_SdkV2) {
@@ -1233,6 +1271,18 @@ func (to *ListStatusResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 		// If a user specified a non-Null, empty list for Files, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Files = from.Files
+	}
+	if !from.Files.IsNull() && !from.Files.IsUnknown() {
+		if toFiles, ok := to.GetFiles(ctx); ok {
+			if fromFiles, ok := from.GetFiles(ctx); ok {
+				for i := range toFiles {
+					if i < len(fromFiles) {
+						toFiles[i].SyncFieldsDuringRead(ctx, fromFiles[i])
+					}
+				}
+				to.SetFiles(ctx, toFiles)
+			}
+		}
 	}
 }
 

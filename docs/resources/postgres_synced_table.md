@@ -128,6 +128,9 @@ The following arguments are supported:
 
 ### NewPipelineSpec
 * `budget_policy_id` (string, optional) - Budget policy to set on the newly created pipeline
+* `pipeline_channel` (string, optional) - Release channel of the underlying pipeline's runtime.
+  Some source table configurations (e.g., read-time CDF) require PREVIEW.
+  Defaults to CURRENT if not specified. Possible values are: `CURRENT`, `PREVIEW`
 * `storage_catalog` (string, optional) - UC catalog for the pipeline to store intermediate files (checkpoints, event logs etc).
   This needs to be a standard catalog where the user has permissions to create Delta tables
 * `storage_schema` (string, optional) - UC schema for the pipeline to store intermediate files (checkpoints, event logs etc).
@@ -149,6 +152,7 @@ The following arguments are supported:
   At most one of existing_pipeline_id and new_pipeline_spec should be defined.
   
   The pipeline used for the synced table is returned via the top level pipeline_id attribute
+* `extra_columns` (list of SyncedTableSyncedTableSpecExtraColumn, optional) - Extra PostgreSQL-only columns to add to the synced table
 * `new_pipeline_spec` (NewPipelineSpec, optional) - Specification for creating a new pipeline.
   At most one of existing_pipeline_id and new_pipeline_spec should be defined.
   
@@ -171,11 +175,18 @@ The following arguments are supported:
 * `type_overrides` (list of SyncedTableSyncedTableSpecTypeOverride, optional) - Override the default Delta->PG type mapping for specific columns.
   A TypeOverride with PG_SPECIFIC_TYPE_UNSPECIFIED is rejected; a valid pg_type must be set
 
+### SyncedTableSyncedTableSpecExtraColumn
+* `column_name` (string, required) - Name of the column
+* `column_type` (string, required) - PostgreSQL type of the column, for example "tsvector" or "vector(1024)"
+* `compute` (string, optional) - SQL expression used to compute the column's value, for example
+  "to_tsvector('english', content)"
+* `maintenance` (string, optional) - Possible values are: `STORED_GENERATED`
+
 ### SyncedTableSyncedTableSpecTypeOverride
 * `column_name` (string, required) - Name of the source column whose target PostgreSQL type should be overridden
-* `pg_type` (string, required) - PostgreSQL-specific target type to use for the column. Possible values are: `PG_SPECIFIC_TYPE_VECTOR`
-* `size` (integer, optional) - Size parameter for the target type. Required when pg_type is PG_SPECIFIC_TYPE_VECTOR
-  or PG_SPECIFIC_TYPE_HALFVEC (specifies the vector dimension, e.g., 1024)
+* `pg_type` (string, required) - PostgreSQL-specific target type to use for the column. Possible values are: `PG_SPECIFIC_TYPE_HALFVEC`, `PG_SPECIFIC_TYPE_VARCHAR`, `PG_SPECIFIC_TYPE_VECTOR`
+* `size` (integer, optional) - Size parameter for the target type, for types that take one (e.g. vector
+  dimension, varchar length). Required when the chosen pg_type needs a size
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

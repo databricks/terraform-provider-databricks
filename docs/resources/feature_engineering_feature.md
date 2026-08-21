@@ -87,6 +87,11 @@ The following arguments are supported:
   Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
+### CustomUdf
+* `function_path` (string, required) - Fully qualified 3-part Unity Catalog path of the function to apply
+* `input_bindings` (list of InputBinding, optional) - Binds each UC function parameter to a source column.
+  May be empty for zero-argument functions (e.g. a timestamp generator)
+
 ### DataSource
 * `delta_table_source` (DeltaTableSource, optional) - A Delta table data source
 * `kafka_source` (KafkaSource, optional) - A Kafka stream data source
@@ -136,6 +141,7 @@ The following arguments are supported:
 ### Function
 * `aggregation_function` (AggregationFunction, optional) - An aggregation function applied over a time window
 * `column_selection` (ColumnSelection, optional) - Selects the latest value of a single column in a data source
+* `custom_udf` (CustomUdf, optional) - Applies a registered Unity Catalog function row-wise to source columns
 * `extra_parameters` (list of FunctionExtraParameter, optional, deprecated) - Deprecated: Use the function oneof with AggregationFunction instead. Kept for backwards compatibility.
   Extra parameters for parameterized functions
 * `function_type` (string, optional, deprecated) - Deprecated: Use the function oneof with AggregationFunction instead. Kept for backwards compatibility.
@@ -144,6 +150,10 @@ The following arguments are supported:
 ### FunctionExtraParameter
 * `key` (string, required) - The name of the parameter
 * `value` (string, required) - The value of the parameter
+
+### InputBinding
+* `column` (string, required) - Source column whose value is passed for this parameter at execution time
+* `parameter` (string, required) - Name of the UC function parameter
 
 ### JobContext
 * `job_id` (integer, optional) - The job ID where this API invoked
@@ -172,13 +182,6 @@ The following arguments are supported:
 * `job_context` (JobContext, optional) - Job context information including job ID and run ID
 * `notebook_id` (integer, optional) - The notebook ID where this API was invoked
 
-### LongRollingWindow
-* `window_duration` (string, required) - The duration of the rolling window. Must be positive and span more than two days, so that both
-  the batch (N-1 day) and stale-path (N-2 day) partial aggregates are well defined. The duration
-  need not be a whole number of days (e.g. 3 days 15 minutes is allowed)
-* `delay` (string, optional) - The delay applied to the end of the rolling window (must be non-negative).
-  For example, delay=1d shifts the window end 1 day before the evaluation time
-
 ### MaxFunction
 * `input` (string, required) - The input column from which the maximum is computed
 
@@ -189,13 +192,23 @@ The following arguments are supported:
 * `flat_schema` (FlatSchema, optional) - A flat schema with scalar-typed fields only
 
 ### RollingWindow
-* `window_duration` (string, required) - The duration of the rolling window (must be positive)
-* `delay` (string, optional) - The delay applied to the end of the rolling window (must be non-negative).
-  For example, delay=1d shifts the window end 1 day before the evaluation time
+* `delay` (string, optional) - Non-negative analytic lag that evaluates the window this far in the past. Use this for timing
+  variations unrelated to source lateness, such as a 30-day count as of one week ago. If unset,
+  the analytic lag is zero. It composes with source.lateness when both are set
+* `window_duration` (string, optional) - The duration of the rolling window. Must be positive when set; absent means lifetime
+  (aggregate over the entity's entire history)
+
+### SawtoothWindow
+* `delay` (string, optional) - Delay is not currently supported for Sawtooth windows
+* `window_duration` (string, optional) - The duration of the window. Must be positive and span more than two days when set, so that both
+  the batch (N-1 day) and stale-path (N-2 day) partial aggregates are well defined. The duration
+  need not be a whole number of days (e.g. 3 days 15 minutes is allowed). Absent means lifetime
+  (aggregate over the entity's entire history)
 
 ### SlidingWindow
 * `slide_duration` (string, required) - The slide duration (interval by which windows advance, must be positive and less than duration)
-* `window_duration` (string, required) - The duration of the sliding window
+* `window_duration` (string, optional) - The duration of the sliding window. Must be positive when set; absent means lifetime
+  (aggregate over the entity's entire history)
 
 ### StddevPopFunction
 * `input` (string, required) - The input column from which the population standard deviation is computed. For Kafka sources,
@@ -208,7 +221,12 @@ The following arguments are supported:
 
 ### StreamSource
 * `full_name` (string, required) - Three-part full name of the Stream (catalog.schema.stream)
+* `dataframe_schema` (string, optional) - Schema of the resulting dataframe after transformations, in Spark StructType
+  JSON format (from df.schema.json()).
+  Any subsequent functions operate against this dataframe
 * `filter_condition` (string, optional) - The filter condition applied to the source data before aggregation
+* `transformation_sql` (string, optional) - The pipeline runs these SQL statements immediately after conversion into
+  the schema specified on the Stream object
 
 ### SumFunction
 * `input` (string, required) - The input column from which the sum is computed. For Kafka sources, use dot-prefixed path
@@ -218,8 +236,8 @@ The following arguments are supported:
 
 ### TimeWindow
 * `continuous` (ContinuousWindow, optional, deprecated)
-* `long_rolling` (LongRollingWindow, optional) - A long (multi-day) rolling window served via the hybrid batch + streaming path
 * `rolling` (RollingWindow, optional)
+* `sawtooth` (SawtoothWindow, optional) - A sawtooth window served via the hybrid batch + streaming path
 * `sliding` (SlidingWindow, optional)
 * `tumbling` (TumblingWindow, optional)
 

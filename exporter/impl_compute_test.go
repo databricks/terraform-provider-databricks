@@ -77,6 +77,32 @@ func TestClusterPolicy(t *testing.T) {
 	assert.True(t, ic.testEmits["databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/init-script.sh)"])
 }
 
+func TestClusterPolicyEmitsSecretScopes(t *testing.T) {
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
+	d.Set("name", "sec")
+	definition := map[string]map[string]string{
+		// non-fixed type with the secret in defaultValue (typical for policy families)
+		"spark_conf.fs.azure.account.oauth2.client.id": {
+			"type":         "unlimited",
+			"defaultValue": "{{secrets/akv/app-id}}",
+		},
+		// secret in docker image credentials
+		"docker_image.basic_auth.password": {
+			"type":  "fixed",
+			"value": "{{secrets/dkr/pass}}",
+		},
+	}
+	policy, _ := json.Marshal(definition)
+	d.Set("definition", string(policy))
+	ic := importContextForTest()
+	ic.enableServices("secrets,policies,access")
+	ic.meAdmin = true
+	err := ic.Importables["databricks_cluster_policy"].Import(ic, &resource{ID: "abc", Data: d})
+	assert.NoError(t, err)
+	assert.True(t, ic.testEmits["databricks_secret_scope[<unknown>] (id: akv)"])
+	assert.True(t, ic.testEmits["databricks_secret_scope[<unknown>] (id: dkr)"])
+}
+
 func TestPredefinedClusterPolicy(t *testing.T) {
 	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
 	d.Set("policy_family_id", "job-cluster")

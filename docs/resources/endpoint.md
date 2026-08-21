@@ -38,12 +38,27 @@ The following arguments are supported:
 * `parent` (string, required) - The parent resource name of the account under which the endpoint is created.
   Format: `accounts/{account_id}`
 * `region` (string, required) - The cloud provider region where this endpoint is located
+* `aws_vpc_endpoint_info` (AwsVpcEndpointInfo, optional) - Info for an AWS VPC endpoint
 * `azure_private_endpoint_info` (AzurePrivateEndpointInfo, optional) - Info for an Azure private endpoint
+* `gcp_psc_endpoint_info` (GcpPscEndpointInfo, optional) - Info for a GCP Private Service Connect endpoint
+
+### AwsVpcEndpointInfo
+* `aws_vpc_endpoint_id` (string, required) - The ID of the underlying VPC endpoint in AWS. Provided by the customer when
+  registering an existing AWS VPC endpoint
 
 ### AzurePrivateEndpointInfo
 * `private_endpoint_name` (string, required) - The name of the Private Endpoint in the Azure subscription
 * `private_endpoint_resource_guid` (string, required) - The GUID of the Private Endpoint resource in the Azure subscription.
   This is assigned by Azure when the user sets up the Private Endpoint
+
+### GcpPscEndpointInfo
+* `endpoint_region` (string, required) - The GCP region of the PSC connection endpoint. Provided by the customer when registering an
+  existing PSC endpoint. GCP supports only same-region PSC, so this must match the workspace
+  region
+* `project_id` (string, required) - The GCP consumer project ID in which this PSC endpoint is created. Provided by the customer
+  when registering an existing PSC endpoint
+* `psc_endpoint` (string, required) - The name of this PSC connection in the GCP consumer project. Provided by the customer when
+  registering an existing PSC endpoint
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -55,9 +70,18 @@ In addition to the above arguments, the following attributes are exported:
 * `use_case` (string) - The use case that determines the type of network connectivity this endpoint provides.
   This field is automatically determined based on the endpoint configuration and cloud-specific settings. Possible values are: `SERVICE_DIRECT`
 
+### AwsVpcEndpointInfo
+* `aws_account_id` (string) - The AWS account ID in which this VPC endpoint lives
+* `aws_endpoint_service_id` (string) - The ID of the Databricks VPC endpoint service that this endpoint connects to
+
 ### AzurePrivateEndpointInfo
 * `private_endpoint_resource_id` (string) - The full resource ID of the Private Endpoint
 * `private_link_service_id` (string) - The resource ID of the Databricks Private Link Service that this Private Endpoint connects to
+
+### GcpPscEndpointInfo
+* `psc_connection_id` (string) - The ID of the underlying Private Service Connect connection in the GCP consumer project,
+  assigned by GCP when the PSC connection is created
+* `service_attachment_id` (string) - The ID of the Databricks service attachment this PSC endpoint connects to
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

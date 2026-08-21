@@ -13,9 +13,8 @@ subcategory: "Unity Catalog"
 
 ## Arguments
 The following arguments are supported:
-* `mcp_service_id` (string, required) - Leaf identifier for the MCP service (the unqualified name within the
-  parent schema, e.g. "my_mcp_service")
-* `parent` (string, required) - Resource name of the parent schema.
+* `mcp_service_id` (string, required) - Name for the MCP service, e.g. "my_mcp_service"
+* `parent` (string, required) - Name of the parent schema.
   Format: `schemas/{catalog}.{schema}`.
   Each `{...}` component is capped at 255 characters individually
 * `comment` (string, optional) - User-provided description
@@ -41,7 +40,8 @@ The following arguments are supported:
 * `source_connection` (McpServiceConfigSourceConnection, optional) - UC Connection referencing the MCP server
 
 ### McpServiceConfigSourceConnection
-* `name` (string, required)
+* `name` (string, required) - Name of the UC connection that hosts the MCP server, as
+  `connections/{catalog}.{schema}.{connection}`
 
 ### RateLimit
 * `key` (string, required) - Scope key. Determines whether `principal` is required. Possible values are: `RATE_LIMIT_KEY_REQUEST_TAG`, `RATE_LIMIT_KEY_SERVICE`, `RATE_LIMIT_KEY_SERVICE_PRINCIPAL`, `RATE_LIMIT_KEY_USER`, `RATE_LIMIT_KEY_USER_DEFAULT`, `RATE_LIMIT_KEY_USER_GROUP`
@@ -61,8 +61,6 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `browse_only` (boolean) - Whether the caller sees only metadata available through the BROWSE
-  privilege
 * `create_time` (string) - When the MCP service was created
 * `created_by` (string) - Creator identity
 * `effective_owner` (string) - The resolved owner of the MCP service. Falls back to the caller's identity

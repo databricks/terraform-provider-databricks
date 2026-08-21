@@ -145,8 +145,7 @@ type CreateCredentialsRequest_SdkV2 struct {
 	// are `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices` (Azure
 	// DevOps Services, including Microsoft Entra ID authentication),
 	// `gitHubEnterprise`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`
-	// (deprecated by AWS, not accepting new customers).
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`.
 	GitProvider types.String `tfsdk:"git_provider"`
 	// The username provided with your Git provider account and associated with
 	// the credential. For most Git providers it is only used to set the Git
@@ -325,8 +324,7 @@ type CreateRepoRequest_SdkV2 struct {
 	// are `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices` (Azure
 	// DevOps Services, including Microsoft Entra ID authentication),
 	// `gitHubEnterprise`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`
-	// (deprecated by AWS, not accepting new customers).
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`.
 	Provider types.String `tfsdk:"provider"`
 	// If specified, the repo will be created with sparse checkout enabled. You
 	// cannot enable/disable sparse checkout after the repo is created.
@@ -450,8 +448,7 @@ type CreateRepoResponse_SdkV2 struct {
 	Path types.String `tfsdk:"path"`
 	// Git provider of the linked Git repository, e.g. `gitHub`,
 	// `azureDevOpsServices`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`
-	// (deprecated).
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`.
 	Provider types.String `tfsdk:"provider"`
 	// Sparse checkout settings for the Git folder (repo).
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
@@ -694,7 +691,7 @@ type CredentialInfo_SdkV2 struct {
 	// `bitbucketCloud`, `gitLab`, `azureDevOpsServices` (Azure DevOps Services,
 	// including Microsoft Entra ID authentication), `gitHubEnterprise`,
 	// `bitbucketServer` (Bitbucket Data Center), `gitLabEnterpriseEdition`
-	// (GitLab Self-Managed), or `awsCodeCommit` (deprecated).
+	// (GitLab Self-Managed), or `awsCodeCommit`.
 	GitProvider types.String `tfsdk:"git_provider"`
 	// The username provided with your Git provider account and associated with
 	// the credential. For most Git providers it is only used to set the Git
@@ -1240,6 +1237,66 @@ func (m DeleteSecretResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes
 func (m DeleteSecretResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+// Additional metadata about a directory.
+type DirectoryInfo_SdkV2 struct {
+	// Whether the directory is a Git folder, whose contents are
+	// version-controlled by a remote Git repository. How a Git folder is
+	// represented depends on whether it has Git CLI access:
+	//
+	// - A Git folder with Git CLI access has an object type of ``DIRECTORY``,
+	// with this field set to ``true``. - A standard Git folder, which does not
+	// have Git CLI access, has an object type of ``REPO`` and does not include
+	// this field. - A directory that is not Git-backed has this field set to
+	// ``false``.
+	//
+	// Use this field together with ``object_type`` to identify every Git folder
+	// in a workspace.
+	IsGitFolder types.Bool `tfsdk:"is_git_folder"`
+}
+
+func (to *DirectoryInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DirectoryInfo_SdkV2) {
+}
+
+func (to *DirectoryInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DirectoryInfo_SdkV2) {
+}
+
+func (m DirectoryInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["is_git_folder"] = attrs["is_git_folder"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DirectoryInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DirectoryInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DirectoryInfo_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DirectoryInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"is_git_folder": m.IsGitFolder,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DirectoryInfo_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"is_git_folder": types.BoolType,
+		},
 	}
 }
 
@@ -1828,8 +1885,7 @@ type GetRepoResponse_SdkV2 struct {
 	Path types.String `tfsdk:"path"`
 	// Git provider of the linked Git repository, e.g. `gitHub`,
 	// `azureDevOpsServices`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`
-	// (deprecated).
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`.
 	Provider types.String `tfsdk:"provider"`
 	// Sparse checkout settings for the Git folder (repo).
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
@@ -3545,6 +3601,9 @@ func (m MkdirsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type ObjectInfo_SdkV2 struct {
 	// Only applicable to files. The creation UTC timestamp.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
+	// Additional metadata about the directory. Only set for objects of type
+	// ``DIRECTORY``.
+	DirectoryInfo types.List `tfsdk:"directory_info"`
 	// The language of the object. This value is set only if the object type is
 	// ``NOTEBOOK``. For Jupyter (.ipynb) notebooks, this is always ``PYTHON``.
 	Language types.String `tfsdk:"language"`
@@ -3568,13 +3627,32 @@ type ObjectInfo_SdkV2 struct {
 }
 
 func (to *ObjectInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ObjectInfo_SdkV2) {
+	if !from.DirectoryInfo.IsNull() && !from.DirectoryInfo.IsUnknown() {
+		if toDirectoryInfo, ok := to.GetDirectoryInfo(ctx); ok {
+			if fromDirectoryInfo, ok := from.GetDirectoryInfo(ctx); ok {
+				// Recursively sync the fields of DirectoryInfo
+				toDirectoryInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromDirectoryInfo)
+				to.SetDirectoryInfo(ctx, toDirectoryInfo)
+			}
+		}
+	}
 }
 
 func (to *ObjectInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ObjectInfo_SdkV2) {
+	if !from.DirectoryInfo.IsNull() && !from.DirectoryInfo.IsUnknown() {
+		if toDirectoryInfo, ok := to.GetDirectoryInfo(ctx); ok {
+			if fromDirectoryInfo, ok := from.GetDirectoryInfo(ctx); ok {
+				toDirectoryInfo.SyncFieldsDuringRead(ctx, fromDirectoryInfo)
+				to.SetDirectoryInfo(ctx, toDirectoryInfo)
+			}
+		}
+	}
 }
 
 func (m ObjectInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["directory_info"] = attrs["directory_info"].SetOptional()
+	attrs["directory_info"] = attrs["directory_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["language"] = attrs["language"].SetOptional()
 	attrs["modified_at"] = attrs["modified_at"].SetOptional()
 	attrs["object_id"] = attrs["object_id"].SetOptional()
@@ -3594,7 +3672,9 @@ func (m ObjectInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ObjectInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"directory_info": reflect.TypeOf(DirectoryInfo_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -3604,14 +3684,15 @@ func (m ObjectInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"created_at":  m.CreatedAt,
-			"language":    m.Language,
-			"modified_at": m.ModifiedAt,
-			"object_id":   m.ObjectId,
-			"object_type": m.ObjectType,
-			"path":        m.Path,
-			"resource_id": m.ResourceId,
-			"size":        m.Size,
+			"created_at":     m.CreatedAt,
+			"directory_info": m.DirectoryInfo,
+			"language":       m.Language,
+			"modified_at":    m.ModifiedAt,
+			"object_id":      m.ObjectId,
+			"object_type":    m.ObjectType,
+			"path":           m.Path,
+			"resource_id":    m.ResourceId,
+			"size":           m.Size,
 		})
 }
 
@@ -3619,7 +3700,10 @@ func (m ObjectInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m ObjectInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"created_at":  types.Int64Type,
+			"created_at": types.Int64Type,
+			"directory_info": basetypes.ListType{
+				ElemType: DirectoryInfo_SdkV2{}.Type(ctx),
+			},
 			"language":    types.StringType,
 			"modified_at": types.Int64Type,
 			"object_id":   types.Int64Type,
@@ -3629,6 +3713,32 @@ func (m ObjectInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"size":        types.Int64Type,
 		},
 	}
+}
+
+// GetDirectoryInfo returns the value of the DirectoryInfo field in ObjectInfo_SdkV2 as
+// a DirectoryInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ObjectInfo_SdkV2) GetDirectoryInfo(ctx context.Context) (DirectoryInfo_SdkV2, bool) {
+	var e DirectoryInfo_SdkV2
+	if m.DirectoryInfo.IsNull() || m.DirectoryInfo.IsUnknown() {
+		return e, false
+	}
+	var v []DirectoryInfo_SdkV2
+	d := m.DirectoryInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDirectoryInfo sets the value of the DirectoryInfo field in ObjectInfo_SdkV2.
+func (m *ObjectInfo_SdkV2) SetDirectoryInfo(ctx context.Context, v DirectoryInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["directory_info"]
+	m.DirectoryInfo = types.ListValueMust(t, vs)
 }
 
 type PutAcl_SdkV2 struct {
@@ -3962,8 +4072,7 @@ type RepoInfo_SdkV2 struct {
 	Path types.String `tfsdk:"path"`
 	// Git provider of the remote git repository, e.g. `gitHub`,
 	// `azureDevOpsServices`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`
-	// (deprecated).
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`.
 	Provider types.String `tfsdk:"provider"`
 	// Sparse checkout config for the git folder (repo).
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
@@ -4839,8 +4948,7 @@ type UpdateCredentialsRequest_SdkV2 struct {
 	// are `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices` (Azure
 	// DevOps Services, including Microsoft Entra ID authentication),
 	// `gitHubEnterprise`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`
-	// (deprecated by AWS, not accepting new customers).
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`.
 	GitProvider types.String `tfsdk:"git_provider"`
 	// The username provided with your Git provider account and associated with
 	// the credential. For most Git providers it is only used to set the Git

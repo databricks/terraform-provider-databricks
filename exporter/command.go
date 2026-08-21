@@ -11,6 +11,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/useragent"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"golang.org/x/exp/maps"
 )
@@ -133,9 +134,18 @@ func Run(args ...string) error {
 	if err != nil {
 		return err
 	}
+	flags.Visit(func(f *flag.Flag) {
+		if f.Name == "services" || f.Name == "listing" {
+			skipInteractive = true
+		}
+	})
 
 	configureExporterLogging(debug, trace)
 	log.Printf("[WARN] This tooling is experimental and provided as is. It has an evolving interface, which may change or be removed in future versions of the provider.")
+
+	// Mark all requests made by the exporter with a dedicated user agent dimension,
+	// so that exporter usage can be distinguished from regular provider usage.
+	useragent.WithUserAgentExtra("exporter", common.Version())
 
 	client, err := client.New(&config.Config{})
 	if err != nil {

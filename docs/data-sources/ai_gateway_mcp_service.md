@@ -25,8 +25,6 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `browse_only` (boolean) - Whether the caller sees only metadata available through the BROWSE
-  privilege
 * `comment` (string) - User-provided description
 * `config` (McpServiceConfig) - Operational configuration: connection, tool selectors, rate limit.
   Required on CreateMcpService; on
@@ -64,7 +62,8 @@ The following attributes are exported:
 
 ### McpServiceConfigSourceConnection
 * `is_deleted` (boolean)
-* `name` (string)
+* `name` (string) - Name of the UC connection that hosts the MCP server, as
+  `connections/{catalog}.{schema}.{connection}`
 
 ### RateLimit
 * `key` (string) - Scope key. Determines whether `principal` is required. Possible values are: `RATE_LIMIT_KEY_REQUEST_TAG`, `RATE_LIMIT_KEY_SERVICE`, `RATE_LIMIT_KEY_SERVICE_PRINCIPAL`, `RATE_LIMIT_KEY_USER`, `RATE_LIMIT_KEY_USER_DEFAULT`, `RATE_LIMIT_KEY_USER_GROUP`

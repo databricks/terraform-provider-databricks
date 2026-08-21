@@ -50,6 +50,7 @@ func (a AppResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBu
 	s["provider_config"] = pcBuilder
 	s["compute_size"] = s["compute_size"].SetComputed()
 	s = apps_tf.App{}.ApplySchemaCustomizations(s)
+	s["forward_user_access_token"] = s["forward_user_access_token"].SetComputed()
 	return s
 }
 

@@ -126,7 +126,7 @@ All arguments are optional, and they tune what code is being generated.
   ```
 
   The script generates comprehensive three-way mappings (~99.5% coverage) using similarity scoring based on cores, memory, category, and disk configuration. See `exporter/AGENTS.md` for detailed algorithm documentation.
-* `-skip-interactive` - optionally run in a non-interactive mode.
+* `-skip-interactive` - run in a non-interactive mode.  *This option is enabled automatically when you specify either `-listing` or `-services` option.*
 * `-includeUserDomains` - optionally include the domain name in the generated resource name for `databricks_user` resource.
 * `-importAllUsers` - optionally includes all users and service principals even if they are only part of the `users` group.
 * `-exportDeletedUsersAssets` - optionally include assets of deleted users and service principals.
@@ -228,6 +228,10 @@ Migration between Databricks accounts should be done in multiple steps:
 3. Apply account-level export to a new account.  Extract application IDs of newly created service principals.
 4. Adjust service principal IDs in the workspace export.
 5. Apply workspace export to a new workspace.
+
+### Account ID variable
+
+For account-level exports, the exporter emits a single `databricks_account_id` variable in `vars.tf` (with the current account ID as its default) and references it from the generated provider block and from account-scoped resource attributes (for example, `databricks_endpoint.parent` and `databricks_access_control_rule_set.name`).  To point the generated configuration at a different account, override this one variable (via `-var`, an environment variable, or `terraform.tfvars`) instead of editing every occurrence.
 
 ## Services
 
@@ -331,6 +335,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_database_instance](../resources/database_instance.md) | Yes | No | Yes | No |
 | [databricks_data_quality_monitor](../resources/data_quality_monitor.md) | Yes | Yes | Yes | No |
 | [databricks_dbfs_file](../resources/dbfs_file.md) | Yes | No | Yes | No |
+| [databricks_endpoint](../resources/endpoint.md) | Yes | No | No | Yes |
 | [databricks_external_location](../resources/external_location.md) | Yes | Yes | Yes | No |
 | [databricks_file](../resources/file.md) | Yes | No | Yes | No |
 | [databricks_global_init_script](../resources/global_init_script.md) | Yes | Yes | Yes\*\* | No |

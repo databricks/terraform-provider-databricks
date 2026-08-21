@@ -29,18 +29,16 @@ func DataSourceModelServices() datasource.DataSource {
 // ModelServicesData extends the main model with additional fields.
 type ModelServicesData struct {
 	AiGateway types.List `tfsdk:"model_services"`
-	// Whether to include model services for which the principal can only access
-	// selective metadata.
-	IncludeBrowse types.Bool `tfsdk:"include_browse"`
 	// Maximum number of model services to return. Defaults to 100 when unset or
-	// 0; the maximum is 1000. Use `next_page_token` to retrieve additional
-	// pages.
+	// 0; the maximum is 100. Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"page_size"`
-	// Resource name of the parent schema to list within, as
+	// Name of the parent schema to list within, as
 	// `schemas/{catalog}.{schema}`. Each `{...}` component is capped at 255
 	// characters individually.
 	Parent types.String `tfsdk:"parent"`
-	// View selector controlling which fields are populated per row.
+	// View selector controlling which fields are populated per row. `FULL`
+	// returns the full representation of the service; `BASIC` returns a more
+	// compact version. Defaults to `BASIC` when unset.
 	View               types.String `tfsdk:"view"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
@@ -55,7 +53,6 @@ func (ModelServicesData) GetComplexFieldTypes(context.Context) map[string]reflec
 func (m ModelServicesData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["parent"] = attrs["parent"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 	attrs["view"] = attrs["view"].SetOptional()
 
 	attrs["model_services"] = attrs["model_services"].SetComputed()

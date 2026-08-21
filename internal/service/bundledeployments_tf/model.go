@@ -17,7 +17,6 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
@@ -181,110 +180,6 @@ func (m *CreateDeploymentRequest) GetDeployment(ctx context.Context) (Deployment
 func (m *CreateDeploymentRequest) SetDeployment(ctx context.Context, v Deployment) {
 	vs := v.ToObjectValue(ctx)
 	m.Deployment = vs
-}
-
-type CreateOperationRequest struct {
-	// The resource operation to create.
-	Operation types.Object `tfsdk:"operation"`
-	// The parent version where this operation will be recorded. Format:
-	// deployments/{deployment_id}/versions/{version_id}
-	Parent types.String `tfsdk:"-"`
-	// The key identifying the resource this operation applies to. Becomes the
-	// final component of the operation's name.
-	ResourceKey types.String `tfsdk:"-"`
-}
-
-func (to *CreateOperationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateOperationRequest) {
-	if !from.Operation.IsNull() && !from.Operation.IsUnknown() {
-		if toOperation, ok := to.GetOperation(ctx); ok {
-			if fromOperation, ok := from.GetOperation(ctx); ok {
-				// Recursively sync the fields of Operation
-				toOperation.SyncFieldsDuringCreateOrUpdate(ctx, fromOperation)
-				to.SetOperation(ctx, toOperation)
-			}
-		}
-	}
-}
-
-func (to *CreateOperationRequest) SyncFieldsDuringRead(ctx context.Context, from CreateOperationRequest) {
-	if !from.Operation.IsNull() && !from.Operation.IsUnknown() {
-		if toOperation, ok := to.GetOperation(ctx); ok {
-			if fromOperation, ok := from.GetOperation(ctx); ok {
-				toOperation.SyncFieldsDuringRead(ctx, fromOperation)
-				to.SetOperation(ctx, toOperation)
-			}
-		}
-	}
-}
-
-func (m CreateOperationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["operation"] = attrs["operation"].SetRequired()
-	attrs["parent"] = attrs["parent"].SetRequired()
-	attrs["resource_key"] = attrs["resource_key"].SetRequired()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateOperationRequest.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (m CreateOperationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"operation": reflect.TypeOf(Operation{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateOperationRequest
-// only implements ToObjectValue() and Type().
-func (m CreateOperationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"operation":    m.Operation,
-			"parent":       m.Parent,
-			"resource_key": m.ResourceKey,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (m CreateOperationRequest) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"operation":    Operation{}.Type(ctx),
-			"parent":       types.StringType,
-			"resource_key": types.StringType,
-		},
-	}
-}
-
-// GetOperation returns the value of the Operation field in CreateOperationRequest as
-// a Operation value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *CreateOperationRequest) GetOperation(ctx context.Context) (Operation, bool) {
-	var e Operation
-	if m.Operation.IsNull() || m.Operation.IsUnknown() {
-		return e, false
-	}
-	var v Operation
-	d := m.Operation.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetOperation sets the value of the Operation field in CreateOperationRequest.
-func (m *CreateOperationRequest) SetOperation(ctx context.Context, v Operation) {
-	vs := v.ToObjectValue(ctx)
-	m.Operation = vs
 }
 
 type CreateVersionRequest struct {
@@ -513,7 +408,9 @@ func (m DeleteDeploymentRequest) Type(ctx context.Context) attr.Type {
 type Deployment struct {
 	// When the deployment was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The user who created the deployment (email or principal name).
+	// The user who created the deployment (email or principal name). Empty if
+	// authoritative deployment metadata does not identify a creator or the
+	// principal cannot be resolved.
 	CreatedBy types.String `tfsdk:"created_by"`
 	// Bundle target deployment mode (development or production), derived from
 	// the most recent version's mode.
@@ -558,7 +455,8 @@ type Deployment struct {
 	// When the deployment was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// The user who most recently updated the deployment (email or principal
-	// name).
+	// name). Empty if authoritative deployment metadata does not identify a
+	// modifier or the principal cannot be resolved.
 	UpdatedBy types.String `tfsdk:"updated_by"`
 	// Workspace location of the deployment, derived from the latest version.
 	WorkspaceInfo types.Object `tfsdk:"workspace_info"`
@@ -1107,7 +1005,7 @@ func (m HeartbeatResponse) Type(ctx context.Context) attr.Type {
 type ListDeploymentsRequest struct {
 	// The maximum number of deployments to return. The service may return fewer
 	// than this value. If unspecified, at most 20 deployments will be returned.
-	// The maximum value is 100; values above 100 will be coerced to 100.
+	// The maximum value is 1000; values above 1000 will be coerced to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token, received from a previous `ListDeployments` call. Provide
 	// this to retrieve the subsequent page.
@@ -1832,17 +1730,23 @@ func (m *ListVersionsResponse) SetVersions(ctx context.Context, v []Version) {
 	m.Versions = types.ListValueMust(t, vs)
 }
 
-// An operation on a single resource performed during a version. Operations
-// record the result of applying a resource change to the workspace. Most fields
-// are immutable once recorded; `state`, `error_message`, `resource_id`, and
-// `status` may be updated afterwards (via UpdateOperation), guarded by
-// `sequence_id` for optimistic concurrency control.
+// An operation on a single resource performed during a version. The full set of
+// operations for a version is recorded when the version is created: each
+// carries its `resource_key` and `action_type` and starts in
+// `OPERATION_STATUS_PENDING`. As each resource is applied, its operation is
+// updated (via UpdateOperation) to record the result of applying the change to
+// the workspace. `state`, `error_message`, `resource_id`, `status`, and
+// `dashboard_metadata` may be updated afterwards, guarded by `sequence_id` for
+// optimistic concurrency control; all other fields are immutable once recorded.
 type Operation struct {
-	// The type of operation performed on this resource.
+	// The type of operation performed on this resource. Set when the version is
+	// created and immutable thereafter.
 	ActionType types.String `tfsdk:"action_type"`
 	// When the operation was recorded.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Dashboard-specific metadata; set only for dashboard resources.
+	// Dashboard-specific metadata; set only for dashboard resources. Mutable:
+	// may be set or updated via UpdateOperation as the resource is applied, and
+	// is mirrored onto the corresponding deployment-level resource.
 	DashboardMetadata types.Object `tfsdk:"dashboard_metadata"`
 	// Error message if the operation failed. Set when status is
 	// OPERATION_STATUS_FAILED. Captures the error encountered while applying
@@ -1855,15 +1759,16 @@ type Operation struct {
 	// deployments/{deployment_id}/versions/{version_id}/operations/{resource_key}
 	Name types.String `tfsdk:"name"`
 	// ID of the actual resource in the workspace (e.g. the job ID, pipeline
-	// ID). Optional at creation: CREATE and RECREATE operations produce a new
-	// resource whose ID is not yet known when the operation is recorded.
-	// Mutable: may be filled in (or corrected) later via UpdateOperation once
-	// the ID is known.
+	// ID). Required whenever `state` is set, because state records a resource
+	// that exists. A CREATE or RECREATE that has not produced its resource yet
+	// records neither. Mutable: may be filled in (or corrected) later via
+	// UpdateOperation once the ID is known.
 	ResourceId types.String `tfsdk:"resource_id"`
 	// Resource identifier within the bundle (e.g. "jobs.foo", "pipelines.bar",
 	// "jobs.foo.permissions", "files.<rel-path>"). Can be an arbitrary UTF-8
 	// encoded string key. This key links the operation to the corresponding
-	// deployment-level Resource.
+	// deployment-level Resource. Set when the version is created and immutable
+	// thereafter.
 	ResourceKey types.String `tfsdk:"resource_key"`
 	// The type of the deployment resource this operation applies to. Derived
 	// from the `resource_key` prefix (e.g. "jobs" → JOB); the caller does not
@@ -1871,23 +1776,45 @@ type Operation struct {
 	ResourceType types.String `tfsdk:"resource_type"`
 	// Monotonically increasing revision used for optimistic concurrency control
 	// (the AIP-154 concurrency token for this resource, realized as a sequence
-	// number rather than an opaque etag). The server assigns 1 on creation and
-	// increments it on every successful UpdateOperation. It is OPTIONAL rather
-	// than OUTPUT_ONLY because it is dual-purpose: CreateOperation/GetOperation
-	// return the current value, and UpdateOperation reads the caller-supplied
-	// value as a precondition. The caller must echo the value it last observed;
-	// if it no longer matches the server's value, the update is rejected with
-	// ABORTED so the caller can re-read and retry. Ignored on CreateOperation.
+	// number rather than an opaque etag). The server assigns 0 when the
+	// operation is created and increments it on every successful
+	// UpdateOperation, so a never-updated operation is at 0 and the first
+	// successful update makes it 1. It is OPTIONAL rather than OUTPUT_ONLY
+	// because it is dual-purpose: GetOperation returns the current value, and
+	// UpdateOperation reads the caller-supplied value as a precondition. The
+	// caller must echo the value it last observed; if it no longer matches the
+	// server's value, the update is rejected with ABORTED so the caller can
+	// re-read and retry.
 	SequenceId types.Int64 `tfsdk:"sequence_id"`
-	// Serialized local config state after the operation. Should be unset for
-	// delete operations. Mutable: may be updated after creation via
-	// UpdateOperation. When updating, the caller must echo the last-observed
-	// `sequence_id` as a concurrency precondition.
-	State jsontypes.Normalized `tfsdk:"state"`
-	// Whether the operation succeeded or failed. Mutable: may be updated after
-	// creation via UpdateOperation, e.g. when an operation recorded as failed
-	// is retried and eventually succeeds. A succeeded operation cannot carry an
-	// `error_message`.
+	// Serialized local config state after the operation. Its presence records
+	// whether the resource still exists, so an operation that records no state
+	// removes its resource from the deployment. It may be unset only for an
+	// operation that left no resource behind: a `DELETE` that succeeded, or a
+	// `CREATE` or `RECREATE` that failed. It is required otherwise, including
+	// for a failed `DELETE`, whose resource survives.
+	//
+	// Mutable: may be updated after creation via UpdateOperation. When
+	// updating, the caller must echo the last-observed `sequence_id` as a
+	// concurrency precondition.
+	//
+	// Opaque to this service: the string is stored and returned unchanged. This
+	// is deliberately not google.protobuf.Value, whose only numeric case is
+	// `double number_value`, so parsing the client's JSON into it rewrites
+	// every integer as a double - `1` reads back as `1.0`, which no longer
+	// deserializes into an integer field - and silently loses precision above
+	// 2^53, which is within range for IDs the client records.
+	//
+	// A string rather than bytes: the payload is always UTF-8 JSON, and proto3
+	// JSON maps bytes to base64, which inflates every request and response by a
+	// third and makes state unreadable in logs and API responses. Both generate
+	// the same OpenAPI schema ("type": "string"), so the SDKs are identical
+	// either way.
+	State types.String `tfsdk:"state"`
+	// Status of the operation. Starts as OPERATION_STATUS_PENDING when the
+	// version is created and moves to a terminal status once the resource is
+	// applied. Mutable: updated via UpdateOperation, e.g. when an operation
+	// recorded as failed is retried and eventually succeeds. A succeeded
+	// operation cannot carry an `error_message`.
 	Status types.String `tfsdk:"status"`
 	// When the operation was last updated. Set to `create_time` when the
 	// operation is created and to the server timestamp on each successful
@@ -1919,11 +1846,10 @@ func (to *Operation) SyncFieldsDuringRead(ctx context.Context, from Operation) {
 }
 
 func (m Operation) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["action_type"] = attrs["action_type"].SetRequired()
+	attrs["action_type"] = attrs["action_type"].SetOptional()
 	attrs["action_type"] = attrs["action_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["dashboard_metadata"] = attrs["dashboard_metadata"].SetOptional()
-	attrs["dashboard_metadata"] = attrs["dashboard_metadata"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["error_message"] = attrs["error_message"].SetOptional()
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["resource_id"] = attrs["resource_id"].SetOptional()
@@ -1932,7 +1858,7 @@ func (m Operation) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["resource_type"] = attrs["resource_type"].SetComputed()
 	attrs["sequence_id"] = attrs["sequence_id"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
-	attrs["status"] = attrs["status"].SetRequired()
+	attrs["status"] = attrs["status"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 
 	return attrs
@@ -1986,7 +1912,7 @@ func (m Operation) Type(ctx context.Context) attr.Type {
 			"resource_key":       types.StringType,
 			"resource_type":      types.StringType,
 			"sequence_id":        types.Int64Type,
-			"state":              jsontypes.NormalizedType{},
+			"state":              types.StringType,
 			"status":             types.StringType,
 			"update_time":        timetypes.RFC3339{}.Type(ctx),
 		},
@@ -2038,8 +1964,10 @@ type Resource struct {
 	ResourceKey types.String `tfsdk:"resource_key"`
 	// The type of the deployment resource.
 	ResourceType types.String `tfsdk:"resource_type"`
-	// Serialized local config state (what the CLI deployed).
-	State jsontypes.Normalized `tfsdk:"state"`
+	// Serialized local config state (what the CLI deployed). Opaque to this
+	// service; see Operation.state for why this is a string and not
+	// google.protobuf.Value.
+	State types.String `tfsdk:"state"`
 	// When the last operation that updated this resource's recorded state was
 	// applied. Pairs with last_action_type and last_version_id (all three
 	// advance together on that write).
@@ -2128,7 +2056,7 @@ func (m Resource) Type(ctx context.Context) attr.Type {
 			"resource_id":        types.StringType,
 			"resource_key":       types.StringType,
 			"resource_type":      types.StringType,
-			"state":              jsontypes.NormalizedType{},
+			"state":              types.StringType,
 			"update_time":        timetypes.RFC3339{}.Type(ctx),
 		},
 	}
@@ -2169,8 +2097,8 @@ type UpdateOperationRequest struct {
 	// Operation). All other fields are ignored.
 	Operation types.Object `tfsdk:"operation"`
 	// The set of fields to update. Required; supported paths are `state`,
-	// `error_message`, `resource_id`, and `status`. An empty mask or any other
-	// path is rejected with INVALID_PARAMETER_VALUE.
+	// `error_message`, `resource_id`, `status`, and `dashboard_metadata`. An
+	// empty mask or any other path is rejected with INVALID_PARAMETER_VALUE.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

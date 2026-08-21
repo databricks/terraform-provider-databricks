@@ -238,6 +238,45 @@ resource "databricks_grant" "udf_data_analysts" {
 }
 ```
 
+## Model service grants
+
+See [databricks_grants Model service grants](grants.md#model-service-grants) for the list of privileges that apply to model services.
+
+```hcl
+resource "databricks_grant" "model_service" {
+  model_service = "main.default.my_model_service"
+
+  principal  = "account users"
+  privileges = ["EXECUTE"]
+}
+```
+
+## Model provider service grants
+
+See [databricks_grants Model provider service grants](grants.md#model-provider-service-grants) for the list of privileges that apply to model provider services.
+
+```hcl
+resource "databricks_grant" "model_provider_service" {
+  model_provider_service = "main.default.my_provider"
+
+  principal  = "account users"
+  privileges = ["EXECUTE"]
+}
+```
+
+## MCP service grants
+
+See [databricks_grants MCP service grants](grants.md#mcp-service-grants) for the list of privileges that apply to MCP services.
+
+```hcl
+resource "databricks_grant" "mcp_service" {
+  mcp_service = "main.default.my_mcp_service"
+
+  principal  = "account users"
+  privileges = ["EXECUTE"]
+}
+```
+
 ## Service credential grants
 
 See [databricks_grants Service credential grants](grants.md#service-credential-grants) for the list of privileges that apply to Service credentials.

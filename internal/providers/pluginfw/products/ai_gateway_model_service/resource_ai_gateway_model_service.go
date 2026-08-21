@@ -110,9 +110,6 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 
 // ModelService extends the main model with additional fields.
 type ModelService struct {
-	// Whether the caller sees only metadata available through the BROWSE
-	// privilege.
-	BrowseOnly types.Bool `tfsdk:"browse_only"`
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
 	// Operational configuration: destinations, routing, rate limits, inference
@@ -135,8 +132,7 @@ type ModelService struct {
 	Etag types.String `tfsdk:"etag"`
 	// Metastore hosting the model service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
-	// Leaf identifier for the model service (the unqualified name within the
-	// parent schema, e.g. "my_model_service").
+	// Name for the model service, e.g. "my_model_service".
 	ModelServiceId types.String `tfsdk:"model_service_id"`
 	// Resource name of the model service. Format:
 	// `model-services/{catalog}.{schema}.{model_service}`. Each `{...}`
@@ -147,8 +143,8 @@ type ModelService struct {
 	// The owner of the model service. Write-only; read owner via
 	// effective_owner.
 	Owner types.String `tfsdk:"owner"`
-	// Resource name of the parent schema. Format: `schemas/{catalog}.{schema}`.
-	// Each `{...}` component is capped at 255 characters individually.
+	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
+	// `{...}` component is capped at 255 characters individually.
 	Parent types.String `tfsdk:"parent"`
 	// Unified API types this endpoint supports (e.g. "chat", "embeddings",
 	// "completions"). Derived from the destinations' backing models / providers
@@ -185,8 +181,7 @@ func (m ModelService) GetComplexFieldTypes(ctx context.Context) map[string]refle
 func (m ModelService) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{"browse_only": m.BrowseOnly,
-			"comment":             m.Comment,
+		map[string]attr.Value{"comment": m.Comment,
 			"config":              m.Config,
 			"create_time":         m.CreateTime,
 			"created_by":          m.CreatedBy,
@@ -210,8 +205,7 @@ func (m ModelService) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 // and contains additional fields.
 func (m ModelService) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"browse_only": types.BoolType,
-			"comment":          types.StringType,
+		AttrTypes: map[string]attr.Type{"comment": types.StringType,
 			"config":           catalog_tf.ModelServiceConfig{}.Type(ctx),
 			"create_time":      timetypes.RFC3339{}.Type(ctx),
 			"created_by":       types.StringType,
@@ -299,7 +293,6 @@ func (to *ModelService) SyncFieldsDuringRead(ctx context.Context, from ModelServ
 }
 
 func (m ModelService) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["config"] = attrs["config"].SetOptional()
 	attrs["create_time"] = attrs["create_time"].SetComputed()

@@ -270,7 +270,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `seg` - **listing** [databricks_account_network_policy](../resources/account_network_policy.md).
 * `settings` - **listing** [databricks_notification_destination](../resources/notification_destination.md), [databricks_workspace_setting_v2](../resources/workspace_setting_v2.md), and [databricks_account_setting_v2](../resources/account_setting_v2.md) (account-level).
 * `sql-dashboards` - **listing** Legacy [databricks_sql_dashboard](../resources/sql_dashboard.md) along with associated [databricks_sql_widget](../resources/sql_widget.md) and [databricks_sql_visualization](../resources/sql_visualization.md).
-* `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md).
+* `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md) and [databricks_warehouses_default_warehouse_override](../resources/warehouses_default_warehouse_override.md).
 * `storage` - only [databricks_dbfs_file](../resources/dbfs_file.md) and [databricks_file](../resources/file.md) referenced in other resources (libraries, init scripts, ...) will be downloaded locally and properly arranged into the Terraform state.
 * `uc-artifact-allowlist` - **listing** exports [databricks_artifact_allowlist](../resources/artifact_allowlist.md) resources for Unity Catalog Allow Lists attached to the current metastore.
 * `uc-catalogs` - **listing** [databricks_catalog](../resources/catalog.md) and [databricks_workspace_binding](../resources/workspace_binding.md)
@@ -415,6 +415,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_vector_search_endpoint](../resources/vector_search_endpoint.md) | Yes | No | Yes | No |
 | [databricks_vector_search_index](../resources/vector_search_index.md) | Yes | No | Yes | No |
 | [databricks_volume](../resources/volume.md) | Yes | Yes | Yes | No |
+| [databricks_warehouses_default_warehouse_override](../resources/warehouses_default_warehouse_override.md) | Yes | No | Yes | No |
 | [databricks_workspace_binding](../resources/workspace_binding.md) | Yes | No | Yes | No |
 | [databricks_workspace_conf](../resources/workspace_conf.md) | Yes (partial) | No | Yes\*\* | No |
 | [databricks_workspace_file](../resources/workspace_file.md) | Yes | Yes | Yes | No |

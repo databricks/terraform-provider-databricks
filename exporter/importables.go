@@ -815,6 +815,25 @@ var resourcesMap map[string]importable = map[string]importable{
 			return pathString == "enable_serverless_compute"
 		},
 	},
+	"databricks_warehouses_default_warehouse_override": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "sql-endpoints",
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			// The resource name is `default-warehouse-overrides/{default_warehouse_override_id}`,
+			// where the ID component is the user ID the override applies to.
+			if id := defaultWarehouseOverrideId(wrapper.Id()); id != "" {
+				return "default_warehouse_override_" + id
+			}
+			return generateUniqueID(wrapper.Id())
+		},
+		List:   listWarehouseDefaultOverrides,
+		Import: importWarehouseDefaultOverride,
+		Depends: []reference{
+			{Path: "default_warehouse_override_id", Resource: "databricks_user"},
+			{Path: "warehouse_id", Resource: "databricks_sql_endpoint"},
+		},
+	},
 	"databricks_sql_global_config": {
 		WorkspaceLevel: true,
 		Service:        "wsconf",

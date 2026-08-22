@@ -200,9 +200,50 @@ func importUcSchema(ic *importContext, r *resource) error {
 		}
 	}
 
+	if ic.isServiceInListing("uc-secrets") {
+		it := ic.workspaceClient.SecretsUc.ListSecrets(ic.Context, catalog.ListSecretsRequest{
+			CatalogName: catalogName,
+			SchemaName:  schemaName,
+		})
+		for it.HasNext(ic.Context) {
+			secret, err := it.Next(ic.Context)
+			if err != nil {
+				return err // TODO: should we continue?
+			}
+			ic.Emit(&resource{
+				Resource:  "databricks_secret_uc",
+				ID:        secret.FullName,
+				DependsOn: dependsOn,
+			})
+		}
+	}
+
 	// Emit RFA access request destinations if configured
 	ic.emitRfaAccessRequestDestinations("SCHEMA", schemaFullName)
 
+	return nil
+}
+
+func importUcSecret(ic *importContext, r *resource) error {
+	// The `value` field is input-only and not returned by the read API, so it's always
+	// generated as a variable reference (see the `value` entry in Depends). When the
+	// `-export-secrets` flag is set, we fetch the actual value and populate the variable;
+	// otherwise the variable is emitted empty for the user to fill in.
+	if ic.exportSecrets {
+		resp, err := ic.workspaceClient.SecretsUc.GetSecret(ic.Context, catalog.GetSecretRequest{
+			FullName:     r.ID,
+			IncludeValue: true,
+		})
+		if err != nil {
+			// Reading the value requires the READ_SECRET privilege, which the caller may
+			// not have for every secret. Don't fail the whole resource export in that case:
+			// the value is still emitted as a variable for the user to fill in manually.
+			log.Printf("[WARN] Can't read value of the UC secret %s: %s", r.ID, err.Error())
+			return nil
+		}
+		varName := ic.generateVariableName("value", ic.ResourceName(r))
+		ic.addTfVar(varName, resp.EffectiveValue)
+	}
 	return nil
 }
 
@@ -406,6 +447,21 @@ func shouldOmitWithIsolationMode(ic *importContext, pathString string, as *schem
 	return shouldOmitForUnityCatalog(ic, pathString, as, d, r)
 }
 
+// resourceGetString reads a string attribute from a resource, working for both SDKv2
+// (via res.Data) and Plugin Framework (via res.DataWrapper) resources. It returns an
+// empty string if the attribute is missing or not a string.
+func resourceGetString(res *resource, key string) string {
+	if res.DataWrapper != nil {
+		v, _ := res.DataWrapper.Get(key).(string)
+		return v
+	}
+	if res.Data != nil {
+		v, _ := res.Data.Get(key).(string)
+		return v
+	}
+	return ""
+}
+
 func createIsMatchingCatalogAndSchema(catalog_name_attr, schema_name_attr string) func(ic *importContext, res *resource,
 	ra *resourceApproximation, origPath string) bool {
 	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
@@ -415,8 +471,8 @@ func createIsMatchingCatalogAndSchema(catalog_name_attr, schema_name_attr string
 		if strings.HasSuffix(origPath, "."+schema_name_attr) {
 			new_catalog_name_attr = strings.TrimSuffix(origPath, schema_name_attr) + catalog_name_attr
 		}
-		res_catalog_name := res.Data.Get(new_catalog_name_attr).(string)
-		res_schema_name := res.Data.Get(origPath).(string)
+		res_catalog_name := resourceGetString(res, new_catalog_name_attr)
+		res_schema_name := resourceGetString(res, origPath)
 		// In some cases catalog or schema name could be empty, like, in non-UC DLT pipelines, so we need to skip it
 		if res_catalog_name == "" || res_schema_name == "" {
 			return false

@@ -284,6 +284,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `uc-online-tables` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_online_table](../resources/online_table.md)
 * `uc-rfa` - [databricks_rfa_access_request_destinations](../resources/rfa_access_request_destinations.md) (*emitted as dependencies from Unity Catalog resources when access request destinations are configured*)
 * `uc-schemas` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_schema](../resources/schema.md)
+* `uc-secrets` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_secret_uc](../resources/secret_uc.md), emitted as dependencies from [databricks_schema](../resources/schema.md).
 * `uc-shares` - **listing** [databricks_share](../resources/share.md), [databricks_recipient](../resources/recipient.md) and [databricks_provider](../resources/provider.md)
 * `uc-storage-credentials` - **listing** exports [databricks_storage_credential](../resources/storage_credential.md) resources on workspace or account level.
 * `uc-system-schemas` - **listing** exports [databricks_system_schema](../resources/system_schema.md) resources for the UC metastore of the current workspace.
@@ -297,7 +298,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 
 ## Secrets
 
-For security reasons, [databricks_secret](../resources/secret.md) cannot contain actual plaintext secrets. By default, the exporter will create a variable in `vars.tf`, with the same name as the secret. You are supposed to [fill in the value of the secret](https://blog.gruntwork.io/a-comprehensive-guide-to-managing-secrets-in-your-terraform-code-1d586955ace1#0e7d) after that.  You can use `-export-secrets` command-line option to generate the `terraform.tfvars` file with secret values.
+For security reasons, [databricks_secret](../resources/secret.md) and [databricks_secret_uc](../resources/secret_uc.md) cannot contain actual plaintext secrets. By default, the exporter will create a variable in `vars.tf`, with the same name as the secret. You are supposed to [fill in the value of the secret](https://blog.gruntwork.io/a-comprehensive-guide-to-managing-secrets-in-your-terraform-code-1d586955ace1#0e7d) after that.  You can use `-export-secrets` command-line option to generate the `terraform.tfvars` file with secret values.
 
 ## Parallel execution
 
@@ -390,6 +391,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_secret](../resources/secret.md) | Yes | No | Yes | No |
 | [databricks_secret_acl](../resources/secret_acl.md) | Yes | No | Yes | No |
 | [databricks_secret_scope](../resources/secret_scope.md) | Yes | No | Yes | No |
+| [databricks_secret_uc](../resources/secret_uc.md) | Yes | No | Yes | No |
 | [databricks_service_principal](../resources/service_principal.md) | Yes | No | Yes | Yes |
 | [databricks_service_principal_federation_policy](../resources/service_principal_federation_policy.md) | Yes | No | No | Yes |
 | [databricks_service_principal_role](../resources/service_principal_role.md) | Yes | No | Yes | Yes |

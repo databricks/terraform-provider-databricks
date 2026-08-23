@@ -27,6 +27,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/secrets"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
+	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	frameworkschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -662,6 +663,100 @@ func TestRfaAccessRequestDestinationsIgnore(t *testing.T) {
 		ignore := resourcesMap["databricks_rfa_access_request_destinations"].Ignore(ic, r)
 		assert.False(t, ignore, "Resource should not be ignored when securable is missing")
 	})
+}
+
+// TestIsMatchingCatalogAndSchemaPluginFramework verifies that
+// createIsMatchingCatalogAndSchema works for Plugin Framework resources, whose
+// res.Data is nil (they use res.DataWrapper). This previously crashed with a nil
+// pointer dereference when resolving the schema_name reference of databricks_secret_uc.
+func TestIsMatchingCatalogAndSchemaPluginFramework(t *testing.T) {
+	ctx := context.Background()
+	ic := importContextForTest()
+
+	pfSchema := ic.PluginFrameworkSchemas["databricks_secret_uc"]
+	attrTypes := make(map[string]attr.Type)
+	for name, schemaAttr := range pfSchema.GetAttributes() {
+		attrTypes[name] = schemaAttr.GetType()
+	}
+	nullObj := basetypes.NewObjectNull(attrTypes)
+	rawValue, err := nullObj.ToTerraformValue(ctx)
+	require.NoError(t, err)
+	state := tfsdk.State{Schema: pfSchema, Raw: rawValue}
+	state.SetAttribute(ctx, path.Root("catalog_name"), basetypes.NewStringValue("main"))
+	state.SetAttribute(ctx, path.Root("schema_name"), basetypes.NewStringValue("default"))
+
+	// A Plugin Framework resource has DataWrapper set and Data == nil.
+	res := &resource{
+		Resource: "databricks_secret_uc",
+		ID:       "main.default.my_secret",
+		DataWrapper: &PluginFrameworkResourceData{
+			state:      &state,
+			schema:     pfSchema,
+			resourceId: "main.default.my_secret",
+		},
+	}
+
+	matcher := createIsMatchingCatalogAndSchema("catalog_name", "schema_name")
+
+	matchingRa := &resourceApproximation{
+		Type: "databricks_schema",
+		Instances: []instanceApproximation{{Attributes: map[string]any{
+			"catalog_name": "main",
+			"name":         "default",
+		}}},
+	}
+	assert.True(t, matcher(ic, res, matchingRa, "schema_name"),
+		"should match a schema with the same catalog and schema name")
+
+	nonMatchingRa := &resourceApproximation{
+		Type: "databricks_schema",
+		Instances: []instanceApproximation{{Attributes: map[string]any{
+			"catalog_name": "other",
+			"name":         "default",
+		}}},
+	}
+	assert.False(t, matcher(ic, res, nonMatchingRa, "schema_name"),
+		"should not match a schema in a different catalog")
+}
+
+// TestSecretUcValueGeneratesVariable verifies that the required, input-only `value`
+// field of databricks_secret_uc is emitted as a variable reference and that the
+// variable is registered for vars.tf, even though the read API never returns it.
+func TestSecretUcValueGeneratesVariable(t *testing.T) {
+	ctx := context.Background()
+	ic := importContextForTest()
+
+	pfSchema := ic.PluginFrameworkSchemas["databricks_secret_uc"]
+	attrTypes := make(map[string]attr.Type)
+	for name, schemaAttr := range pfSchema.GetAttributes() {
+		attrTypes[name] = schemaAttr.GetType()
+	}
+	nullObj := basetypes.NewObjectNull(attrTypes)
+	rawValue, err := nullObj.ToTerraformValue(ctx)
+	require.NoError(t, err)
+	state := tfsdk.State{Schema: pfSchema, Raw: rawValue}
+	state.SetAttribute(ctx, path.Root("catalog_name"), basetypes.NewStringValue("main"))
+	state.SetAttribute(ctx, path.Root("schema_name"), basetypes.NewStringValue("default"))
+	state.SetAttribute(ctx, path.Root("name"), basetypes.NewStringValue("my_secret"))
+	// value is intentionally left null - it's input-only and not returned by the read API.
+
+	r := &resource{
+		Resource: "databricks_secret_uc",
+		ID:       "main.default.my_secret",
+		Name:     "my_secret",
+		DataWrapper: &PluginFrameworkResourceData{
+			state:      &state,
+			schema:     pfSchema,
+			resourceId: "main.default.my_secret",
+		},
+	}
+	f := hclwrite.NewEmptyFile()
+	block := f.Body().AppendNewBlock("resource", []string{r.Resource, r.Name})
+	require.NoError(t, ic.unifiedDataToHcl(ic.Importables[r.Resource], []string{}, r, block.Body()))
+	rendered := string(hclwrite.Format(f.Bytes()))
+	assert.Contains(t, rendered, "value        = var.value_my_secret")
+	_, ok := ic.variables["value_my_secret"]
+	assert.True(t, ok, "the value variable should be registered for vars.tf")
 }
 
 // TestBudgetPolicyNameFromPolicyName verifies that the Plugin Framework

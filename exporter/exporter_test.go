@@ -20,6 +20,7 @@ import (
 	sdk_compute "github.com/databricks/databricks-sdk-go/service/compute"
 	sdk_dashboards "github.com/databricks/databricks-sdk-go/service/dashboards"
 	"github.com/databricks/databricks-sdk-go/service/database"
+	"github.com/databricks/databricks-sdk-go/service/environments"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/knowledgeassistants"
@@ -274,6 +275,20 @@ var emptyClusterPolicies = qa.HTTPFixture{
 	Response:     sdk_compute.ListPoliciesResponse{},
 }
 
+var emptyWorkspaceBaseEnvironments = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/environments/v1/workspace-base-environments?",
+	Response:     environments.ListWorkspaceBaseEnvironmentsResponse{},
+}
+
+var emptyDefaultWorkspaceBaseEnvironment = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/environments/v1/default-workspace-base-environment?",
+	Response:     environments.DefaultWorkspaceBaseEnvironment{},
+}
+
 var emptyPolicyFamilies = qa.HTTPFixture{
 	Method:   "GET",
 	Resource: "/api/2.0/policy-families?",
@@ -469,6 +484,13 @@ var emptySqlEndpoints = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var emptyWarehouseDefaultOverrides = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/warehouses/v1/default-warehouse-overrides?",
+	Response:     sdk_sql.ListDefaultWarehouseOverridesResponse{},
+	ReuseRequest: true,
+}
+
 var emptyInstancePools = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/instance-pools/list",
@@ -650,6 +672,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyMlflowWebhooks,
 			emptySqlDashboards,
 			emptySqlEndpoints,
+			emptyWarehouseDefaultOverrides,
 			emptySqlQueries,
 			emptySqlAlerts,
 			emptyAlertsV2,
@@ -658,6 +681,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySupervisorAgents,
 			emptyPipelines,
 			emptyClusterPolicies,
+			emptyWorkspaceBaseEnvironments,
+			emptyDefaultWorkspaceBaseEnvironment,
 			emptyPolicyFamilies,
 			emptyWorkspaceConf,
 			allKnownWorkspaceConfsNoData,
@@ -931,12 +956,15 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyWorkspaceConf,
 			emptyInstancePools,
 			emptyClusterPolicies,
+			emptyWorkspaceBaseEnvironments,
+			emptyDefaultWorkspaceBaseEnvironment,
 			allKnownWorkspaceConfsNoData,
 			qa.ListGroupsFixtures([]iam.Group{})[0],
 			emptyGitCredentials,
 			emptyIpAccessLIst,
 			emptyWorkspace,
 			emptySqlEndpoints,
+			emptyWarehouseDefaultOverrides,
 			emptyVectorSearch,
 			emptyKnowledgeAssistants,
 			emptySupervisorAgents,
@@ -1015,6 +1043,8 @@ func TestImportingClusters(t *testing.T) {
 				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: sdk_jobs.ListJobsResponse{},
 			},
+			emptyWorkspaceBaseEnvironments,
+			emptyDefaultWorkspaceBaseEnvironment,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
@@ -2068,6 +2098,12 @@ func TestImportingSqlObjects(t *testing.T) {
 				Response: getJSONObject("test-data/get-sql-endpoint.json"),
 			},
 			{
+				Method:       "GET",
+				Resource:     "/api/warehouses/v1/default-warehouse-overrides?",
+				Response:     sdk_sql.ListDefaultWarehouseOverridesResponse{},
+				ReuseRequest: true,
+			},
+			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/sql/data_sources",
 				Response: []sdk_sql.DataSource{
@@ -2495,6 +2531,7 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 				Resource: "/api/2.0/sql/warehouses?",
 				Response: sdk_sql.ListWarehousesResponse{},
 			},
+			emptyWarehouseDefaultOverrides,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/sql/config/warehouses",

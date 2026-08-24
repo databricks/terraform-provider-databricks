@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/databricks-sdk-go/service/dataclassification"
 	"github.com/databricks/databricks-sdk-go/service/dataquality"
 	"github.com/databricks/databricks-sdk-go/service/tags"
 	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
@@ -92,6 +93,9 @@ func importUcCatalog(ic *importContext, r *resource) error {
 
 	// Emit RFA access request destinations if configured
 	ic.emitRfaAccessRequestDestinations("CATALOG", cat.Name)
+
+	// Emit data classification catalog config if configured
+	ic.emitDataClassificationCatalogConfig(cat.Name)
 
 	return nil
 }
@@ -196,9 +200,50 @@ func importUcSchema(ic *importContext, r *resource) error {
 		}
 	}
 
+	if ic.isServiceInListing("uc-secrets") {
+		it := ic.workspaceClient.SecretsUc.ListSecrets(ic.Context, catalog.ListSecretsRequest{
+			CatalogName: catalogName,
+			SchemaName:  schemaName,
+		})
+		for it.HasNext(ic.Context) {
+			secret, err := it.Next(ic.Context)
+			if err != nil {
+				return err // TODO: should we continue?
+			}
+			ic.Emit(&resource{
+				Resource:  "databricks_secret_uc",
+				ID:        secret.FullName,
+				DependsOn: dependsOn,
+			})
+		}
+	}
+
 	// Emit RFA access request destinations if configured
 	ic.emitRfaAccessRequestDestinations("SCHEMA", schemaFullName)
 
+	return nil
+}
+
+func importUcSecret(ic *importContext, r *resource) error {
+	// The `value` field is input-only and not returned by the read API, so it's always
+	// generated as a variable reference (see the `value` entry in Depends). When the
+	// `-export-secrets` flag is set, we fetch the actual value and populate the variable;
+	// otherwise the variable is emitted empty for the user to fill in.
+	if ic.exportSecrets {
+		resp, err := ic.workspaceClient.SecretsUc.GetSecret(ic.Context, catalog.GetSecretRequest{
+			FullName:     r.ID,
+			IncludeValue: true,
+		})
+		if err != nil {
+			// Reading the value requires the READ_SECRET privilege, which the caller may
+			// not have for every secret. Don't fail the whole resource export in that case:
+			// the value is still emitted as a variable for the user to fill in manually.
+			log.Printf("[WARN] Can't read value of the UC secret %s: %s", r.ID, err.Error())
+			return nil
+		}
+		varName := ic.generateVariableName("value", ic.ResourceName(r))
+		ic.addTfVar(varName, resp.EffectiveValue)
+	}
 	return nil
 }
 
@@ -402,6 +447,21 @@ func shouldOmitWithIsolationMode(ic *importContext, pathString string, as *schem
 	return shouldOmitForUnityCatalog(ic, pathString, as, d, r)
 }
 
+// resourceGetString reads a string attribute from a resource, working for both SDKv2
+// (via res.Data) and Plugin Framework (via res.DataWrapper) resources. It returns an
+// empty string if the attribute is missing or not a string.
+func resourceGetString(res *resource, key string) string {
+	if res.DataWrapper != nil {
+		v, _ := res.DataWrapper.Get(key).(string)
+		return v
+	}
+	if res.Data != nil {
+		v, _ := res.Data.Get(key).(string)
+		return v
+	}
+	return ""
+}
+
 func createIsMatchingCatalogAndSchema(catalog_name_attr, schema_name_attr string) func(ic *importContext, res *resource,
 	ra *resourceApproximation, origPath string) bool {
 	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
@@ -411,8 +471,8 @@ func createIsMatchingCatalogAndSchema(catalog_name_attr, schema_name_attr string
 		if strings.HasSuffix(origPath, "."+schema_name_attr) {
 			new_catalog_name_attr = strings.TrimSuffix(origPath, schema_name_attr) + catalog_name_attr
 		}
-		res_catalog_name := res.Data.Get(new_catalog_name_attr).(string)
-		res_schema_name := res.Data.Get(origPath).(string)
+		res_catalog_name := resourceGetString(res, new_catalog_name_attr)
+		res_schema_name := resourceGetString(res, origPath)
 		// In some cases catalog or schema name could be empty, like, in non-UC DLT pipelines, so we need to skip it
 		if res_catalog_name == "" || res_schema_name == "" {
 			return false
@@ -798,6 +858,56 @@ func importRfaAccessRequestDestinations(ic *importContext, r *resource) error {
 		}
 	}
 
+	return nil
+}
+
+// dataClassificationCatalogName extracts the catalog name from a data classification
+// catalog config resource name in the format `catalogs/{catalog_name}/config`.
+// It returns an empty string if the name doesn't match the expected format.
+func dataClassificationCatalogName(name string) string {
+	if strings.HasPrefix(name, "catalogs/") && strings.HasSuffix(name, "/config") {
+		return strings.TrimSuffix(strings.TrimPrefix(name, "catalogs/"), "/config")
+	}
+	return ""
+}
+
+// emitDataClassificationCatalogConfig emits databricks_data_classification_catalog_config
+// resource for a given catalog if a data classification configuration exists for it.
+// There is no list API, so this is called from the databricks_catalog Import function.
+func (ic *importContext) emitDataClassificationCatalogConfig(catalogName string) {
+	if !ic.isServiceEnabled("uc-data-classification") {
+		return
+	}
+	name := fmt.Sprintf("catalogs/%s/config", catalogName)
+	_, err := ic.workspaceClient.DataClassification.GetCatalogConfig(ic.Context,
+		dataclassification.GetCatalogConfigRequest{Name: name})
+	if err != nil {
+		// Most catalogs won't have a data classification config configured.
+		log.Printf("[DEBUG] No data classification config for catalog %s: %v", catalogName, err)
+		return
+	}
+	ic.Emit(&resource{
+		Resource: "databricks_data_classification_catalog_config",
+		ID:       name,
+	})
+}
+
+func importDataClassificationCatalogConfig(ic *importContext, r *resource) error {
+	// The read API doesn't return the `parent` field (it's only part of the create
+	// request), so we derive it from the resource name (`catalogs/{catalog_name}/config`)
+	// and set it explicitly. This also lets the `parent` -> databricks_catalog reference
+	// resolve during code generation. The parent catalog itself doesn't need to be emitted
+	// here: this resource is only emitted from the databricks_catalog Import function, so
+	// the catalog is always already in scope.
+	catalogName := dataClassificationCatalogName(r.ID)
+	if catalogName == "" {
+		return fmt.Errorf("unexpected data classification config name: %s", r.ID)
+	}
+	if r.DataWrapper != nil {
+		if err := r.DataWrapper.Set("parent", "catalogs/"+catalogName); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

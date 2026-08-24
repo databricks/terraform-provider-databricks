@@ -37,7 +37,7 @@ var (
 	secretPathRegex                  = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 	secretScopePathRegex             = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/[^}]+\}\}$`)
 	sqlParentRegexp                  = regexp.MustCompile(`^folders/(\d+)$`)
-	requirementsFileRegexp           = regexp.MustCompile(`-r\s+(/.*)$`)
+	requirementsFileRegexp           = regexp.MustCompile(`-r\s+["']?(/[^"']+)["']?\s*$`)
 	dltDefaultStorageRegex           = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 	ignoreIdeFolderRegex             = regexp.MustCompile(`^/Users/[^/]+/\.ide/.*$`)
 	servedEntityFieldExtractionRegex = regexp.MustCompile(`^config\.[0-9]+\.served_entities\.([0-9]+)\.(.*)$`)
@@ -58,7 +58,10 @@ var (
 	policyInitScriptWorkspaceRegex = regexp.MustCompile(`"init_scripts\.\d+\.workspace\.destination":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
 	policyInitScriptVolumesRegex   = regexp.MustCompile(`"init_scripts\.\d+\.volumes\.destination":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
 	globIncludeDirectoryRegex      = regexp.MustCompile(`^(/.+)/\*\*$`)
-	fileExtensionLanguageMapping   = map[string]string{
+	// dataClassificationParentRegex captures the catalog name from the `parent`
+	// field of databricks_data_classification_catalog_config (format `catalogs/{name}`).
+	dataClassificationParentRegex = regexp.MustCompile(`^catalogs/([^/]+)$`)
+	fileExtensionLanguageMapping  = map[string]string{
 		"SCALA":  ".scala",
 		"PYTHON": ".py",
 		"SQL":    ".sql",
@@ -241,6 +244,38 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: clusterPolicyReferences(),
 		// TODO: implement a custom Body that will write with special formatting, where
 		// JSON is written line by line so that we're able to do the references
+	},
+	"databricks_environments_workspace_base_environment": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "compute",
+		NameUnified:     makeNamePlusIdFuncUnified("display_name"),
+		List:            listWorkspaceBaseEnvironments,
+		Import:          importWorkspaceBaseEnvironment,
+		Depends: []reference{
+			{Path: "filepath", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "filepath", Resource: "databricks_workspace_file", Match: "path"},
+			{Path: "filepath", Resource: "databricks_file"},
+			{Path: "spec.dependencies", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "spec.dependencies", Resource: "databricks_workspace_file", Match: "path"},
+			{Path: "spec.dependencies", Resource: "databricks_file"},
+			{Path: "spec.dependencies", Resource: "databricks_workspace_file", Match: "workspace_path",
+				MatchType: MatchRegexp, Regexp: requirementsFileRegexp},
+			{Path: "spec.dependencies", Resource: "databricks_file", MatchType: MatchRegexp,
+				Regexp: requirementsFileRegexp},
+		},
+	},
+	"databricks_environments_default_workspace_base_environment": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "compute",
+		List:            listDefaultWorkspaceBaseEnvironment,
+		Import:          importDefaultWorkspaceBaseEnvironment,
+		Ignore:          ignoreDefaultWorkspaceBaseEnvironment,
+		Depends: []reference{
+			{Path: "cpu_workspace_base_environment", Resource: "databricks_environments_workspace_base_environment", Match: "name"},
+			{Path: "gpu_workspace_base_environment", Resource: "databricks_environments_workspace_base_environment", Match: "name"},
+		},
 	},
 	"databricks_group": {
 		Service:        "groups",
@@ -778,6 +813,25 @@ var resourcesMap map[string]importable = map[string]importable{
 		ShouldGenerateField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
 			// We need to generate it even if it's false...
 			return pathString == "enable_serverless_compute"
+		},
+	},
+	"databricks_warehouses_default_warehouse_override": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "sql-endpoints",
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			// The resource name is `default-warehouse-overrides/{default_warehouse_override_id}`,
+			// where the ID component is the user ID the override applies to.
+			if id := defaultWarehouseOverrideId(wrapper.Id()); id != "" {
+				return "default_warehouse_override_" + id
+			}
+			return generateUniqueID(wrapper.Id())
+		},
+		List:   listWarehouseDefaultOverrides,
+		Import: importWarehouseDefaultOverride,
+		Depends: []reference{
+			{Path: "default_warehouse_override_id", Resource: "databricks_user"},
+			{Path: "warehouse_id", Resource: "databricks_sql_endpoint"},
 		},
 	},
 	"databricks_sql_global_config": {
@@ -1605,6 +1659,25 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
+	"databricks_secret_uc": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "uc-secrets",
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			// The ID is the three-level full name `catalog.schema.secret`.
+			return nameNormalizationRegex.ReplaceAllString(wrapper.Id(), "_")
+		},
+		// No List function - this resource is emitted as a dependency from the Import
+		// function of databricks_schema when the `uc-secrets` service is in the listing.
+		Import: importUcSecret,
+		Depends: []reference{
+			{Path: "value", Variable: true},
+			{Path: "catalog_name", Resource: "databricks_catalog"},
+			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog_name", "schema_name"),
+				SkipDirectLookup:     true},
+		},
+	},
 	"databricks_volume": {
 		WorkspaceLevel: true,
 		Service:        "uc-volumes",
@@ -1832,6 +1905,26 @@ var resourcesMap map[string]importable = map[string]importable{
 			// Notification destination IDs - EMAIL destinations may reference users' emails
 			{Path: "destinations.destination_id", Resource: "databricks_user", Match: "user_name",
 				MatchType: MatchCaseInsensitive},
+		},
+	},
+	"databricks_data_classification_catalog_config": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "uc-data-classification",
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			// The resource name is in the format `catalogs/{catalog_name}/config`,
+			// so we generate a Terraform name from the catalog name.
+			if catalogName := dataClassificationCatalogName(wrapper.Id()); catalogName != "" {
+				return catalogName
+			}
+			return generateUniqueID(wrapper.Id())
+		},
+		Import: importDataClassificationCatalogConfig,
+		// No List function - this resource is emitted as a dependency from the Import
+		// function of databricks_catalog when a data classification config exists.
+		Depends: []reference{
+			{Path: "parent", Resource: "databricks_catalog", MatchType: MatchRegexp,
+				Regexp: dataClassificationParentRegex},
 		},
 	},
 	"databricks_storage_credential": {

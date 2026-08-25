@@ -98,6 +98,7 @@ func PrepareDatabricksClient(ctx context.Context, cfg *config.Config, configCust
 	}
 	// If not set, the default provider timeout is 65 seconds. Most APIs have a server-side timeout of 60 seconds.
 	// The additional 5 seconds is to account for network latency.
+	httpTimeoutSetByUser := cfg.HTTPTimeoutSeconds != 0
 	if cfg.HTTPTimeoutSeconds == 0 {
 		cfg.HTTPTimeoutSeconds = 65
 	}
@@ -125,6 +126,7 @@ func PrepareDatabricksClient(ctx context.Context, cfg *config.Config, configCust
 	pc := &common.DatabricksClient{
 		DatabricksClient: client,
 	}
+	pc.SetHTTPTimeoutSetByUser(httpTimeoutSetByUser)
 	// For workspace hosts, reconcile the user-supplied workspace_id against the
 	// host's discovery metadata and seed the cache so the SCIM /Me call is avoided.
 	if err := pc.ReconcileWorkspaceIDFromHostMetadata(pc.HostTypeForTerraform(), captured.userWorkspaceID, captured.hostWorkspaceID); err != nil {

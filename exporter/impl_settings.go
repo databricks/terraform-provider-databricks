@@ -2,26 +2,20 @@ package exporter
 
 import (
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/settingsv2"
 	"github.com/databricks/terraform-provider-databricks/common"
-	account_setting_v2_resource "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_setting_v2"
-	workspace_setting_v2_resource "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_setting_v2"
 	tf_settings "github.com/databricks/terraform-provider-databricks/settings"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func importWorkspaceSettingV2(ic *importContext, r *resource) error {
-	// Copy values from effective_* fields to their input counterparts using converter-based approach
-	// This works by:
-	// 1. Converting TF state to Go SDK struct
-	// 2. Copying effective_* fields to input fields using reflection
-	// 3. Converting back to TF state
-	// This automatically handles all types (simple and complex)
-	copyEffectiveFieldsToInputFieldsWithConverters[workspace_setting_v2_resource.Setting](
-		ic, r, settingsv2.Setting{})
-
+	copyEffectiveSettingV2Fields(ic, r)
 	return nil
 }
 
@@ -41,16 +35,60 @@ func listWorkspaceSettingsV2(ic *importContext) error {
 }
 
 func importAccountSettingV2(ic *importContext, r *resource) error {
-	// Copy values from effective_* fields to their input counterparts using converter-based approach
-	// This works by:
-	// 1. Converting TF state to Go SDK struct
-	// 2. Copying effective_* fields to input fields using reflection
-	// 3. Converting back to TF state
-	// This automatically handles all types (simple and complex)
-	copyEffectiveFieldsToInputFieldsWithConverters[account_setting_v2_resource.Setting](
-		ic, r, settingsv2.Setting{})
-
+	copyEffectiveSettingV2Fields(ic, r)
 	return nil
+}
+
+func copyEffectiveSettingV2Fields(ic *importContext, r *resource) {
+	wrapper, ok := r.DataWrapper.(*PluginFrameworkResourceData)
+	if !ok {
+		return
+	}
+
+	schema := wrapper.GetSchema()
+	copiedFields := []string{}
+	for _, fieldName := range schema.GetFields() {
+		if !strings.HasPrefix(fieldName, "effective_") {
+			continue
+		}
+		inputFieldName := strings.TrimPrefix(fieldName, "effective_")
+		if schema.GetField(inputFieldName) == nil {
+			continue
+		}
+		if _, ok := wrapper.GetOk(inputFieldName); ok {
+			continue
+		}
+
+		var value attr.Value
+		diags := wrapper.state.GetAttribute(ic.Context, path.Root(fieldName), &value)
+		if diags.HasError() || value == nil || value.IsNull() || value.IsUnknown() {
+			continue
+		}
+		diags = wrapper.state.SetAttribute(ic.Context, path.Root(inputFieldName), value)
+		if diags.HasError() {
+			log.Printf("[WARN] Failed to copy %s to %s for %s: %v", fieldName, inputFieldName, r.ID, diags)
+			continue
+		}
+		copiedFields = append(copiedFields, fmt.Sprintf("%s->%s", fieldName, inputFieldName))
+	}
+	if len(copiedFields) > 0 {
+		log.Printf("[TRACE] Copied effective setting fields for %s: %s", r.ID, strings.Join(copiedFields, ", "))
+	}
+}
+
+// shouldGenerateForSettingV2 forces emission of the inner `value` field inside
+// the simple `boolean_val`, `string_val`, and `integer_val` blocks. The
+// underlying Setting API marks `value` with `omitempty`, so a zero value (false,
+// "", 0) is lost during the Go-SDK -> TF-SDK round-trip. Without this override
+// an explicitly configured `value = false` would be silently dropped from the
+// generated HCL, leaving an empty block (or the whole resource without it).
+func shouldGenerateForSettingV2(ic *importContext, pathString string, fieldSchema FieldSchema,
+	wrapper ResourceDataWrapper, r *resource) bool {
+	switch pathString {
+	case "boolean_val.value", "string_val.value", "integer_val.value":
+		return true
+	}
+	return false
 }
 
 func listAccountSettingsV2(ic *importContext) error {

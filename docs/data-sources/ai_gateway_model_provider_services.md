@@ -13,14 +13,14 @@ subcategory: "Unity Catalog"
 
 ## Arguments
 The following arguments are supported:
-* `include_browse` (boolean, optional) - Whether to include provider services for which the principal can only
-  access selective metadata
 * `page_size` (integer, optional) - Maximum number of provider services to return. Defaults to 100 when unset or
-  0; the maximum is 1000. Use `next_page_token` to retrieve additional pages
-* `parent` (string, optional) - Resource name of the parent schema to list within, as
+  0; the maximum is 100. Use `page_token` to retrieve additional pages
+* `parent` (string, optional) - Name of the parent schema to list within, as
   `schemas/{catalog}.{schema}`. Each `{...}` component is capped at 255
   characters individually
-* `view` (string, optional) - View selector controlling which fields are populated per row. Possible values are: `BASIC`, `FULL`
+* `view` (string, optional) - View selector controlling which fields are populated per row. `FULL`
+  returns the full representation of the service; `BASIC` returns a more
+  compact version. Defaults to `BASIC` when unset. Possible values are: `BASIC`, `FULL`
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -29,8 +29,6 @@ The following arguments are supported:
 
 ## Attributes
 This data source exports a single attribute, `model_provider_services`. It is a list of resources, each with the following attributes:
-* `browse_only` (boolean) - Whether the caller sees only metadata available through the BROWSE
-  privilege
 * `comment` (string) - User-provided description
 * `config` (ModelProviderServiceConfig) - Behavioral configuration: provider connection, model catalog, and
   passthrough policy. See `ModelProviderServiceConfig` for the per-field
@@ -128,24 +126,17 @@ This data source exports a single attribute, `model_provider_services`. It is a 
 * `direct` (ModelProviderServiceConfigAmazonBedrockProviderDirectConfig)
 
 ### ModelProviderServiceConfigAmazonBedrockProviderDirectConfig
-* `aws_access_key_id` (string) - AWS access key ID for Bedrock authentication. Required on Create when using
-  access-key auth; must be paired with `aws_secret_access_key` and is
-  mutually exclusive with `service_credential`. Treated as
-  username-equivalent (not a secret value): round-trips on reads and is
-  scrubbed from audit logs
-* `aws_secret_access_key` (ModelProviderServiceConfigProviderSecret) - AWS secret access key paired with `aws_access_key_id`. Required on Create
-  when using access-key auth; mutually exclusive with `service_credential`.
-  Supplied as inline plaintext via `ProviderSecret.plaintext`
+* `aws_access_key` (ModelProviderServiceConfigAwsAccessKey) - AWS access-key-pair auth. Mutually exclusive with `service_credential`
 * `region` (string) - AWS region where the Bedrock endpoint is hosted (e.g., `us-east-1`).
   Required on Create
 * `service_credential` (ModelProviderServiceConfigServiceCredential) - Reference to a UC service credential authorizing Bedrock requests. On
   Create the caller supplies `service_credential.name` in the AIP-122
   resource-name form `credentials/{name}`. Required on Create when using
-  UC-service-credential auth; mutually exclusive with the aws_access_key_id
-  + aws_secret_access_key pair. The credential is referenced by name; its
-  value is not carried here. On read the resolved `id` and `is_deleted` are
-  also populated. Only supported on AWS-hosted workspaces; Create requests
-  from other clouds are rejected with INVALID_PARAMETER_VALUE
+  UC-service-credential auth; mutually exclusive with `aws_access_key`. The
+  credential is referenced by name; its value is not carried here. On read the
+  resolved `id` and `is_deleted` are also populated. Only supported on AWS-hosted
+  workspaces; Create requests from other clouds are rejected with
+  INVALID_PARAMETER_VALUE
 
 ### ModelProviderServiceConfigAnthropicProviderConfig
 * `direct` (ModelProviderServiceConfigAnthropicProviderDirectConfig) - Direct (inline-credentials) form: caller supplies the API key in the
@@ -165,33 +156,34 @@ This data source exports a single attribute, `model_provider_services`. It is a 
   when unset the MPS gets the full governance surface (see TEAM_ENTERPRISE).
   Immutable after Create, so the tier cannot be flipped in place. Possible values are: `ANTHROPIC_RELAYED_PLAN_TYPE_MAX`, `ANTHROPIC_RELAYED_PLAN_TYPE_TEAM_ENTERPRISE`
 
+### ModelProviderServiceConfigAwsAccessKey
+* `access_key_id` (string) - AWS access key ID. Required on Create when using access-key auth. Treated as
+  username-equivalent (not a secret value): round-trips on reads and is
+  scrubbed from audit logs
+* `secret_access_key` (ModelProviderServiceConfigProviderSecret) - AWS secret access key paired with `access_key_id`. Required on Create when
+  using access-key auth. Supplied as inline plaintext via
+  `ProviderSecret.plaintext`
+
 ### ModelProviderServiceConfigAzureOpenAiProviderConfig
 * `direct` (ModelProviderServiceConfigAzureOpenAiProviderDirectConfig)
 
 ### ModelProviderServiceConfigAzureOpenAiProviderDirectConfig
-* `api_key` (ModelProviderServiceConfigProviderSecret) - Azure OpenAI API key. Mutually exclusive with the Entra fields. Supplied as
-  inline plaintext via `ProviderSecret.plaintext`
+* `api_key` (ModelProviderServiceConfigProviderSecret) - Azure OpenAI API key. Mutually exclusive with the Entra and
+  service-credential modes. Supplied as inline plaintext via
+  `ProviderSecret.plaintext`
 * `base_url` (string) - Full Azure OpenAI endpoint base URL, e.g.
   `https://myresource.openai.azure.com`. Required on Create
-* `client_id` (string) - Entra ID client (application) ID for service-principal auth. Set together
-  with `tenant_id` and `client_secret`; mutually exclusive with `api_key`
-  and `service_credential`
-* `client_secret` (ModelProviderServiceConfigProviderSecret) - Entra ID client secret for service-principal auth. Set together with
-  `tenant_id` and `client_id`; mutually exclusive with `api_key` and
-  `service_credential`. Supplied as
-  inline plaintext via `ProviderSecret.plaintext`
+* `entra_service_principal` (ModelProviderServiceConfigEntraServicePrincipal) - Entra ID (service principal) auth. Mutually exclusive with `api_key` and
+  `service_credential`
 * `service_credential` (ModelProviderServiceConfigServiceCredential) - Reference to a UC service credential authorizing Azure OpenAI requests. On
   Create the caller supplies `service_credential.name` in the AIP-122
   resource-name form `credentials/{name}`. Required on Create when using
-  UC-service-credential auth; mutually exclusive with `api_key` and with the
-  Entra triple (tenant_id + client_id + client_secret). The credential is
+  UC-service-credential auth; mutually exclusive with `api_key` and
+  `entra_service_principal`. The credential is
   referenced by name; its value is not carried here. On read the resolved `id`
   and `is_deleted` are also populated. Only supported on Azure-hosted
   workspaces; Create requests from other clouds are rejected with
   INVALID_PARAMETER_VALUE
-* `tenant_id` (string) - Entra ID (Azure AD) tenant ID for service-principal auth. Set together with
-  `client_id` and `client_secret`; mutually exclusive with `api_key` and
-  `service_credential`
 
 ### ModelProviderServiceConfigCustomProviderConfig
 * `direct` (ModelProviderServiceConfigCustomProviderDirectConfig)
@@ -203,11 +195,18 @@ This data source exports a single attribute, `model_provider_services`. It is a 
 * `base_url` (string) - Endpoint URL of the OpenAI-compatible service (e.g.,
   `https://api.example.com/v1`). Required on Create
 
+### ModelProviderServiceConfigEntraServicePrincipal
+* `client_id` (string) - Entra ID client (application) ID. Required on Create
+* `client_secret` (ModelProviderServiceConfigProviderSecret) - Entra ID client secret. Supplied as inline plaintext via
+  `ProviderSecret.plaintext`
+* `tenant_id` (string) - Entra ID (Azure AD) tenant ID. Required on Create
+
 ### ModelProviderServiceConfigGeminiEnterpriseProviderConfig
 * `direct` (ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig)
 
 ### ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig
-* `api_key` (ModelProviderServiceConfigProviderSecret) - Google Gemini Enterprise API key. Required on Create. Supplied as inline
+* `api_key` (ModelProviderServiceConfigProviderSecret) - Google Gemini Enterprise API key. Required on Create when using API-key
+  auth; mutually exclusive with `service_credential`. Supplied as inline
   plaintext via `ProviderSecret.plaintext`
 * `project_id` (string) - GCP project ID hosting the Gemini Enterprise endpoint. Required on Create
 * `region` (string) - GCP region of the Gemini Enterprise endpoint (e.g., `us-central1`).
@@ -217,28 +216,21 @@ This data source exports a single attribute, `model_provider_services`. It is a 
 * `direct` (ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig)
 
 ### ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig
-* `api_key` (ModelProviderServiceConfigProviderSecret) - Microsoft AI Foundry API key. Mutually exclusive with the Entra fields.
-  Supplied as inline plaintext via `ProviderSecret.plaintext`
+* `api_key` (ModelProviderServiceConfigProviderSecret) - Microsoft AI Foundry API key. Mutually exclusive with the Entra and
+  service-credential modes. Supplied as inline plaintext via
+  `ProviderSecret.plaintext`
 * `base_url` (string) - Microsoft AI Foundry endpoint URL. Required on Create
-* `client_id` (string) - Entra ID client (application) ID for service-principal auth. Set together
-  with `tenant_id` and `client_secret`; mutually exclusive with `api_key`
-  and `service_credential`
-* `client_secret` (ModelProviderServiceConfigProviderSecret) - Entra ID client secret for service-principal auth. Set together with
-  `tenant_id` and `client_id`; mutually exclusive with `api_key` and
-  `service_credential`. Supplied as
-  inline plaintext via `ProviderSecret.plaintext`
+* `entra_service_principal` (ModelProviderServiceConfigEntraServicePrincipal) - Entra ID (service principal) auth. Mutually exclusive with `api_key` and
+  `service_credential`
 * `service_credential` (ModelProviderServiceConfigServiceCredential) - Reference to a UC service credential authorizing Microsoft Foundry requests.
   On Create the caller supplies `service_credential.name` in the AIP-122
   resource-name form `credentials/{name}`. Required on Create when using
-  UC-service-credential auth; mutually exclusive with `api_key` and with the
-  Entra triple (tenant_id + client_id + client_secret). The credential is
+  UC-service-credential auth; mutually exclusive with `api_key` and
+  `entra_service_principal`. The credential is
   referenced by name; its value is not carried here. On read the resolved `id`
   and `is_deleted` are also populated. Only supported on Azure-hosted
   workspaces; Create requests from other clouds are rejected with
   INVALID_PARAMETER_VALUE
-* `tenant_id` (string) - Entra ID (Azure AD) tenant ID for service-principal auth. Set together with
-  `client_id` and `client_secret`; mutually exclusive with `api_key` and
-  `service_credential`
 
 ### ModelProviderServiceConfigModelTargetConfig
 * `model` (string) - Provider-side model identifier (e.g. "gpt-5", "claude-opus-4-7"). This is

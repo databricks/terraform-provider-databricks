@@ -6931,6 +6931,10 @@ func (m *ListRolesResponse_SdkV2) SetRoles(ctx context.Context, v []Role_SdkV2) 
 type NewPipelineSpec_SdkV2 struct {
 	// Budget policy to set on the newly created pipeline.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+	// Release channel of the underlying pipeline's runtime. Some source table
+	// configurations (e.g., read-time CDF) require PREVIEW. Defaults to CURRENT
+	// if not specified.
+	PipelineChannel types.String `tfsdk:"pipeline_channel"`
 	// UC catalog for the pipeline to store intermediate files (checkpoints,
 	// event logs etc). This needs to be a standard catalog where the user has
 	// permissions to create Delta tables.
@@ -6949,6 +6953,7 @@ func (to *NewPipelineSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 
 func (m NewPipelineSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["pipeline_channel"] = attrs["pipeline_channel"].SetOptional()
 	attrs["storage_catalog"] = attrs["storage_catalog"].SetOptional()
 	attrs["storage_schema"] = attrs["storage_schema"].SetOptional()
 
@@ -6974,6 +6979,7 @@ func (m NewPipelineSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"budget_policy_id": m.BudgetPolicyId,
+			"pipeline_channel": m.PipelineChannel,
 			"storage_catalog":  m.StorageCatalog,
 			"storage_schema":   m.StorageSchema,
 		})
@@ -6984,6 +6990,7 @@ func (m NewPipelineSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget_policy_id": types.StringType,
+			"pipeline_channel": types.StringType,
 			"storage_catalog":  types.StringType,
 			"storage_schema":   types.StringType,
 		},
@@ -10084,8 +10091,7 @@ type UpdateBranchRequest_SdkV2 struct {
 	// Output only. The full resource path of the branch. Format:
 	// projects/{project_id}/branches/{branch_id}
 	Name types.String `tfsdk:"-"`
-	// The list of fields to update. If unspecified, all fields will be updated
-	// when possible.
+	// The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -10193,8 +10199,7 @@ type UpdateDataApiRequest_SdkV2 struct {
 	// Resource name:
 	// projects/{project_id}/branches/{branch_id}/databases/{database_id}/data-api
 	Name types.String `tfsdk:"-"`
-	// The list of fields to update. If unspecified, all fields will be updated
-	// when possible.
+	// The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -10305,8 +10310,7 @@ type UpdateDatabaseRequest_SdkV2 struct {
 	// The resource name of the database. Format:
 	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
 	Name types.String `tfsdk:"-"`
-	// The list of fields to update. If unspecified, all fields will be updated
-	// when possible.
+	// The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -10417,8 +10421,7 @@ type UpdateEndpointRequest_SdkV2 struct {
 	// Output only. The full resource path of the endpoint. Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Name types.String `tfsdk:"-"`
-	// The list of fields to update. If unspecified, all fields will be updated
-	// when possible.
+	// The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -10528,8 +10531,7 @@ type UpdateProjectRequest_SdkV2 struct {
 	// The project's `name` field is used to identify the project to update.
 	// Format: projects/{project_id}
 	Project types.List `tfsdk:"project"`
-	// The list of fields to update. If unspecified, all fields will be updated
-	// when possible.
+	// The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -10639,8 +10641,7 @@ type UpdateRoleRequest_SdkV2 struct {
 	// The role's `name` field is used to identify the role to update. Format:
 	// projects/{project_id}/branches/{branch_id}/roles/{role_id}
 	Role types.List `tfsdk:"role"`
-	// The list of fields to update in Postgres Role. If unspecified, all fields
-	// will be updated when possible.
+	// The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

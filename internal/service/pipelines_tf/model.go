@@ -23,6 +23,165 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+// Top-level configuration for API Source connectors with arbitrary
+// configuration.
+type ApiSourceConnectorConfig struct {
+	// Arbitrary key-value configuration values for the API Source connector.
+	Configs types.Map `tfsdk:"configs"`
+}
+
+func (to *ApiSourceConnectorConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ApiSourceConnectorConfig) {
+}
+
+func (to *ApiSourceConnectorConfig) SyncFieldsDuringRead(ctx context.Context, from ApiSourceConnectorConfig) {
+}
+
+func (m ApiSourceConnectorConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["configs"] = attrs["configs"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ApiSourceConnectorConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ApiSourceConnectorConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"configs": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ApiSourceConnectorConfig
+// only implements ToObjectValue() and Type().
+func (m ApiSourceConnectorConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"configs": m.Configs,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ApiSourceConnectorConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"configs": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetConfigs returns the value of the Configs field in ApiSourceConnectorConfig as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ApiSourceConnectorConfig) GetConfigs(ctx context.Context) (map[string]types.String, bool) {
+	if m.Configs.IsNull() || m.Configs.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Configs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetConfigs sets the value of the Configs field in ApiSourceConnectorConfig.
+func (m *ApiSourceConnectorConfig) SetConfigs(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["configs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Configs = types.MapValueMust(t, vs)
+}
+
+// Options for API Source connectors with arbitrary configuration.
+type ApiSourceConnectorOptions struct {
+	// Arbitrary key-value configuration options for the API Source connector.
+	Options types.Map `tfsdk:"options"`
+}
+
+func (to *ApiSourceConnectorOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ApiSourceConnectorOptions) {
+}
+
+func (to *ApiSourceConnectorOptions) SyncFieldsDuringRead(ctx context.Context, from ApiSourceConnectorOptions) {
+}
+
+func (m ApiSourceConnectorOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["options"] = attrs["options"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ApiSourceConnectorOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ApiSourceConnectorOptions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"options": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ApiSourceConnectorOptions
+// only implements ToObjectValue() and Type().
+func (m ApiSourceConnectorOptions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"options": m.Options,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ApiSourceConnectorOptions) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetOptions returns the value of the Options field in ApiSourceConnectorOptions as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ApiSourceConnectorOptions) GetOptions(ctx context.Context) (map[string]types.String, bool) {
+	if m.Options.IsNull() || m.Options.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOptions sets the value of the Options field in ApiSourceConnectorOptions.
+func (m *ApiSourceConnectorOptions) SetOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Options = types.MapValueMust(t, vs)
+}
+
 type ApplyEnvironmentRequest struct {
 	PipelineId types.String `tfsdk:"-"`
 }
@@ -1185,6 +1344,9 @@ func (m ConnectionParameters) Type(ctx context.Context) attr.Type {
 // Wrapper message for source-specific options to support multiple connector
 // types
 type ConnectorOptions struct {
+	// Connector-specific options for API Source connectors.
+	ApiSourceConnectorOptions types.Object `tfsdk:"api_source_connector_options"`
+
 	ConfluenceOptions types.Object `tfsdk:"confluence_options"`
 
 	GdriveOptions types.Object `tfsdk:"gdrive_options"`
@@ -1194,6 +1356,10 @@ type ConnectorOptions struct {
 	JiraOptions types.Object `tfsdk:"jira_options"`
 
 	KafkaOptions types.Object `tfsdk:"kafka_options"`
+
+	LinkedinAdsOptions types.Object `tfsdk:"linkedin_ads_options"`
+
+	MarketoOptions types.Object `tfsdk:"marketo_options"`
 
 	MetaAdsOptions types.Object `tfsdk:"meta_ads_options"`
 
@@ -1211,6 +1377,15 @@ type ConnectorOptions struct {
 }
 
 func (to *ConnectorOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ConnectorOptions) {
+	if !from.ApiSourceConnectorOptions.IsNull() && !from.ApiSourceConnectorOptions.IsUnknown() {
+		if toApiSourceConnectorOptions, ok := to.GetApiSourceConnectorOptions(ctx); ok {
+			if fromApiSourceConnectorOptions, ok := from.GetApiSourceConnectorOptions(ctx); ok {
+				// Recursively sync the fields of ApiSourceConnectorOptions
+				toApiSourceConnectorOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromApiSourceConnectorOptions)
+				to.SetApiSourceConnectorOptions(ctx, toApiSourceConnectorOptions)
+			}
+		}
+	}
 	if !from.ConfluenceOptions.IsNull() && !from.ConfluenceOptions.IsUnknown() {
 		if toConfluenceOptions, ok := to.GetConfluenceOptions(ctx); ok {
 			if fromConfluenceOptions, ok := from.GetConfluenceOptions(ctx); ok {
@@ -1253,6 +1428,24 @@ func (to *ConnectorOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 				// Recursively sync the fields of KafkaOptions
 				toKafkaOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromKafkaOptions)
 				to.SetKafkaOptions(ctx, toKafkaOptions)
+			}
+		}
+	}
+	if !from.LinkedinAdsOptions.IsNull() && !from.LinkedinAdsOptions.IsUnknown() {
+		if toLinkedinAdsOptions, ok := to.GetLinkedinAdsOptions(ctx); ok {
+			if fromLinkedinAdsOptions, ok := from.GetLinkedinAdsOptions(ctx); ok {
+				// Recursively sync the fields of LinkedinAdsOptions
+				toLinkedinAdsOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromLinkedinAdsOptions)
+				to.SetLinkedinAdsOptions(ctx, toLinkedinAdsOptions)
+			}
+		}
+	}
+	if !from.MarketoOptions.IsNull() && !from.MarketoOptions.IsUnknown() {
+		if toMarketoOptions, ok := to.GetMarketoOptions(ctx); ok {
+			if fromMarketoOptions, ok := from.GetMarketoOptions(ctx); ok {
+				// Recursively sync the fields of MarketoOptions
+				toMarketoOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromMarketoOptions)
+				to.SetMarketoOptions(ctx, toMarketoOptions)
 			}
 		}
 	}
@@ -1322,6 +1515,14 @@ func (to *ConnectorOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 }
 
 func (to *ConnectorOptions) SyncFieldsDuringRead(ctx context.Context, from ConnectorOptions) {
+	if !from.ApiSourceConnectorOptions.IsNull() && !from.ApiSourceConnectorOptions.IsUnknown() {
+		if toApiSourceConnectorOptions, ok := to.GetApiSourceConnectorOptions(ctx); ok {
+			if fromApiSourceConnectorOptions, ok := from.GetApiSourceConnectorOptions(ctx); ok {
+				toApiSourceConnectorOptions.SyncFieldsDuringRead(ctx, fromApiSourceConnectorOptions)
+				to.SetApiSourceConnectorOptions(ctx, toApiSourceConnectorOptions)
+			}
+		}
+	}
 	if !from.ConfluenceOptions.IsNull() && !from.ConfluenceOptions.IsUnknown() {
 		if toConfluenceOptions, ok := to.GetConfluenceOptions(ctx); ok {
 			if fromConfluenceOptions, ok := from.GetConfluenceOptions(ctx); ok {
@@ -1359,6 +1560,22 @@ func (to *ConnectorOptions) SyncFieldsDuringRead(ctx context.Context, from Conne
 			if fromKafkaOptions, ok := from.GetKafkaOptions(ctx); ok {
 				toKafkaOptions.SyncFieldsDuringRead(ctx, fromKafkaOptions)
 				to.SetKafkaOptions(ctx, toKafkaOptions)
+			}
+		}
+	}
+	if !from.LinkedinAdsOptions.IsNull() && !from.LinkedinAdsOptions.IsUnknown() {
+		if toLinkedinAdsOptions, ok := to.GetLinkedinAdsOptions(ctx); ok {
+			if fromLinkedinAdsOptions, ok := from.GetLinkedinAdsOptions(ctx); ok {
+				toLinkedinAdsOptions.SyncFieldsDuringRead(ctx, fromLinkedinAdsOptions)
+				to.SetLinkedinAdsOptions(ctx, toLinkedinAdsOptions)
+			}
+		}
+	}
+	if !from.MarketoOptions.IsNull() && !from.MarketoOptions.IsUnknown() {
+		if toMarketoOptions, ok := to.GetMarketoOptions(ctx); ok {
+			if fromMarketoOptions, ok := from.GetMarketoOptions(ctx); ok {
+				toMarketoOptions.SyncFieldsDuringRead(ctx, fromMarketoOptions)
+				to.SetMarketoOptions(ctx, toMarketoOptions)
 			}
 		}
 	}
@@ -1421,11 +1638,14 @@ func (to *ConnectorOptions) SyncFieldsDuringRead(ctx context.Context, from Conne
 }
 
 func (m ConnectorOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["api_source_connector_options"] = attrs["api_source_connector_options"].SetOptional()
 	attrs["confluence_options"] = attrs["confluence_options"].SetOptional()
 	attrs["gdrive_options"] = attrs["gdrive_options"].SetOptional()
 	attrs["google_ads_options"] = attrs["google_ads_options"].SetOptional()
 	attrs["jira_options"] = attrs["jira_options"].SetOptional()
 	attrs["kafka_options"] = attrs["kafka_options"].SetOptional()
+	attrs["linkedin_ads_options"] = attrs["linkedin_ads_options"].SetOptional()
+	attrs["marketo_options"] = attrs["marketo_options"].SetOptional()
 	attrs["meta_ads_options"] = attrs["meta_ads_options"].SetOptional()
 	attrs["outlook_options"] = attrs["outlook_options"].SetOptional()
 	attrs["reddit_ads_options"] = attrs["reddit_ads_options"].SetOptional()
@@ -1446,18 +1666,21 @@ func (m ConnectorOptions) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (m ConnectorOptions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"confluence_options":      reflect.TypeOf(ConfluenceConnectorOptions{}),
-		"gdrive_options":          reflect.TypeOf(GoogleDriveOptions{}),
-		"google_ads_options":      reflect.TypeOf(GoogleAdsOptions{}),
-		"jira_options":            reflect.TypeOf(JiraConnectorOptions{}),
-		"kafka_options":           reflect.TypeOf(KafkaOptions{}),
-		"meta_ads_options":        reflect.TypeOf(MetaMarketingOptions{}),
-		"outlook_options":         reflect.TypeOf(OutlookOptions{}),
-		"reddit_ads_options":      reflect.TypeOf(RedditAdsOptions{}),
-		"sharepoint_options":      reflect.TypeOf(SharepointOptions{}),
-		"smartsheet_options":      reflect.TypeOf(SmartsheetOptions{}),
-		"tiktok_ads_options":      reflect.TypeOf(TikTokAdsOptions{}),
-		"zendesk_support_options": reflect.TypeOf(ZendeskSupportOptions{}),
+		"api_source_connector_options": reflect.TypeOf(ApiSourceConnectorOptions{}),
+		"confluence_options":           reflect.TypeOf(ConfluenceConnectorOptions{}),
+		"gdrive_options":               reflect.TypeOf(GoogleDriveOptions{}),
+		"google_ads_options":           reflect.TypeOf(GoogleAdsOptions{}),
+		"jira_options":                 reflect.TypeOf(JiraConnectorOptions{}),
+		"kafka_options":                reflect.TypeOf(KafkaOptions{}),
+		"linkedin_ads_options":         reflect.TypeOf(LinkedInAdsOptions{}),
+		"marketo_options":              reflect.TypeOf(MarketoOptions{}),
+		"meta_ads_options":             reflect.TypeOf(MetaMarketingOptions{}),
+		"outlook_options":              reflect.TypeOf(OutlookOptions{}),
+		"reddit_ads_options":           reflect.TypeOf(RedditAdsOptions{}),
+		"sharepoint_options":           reflect.TypeOf(SharepointOptions{}),
+		"smartsheet_options":           reflect.TypeOf(SmartsheetOptions{}),
+		"tiktok_ads_options":           reflect.TypeOf(TikTokAdsOptions{}),
+		"zendesk_support_options":      reflect.TypeOf(ZendeskSupportOptions{}),
 	}
 }
 
@@ -1468,18 +1691,21 @@ func (m ConnectorOptions) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"confluence_options":      m.ConfluenceOptions,
-			"gdrive_options":          m.GdriveOptions,
-			"google_ads_options":      m.GoogleAdsOptions,
-			"jira_options":            m.JiraOptions,
-			"kafka_options":           m.KafkaOptions,
-			"meta_ads_options":        m.MetaAdsOptions,
-			"outlook_options":         m.OutlookOptions,
-			"reddit_ads_options":      m.RedditAdsOptions,
-			"sharepoint_options":      m.SharepointOptions,
-			"smartsheet_options":      m.SmartsheetOptions,
-			"tiktok_ads_options":      m.TiktokAdsOptions,
-			"zendesk_support_options": m.ZendeskSupportOptions,
+			"api_source_connector_options": m.ApiSourceConnectorOptions,
+			"confluence_options":           m.ConfluenceOptions,
+			"gdrive_options":               m.GdriveOptions,
+			"google_ads_options":           m.GoogleAdsOptions,
+			"jira_options":                 m.JiraOptions,
+			"kafka_options":                m.KafkaOptions,
+			"linkedin_ads_options":         m.LinkedinAdsOptions,
+			"marketo_options":              m.MarketoOptions,
+			"meta_ads_options":             m.MetaAdsOptions,
+			"outlook_options":              m.OutlookOptions,
+			"reddit_ads_options":           m.RedditAdsOptions,
+			"sharepoint_options":           m.SharepointOptions,
+			"smartsheet_options":           m.SmartsheetOptions,
+			"tiktok_ads_options":           m.TiktokAdsOptions,
+			"zendesk_support_options":      m.ZendeskSupportOptions,
 		})
 }
 
@@ -1487,20 +1713,48 @@ func (m ConnectorOptions) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m ConnectorOptions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"confluence_options":      ConfluenceConnectorOptions{}.Type(ctx),
-			"gdrive_options":          GoogleDriveOptions{}.Type(ctx),
-			"google_ads_options":      GoogleAdsOptions{}.Type(ctx),
-			"jira_options":            JiraConnectorOptions{}.Type(ctx),
-			"kafka_options":           KafkaOptions{}.Type(ctx),
-			"meta_ads_options":        MetaMarketingOptions{}.Type(ctx),
-			"outlook_options":         OutlookOptions{}.Type(ctx),
-			"reddit_ads_options":      RedditAdsOptions{}.Type(ctx),
-			"sharepoint_options":      SharepointOptions{}.Type(ctx),
-			"smartsheet_options":      SmartsheetOptions{}.Type(ctx),
-			"tiktok_ads_options":      TikTokAdsOptions{}.Type(ctx),
-			"zendesk_support_options": ZendeskSupportOptions{}.Type(ctx),
+			"api_source_connector_options": ApiSourceConnectorOptions{}.Type(ctx),
+			"confluence_options":           ConfluenceConnectorOptions{}.Type(ctx),
+			"gdrive_options":               GoogleDriveOptions{}.Type(ctx),
+			"google_ads_options":           GoogleAdsOptions{}.Type(ctx),
+			"jira_options":                 JiraConnectorOptions{}.Type(ctx),
+			"kafka_options":                KafkaOptions{}.Type(ctx),
+			"linkedin_ads_options":         LinkedInAdsOptions{}.Type(ctx),
+			"marketo_options":              MarketoOptions{}.Type(ctx),
+			"meta_ads_options":             MetaMarketingOptions{}.Type(ctx),
+			"outlook_options":              OutlookOptions{}.Type(ctx),
+			"reddit_ads_options":           RedditAdsOptions{}.Type(ctx),
+			"sharepoint_options":           SharepointOptions{}.Type(ctx),
+			"smartsheet_options":           SmartsheetOptions{}.Type(ctx),
+			"tiktok_ads_options":           TikTokAdsOptions{}.Type(ctx),
+			"zendesk_support_options":      ZendeskSupportOptions{}.Type(ctx),
 		},
 	}
+}
+
+// GetApiSourceConnectorOptions returns the value of the ApiSourceConnectorOptions field in ConnectorOptions as
+// a ApiSourceConnectorOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions) GetApiSourceConnectorOptions(ctx context.Context) (ApiSourceConnectorOptions, bool) {
+	var e ApiSourceConnectorOptions
+	if m.ApiSourceConnectorOptions.IsNull() || m.ApiSourceConnectorOptions.IsUnknown() {
+		return e, false
+	}
+	var v ApiSourceConnectorOptions
+	d := m.ApiSourceConnectorOptions.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetApiSourceConnectorOptions sets the value of the ApiSourceConnectorOptions field in ConnectorOptions.
+func (m *ConnectorOptions) SetApiSourceConnectorOptions(ctx context.Context, v ApiSourceConnectorOptions) {
+	vs := v.ToObjectValue(ctx)
+	m.ApiSourceConnectorOptions = vs
 }
 
 // GetConfluenceOptions returns the value of the ConfluenceOptions field in ConnectorOptions as
@@ -1626,6 +1880,56 @@ func (m *ConnectorOptions) GetKafkaOptions(ctx context.Context) (KafkaOptions, b
 func (m *ConnectorOptions) SetKafkaOptions(ctx context.Context, v KafkaOptions) {
 	vs := v.ToObjectValue(ctx)
 	m.KafkaOptions = vs
+}
+
+// GetLinkedinAdsOptions returns the value of the LinkedinAdsOptions field in ConnectorOptions as
+// a LinkedInAdsOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions) GetLinkedinAdsOptions(ctx context.Context) (LinkedInAdsOptions, bool) {
+	var e LinkedInAdsOptions
+	if m.LinkedinAdsOptions.IsNull() || m.LinkedinAdsOptions.IsUnknown() {
+		return e, false
+	}
+	var v LinkedInAdsOptions
+	d := m.LinkedinAdsOptions.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLinkedinAdsOptions sets the value of the LinkedinAdsOptions field in ConnectorOptions.
+func (m *ConnectorOptions) SetLinkedinAdsOptions(ctx context.Context, v LinkedInAdsOptions) {
+	vs := v.ToObjectValue(ctx)
+	m.LinkedinAdsOptions = vs
+}
+
+// GetMarketoOptions returns the value of the MarketoOptions field in ConnectorOptions as
+// a MarketoOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions) GetMarketoOptions(ctx context.Context) (MarketoOptions, bool) {
+	var e MarketoOptions
+	if m.MarketoOptions.IsNull() || m.MarketoOptions.IsUnknown() {
+		return e, false
+	}
+	var v MarketoOptions
+	d := m.MarketoOptions.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMarketoOptions sets the value of the MarketoOptions field in ConnectorOptions.
+func (m *ConnectorOptions) SetMarketoOptions(ctx context.Context, v MarketoOptions) {
+	vs := v.ToObjectValue(ctx)
+	m.MarketoOptions = vs
 }
 
 // GetMetaAdsOptions returns the value of the MetaAdsOptions field in ConnectorOptions as
@@ -4904,6 +5208,8 @@ type GetPipelineResponse struct {
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 	// Publishing mode of the pipeline
 	EffectivePublishingMode types.String `tfsdk:"effective_publishing_mode"`
+	// Serverless compute ID resolved for the pipeline.
+	EffectiveServerlessComputeId types.String `tfsdk:"effective_serverless_compute_id"`
 	// The health of a pipeline.
 	Health types.String `tfsdk:"health"`
 	// The last time the pipeline settings were modified or created.
@@ -5015,6 +5321,7 @@ func (m GetPipelineResponse) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetOptional()
 	attrs["effective_publishing_mode"] = attrs["effective_publishing_mode"].SetOptional()
+	attrs["effective_serverless_compute_id"] = attrs["effective_serverless_compute_id"].SetOptional()
 	attrs["health"] = attrs["health"].SetOptional()
 	attrs["last_modified"] = attrs["last_modified"].SetOptional()
 	attrs["latest_updates"] = attrs["latest_updates"].SetOptional()
@@ -5052,21 +5359,22 @@ func (m GetPipelineResponse) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"cause":                      m.Cause,
-			"cluster_id":                 m.ClusterId,
-			"creator_user_name":          m.CreatorUserName,
-			"effective_budget_policy_id": m.EffectiveBudgetPolicyId,
-			"effective_publishing_mode":  m.EffectivePublishingMode,
-			"health":                     m.Health,
-			"last_modified":              m.LastModified,
-			"latest_updates":             m.LatestUpdates,
-			"name":                       m.Name,
-			"parameters":                 m.Parameters,
-			"pipeline_id":                m.PipelineId,
-			"run_as":                     m.RunAs,
-			"run_as_user_name":           m.RunAsUserName,
-			"spec":                       m.Spec,
-			"state":                      m.State,
+			"cause":                           m.Cause,
+			"cluster_id":                      m.ClusterId,
+			"creator_user_name":               m.CreatorUserName,
+			"effective_budget_policy_id":      m.EffectiveBudgetPolicyId,
+			"effective_publishing_mode":       m.EffectivePublishingMode,
+			"effective_serverless_compute_id": m.EffectiveServerlessComputeId,
+			"health":                          m.Health,
+			"last_modified":                   m.LastModified,
+			"latest_updates":                  m.LatestUpdates,
+			"name":                            m.Name,
+			"parameters":                      m.Parameters,
+			"pipeline_id":                     m.PipelineId,
+			"run_as":                          m.RunAs,
+			"run_as_user_name":                m.RunAsUserName,
+			"spec":                            m.Spec,
+			"state":                           m.State,
 		})
 }
 
@@ -5074,13 +5382,14 @@ func (m GetPipelineResponse) ToObjectValue(ctx context.Context) basetypes.Object
 func (m GetPipelineResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cause":                      types.StringType,
-			"cluster_id":                 types.StringType,
-			"creator_user_name":          types.StringType,
-			"effective_budget_policy_id": types.StringType,
-			"effective_publishing_mode":  types.StringType,
-			"health":                     types.StringType,
-			"last_modified":              types.Int64Type,
+			"cause":                           types.StringType,
+			"cluster_id":                      types.StringType,
+			"creator_user_name":               types.StringType,
+			"effective_budget_policy_id":      types.StringType,
+			"effective_publishing_mode":       types.StringType,
+			"effective_serverless_compute_id": types.StringType,
+			"health":                          types.StringType,
+			"last_modified":                   types.Int64Type,
 			"latest_updates": basetypes.ListType{
 				ElemType: UpdateStateInfo{}.Type(ctx),
 			},
@@ -7392,6 +7701,277 @@ func (m *KafkaOptions) SetValueTransformer(ctx context.Context, v Transformer) {
 	m.ValueTransformer = vs
 }
 
+// LinkedIn Ads specific options for ingestion. sync_start_date and
+// lookback_window_days apply to both the prebuilt analytics tables and custom
+// reports. custom_report_options defines a custom (user-defined) adAnalytics
+// report and is only valid on a table object.
+type LinkedInAdsOptions struct {
+	// (Optional) Custom report definition. Only valid on a table object. When
+	// set, the table is synthesized from /rest/adAnalytics using the finder,
+	// pivots, time granularity and metrics here. When unset, the table must
+	// match one of the connector's prebuilt sources.
+	CustomReportOptions types.Object `tfsdk:"custom_report_options"`
+	// (Optional) Days to look back during incremental sync for late-arriving
+	// data. If not specified, defaults to 30 days.
+	LookbackWindowDays types.Int64 `tfsdk:"lookback_window_days"`
+	// (Optional) Start date for the initial sync of report tables, YYYY-MM-DD.
+	// Earliest date from which to sync historical data; overrides the default
+	// when set. For finder attributedRevenueMetrics, this must be between 30
+	// and 366 days before today. If not specified, defaults to 1 year of
+	// history.
+	SyncStartDate types.String `tfsdk:"sync_start_date"`
+}
+
+func (to *LinkedInAdsOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LinkedInAdsOptions) {
+	if !from.CustomReportOptions.IsNull() && !from.CustomReportOptions.IsUnknown() {
+		if toCustomReportOptions, ok := to.GetCustomReportOptions(ctx); ok {
+			if fromCustomReportOptions, ok := from.GetCustomReportOptions(ctx); ok {
+				// Recursively sync the fields of CustomReportOptions
+				toCustomReportOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromCustomReportOptions)
+				to.SetCustomReportOptions(ctx, toCustomReportOptions)
+			}
+		}
+	}
+}
+
+func (to *LinkedInAdsOptions) SyncFieldsDuringRead(ctx context.Context, from LinkedInAdsOptions) {
+	if !from.CustomReportOptions.IsNull() && !from.CustomReportOptions.IsUnknown() {
+		if toCustomReportOptions, ok := to.GetCustomReportOptions(ctx); ok {
+			if fromCustomReportOptions, ok := from.GetCustomReportOptions(ctx); ok {
+				toCustomReportOptions.SyncFieldsDuringRead(ctx, fromCustomReportOptions)
+				to.SetCustomReportOptions(ctx, toCustomReportOptions)
+			}
+		}
+	}
+}
+
+func (m LinkedInAdsOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["custom_report_options"] = attrs["custom_report_options"].SetOptional()
+	attrs["lookback_window_days"] = attrs["lookback_window_days"].SetOptional()
+	attrs["sync_start_date"] = attrs["sync_start_date"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LinkedInAdsOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m LinkedInAdsOptions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"custom_report_options": reflect.TypeOf(LinkedInAdsOptionsLinkedInAdsCustomReportOptions{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LinkedInAdsOptions
+// only implements ToObjectValue() and Type().
+func (m LinkedInAdsOptions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"custom_report_options": m.CustomReportOptions,
+			"lookback_window_days":  m.LookbackWindowDays,
+			"sync_start_date":       m.SyncStartDate,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m LinkedInAdsOptions) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"custom_report_options": LinkedInAdsOptionsLinkedInAdsCustomReportOptions{}.Type(ctx),
+			"lookback_window_days":  types.Int64Type,
+			"sync_start_date":       types.StringType,
+		},
+	}
+}
+
+// GetCustomReportOptions returns the value of the CustomReportOptions field in LinkedInAdsOptions as
+// a LinkedInAdsOptionsLinkedInAdsCustomReportOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *LinkedInAdsOptions) GetCustomReportOptions(ctx context.Context) (LinkedInAdsOptionsLinkedInAdsCustomReportOptions, bool) {
+	var e LinkedInAdsOptionsLinkedInAdsCustomReportOptions
+	if m.CustomReportOptions.IsNull() || m.CustomReportOptions.IsUnknown() {
+		return e, false
+	}
+	var v LinkedInAdsOptionsLinkedInAdsCustomReportOptions
+	d := m.CustomReportOptions.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomReportOptions sets the value of the CustomReportOptions field in LinkedInAdsOptions.
+func (m *LinkedInAdsOptions) SetCustomReportOptions(ctx context.Context, v LinkedInAdsOptionsLinkedInAdsCustomReportOptions) {
+	vs := v.ToObjectValue(ctx)
+	m.CustomReportOptions = vs
+}
+
+// User-defined custom report for the LinkedIn Ads connector. The destination
+// table name comes from the enclosing TableSpec.destination_table, the start
+// date from the enclosing LinkedInAdsOptions.sync_start_date, and the account
+// it runs against from the source schema (namespace) -- none are repeated here.
+type LinkedInAdsOptionsLinkedInAdsCustomReportOptions struct {
+	// (Required) Entity pivots to group by; count/constraints depend on finder.
+	EntityGranularity types.List `tfsdk:"entity_granularity"`
+	// (Required) adAnalytics finder. See LinkedInAdsFinder.
+	Finder types.String `tfsdk:"finder"`
+	// (Optional) LinkedIn metric names for the report. Open vocabulary (not an
+	// enum): the valid set is large (~100) and evolves with the LinkedIn
+	// adAnalytics API, so values are passed through verbatim. If empty, a
+	// pivot-safe default core set is ingested: impressions, clicks,
+	// costInLocalCurrency, externalWebsiteConversions (valid for every pivot).
+	// Ignored for attributedRevenueMetrics (always returns the full
+	// RevenueAttributionMetrics struct).
+	Metrics types.List `tfsdk:"metrics"`
+	// (Optional) Time aggregation. Defaults to DAILY when unspecified. Used by
+	// analytics/statistics; ignored for attributedRevenueMetrics.
+	TimeGranularity types.String `tfsdk:"time_granularity"`
+}
+
+func (to *LinkedInAdsOptionsLinkedInAdsCustomReportOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LinkedInAdsOptionsLinkedInAdsCustomReportOptions) {
+	if !from.EntityGranularity.IsNull() && !from.EntityGranularity.IsUnknown() && to.EntityGranularity.IsNull() && len(from.EntityGranularity.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EntityGranularity, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EntityGranularity = from.EntityGranularity
+	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() && to.Metrics.IsNull() && len(from.Metrics.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Metrics, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Metrics = from.Metrics
+	}
+}
+
+func (to *LinkedInAdsOptionsLinkedInAdsCustomReportOptions) SyncFieldsDuringRead(ctx context.Context, from LinkedInAdsOptionsLinkedInAdsCustomReportOptions) {
+	if !from.EntityGranularity.IsNull() && !from.EntityGranularity.IsUnknown() && to.EntityGranularity.IsNull() && len(from.EntityGranularity.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EntityGranularity, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EntityGranularity = from.EntityGranularity
+	}
+	if !from.Metrics.IsNull() && !from.Metrics.IsUnknown() && to.Metrics.IsNull() && len(from.Metrics.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Metrics, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Metrics = from.Metrics
+	}
+}
+
+func (m LinkedInAdsOptionsLinkedInAdsCustomReportOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_granularity"] = attrs["entity_granularity"].SetOptional()
+	attrs["finder"] = attrs["finder"].SetRequired()
+	attrs["metrics"] = attrs["metrics"].SetOptional()
+	attrs["time_granularity"] = attrs["time_granularity"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LinkedInAdsOptionsLinkedInAdsCustomReportOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m LinkedInAdsOptionsLinkedInAdsCustomReportOptions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"entity_granularity": reflect.TypeOf(types.String{}),
+		"metrics":            reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LinkedInAdsOptionsLinkedInAdsCustomReportOptions
+// only implements ToObjectValue() and Type().
+func (m LinkedInAdsOptionsLinkedInAdsCustomReportOptions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entity_granularity": m.EntityGranularity,
+			"finder":             m.Finder,
+			"metrics":            m.Metrics,
+			"time_granularity":   m.TimeGranularity,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m LinkedInAdsOptionsLinkedInAdsCustomReportOptions) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entity_granularity": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"finder": types.StringType,
+			"metrics": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"time_granularity": types.StringType,
+		},
+	}
+}
+
+// GetEntityGranularity returns the value of the EntityGranularity field in LinkedInAdsOptionsLinkedInAdsCustomReportOptions as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *LinkedInAdsOptionsLinkedInAdsCustomReportOptions) GetEntityGranularity(ctx context.Context) ([]types.String, bool) {
+	if m.EntityGranularity.IsNull() || m.EntityGranularity.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.EntityGranularity.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEntityGranularity sets the value of the EntityGranularity field in LinkedInAdsOptionsLinkedInAdsCustomReportOptions.
+func (m *LinkedInAdsOptionsLinkedInAdsCustomReportOptions) SetEntityGranularity(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entity_granularity"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EntityGranularity = types.ListValueMust(t, vs)
+}
+
+// GetMetrics returns the value of the Metrics field in LinkedInAdsOptionsLinkedInAdsCustomReportOptions as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *LinkedInAdsOptionsLinkedInAdsCustomReportOptions) GetMetrics(ctx context.Context) ([]types.String, bool) {
+	if m.Metrics.IsNull() || m.Metrics.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Metrics.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMetrics sets the value of the Metrics field in LinkedInAdsOptionsLinkedInAdsCustomReportOptions.
+func (m *LinkedInAdsOptionsLinkedInAdsCustomReportOptions) SetMetrics(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["metrics"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Metrics = types.ListValueMust(t, vs)
+}
+
 type ListPipelineEventsRequest struct {
 	// Criteria to select a subset of results, expressed using a SQL-like
 	// syntax. The supported filters are: 1. level='INFO' (or WARN or ERROR) 2.
@@ -8106,6 +8686,57 @@ func (m ManualTrigger) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m ManualTrigger) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+// Marketo specific options for ingestion
+type MarketoOptions struct {
+	// (Optional) Start date for the initial sync in YYYY-MM-DD format. This
+	// determines the earliest date from which to sync historical data. If not
+	// specified, complete history is ingested.
+	SyncStartDate types.String `tfsdk:"sync_start_date"`
+}
+
+func (to *MarketoOptions) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MarketoOptions) {
+}
+
+func (to *MarketoOptions) SyncFieldsDuringRead(ctx context.Context, from MarketoOptions) {
+}
+
+func (m MarketoOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["sync_start_date"] = attrs["sync_start_date"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MarketoOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m MarketoOptions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MarketoOptions
+// only implements ToObjectValue() and Type().
+func (m MarketoOptions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"sync_start_date": m.SyncStartDate,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m MarketoOptions) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"sync_start_date": types.StringType,
+		},
 	}
 }
 
@@ -13481,7 +14112,12 @@ type SchemaSpec struct {
 	// The source catalog name. Might be optional depending on the type of
 	// source.
 	SourceCatalog types.String `tfsdk:"source_catalog"`
-	// Required. Schema name in the source database.
+	// Schema name in the source database. Currently required; this field will
+	// become optional in an upcoming release, since some source types (for
+	// example streaming / message-bus connectors) do not use it. When that
+	// change ships, this field's type in the generated SDKs and CLI will change
+	// from required to optional (nullable); clients that assume it is always
+	// present should handle its absence.
 	SourceSchema types.String `tfsdk:"source_schema"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// are applied to all tables in this schema and override the
@@ -14158,6 +14794,8 @@ func (m *SourceCatalogConfig) SetPostgres(ctx context.Context, v PostgresCatalog
 }
 
 type SourceConfig struct {
+	// Connector-specific top-level configuration for API Source connectors.
+	ApiSourceConnectorConfig types.Object `tfsdk:"api_source_connector_config"`
 	// Catalog-level source configuration parameters
 	Catalog types.Object `tfsdk:"catalog"`
 
@@ -14165,6 +14803,15 @@ type SourceConfig struct {
 }
 
 func (to *SourceConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SourceConfig) {
+	if !from.ApiSourceConnectorConfig.IsNull() && !from.ApiSourceConnectorConfig.IsUnknown() {
+		if toApiSourceConnectorConfig, ok := to.GetApiSourceConnectorConfig(ctx); ok {
+			if fromApiSourceConnectorConfig, ok := from.GetApiSourceConnectorConfig(ctx); ok {
+				// Recursively sync the fields of ApiSourceConnectorConfig
+				toApiSourceConnectorConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromApiSourceConnectorConfig)
+				to.SetApiSourceConnectorConfig(ctx, toApiSourceConnectorConfig)
+			}
+		}
+	}
 	if !from.Catalog.IsNull() && !from.Catalog.IsUnknown() {
 		if toCatalog, ok := to.GetCatalog(ctx); ok {
 			if fromCatalog, ok := from.GetCatalog(ctx); ok {
@@ -14186,6 +14833,14 @@ func (to *SourceConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 }
 
 func (to *SourceConfig) SyncFieldsDuringRead(ctx context.Context, from SourceConfig) {
+	if !from.ApiSourceConnectorConfig.IsNull() && !from.ApiSourceConnectorConfig.IsUnknown() {
+		if toApiSourceConnectorConfig, ok := to.GetApiSourceConnectorConfig(ctx); ok {
+			if fromApiSourceConnectorConfig, ok := from.GetApiSourceConnectorConfig(ctx); ok {
+				toApiSourceConnectorConfig.SyncFieldsDuringRead(ctx, fromApiSourceConnectorConfig)
+				to.SetApiSourceConnectorConfig(ctx, toApiSourceConnectorConfig)
+			}
+		}
+	}
 	if !from.Catalog.IsNull() && !from.Catalog.IsUnknown() {
 		if toCatalog, ok := to.GetCatalog(ctx); ok {
 			if fromCatalog, ok := from.GetCatalog(ctx); ok {
@@ -14205,6 +14860,7 @@ func (to *SourceConfig) SyncFieldsDuringRead(ctx context.Context, from SourceCon
 }
 
 func (m SourceConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["api_source_connector_config"] = attrs["api_source_connector_config"].SetOptional()
 	attrs["catalog"] = attrs["catalog"].SetOptional()
 	attrs["google_ads_config"] = attrs["google_ads_config"].SetOptional()
 
@@ -14220,8 +14876,9 @@ func (m SourceConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // SDK values.
 func (m SourceConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"catalog":           reflect.TypeOf(SourceCatalogConfig{}),
-		"google_ads_config": reflect.TypeOf(GoogleAdsConfig{}),
+		"api_source_connector_config": reflect.TypeOf(ApiSourceConnectorConfig{}),
+		"catalog":                     reflect.TypeOf(SourceCatalogConfig{}),
+		"google_ads_config":           reflect.TypeOf(GoogleAdsConfig{}),
 	}
 }
 
@@ -14232,8 +14889,9 @@ func (m SourceConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"catalog":           m.Catalog,
-			"google_ads_config": m.GoogleAdsConfig,
+			"api_source_connector_config": m.ApiSourceConnectorConfig,
+			"catalog":                     m.Catalog,
+			"google_ads_config":           m.GoogleAdsConfig,
 		})
 }
 
@@ -14241,10 +14899,36 @@ func (m SourceConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m SourceConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"catalog":           SourceCatalogConfig{}.Type(ctx),
-			"google_ads_config": GoogleAdsConfig{}.Type(ctx),
+			"api_source_connector_config": ApiSourceConnectorConfig{}.Type(ctx),
+			"catalog":                     SourceCatalogConfig{}.Type(ctx),
+			"google_ads_config":           GoogleAdsConfig{}.Type(ctx),
 		},
 	}
+}
+
+// GetApiSourceConnectorConfig returns the value of the ApiSourceConnectorConfig field in SourceConfig as
+// a ApiSourceConnectorConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SourceConfig) GetApiSourceConnectorConfig(ctx context.Context) (ApiSourceConnectorConfig, bool) {
+	var e ApiSourceConnectorConfig
+	if m.ApiSourceConnectorConfig.IsNull() || m.ApiSourceConnectorConfig.IsUnknown() {
+		return e, false
+	}
+	var v ApiSourceConnectorConfig
+	d := m.ApiSourceConnectorConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetApiSourceConnectorConfig sets the value of the ApiSourceConnectorConfig field in SourceConfig.
+func (m *SourceConfig) SetApiSourceConnectorConfig(ctx context.Context, v ApiSourceConnectorConfig) {
+	vs := v.ToObjectValue(ctx)
+	m.ApiSourceConnectorConfig = vs
 }
 
 // GetCatalog returns the value of the Catalog field in SourceConfig as
@@ -14877,7 +15561,12 @@ type TableSpec struct {
 	// Schema name in the source database. Might be optional depending on the
 	// type of source.
 	SourceSchema types.String `tfsdk:"source_schema"`
-	// Required. Table name in the source database.
+	// Table name in the source database. Currently required; this field will
+	// become optional in an upcoming release, since some source types (for
+	// example streaming / message-bus connectors) do not use it. When that
+	// change ships, this field's type in the generated SDKs and CLI will change
+	// from required to optional (nullable); clients that assume it is always
+	// present should handle its absence.
 	SourceTable types.String `tfsdk:"source_table"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// override the table_configuration defined in the
@@ -15930,8 +16619,14 @@ func (m *TikTokAdsOptionsTikTokAdsCustomReportOptions) SetMetrics(ctx context.Co
 type Transformer struct {
 	// Required: the wire format of the data.
 	Format types.String `tfsdk:"format"`
+	// Optional input column to transform. When set, the transformer reads from
+	// this column instead of the default source column.
+	InputColumn types.String `tfsdk:"input_column"`
 
 	JsonOptions types.Object `tfsdk:"json_options"`
+	// Optional output column name. When set, the transformed result is written
+	// to this column instead of replacing the input column.
+	OutputColumn types.String `tfsdk:"output_column"`
 }
 
 func (to *Transformer) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Transformer) {
@@ -15959,7 +16654,9 @@ func (to *Transformer) SyncFieldsDuringRead(ctx context.Context, from Transforme
 
 func (m Transformer) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["format"] = attrs["format"].SetOptional()
+	attrs["input_column"] = attrs["input_column"].SetOptional()
 	attrs["json_options"] = attrs["json_options"].SetOptional()
+	attrs["output_column"] = attrs["output_column"].SetOptional()
 
 	return attrs
 }
@@ -15984,8 +16681,10 @@ func (m Transformer) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"format":       m.Format,
-			"json_options": m.JsonOptions,
+			"format":        m.Format,
+			"input_column":  m.InputColumn,
+			"json_options":  m.JsonOptions,
+			"output_column": m.OutputColumn,
 		})
 }
 
@@ -15993,8 +16692,10 @@ func (m Transformer) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Transformer) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"format":       types.StringType,
-			"json_options": JsonTransformerOptions{}.Type(ctx),
+			"format":        types.StringType,
+			"input_column":  types.StringType,
+			"json_options":  JsonTransformerOptions{}.Type(ctx),
+			"output_column": types.StringType,
 		},
 	}
 }
@@ -16208,6 +16909,10 @@ type UpdateInfo struct {
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
 	FullRefreshSelection types.List `tfsdk:"full_refresh_selection"`
+	// Indicates whether the update is either part of a continuous job run, or
+	// running in legacy continuous pipeline mode. Returned only for GetUpdate;
+	// not populated in ListUpdates responses.
+	Mode types.String `tfsdk:"mode"`
 	// Key/value map of parameters used to initiate the update
 	Parameters types.Map `tfsdk:"parameters"`
 	// The ID of the pipeline.
@@ -16280,6 +16985,7 @@ func (m UpdateInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["creation_time"] = attrs["creation_time"].SetOptional()
 	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
 	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
+	attrs["mode"] = attrs["mode"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
 	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
@@ -16319,6 +17025,7 @@ func (m UpdateInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"creation_time":          m.CreationTime,
 			"full_refresh":           m.FullRefresh,
 			"full_refresh_selection": m.FullRefreshSelection,
+			"mode":                   m.Mode,
 			"parameters":             m.Parameters,
 			"pipeline_id":            m.PipelineId,
 			"refresh_selection":      m.RefreshSelection,
@@ -16340,6 +17047,7 @@ func (m UpdateInfo) Type(ctx context.Context) attr.Type {
 			"full_refresh_selection": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"mode": types.StringType,
 			"parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},

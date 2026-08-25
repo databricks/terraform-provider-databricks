@@ -1,5 +1,85 @@
 # Version changelog
 
+## Release v1.129.0 (2026-08-24)
+
+### Exporter
+
+* Added support for exporting `databricks_data_classification_catalog_config` resource ([#5961](https://github.com/databricks/terraform-provider-databricks/pull/5961)).
+* Added support for exporting `databricks_warehouses_default_warehouse_override` resource ([#5962](https://github.com/databricks/terraform-provider-databricks/pull/5962)).
+* Added support for exporting `databricks_secret_uc` resource ([#5963](https://github.com/databricks/terraform-provider-databricks/pull/5963)).
+* Skip system-managed jobs during export and add missing file references for job task parameters ([#5956](https://github.com/databricks/terraform-provider-databricks/issues/5956)).
+* Added support for exporting `databricks_endpoint` resource ([#5951](https://github.com/databricks/terraform-provider-databricks/pull/5951)).
+* Added support for exporting `databricks_environments_workspace_base_environment` and `databricks_environments_default_workspace_base_environment` resources ([#5960](https://github.com/databricks/terraform-provider-databricks/pull/5960)).
+* Add an `exporter` dimension to the user agent ([#5954](https://github.com/databricks/terraform-provider-databricks/pull/5954)).
+* Allow to generate named variables from references; introduce `databricks_account_id` variable for account-level exports; bug fixes ([#5952](https://github.com/databricks/terraform-provider-databricks/pull/5952)).
+* Preserve zero `value` fields when exporting `databricks_workspace_setting_v2` and `databricks_account_setting_v2` ([#5955](https://github.com/databricks/terraform-provider-databricks/issues/5955)).
+* Resolve references embedded in `databricks_cluster_policy` definitions instead of emitting hardcoded values ([#5953](https://github.com/databricks/terraform-provider-databricks/issues/5953)).
+
+
+## Release v1.128.0 (2026-08-19)
+
+### New Features and Improvements
+
+* Add resource and data sources for `databricks_account_iam_direct_group_member_v2`.
+* Add resource and data sources for `databricks_account_iam_group_v2`.
+* Add resource and data sources for `databricks_account_iam_service_principal_v2`.
+* Add resource and data sources for `databricks_account_iam_user_v2`.
+* Add resource and data sources for `databricks_account_iam_workspace_assignment_v2`.
+* Add resource and data sources for `databricks_workspace_iam_direct_group_member_v2`.
+* Add resource and data sources for `databricks_workspace_iam_group_v2`.
+* Add resource and data sources for `databricks_workspace_iam_service_principal_v2`.
+* Add resource and data sources for `databricks_workspace_iam_user_v2`.
+* Add resource and data sources for `databricks_workspace_iam_workspace_assignment_v2`.
+* Add resource and data source for `databricks_workspace_iam_workspace_identity_detail_v2`.
+
+### Documentation
+
+* Document Genie budgets on `databricks_budget` with shared vs per-user examples, and blocking usage ([#5946](https://github.com/databricks/terraform-provider-databricks/pull/5946))
+
+### Exporter
+
+* Automatically skip interactive mode when `-services` or `-listing` options is specified ([#5900](https://github.com/databricks/terraform-provider-databricks/issues/5900)).
+
+
+## Release v1.127.0 (2026-08-17)
+
+### New Features and Improvements
+
+* Add support for `model_service`, `mcp_service`, and `model_provider_service` securables in `databricks_grant` and `databricks_grants` ([#5941](https://github.com/databricks/terraform-provider-databricks/pull/5941)).
+
+### Bug Fixes
+* Fixed `databricks_share` failing with `produced an unexpected new value: .comment` when a share's comment is set or removed outside of Terraform (e.g. in the UI). The `comment` attribute is now `Optional`+`Computed`, so an out-of-band value is adopted into state instead of erroring, while `comment = ""` still explicitly clears the description.
+
+### Documentation
+
+* Document the `roles/group.assumer` role for group rule sets in `databricks_access_control_rule_set` ([#5924](https://github.com/databricks/terraform-provider-databricks/pull/5924)).
+
+
+## Release v1.126.0 (2026-08-12)
+
+### Bug Fixes
+* Honor `config.DefaultHostMetadataResolverFactory` during provider configuration ([#5940](https://github.com/databricks/terraform-provider-databricks/pull/5940)).
+* Fix perpetual `databricks_share` plan diff and null `id` by restoring the resource `id` on read and update ([#5934](https://github.com/databricks/terraform-provider-databricks/pull/5934)).
+
+
+## Release v1.125.0 (2026-08-10)
+
+### New Features and Improvements
+* Add optional `git_credential_id` attribute to `databricks_repo` resource to allow explicit credential selection ([#5877](https://github.com/databricks/terraform-provider-databricks/pull/5877)).
+
+* For workspace-level hosts, resolve and validate the provider's `workspace_id` from the host's `/.well-known/databricks-config` discovery metadata instead of a SCIM `/Me` call ([#5922](https://github.com/databricks/terraform-provider-databricks/pull/5922)).
+
+  This removes the authenticated `/Me` request on workspace hosts (avoiding false failures for service principals that can manage resources but cannot call `/Me`), and makes a `workspace_id` that disagrees with the host fail at plan time instead of at apply. Hosts whose metadata does not advertise a `workspace_id` fall back to the previous `/Me` behavior.
+
+
+## Release v1.124.0 (2026-08-03)
+
+### New Features and Improvements
+* Add resource and data sources for `databricks_ai_gateway_model_service`.
+* Add resource and data sources for `databricks_ai_gateway_model_provider_service`.
+* Add resource and data sources for `databricks_ai_gateway_mcp_service`.
+
+
 ## Release v1.123.0 (2026-07-29)
 
 ### Important Changes

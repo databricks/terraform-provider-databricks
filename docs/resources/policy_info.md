@@ -104,9 +104,8 @@ resource "databricks_policy_info" "sensitive_column_mask" {
 ## Arguments
 The following arguments are supported:
 * `for_securable_type` (string, required) - Type of securables that the policy should take effect on.
-  Only `TABLE` is supported at this moment.
   Required on create and optional on update. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `METASTORE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
-* `policy_type` (string, required) - Type of the policy. Required on create. Possible values are: `POLICY_TYPE_COLUMN_MASK`, `POLICY_TYPE_ROW_FILTER`
+* `policy_type` (string, required) - Type of the policy. Required on create. Possible values are: `POLICY_TYPE_COLUMN_MASK`, `POLICY_TYPE_GRANT`, `POLICY_TYPE_ROW_FILTER`
 * `to_principals` (list of string, required) - List of user or group names that the policy applies to.
   Required on create and optional on update
 * `column_mask` (ColumnMaskOptions, optional) - Options for column mask policies. Valid only if `policy_type` is `POLICY_TYPE_COLUMN_MASK`.
@@ -114,6 +113,9 @@ The following arguments are supported:
   the new options will replace the existing options as a whole
 * `comment` (string, optional) - Optional description of the policy
 * `except_principals` (list of string, optional) - Optional list of user or group names that should be excluded from the policy
+* `grant` (GrantOptions, optional) - Options for grant policies. Valid only if `policy_type` is `POLICY_TYPE_GRANT`.
+  Required on create and optional on update. When specified on update,
+  the new options will replace the existing options as a whole
 * `match_columns` (list of MatchColumn, optional) - Optional list of condition expressions used to match table columns.
   Only valid when `for_securable_type` is `TABLE`.
   When specified, the policy only applies to tables whose columns satisfy all match conditions
@@ -147,6 +149,12 @@ The following arguments are supported:
 ### FunctionArgument
 * `alias` (string, optional) - The alias of a matched column
 * `constant` (string, optional) - A constant literal
+
+### GrantOptions
+* `privileges` (list of string, required) - List of privileges to grant.
+  When any of these privileges are requested, the policy will grant access
+  if the principal and condition match.
+  Required on create and update
 
 ### MatchColumn
 * `alias` (string, optional) - Optional alias of the matched column

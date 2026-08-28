@@ -51,7 +51,35 @@ func (a AppResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBu
 	s["compute_size"] = s["compute_size"].SetComputed()
 	s = apps_tf.App{}.ApplySchemaCustomizations(s)
 	s["forward_user_access_token"] = s["forward_user_access_token"].SetComputed()
+
+	// git_source is input_only at the app level: the Apps API accepts it on write but never
+	// echoes it on read (the read-back is the separate OUTPUT_ONLY default_git_source). Its
+	// nested git_repository/resolved_commit are generated as Computed because GitSource is a
+	// shared message reused in output contexts; left Computed, a user-configured git_source
+	// carries unknown-after-apply values and the apply fails. Drop Computed on those
+	// descendants so a configured git_source is fully known; preserveInputOnlySource then
+	// round-trips it across reads.
+	if gs, ok := s["git_source"].(tfschema.SingleNestedAttributeBuilder); ok {
+		gs.Attributes["git_repository"] = clearComputed(gs.Attributes["git_repository"])
+		gs.Attributes["resolved_commit"] = clearComputed(gs.Attributes["resolved_commit"])
+		s["git_source"] = gs
+	}
 	return s
+}
+
+// clearComputed makes an attribute plain-optional (not Computed). It is used for the nested
+// fields of an input_only attribute, where the generated Computed flag is a shared-message
+// artifact the API can never populate — and a Computed value left unknown after apply fails.
+func clearComputed(b tfschema.AttributeBuilder) tfschema.AttributeBuilder {
+	switch nb := b.(type) {
+	case tfschema.SingleNestedAttributeBuilder:
+		nb.Computed, nb.Optional, nb.Required = false, true, false
+		return nb
+	case tfschema.StringAttributeBuilder:
+		nb.Computed, nb.Optional, nb.Required = false, true, false
+		return nb
+	}
+	return b
 }
 
 func (a AppResource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
@@ -142,6 +170,21 @@ func reconcileEmptyUserApiScopes(configured, fromAPI types.List) types.List {
 	return fromAPI
 }
 
+// preserveInputOnlySource carries source_code_path and git_source over from the
+// configured (plan) or prior-state value. Both are input_only: the Apps API accepts
+// them on write but never echoes them on read, so the response deserializes back empty
+// and Terraform reports "inconsistent result after apply" (then a perpetual diff). Only
+// a known, non-null value is preserved — writing an unknown/null into state is invalid —
+// which mirrors the guards in the generated apps_tf App.SyncFields* reconciliation.
+func preserveInputOnlySource(dst *AppResource, src AppResource) {
+	if !src.SourceCodePath.IsUnknown() && !src.SourceCodePath.IsNull() {
+		dst.SourceCodePath = src.SourceCodePath
+	}
+	if !src.GitSource.IsUnknown() && !src.GitSource.IsNull() {
+		dst.GitSource = src.GitSource
+	}
+}
+
 func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -193,6 +236,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 	newApp.NoCompute = app.NoCompute
 	newApp.ProviderConfig = app.ProviderConfig
 	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
+	preserveInputOnlySource(&newApp, app)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -212,6 +256,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 	newApp.ProviderConfig = app.ProviderConfig
 	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
+	preserveInputOnlySource(&newApp, app)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -299,6 +344,7 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 	newApp.NoCompute = app.NoCompute
 	newApp.ProviderConfig = app.ProviderConfig
 	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
+	preserveInputOnlySource(&newApp, app)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -352,6 +398,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	newApp.NoCompute = app.NoCompute
 	newApp.ProviderConfig = app.ProviderConfig
 	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
+	preserveInputOnlySource(&newApp, app)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	// No PopulateProviderConfigInState needed for Update: provider_config.workspace_id
 	// is already in state from a previous Create, and if the workspace ID had changed,

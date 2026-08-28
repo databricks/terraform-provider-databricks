@@ -158,3 +158,66 @@ func TestResourceApp_ModifyPlan_SkipsWhenClientNil(t *testing.T) {
 	r.ModifyPlan(context.Background(), req, resp)
 	assert.False(t, resp.Diagnostics.HasError(), "should not error when client is nil")
 }
+
+func TestResourceApp_GitSourceInputOnlySchema(t *testing.T) {
+	r := ResourceApp()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	gitSource, ok := resp.Schema.Attributes["git_source"].(schema.SingleNestedAttribute)
+	require.True(t, ok, "git_source must be a single nested attribute")
+	assert.True(t, gitSource.Optional, "git_source should be settable")
+
+	// The nested descendants must not be Computed: git_source is input_only (never echoed),
+	// so a Computed nested value would be unknown after apply and fail. branch stays optional.
+	repo, ok := gitSource.Attributes["git_repository"].(schema.SingleNestedAttribute)
+	require.True(t, ok, "git_source.git_repository must be a single nested attribute")
+	assert.False(t, repo.Computed, "git_source.git_repository must not be Computed")
+
+	resolved, ok := gitSource.Attributes["resolved_commit"].(schema.StringAttribute)
+	require.True(t, ok, "git_source.resolved_commit must be a string attribute")
+	assert.False(t, resolved.Computed, "git_source.resolved_commit must not be Computed")
+
+	branch, ok := gitSource.Attributes["branch"].(schema.StringAttribute)
+	require.True(t, ok, "git_source.branch must be a string attribute")
+	assert.True(t, branch.Optional, "git_source.branch should be settable")
+}
+
+func TestPreserveInputOnlySource(t *testing.T) {
+	gitType := map[string]attr.Type{"branch": types.StringType}
+	knownGit := types.ObjectValueMust(gitType, map[string]attr.Value{"branch": types.StringValue("main")})
+	// apiPath/apiGit stand in for what the input_only fields deserialize to from the
+	// API response (empty), which is what preserveInputOnlySource must override.
+	apiPath := types.StringValue("/Workspace/from-api")
+
+	t.Run("known configured value is preserved", func(t *testing.T) {
+		var dst AppResource
+		dst.SourceCodePath, dst.GitSource = apiPath, types.ObjectNull(gitType)
+		var src AppResource
+		src.SourceCodePath, src.GitSource = types.StringValue("./app"), knownGit
+		preserveInputOnlySource(&dst, src)
+		assert.Equal(t, "./app", dst.SourceCodePath.ValueString())
+		assert.Equal(t, knownGit, dst.GitSource)
+	})
+
+	// A null or unknown configured value must be left as-is: writing unknown into state
+	// is invalid, and null would wrongly clear a server-tracked value.
+	for _, tc := range []struct {
+		name string
+		path types.String
+		git  types.Object
+	}{
+		{"null", types.StringNull(), types.ObjectNull(gitType)},
+		{"unknown", types.StringUnknown(), types.ObjectUnknown(gitType)},
+	} {
+		t.Run(tc.name+" configured value keeps the API value", func(t *testing.T) {
+			var dst AppResource
+			dst.SourceCodePath, dst.GitSource = apiPath, knownGit
+			var src AppResource
+			src.SourceCodePath, src.GitSource = tc.path, tc.git
+			preserveInputOnlySource(&dst, src)
+			assert.Equal(t, apiPath, dst.SourceCodePath)
+			assert.Equal(t, knownGit, dst.GitSource)
+		})
+	}
+}

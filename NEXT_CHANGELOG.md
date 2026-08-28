@@ -13,6 +13,8 @@
 
 ### Documentation
 
+* Document the `auto_deploy` and `caller_credential_id` fields of the `databricks_app` `git_repository` block, and add a `git_source` block reference. Clarify that `auto_deploy` requires `git_source` to specify a `branch`.
+
 ### Exporter
 
 * Add support for Lakebase autoscaling resources ([#5965](https://github.com/databricks/terraform-provider-databricks/pull/5965)).

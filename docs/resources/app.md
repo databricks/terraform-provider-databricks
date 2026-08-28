@@ -52,6 +52,7 @@ The following arguments are required:
 * `user_api_scopes` - (Optional) A list of api scopes granted to the user access token.  See [REST API docs](https://docs.databricks.com/api/workspace/api/scopes) for full list of supported scopes.
 * `compute_size` - (Optional) A string specifying compute size for the App. Possible values are `MEDIUM`, `LARGE`.
 * `git_repository` - (Optional) Git repository configuration for app deployments (see [below](#git_repository-configuration-attribute)). When specified, deployments can reference code from this repository by providing only the git reference (branch, tag, or commit).
+* `git_source` - (Optional) The Git source to deploy from, specifying the reference to check out and an optional path to the app source code within the repository configured in `git_repository` (see [below](#git_source-configuration-attribute)).
 * `telemetry_export_destinations` - (Optional) A list of destinations to which the app's telemetry (logs, metrics, traces) is exported (see [below](#telemetry_export_destinations-configuration-attribute)).
 
 ### resources Configuration Attribute
@@ -105,6 +106,17 @@ This block configures a Git repository associated with the app, allowing deploym
 
 * `url` - (Required) URL of the Git repository.
 * `provider` - (Required) Git provider. Case insensitive. Supported values: `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`, `awsCodeCommit`.
+* `auto_deploy` - (Optional) When `true`, the app is automatically redeployed on push events to the branch configured in `git_source`. This requires `git_source` to specify a `branch`; a `tag` or `commit` cannot be used, because automatic deployment is triggered by pushes to a branch.
+* `caller_credential_id` - (Optional) ID of a personal access token Git credential owned by the caller, used to grant the app's service principal access to this repository.
+
+### git_source Configuration Attribute
+
+This block selects the Git reference the app is deployed from. It is used together with `git_repository`. Specify exactly one of `branch`, `tag`, or `commit`:
+
+* `branch` - (Optional) Git branch to check out and deploy from. Required when `git_repository.auto_deploy` is `true`, since automatic deployment tracks pushes to a branch.
+* `tag` - (Optional) Git tag to check out and deploy from.
+* `commit` - (Optional) Git commit SHA to check out and deploy from.
+* `source_code_path` - (Optional) Path to the app source code within the repository. Defaults to the repository root.
 
 ### telemetry_export_destinations Configuration Attribute
 

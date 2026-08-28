@@ -106,7 +106,7 @@ This block configures a Git repository associated with the app, allowing deploym
 
 * `url` - (Required) URL of the Git repository.
 * `provider` - (Required) Git provider. Case insensitive. Supported values: `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`, `awsCodeCommit`.
-* `auto_deploy` - (Optional) When `true`, the app is automatically redeployed on push events to the branch configured in `git_source`. This requires `git_source` to specify a `branch`; a `tag` or `commit` cannot be used, because automatic deployment is triggered by pushes to a branch.
+* `auto_deploy` - (Optional) When `true`, the app is automatically redeployed on push events to the branch configured in `git_source`. This requires `git_source` to specify a `branch`; a `tag` or `commit` cannot be used, because automatic deployment is triggered by pushes to a branch. Automatic deployment is currently supported only for the `gitHub` and `azureDevOpsServices` providers.
 * `caller_credential_id` - (Optional) ID of a personal access token Git credential owned by the caller, used to grant the app's service principal access to this repository. This is only applied when the app is created and is not returned by the service; changing it on an existing app is not supported.
 
 ### git_source Configuration Attribute

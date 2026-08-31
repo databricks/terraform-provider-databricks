@@ -112,6 +112,25 @@ resource "databricks_permissions" "policy_usage" {
 }
 ```
 
+## Serverless compute usage
+
+Valid [permission levels](https://docs.databricks.com/compute/serverless/manage-serverless-compute.html) for serverless compute objects are: `CAN_USE`.
+
+```hcl
+resource "databricks_group" "ds" {
+  display_name = "Data Science"
+}
+
+resource "databricks_permissions" "serverless_automated" {
+  serverless_compute_id = "<default-automated-compute-id>"
+
+  access_control {
+    group_name       = databricks_group.ds.display_name
+    permission_level = "CAN_USE"
+  }
+}
+```
+
 ## Instance Pool usage
 
 [Instance Pools](instance_pool.md) access control [allows to](https://docs.databricks.com/security/access-control/pool-acl.html) assign `CAN_ATTACH_TO` and `CAN_MANAGE` permissions to users, service principals, and groups. It's also possible to grant creation of Instance Pools to individual [groups](group.md#allow_instance_pool_create) and [users](user.md#allow_instance_pool_create), [service principals](service_principal.md#allow_instance_pool_create).
@@ -1066,6 +1085,7 @@ Exactly one of the following arguments is required:
 - `app_name` - [app](app.md) name
 - `cluster_id` - [cluster](cluster.md) id
 - `cluster_policy_id` - [cluster policy](cluster_policy.md) id
+- `serverless_compute_id` - serverless compute object id (`Default Interactive Compute` or `Default Automated Compute`)
 - `instance_pool_id` - [instance pool](instance_pool.md) id
 - `job_id` - [job](job.md) id
 - `pipeline_id` - [pipeline](pipeline.md) id

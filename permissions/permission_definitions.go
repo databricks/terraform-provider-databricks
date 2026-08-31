@@ -354,6 +354,14 @@ func allResourcePermissions() []resourcePermissions {
 			},
 		},
 		{
+			field:             "serverless_compute_id",
+			objectType:        "serverless-compute",
+			requestObjectType: "serverless-compute",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_USE": {isManagementPermission: true},
+			},
+		},
+		{
 			field:             "instance_pool_id",
 			objectType:        "instance-pool",
 			requestObjectType: "instance-pools",

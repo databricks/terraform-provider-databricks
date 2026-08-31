@@ -170,21 +170,6 @@ func reconcileEmptyUserApiScopes(configured, fromAPI types.List) types.List {
 	return fromAPI
 }
 
-// preserveInputOnlySource carries source_code_path and git_source over from the
-// configured (plan) or prior-state value. Both are input_only: the Apps API accepts
-// them on write but never echoes them on read, so the response deserializes back empty
-// and Terraform reports "inconsistent result after apply" (then a perpetual diff). Only
-// a known, non-null value is preserved — writing an unknown/null into state is invalid —
-// which mirrors the guards in the generated apps_tf App.SyncFields* reconciliation.
-func preserveInputOnlySource(dst *AppResource, src AppResource) {
-	if !src.SourceCodePath.IsUnknown() && !src.SourceCodePath.IsNull() {
-		dst.SourceCodePath = src.SourceCodePath
-	}
-	if !src.GitSource.IsUnknown() && !src.GitSource.IsNull() {
-		dst.GitSource = src.GitSource
-	}
-}
-
 func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
@@ -235,8 +220,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 	newApp.NoCompute = app.NoCompute
 	newApp.ProviderConfig = app.ProviderConfig
-	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
-	preserveInputOnlySource(&newApp, app)
+	newApp.App.SyncFieldsDuringCreateOrUpdate(ctx, app.App)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -255,8 +239,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 	newApp.ProviderConfig = app.ProviderConfig
-	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
-	preserveInputOnlySource(&newApp, app)
+	newApp.App.SyncFieldsDuringCreateOrUpdate(ctx, app.App)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -343,8 +326,10 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 	}
 	newApp.NoCompute = app.NoCompute
 	newApp.ProviderConfig = app.ProviderConfig
+	newApp.App.SyncFieldsDuringRead(ctx, app.App)
+	// SyncFieldsDuringRead reconciles the input_only fields (git_source, source_code_path,
+	// git_repository.caller_credential_id) but omits user_api_scopes, so restore it here.
 	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
-	preserveInputOnlySource(&newApp, app)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -397,8 +382,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	// Modifying no_compute after creation has no effect.
 	newApp.NoCompute = app.NoCompute
 	newApp.ProviderConfig = app.ProviderConfig
-	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
-	preserveInputOnlySource(&newApp, app)
+	newApp.App.SyncFieldsDuringCreateOrUpdate(ctx, app.App)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	// No PopulateProviderConfigInState needed for Update: provider_config.workspace_id
 	// is already in state from a previous Create, and if the workspace ID had changed,

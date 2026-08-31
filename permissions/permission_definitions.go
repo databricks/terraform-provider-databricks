@@ -358,7 +358,8 @@ func allResourcePermissions() []resourcePermissions {
 			objectType:        "serverless-compute",
 			requestObjectType: "serverless-compute",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
-				"CAN_USE": {isManagementPermission: true},
+				"CAN_USE":    {isManagementPermission: false},
+				"CAN_MANAGE": {isManagementPermission: true},
 			},
 		},
 		{

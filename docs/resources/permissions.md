@@ -114,7 +114,7 @@ resource "databricks_permissions" "policy_usage" {
 
 ## Serverless compute usage
 
-Valid [permission levels](https://docs.databricks.com/compute/serverless/manage-serverless-compute.html) for serverless compute objects are: `CAN_USE`.
+Valid [permission levels](https://docs.databricks.com/compute/serverless/manage-serverless-compute.html) for serverless compute objects are: `CAN_USE` and `CAN_MANAGE`.
 
 ```hcl
 resource "databricks_group" "ds" {

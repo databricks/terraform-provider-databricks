@@ -1,6 +1,6 @@
 # NEXT CHANGELOG
 
-## Release v1.130.0
+## Release v1.131.0
 
 ### Important Changes
 
@@ -9,12 +9,9 @@
 ### New Features and Improvements
 
 ### Bug Fixes
-* Default to a 600 second HTTP timeout for `databricks_repo` operations that run git commands inline (the clone on create and the branch/tag checkout on update), so larger repositories no longer fail with `request timed out after 1m5s of inactivity`. An explicitly configured `http_timeout_seconds` still takes precedence.
 
 ### Documentation
 
 ### Exporter
-
-* Add support for Lakebase autoscaling resources ([#5965](https://github.com/databricks/terraform-provider-databricks/pull/5965)).
 
 ### Internal Changes

@@ -63,12 +63,38 @@ func (a UnityCatalogPermissionsAPI) UpdatePermissions(securable catalog.Securabl
 		})
 		return err
 	}
-	_, err := a.client.Grants.Update(a.context, catalog.UpdatePermissions{
-		Changes:       diff,
-		SecurableType: securable.String(),
-		FullName:      name,
-	})
-	return err
+	// The Databricks API rejects requests that both add and remove privileges for the
+	// same principal in one call. Split into removes-first then adds to avoid this.
+	var removeChanges, addChanges []catalog.PermissionsChange
+	for _, c := range diff {
+		if len(c.Remove) > 0 {
+			removeChanges = append(removeChanges, catalog.PermissionsChange{Principal: c.Principal, Remove: c.Remove})
+		}
+		if len(c.Add) > 0 {
+			addChanges = append(addChanges, catalog.PermissionsChange{Principal: c.Principal, Add: c.Add})
+		}
+	}
+	if len(removeChanges) > 0 {
+		_, err := a.client.Grants.Update(a.context, catalog.UpdatePermissions{
+			Changes:       removeChanges,
+			SecurableType: securable.String(),
+			FullName:      name,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	if len(addChanges) > 0 {
+		_, err := a.client.Grants.Update(a.context, catalog.UpdatePermissions{
+			Changes:       addChanges,
+			SecurableType: securable.String(),
+			FullName:      name,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (a UnityCatalogPermissionsAPI) WaitForUpdate(timeout time.Duration, securable catalog.SecurableType, name string, desired []catalog.PrivilegeAssignment, diff func([]catalog.PrivilegeAssignment, []catalog.PrivilegeAssignment) []catalog.PermissionsChange) error {

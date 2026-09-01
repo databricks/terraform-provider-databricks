@@ -8,7 +8,7 @@
 
 ### New Features and Improvements
 
-* Add GCP targets to `databricks_mws_ncc_private_endpoint_rule` ([#TBD](https://github.com/databricks/terraform-provider-databricks/pull/TBD)).
+* Add GCP targets to `databricks_mws_ncc_private_endpoint_rule` ([#5973](https://github.com/databricks/terraform-provider-databricks/pull/5973)).
 
 ### Bug Fixes
 

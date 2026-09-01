@@ -11,6 +11,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestAccSQLEndpointMinNumClustersDefault(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+		resource "databricks_sql_endpoint" "this" {
+			name = "tf-{var.RANDOM}"
+			cluster_size = "2X-Small"
+		}`,
+		Check: func(s *terraform.State) error {
+			w, err := databricks.NewWorkspaceClient()
+			require.NoError(t, err)
+			warehouseId := s.RootModule().Resources["databricks_sql_endpoint.this"].Primary.ID
+			warehouse, err := w.Warehouses.GetById(context.Background(), warehouseId)
+			require.NoError(t, err)
+			assert.Equal(t, 1, warehouse.MinNumClusters)
+			assert.Equal(t, 1, warehouse.MaxNumClusters)
+			return nil
+		},
+	})
+}
+
 func TestAccSQLEndpoint(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `

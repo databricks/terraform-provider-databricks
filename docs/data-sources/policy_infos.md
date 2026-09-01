@@ -49,7 +49,7 @@ This data source exports a single attribute, `policies`. It is a list of resourc
 * `created_by` (string) - Username of the user who created the policy. Output only
 * `except_principals` (list of string) - Optional list of user or group names that should be excluded from the policy
 * `for_securable_type` (string) - Type of securables that the policy should take effect on.
-  Required on create and optional on update. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `METASTORE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
+  Required on create and optional on update. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `MCP_SERVICE`, `METASTORE`, `MODEL`, `MODEL_PROVIDER_SERVICE`, `MODEL_SERVICE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
 * `grant` (GrantOptions) - Options for grant policies. Valid only if `policy_type` is `POLICY_TYPE_GRANT`.
   Required on create and optional on update. When specified on update,
   the new options will replace the existing options as a whole
@@ -63,7 +63,7 @@ This data source exports a single attribute, `policies`. It is a list of resourc
   Required on create
 * `on_securable_type` (string) - Type of the securable on which the policy is defined.
   Only `CATALOG`, `SCHEMA` and `TABLE` are supported at this moment.
-  Required on create. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `METASTORE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
+  Required on create. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `MCP_SERVICE`, `METASTORE`, `MODEL`, `MODEL_PROVIDER_SERVICE`, `MODEL_SERVICE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
 * `policy_type` (string) - Type of the policy. Required on create. Possible values are: `POLICY_TYPE_COLUMN_MASK`, `POLICY_TYPE_GRANT`, `POLICY_TYPE_ROW_FILTER`
 * `row_filter` (RowFilterOptions) - Options for row filter policies. Valid only if `policy_type` is `POLICY_TYPE_ROW_FILTER`.
   Required on create and optional on update. When specified on update,
@@ -85,9 +85,19 @@ This data source exports a single attribute, `policies`. It is a list of resourc
 * `using` (list of FunctionArgument) - Optional list of column aliases or constant literals to be passed as additional arguments to the column mask function.
   The type of each column should match the positional argument of the column mask function
 
+### ColumnTagValueExtraction
+* `column_alias` (string) - The alias from MATCH COLUMNS that identifies the column
+* `tag_key` (string) - 1024 matches the max_length on FunctionArgument.constant above
+
+### FunctionArgExpression
+* `tag_introspection` (TagIntrospectionExpression) - An expression that introspects tags at query time
+
 ### FunctionArgument
 * `alias` (string) - The alias of a matched column
 * `constant` (string) - A constant literal
+* `function_arg_expression` (FunctionArgExpression) - An expression evaluated at query time. Wraps per-request expression variants
+  (e.g., tag introspection) so new variants can be added without extending the
+  FunctionArgument oneof
 
 ### GrantOptions
 * `privileges` (list of string) - List of privileges to grant.
@@ -106,3 +116,10 @@ This data source exports a single attribute, `policies`. It is a list of resourc
   Required on create and update
 * `using` (list of FunctionArgument) - Optional list of column aliases or constant literals to be passed as arguments to the row filter function.
   The type of each column should match the positional argument of the row filter function
+
+### TagIntrospectionExpression
+* `column_tag_value` (ColumnTagValueExtraction) - Extracts the value of a column-level tag
+* `tag_value` (TagValueExtraction) - Extracts the value of a securable-level tag
+
+### TagValueExtraction
+* `tag_key` (string) - 1024 matches the max_length on FunctionArgument.constant above

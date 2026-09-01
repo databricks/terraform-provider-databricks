@@ -19,12 +19,14 @@ func TestDataSourceMwsWorkspaces(t *testing.T) {
 
 				Response: []Workspace{
 					{
-						WorkspaceName: "bcd",
-						WorkspaceID:   123,
+						WorkspaceName:  "bcd",
+						WorkspaceID:    123,
+						DeploymentName: "deployment1",
 					},
 					{
-						WorkspaceName: "def",
-						WorkspaceID:   456,
+						WorkspaceName:  "def",
+						WorkspaceID:    456,
+						DeploymentName: "deployment2",
 					},
 				},
 			},
@@ -39,6 +41,10 @@ func TestDataSourceMwsWorkspaces(t *testing.T) {
 			"bcd": 123,
 			"def": 456,
 		},
+		//"mws_workspaces": []any{
+		//	map[string]any{"workspace_name": "bcd", "workspace_id": 123, "deployment_name": "deployment1"},
+		//	map[string]any{"workspace_name": "def", "workspace_id": 456, "deployment_name": "deployment2"},
+		//},
 	})
 }
 
@@ -102,6 +108,7 @@ func TestDataSourceMwsWorkspaces_Empty(t *testing.T) {
 		NonWritable: true,
 		ID:          "_",
 	}.ApplyAndExpectData(t, map[string]any{
-		"ids": map[string]any{},
+		"ids":            map[string]any{},
+		"mws_workspaces": []any{},
 	})
 }

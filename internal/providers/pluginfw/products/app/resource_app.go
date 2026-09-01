@@ -54,11 +54,12 @@ func (a AppResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBu
 
 	// git_source is input_only at the app level: the Apps API accepts it on write but never
 	// echoes it on read (the read-back is the separate OUTPUT_ONLY default_git_source). Its
-	// nested git_repository/resolved_commit are generated as Computed because GitSource is a
-	// shared message reused in output contexts; left Computed, a user-configured git_source
-	// carries unknown-after-apply values and the apply fails. Drop Computed on those
-	// descendants so a configured git_source is fully known; preserveInputOnlySource then
-	// round-trips it across reads.
+	// descendants (git_repository, resolved_commit, and the grandchild
+	// git_repository.caller_credential_id) are generated as Computed because GitSource and
+	// GitRepository are shared messages reused in output contexts; left Computed, a
+	// user-configured git_source carries unknown-after-apply values and the apply fails. Drop
+	// Computed across the whole git_source subtree so a configured value is fully known;
+	// SyncFields then round-trips it across reads.
 	if gs, ok := s["git_source"].(tfschema.SingleNestedAttributeBuilder); ok {
 		gs.Attributes["git_repository"] = clearComputed(gs.Attributes["git_repository"])
 		gs.Attributes["resolved_commit"] = clearComputed(gs.Attributes["resolved_commit"])
@@ -67,16 +68,38 @@ func (a AppResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBu
 	return s
 }
 
-// clearComputed makes an attribute plain-optional (not Computed). It is used for the nested
-// fields of an input_only attribute, where the generated Computed flag is a shared-message
-// artifact the API can never populate — and a Computed value left unknown after apply fails.
+// clearComputed recursively drops the Computed flag (and its now-moot UseStateForUnknown plan
+// modifiers) from an input_only attribute's descendants, turning each into a plain optional.
+// git_source is input_only — SyncFields copies the whole subtree from the plan on every read —
+// so any Computed descendant is left unknown after apply and fails. Recursion reaches
+// grandchildren such as git_repository.caller_credential_id; Required descendants
+// (git_repository url/provider) have Computed unset already and are left as-is.
 func clearComputed(b tfschema.AttributeBuilder) tfschema.AttributeBuilder {
 	switch nb := b.(type) {
 	case tfschema.SingleNestedAttributeBuilder:
-		nb.Computed, nb.Optional, nb.Required = false, true, false
+		if nb.Computed {
+			nb.Computed, nb.Optional, nb.PlanModifiers = false, true, nil
+		}
+		cleared := make(map[string]tfschema.AttributeBuilder, len(nb.Attributes))
+		for k, child := range nb.Attributes {
+			cleared[k] = clearComputed(child)
+		}
+		nb.Attributes = cleared
 		return nb
 	case tfschema.StringAttributeBuilder:
-		nb.Computed, nb.Optional, nb.Required = false, true, false
+		if nb.Computed {
+			nb.Computed, nb.Optional, nb.PlanModifiers = false, true, nil
+		}
+		return nb
+	case tfschema.Int64AttributeBuilder:
+		if nb.Computed {
+			nb.Computed, nb.Optional, nb.PlanModifiers = false, true, nil
+		}
+		return nb
+	case tfschema.BoolAttributeBuilder:
+		if nb.Computed {
+			nb.Computed, nb.Optional, nb.PlanModifiers = false, true, nil
+		}
 		return nb
 	}
 	return b

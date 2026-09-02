@@ -1,6 +1,7 @@
 package mws
 
 import (
+	"context"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -8,7 +9,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -397,10 +397,39 @@ func TestResourceNccPrivateEndpointRule_AccountIdIsComputed(t *testing.T) {
 		"account_id must be Computed; otherwise a backend-populated value triggers spurious drift and an empty-update-mask error")
 }
 
-func TestResourceNccPrivateEndpointRule_GcpServiceAttachmentIsForceNew(t *testing.T) {
-	gcpEndpoint := ResourceMwsNccPrivateEndpointRule().Schema["gcp_endpoint"]
-	gcpSchema := gcpEndpoint.Elem.(*schema.Resource).Schema
-	assert.True(t, gcpSchema["service_attachment"].ForceNew)
+func TestResourceNccPrivateEndpointRule_GcpServiceAttachmentChangeRequiresNew(t *testing.T) {
+	resource := ResourceMwsNccPrivateEndpointRule().ToResource()
+	state := &terraform.InstanceState{
+		ID: "ncc_id/rule_id",
+		Attributes: map[string]string{
+			"network_connectivity_config_id":     "ncc_id",
+			"gcp_endpoint.#":                     "1",
+			"gcp_endpoint.0.service_attachment":  "projects/p/regions/r/serviceAttachments/a",
+			"gcp_endpoint.0.all_vpc_sc_services": "false",
+		},
+	}
+	diffFor := func(serviceAttachment string) (*terraform.InstanceDiff, error) {
+		config := terraform.NewResourceConfigRaw(map[string]interface{}{
+			"network_connectivity_config_id": "ncc_id",
+			"gcp_endpoint": []interface{}{map[string]interface{}{
+				"service_attachment": serviceAttachment,
+			}},
+		})
+		return resource.Diff(context.Background(), state, config, nil)
+	}
+
+	unchanged, err := diffFor("projects/p/regions/r/serviceAttachments/a")
+	assert.NoError(t, err)
+	assert.Nil(t, unchanged)
+
+	changed, err := diffFor("projects/p/regions/r/serviceAttachments/b")
+	assert.NoError(t, err)
+	if assert.NotNil(t, changed) {
+		serviceAttachment, ok := changed.Attributes["gcp_endpoint.0.service_attachment"]
+		if assert.True(t, ok, "service attachment should be present in the diff") {
+			assert.True(t, serviceAttachment.RequiresNew)
+		}
+	}
 }
 
 // Reproduces the customer-facing symptom of #5347: when a prior Read has

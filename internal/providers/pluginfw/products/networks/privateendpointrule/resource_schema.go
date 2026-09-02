@@ -19,10 +19,8 @@ import (
 // opting in needs no config or state change. `make diff-schema` does NOT
 // guard this parity: it dumps the default (SDKv2) provider, and this resource
 // is opt-in, so the PF schema below is never introspected by that gate.
-// TestSchema_MatchesSDKv2 asserts the parity instead. The one intentional
-// divergence is gcp_endpoint.service_attachment: SDKv2 leaves it updatable
-// (ForceNew=false), but the Update path never sends gcp_endpoint, so an edit
-// is silently dropped into a perpetual diff; PF marks it RequiresReplace.
+// TestSchema_MatchesSDKv2 asserts attribute parity instead; dedicated schema
+// invariant tests cover create-only fields such as service_attachment.
 //
 // Attribute descriptions are sourced from the SDK struct comments
 // (databricks-sdk-go service/settings) and surfaced through

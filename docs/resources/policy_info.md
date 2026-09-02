@@ -104,7 +104,7 @@ resource "databricks_policy_info" "sensitive_column_mask" {
 ## Arguments
 The following arguments are supported:
 * `for_securable_type` (string, required) - Type of securables that the policy should take effect on.
-  Required on create and optional on update. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `METASTORE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
+  Required on create and optional on update. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `MCP_SERVICE`, `METASTORE`, `MODEL`, `MODEL_PROVIDER_SERVICE`, `MODEL_SERVICE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
 * `policy_type` (string, required) - Type of the policy. Required on create. Possible values are: `POLICY_TYPE_COLUMN_MASK`, `POLICY_TYPE_GRANT`, `POLICY_TYPE_ROW_FILTER`
 * `to_principals` (list of string, required) - List of user or group names that the policy applies to.
   Required on create and optional on update
@@ -125,7 +125,7 @@ The following arguments are supported:
   Required on create
 * `on_securable_type` (string, optional) - Type of the securable on which the policy is defined.
   Only `CATALOG`, `SCHEMA` and `TABLE` are supported at this moment.
-  Required on create. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `METASTORE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
+  Required on create. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `MCP_SERVICE`, `METASTORE`, `MODEL`, `MODEL_PROVIDER_SERVICE`, `MODEL_SERVICE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
 * `row_filter` (RowFilterOptions, optional) - Options for row filter policies. Valid only if `policy_type` is `POLICY_TYPE_ROW_FILTER`.
   Required on create and optional on update. When specified on update,
   the new options will replace the existing options as a whole
@@ -146,9 +146,19 @@ The following arguments are supported:
 * `using` (list of FunctionArgument, optional) - Optional list of column aliases or constant literals to be passed as additional arguments to the column mask function.
   The type of each column should match the positional argument of the column mask function
 
+### ColumnTagValueExtraction
+* `column_alias` (string, required) - The alias from MATCH COLUMNS that identifies the column
+* `tag_key` (string, required) - 1024 matches the max_length on FunctionArgument.constant above
+
+### FunctionArgExpression
+* `tag_introspection` (TagIntrospectionExpression, optional) - An expression that introspects tags at query time
+
 ### FunctionArgument
 * `alias` (string, optional) - The alias of a matched column
 * `constant` (string, optional) - A constant literal
+* `function_arg_expression` (FunctionArgExpression, optional) - An expression evaluated at query time. Wraps per-request expression variants
+  (e.g., tag introspection) so new variants can be added without extending the
+  FunctionArgument oneof
 
 ### GrantOptions
 * `privileges` (list of string, required) - List of privileges to grant.
@@ -167,6 +177,13 @@ The following arguments are supported:
   Required on create and update
 * `using` (list of FunctionArgument, optional) - Optional list of column aliases or constant literals to be passed as arguments to the row filter function.
   The type of each column should match the positional argument of the row filter function
+
+### TagIntrospectionExpression
+* `column_tag_value` (ColumnTagValueExtraction, optional) - Extracts the value of a column-level tag
+* `tag_value` (TagValueExtraction, optional) - Extracts the value of a securable-level tag
+
+### TagValueExtraction
+* `tag_key` (string, required) - 1024 matches the max_length on FunctionArgument.constant above
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

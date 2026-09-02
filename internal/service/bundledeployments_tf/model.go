@@ -19,6 +19,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -90,8 +91,10 @@ func (m CompleteVersionRequest) Type(ctx context.Context) attr.Type {
 }
 
 type CreateDeploymentRequest struct {
-	// The deployment to create. The caller must set `initial_parent_path`.
-	// Other fields are ignored on input and populated by the service.
+	// The deployment to create. `initial_parent_path` is required.
+	// `display_name`, `target_name`, `deployment_mode`, and `workspace_info`
+	// may be set; every other field is assigned by the service and ignored on
+	// input.
 	Deployment types.Object `tfsdk:"deployment"`
 }
 
@@ -294,8 +297,8 @@ func (m *CreateVersionRequest) SetVersion(ctx context.Context, v Version) {
 // Dashboard-specific per-resource metadata. Set only for dashboard resources.
 type DashboardMetadata struct {
 	// Path of the file that declares this dashboard, relative to the bundle's
-	// workspace.file_path (Version.workspace_info.file_path) — join the two
-	// to get the file's absolute workspace path.
+	// workspace.file_path (Deployment.workspace_info.file_path) — join the
+	// two to get the file's absolute workspace path.
 	//
 	// For now this lives only on the dashboard metadata, and is a single string
 	// because it was a single string (`relative_path`) in the legacy bundle
@@ -412,8 +415,7 @@ type Deployment struct {
 	// authoritative deployment metadata does not identify a creator or the
 	// principal cannot be resolved.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Bundle target deployment mode (development or production), derived from
-	// the most recent version's mode.
+	// Bundle target deployment mode (development or production).
 	DeploymentMode types.String `tfsdk:"deployment_mode"`
 	// When deletion was recorded. Unset if deletion has not been recorded. This
 	// response metadata does not determine the deployment's lifecycle status.
@@ -421,9 +423,7 @@ type Deployment struct {
 	// The user who destroyed the deployment (email or principal name). Unset if
 	// the deployment has not been destroyed.
 	DestroyedBy types.String `tfsdk:"destroyed_by"`
-	// Human-readable name for the deployment, up to 256 characters. Output
-	// only: clients update it by setting `display_name` when creating a
-	// version.
+	// Human-readable name for the deployment, up to 256 characters.
 	DisplayName types.String `tfsdk:"display_name"`
 	// Git provenance of the deployment's source, derived from the latest
 	// version.
@@ -448,9 +448,7 @@ type Deployment struct {
 	Name types.String `tfsdk:"name"`
 	// Current status of the deployment.
 	Status types.String `tfsdk:"status"`
-	// The bundle target name associated with this deployment. Output only: it
-	// is denormalized from the latest version, not set directly on the
-	// deployment.
+	// The bundle target name associated with this deployment.
 	TargetName types.String `tfsdk:"target_name"`
 	// When the deployment was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
@@ -458,7 +456,7 @@ type Deployment struct {
 	// name). Empty if authoritative deployment metadata does not identify a
 	// modifier or the principal cannot be resolved.
 	UpdatedBy types.String `tfsdk:"updated_by"`
-	// Workspace location of the deployment, derived from the latest version.
+	// Workspace location of the deployment.
 	WorkspaceInfo types.Object `tfsdk:"workspace_info"`
 }
 
@@ -513,10 +511,10 @@ func (to *Deployment) SyncFieldsDuringRead(ctx context.Context, from Deployment)
 func (m Deployment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["created_by"] = attrs["created_by"].SetComputed()
-	attrs["deployment_mode"] = attrs["deployment_mode"].SetComputed()
+	attrs["deployment_mode"] = attrs["deployment_mode"].SetOptional()
 	attrs["destroy_time"] = attrs["destroy_time"].SetComputed()
 	attrs["destroyed_by"] = attrs["destroyed_by"].SetComputed()
-	attrs["display_name"] = attrs["display_name"].SetComputed()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["git_info"] = attrs["git_info"].SetComputed()
 	attrs["initial_parent_path"] = attrs["initial_parent_path"].SetOptional()
 	attrs["initial_parent_path"] = attrs["initial_parent_path"].SetComputed()
@@ -525,10 +523,10 @@ func (m Deployment) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["last_version_id"] = attrs["last_version_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["status"] = attrs["status"].SetComputed()
-	attrs["target_name"] = attrs["target_name"].SetComputed()
+	attrs["target_name"] = attrs["target_name"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updated_by"] = attrs["updated_by"].SetComputed()
-	attrs["workspace_info"] = attrs["workspace_info"].SetComputed()
+	attrs["workspace_info"] = attrs["workspace_info"].SetOptional()
 
 	return attrs
 }
@@ -2087,6 +2085,171 @@ func (m *Resource) SetDashboardMetadata(ctx context.Context, v DashboardMetadata
 	m.DashboardMetadata = vs
 }
 
+// A resource operation to record when a version is created. Each staged
+// operation identifies the resource it applies to and the action planned for
+// it; the server records the operation in `OPERATION_STATUS_PENDING`, and its
+// outcome is filled in later via UpdateOperation.
+type StagedOperation struct {
+	// The type of operation planned for this resource.
+	ActionType types.String `tfsdk:"action_type"`
+	// The key identifying the resource this operation applies to (e.g.
+	// "jobs.foo", "pipelines.bar"). Becomes the final component of the
+	// operation's name and must be unique among the operations in the version.
+	ResourceKey types.String `tfsdk:"resource_key"`
+}
+
+func (to *StagedOperation) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StagedOperation) {
+}
+
+func (to *StagedOperation) SyncFieldsDuringRead(ctx context.Context, from StagedOperation) {
+}
+
+func (m StagedOperation) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["action_type"] = attrs["action_type"].SetRequired()
+	attrs["resource_key"] = attrs["resource_key"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StagedOperation.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StagedOperation) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StagedOperation
+// only implements ToObjectValue() and Type().
+func (m StagedOperation) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"action_type":  m.ActionType,
+			"resource_key": m.ResourceKey,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StagedOperation) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"action_type":  types.StringType,
+			"resource_key": types.StringType,
+		},
+	}
+}
+
+type UpdateDeploymentRequest struct {
+	// The deployment to update. Its `name` selects the deployment; the fields
+	// named in `update_mask` carry the new values. All other fields are
+	// ignored.
+	Deployment types.Object `tfsdk:"deployment"`
+	// Resource name of the deployment. Format: deployments/{deployment_id}
+	Name types.String `tfsdk:"-"`
+	// The fields to update; supported paths are `display_name`,
+	// `deployment_mode`, `target_name`, and `workspace_info`. An empty mask or
+	// any other path returns INVALID_PARAMETER_VALUE.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateDeploymentRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateDeploymentRequest) {
+	if !from.Deployment.IsNull() && !from.Deployment.IsUnknown() {
+		if toDeployment, ok := to.GetDeployment(ctx); ok {
+			if fromDeployment, ok := from.GetDeployment(ctx); ok {
+				// Recursively sync the fields of Deployment
+				toDeployment.SyncFieldsDuringCreateOrUpdate(ctx, fromDeployment)
+				to.SetDeployment(ctx, toDeployment)
+			}
+		}
+	}
+}
+
+func (to *UpdateDeploymentRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateDeploymentRequest) {
+	if !from.Deployment.IsNull() && !from.Deployment.IsUnknown() {
+		if toDeployment, ok := to.GetDeployment(ctx); ok {
+			if fromDeployment, ok := from.GetDeployment(ctx); ok {
+				toDeployment.SyncFieldsDuringRead(ctx, fromDeployment)
+				to.SetDeployment(ctx, toDeployment)
+			}
+		}
+	}
+}
+
+func (m UpdateDeploymentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["deployment"] = attrs["deployment"].SetRequired()
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDeploymentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateDeploymentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"deployment": reflect.TypeOf(Deployment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateDeploymentRequest
+// only implements ToObjectValue() and Type().
+func (m UpdateDeploymentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"deployment":  m.Deployment,
+			"name":        m.Name,
+			"update_mask": m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateDeploymentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"deployment":  Deployment{}.Type(ctx),
+			"name":        types.StringType,
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetDeployment returns the value of the Deployment field in UpdateDeploymentRequest as
+// a Deployment value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateDeploymentRequest) GetDeployment(ctx context.Context) (Deployment, bool) {
+	var e Deployment
+	if m.Deployment.IsNull() || m.Deployment.IsUnknown() {
+		return e, false
+	}
+	var v Deployment
+	d := m.Deployment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDeployment sets the value of the Deployment field in UpdateDeploymentRequest.
+func (m *UpdateDeploymentRequest) SetDeployment(ctx context.Context, v Deployment) {
+	vs := v.ToObjectValue(ctx)
+	m.Deployment = vs
+}
+
 type UpdateOperationRequest struct {
 	// Resource name of the operation. Format:
 	// deployments/{deployment_id}/versions/{version_id}/operations/{resource_key}
@@ -2225,6 +2388,11 @@ type Version struct {
 	// Resource name of the version. Format:
 	// deployments/{deployment_id}/versions/{version_id}
 	Name types.String `tfsdk:"name"`
+	// The full operation plan for this version: one PENDING operation per
+	// entry, recorded in the same transaction. Input only -- supplied on create
+	// and never returned by create/get/list; read the recorded operations via
+	// ListOperations.
+	Operations types.List `tfsdk:"operations"`
 	// The version_id this version was created on top of — the deployment's
 	// most recent version at creation time. Leave unset when creating the first
 	// version (the deployment has no prior versions). Set by the client on
@@ -2263,6 +2431,29 @@ func (to *Version) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Vers
 			}
 		}
 	}
+	if !from.Operations.IsUnknown() && !from.Operations.IsNull() {
+		// Operations is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Operations = from.Operations
+	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Operations = from.Operations
+	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				// Recursively sync the fields of each Operations element by position.
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
+			}
+		}
+	}
 	if !from.WorkspaceInfo.IsNull() && !from.WorkspaceInfo.IsUnknown() {
 		if toWorkspaceInfo, ok := to.GetWorkspaceInfo(ctx); ok {
 			if fromWorkspaceInfo, ok := from.GetWorkspaceInfo(ctx); ok {
@@ -2280,6 +2471,28 @@ func (to *Version) SyncFieldsDuringRead(ctx context.Context, from Version) {
 			if fromGitInfo, ok := from.GetGitInfo(ctx); ok {
 				toGitInfo.SyncFieldsDuringRead(ctx, fromGitInfo)
 				to.SetGitInfo(ctx, toGitInfo)
+			}
+		}
+	}
+	if !from.Operations.IsUnknown() && !from.Operations.IsNull() {
+		// Operations is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.Operations = from.Operations
+	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() && to.Operations.IsNull() && len(from.Operations.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Operations, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Operations = from.Operations
+	}
+	if !from.Operations.IsNull() && !from.Operations.IsUnknown() {
+		if toOperations, ok := to.GetOperations(ctx); ok {
+			if fromOperations, ok := from.GetOperations(ctx); ok {
+				for i := range toOperations {
+					if i < len(fromOperations) {
+						toOperations[i].SyncFieldsDuringRead(ctx, fromOperations[i])
+					}
+				}
+				to.SetOperations(ctx, toOperations)
 			}
 		}
 	}
@@ -2308,6 +2521,9 @@ func (m Version) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["git_info"] = attrs["git_info"].SetOptional()
 	attrs["git_info"] = attrs["git_info"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
+	attrs["operations"] = attrs["operations"].SetOptional()
+	attrs["operations"] = attrs["operations"].SetComputed()
+	attrs["operations"] = attrs["operations"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["previous_version_id"] = attrs["previous_version_id"].SetOptional()
 	attrs["previous_version_id"] = attrs["previous_version_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
@@ -2332,6 +2548,7 @@ func (m Version) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 func (m Version) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"git_info":       reflect.TypeOf(GitInfo{}),
+		"operations":     reflect.TypeOf(StagedOperation{}),
 		"workspace_info": reflect.TypeOf(WorkspaceInfo{}),
 	}
 }
@@ -2353,6 +2570,7 @@ func (m Version) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"display_name":        m.DisplayName,
 			"git_info":            m.GitInfo,
 			"name":                m.Name,
+			"operations":          m.Operations,
 			"previous_version_id": m.PreviousVersionId,
 			"status":              m.Status,
 			"target_name":         m.TargetName,
@@ -2366,16 +2584,19 @@ func (m Version) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Version) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cli_version":         types.StringType,
-			"complete_time":       timetypes.RFC3339{}.Type(ctx),
-			"completed_by":        types.StringType,
-			"completion_reason":   types.StringType,
-			"create_time":         timetypes.RFC3339{}.Type(ctx),
-			"created_by":          types.StringType,
-			"deployment_mode":     types.StringType,
-			"display_name":        types.StringType,
-			"git_info":            GitInfo{}.Type(ctx),
-			"name":                types.StringType,
+			"cli_version":       types.StringType,
+			"complete_time":     timetypes.RFC3339{}.Type(ctx),
+			"completed_by":      types.StringType,
+			"completion_reason": types.StringType,
+			"create_time":       timetypes.RFC3339{}.Type(ctx),
+			"created_by":        types.StringType,
+			"deployment_mode":   types.StringType,
+			"display_name":      types.StringType,
+			"git_info":          GitInfo{}.Type(ctx),
+			"name":              types.StringType,
+			"operations": basetypes.ListType{
+				ElemType: StagedOperation{}.Type(ctx),
+			},
 			"previous_version_id": types.StringType,
 			"status":              types.StringType,
 			"target_name":         types.StringType,
@@ -2409,6 +2630,32 @@ func (m *Version) GetGitInfo(ctx context.Context) (GitInfo, bool) {
 func (m *Version) SetGitInfo(ctx context.Context, v GitInfo) {
 	vs := v.ToObjectValue(ctx)
 	m.GitInfo = vs
+}
+
+// GetOperations returns the value of the Operations field in Version as
+// a slice of StagedOperation values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Version) GetOperations(ctx context.Context) ([]StagedOperation, bool) {
+	if m.Operations.IsNull() || m.Operations.IsUnknown() {
+		return nil, false
+	}
+	var v []StagedOperation
+	d := m.Operations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOperations sets the value of the Operations field in Version.
+func (m *Version) SetOperations(ctx context.Context, v []StagedOperation) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["operations"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Operations = types.ListValueMust(t, vs)
 }
 
 // GetWorkspaceInfo returns the value of the WorkspaceInfo field in Version as

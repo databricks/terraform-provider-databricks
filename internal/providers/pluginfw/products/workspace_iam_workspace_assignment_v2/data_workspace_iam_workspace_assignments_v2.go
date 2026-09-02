@@ -30,7 +30,9 @@ func DataSourceWorkspaceAssignments() datasource.DataSource {
 type WorkspaceAssignmentsData struct {
 	WorkspaceIamV2 types.List `tfsdk:"workspace_assignments"`
 	// The maximum number of workspace assignments to return. The service may
-	// return fewer than this value.
+	// return fewer than this value. If not provided, defaults to 1000, which is
+	// also the maximum allowed. Requests for more than the maximum are clamped
+	// to 1000.
 	PageSize           types.Int64  `tfsdk:"page_size"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

@@ -21,7 +21,7 @@ To manage Data Classification configuration, you must either:
 ```hcl
 # Enable Data Classification for a set of schemas in a catalog
 resource "databricks_data_classification_catalog_config" "example" {
-  name = "catalogs/prod_catalog/config"
+  parent = "catalogs/prod_catalog"
 
   included_schemas = {
     names = ["sales", "marketing", "customer_data"]
@@ -41,7 +41,7 @@ resource "databricks_data_classification_catalog_config" "example" {
 
 # Enable Data Classification for the entire catalog (all current and future schemas)
 resource "databricks_data_classification_catalog_config" "all_schemas" {
-  name = "catalogs/staging_catalog/config"
+  parent = "catalogs/staging_catalog"
 }
 ```
 

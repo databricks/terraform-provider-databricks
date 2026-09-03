@@ -2,7 +2,7 @@
 subcategory: "Identity and Access Management"
 ---
 # databricks_workspace_iam_direct_group_members_v2 Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/iamv2)
 
@@ -25,7 +25,7 @@ data "databricks_workspace_iam_direct_group_members_v2" "this" {
 The following arguments are supported:
 * `group_id` (integer, required) - Required. Internal ID of the group in Databricks whose direct members are being listed
 * `page_size` (integer, optional) - The maximum number of members to return. The service may return fewer than this value.
-  If not provided, defaults to 1000 (also the maximum allowed)
+  If not provided, defaults to 1000, which is also the maximum allowed. Requests for more than the maximum are clamped to 1000
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig

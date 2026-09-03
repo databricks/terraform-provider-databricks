@@ -22,6 +22,9 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
+* `assume_group_id` (string) - The group whose permissions users assume via Role Authorization for apps in this space. When
+  set, user tokens assume the role of this group instead of doing regular obo token downscoping.
+  Set only at space creation
 * `create_time` (string) - The creation time of the app space. Formatted timestamp in ISO 6801
 * `creator` (string) - The email of the user that created the app space
 * `description` (string) - The description of the app space

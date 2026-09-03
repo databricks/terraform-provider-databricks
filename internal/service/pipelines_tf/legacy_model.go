@@ -349,6 +349,11 @@ type ClonePipelineRequest_SdkV2 struct {
 	// String-String configuration for this pipeline execution.
 	Configuration types.Map `tfsdk:"configuration"`
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
+	//
+	// Deprecated: wrap the pipeline in a continuous job instead, which also
+	// lets you take advantage of job-level settings such as performance mode.
+	// When the pipeline is started by a continuous job, the job's setting takes
+	// precedence and this field is ignored.
 	Continuous types.Bool `tfsdk:"continuous"`
 	// Deployment type of this pipeline.
 	Deployment types.List `tfsdk:"deployment"`
@@ -1398,6 +1403,8 @@ type ConnectorOptions_SdkV2 struct {
 
 	OutlookOptions types.List `tfsdk:"outlook_options"`
 
+	RabbitmqOptions types.List `tfsdk:"rabbitmq_options"`
+
 	RedditAdsOptions types.List `tfsdk:"reddit_ads_options"`
 
 	SharepointOptions types.List `tfsdk:"sharepoint_options"`
@@ -1497,6 +1504,15 @@ func (to *ConnectorOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 				// Recursively sync the fields of OutlookOptions
 				toOutlookOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromOutlookOptions)
 				to.SetOutlookOptions(ctx, toOutlookOptions)
+			}
+		}
+	}
+	if !from.RabbitmqOptions.IsNull() && !from.RabbitmqOptions.IsUnknown() {
+		if toRabbitmqOptions, ok := to.GetRabbitmqOptions(ctx); ok {
+			if fromRabbitmqOptions, ok := from.GetRabbitmqOptions(ctx); ok {
+				// Recursively sync the fields of RabbitmqOptions
+				toRabbitmqOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromRabbitmqOptions)
+				to.SetRabbitmqOptions(ctx, toRabbitmqOptions)
 			}
 		}
 	}
@@ -1628,6 +1644,14 @@ func (to *ConnectorOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 			}
 		}
 	}
+	if !from.RabbitmqOptions.IsNull() && !from.RabbitmqOptions.IsUnknown() {
+		if toRabbitmqOptions, ok := to.GetRabbitmqOptions(ctx); ok {
+			if fromRabbitmqOptions, ok := from.GetRabbitmqOptions(ctx); ok {
+				toRabbitmqOptions.SyncFieldsDuringRead(ctx, fromRabbitmqOptions)
+				to.SetRabbitmqOptions(ctx, toRabbitmqOptions)
+			}
+		}
+	}
 	if !from.RedditAdsOptions.IsNull() && !from.RedditAdsOptions.IsUnknown() {
 		if toRedditAdsOptions, ok := to.GetRedditAdsOptions(ctx); ok {
 			if fromRedditAdsOptions, ok := from.GetRedditAdsOptions(ctx); ok {
@@ -1691,6 +1715,8 @@ func (m ConnectorOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["meta_ads_options"] = attrs["meta_ads_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["outlook_options"] = attrs["outlook_options"].SetOptional()
 	attrs["outlook_options"] = attrs["outlook_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["rabbitmq_options"] = attrs["rabbitmq_options"].SetOptional()
+	attrs["rabbitmq_options"] = attrs["rabbitmq_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["reddit_ads_options"] = attrs["reddit_ads_options"].SetOptional()
 	attrs["reddit_ads_options"] = attrs["reddit_ads_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["sharepoint_options"] = attrs["sharepoint_options"].SetOptional()
@@ -1724,6 +1750,7 @@ func (m ConnectorOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[st
 		"marketo_options":              reflect.TypeOf(MarketoOptions_SdkV2{}),
 		"meta_ads_options":             reflect.TypeOf(MetaMarketingOptions_SdkV2{}),
 		"outlook_options":              reflect.TypeOf(OutlookOptions_SdkV2{}),
+		"rabbitmq_options":             reflect.TypeOf(RabbitmqOptions_SdkV2{}),
 		"reddit_ads_options":           reflect.TypeOf(RedditAdsOptions_SdkV2{}),
 		"sharepoint_options":           reflect.TypeOf(SharepointOptions_SdkV2{}),
 		"smartsheet_options":           reflect.TypeOf(SmartsheetOptions_SdkV2{}),
@@ -1749,6 +1776,7 @@ func (m ConnectorOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 			"marketo_options":              m.MarketoOptions,
 			"meta_ads_options":             m.MetaAdsOptions,
 			"outlook_options":              m.OutlookOptions,
+			"rabbitmq_options":             m.RabbitmqOptions,
 			"reddit_ads_options":           m.RedditAdsOptions,
 			"sharepoint_options":           m.SharepointOptions,
 			"smartsheet_options":           m.SmartsheetOptions,
@@ -1790,6 +1818,9 @@ func (m ConnectorOptions_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"outlook_options": basetypes.ListType{
 				ElemType: OutlookOptions_SdkV2{}.Type(ctx),
+			},
+			"rabbitmq_options": basetypes.ListType{
+				ElemType: RabbitmqOptions_SdkV2{}.Type(ctx),
 			},
 			"reddit_ads_options": basetypes.ListType{
 				ElemType: RedditAdsOptions_SdkV2{}.Type(ctx),
@@ -2070,6 +2101,32 @@ func (m *ConnectorOptions_SdkV2) SetOutlookOptions(ctx context.Context, v Outloo
 	m.OutlookOptions = types.ListValueMust(t, vs)
 }
 
+// GetRabbitmqOptions returns the value of the RabbitmqOptions field in ConnectorOptions_SdkV2 as
+// a RabbitmqOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions_SdkV2) GetRabbitmqOptions(ctx context.Context) (RabbitmqOptions_SdkV2, bool) {
+	var e RabbitmqOptions_SdkV2
+	if m.RabbitmqOptions.IsNull() || m.RabbitmqOptions.IsUnknown() {
+		return e, false
+	}
+	var v []RabbitmqOptions_SdkV2
+	d := m.RabbitmqOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRabbitmqOptions sets the value of the RabbitmqOptions field in ConnectorOptions_SdkV2.
+func (m *ConnectorOptions_SdkV2) SetRabbitmqOptions(ctx context.Context, v RabbitmqOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["rabbitmq_options"]
+	m.RabbitmqOptions = types.ListValueMust(t, vs)
+}
+
 // GetRedditAdsOptions returns the value of the RedditAdsOptions field in ConnectorOptions_SdkV2 as
 // a RedditAdsOptions_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -2219,6 +2276,11 @@ type CreatePipeline_SdkV2 struct {
 	// String-String configuration for this pipeline execution.
 	Configuration types.Map `tfsdk:"configuration"`
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
+	//
+	// Deprecated: wrap the pipeline in a continuous job instead, which also
+	// lets you take advantage of job-level settings such as performance mode.
+	// When the pipeline is started by a continuous job, the job's setting takes
+	// precedence and this field is ignored.
 	Continuous types.Bool `tfsdk:"continuous"`
 	// Deployment type of this pipeline.
 	Deployment types.List `tfsdk:"deployment"`
@@ -3525,6 +3587,11 @@ type EditPipeline_SdkV2 struct {
 	// String-String configuration for this pipeline execution.
 	Configuration types.Map `tfsdk:"configuration"`
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
+	//
+	// Deprecated: wrap the pipeline in a continuous job instead, which also
+	// lets you take advantage of job-level settings such as performance mode.
+	// When the pipeline is started by a continuous job, the job's setting takes
+	// precedence and this field is ignored.
 	Continuous types.Bool `tfsdk:"continuous"`
 	// Deployment type of this pipeline.
 	Deployment types.List `tfsdk:"deployment"`
@@ -10599,8 +10666,10 @@ type PipelineCluster_SdkV2 struct {
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 	// A label for the cluster specification, either `default` to configure the
-	// default cluster, or `maintenance` to configure the maintenance cluster.
-	// This field is optional. The default value is `default`.
+	// default cluster settings applied to both the update and maintenance
+	// clusters, `updates` to configure the update cluster, or `maintenance` to
+	// configure the maintenance cluster. This field is optional. The default
+	// value is `default`.
 	Label types.String `tfsdk:"label"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -12265,6 +12334,11 @@ type PipelineSpec_SdkV2 struct {
 	// String-String configuration for this pipeline execution.
 	Configuration types.Map `tfsdk:"configuration"`
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
+	//
+	// Deprecated: wrap the pipeline in a continuous job instead, which also
+	// lets you take advantage of job-level settings such as performance mode.
+	// When the pipeline is started by a continuous job, the job's setting takes
+	// precedence and this field is ignored.
 	Continuous types.Bool `tfsdk:"continuous"`
 	// Deployment type of this pipeline.
 	Deployment types.List `tfsdk:"deployment"`
@@ -13647,6 +13721,58 @@ func (m PostgresSlotConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// RabbitMQ specific options for ingestion. Performance tuning options
+// (consumers_per_task, max_messages_per_fetch, etc.) are intentionally not
+// exposed in the public API. The managed connector uses sensible defaults
+// internally. These can be added later if user demand arises.
+type RabbitmqOptions_SdkV2 struct {
+	// (Required) RabbitMQ queue name to consume from.
+	Queue types.String `tfsdk:"queue"`
+}
+
+func (to *RabbitmqOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RabbitmqOptions_SdkV2) {
+}
+
+func (to *RabbitmqOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RabbitmqOptions_SdkV2) {
+}
+
+func (m RabbitmqOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["queue"] = attrs["queue"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RabbitmqOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RabbitmqOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RabbitmqOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m RabbitmqOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"queue": m.Queue,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RabbitmqOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"queue": types.StringType,
+		},
+	}
+}
+
 // Reddit Ads specific options for ingestion
 type RedditAdsOptions_SdkV2 struct {
 	// (Optional) Custom report definition. When set, the table is treated as a
@@ -14449,11 +14575,9 @@ type SchemaSpec_SdkV2 struct {
 	// The source catalog name. Might be optional depending on the type of
 	// source.
 	SourceCatalog types.String `tfsdk:"source_catalog"`
-	// Schema name in the source database. Currently required; this field will
-	// become optional in an upcoming release, since some source types (for
-	// example streaming / message-bus connectors) do not use it. When that
-	// change ships, this field's type in the generated SDKs and CLI will change
-	// from required to optional (nullable); clients that assume it is always
+	// Schema name in the source database. Optional: some source types (for
+	// example streaming or message-bus connectors) do not use it, so it may be
+	// absent from a pipeline's definition. Clients that assume it is always
 	// present should handle its absence.
 	SourceSchema types.String `tfsdk:"source_schema"`
 	// Configuration settings to control the ingestion of tables. These settings
@@ -14527,7 +14651,7 @@ func (m SchemaSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["fanout_options"] = attrs["fanout_options"].SetOptional()
 	attrs["fanout_options"] = attrs["fanout_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["source_catalog"] = attrs["source_catalog"].SetOptional()
-	attrs["source_schema"] = attrs["source_schema"].SetRequired()
+	attrs["source_schema"] = attrs["source_schema"].SetOptional()
 	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
 	attrs["table_configuration"] = attrs["table_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -15938,11 +16062,9 @@ type TableSpec_SdkV2 struct {
 	// Schema name in the source database. Might be optional depending on the
 	// type of source.
 	SourceSchema types.String `tfsdk:"source_schema"`
-	// Table name in the source database. Currently required; this field will
-	// become optional in an upcoming release, since some source types (for
-	// example streaming / message-bus connectors) do not use it. When that
-	// change ships, this field's type in the generated SDKs and CLI will change
-	// from required to optional (nullable); clients that assume it is always
+	// Table name in the source database. Optional: some source types (for
+	// example streaming or message-bus connectors) do not use it, so it may be
+	// absent from a pipeline's definition. Clients that assume it is always
 	// present should handle its absence.
 	SourceTable types.String `tfsdk:"source_table"`
 	// Configuration settings to control the ingestion of tables. These settings
@@ -15999,7 +16121,7 @@ func (m TableSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["destination_table"] = attrs["destination_table"].SetOptional()
 	attrs["source_catalog"] = attrs["source_catalog"].SetOptional()
 	attrs["source_schema"] = attrs["source_schema"].SetOptional()
-	attrs["source_table"] = attrs["source_table"].SetRequired()
+	attrs["source_table"] = attrs["source_table"].SetOptional()
 	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
 	attrs["table_configuration"] = attrs["table_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 

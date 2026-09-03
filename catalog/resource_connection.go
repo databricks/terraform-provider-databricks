@@ -11,7 +11,7 @@ import (
 )
 
 var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret",
-	"pem_private_key", "OAuthPvtKey", "GoogleServiceAccountKeyJson", "bearer_token"}
+	"pem_private_key", "OAuthPvtKey", "GoogleServiceAccountKeyJson", "bearer_token", "refresh_token"}
 
 var computedOptions = []string{"pem_private_key_expiration_epoch_sec", "access_token_expiration"}
 

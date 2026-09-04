@@ -1,13 +1,19 @@
 # NEXT CHANGELOG
 
-## Release v1.125.0
+## Release v1.131.0
 
 ### Important Changes
 
 ### Breaking Changes
 
 ### New Features and Improvements
-* Add optional `git_credential_id` attribute to `databricks_repo` resource to allow explicit credential selection ([#5877](https://github.com/databricks/terraform-provider-databricks/pull/5877)).
+* Add data source for `databricks_account_iam_external_user_v2`.
+* Add data source for `databricks_account_iam_external_service_principal_v2`.
+* Add data source for `databricks_account_iam_external_group_v2`.
+* Add data source for `databricks_workspace_iam_external_user_v2`.
+* Add data source for `databricks_workspace_iam_external_service_principal_v2`.
+* Add data source for `databricks_workspace_iam_external_group_v2`.
+* Add resource and data source for `databricks_postgres_snapshot_schedule`.
 
 ### Bug Fixes
 

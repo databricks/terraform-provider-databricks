@@ -3794,10 +3794,10 @@ func (m *ColumnInfo_SdkV2) SetMask(ctx context.Context, v ColumnMask_SdkV2) {
 type ColumnMask_SdkV2 struct {
 	// The full name of the column mask SQL UDF.
 	FunctionName types.String `tfsdk:"function_name"`
-	// The list of additional table columns or literals to be passed as
-	// additional arguments to a column mask function. This is the replacement
-	// of the deprecated using_column_names field and carries information about
-	// the types (alias or constant) of the arguments to the mask function.
+	// The list of table columns or literals to be passed as additional
+	// arguments to a column mask function, carrying the type (column reference
+	// vs constant literal) of each argument. Deprecated: use using_column_names
+	// instead.
 	UsingArguments types.List `tfsdk:"using_arguments"`
 	// The list of additional table columns to be passed as input to the column
 	// mask function. The first arg of the mask function should be of the type
@@ -4143,6 +4143,61 @@ func (m ColumnRelationship_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"source": types.StringType,
 			"target": types.StringType,
+		},
+	}
+}
+
+// Extracts the value of a column-level tag: get_column_tag_value(col,
+// "tagKey").
+type ColumnTagValueExtraction_SdkV2 struct {
+	// The alias from MATCH COLUMNS that identifies the column.
+	ColumnAlias types.String `tfsdk:"column_alias"`
+	// 1024 matches the max_length on FunctionArgument.constant above.
+	TagKey types.String `tfsdk:"tag_key"`
+}
+
+func (to *ColumnTagValueExtraction_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ColumnTagValueExtraction_SdkV2) {
+}
+
+func (to *ColumnTagValueExtraction_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ColumnTagValueExtraction_SdkV2) {
+}
+
+func (m ColumnTagValueExtraction_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column_alias"] = attrs["column_alias"].SetRequired()
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ColumnTagValueExtraction.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ColumnTagValueExtraction_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ColumnTagValueExtraction_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ColumnTagValueExtraction_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"column_alias": m.ColumnAlias,
+			"tag_key":      m.TagKey,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ColumnTagValueExtraction_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"column_alias": types.StringType,
+			"tag_key":      types.StringType,
 		},
 	}
 }
@@ -6943,11 +6998,10 @@ type CreateMcpServiceRequest_SdkV2 struct {
 	// The MCP service to create. The server populates `name` from `parent` +
 	// `mcp_service_id`; clients should leave it unset.
 	McpService types.List `tfsdk:"mcp_service"`
-	// Leaf identifier for the MCP service (the unqualified name within the
-	// parent schema, e.g. "my_mcp_service").
+	// Name for the MCP service, e.g. "my_mcp_service".
 	McpServiceId types.String `tfsdk:"-"`
-	// Resource name of the parent schema. Format: `schemas/{catalog}.{schema}`.
-	// Each `{...}` component is capped at 255 characters individually.
+	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
+	// `{...}` component is capped at 255 characters individually.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -7176,11 +7230,10 @@ type CreateModelProviderServiceRequest_SdkV2 struct {
 	// The model provider service to create. The server populates `name` from
 	// `parent` + `model_provider_service_id`; clients should leave it unset.
 	ModelProviderService types.List `tfsdk:"model_provider_service"`
-	// Leaf identifier for the provider service (the unqualified name within the
-	// parent schema, e.g. "openai_prod").
+	// Name for the model provider service, e.g. "openai_prod".
 	ModelProviderServiceId types.String `tfsdk:"-"`
-	// Resource name of the parent schema. Format: `schemas/{catalog}.{schema}`.
-	// Each `{...}` component is capped at 255 characters individually.
+	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
+	// `{...}` component is capped at 255 characters individually.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -7285,11 +7338,10 @@ type CreateModelServiceRequest_SdkV2 struct {
 	// The model service to create. The server populates `name` from `parent` +
 	// `model_service_id`; clients should leave it unset.
 	ModelService types.List `tfsdk:"model_service"`
-	// Leaf identifier for the model service (the unqualified name within the
-	// parent schema, e.g. "my_model_service").
+	// Name for the model service, e.g. "my_model_service".
 	ModelServiceId types.String `tfsdk:"-"`
-	// Resource name of the parent schema. Format: `schemas/{catalog}.{schema}`.
-	// Each `{...}` component is capped at 255 characters individually.
+	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
+	// `{...}` component is capped at 255 characters individually.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -15879,22 +15931,143 @@ func (m *ForeignKeyConstraint_SdkV2) SetParentColumns(ctx context.Context, v []t
 	m.ParentColumns = types.ListValueMust(t, vs)
 }
 
+// An expression that is evaluated at query time against per-request context.
+// New variants (e.g., identity attributes) are added as additional oneof cases.
+type FunctionArgExpression_SdkV2 struct {
+	// An expression that introspects tags at query time.
+	TagIntrospection types.List `tfsdk:"tag_introspection"`
+}
+
+func (to *FunctionArgExpression_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FunctionArgExpression_SdkV2) {
+	if !from.TagIntrospection.IsNull() && !from.TagIntrospection.IsUnknown() {
+		if toTagIntrospection, ok := to.GetTagIntrospection(ctx); ok {
+			if fromTagIntrospection, ok := from.GetTagIntrospection(ctx); ok {
+				// Recursively sync the fields of TagIntrospection
+				toTagIntrospection.SyncFieldsDuringCreateOrUpdate(ctx, fromTagIntrospection)
+				to.SetTagIntrospection(ctx, toTagIntrospection)
+			}
+		}
+	}
+}
+
+func (to *FunctionArgExpression_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FunctionArgExpression_SdkV2) {
+	if !from.TagIntrospection.IsNull() && !from.TagIntrospection.IsUnknown() {
+		if toTagIntrospection, ok := to.GetTagIntrospection(ctx); ok {
+			if fromTagIntrospection, ok := from.GetTagIntrospection(ctx); ok {
+				toTagIntrospection.SyncFieldsDuringRead(ctx, fromTagIntrospection)
+				to.SetTagIntrospection(ctx, toTagIntrospection)
+			}
+		}
+	}
+}
+
+func (m FunctionArgExpression_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_introspection"] = attrs["tag_introspection"].SetOptional()
+	attrs["tag_introspection"] = attrs["tag_introspection"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FunctionArgExpression.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m FunctionArgExpression_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"tag_introspection": reflect.TypeOf(TagIntrospectionExpression_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FunctionArgExpression_SdkV2
+// only implements ToObjectValue() and Type().
+func (m FunctionArgExpression_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"tag_introspection": m.TagIntrospection,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m FunctionArgExpression_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"tag_introspection": basetypes.ListType{
+				ElemType: TagIntrospectionExpression_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetTagIntrospection returns the value of the TagIntrospection field in FunctionArgExpression_SdkV2 as
+// a TagIntrospectionExpression_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *FunctionArgExpression_SdkV2) GetTagIntrospection(ctx context.Context) (TagIntrospectionExpression_SdkV2, bool) {
+	var e TagIntrospectionExpression_SdkV2
+	if m.TagIntrospection.IsNull() || m.TagIntrospection.IsUnknown() {
+		return e, false
+	}
+	var v []TagIntrospectionExpression_SdkV2
+	d := m.TagIntrospection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTagIntrospection sets the value of the TagIntrospection field in FunctionArgExpression_SdkV2.
+func (m *FunctionArgExpression_SdkV2) SetTagIntrospection(ctx context.Context, v TagIntrospectionExpression_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tag_introspection"]
+	m.TagIntrospection = types.ListValueMust(t, vs)
+}
+
 type FunctionArgument_SdkV2 struct {
 	// The alias of a matched column.
 	Alias types.String `tfsdk:"alias"`
 	// A constant literal.
 	Constant types.String `tfsdk:"constant"`
+	// An expression evaluated at query time. Wraps per-request expression
+	// variants (e.g., tag introspection) so new variants can be added without
+	// extending the FunctionArgument oneof.
+	FunctionArgExpression types.List `tfsdk:"function_arg_expression"`
 }
 
 func (to *FunctionArgument_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FunctionArgument_SdkV2) {
+	if !from.FunctionArgExpression.IsNull() && !from.FunctionArgExpression.IsUnknown() {
+		if toFunctionArgExpression, ok := to.GetFunctionArgExpression(ctx); ok {
+			if fromFunctionArgExpression, ok := from.GetFunctionArgExpression(ctx); ok {
+				// Recursively sync the fields of FunctionArgExpression
+				toFunctionArgExpression.SyncFieldsDuringCreateOrUpdate(ctx, fromFunctionArgExpression)
+				to.SetFunctionArgExpression(ctx, toFunctionArgExpression)
+			}
+		}
+	}
 }
 
 func (to *FunctionArgument_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FunctionArgument_SdkV2) {
+	if !from.FunctionArgExpression.IsNull() && !from.FunctionArgExpression.IsUnknown() {
+		if toFunctionArgExpression, ok := to.GetFunctionArgExpression(ctx); ok {
+			if fromFunctionArgExpression, ok := from.GetFunctionArgExpression(ctx); ok {
+				toFunctionArgExpression.SyncFieldsDuringRead(ctx, fromFunctionArgExpression)
+				to.SetFunctionArgExpression(ctx, toFunctionArgExpression)
+			}
+		}
+	}
 }
 
 func (m FunctionArgument_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alias"] = attrs["alias"].SetOptional()
 	attrs["constant"] = attrs["constant"].SetOptional()
+	attrs["function_arg_expression"] = attrs["function_arg_expression"].SetOptional()
+	attrs["function_arg_expression"] = attrs["function_arg_expression"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -15907,7 +16080,9 @@ func (m FunctionArgument_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m FunctionArgument_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"function_arg_expression": reflect.TypeOf(FunctionArgExpression_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -15917,8 +16092,9 @@ func (m FunctionArgument_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"alias":    m.Alias,
-			"constant": m.Constant,
+			"alias":                   m.Alias,
+			"constant":                m.Constant,
+			"function_arg_expression": m.FunctionArgExpression,
 		})
 }
 
@@ -15928,8 +16104,37 @@ func (m FunctionArgument_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"alias":    types.StringType,
 			"constant": types.StringType,
+			"function_arg_expression": basetypes.ListType{
+				ElemType: FunctionArgExpression_SdkV2{}.Type(ctx),
+			},
 		},
 	}
+}
+
+// GetFunctionArgExpression returns the value of the FunctionArgExpression field in FunctionArgument_SdkV2 as
+// a FunctionArgExpression_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *FunctionArgument_SdkV2) GetFunctionArgExpression(ctx context.Context) (FunctionArgExpression_SdkV2, bool) {
+	var e FunctionArgExpression_SdkV2
+	if m.FunctionArgExpression.IsNull() || m.FunctionArgExpression.IsUnknown() {
+		return e, false
+	}
+	var v []FunctionArgExpression_SdkV2
+	d := m.FunctionArgExpression.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFunctionArgExpression sets the value of the FunctionArgExpression field in FunctionArgument_SdkV2.
+func (m *FunctionArgument_SdkV2) SetFunctionArgExpression(ctx context.Context, v FunctionArgExpression_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["function_arg_expression"]
+	m.FunctionArgExpression = types.ListValueMust(t, vs)
 }
 
 // A function that is dependent on a SQL object.
@@ -19095,9 +19300,6 @@ func (m GetGrantRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetMcpServiceRequest_SdkV2 struct {
-	// Whether to include MCP services for which the principal can only access
-	// selective metadata.
-	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Resource name of the MCP service. Format:
 	// `mcp-services/{catalog}.{schema}.{mcp_service}`. Each `{...}` component
 	// is capped at 255 characters individually.
@@ -19112,7 +19314,6 @@ func (to *GetMcpServiceRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 
 func (m GetMcpServiceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 
 	return attrs
 }
@@ -19135,8 +19336,7 @@ func (m GetMcpServiceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"include_browse": m.IncludeBrowse,
-			"name":           m.Name,
+			"name": m.Name,
 		})
 }
 
@@ -19144,8 +19344,7 @@ func (m GetMcpServiceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes
 func (m GetMcpServiceRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"include_browse": types.BoolType,
-			"name":           types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -19341,9 +19540,6 @@ func (m GetMetastoreSummaryResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetModelProviderServiceRequest_SdkV2 struct {
-	// Whether to include provider services for which the principal can only
-	// access selective metadata.
-	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Resource name of the model provider service. Format:
 	// `model-provider-services/{catalog}.{schema}.{model_provider_service}`.
 	// Each `{...}` component is capped at 255 characters individually.
@@ -19358,7 +19554,6 @@ func (to *GetModelProviderServiceRequest_SdkV2) SyncFieldsDuringRead(ctx context
 
 func (m GetModelProviderServiceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 
 	return attrs
 }
@@ -19381,8 +19576,7 @@ func (m GetModelProviderServiceRequest_SdkV2) ToObjectValue(ctx context.Context)
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"include_browse": m.IncludeBrowse,
-			"name":           m.Name,
+			"name": m.Name,
 		})
 }
 
@@ -19390,16 +19584,12 @@ func (m GetModelProviderServiceRequest_SdkV2) ToObjectValue(ctx context.Context)
 func (m GetModelProviderServiceRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"include_browse": types.BoolType,
-			"name":           types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
 
 type GetModelServiceRequest_SdkV2 struct {
-	// Whether to include model services for which the principal can only access
-	// selective metadata.
-	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Resource name of the model service. Format:
 	// `model-services/{catalog}.{schema}.{model_service}`. Each `{...}`
 	// component is capped at 255 characters individually.
@@ -19414,7 +19604,6 @@ func (to *GetModelServiceRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context
 
 func (m GetModelServiceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 
 	return attrs
 }
@@ -19437,8 +19626,7 @@ func (m GetModelServiceRequest_SdkV2) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"include_browse": m.IncludeBrowse,
-			"name":           m.Name,
+			"name": m.Name,
 		})
 }
 
@@ -19446,8 +19634,7 @@ func (m GetModelServiceRequest_SdkV2) ToObjectValue(ctx context.Context) basetyp
 func (m GetModelServiceRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"include_browse": types.BoolType,
-			"name":           types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -20120,6 +20307,9 @@ type GetSecretRequest_SdkV2 struct {
 	// The three-level (fully qualified) name of the secret (for example,
 	// **catalog_name.schema_name.secret_name**).
 	FullName types.String `tfsdk:"-"`
+	// Whether to include the secret value in the response. Defaults to false.
+	// Requires the **READ_SECRET** privilege.
+	IncludeValue types.Bool `tfsdk:"-"`
 }
 
 func (to *GetSecretRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetSecretRequest_SdkV2) {
@@ -20130,6 +20320,7 @@ func (to *GetSecretRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 
 func (m GetSecretRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["full_name"] = attrs["full_name"].SetRequired()
+	attrs["include_value"] = attrs["include_value"].SetOptional()
 
 	return attrs
 }
@@ -20152,7 +20343,8 @@ func (m GetSecretRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"full_name": m.FullName,
+			"full_name":     m.FullName,
+			"include_value": m.IncludeValue,
 		})
 }
 
@@ -20160,7 +20352,8 @@ func (m GetSecretRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m GetSecretRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"full_name": types.StringType,
+			"full_name":     types.StringType,
+			"include_value": types.BoolType,
 		},
 	}
 }
@@ -20446,6 +20639,86 @@ func (m *GetWorkspaceBindingsResponse_SdkV2) SetBindings(ctx context.Context, v 
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["bindings"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Bindings = types.ListValueMust(t, vs)
+}
+
+type GrantOptions_SdkV2 struct {
+	// List of privileges to grant. When any of these privileges are requested,
+	// the policy will grant access if the principal and condition match.
+	// Required on create and update.
+	Privileges types.List `tfsdk:"privileges"`
+}
+
+func (to *GrantOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GrantOptions_SdkV2) {
+}
+
+func (to *GrantOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GrantOptions_SdkV2) {
+}
+
+func (m GrantOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["privileges"] = attrs["privileges"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GrantOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GrantOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"privileges": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GrantOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GrantOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"privileges": m.Privileges,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GrantOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"privileges": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetPrivileges returns the value of the Privileges field in GrantOptions_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GrantOptions_SdkV2) GetPrivileges(ctx context.Context) ([]types.String, bool) {
+	if m.Privileges.IsNull() || m.Privileges.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Privileges.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrivileges sets the value of the Privileges field in GrantOptions_SdkV2.
+func (m *GrantOptions_SdkV2) SetPrivileges(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["privileges"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Privileges = types.ListValueMust(t, vs)
 }
 
 // Inference table configuration for payload logging on a model service.
@@ -22639,20 +22912,18 @@ func (m *ListFunctionsResponse_SdkV2) SetFunctions(ctx context.Context, v []Func
 }
 
 type ListMcpServicesRequest_SdkV2 struct {
-	// Whether to include MCP services for which the principal can only access
-	// selective metadata.
-	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Maximum number of MCP services to return. Defaults to 100 when unset or
-	// 0; the maximum is 100. Use `next_page_token` to retrieve additional
-	// pages.
+	// 0; the maximum is 100. Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from a previous request.
 	PageToken types.String `tfsdk:"-"`
-	// Resource name of the parent schema to list within, as
+	// Name of the parent schema to list within, as
 	// `schemas/{catalog}.{schema}`. Each `{...}` component is capped at 255
 	// characters individually.
 	Parent types.String `tfsdk:"-"`
-	// View selector controlling which fields are populated per row.
+	// View selector controlling which fields are populated per row. `FULL`
+	// returns the full representation of the service; `BASIC` returns a more
+	// compact version. Defaults to `BASIC` when unset.
 	View types.String `tfsdk:"-"`
 }
 
@@ -22666,7 +22937,6 @@ func (m ListMcpServicesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string
 	attrs["parent"] = attrs["parent"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 	attrs["view"] = attrs["view"].SetOptional()
 
 	return attrs
@@ -22690,11 +22960,10 @@ func (m ListMcpServicesRequest_SdkV2) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"include_browse": m.IncludeBrowse,
-			"page_size":      m.PageSize,
-			"page_token":     m.PageToken,
-			"parent":         m.Parent,
-			"view":           m.View,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+			"view":       m.View,
 		})
 }
 
@@ -22702,11 +22971,10 @@ func (m ListMcpServicesRequest_SdkV2) ToObjectValue(ctx context.Context) basetyp
 func (m ListMcpServicesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"include_browse": types.BoolType,
-			"page_size":      types.Int64Type,
-			"page_token":     types.StringType,
-			"parent":         types.StringType,
-			"view":           types.StringType,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+			"view":       types.StringType,
 		},
 	}
 }
@@ -23016,20 +23284,18 @@ func (m *ListMetastoresResponse_SdkV2) SetMetastores(ctx context.Context, v []Me
 }
 
 type ListModelProviderServicesRequest_SdkV2 struct {
-	// Whether to include provider services for which the principal can only
-	// access selective metadata.
-	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Maximum number of provider services to return. Defaults to 100 when unset
-	// or 0; the maximum is 100. Use `next_page_token` to retrieve additional
-	// pages.
+	// or 0; the maximum is 100. Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from a previous request.
 	PageToken types.String `tfsdk:"-"`
-	// Resource name of the parent schema to list within, as
+	// Name of the parent schema to list within, as
 	// `schemas/{catalog}.{schema}`. Each `{...}` component is capped at 255
 	// characters individually.
 	Parent types.String `tfsdk:"-"`
-	// View selector controlling which fields are populated per row.
+	// View selector controlling which fields are populated per row. `FULL`
+	// returns the full representation of the service; `BASIC` returns a more
+	// compact version. Defaults to `BASIC` when unset.
 	View types.String `tfsdk:"-"`
 }
 
@@ -23043,7 +23309,6 @@ func (m ListModelProviderServicesRequest_SdkV2) ApplySchemaCustomizations(attrs 
 	attrs["parent"] = attrs["parent"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 	attrs["view"] = attrs["view"].SetOptional()
 
 	return attrs
@@ -23067,11 +23332,10 @@ func (m ListModelProviderServicesRequest_SdkV2) ToObjectValue(ctx context.Contex
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"include_browse": m.IncludeBrowse,
-			"page_size":      m.PageSize,
-			"page_token":     m.PageToken,
-			"parent":         m.Parent,
-			"view":           m.View,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+			"view":       m.View,
 		})
 }
 
@@ -23079,11 +23343,10 @@ func (m ListModelProviderServicesRequest_SdkV2) ToObjectValue(ctx context.Contex
 func (m ListModelProviderServicesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"include_browse": types.BoolType,
-			"page_size":      types.Int64Type,
-			"page_token":     types.StringType,
-			"parent":         types.StringType,
-			"view":           types.StringType,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+			"view":       types.StringType,
 		},
 	}
 }
@@ -23210,20 +23473,18 @@ func (m *ListModelProviderServicesResponse_SdkV2) SetModelProviderServices(ctx c
 }
 
 type ListModelServicesRequest_SdkV2 struct {
-	// Whether to include model services for which the principal can only access
-	// selective metadata.
-	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Maximum number of model services to return. Defaults to 100 when unset or
-	// 0; the maximum is 100. Use `next_page_token` to retrieve additional
-	// pages.
+	// 0; the maximum is 100. Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from a previous request.
 	PageToken types.String `tfsdk:"-"`
-	// Resource name of the parent schema to list within, as
+	// Name of the parent schema to list within, as
 	// `schemas/{catalog}.{schema}`. Each `{...}` component is capped at 255
 	// characters individually.
 	Parent types.String `tfsdk:"-"`
-	// View selector controlling which fields are populated per row.
+	// View selector controlling which fields are populated per row. `FULL`
+	// returns the full representation of the service; `BASIC` returns a more
+	// compact version. Defaults to `BASIC` when unset.
 	View types.String `tfsdk:"-"`
 }
 
@@ -23237,7 +23498,6 @@ func (m ListModelServicesRequest_SdkV2) ApplySchemaCustomizations(attrs map[stri
 	attrs["parent"] = attrs["parent"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 	attrs["view"] = attrs["view"].SetOptional()
 
 	return attrs
@@ -23261,11 +23521,10 @@ func (m ListModelServicesRequest_SdkV2) ToObjectValue(ctx context.Context) baset
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"include_browse": m.IncludeBrowse,
-			"page_size":      m.PageSize,
-			"page_token":     m.PageToken,
-			"parent":         m.Parent,
-			"view":           m.View,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+			"view":       m.View,
 		})
 }
 
@@ -23273,11 +23532,10 @@ func (m ListModelServicesRequest_SdkV2) ToObjectValue(ctx context.Context) baset
 func (m ListModelServicesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"include_browse": types.BoolType,
-			"page_size":      types.Int64Type,
-			"page_token":     types.StringType,
-			"parent":         types.StringType,
-			"view":           types.StringType,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+			"view":       types.StringType,
 		},
 	}
 }
@@ -25863,9 +26121,6 @@ func (m MatchColumn_SdkV2) Type(ctx context.Context) attr.Type {
 // Connection, or Databricks-hosted via an internal server -- and exposes its
 // tools for discovery, authorization, and invocation.
 type McpService_SdkV2 struct {
-	// Whether the caller sees only metadata available through the BROWSE
-	// privilege.
-	BrowseOnly types.Bool `tfsdk:"browse_only"`
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
 	// Operational configuration: connection, tool selectors, rate limit.
@@ -25932,7 +26187,6 @@ func (to *McpService_SdkV2) SyncFieldsDuringRead(ctx context.Context, from McpSe
 }
 
 func (m McpService_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["config"] = attrs["config"].SetOptional()
 	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -25972,7 +26226,6 @@ func (m McpService_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"browse_only":     m.BrowseOnly,
 			"comment":         m.Comment,
 			"config":          m.Config,
 			"create_time":     m.CreateTime,
@@ -25991,8 +26244,7 @@ func (m McpService_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m McpService_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"browse_only": types.BoolType,
-			"comment":     types.StringType,
+			"comment": types.StringType,
 			"config": basetypes.ListType{
 				ElemType: McpServiceConfig_SdkV2{}.Type(ctx),
 			},
@@ -26263,7 +26515,8 @@ func (m *McpServiceConfig_SdkV2) SetSourceConnection(ctx context.Context, v McpS
 // dangling source so callers can diagnose a deleted backing connection.
 type McpServiceConfigSourceConnection_SdkV2 struct {
 	IsDeleted types.Bool `tfsdk:"is_deleted"`
-
+	// Name of the UC connection that hosts the MCP server, as
+	// `connections/{catalog}.{schema}.{connection}`.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -26525,9 +26778,6 @@ func (m MetastoreInfo_SdkV2) Type(ctx context.Context) attr.Type {
 // provider serving multiple models); a single ModelService can fan out across
 // multiple ModelProviderServices for traffic split or failover.
 type ModelProviderService_SdkV2 struct {
-	// Whether the caller sees only metadata available through the BROWSE
-	// privilege.
-	BrowseOnly types.Bool `tfsdk:"browse_only"`
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
 	// Behavioral configuration: provider connection, model catalog, and
@@ -26598,7 +26848,6 @@ func (to *ModelProviderService_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 }
 
 func (m ModelProviderService_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["config"] = attrs["config"].SetOptional()
 	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -26638,7 +26887,6 @@ func (m ModelProviderService_SdkV2) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"browse_only":     m.BrowseOnly,
 			"comment":         m.Comment,
 			"config":          m.Config,
 			"create_time":     m.CreateTime,
@@ -26657,8 +26905,7 @@ func (m ModelProviderService_SdkV2) ToObjectValue(ctx context.Context) basetypes
 func (m ModelProviderService_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"browse_only": types.BoolType,
-			"comment":     types.StringType,
+			"comment": types.StringType,
 			"config": basetypes.ListType{
 				ElemType: ModelProviderServiceConfig_SdkV2{}.Type(ctx),
 			},
@@ -27469,7 +27716,6 @@ func (m *ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2) SetDirect(
 // than one mode is rejected.
 type ModelProviderServiceConfigAmazonBedrockProviderDirectConfig_SdkV2 struct {
 	// AWS access-key-pair auth. Mutually exclusive with `service_credential`.
-	// Supersedes the flat `aws_access_key_id` / `aws_secret_access_key` fields.
 	AwsAccessKey types.List `tfsdk:"aws_access_key"`
 	// AWS region where the Bedrock endpoint is hosted (e.g., `us-east-1`).
 	// Required on Create.
@@ -28160,8 +28406,7 @@ type ModelProviderServiceConfigAzureOpenAiProviderDirectConfig_SdkV2 struct {
 	// `https://myresource.openai.azure.com`. Required on Create.
 	BaseUrl types.String `tfsdk:"base_url"`
 	// Entra ID (service principal) auth. Mutually exclusive with `api_key` and
-	// `service_credential`. Supersedes the flat `tenant_id` / `client_id` /
-	// `client_secret` fields.
+	// `service_credential`.
 	EntraServicePrincipal types.List `tfsdk:"entra_service_principal"`
 	// Reference to a UC service credential authorizing Azure OpenAI requests.
 	// On Create the caller supplies `service_credential.name` in the AIP-122
@@ -29018,8 +29263,7 @@ type ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig_SdkV2 struct
 	// Microsoft AI Foundry endpoint URL. Required on Create.
 	BaseUrl types.String `tfsdk:"base_url"`
 	// Entra ID (service principal) auth. Mutually exclusive with `api_key` and
-	// `service_credential`. Supersedes the flat `tenant_id` / `client_id` /
-	// `client_secret` fields.
+	// `service_credential`.
 	EntraServicePrincipal types.List `tfsdk:"entra_service_principal"`
 	// Reference to a UC service credential authorizing Microsoft Foundry
 	// requests. On Create the caller supplies `service_credential.name` in the
@@ -29659,9 +29903,6 @@ func (m ModelProviderServiceConfigServiceCredential_SdkV2) Type(ctx context.Cont
 // access control, rate limits, guardrails, and auditing to the traffic it
 // serves.
 type ModelService_SdkV2 struct {
-	// Whether the caller sees only metadata available through the BROWSE
-	// privilege.
-	BrowseOnly types.Bool `tfsdk:"browse_only"`
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
 	// Operational configuration: destinations, routing, rate limits, inference
@@ -29747,7 +29988,6 @@ func (to *ModelService_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Mod
 }
 
 func (m ModelService_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["config"] = attrs["config"].SetOptional()
 	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -29789,7 +30029,6 @@ func (m ModelService_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"browse_only":         m.BrowseOnly,
 			"comment":             m.Comment,
 			"config":              m.Config,
 			"create_time":         m.CreateTime,
@@ -29809,8 +30048,7 @@ func (m ModelService_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (m ModelService_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"browse_only": types.BoolType,
-			"comment":     types.StringType,
+			"comment": types.StringType,
 			"config": basetypes.ListType{
 				ElemType: ModelServiceConfig_SdkV2{}.Type(ctx),
 			},
@@ -33945,9 +34183,14 @@ type PolicyInfo_SdkV2 struct {
 	// Optional list of user or group names that should be excluded from the
 	// policy.
 	ExceptPrincipals types.List `tfsdk:"except_principals"`
-	// Type of securables that the policy should take effect on. Only `TABLE` is
-	// supported at this moment. Required on create and optional on update.
+	// Type of securables that the policy should take effect on. Required on
+	// create and optional on update.
 	ForSecurableType types.String `tfsdk:"for_securable_type"`
+	// Options for grant policies. Valid only if `policy_type` is
+	// `POLICY_TYPE_GRANT`. Required on create and optional on update. When
+	// specified on update, the new options will replace the existing options as
+	// a whole.
+	Grant types.List `tfsdk:"grant"`
 	// Unique identifier of the policy. This field is output only and is
 	// generated by the system.
 	Id types.String `tfsdk:"id"`
@@ -33999,6 +34242,15 @@ func (to *PolicyInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ExceptPrincipals = from.ExceptPrincipals
 	}
+	if !from.Grant.IsNull() && !from.Grant.IsUnknown() {
+		if toGrant, ok := to.GetGrant(ctx); ok {
+			if fromGrant, ok := from.GetGrant(ctx); ok {
+				// Recursively sync the fields of Grant
+				toGrant.SyncFieldsDuringCreateOrUpdate(ctx, fromGrant)
+				to.SetGrant(ctx, toGrant)
+			}
+		}
+	}
 	if !from.MatchColumns.IsNull() && !from.MatchColumns.IsUnknown() && to.MatchColumns.IsNull() && len(from.MatchColumns.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for MatchColumns, and the deserialized field value is Null,
@@ -34044,6 +34296,14 @@ func (to *PolicyInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Polic
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ExceptPrincipals = from.ExceptPrincipals
 	}
+	if !from.Grant.IsNull() && !from.Grant.IsUnknown() {
+		if toGrant, ok := to.GetGrant(ctx); ok {
+			if fromGrant, ok := from.GetGrant(ctx); ok {
+				toGrant.SyncFieldsDuringRead(ctx, fromGrant)
+				to.SetGrant(ctx, toGrant)
+			}
+		}
+	}
 	if !from.MatchColumns.IsNull() && !from.MatchColumns.IsUnknown() && to.MatchColumns.IsNull() && len(from.MatchColumns.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for MatchColumns, and the deserialized field value is Null,
@@ -34080,6 +34340,8 @@ func (m PolicyInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["except_principals"] = attrs["except_principals"].SetOptional()
 	attrs["for_securable_type"] = attrs["for_securable_type"].SetRequired()
+	attrs["grant"] = attrs["grant"].SetOptional()
+	attrs["grant"] = attrs["grant"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["match_columns"] = attrs["match_columns"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -34107,6 +34369,7 @@ func (m PolicyInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]r
 	return map[string]reflect.Type{
 		"column_mask":       reflect.TypeOf(ColumnMaskOptions_SdkV2{}),
 		"except_principals": reflect.TypeOf(types.String{}),
+		"grant":             reflect.TypeOf(GrantOptions_SdkV2{}),
 		"match_columns":     reflect.TypeOf(MatchColumn_SdkV2{}),
 		"row_filter":        reflect.TypeOf(RowFilterOptions_SdkV2{}),
 		"to_principals":     reflect.TypeOf(types.String{}),
@@ -34126,6 +34389,7 @@ func (m PolicyInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"created_by":            m.CreatedBy,
 			"except_principals":     m.ExceptPrincipals,
 			"for_securable_type":    m.ForSecurableType,
+			"grant":                 m.Grant,
 			"id":                    m.Id,
 			"match_columns":         m.MatchColumns,
 			"name":                  m.Name,
@@ -34154,7 +34418,10 @@ func (m PolicyInfo_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"for_securable_type": types.StringType,
-			"id":                 types.StringType,
+			"grant": basetypes.ListType{
+				ElemType: GrantOptions_SdkV2{}.Type(ctx),
+			},
+			"id": types.StringType,
 			"match_columns": basetypes.ListType{
 				ElemType: MatchColumn_SdkV2{}.Type(ctx),
 			},
@@ -34225,6 +34492,32 @@ func (m *PolicyInfo_SdkV2) SetExceptPrincipals(ctx context.Context, v []types.St
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["except_principals"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.ExceptPrincipals = types.ListValueMust(t, vs)
+}
+
+// GetGrant returns the value of the Grant field in PolicyInfo_SdkV2 as
+// a GrantOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PolicyInfo_SdkV2) GetGrant(ctx context.Context) (GrantOptions_SdkV2, bool) {
+	var e GrantOptions_SdkV2
+	if m.Grant.IsNull() || m.Grant.IsUnknown() {
+		return e, false
+	}
+	var v []GrantOptions_SdkV2
+	d := m.Grant.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGrant sets the value of the Grant field in PolicyInfo_SdkV2.
+func (m *PolicyInfo_SdkV2) SetGrant(ctx context.Context, v GrantOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["grant"]
+	m.Grant = types.ListValueMust(t, vs)
 }
 
 // GetMatchColumns returns the value of the MatchColumns field in PolicyInfo_SdkV2 as
@@ -38027,10 +38320,10 @@ func (m *TableInfo_SdkV2) SetViewDependencies(ctx context.Context, v DependencyL
 type TableRowFilter_SdkV2 struct {
 	// The full name of the row filter SQL UDF.
 	FunctionName types.String `tfsdk:"function_name"`
-	// The list of additional table columns or literals to be passed as
-	// additional arguments to a row filter function. This is the replacement of
-	// the deprecated input_column_names field and carries information about the
-	// types (alias or constant) of the arguments to the filter function.
+	// The list of table columns or literals to be passed as additional
+	// arguments to a row filter function, carrying the type (column reference
+	// vs constant literal) of each argument. Deprecated: use input_column_names
+	// instead.
 	InputArguments types.List `tfsdk:"input_arguments"`
 	// The list of table columns to be passed as input to the row filter
 	// function. The column types should match the types of the filter function
@@ -38289,6 +38582,155 @@ func (m *TableSummary_SdkV2) SetSecurableKindManifest(ctx context.Context, v Sec
 	m.SecurableKindManifest = types.ListValueMust(t, vs)
 }
 
+// An expression that introspects tags at query time.
+type TagIntrospectionExpression_SdkV2 struct {
+	// Extracts the value of a column-level tag.
+	ColumnTagValue types.List `tfsdk:"column_tag_value"`
+	// Extracts the value of a securable-level tag.
+	TagValue types.List `tfsdk:"tag_value"`
+}
+
+func (to *TagIntrospectionExpression_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TagIntrospectionExpression_SdkV2) {
+	if !from.ColumnTagValue.IsNull() && !from.ColumnTagValue.IsUnknown() {
+		if toColumnTagValue, ok := to.GetColumnTagValue(ctx); ok {
+			if fromColumnTagValue, ok := from.GetColumnTagValue(ctx); ok {
+				// Recursively sync the fields of ColumnTagValue
+				toColumnTagValue.SyncFieldsDuringCreateOrUpdate(ctx, fromColumnTagValue)
+				to.SetColumnTagValue(ctx, toColumnTagValue)
+			}
+		}
+	}
+	if !from.TagValue.IsNull() && !from.TagValue.IsUnknown() {
+		if toTagValue, ok := to.GetTagValue(ctx); ok {
+			if fromTagValue, ok := from.GetTagValue(ctx); ok {
+				// Recursively sync the fields of TagValue
+				toTagValue.SyncFieldsDuringCreateOrUpdate(ctx, fromTagValue)
+				to.SetTagValue(ctx, toTagValue)
+			}
+		}
+	}
+}
+
+func (to *TagIntrospectionExpression_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TagIntrospectionExpression_SdkV2) {
+	if !from.ColumnTagValue.IsNull() && !from.ColumnTagValue.IsUnknown() {
+		if toColumnTagValue, ok := to.GetColumnTagValue(ctx); ok {
+			if fromColumnTagValue, ok := from.GetColumnTagValue(ctx); ok {
+				toColumnTagValue.SyncFieldsDuringRead(ctx, fromColumnTagValue)
+				to.SetColumnTagValue(ctx, toColumnTagValue)
+			}
+		}
+	}
+	if !from.TagValue.IsNull() && !from.TagValue.IsUnknown() {
+		if toTagValue, ok := to.GetTagValue(ctx); ok {
+			if fromTagValue, ok := from.GetTagValue(ctx); ok {
+				toTagValue.SyncFieldsDuringRead(ctx, fromTagValue)
+				to.SetTagValue(ctx, toTagValue)
+			}
+		}
+	}
+}
+
+func (m TagIntrospectionExpression_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column_tag_value"] = attrs["column_tag_value"].SetOptional()
+	attrs["column_tag_value"] = attrs["column_tag_value"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["tag_value"] = attrs["tag_value"].SetOptional()
+	attrs["tag_value"] = attrs["tag_value"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TagIntrospectionExpression.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TagIntrospectionExpression_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"column_tag_value": reflect.TypeOf(ColumnTagValueExtraction_SdkV2{}),
+		"tag_value":        reflect.TypeOf(TagValueExtraction_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TagIntrospectionExpression_SdkV2
+// only implements ToObjectValue() and Type().
+func (m TagIntrospectionExpression_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"column_tag_value": m.ColumnTagValue,
+			"tag_value":        m.TagValue,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TagIntrospectionExpression_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"column_tag_value": basetypes.ListType{
+				ElemType: ColumnTagValueExtraction_SdkV2{}.Type(ctx),
+			},
+			"tag_value": basetypes.ListType{
+				ElemType: TagValueExtraction_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetColumnTagValue returns the value of the ColumnTagValue field in TagIntrospectionExpression_SdkV2 as
+// a ColumnTagValueExtraction_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TagIntrospectionExpression_SdkV2) GetColumnTagValue(ctx context.Context) (ColumnTagValueExtraction_SdkV2, bool) {
+	var e ColumnTagValueExtraction_SdkV2
+	if m.ColumnTagValue.IsNull() || m.ColumnTagValue.IsUnknown() {
+		return e, false
+	}
+	var v []ColumnTagValueExtraction_SdkV2
+	d := m.ColumnTagValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetColumnTagValue sets the value of the ColumnTagValue field in TagIntrospectionExpression_SdkV2.
+func (m *TagIntrospectionExpression_SdkV2) SetColumnTagValue(ctx context.Context, v ColumnTagValueExtraction_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["column_tag_value"]
+	m.ColumnTagValue = types.ListValueMust(t, vs)
+}
+
+// GetTagValue returns the value of the TagValue field in TagIntrospectionExpression_SdkV2 as
+// a TagValueExtraction_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TagIntrospectionExpression_SdkV2) GetTagValue(ctx context.Context) (TagValueExtraction_SdkV2, bool) {
+	var e TagValueExtraction_SdkV2
+	if m.TagValue.IsNull() || m.TagValue.IsUnknown() {
+		return e, false
+	}
+	var v []TagValueExtraction_SdkV2
+	d := m.TagValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTagValue sets the value of the TagValue field in TagIntrospectionExpression_SdkV2.
+func (m *TagIntrospectionExpression_SdkV2) SetTagValue(ctx context.Context, v TagValueExtraction_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tag_value"]
+	m.TagValue = types.ListValueMust(t, vs)
+}
+
 type TagKeyValue_SdkV2 struct {
 	// name of the tag
 	Key types.String `tfsdk:"key"`
@@ -38338,6 +38780,55 @@ func (m TagKeyValue_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"key":   types.StringType,
 			"value": types.StringType,
+		},
+	}
+}
+
+// Extracts the value of a securable-level tag: get_tag_value("tagKey").
+type TagValueExtraction_SdkV2 struct {
+	// 1024 matches the max_length on FunctionArgument.constant above.
+	TagKey types.String `tfsdk:"tag_key"`
+}
+
+func (to *TagValueExtraction_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TagValueExtraction_SdkV2) {
+}
+
+func (to *TagValueExtraction_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TagValueExtraction_SdkV2) {
+}
+
+func (m TagValueExtraction_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TagValueExtraction.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TagValueExtraction_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TagValueExtraction_SdkV2
+// only implements ToObjectValue() and Type().
+func (m TagValueExtraction_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"tag_key": m.TagKey,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TagValueExtraction_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"tag_key": types.StringType,
 		},
 	}
 }

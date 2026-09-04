@@ -767,6 +767,30 @@ func TestFromAPI_UnsetScalarsBecomeNull(t *testing.T) {
 	}
 }
 
+// SDKv2 stores omitted scalar fields using their Go zero values. Collapse
+// unselected GCP targets to null so switching implementations does not plan a
+// target update or replacement.
+func TestFromAPI_UnselectedGcpTargetsBecomeNull(t *testing.T) {
+	ctx := context.Background()
+	m := emptyModel()
+	m.GcpEndpoint = []gcpEndpointModel{{
+		AllVpcScServices:  types.BoolValue(false),
+		ServiceAttachment: types.StringValue(""),
+	}}
+	fatalIfDiag(t, m.fromAPI(ctx, &settings.NccPrivateEndpointRule{GcpEndpoint: &settings.GcpEndpoint{
+		GoogleApiEndpoints: &settings.GoogleApiEndpoints{Endpoints: []string{"storage.googleapis.com"}},
+	}}))
+	if len(m.GcpEndpoint) != 1 {
+		t.Fatalf("GcpEndpoint: got %d entries, want 1", len(m.GcpEndpoint))
+	}
+	if got := m.GcpEndpoint[0].AllVpcScServices; !got.IsNull() {
+		t.Errorf("AllVpcScServices: got %v, want null", got)
+	}
+	if got := m.GcpEndpoint[0].ServiceAttachment; !got.IsNull() {
+		t.Errorf("ServiceAttachment: got %v, want null", got)
+	}
+}
+
 // TestSchema_CreateOnlyFieldsRequireReplace locks the contract that the
 // create-only inputs carry a plan modifier (RequiresReplace) and stay
 // Optional-not-Computed. toUpdateRequest never masks these, so without

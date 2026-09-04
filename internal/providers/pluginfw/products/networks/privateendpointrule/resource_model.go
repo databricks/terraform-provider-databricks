@@ -223,7 +223,7 @@ func (m *model) fromAPI(ctx context.Context, rule *settings.NccPrivateEndpointRu
 	m.DomainNames = stringsToList(ctx, rule.DomainNames, &diags)
 	m.ResourceNames = stringsToList(ctx, rule.ResourceNames, &diags)
 
-	m.GcpEndpoint = gcpEndpointFromAPI(ctx, rule.GcpEndpoint, m.GcpEndpoint, &diags)
+	m.GcpEndpoint = gcpEndpointFromAPI(ctx, rule.GcpEndpoint, &diags)
 	return diags
 }
 
@@ -251,13 +251,13 @@ func stringsToList(ctx context.Context, vals []string, diags *diag.Diagnostics) 
 // gcpEndpointFromAPI converts the SDK's pointer-to-struct into the
 // size-0-or-1 slice the schema expects. Returning nil omits the block from
 // state.
-func gcpEndpointFromAPI(ctx context.Context, gcp *settings.GcpEndpoint, previous []gcpEndpointModel, diags *diag.Diagnostics) []gcpEndpointModel {
+func gcpEndpointFromAPI(ctx context.Context, gcp *settings.GcpEndpoint, diags *diag.Diagnostics) []gcpEndpointModel {
 	if gcp == nil {
 		return nil
 	}
-	allVpcScServices := types.BoolValue(gcp.AllVpcScServices)
-	if !gcp.AllVpcScServices && (len(previous) == 0 || previous[0].AllVpcScServices.IsNull() || previous[0].AllVpcScServices.IsUnknown()) {
-		allVpcScServices = types.BoolNull()
+	allVpcScServices := types.BoolNull()
+	if gcp.AllVpcScServices {
+		allVpcScServices = types.BoolValue(true)
 	}
 	var googleApiEndpoints []googleApiEndpointsModel
 	if gcp.GoogleApiEndpoints != nil {
@@ -269,6 +269,6 @@ func gcpEndpointFromAPI(ctx context.Context, gcp *settings.GcpEndpoint, previous
 		AllVpcScServices:   allVpcScServices,
 		GoogleApiEndpoints: googleApiEndpoints,
 		PscEndpointUri:     types.StringValue(gcp.PscEndpointUri),
-		ServiceAttachment:  types.StringValue(gcp.ServiceAttachment),
+		ServiceAttachment:  stringOrNull(gcp.ServiceAttachment),
 	}}
 }

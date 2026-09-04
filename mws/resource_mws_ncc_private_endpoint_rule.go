@@ -27,6 +27,7 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 			common.CustomizeSchemaPath(m, p).SetReadOnly()
 		}
 		common.CustomizeSchemaPath(m, "gcp_endpoint", "psc_endpoint_uri").SetReadOnly()
+		common.CustomizeSchemaPath(m, "gcp_endpoint", "service_attachment").SetForceNew()
 
 		common.CustomizeSchemaPath(m, "network_connectivity_config_id").SetRequired().SetForceNew()
 		common.CustomizeSchemaPath(m, "enabled").SetOptional().SetComputed()
@@ -89,9 +90,8 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 				return err
 			}
 
-			// only enabled, domain names & resource names are updatable
-			// they do require update_mask to be set
-			// resource_names are not applicable to Azure, so we exclude them from the update
+			// Updatable fields require update_mask to be set. GCP service
+			// attachments are ForceNew, so only first-party target changes reach Update.
 			updateMask := []string{}
 			updatePrivateEndpointRule := settings.UpdatePrivateEndpointRule{}
 
@@ -114,6 +114,15 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 					newResourceNames = append(newResourceNames, v.(string))
 				}
 				updatePrivateEndpointRule.ResourceNames = newResourceNames
+			}
+			if d.HasChange("gcp_endpoint") {
+				updateMask = append(updateMask, "gcp_endpoint")
+				var gcpUpdate settings.UpdatePrivateEndpointRule
+				common.DataToStructPointer(d, s, &gcpUpdate)
+				if gcpUpdate.GcpEndpoint != nil {
+					gcpUpdate.GcpEndpoint.PscEndpointUri = ""
+				}
+				updatePrivateEndpointRule.GcpEndpoint = gcpUpdate.GcpEndpoint
 			}
 			_, err = acc.NetworkConnectivity.UpdatePrivateEndpointRule(ctx, settings.UpdateNccPrivateEndpointRuleRequest{
 				NetworkConnectivityConfigId: nccId,

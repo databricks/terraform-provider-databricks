@@ -15,6 +15,8 @@
 * Add data source for `databricks_workspace_iam_external_group_v2`.
 * Add resource and data source for `databricks_postgres_snapshot_schedule`.
 
+* Add GCP targets to `databricks_mws_ncc_private_endpoint_rule` ([#5973](https://github.com/databricks/terraform-provider-databricks/pull/5973)).
+
 ### Bug Fixes
 
 ### Documentation

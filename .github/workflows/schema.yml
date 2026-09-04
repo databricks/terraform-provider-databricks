@@ -29,10 +29,8 @@ on:
   pull_request:
     types: [opened, synchronize, edited]
 
-  # Required status checks are enforced against the merge-queue ref as well as
-  # the PR head, so the `status` context must report on `gh-readonly-queue/*`
-  # or queued entries stall until the queue's status-check timeout and get
-  # dequeued. Only the merge-queue-status job runs here.
+  # Required checks are enforced on the merge-queue ref too, so `status` must
+  # report there or queued PRs time out. Only merge-queue-status runs here.
   merge_group:
 
   workflow_dispatch:
@@ -283,25 +281,15 @@ jobs:
           fi
           exit 1
 
-  # Statuses and checks apply to specific commits (by hash), and required checks
-  # are enforced at the merge-queue level as well as the PR level. The squashed
-  # queue commit is a different hash than the PR head, so the `status` check from
-  # the PR does not carry over — without something reporting here, every queued
-  # entry would wait out the queue's status-check timeout and be dequeued.
-  #
-  # Rather than re-run the classifier on the queue ref, post a synthetic success,
-  # matching the auto-approve job in integration-tests.yml. Two reasons:
-  # * The classifier is a double provider build; it already ran at the tip of the
-  #   branch, and the queue only squashes commits that each passed it.
-  # * The bypass directive is read from `github.event.pull_request.body`, which
-  #   does not exist on the merge_group payload. A PR that legitimately carries
-  #   ALLOW_SCHEMA_BREAKING_CHANGE=true would pass on the PR and then fail here
-  #   with no way to unblock it.
-  #
-  # Tradeoff: the schema is verified at PR head, not at the squashed commit, so
-  # two PRs that each pass alone but conflict semantically could merge. This is
-  # the same tradeoff already accepted for Integration Tests, narrowed by the
-  # queue's strict-required-checks policy and ALLGREEN grouping.
+  # The squashed merge-queue commit has a different hash than the PR head, so the
+  # PR's `status` check does not carry over. Post a synthetic success rather than
+  # re-run the classifier on the queue ref, mirroring the auto-approve job in
+  # integration-tests.yml:
+  # * The classifier is a double provider build; it already ran on the PR, and
+  #   the queue only squashes commits that each passed it.
+  # * Its bypass reads github.event.pull_request.body, absent from the merge_group
+  #   payload — a PR carrying ALLOW_SCHEMA_BREAKING_CHANGE=true would pass on the
+  #   PR then fail here with no way to unblock.
   merge-queue-status:
     if: github.event_name == 'merge_group'
 
@@ -318,8 +306,7 @@ jobs:
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
-            // Name must match the required status check context, which is the
-            // `status` job id — that job declares no `name:`.
+            // Must match the required check context: the `status` job id (no name:).
             await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,

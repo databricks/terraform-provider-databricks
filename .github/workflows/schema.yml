@@ -102,6 +102,24 @@ jobs:
           CLASSIFIER_GENERATION_ERROR_MARKER: /tmp/classifier-generation-error
         run: make diff-schema
 
+      # Publish the classifier report to the run's job summary. Unlike the
+      # sticky PR comment (posted by the status job), $GITHUB_STEP_SUMMARY needs
+      # no token permissions, so the report renders on the run summary page even
+      # for fork PRs — where the comment step can't post because fork
+      # `pull_request` runs get a read-only GITHUB_TOKEN. Also surfaces the
+      # report for workflow_dispatch runs, which have no PR to comment on.
+      - name: Publish classifier report to job summary
+        run: |
+          {
+            echo "## Provider schema breaking-change report"
+            echo
+            if [ -s /tmp/classifier-report.md ]; then
+              cat /tmp/classifier-report.md
+            else
+              echo "_Classifier report not generated — see the \"Run schema diff and breaking-change classifier\" step log above._"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
       # Persist the step outcome so the downstream status job can read it.
       - name: Write outcome marker
         run: |

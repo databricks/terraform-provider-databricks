@@ -123,6 +123,11 @@ The following arguments are supported:
   Format: projects/{project_id}/branches/{branch_id}
 * `source_branch_lsn` (string, optional) - The Log Sequence Number (LSN) on the source branch from which this branch was created
 * `source_branch_time` (string, optional) - The point in time on the source branch from which this branch was created
+* `source_snapshot` (string, optional) - The snapshot this branch was created from. When set, the branch's data
+  comes from the snapshot rather than a source branch, so source_branch,
+  source_branch_lsn, and source_branch_time must be empty. The snapshot must
+  be AVAILABLE and belong to this branch's project.
+  Format: projects/{project_id}/snapshots/{snapshot_id}
 * `ttl` (string, optional) - Relative time-to-live duration. When set, the branch will expire at creation_time + ttl.
   Mutually exclusive with `expire_time` and `no_expiry`. When updating, use `spec.expiration` in the update_mask
 
@@ -151,6 +156,9 @@ In addition to the above arguments, the following attributes are exported:
   Format: projects/{project_id}/branches/{branch_id}
 * `source_branch_lsn` (string) - The Log Sequence Number (LSN) on the source branch from which this branch was created
 * `source_branch_time` (string) - The point in time on the source branch from which this branch was created
+* `source_snapshot` (string) - The snapshot this branch was restored from. Set only for branches created by
+  restoring a snapshot; unset for all other branches.
+  Format: projects/{project_id}/snapshots/{snapshot_id}
 * `state_change_time` (string) - A timestamp indicating when the `current_state` began
 
 ## Import

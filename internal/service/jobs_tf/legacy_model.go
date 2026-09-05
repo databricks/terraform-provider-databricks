@@ -257,6 +257,15 @@ func (m AiRuntimeTaskOutput_SdkV2) Type(ctx context.Context) attr.Type {
 type AlertTask_SdkV2 struct {
 	// The alert_id is the canonical identifier of the alert.
 	AlertId types.String `tfsdk:"alert_id"`
+	// Per-run parameter overrides, keyed by parameter name, applied onto the
+	// alert's stored query parameters before the query is executed. Only scalar
+	// values are supported. Values may reference job parameters with
+	// `{{job.parameters.*}}`, which are resolved before the task runs. An
+	// override whose key does not match a stored parameter fails the task run.
+	// Limited to 10000 characters when serialized as JSON; keys must be 1-100
+	// characters and contain only letters, digits, underscores, dashes, and
+	// periods.
+	Parameters types.Map `tfsdk:"parameters"`
 	// The subscribers receive alert evaluation result notifications after the
 	// alert task is completed. The number of subscriptions is limited to 100.
 	Subscribers types.List `tfsdk:"subscribers"`
@@ -315,6 +324,7 @@ func (to *AlertTask_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AlertT
 
 func (m AlertTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alert_id"] = attrs["alert_id"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["subscribers"] = attrs["subscribers"].SetOptional()
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 	attrs["workspace_path"] = attrs["workspace_path"].SetOptional()
@@ -331,6 +341,7 @@ func (m AlertTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // SDK values.
 func (m AlertTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"parameters":  reflect.TypeOf(types.String{}),
 		"subscribers": reflect.TypeOf(AlertTaskSubscriber_SdkV2{}),
 	}
 }
@@ -343,6 +354,7 @@ func (m AlertTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"alert_id":       m.AlertId,
+			"parameters":     m.Parameters,
 			"subscribers":    m.Subscribers,
 			"warehouse_id":   m.WarehouseId,
 			"workspace_path": m.WorkspacePath,
@@ -354,6 +366,9 @@ func (m AlertTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"alert_id": types.StringType,
+			"parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 			"subscribers": basetypes.ListType{
 				ElemType: AlertTaskSubscriber_SdkV2{}.Type(ctx),
 			},
@@ -361,6 +376,32 @@ func (m AlertTask_SdkV2) Type(ctx context.Context) attr.Type {
 			"workspace_path": types.StringType,
 		},
 	}
+}
+
+// GetParameters returns the value of the Parameters field in AlertTask_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AlertTask_SdkV2) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in AlertTask_SdkV2.
+func (m *AlertTask_SdkV2) SetParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Parameters = types.MapValueMust(t, vs)
 }
 
 // GetSubscribers returns the value of the Subscribers field in AlertTask_SdkV2 as
@@ -2635,6 +2676,9 @@ func (m ConditionTask_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type Continuous_SdkV2 struct {
+	// Defines when platform-initiated maintenance may run for this job. If
+	// unspecified, maintenance may run at any time.
+	MaintenanceWindow types.List `tfsdk:"maintenance_window"`
 	// Indicate whether the continuous execution of the job is paused or not.
 	// Defaults to UNPAUSED.
 	PauseStatus types.String `tfsdk:"pause_status"`
@@ -2644,12 +2688,31 @@ type Continuous_SdkV2 struct {
 }
 
 func (to *Continuous_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Continuous_SdkV2) {
+	if !from.MaintenanceWindow.IsNull() && !from.MaintenanceWindow.IsUnknown() {
+		if toMaintenanceWindow, ok := to.GetMaintenanceWindow(ctx); ok {
+			if fromMaintenanceWindow, ok := from.GetMaintenanceWindow(ctx); ok {
+				// Recursively sync the fields of MaintenanceWindow
+				toMaintenanceWindow.SyncFieldsDuringCreateOrUpdate(ctx, fromMaintenanceWindow)
+				to.SetMaintenanceWindow(ctx, toMaintenanceWindow)
+			}
+		}
+	}
 }
 
 func (to *Continuous_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Continuous_SdkV2) {
+	if !from.MaintenanceWindow.IsNull() && !from.MaintenanceWindow.IsUnknown() {
+		if toMaintenanceWindow, ok := to.GetMaintenanceWindow(ctx); ok {
+			if fromMaintenanceWindow, ok := from.GetMaintenanceWindow(ctx); ok {
+				toMaintenanceWindow.SyncFieldsDuringRead(ctx, fromMaintenanceWindow)
+				to.SetMaintenanceWindow(ctx, toMaintenanceWindow)
+			}
+		}
+	}
 }
 
 func (m Continuous_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["maintenance_window"] = attrs["maintenance_window"].SetOptional()
+	attrs["maintenance_window"] = attrs["maintenance_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["task_retry_mode"] = attrs["task_retry_mode"].SetOptional()
 
@@ -2664,7 +2727,9 @@ func (m Continuous_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m Continuous_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"maintenance_window": reflect.TypeOf(MaintenanceWindow_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2674,8 +2739,9 @@ func (m Continuous_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"pause_status":    m.PauseStatus,
-			"task_retry_mode": m.TaskRetryMode,
+			"maintenance_window": m.MaintenanceWindow,
+			"pause_status":       m.PauseStatus,
+			"task_retry_mode":    m.TaskRetryMode,
 		})
 }
 
@@ -2683,27 +2749,78 @@ func (m Continuous_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m Continuous_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"maintenance_window": basetypes.ListType{
+				ElemType: MaintenanceWindow_SdkV2{}.Type(ctx),
+			},
 			"pause_status":    types.StringType,
 			"task_retry_mode": types.StringType,
 		},
 	}
 }
 
+// GetMaintenanceWindow returns the value of the MaintenanceWindow field in Continuous_SdkV2 as
+// a MaintenanceWindow_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Continuous_SdkV2) GetMaintenanceWindow(ctx context.Context) (MaintenanceWindow_SdkV2, bool) {
+	var e MaintenanceWindow_SdkV2
+	if m.MaintenanceWindow.IsNull() || m.MaintenanceWindow.IsUnknown() {
+		return e, false
+	}
+	var v []MaintenanceWindow_SdkV2
+	d := m.MaintenanceWindow.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMaintenanceWindow sets the value of the MaintenanceWindow field in Continuous_SdkV2.
+func (m *Continuous_SdkV2) SetMaintenanceWindow(ctx context.Context, v MaintenanceWindow_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["maintenance_window"]
+	m.MaintenanceWindow = types.ListValueMust(t, vs)
+}
+
 // Continuous trigger. Stripped-down counterpart to `ContinuousSettings`:
 // `pause_status` is owned by the enclosing `TriggerConfiguration` and
 // intentionally omitted here.
 type ContinuousTriggerConfiguration_SdkV2 struct {
+	// Defines when platform-initiated maintenance may run for this trigger. If
+	// unspecified, maintenance may run at any time.
+	MaintenanceWindow types.List `tfsdk:"maintenance_window"`
 	// Whether the continuous job applies task-level retries. Defaults to NEVER.
 	TaskRetryMode types.String `tfsdk:"task_retry_mode"`
 }
 
 func (to *ContinuousTriggerConfiguration_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ContinuousTriggerConfiguration_SdkV2) {
+	if !from.MaintenanceWindow.IsNull() && !from.MaintenanceWindow.IsUnknown() {
+		if toMaintenanceWindow, ok := to.GetMaintenanceWindow(ctx); ok {
+			if fromMaintenanceWindow, ok := from.GetMaintenanceWindow(ctx); ok {
+				// Recursively sync the fields of MaintenanceWindow
+				toMaintenanceWindow.SyncFieldsDuringCreateOrUpdate(ctx, fromMaintenanceWindow)
+				to.SetMaintenanceWindow(ctx, toMaintenanceWindow)
+			}
+		}
+	}
 }
 
 func (to *ContinuousTriggerConfiguration_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ContinuousTriggerConfiguration_SdkV2) {
+	if !from.MaintenanceWindow.IsNull() && !from.MaintenanceWindow.IsUnknown() {
+		if toMaintenanceWindow, ok := to.GetMaintenanceWindow(ctx); ok {
+			if fromMaintenanceWindow, ok := from.GetMaintenanceWindow(ctx); ok {
+				toMaintenanceWindow.SyncFieldsDuringRead(ctx, fromMaintenanceWindow)
+				to.SetMaintenanceWindow(ctx, toMaintenanceWindow)
+			}
+		}
+	}
 }
 
 func (m ContinuousTriggerConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["maintenance_window"] = attrs["maintenance_window"].SetOptional()
+	attrs["maintenance_window"] = attrs["maintenance_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["task_retry_mode"] = attrs["task_retry_mode"].SetOptional()
 
 	return attrs
@@ -2717,7 +2834,9 @@ func (m ContinuousTriggerConfiguration_SdkV2) ApplySchemaCustomizations(attrs ma
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ContinuousTriggerConfiguration_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"maintenance_window": reflect.TypeOf(MaintenanceWindow_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2727,7 +2846,8 @@ func (m ContinuousTriggerConfiguration_SdkV2) ToObjectValue(ctx context.Context)
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"task_retry_mode": m.TaskRetryMode,
+			"maintenance_window": m.MaintenanceWindow,
+			"task_retry_mode":    m.TaskRetryMode,
 		})
 }
 
@@ -2735,9 +2855,38 @@ func (m ContinuousTriggerConfiguration_SdkV2) ToObjectValue(ctx context.Context)
 func (m ContinuousTriggerConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"maintenance_window": basetypes.ListType{
+				ElemType: MaintenanceWindow_SdkV2{}.Type(ctx),
+			},
 			"task_retry_mode": types.StringType,
 		},
 	}
+}
+
+// GetMaintenanceWindow returns the value of the MaintenanceWindow field in ContinuousTriggerConfiguration_SdkV2 as
+// a MaintenanceWindow_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ContinuousTriggerConfiguration_SdkV2) GetMaintenanceWindow(ctx context.Context) (MaintenanceWindow_SdkV2, bool) {
+	var e MaintenanceWindow_SdkV2
+	if m.MaintenanceWindow.IsNull() || m.MaintenanceWindow.IsUnknown() {
+		return e, false
+	}
+	var v []MaintenanceWindow_SdkV2
+	d := m.MaintenanceWindow.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMaintenanceWindow sets the value of the MaintenanceWindow field in ContinuousTriggerConfiguration_SdkV2.
+func (m *ContinuousTriggerConfiguration_SdkV2) SetMaintenanceWindow(ctx context.Context, v MaintenanceWindow_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["maintenance_window"]
+	m.MaintenanceWindow = types.ListValueMust(t, vs)
 }
 
 type ContinuousTriggerState_SdkV2 struct {
@@ -2808,6 +2957,9 @@ type CreateJob_SdkV2 struct {
 	// An optional continuous property for this job. The continuous property
 	// will ensure that there is always one run executing. Only one of
 	// `schedule` and `continuous` can be used.
+	//
+	// Pipelines started by a continuous job also run continuously, regardless
+	// of their own pipeline mode setting.
 	Continuous types.List `tfsdk:"continuous"`
 	// Deployment information for jobs managed by external sources.
 	Deployment types.List `tfsdk:"deployment"`
@@ -9308,6 +9460,9 @@ type JobSettings_SdkV2 struct {
 	// An optional continuous property for this job. The continuous property
 	// will ensure that there is always one run executing. Only one of
 	// `schedule` and `continuous` can be used.
+	//
+	// Pipelines started by a continuous job also run continuously, regardless
+	// of their own pipeline mode setting.
 	Continuous types.List `tfsdk:"continuous"`
 	// Deployment information for jobs managed by external sources.
 	Deployment types.List `tfsdk:"deployment"`
@@ -11309,6 +11464,73 @@ func (m *ListRunsResponse_SdkV2) SetRuns(ctx context.Context, v []BaseRun_SdkV2)
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["runs"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Runs = types.ListValueMust(t, vs)
+}
+
+// A recurring weekly time window during which platform-initiated maintenance is
+// allowed to run for a continuous job.
+type MaintenanceWindow_SdkV2 struct {
+	// The day of week on which maintenance is allowed to happen. This field is
+	// required.
+	DayOfWeek types.String `tfsdk:"day_of_week"`
+	// An integer between 0 and 23 denoting the start hour for the maintenance
+	// window in the 24-hour day. Platform-initiated maintenance is triggered
+	// only within a one-hour window starting at this hour. This field is
+	// required.
+	StartHour types.Int64 `tfsdk:"start_hour"`
+	// A Java timezone ID. The maintenance window is resolved with respect to
+	// this timezone. See [Java TimeZone] for details. This field is required.
+	//
+	// [Java TimeZone]: https://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html
+	TimezoneId types.String `tfsdk:"timezone_id"`
+}
+
+func (to *MaintenanceWindow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MaintenanceWindow_SdkV2) {
+}
+
+func (to *MaintenanceWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from MaintenanceWindow_SdkV2) {
+}
+
+func (m MaintenanceWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["day_of_week"] = attrs["day_of_week"].SetRequired()
+	attrs["start_hour"] = attrs["start_hour"].SetRequired()
+	attrs["timezone_id"] = attrs["timezone_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MaintenanceWindow.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m MaintenanceWindow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MaintenanceWindow_SdkV2
+// only implements ToObjectValue() and Type().
+func (m MaintenanceWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"day_of_week": m.DayOfWeek,
+			"start_hour":  m.StartHour,
+			"timezone_id": m.TimezoneId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m MaintenanceWindow_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"day_of_week": types.StringType,
+			"start_hour":  types.Int64Type,
+			"timezone_id": types.StringType,
+		},
+	}
 }
 
 type ModelTriggerConfiguration_SdkV2 struct {
@@ -28817,10 +29039,10 @@ func (m TerminationDetails_SdkV2) Type(ctx context.Context) attr.Type {
 
 // A single trigger attached to a job via `JobSettings.triggers`. Exactly one of
 // the trigger-type fields (`periodic`, `schedule`, `continuous`,
-// `file_arrival`, `table_update`, `model`) must be set; mutual exclusivity is
-// enforced in the API handler rather than via `oneof` so that codegen,
-// validation, and JSON serialization across SDKs and Terraform behave
-// consistently.
+// `file_arrival`, `table_update`, `model`, `job_completion`) must be set;
+// mutual exclusivity is enforced in the API handler rather than via `oneof` so
+// that codegen, validation, and JSON serialization across SDKs and Terraform
+// behave consistently.
 type TriggerConfiguration_SdkV2 struct {
 	// Continuous trigger configuration.
 	Continuous types.List `tfsdk:"continuous"`

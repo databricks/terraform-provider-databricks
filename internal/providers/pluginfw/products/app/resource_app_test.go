@@ -158,3 +158,34 @@ func TestResourceApp_ModifyPlan_SkipsWhenClientNil(t *testing.T) {
 	r.ModifyPlan(context.Background(), req, resp)
 	assert.False(t, resp.Diagnostics.HasError(), "should not error when client is nil")
 }
+
+func TestResourceApp_GitSourceInputOnlySchema(t *testing.T) {
+	r := ResourceApp()
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+
+	gitSource, ok := resp.Schema.Attributes["git_source"].(schema.SingleNestedAttribute)
+	require.True(t, ok, "git_source must be a single nested attribute")
+	assert.True(t, gitSource.Optional, "git_source should be settable")
+
+	// The nested descendants must not be Computed: git_source is input_only (never echoed),
+	// so a Computed nested value would be unknown after apply and fail. branch stays optional.
+	repo, ok := gitSource.Attributes["git_repository"].(schema.SingleNestedAttribute)
+	require.True(t, ok, "git_source.git_repository must be a single nested attribute")
+	assert.False(t, repo.Computed, "git_source.git_repository must not be Computed")
+
+	// The grandchild caller_credential_id is generated Computed+UseStateForUnknown; since the
+	// whole input_only git_source is copied from the plan, a Computed grandchild would be
+	// unknown after apply. It must be cleared recursively.
+	callerCred, ok := repo.Attributes["caller_credential_id"].(schema.Int64Attribute)
+	require.True(t, ok, "git_source.git_repository.caller_credential_id must be an int64 attribute")
+	assert.False(t, callerCred.Computed, "git_source.git_repository.caller_credential_id must not be Computed")
+
+	resolved, ok := gitSource.Attributes["resolved_commit"].(schema.StringAttribute)
+	require.True(t, ok, "git_source.resolved_commit must be a string attribute")
+	assert.False(t, resolved.Computed, "git_source.resolved_commit must not be Computed")
+
+	branch, ok := gitSource.Attributes["branch"].(schema.StringAttribute)
+	require.True(t, ok, "git_source.branch must be a string attribute")
+	assert.True(t, branch.Optional, "git_source.branch should be settable")
+}

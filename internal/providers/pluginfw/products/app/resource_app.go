@@ -51,7 +51,58 @@ func (a AppResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBu
 	s["compute_size"] = s["compute_size"].SetComputed()
 	s = apps_tf.App{}.ApplySchemaCustomizations(s)
 	s["forward_user_access_token"] = s["forward_user_access_token"].SetComputed()
+
+	// git_source is input_only at the app level: the Apps API accepts it on write but never
+	// echoes it on read (the read-back is the separate OUTPUT_ONLY default_git_source). Its
+	// descendants (git_repository, resolved_commit, and the grandchild
+	// git_repository.caller_credential_id) are generated as Computed because GitSource and
+	// GitRepository are shared messages reused in output contexts; left Computed, a
+	// user-configured git_source carries unknown-after-apply values and the apply fails. Drop
+	// Computed across the whole git_source subtree so a configured value is fully known;
+	// SyncFields then round-trips it across reads.
+	if gs, ok := s["git_source"].(tfschema.SingleNestedAttributeBuilder); ok {
+		gs.Attributes["git_repository"] = clearComputed(gs.Attributes["git_repository"])
+		gs.Attributes["resolved_commit"] = clearComputed(gs.Attributes["resolved_commit"])
+		s["git_source"] = gs
+	}
 	return s
+}
+
+// clearComputed recursively drops the Computed flag (and its now-moot UseStateForUnknown plan
+// modifiers) from an input_only attribute's descendants, turning each into a plain optional.
+// git_source is input_only — SyncFields copies the whole subtree from the plan on every read —
+// so any Computed descendant is left unknown after apply and fails. Recursion reaches
+// grandchildren such as git_repository.caller_credential_id; Required descendants
+// (git_repository url/provider) have Computed unset already and are left as-is.
+func clearComputed(b tfschema.AttributeBuilder) tfschema.AttributeBuilder {
+	switch nb := b.(type) {
+	case tfschema.SingleNestedAttributeBuilder:
+		if nb.Computed {
+			nb.Computed, nb.Optional, nb.PlanModifiers = false, true, nil
+		}
+		cleared := make(map[string]tfschema.AttributeBuilder, len(nb.Attributes))
+		for k, child := range nb.Attributes {
+			cleared[k] = clearComputed(child)
+		}
+		nb.Attributes = cleared
+		return nb
+	case tfschema.StringAttributeBuilder:
+		if nb.Computed {
+			nb.Computed, nb.Optional, nb.PlanModifiers = false, true, nil
+		}
+		return nb
+	case tfschema.Int64AttributeBuilder:
+		if nb.Computed {
+			nb.Computed, nb.Optional, nb.PlanModifiers = false, true, nil
+		}
+		return nb
+	case tfschema.BoolAttributeBuilder:
+		if nb.Computed {
+			nb.Computed, nb.Optional, nb.PlanModifiers = false, true, nil
+		}
+		return nb
+	}
+	return b
 }
 
 func (a AppResource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
@@ -192,7 +243,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 	newApp.NoCompute = app.NoCompute
 	newApp.ProviderConfig = app.ProviderConfig
-	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
+	newApp.App.SyncFieldsDuringCreateOrUpdate(ctx, app.App)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -211,7 +262,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 	newApp.ProviderConfig = app.ProviderConfig
-	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
+	newApp.App.SyncFieldsDuringCreateOrUpdate(ctx, app.App)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -298,6 +349,9 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 	}
 	newApp.NoCompute = app.NoCompute
 	newApp.ProviderConfig = app.ProviderConfig
+	newApp.App.SyncFieldsDuringRead(ctx, app.App)
+	// SyncFieldsDuringRead reconciles the input_only fields (git_source, source_code_path,
+	// git_repository.caller_credential_id) but omits user_api_scopes, so restore it here.
 	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
@@ -351,7 +405,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	// Modifying no_compute after creation has no effect.
 	newApp.NoCompute = app.NoCompute
 	newApp.ProviderConfig = app.ProviderConfig
-	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
+	newApp.App.SyncFieldsDuringCreateOrUpdate(ctx, app.App)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	// No PopulateProviderConfigInState needed for Update: provider_config.workspace_id
 	// is already in state from a previous Create, and if the workspace ID had changed,

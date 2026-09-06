@@ -63,7 +63,7 @@ This data source exports a single attribute, `items`. It is a list of resources,
 ### CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess
 * `allow_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule)
 * `deny_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule)
-* `restriction_mode` (string) - Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
+* `restriction_mode` (string) - Possible values are: `FULL_ACCESS`, `LEGACY_MODE`, `RESTRICTED_ACCESS`
 
 ### CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule
 * `authentication` (CustomerFacingIngressNetworkPolicyAuthentication)

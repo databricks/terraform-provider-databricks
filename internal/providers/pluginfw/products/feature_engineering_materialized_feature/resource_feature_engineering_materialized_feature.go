@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -108,11 +109,6 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 
 // MaterializedFeature extends the main model with additional fields.
 type MaterializedFeature struct {
-	// The quartz cron expression that defines the schedule of the
-	// materialization pipeline. The schedule is evaluated in the UTC timezone.
-	// Hidden from GraphQL: superseded by the `trigger` oneof
-	// (cron_schedule_trigger), so not exposed to Catalog Explorer.
-	CronSchedule types.String `tfsdk:"cron_schedule"`
 	// A cron-based schedule trigger for the materialization pipeline.
 	CronScheduleTrigger types.Object `tfsdk:"cron_schedule_trigger"`
 	// The full name of the feature in Unity Catalog.
@@ -172,8 +168,7 @@ func (m MaterializedFeature) GetComplexFieldTypes(ctx context.Context) map[strin
 func (m MaterializedFeature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{"cron_schedule": m.CronSchedule,
-			"cron_schedule_trigger":     m.CronScheduleTrigger,
+		map[string]attr.Value{"cron_schedule_trigger": m.CronScheduleTrigger,
 			"feature_name":              m.FeatureName,
 			"is_online":                 m.IsOnline,
 			"last_materialization_time": m.LastMaterializationTime,
@@ -194,8 +189,7 @@ func (m MaterializedFeature) ToObjectValue(ctx context.Context) basetypes.Object
 // and contains additional fields.
 func (m MaterializedFeature) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"cron_schedule": types.StringType,
-			"cron_schedule_trigger":     ml_tf.CronSchedule{}.Type(ctx),
+		AttrTypes: map[string]attr.Type{"cron_schedule_trigger": ml_tf.CronSchedule{}.Type(ctx),
 			"feature_name":              types.StringType,
 			"is_online":                 types.BoolType,
 			"last_materialization_time": types.StringType,
@@ -314,7 +308,6 @@ func (to *MaterializedFeature) SyncFieldsDuringRead(ctx context.Context, from Ma
 }
 
 func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cron_schedule"] = attrs["cron_schedule"].SetOptional()
 	attrs["cron_schedule_trigger"] = attrs["cron_schedule_trigger"].SetOptional()
 	attrs["feature_name"] = attrs["feature_name"].SetRequired()
 	attrs["is_online"] = attrs["is_online"].SetComputed()
@@ -322,7 +315,9 @@ func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetOptional()
+	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["online_store_config"] = attrs["online_store_config"].SetOptional()
+	attrs["online_store_config"] = attrs["online_store_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["pipeline_schedule_state"] = attrs["pipeline_schedule_state"].SetOptional()
 	attrs["streaming_mode"] = attrs["streaming_mode"].SetOptional()
 	attrs["table_name"] = attrs["table_name"].SetComputed()
@@ -615,7 +610,7 @@ func (r *MaterializedFeatureResource) update(ctx context.Context, plan Materiali
 	updateRequest := ml.UpdateMaterializedFeatureRequest{
 		MaterializedFeature:   materialized_feature,
 		MaterializedFeatureId: plan.MaterializedFeatureId.ValueString(),
-		UpdateMask:            "cron_schedule,cron_schedule_trigger,feature_name,offline_store_config,online_store_config,pipeline_schedule_state,streaming_mode,table_trigger",
+		UpdateMask:            "cron_schedule_trigger,feature_name,pipeline_schedule_state,streaming_mode,table_trigger",
 	}
 
 	var namespace ProviderConfig

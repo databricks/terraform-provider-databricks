@@ -8,6 +8,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestPluginFrameworkOptInsExistInSdkV2 asserts that every resource and data
@@ -44,6 +45,10 @@ func TestConfigureDatabricksClient(t *testing.T) {
 			config: map[string]interface{}{},
 			validateResourceData: func(dc *common.DatabricksClient) {
 				assert.Equal(t, 65, dc.Config.HTTPTimeoutSeconds, "HTTP timeout should be 65 seconds by default")
+				// An unset timeout lets slow endpoints apply their own default.
+				raised, err := dc.ClientWithDefaultHTTPTimeout(600)
+				require.NoError(t, err)
+				assert.NotSame(t, dc, raised, "endpoint default should apply when http_timeout_seconds is unset")
 			},
 		},
 		{
@@ -53,6 +58,11 @@ func TestConfigureDatabricksClient(t *testing.T) {
 			},
 			validateResourceData: func(dc *common.DatabricksClient) {
 				assert.Equal(t, 30, dc.Config.HTTPTimeoutSeconds, "HTTP timeout should be overridden when set")
+				// An explicit timeout wins over any endpoint default, so a user
+				// who lowered it to fail fast keeps that behavior.
+				raised, err := dc.ClientWithDefaultHTTPTimeout(600)
+				require.NoError(t, err)
+				assert.Same(t, dc, raised, "explicit http_timeout_seconds must not be overridden")
 			},
 		},
 		{

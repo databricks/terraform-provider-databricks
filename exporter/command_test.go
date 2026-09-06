@@ -19,6 +19,13 @@ func (d dummyReader) Read(p []byte) (int, error) {
 }
 
 func TestInteractivePrompts(t *testing.T) {
+	originalInput := cliInput
+	originalOutput := cliOutput
+	t.Cleanup(func() {
+		cliInput = originalInput
+		cliOutput = originalOutput
+	})
+
 	cliInput = dummyReader("y\n")
 	cliOutput = &bytes.Buffer{}
 	ic := &importContext{
@@ -47,4 +54,41 @@ func TestInteractivePrompts(t *testing.T) {
 	assert.Equal(t, "y", ic.match)
 	assert.True(t, ic.mounts)
 	assert.Equal(t, "a,mounts", services)
+}
+
+func TestRunSkipsInteractivePromptsWhenServicesOrListingIsConfigured(t *testing.T) {
+	originalInput := cliInput
+	originalOutput := cliOutput
+	t.Cleanup(func() {
+		cliInput = originalInput
+		cliOutput = originalOutput
+	})
+
+	for _, tc := range []struct {
+		name string
+		args []string
+	}{
+		{
+			name: "services",
+			args: []string{"-services", "groups,users"},
+		},
+		{
+			name: "listing",
+			args: []string{"-listing", "groups"},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			output := &bytes.Buffer{}
+			cliInput = dummyReader("https://example.com\n")
+			cliOutput = output
+
+			args := []string{"-directory", t.TempDir(), "-targetCloud", "invalid"}
+			args = append(args, tc.args...)
+
+			err := Run(args...)
+
+			assert.EqualError(t, err, "invalid targetCloud value: invalid. Must be one of: aws, azure, gcp")
+			assert.Empty(t, output.String())
+		})
+	}
 }

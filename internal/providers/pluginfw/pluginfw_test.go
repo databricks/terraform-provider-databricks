@@ -99,6 +99,14 @@ func TestConfigure(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			// Keep the test hermetic against ambient developer state: point HOME at
+			// an empty temp dir so the SDK's ~/.databrickscfg loader finds no profile
+			// and no host is resolved. Without this, a developer's DEFAULT profile
+			// supplies a real host whose /.well-known/databricks-config workspace_id
+			// disagrees with the bogus workspace_id below, and PrepareDatabricksClient
+			// now fails fast on that mismatch (see ReconcileWorkspaceIDFromHostMetadata).
+			t.Setenv("HOME", t.TempDir())
+
 			// Create a provider instance
 			p := GetDatabricksProviderPluginFramework()
 

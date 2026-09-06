@@ -2871,7 +2871,7 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 						JobClusters: []jobs.JobCluster{
 							{
 								JobClusterKey: "job_cluster_1",
-								NewCluster: compute.ClusterSpec{
+								NewCluster: &compute.ClusterSpec{
 									InstancePoolId:       "instance-pool-worker-job",
 									DriverInstancePoolId: "instance-pool-driver-job",
 									SparkVersion:         "spark-3",
@@ -2968,7 +2968,7 @@ func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
 						JobClusters: []jobs.JobCluster{
 							{
 								JobClusterKey: "job_cluster_1",
-								NewCluster: compute.ClusterSpec{
+								NewCluster: &compute.ClusterSpec{
 									NodeTypeId:   "node-type-id-3",
 									SparkVersion: "spark-3",
 									NumWorkers:   3,

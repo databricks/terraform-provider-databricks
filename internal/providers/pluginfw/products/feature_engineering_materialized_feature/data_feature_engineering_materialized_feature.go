@@ -98,11 +98,6 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // MaterializedFeatureData extends the main model with additional fields.
 type MaterializedFeatureData struct {
-	// The quartz cron expression that defines the schedule of the
-	// materialization pipeline. The schedule is evaluated in the UTC timezone.
-	// Hidden from GraphQL: superseded by the `trigger` oneof
-	// (cron_schedule_trigger), so not exposed to Catalog Explorer.
-	CronSchedule types.String `tfsdk:"cron_schedule"`
 	// A cron-based schedule trigger for the materialization pipeline.
 	CronScheduleTrigger types.Object `tfsdk:"cron_schedule_trigger"`
 	// The full name of the feature in Unity Catalog.
@@ -163,7 +158,6 @@ func (m MaterializedFeatureData) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"cron_schedule":             m.CronSchedule,
 			"cron_schedule_trigger":     m.CronScheduleTrigger,
 			"feature_name":              m.FeatureName,
 			"is_online":                 m.IsOnline,
@@ -186,7 +180,6 @@ func (m MaterializedFeatureData) ToObjectValue(ctx context.Context) basetypes.Ob
 func (m MaterializedFeatureData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cron_schedule":             types.StringType,
 			"cron_schedule_trigger":     ml_tf.CronSchedule{}.Type(ctx),
 			"feature_name":              types.StringType,
 			"is_online":                 types.BoolType,
@@ -205,7 +198,6 @@ func (m MaterializedFeatureData) Type(ctx context.Context) attr.Type {
 }
 
 func (m MaterializedFeatureData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cron_schedule"] = attrs["cron_schedule"].SetComputed()
 	attrs["cron_schedule_trigger"] = attrs["cron_schedule_trigger"].SetComputed()
 	attrs["feature_name"] = attrs["feature_name"].SetComputed()
 	attrs["is_online"] = attrs["is_online"].SetComputed()

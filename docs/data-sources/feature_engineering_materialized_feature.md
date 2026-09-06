@@ -19,8 +19,6 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `cron_schedule` (string) - The quartz cron expression that defines the schedule of the materialization pipeline. The schedule is evaluated in the UTC timezone.
-  Hidden from GraphQL: superseded by the `trigger` oneof (cron_schedule_trigger), so not exposed to Catalog Explorer
 * `cron_schedule_trigger` (CronSchedule) - A cron-based schedule trigger for the materialization pipeline
 * `feature_name` (string) - The full name of the feature in Unity Catalog
 * `is_online` (boolean) - True if this is an online materialized feature. False if it is an offline materialized feature

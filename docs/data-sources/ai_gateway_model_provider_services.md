@@ -13,14 +13,14 @@ subcategory: "Unity Catalog"
 
 ## Arguments
 The following arguments are supported:
-* `include_browse` (boolean, optional) - Whether to include provider services for which the principal can only
-  access selective metadata
 * `page_size` (integer, optional) - Maximum number of provider services to return. Defaults to 100 when unset or
-  0; the maximum is 100. Use `next_page_token` to retrieve additional pages
-* `parent` (string, optional) - Resource name of the parent schema to list within, as
+  0; the maximum is 100. Use `page_token` to retrieve additional pages
+* `parent` (string, optional) - Name of the parent schema to list within, as
   `schemas/{catalog}.{schema}`. Each `{...}` component is capped at 255
   characters individually
-* `view` (string, optional) - View selector controlling which fields are populated per row. Possible values are: `BASIC`, `FULL`
+* `view` (string, optional) - View selector controlling which fields are populated per row. `FULL`
+  returns the full representation of the service; `BASIC` returns a more
+  compact version. Defaults to `BASIC` when unset. Possible values are: `BASIC`, `FULL`
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -29,8 +29,6 @@ The following arguments are supported:
 
 ## Attributes
 This data source exports a single attribute, `model_provider_services`. It is a list of resources, each with the following attributes:
-* `browse_only` (boolean) - Whether the caller sees only metadata available through the BROWSE
-  privilege
 * `comment` (string) - User-provided description
 * `config` (ModelProviderServiceConfig) - Behavioral configuration: provider connection, model catalog, and
   passthrough policy. See `ModelProviderServiceConfig` for the per-field
@@ -128,8 +126,7 @@ This data source exports a single attribute, `model_provider_services`. It is a 
 * `direct` (ModelProviderServiceConfigAmazonBedrockProviderDirectConfig)
 
 ### ModelProviderServiceConfigAmazonBedrockProviderDirectConfig
-* `aws_access_key` (ModelProviderServiceConfigAwsAccessKey) - AWS access-key-pair auth. Mutually exclusive with `service_credential`.
-  Supersedes the flat `aws_access_key_id` / `aws_secret_access_key` fields
+* `aws_access_key` (ModelProviderServiceConfigAwsAccessKey) - AWS access-key-pair auth. Mutually exclusive with `service_credential`
 * `region` (string) - AWS region where the Bedrock endpoint is hosted (e.g., `us-east-1`).
   Required on Create
 * `service_credential` (ModelProviderServiceConfigServiceCredential) - Reference to a UC service credential authorizing Bedrock requests. On
@@ -177,8 +174,7 @@ This data source exports a single attribute, `model_provider_services`. It is a 
 * `base_url` (string) - Full Azure OpenAI endpoint base URL, e.g.
   `https://myresource.openai.azure.com`. Required on Create
 * `entra_service_principal` (ModelProviderServiceConfigEntraServicePrincipal) - Entra ID (service principal) auth. Mutually exclusive with `api_key` and
-  `service_credential`. Supersedes the flat `tenant_id` / `client_id` /
-  `client_secret` fields
+  `service_credential`
 * `service_credential` (ModelProviderServiceConfigServiceCredential) - Reference to a UC service credential authorizing Azure OpenAI requests. On
   Create the caller supplies `service_credential.name` in the AIP-122
   resource-name form `credentials/{name}`. Required on Create when using
@@ -225,8 +221,7 @@ This data source exports a single attribute, `model_provider_services`. It is a 
   `ProviderSecret.plaintext`
 * `base_url` (string) - Microsoft AI Foundry endpoint URL. Required on Create
 * `entra_service_principal` (ModelProviderServiceConfigEntraServicePrincipal) - Entra ID (service principal) auth. Mutually exclusive with `api_key` and
-  `service_credential`. Supersedes the flat `tenant_id` / `client_id` /
-  `client_secret` fields
+  `service_credential`
 * `service_credential` (ModelProviderServiceConfigServiceCredential) - Reference to a UC service credential authorizing Microsoft Foundry requests.
   On Create the caller supplies `service_credential.name` in the AIP-122
   resource-name form `credentials/{name}`. Required on Create when using

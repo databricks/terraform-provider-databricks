@@ -14,6 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// repoCloneTimeoutSeconds is the HTTP inactivity timeout used for calls that do
+// git work inline: the clone in CreateRepo and the checkout in UpdateRepo. Both
+// are synchronous and unbounded by repo size, and the backend budgets ~10
+// minutes for checkout, so the provider default of 65s is not enough for larger
+// repositories.
+const repoCloneTimeoutSeconds = 600
+
 // ReposAPI exposes the Repos API
 type ReposAPI struct {
 	client  *common.DatabricksClient
@@ -46,10 +53,11 @@ func (r ReposInformation) RepoID() string {
 }
 
 type reposCreateRequest struct {
-	Url            string               `json:"url"`
-	Provider       string               `json:"provider"`
-	Path           string               `json:"path,omitempty"`
-	SparseCheckout *ReposSparseCheckout `json:"sparse_checkout,omitempty"`
+	Url             string               `json:"url"`
+	Provider        string               `json:"provider"`
+	Path            string               `json:"path,omitempty"`
+	SparseCheckout  *ReposSparseCheckout `json:"sparse_checkout,omitempty"`
+	GitCredentialID int64                `json:"git_credential_id,omitempty"`
 }
 
 func (a ReposAPI) Create(r reposCreateRequest) (ReposInformation, error) {
@@ -67,7 +75,13 @@ func (a ReposAPI) Create(r reposCreateRequest) (ReposInformation, error) {
 		}
 	}
 
-	err := a.client.Post(a.context, "/repos", r, &resp, a.client.AddWorkspaceIdHeader)
+	// The clone happens inline in this request, so it needs a longer HTTP
+	// timeout than the rest of the Repos API.
+	client, err := a.client.ClientWithDefaultHTTPTimeout(repoCloneTimeoutSeconds)
+	if err != nil {
+		return resp, err
+	}
+	err = client.Post(a.context, "/repos", r, &resp, client.AddWorkspaceIdHeader)
 	return resp, err
 }
 
@@ -81,6 +95,7 @@ func (a ReposAPI) Update(id string, r map[string]any) error {
 	}
 	// TODO: update may change ONE OF (url AND provider (optional)), (path), or (branch OR tag).
 	// for URL/provider force re-create as there are limits on what could be done for changing URL/provider
+	// Moving a Git folder only renames it, so it keeps the default timeout.
 	if path, ok := r["path"]; ok {
 		err := a.client.Patch(a.context, fmt.Sprintf("/repos/%s", id), map[string]any{"path": path}, a.client.AddWorkspaceIdHeader)
 		if err != nil {
@@ -88,7 +103,13 @@ func (a ReposAPI) Update(id string, r map[string]any) error {
 		}
 		delete(r, "path")
 	}
-	return a.client.Patch(a.context, fmt.Sprintf("/repos/%s", id), r, a.client.AddWorkspaceIdHeader)
+	// Switching branch or tag checks out the new ref inline, so this needs the
+	// same longer timeout as the clone in Create.
+	client, err := a.client.ClientWithDefaultHTTPTimeout(repoCloneTimeoutSeconds)
+	if err != nil {
+		return err
+	}
+	return client.Patch(a.context, fmt.Sprintf("/repos/%s", id), r, client.AddWorkspaceIdHeader)
 }
 
 func (a ReposAPI) Read(id string) (ReposInformation, error) {
@@ -177,6 +198,10 @@ func ResourceRepo() common.Resource {
 			ConflictsWith: []string{"branch"},
 			ValidateFunc:  validation.StringIsNotWhiteSpace,
 		}
+		s["git_credential_id"] = &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+		}
 		s["workspace_path"] = &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,
@@ -204,7 +229,8 @@ func ResourceRepo() common.Resource {
 			common.DataToStructPointer(d, s, &repo)
 
 			req := reposCreateRequest{Path: repo.Path, Provider: repo.Provider,
-				Url: repo.Url, SparseCheckout: repo.SparseCheckout}
+				Url: repo.Url, SparseCheckout: repo.SparseCheckout,
+				GitCredentialID: int64(d.Get("git_credential_id").(int))}
 			resp, err := reposAPI.Create(req)
 			if err != nil {
 				return err
@@ -217,6 +243,13 @@ func ResourceRepo() common.Resource {
 				updateReq["tag"] = tag
 			} else if branch != "" && branch != resp.Branch {
 				updateReq["branch"] = branch
+			}
+			// The checkout below is a separate request that also authenticates against the Git
+			// remote, so it needs the same credential that was used for the clone.
+			if len(updateReq) > 0 {
+				if gitCredentialID := d.Get("git_credential_id").(int); gitCredentialID != 0 {
+					updateReq["git_credential_id"] = int64(gitCredentialID)
+				}
 			}
 			return reposAPI.Update(d.Id(), updateReq)
 		},
@@ -266,6 +299,13 @@ func ResourceRepo() common.Resource {
 			}
 			if repo.SparseCheckout != nil {
 				req["sparse_checkout"] = map[string]any{"patterns": repo.SparseCheckout.Patterns}
+			}
+			// git_credential_id is a per-operation parameter: the API uses it to authenticate this
+			// specific update against the Git remote and does not store it on the repo. Send it on
+			// every update that has one configured, not only when it changed, otherwise a
+			// branch-only update would authenticate with the caller's default credential instead.
+			if gitCredentialID := d.Get("git_credential_id").(int); gitCredentialID != 0 {
+				req["git_credential_id"] = int64(gitCredentialID)
 			}
 			return reposAPI.Update(d.Id(), req)
 		},

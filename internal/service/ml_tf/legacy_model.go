@@ -1886,60 +1886,8 @@ func (m *BatchCreateMaterializedFeaturesResponse_SdkV2) SetMaterializedFeatures(
 	m.MaterializedFeatures = types.ListValueMust(t, vs)
 }
 
-type ColumnIdentifier_SdkV2 struct {
-	// String representation of the column name using dot-prefixed path
-	// notation. For nested fields, the leaf value is what will be present in
-	// materialized tables and expected to match at query time. For example, the
-	// leaf node of value.trip_details.location_details.pickup_zip is
-	// pickup_zip.
-	VariantExprPath types.String `tfsdk:"variant_expr_path"`
-}
-
-func (to *ColumnIdentifier_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ColumnIdentifier_SdkV2) {
-}
-
-func (to *ColumnIdentifier_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ColumnIdentifier_SdkV2) {
-}
-
-func (m ColumnIdentifier_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["variant_expr_path"] = attrs["variant_expr_path"].SetRequired()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ColumnIdentifier.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (m ColumnIdentifier_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ColumnIdentifier_SdkV2
-// only implements ToObjectValue() and Type().
-func (m ColumnIdentifier_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"variant_expr_path": m.VariantExprPath,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (m ColumnIdentifier_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"variant_expr_path": types.StringType,
-		},
-	}
-}
-
 // A ColumnSelection function, equivalent to the LAST() record of an entity over
-// a lifetime ContinuousWindow
+// a lifetime window
 type ColumnSelection_SdkV2 struct {
 	// Column name from source to select as the feature value.
 	Column types.String `tfsdk:"column"`
@@ -2105,60 +2053,6 @@ func (m *CommentObject_SdkV2) SetAvailableActions(ctx context.Context, v []types
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["available_actions"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.AvailableActions = types.ListValueMust(t, vs)
-}
-
-// Deprecated: use RollingWindow with `delay` instead.
-type ContinuousWindow_SdkV2 struct {
-	// The offset of the continuous window (must be non-positive).
-	Offset types.String `tfsdk:"offset"`
-	// The duration of the continuous window (must be positive).
-	WindowDuration types.String `tfsdk:"window_duration"`
-}
-
-func (to *ContinuousWindow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ContinuousWindow_SdkV2) {
-}
-
-func (to *ContinuousWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ContinuousWindow_SdkV2) {
-}
-
-func (m ContinuousWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["offset"] = attrs["offset"].SetOptional()
-	attrs["window_duration"] = attrs["window_duration"].SetRequired()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ContinuousWindow.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (m ContinuousWindow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ContinuousWindow_SdkV2
-// only implements ToObjectValue() and Type().
-func (m ContinuousWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"offset":          m.Offset,
-			"window_duration": m.WindowDuration,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (m ContinuousWindow_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"offset":          types.StringType,
-			"window_duration": types.StringType,
-		},
-	}
 }
 
 // Computes the count of values.
@@ -5099,6 +4993,129 @@ func (m CronSchedule_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A CustomUdf function applies a registered Unity Catalog function row-wise to
+// source columns, producing a single output column per row.
+type CustomUdf_SdkV2 struct {
+	// Fully qualified 3-part Unity Catalog path of the function to apply.
+	FunctionPath types.String `tfsdk:"function_path"`
+	// Binds each UC function parameter to a source column. May be empty for
+	// zero-argument functions (e.g. a timestamp generator).
+	InputBindings types.List `tfsdk:"input_bindings"`
+}
+
+func (to *CustomUdf_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CustomUdf_SdkV2) {
+	if !from.InputBindings.IsNull() && !from.InputBindings.IsUnknown() && to.InputBindings.IsNull() && len(from.InputBindings.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InputBindings, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InputBindings = from.InputBindings
+	}
+	if !from.InputBindings.IsNull() && !from.InputBindings.IsUnknown() {
+		if toInputBindings, ok := to.GetInputBindings(ctx); ok {
+			if fromInputBindings, ok := from.GetInputBindings(ctx); ok {
+				// Recursively sync the fields of each InputBindings element by position.
+				for i := range toInputBindings {
+					if i < len(fromInputBindings) {
+						toInputBindings[i].SyncFieldsDuringCreateOrUpdate(ctx, fromInputBindings[i])
+					}
+				}
+				to.SetInputBindings(ctx, toInputBindings)
+			}
+		}
+	}
+}
+
+func (to *CustomUdf_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CustomUdf_SdkV2) {
+	if !from.InputBindings.IsNull() && !from.InputBindings.IsUnknown() && to.InputBindings.IsNull() && len(from.InputBindings.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InputBindings, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InputBindings = from.InputBindings
+	}
+	if !from.InputBindings.IsNull() && !from.InputBindings.IsUnknown() {
+		if toInputBindings, ok := to.GetInputBindings(ctx); ok {
+			if fromInputBindings, ok := from.GetInputBindings(ctx); ok {
+				for i := range toInputBindings {
+					if i < len(fromInputBindings) {
+						toInputBindings[i].SyncFieldsDuringRead(ctx, fromInputBindings[i])
+					}
+				}
+				to.SetInputBindings(ctx, toInputBindings)
+			}
+		}
+	}
+}
+
+func (m CustomUdf_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["function_path"] = attrs["function_path"].SetRequired()
+	attrs["input_bindings"] = attrs["input_bindings"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CustomUdf.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CustomUdf_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"input_bindings": reflect.TypeOf(InputBinding_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CustomUdf_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CustomUdf_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"function_path":  m.FunctionPath,
+			"input_bindings": m.InputBindings,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CustomUdf_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"function_path": types.StringType,
+			"input_bindings": basetypes.ListType{
+				ElemType: InputBinding_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetInputBindings returns the value of the InputBindings field in CustomUdf_SdkV2 as
+// a slice of InputBinding_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CustomUdf_SdkV2) GetInputBindings(ctx context.Context) ([]InputBinding_SdkV2, bool) {
+	if m.InputBindings.IsNull() || m.InputBindings.IsUnknown() {
+		return nil, false
+	}
+	var v []InputBinding_SdkV2
+	d := m.InputBindings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInputBindings sets the value of the InputBindings field in CustomUdf_SdkV2.
+func (m *CustomUdf_SdkV2) SetInputBindings(ctx context.Context, v []InputBinding_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["input_bindings"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.InputBindings = types.ListValueMust(t, vs)
+}
+
 // Specifies the data source backing a feature. Exactly one source type must be
 // set.
 type DataSource_SdkV2 struct {
@@ -5106,6 +5123,10 @@ type DataSource_SdkV2 struct {
 	DeltaTableSource types.List `tfsdk:"delta_table_source"`
 	// A Kafka stream data source.
 	KafkaSource types.List `tfsdk:"kafka_source"`
+	// Completeness timing for this Feature's use of the source. This
+	// configuration is part of the Feature definition; it does not modify the
+	// underlying table or stream.
+	Lateness types.List `tfsdk:"lateness"`
 	// A request-time data source.
 	RequestSource types.List `tfsdk:"request_source"`
 	// A Stream data source.
@@ -5128,6 +5149,15 @@ func (to *DataSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 				// Recursively sync the fields of KafkaSource
 				toKafkaSource.SyncFieldsDuringCreateOrUpdate(ctx, fromKafkaSource)
 				to.SetKafkaSource(ctx, toKafkaSource)
+			}
+		}
+	}
+	if !from.Lateness.IsNull() && !from.Lateness.IsUnknown() {
+		if toLateness, ok := to.GetLateness(ctx); ok {
+			if fromLateness, ok := from.GetLateness(ctx); ok {
+				// Recursively sync the fields of Lateness
+				toLateness.SyncFieldsDuringCreateOrUpdate(ctx, fromLateness)
+				to.SetLateness(ctx, toLateness)
 			}
 		}
 	}
@@ -5168,6 +5198,14 @@ func (to *DataSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DataS
 			}
 		}
 	}
+	if !from.Lateness.IsNull() && !from.Lateness.IsUnknown() {
+		if toLateness, ok := to.GetLateness(ctx); ok {
+			if fromLateness, ok := from.GetLateness(ctx); ok {
+				toLateness.SyncFieldsDuringRead(ctx, fromLateness)
+				to.SetLateness(ctx, toLateness)
+			}
+		}
+	}
 	if !from.RequestSource.IsNull() && !from.RequestSource.IsUnknown() {
 		if toRequestSource, ok := to.GetRequestSource(ctx); ok {
 			if fromRequestSource, ok := from.GetRequestSource(ctx); ok {
@@ -5191,6 +5229,8 @@ func (m DataSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["delta_table_source"] = attrs["delta_table_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["kafka_source"] = attrs["kafka_source"].SetOptional()
 	attrs["kafka_source"] = attrs["kafka_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["lateness"] = attrs["lateness"].SetOptional()
+	attrs["lateness"] = attrs["lateness"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["request_source"] = attrs["request_source"].SetOptional()
 	attrs["request_source"] = attrs["request_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["stream_source"] = attrs["stream_source"].SetOptional()
@@ -5210,6 +5250,7 @@ func (m DataSource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]r
 	return map[string]reflect.Type{
 		"delta_table_source": reflect.TypeOf(DeltaTableSource_SdkV2{}),
 		"kafka_source":       reflect.TypeOf(KafkaSource_SdkV2{}),
+		"lateness":           reflect.TypeOf(SourceLateness_SdkV2{}),
 		"request_source":     reflect.TypeOf(RequestSource_SdkV2{}),
 		"stream_source":      reflect.TypeOf(StreamSource_SdkV2{}),
 	}
@@ -5224,6 +5265,7 @@ func (m DataSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 		map[string]attr.Value{
 			"delta_table_source": m.DeltaTableSource,
 			"kafka_source":       m.KafkaSource,
+			"lateness":           m.Lateness,
 			"request_source":     m.RequestSource,
 			"stream_source":      m.StreamSource,
 		})
@@ -5238,6 +5280,9 @@ func (m DataSource_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"kafka_source": basetypes.ListType{
 				ElemType: KafkaSource_SdkV2{}.Type(ctx),
+			},
+			"lateness": basetypes.ListType{
+				ElemType: SourceLateness_SdkV2{}.Type(ctx),
 			},
 			"request_source": basetypes.ListType{
 				ElemType: RequestSource_SdkV2{}.Type(ctx),
@@ -5299,6 +5344,32 @@ func (m *DataSource_SdkV2) SetKafkaSource(ctx context.Context, v KafkaSource_Sdk
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["kafka_source"]
 	m.KafkaSource = types.ListValueMust(t, vs)
+}
+
+// GetLateness returns the value of the Lateness field in DataSource_SdkV2 as
+// a SourceLateness_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataSource_SdkV2) GetLateness(ctx context.Context) (SourceLateness_SdkV2, bool) {
+	var e SourceLateness_SdkV2
+	if m.Lateness.IsNull() || m.Lateness.IsUnknown() {
+		return e, false
+	}
+	var v []SourceLateness_SdkV2
+	d := m.Lateness.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLateness sets the value of the Lateness field in DataSource_SdkV2.
+func (m *DataSource_SdkV2) SetLateness(ctx context.Context, v SourceLateness_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["lateness"]
+	m.Lateness = types.ListValueMust(t, vs)
 }
 
 // GetRequestSource returns the value of the RequestSource field in DataSource_SdkV2 as
@@ -7251,18 +7322,12 @@ type DeltaTableSource_SdkV2 struct {
 	// transformation_sql is specified. Example:
 	// {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
 	DataframeSchema types.String `tfsdk:"dataframe_schema"`
-	// Deprecated: Use Feature.entity instead. Kept for backwards compatibility.
-	// The entity columns of the Delta table.
-	EntityColumns types.List `tfsdk:"entity_columns"`
 	// Single WHERE clause to filter delta table before applying
 	// transformations. Will be row-wise evaluated, so should only include
 	// conditionals and projections.
 	FilterCondition types.String `tfsdk:"filter_condition"`
 	// The full three-part (catalog, schema, table) name of the Delta table.
 	FullName types.String `tfsdk:"full_name"`
-	// Deprecated: Use Feature.timeseries_column instead. Kept for backwards
-	// compatibility. The timeseries column of the Delta table.
-	TimeseriesColumn types.String `tfsdk:"timeseries_column"`
 	// A single SQL SELECT expression applied after filter_condition. Should
 	// contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c
 	// FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a +
@@ -7272,29 +7337,15 @@ type DeltaTableSource_SdkV2 struct {
 }
 
 func (to *DeltaTableSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeltaTableSource_SdkV2) {
-	if !from.EntityColumns.IsNull() && !from.EntityColumns.IsUnknown() && to.EntityColumns.IsNull() && len(from.EntityColumns.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for EntityColumns, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.EntityColumns = from.EntityColumns
-	}
 }
 
 func (to *DeltaTableSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeltaTableSource_SdkV2) {
-	if !from.EntityColumns.IsNull() && !from.EntityColumns.IsUnknown() && to.EntityColumns.IsNull() && len(from.EntityColumns.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for EntityColumns, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.EntityColumns = from.EntityColumns
-	}
 }
 
 func (m DeltaTableSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dataframe_schema"] = attrs["dataframe_schema"].SetOptional()
-	attrs["entity_columns"] = attrs["entity_columns"].SetOptional()
 	attrs["filter_condition"] = attrs["filter_condition"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetRequired()
-	attrs["timeseries_column"] = attrs["timeseries_column"].SetOptional()
 	attrs["transformation_sql"] = attrs["transformation_sql"].SetOptional()
 
 	return attrs
@@ -7308,9 +7359,7 @@ func (m DeltaTableSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m DeltaTableSource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"entity_columns": reflect.TypeOf(types.String{}),
-	}
+	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -7321,10 +7370,8 @@ func (m DeltaTableSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"dataframe_schema":   m.DataframeSchema,
-			"entity_columns":     m.EntityColumns,
 			"filter_condition":   m.FilterCondition,
 			"full_name":          m.FullName,
-			"timeseries_column":  m.TimeseriesColumn,
 			"transformation_sql": m.TransformationSql,
 		})
 }
@@ -7333,42 +7380,12 @@ func (m DeltaTableSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m DeltaTableSource_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dataframe_schema": types.StringType,
-			"entity_columns": basetypes.ListType{
-				ElemType: types.StringType,
-			},
+			"dataframe_schema":   types.StringType,
 			"filter_condition":   types.StringType,
 			"full_name":          types.StringType,
-			"timeseries_column":  types.StringType,
 			"transformation_sql": types.StringType,
 		},
 	}
-}
-
-// GetEntityColumns returns the value of the EntityColumns field in DeltaTableSource_SdkV2 as
-// a slice of types.String values.
-// If the field is unknown or null, the boolean return value is false.
-func (m *DeltaTableSource_SdkV2) GetEntityColumns(ctx context.Context) ([]types.String, bool) {
-	if m.EntityColumns.IsNull() || m.EntityColumns.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.EntityColumns.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetEntityColumns sets the value of the EntityColumns field in DeltaTableSource_SdkV2.
-func (m *DeltaTableSource_SdkV2) SetEntityColumns(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entity_columns"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.EntityColumns = types.ListValueMust(t, vs)
 }
 
 // Direct connection configs for mTLS, as Kafka Connections do not support mTLS
@@ -8641,19 +8658,12 @@ type Feature_SdkV2 struct {
 	// The entity columns for the feature, used as aggregation keys and for
 	// query-time lookup.
 	Entities types.List `tfsdk:"entities"`
-	// Deprecated: Use DeltaTableSource.filter_condition or
-	// KafkaSource.filter_condition instead. Kept for backwards compatibility.
-	// The filter condition applied to the source data before aggregation.
-	FilterCondition types.String `tfsdk:"filter_condition"`
 	// The full three-part name (catalog, schema, name) of the feature. This is
 	// the feature's resource identifier; the catalog_name, schema_name, and
 	// name fields below are OUTPUT_ONLY decomposed views of this value.
 	FullName types.String `tfsdk:"full_name"`
 	// The function by which the feature is computed.
 	Function types.List `tfsdk:"function"`
-	// Deprecated: Use AggregationFunction.inputs instead. Kept for backwards
-	// compatibility. The input columns from which the feature is computed.
-	Inputs types.List `tfsdk:"inputs"`
 	// Lineage context information for this feature. WARNING: This field is
 	// primarily intended for internal use by Databricks systems and is
 	// automatically populated when features are created through Databricks
@@ -8669,10 +8679,6 @@ type Feature_SdkV2 struct {
 	SchemaName types.String `tfsdk:"schema_name"`
 	// The data source of the feature.
 	Source types.List `tfsdk:"source"`
-	// Deprecated: Use Function.aggregation_function.time_window instead. Kept
-	// for backwards compatibility. The time window in which the feature is
-	// computed.
-	TimeWindow types.List `tfsdk:"time_window"`
 	// Column recording time, used for point-in-time joins, backfills, and
 	// aggregations.
 	TimeseriesColumn types.List `tfsdk:"timeseries_column"`
@@ -8707,12 +8713,6 @@ func (to *Feature_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 			}
 		}
 	}
-	if !from.Inputs.IsNull() && !from.Inputs.IsUnknown() && to.Inputs.IsNull() && len(from.Inputs.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Inputs, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Inputs = from.Inputs
-	}
 	if !from.LineageContext.IsNull() && !from.LineageContext.IsUnknown() {
 		if toLineageContext, ok := to.GetLineageContext(ctx); ok {
 			if fromLineageContext, ok := from.GetLineageContext(ctx); ok {
@@ -8728,15 +8728,6 @@ func (to *Feature_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 				// Recursively sync the fields of Source
 				toSource.SyncFieldsDuringCreateOrUpdate(ctx, fromSource)
 				to.SetSource(ctx, toSource)
-			}
-		}
-	}
-	if !from.TimeWindow.IsNull() && !from.TimeWindow.IsUnknown() {
-		if toTimeWindow, ok := to.GetTimeWindow(ctx); ok {
-			if fromTimeWindow, ok := from.GetTimeWindow(ctx); ok {
-				// Recursively sync the fields of TimeWindow
-				toTimeWindow.SyncFieldsDuringCreateOrUpdate(ctx, fromTimeWindow)
-				to.SetTimeWindow(ctx, toTimeWindow)
 			}
 		}
 	}
@@ -8778,12 +8769,6 @@ func (to *Feature_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Feature_
 			}
 		}
 	}
-	if !from.Inputs.IsNull() && !from.Inputs.IsUnknown() && to.Inputs.IsNull() && len(from.Inputs.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for Inputs, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.Inputs = from.Inputs
-	}
 	if !from.LineageContext.IsNull() && !from.LineageContext.IsUnknown() {
 		if toLineageContext, ok := to.GetLineageContext(ctx); ok {
 			if fromLineageContext, ok := from.GetLineageContext(ctx); ok {
@@ -8797,14 +8782,6 @@ func (to *Feature_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Feature_
 			if fromSource, ok := from.GetSource(ctx); ok {
 				toSource.SyncFieldsDuringRead(ctx, fromSource)
 				to.SetSource(ctx, toSource)
-			}
-		}
-	}
-	if !from.TimeWindow.IsNull() && !from.TimeWindow.IsUnknown() {
-		if toTimeWindow, ok := to.GetTimeWindow(ctx); ok {
-			if fromTimeWindow, ok := from.GetTimeWindow(ctx); ok {
-				toTimeWindow.SyncFieldsDuringRead(ctx, fromTimeWindow)
-				to.SetTimeWindow(ctx, toTimeWindow)
 			}
 		}
 	}
@@ -8824,14 +8801,11 @@ func (m Feature_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["entities"] = attrs["entities"].SetOptional()
-	attrs["filter_condition"] = attrs["filter_condition"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetRequired()
 	attrs["full_name"] = attrs["full_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["function"] = attrs["function"].SetRequired()
 	attrs["function"] = attrs["function"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["function"] = attrs["function"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["inputs"] = attrs["inputs"].SetOptional()
-	attrs["inputs"] = attrs["inputs"].(tfschema.ListAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["lineage_context"] = attrs["lineage_context"].SetOptional()
 	attrs["lineage_context"] = attrs["lineage_context"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
@@ -8839,9 +8813,6 @@ func (m Feature_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["source"] = attrs["source"].SetRequired()
 	attrs["source"] = attrs["source"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["source"] = attrs["source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["time_window"] = attrs["time_window"].SetOptional()
-	attrs["time_window"] = attrs["time_window"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["time_window"] = attrs["time_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["timeseries_column"] = attrs["timeseries_column"].SetOptional()
 	attrs["timeseries_column"] = attrs["timeseries_column"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -8859,10 +8830,8 @@ func (m Feature_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{
 		"entities":          reflect.TypeOf(EntityColumn_SdkV2{}),
 		"function":          reflect.TypeOf(Function_SdkV2{}),
-		"inputs":            reflect.TypeOf(types.String{}),
 		"lineage_context":   reflect.TypeOf(LineageContext_SdkV2{}),
 		"source":            reflect.TypeOf(DataSource_SdkV2{}),
-		"time_window":       reflect.TypeOf(TimeWindow_SdkV2{}),
 		"timeseries_column": reflect.TypeOf(TimeseriesColumn_SdkV2{}),
 	}
 }
@@ -8879,15 +8848,12 @@ func (m Feature_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"created_by":        m.CreatedBy,
 			"description":       m.Description,
 			"entities":          m.Entities,
-			"filter_condition":  m.FilterCondition,
 			"full_name":         m.FullName,
 			"function":          m.Function,
-			"inputs":            m.Inputs,
 			"lineage_context":   m.LineageContext,
 			"name":              m.Name,
 			"schema_name":       m.SchemaName,
 			"source":            m.Source,
-			"time_window":       m.TimeWindow,
 			"timeseries_column": m.TimeseriesColumn,
 		})
 }
@@ -8903,13 +8869,9 @@ func (m Feature_SdkV2) Type(ctx context.Context) attr.Type {
 			"entities": basetypes.ListType{
 				ElemType: EntityColumn_SdkV2{}.Type(ctx),
 			},
-			"filter_condition": types.StringType,
-			"full_name":        types.StringType,
+			"full_name": types.StringType,
 			"function": basetypes.ListType{
 				ElemType: Function_SdkV2{}.Type(ctx),
-			},
-			"inputs": basetypes.ListType{
-				ElemType: types.StringType,
 			},
 			"lineage_context": basetypes.ListType{
 				ElemType: LineageContext_SdkV2{}.Type(ctx),
@@ -8918,9 +8880,6 @@ func (m Feature_SdkV2) Type(ctx context.Context) attr.Type {
 			"schema_name": types.StringType,
 			"source": basetypes.ListType{
 				ElemType: DataSource_SdkV2{}.Type(ctx),
-			},
-			"time_window": basetypes.ListType{
-				ElemType: TimeWindow_SdkV2{}.Type(ctx),
 			},
 			"timeseries_column": basetypes.ListType{
 				ElemType: TimeseriesColumn_SdkV2{}.Type(ctx),
@@ -8981,32 +8940,6 @@ func (m *Feature_SdkV2) SetFunction(ctx context.Context, v Function_SdkV2) {
 	m.Function = types.ListValueMust(t, vs)
 }
 
-// GetInputs returns the value of the Inputs field in Feature_SdkV2 as
-// a slice of types.String values.
-// If the field is unknown or null, the boolean return value is false.
-func (m *Feature_SdkV2) GetInputs(ctx context.Context) ([]types.String, bool) {
-	if m.Inputs.IsNull() || m.Inputs.IsUnknown() {
-		return nil, false
-	}
-	var v []types.String
-	d := m.Inputs.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetInputs sets the value of the Inputs field in Feature_SdkV2.
-func (m *Feature_SdkV2) SetInputs(ctx context.Context, v []types.String) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e)
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["inputs"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.Inputs = types.ListValueMust(t, vs)
-}
-
 // GetLineageContext returns the value of the LineageContext field in Feature_SdkV2 as
 // a LineageContext_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -9057,32 +8990,6 @@ func (m *Feature_SdkV2) SetSource(ctx context.Context, v DataSource_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["source"]
 	m.Source = types.ListValueMust(t, vs)
-}
-
-// GetTimeWindow returns the value of the TimeWindow field in Feature_SdkV2 as
-// a TimeWindow_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *Feature_SdkV2) GetTimeWindow(ctx context.Context) (TimeWindow_SdkV2, bool) {
-	var e TimeWindow_SdkV2
-	if m.TimeWindow.IsNull() || m.TimeWindow.IsUnknown() {
-		return e, false
-	}
-	var v []TimeWindow_SdkV2
-	d := m.TimeWindow.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetTimeWindow sets the value of the TimeWindow field in Feature_SdkV2.
-func (m *Feature_SdkV2) SetTimeWindow(ctx context.Context, v TimeWindow_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["time_window"]
-	m.TimeWindow = types.ListValueMust(t, vs)
 }
 
 // GetTimeseriesColumn returns the value of the TimeseriesColumn field in Feature_SdkV2 as
@@ -10284,13 +10191,8 @@ type Function_SdkV2 struct {
 	AggregationFunction types.List `tfsdk:"aggregation_function"`
 	// Selects the latest value of a single column in a data source
 	ColumnSelection types.List `tfsdk:"column_selection"`
-	// Deprecated: Use the function oneof with AggregationFunction instead. Kept
-	// for backwards compatibility. Extra parameters for parameterized
-	// functions.
-	ExtraParameters types.List `tfsdk:"extra_parameters"`
-	// Deprecated: Use the function oneof with AggregationFunction instead. Kept
-	// for backwards compatibility. The type of the function.
-	FunctionType types.String `tfsdk:"function_type"`
+	// Applies a registered Unity Catalog function row-wise to source columns.
+	CustomUdf types.List `tfsdk:"custom_udf"`
 }
 
 func (to *Function_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Function_SdkV2) {
@@ -10312,22 +10214,12 @@ func (to *Function_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 			}
 		}
 	}
-	if !from.ExtraParameters.IsNull() && !from.ExtraParameters.IsUnknown() && to.ExtraParameters.IsNull() && len(from.ExtraParameters.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for ExtraParameters, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.ExtraParameters = from.ExtraParameters
-	}
-	if !from.ExtraParameters.IsNull() && !from.ExtraParameters.IsUnknown() {
-		if toExtraParameters, ok := to.GetExtraParameters(ctx); ok {
-			if fromExtraParameters, ok := from.GetExtraParameters(ctx); ok {
-				// Recursively sync the fields of each ExtraParameters element by position.
-				for i := range toExtraParameters {
-					if i < len(fromExtraParameters) {
-						toExtraParameters[i].SyncFieldsDuringCreateOrUpdate(ctx, fromExtraParameters[i])
-					}
-				}
-				to.SetExtraParameters(ctx, toExtraParameters)
+	if !from.CustomUdf.IsNull() && !from.CustomUdf.IsUnknown() {
+		if toCustomUdf, ok := to.GetCustomUdf(ctx); ok {
+			if fromCustomUdf, ok := from.GetCustomUdf(ctx); ok {
+				// Recursively sync the fields of CustomUdf
+				toCustomUdf.SyncFieldsDuringCreateOrUpdate(ctx, fromCustomUdf)
+				to.SetCustomUdf(ctx, toCustomUdf)
 			}
 		}
 	}
@@ -10350,21 +10242,11 @@ func (to *Function_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Functio
 			}
 		}
 	}
-	if !from.ExtraParameters.IsNull() && !from.ExtraParameters.IsUnknown() && to.ExtraParameters.IsNull() && len(from.ExtraParameters.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for ExtraParameters, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.ExtraParameters = from.ExtraParameters
-	}
-	if !from.ExtraParameters.IsNull() && !from.ExtraParameters.IsUnknown() {
-		if toExtraParameters, ok := to.GetExtraParameters(ctx); ok {
-			if fromExtraParameters, ok := from.GetExtraParameters(ctx); ok {
-				for i := range toExtraParameters {
-					if i < len(fromExtraParameters) {
-						toExtraParameters[i].SyncFieldsDuringRead(ctx, fromExtraParameters[i])
-					}
-				}
-				to.SetExtraParameters(ctx, toExtraParameters)
+	if !from.CustomUdf.IsNull() && !from.CustomUdf.IsUnknown() {
+		if toCustomUdf, ok := to.GetCustomUdf(ctx); ok {
+			if fromCustomUdf, ok := from.GetCustomUdf(ctx); ok {
+				toCustomUdf.SyncFieldsDuringRead(ctx, fromCustomUdf)
+				to.SetCustomUdf(ctx, toCustomUdf)
 			}
 		}
 	}
@@ -10375,8 +10257,8 @@ func (m Function_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["aggregation_function"] = attrs["aggregation_function"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["column_selection"] = attrs["column_selection"].SetOptional()
 	attrs["column_selection"] = attrs["column_selection"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["extra_parameters"] = attrs["extra_parameters"].SetOptional()
-	attrs["function_type"] = attrs["function_type"].SetOptional()
+	attrs["custom_udf"] = attrs["custom_udf"].SetOptional()
+	attrs["custom_udf"] = attrs["custom_udf"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -10392,7 +10274,7 @@ func (m Function_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{
 		"aggregation_function": reflect.TypeOf(AggregationFunction_SdkV2{}),
 		"column_selection":     reflect.TypeOf(ColumnSelection_SdkV2{}),
-		"extra_parameters":     reflect.TypeOf(FunctionExtraParameter_SdkV2{}),
+		"custom_udf":           reflect.TypeOf(CustomUdf_SdkV2{}),
 	}
 }
 
@@ -10405,8 +10287,7 @@ func (m Function_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 		map[string]attr.Value{
 			"aggregation_function": m.AggregationFunction,
 			"column_selection":     m.ColumnSelection,
-			"extra_parameters":     m.ExtraParameters,
-			"function_type":        m.FunctionType,
+			"custom_udf":           m.CustomUdf,
 		})
 }
 
@@ -10420,10 +10301,9 @@ func (m Function_SdkV2) Type(ctx context.Context) attr.Type {
 			"column_selection": basetypes.ListType{
 				ElemType: ColumnSelection_SdkV2{}.Type(ctx),
 			},
-			"extra_parameters": basetypes.ListType{
-				ElemType: FunctionExtraParameter_SdkV2{}.Type(ctx),
+			"custom_udf": basetypes.ListType{
+				ElemType: CustomUdf_SdkV2{}.Type(ctx),
 			},
-			"function_type": types.StringType,
 		},
 	}
 }
@@ -10480,86 +10360,30 @@ func (m *Function_SdkV2) SetColumnSelection(ctx context.Context, v ColumnSelecti
 	m.ColumnSelection = types.ListValueMust(t, vs)
 }
 
-// GetExtraParameters returns the value of the ExtraParameters field in Function_SdkV2 as
-// a slice of FunctionExtraParameter_SdkV2 values.
+// GetCustomUdf returns the value of the CustomUdf field in Function_SdkV2 as
+// a CustomUdf_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (m *Function_SdkV2) GetExtraParameters(ctx context.Context) ([]FunctionExtraParameter_SdkV2, bool) {
-	if m.ExtraParameters.IsNull() || m.ExtraParameters.IsUnknown() {
-		return nil, false
+func (m *Function_SdkV2) GetCustomUdf(ctx context.Context) (CustomUdf_SdkV2, bool) {
+	var e CustomUdf_SdkV2
+	if m.CustomUdf.IsNull() || m.CustomUdf.IsUnknown() {
+		return e, false
 	}
-	var v []FunctionExtraParameter_SdkV2
-	d := m.ExtraParameters.ElementsAs(ctx, &v, true)
+	var v []CustomUdf_SdkV2
+	d := m.CustomUdf.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	return v, true
-}
-
-// SetExtraParameters sets the value of the ExtraParameters field in Function_SdkV2.
-func (m *Function_SdkV2) SetExtraParameters(ctx context.Context, v []FunctionExtraParameter_SdkV2) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
+	if len(v) == 0 {
+		return e, false
 	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["extra_parameters"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.ExtraParameters = types.ListValueMust(t, vs)
+	return v[0], true
 }
 
-// Deprecated: Use typed fields on function-specific messages (e.g.
-// ApproxPercentileFunction.percentile) or AggregationFunction.ExtraParameter
-// instead. Kept for backwards compatibility.
-type FunctionExtraParameter_SdkV2 struct {
-	// The name of the parameter.
-	Key types.String `tfsdk:"key"`
-	// The value of the parameter.
-	Value types.String `tfsdk:"value"`
-}
-
-func (to *FunctionExtraParameter_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FunctionExtraParameter_SdkV2) {
-}
-
-func (to *FunctionExtraParameter_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FunctionExtraParameter_SdkV2) {
-}
-
-func (m FunctionExtraParameter_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["key"] = attrs["key"].SetRequired()
-	attrs["value"] = attrs["value"].SetRequired()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in FunctionExtraParameter.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (m FunctionExtraParameter_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, FunctionExtraParameter_SdkV2
-// only implements ToObjectValue() and Type().
-func (m FunctionExtraParameter_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"key":   m.Key,
-			"value": m.Value,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (m FunctionExtraParameter_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"key":   types.StringType,
-			"value": types.StringType,
-		},
-	}
+// SetCustomUdf sets the value of the CustomUdf field in Function_SdkV2.
+func (m *Function_SdkV2) SetCustomUdf(ctx context.Context, v CustomUdf_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_udf"]
+	m.CustomUdf = types.ListValueMust(t, vs)
 }
 
 type GetByNameRequest_SdkV2 struct {
@@ -13174,6 +12998,60 @@ func (m IngestionDestination_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Binds a single UC function parameter to a source column.
+type InputBinding_SdkV2 struct {
+	// Source column whose value is passed for this parameter at execution time.
+	Column types.String `tfsdk:"column"`
+	// Name of the UC function parameter.
+	Parameter types.String `tfsdk:"parameter"`
+}
+
+func (to *InputBinding_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from InputBinding_SdkV2) {
+}
+
+func (to *InputBinding_SdkV2) SyncFieldsDuringRead(ctx context.Context, from InputBinding_SdkV2) {
+}
+
+func (m InputBinding_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column"] = attrs["column"].SetRequired()
+	attrs["parameter"] = attrs["parameter"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in InputBinding.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m InputBinding_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, InputBinding_SdkV2
+// only implements ToObjectValue() and Type().
+func (m InputBinding_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"column":    m.Column,
+			"parameter": m.Parameter,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m InputBinding_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"column":    types.StringType,
+			"parameter": types.StringType,
+		},
+	}
+}
+
 // Tag for a dataset input.
 type InputTag_SdkV2 struct {
 	// The tag key.
@@ -13808,85 +13686,22 @@ func (m *KafkaConfig_SdkV2) SetValueSchema(ctx context.Context, v SchemaConfig_S
 }
 
 type KafkaSource_SdkV2 struct {
-	// Deprecated: Use Feature.entity instead. Kept for backwards compatibility.
-	// The entity column identifiers of the Kafka source.
-	EntityColumnIdentifiers types.List `tfsdk:"entity_column_identifiers"`
 	// The filter condition applied to the source data before aggregation.
 	FilterCondition types.String `tfsdk:"filter_condition"`
 	// Name of the Kafka source, used to identify it. This is used to look up
 	// the corresponding KafkaConfig object. Can be distinct from topic name.
 	Name types.String `tfsdk:"name"`
-	// Deprecated: Use Feature.timeseries_column instead. Kept for backwards
-	// compatibility. The timeseries column identifier of the Kafka source.
-	TimeseriesColumnIdentifier types.List `tfsdk:"timeseries_column_identifier"`
 }
 
 func (to *KafkaSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from KafkaSource_SdkV2) {
-	if !from.EntityColumnIdentifiers.IsNull() && !from.EntityColumnIdentifiers.IsUnknown() && to.EntityColumnIdentifiers.IsNull() && len(from.EntityColumnIdentifiers.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for EntityColumnIdentifiers, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.EntityColumnIdentifiers = from.EntityColumnIdentifiers
-	}
-	if !from.EntityColumnIdentifiers.IsNull() && !from.EntityColumnIdentifiers.IsUnknown() {
-		if toEntityColumnIdentifiers, ok := to.GetEntityColumnIdentifiers(ctx); ok {
-			if fromEntityColumnIdentifiers, ok := from.GetEntityColumnIdentifiers(ctx); ok {
-				// Recursively sync the fields of each EntityColumnIdentifiers element by position.
-				for i := range toEntityColumnIdentifiers {
-					if i < len(fromEntityColumnIdentifiers) {
-						toEntityColumnIdentifiers[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEntityColumnIdentifiers[i])
-					}
-				}
-				to.SetEntityColumnIdentifiers(ctx, toEntityColumnIdentifiers)
-			}
-		}
-	}
-	if !from.TimeseriesColumnIdentifier.IsNull() && !from.TimeseriesColumnIdentifier.IsUnknown() {
-		if toTimeseriesColumnIdentifier, ok := to.GetTimeseriesColumnIdentifier(ctx); ok {
-			if fromTimeseriesColumnIdentifier, ok := from.GetTimeseriesColumnIdentifier(ctx); ok {
-				// Recursively sync the fields of TimeseriesColumnIdentifier
-				toTimeseriesColumnIdentifier.SyncFieldsDuringCreateOrUpdate(ctx, fromTimeseriesColumnIdentifier)
-				to.SetTimeseriesColumnIdentifier(ctx, toTimeseriesColumnIdentifier)
-			}
-		}
-	}
 }
 
 func (to *KafkaSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from KafkaSource_SdkV2) {
-	if !from.EntityColumnIdentifiers.IsNull() && !from.EntityColumnIdentifiers.IsUnknown() && to.EntityColumnIdentifiers.IsNull() && len(from.EntityColumnIdentifiers.Elements()) == 0 {
-		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
-		// If a user specified a non-Null, empty list for EntityColumnIdentifiers, and the deserialized field value is Null,
-		// set the resulting resource state to the empty list to match the planned value.
-		to.EntityColumnIdentifiers = from.EntityColumnIdentifiers
-	}
-	if !from.EntityColumnIdentifiers.IsNull() && !from.EntityColumnIdentifiers.IsUnknown() {
-		if toEntityColumnIdentifiers, ok := to.GetEntityColumnIdentifiers(ctx); ok {
-			if fromEntityColumnIdentifiers, ok := from.GetEntityColumnIdentifiers(ctx); ok {
-				for i := range toEntityColumnIdentifiers {
-					if i < len(fromEntityColumnIdentifiers) {
-						toEntityColumnIdentifiers[i].SyncFieldsDuringRead(ctx, fromEntityColumnIdentifiers[i])
-					}
-				}
-				to.SetEntityColumnIdentifiers(ctx, toEntityColumnIdentifiers)
-			}
-		}
-	}
-	if !from.TimeseriesColumnIdentifier.IsNull() && !from.TimeseriesColumnIdentifier.IsUnknown() {
-		if toTimeseriesColumnIdentifier, ok := to.GetTimeseriesColumnIdentifier(ctx); ok {
-			if fromTimeseriesColumnIdentifier, ok := from.GetTimeseriesColumnIdentifier(ctx); ok {
-				toTimeseriesColumnIdentifier.SyncFieldsDuringRead(ctx, fromTimeseriesColumnIdentifier)
-				to.SetTimeseriesColumnIdentifier(ctx, toTimeseriesColumnIdentifier)
-			}
-		}
-	}
 }
 
 func (m KafkaSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["entity_column_identifiers"] = attrs["entity_column_identifiers"].SetOptional()
 	attrs["filter_condition"] = attrs["filter_condition"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["timeseries_column_identifier"] = attrs["timeseries_column_identifier"].SetOptional()
-	attrs["timeseries_column_identifier"] = attrs["timeseries_column_identifier"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -13899,10 +13714,7 @@ func (m KafkaSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m KafkaSource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"entity_column_identifiers":    reflect.TypeOf(ColumnIdentifier_SdkV2{}),
-		"timeseries_column_identifier": reflect.TypeOf(ColumnIdentifier_SdkV2{}),
-	}
+	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -13912,10 +13724,8 @@ func (m KafkaSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"entity_column_identifiers":    m.EntityColumnIdentifiers,
-			"filter_condition":             m.FilterCondition,
-			"name":                         m.Name,
-			"timeseries_column_identifier": m.TimeseriesColumnIdentifier,
+			"filter_condition": m.FilterCondition,
+			"name":             m.Name,
 		})
 }
 
@@ -13923,68 +13733,10 @@ func (m KafkaSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (m KafkaSource_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"entity_column_identifiers": basetypes.ListType{
-				ElemType: ColumnIdentifier_SdkV2{}.Type(ctx),
-			},
 			"filter_condition": types.StringType,
 			"name":             types.StringType,
-			"timeseries_column_identifier": basetypes.ListType{
-				ElemType: ColumnIdentifier_SdkV2{}.Type(ctx),
-			},
 		},
 	}
-}
-
-// GetEntityColumnIdentifiers returns the value of the EntityColumnIdentifiers field in KafkaSource_SdkV2 as
-// a slice of ColumnIdentifier_SdkV2 values.
-// If the field is unknown or null, the boolean return value is false.
-func (m *KafkaSource_SdkV2) GetEntityColumnIdentifiers(ctx context.Context) ([]ColumnIdentifier_SdkV2, bool) {
-	if m.EntityColumnIdentifiers.IsNull() || m.EntityColumnIdentifiers.IsUnknown() {
-		return nil, false
-	}
-	var v []ColumnIdentifier_SdkV2
-	d := m.EntityColumnIdentifiers.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetEntityColumnIdentifiers sets the value of the EntityColumnIdentifiers field in KafkaSource_SdkV2.
-func (m *KafkaSource_SdkV2) SetEntityColumnIdentifiers(ctx context.Context, v []ColumnIdentifier_SdkV2) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["entity_column_identifiers"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	m.EntityColumnIdentifiers = types.ListValueMust(t, vs)
-}
-
-// GetTimeseriesColumnIdentifier returns the value of the TimeseriesColumnIdentifier field in KafkaSource_SdkV2 as
-// a ColumnIdentifier_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *KafkaSource_SdkV2) GetTimeseriesColumnIdentifier(ctx context.Context) (ColumnIdentifier_SdkV2, bool) {
-	var e ColumnIdentifier_SdkV2
-	if m.TimeseriesColumnIdentifier.IsNull() || m.TimeseriesColumnIdentifier.IsUnknown() {
-		return e, false
-	}
-	var v []ColumnIdentifier_SdkV2
-	d := m.TimeseriesColumnIdentifier.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetTimeseriesColumnIdentifier sets the value of the TimeseriesColumnIdentifier field in KafkaSource_SdkV2.
-func (m *KafkaSource_SdkV2) SetTimeseriesColumnIdentifier(ctx context.Context, v ColumnIdentifier_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["timeseries_column_identifier"]
-	m.TimeseriesColumnIdentifier = types.ListValueMust(t, vs)
 }
 
 // Kafka-specific configuration for a Stream.
@@ -18560,11 +18312,6 @@ func (m LoggedModelTag_SdkV2) Type(ctx context.Context) attr.Type {
 // A materialized feature represents a feature that is continuously computed and
 // stored.
 type MaterializedFeature_SdkV2 struct {
-	// The quartz cron expression that defines the schedule of the
-	// materialization pipeline. The schedule is evaluated in the UTC timezone.
-	// Hidden from GraphQL: superseded by the `trigger` oneof
-	// (cron_schedule_trigger), so not exposed to Catalog Explorer.
-	CronSchedule types.String `tfsdk:"cron_schedule"`
 	// A cron-based schedule trigger for the materialization pipeline.
 	CronScheduleTrigger types.List `tfsdk:"cron_schedule_trigger"`
 	// The full name of the feature in Unity Catalog.
@@ -18688,7 +18435,6 @@ func (to *MaterializedFeature_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 }
 
 func (m MaterializedFeature_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cron_schedule"] = attrs["cron_schedule"].SetOptional()
 	attrs["cron_schedule_trigger"] = attrs["cron_schedule_trigger"].SetOptional()
 	attrs["cron_schedule_trigger"] = attrs["cron_schedule_trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["feature_name"] = attrs["feature_name"].SetRequired()
@@ -18697,8 +18443,10 @@ func (m MaterializedFeature_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetOptional()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetOptional()
+	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["online_store_config"] = attrs["online_store_config"].SetOptional()
+	attrs["online_store_config"] = attrs["online_store_config"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["online_store_config"] = attrs["online_store_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["pipeline_schedule_state"] = attrs["pipeline_schedule_state"].SetOptional()
 	attrs["streaming_mode"] = attrs["streaming_mode"].SetOptional()
@@ -18734,7 +18482,6 @@ func (m MaterializedFeature_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"cron_schedule":             m.CronSchedule,
 			"cron_schedule_trigger":     m.CronScheduleTrigger,
 			"feature_name":              m.FeatureName,
 			"is_online":                 m.IsOnline,
@@ -18753,7 +18500,6 @@ func (m MaterializedFeature_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 func (m MaterializedFeature_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cron_schedule": types.StringType,
 			"cron_schedule_trigger": basetypes.ListType{
 				ElemType: CronSchedule_SdkV2{}.Type(ctx),
 			},
@@ -22567,13 +22313,12 @@ func (m RestoreRunsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// A rolling time window with an optional delay. This is the SQL-spec-aligned
-// replacement for ContinuousWindow: `delay` is the non-negative counterpart of
-// the legacy non-positive `ContinuousWindow.offset`.
+// A rolling time window with an optional non-negative delay.
 type RollingWindow_SdkV2 struct {
-	// The delay applied to the end of the rolling window (must be
-	// non-negative). For example, delay=1d shifts the window end 1 day before
-	// the evaluation time.
+	// Non-negative analytic lag that evaluates the window this far in the past.
+	// Use this for timing variations unrelated to source lateness, such as a
+	// 30-day count as of one week ago. If unset, the analytic lag is zero. It
+	// composes with source.lateness when both are set.
 	Delay timetypes.GoDuration `tfsdk:"delay"`
 	// The duration of the rolling window. Must be positive when set; absent
 	// means lifetime (aggregate over the entity's entire history).
@@ -23433,8 +23178,7 @@ func (m RunTag_SdkV2) Type(ctx context.Context) attr.Type {
 // control plane can explicitly identify hybrid (sawtooth) features rather than
 // inferring hybrid behavior from window_duration.
 type SawtoothWindow_SdkV2 struct {
-	// The delay applied to the end of the window (must be non-negative). For
-	// example, delay=1d shifts the window end 1 day before the evaluation time.
+	// Delay is not currently supported for Sawtooth windows.
 	Delay timetypes.GoDuration `tfsdk:"delay"`
 	// The duration of the window. Must be positive and span more than two days
 	// when set, so that both the batch (N-1 day) and stale-path (N-2 day)
@@ -26091,6 +25835,17 @@ func (m SetTagResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type SlidingWindow_SdkV2 struct {
+	// Non-negative analytic lag that evaluates the window this far in the past.
+	// Use this for timing variations unrelated to source lateness, such as a
+	// 30-day count as of one week ago. If unset, the analytic lag is zero. It
+	// composes with source.lateness when both are set.
+	Delay timetypes.GoDuration `tfsdk:"delay"`
+	// Non-negative phase shift from the default midnight UTC alignment. For
+	// example, offset=22h on a 24h slide produces boundaries at 22:00 UTC
+	// (17:00 New York in standard time) instead of midnight UTC. If unset, the
+	// offset is zero. Must be shorter than slide_duration (and therefore
+	// window_duration).
+	Offset timetypes.GoDuration `tfsdk:"offset"`
 	// The slide duration (interval by which windows advance, must be positive
 	// and less than duration).
 	SlideDuration types.String `tfsdk:"slide_duration"`
@@ -26106,6 +25861,8 @@ func (to *SlidingWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Sl
 }
 
 func (m SlidingWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delay"] = attrs["delay"].SetOptional()
+	attrs["offset"] = attrs["offset"].SetOptional()
 	attrs["slide_duration"] = attrs["slide_duration"].SetRequired()
 	attrs["window_duration"] = attrs["window_duration"].SetOptional()
 
@@ -26130,6 +25887,8 @@ func (m SlidingWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"delay":           m.Delay,
+			"offset":          m.Offset,
 			"slide_duration":  m.SlideDuration,
 			"window_duration": m.WindowDuration,
 		})
@@ -26139,8 +25898,65 @@ func (m SlidingWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 func (m SlidingWindow_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"delay":           timetypes.GoDuration{}.Type(ctx),
+			"offset":          timetypes.GoDuration{}.Type(ctx),
 			"slide_duration":  types.StringType,
 			"window_duration": types.StringType,
+		},
+	}
+}
+
+// Configures when event-time data from this source is considered complete for a
+// Feature.
+type SourceLateness_SdkV2 struct {
+	// Non-negative time to wait after a window ends before treating its source
+	// data as complete. Training shifts the eligible evaluation time backwards
+	// by this duration so it does not join data that would still have been
+	// settling online. Materialization waits for the duration to elapse before
+	// publishing the window. If unset, source data is considered settled
+	// immediately.
+	SettlingDelay timetypes.GoDuration `tfsdk:"settling_delay"`
+}
+
+func (to *SourceLateness_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SourceLateness_SdkV2) {
+}
+
+func (to *SourceLateness_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SourceLateness_SdkV2) {
+}
+
+func (m SourceLateness_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["settling_delay"] = attrs["settling_delay"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SourceLateness.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SourceLateness_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SourceLateness_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SourceLateness_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"settling_delay": m.SettlingDelay,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SourceLateness_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"settling_delay": timetypes.GoDuration{}.Type(ctx),
 		},
 	}
 }
@@ -27519,27 +27335,26 @@ func (m TestRegistryWebhookResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type TimeWindow_SdkV2 struct {
-	Continuous types.List `tfsdk:"continuous"`
-
 	Rolling types.List `tfsdk:"rolling"`
 	// A sawtooth window served via the hybrid batch + streaming path.
 	Sawtooth types.List `tfsdk:"sawtooth"`
 
 	Sliding types.List `tfsdk:"sliding"`
+	// Earliest event-time boundary at which the Feature may emit an output.
+	// This gates outputs, not the historical inputs read by a window. For
+	// example, a 365-day window with start_time=2026-01-01 begins emitting
+	// partial-window values on that date instead of waiting for 365 days of
+	// data; a lifetime window produces no output before start_time. If unset,
+	// tumbling and fixed-duration sliding windows first emit at an
+	// offset-aligned boundary after a full window can be formed. If unset,
+	// lifetime sliding windows and rolling windows emit as soon as eligible
+	// source data exists.
+	StartTime timetypes.RFC3339 `tfsdk:"start_time"`
 
 	Tumbling types.List `tfsdk:"tumbling"`
 }
 
 func (to *TimeWindow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TimeWindow_SdkV2) {
-	if !from.Continuous.IsNull() && !from.Continuous.IsUnknown() {
-		if toContinuous, ok := to.GetContinuous(ctx); ok {
-			if fromContinuous, ok := from.GetContinuous(ctx); ok {
-				// Recursively sync the fields of Continuous
-				toContinuous.SyncFieldsDuringCreateOrUpdate(ctx, fromContinuous)
-				to.SetContinuous(ctx, toContinuous)
-			}
-		}
-	}
 	if !from.Rolling.IsNull() && !from.Rolling.IsUnknown() {
 		if toRolling, ok := to.GetRolling(ctx); ok {
 			if fromRolling, ok := from.GetRolling(ctx); ok {
@@ -27579,14 +27394,6 @@ func (to *TimeWindow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 }
 
 func (to *TimeWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TimeWindow_SdkV2) {
-	if !from.Continuous.IsNull() && !from.Continuous.IsUnknown() {
-		if toContinuous, ok := to.GetContinuous(ctx); ok {
-			if fromContinuous, ok := from.GetContinuous(ctx); ok {
-				toContinuous.SyncFieldsDuringRead(ctx, fromContinuous)
-				to.SetContinuous(ctx, toContinuous)
-			}
-		}
-	}
 	if !from.Rolling.IsNull() && !from.Rolling.IsUnknown() {
 		if toRolling, ok := to.GetRolling(ctx); ok {
 			if fromRolling, ok := from.GetRolling(ctx); ok {
@@ -27622,14 +27429,13 @@ func (to *TimeWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TimeW
 }
 
 func (m TimeWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["continuous"] = attrs["continuous"].SetOptional()
-	attrs["continuous"] = attrs["continuous"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["rolling"] = attrs["rolling"].SetOptional()
 	attrs["rolling"] = attrs["rolling"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["sawtooth"] = attrs["sawtooth"].SetOptional()
 	attrs["sawtooth"] = attrs["sawtooth"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["sliding"] = attrs["sliding"].SetOptional()
 	attrs["sliding"] = attrs["sliding"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["start_time"] = attrs["start_time"].SetOptional()
 	attrs["tumbling"] = attrs["tumbling"].SetOptional()
 	attrs["tumbling"] = attrs["tumbling"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -27645,11 +27451,10 @@ func (m TimeWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (m TimeWindow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"continuous": reflect.TypeOf(ContinuousWindow_SdkV2{}),
-		"rolling":    reflect.TypeOf(RollingWindow_SdkV2{}),
-		"sawtooth":   reflect.TypeOf(SawtoothWindow_SdkV2{}),
-		"sliding":    reflect.TypeOf(SlidingWindow_SdkV2{}),
-		"tumbling":   reflect.TypeOf(TumblingWindow_SdkV2{}),
+		"rolling":  reflect.TypeOf(RollingWindow_SdkV2{}),
+		"sawtooth": reflect.TypeOf(SawtoothWindow_SdkV2{}),
+		"sliding":  reflect.TypeOf(SlidingWindow_SdkV2{}),
+		"tumbling": reflect.TypeOf(TumblingWindow_SdkV2{}),
 	}
 }
 
@@ -27660,10 +27465,10 @@ func (m TimeWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"continuous": m.Continuous,
 			"rolling":    m.Rolling,
 			"sawtooth":   m.Sawtooth,
 			"sliding":    m.Sliding,
+			"start_time": m.StartTime,
 			"tumbling":   m.Tumbling,
 		})
 }
@@ -27672,9 +27477,6 @@ func (m TimeWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m TimeWindow_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"continuous": basetypes.ListType{
-				ElemType: ContinuousWindow_SdkV2{}.Type(ctx),
-			},
 			"rolling": basetypes.ListType{
 				ElemType: RollingWindow_SdkV2{}.Type(ctx),
 			},
@@ -27684,37 +27486,12 @@ func (m TimeWindow_SdkV2) Type(ctx context.Context) attr.Type {
 			"sliding": basetypes.ListType{
 				ElemType: SlidingWindow_SdkV2{}.Type(ctx),
 			},
+			"start_time": timetypes.RFC3339{}.Type(ctx),
 			"tumbling": basetypes.ListType{
 				ElemType: TumblingWindow_SdkV2{}.Type(ctx),
 			},
 		},
 	}
-}
-
-// GetContinuous returns the value of the Continuous field in TimeWindow_SdkV2 as
-// a ContinuousWindow_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *TimeWindow_SdkV2) GetContinuous(ctx context.Context) (ContinuousWindow_SdkV2, bool) {
-	var e ContinuousWindow_SdkV2
-	if m.Continuous.IsNull() || m.Continuous.IsUnknown() {
-		return e, false
-	}
-	var v []ContinuousWindow_SdkV2
-	d := m.Continuous.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetContinuous sets the value of the Continuous field in TimeWindow_SdkV2.
-func (m *TimeWindow_SdkV2) SetContinuous(ctx context.Context, v ContinuousWindow_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["continuous"]
-	m.Continuous = types.ListValueMust(t, vs)
 }
 
 // GetRolling returns the value of the Rolling field in TimeWindow_SdkV2 as
@@ -28174,6 +27951,16 @@ func (m *TransitionStageResponse_SdkV2) SetModelVersionDatabricks(ctx context.Co
 }
 
 type TumblingWindow_SdkV2 struct {
+	// Non-negative analytic lag that evaluates the window this far in the past.
+	// Use this for timing variations unrelated to source lateness, such as a
+	// 30-day count as of one week ago. If unset, the analytic lag is zero. It
+	// composes with source.lateness when both are set.
+	Delay timetypes.GoDuration `tfsdk:"delay"`
+	// Non-negative phase shift from the default midnight UTC alignment. For
+	// example, offset=22h on a 24h window produces boundaries at 22:00 UTC
+	// (17:00 New York in standard time) instead of midnight UTC. If unset, the
+	// offset is zero. Must be shorter than window_duration.
+	Offset timetypes.GoDuration `tfsdk:"offset"`
 	// The duration of each tumbling window (non-overlapping, fixed-duration
 	// windows).
 	WindowDuration types.String `tfsdk:"window_duration"`
@@ -28186,6 +27973,8 @@ func (to *TumblingWindow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from T
 }
 
 func (m TumblingWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delay"] = attrs["delay"].SetOptional()
+	attrs["offset"] = attrs["offset"].SetOptional()
 	attrs["window_duration"] = attrs["window_duration"].SetRequired()
 
 	return attrs
@@ -28209,6 +27998,8 @@ func (m TumblingWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"delay":           m.Delay,
+			"offset":          m.Offset,
 			"window_duration": m.WindowDuration,
 		})
 }
@@ -28217,6 +28008,8 @@ func (m TumblingWindow_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m TumblingWindow_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"delay":           timetypes.GoDuration{}.Type(ctx),
+			"offset":          timetypes.GoDuration{}.Type(ctx),
 			"window_duration": types.StringType,
 		},
 	}

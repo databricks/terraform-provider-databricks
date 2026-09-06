@@ -11742,6 +11742,12 @@ func (m *FetchIpAccessListResponse_SdkV2) SetIpAccessList(ctx context.Context, v
 }
 
 type GcpEndpoint_SdkV2 struct {
+	// All Google APIs that support VPC Service Controls (a subset of all Google
+	// APIs).
+	AllVpcScServices types.Bool `tfsdk:"all_vpc_sc_services"`
+	// Selected Google API hostnames, e.g. "storage.googleapis.com",
+	// "bigquery.googleapis.com".
+	GoogleApiEndpoints types.List `tfsdk:"google_api_endpoints"`
 	// Output only. The URI of the created PSC endpoint.
 	PscEndpointUri types.String `tfsdk:"psc_endpoint_uri"`
 	// The full url of the target service attachment. Example:
@@ -11750,12 +11756,32 @@ type GcpEndpoint_SdkV2 struct {
 }
 
 func (to *GcpEndpoint_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GcpEndpoint_SdkV2) {
+	if !from.GoogleApiEndpoints.IsNull() && !from.GoogleApiEndpoints.IsUnknown() {
+		if toGoogleApiEndpoints, ok := to.GetGoogleApiEndpoints(ctx); ok {
+			if fromGoogleApiEndpoints, ok := from.GetGoogleApiEndpoints(ctx); ok {
+				// Recursively sync the fields of GoogleApiEndpoints
+				toGoogleApiEndpoints.SyncFieldsDuringCreateOrUpdate(ctx, fromGoogleApiEndpoints)
+				to.SetGoogleApiEndpoints(ctx, toGoogleApiEndpoints)
+			}
+		}
+	}
 }
 
 func (to *GcpEndpoint_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GcpEndpoint_SdkV2) {
+	if !from.GoogleApiEndpoints.IsNull() && !from.GoogleApiEndpoints.IsUnknown() {
+		if toGoogleApiEndpoints, ok := to.GetGoogleApiEndpoints(ctx); ok {
+			if fromGoogleApiEndpoints, ok := from.GetGoogleApiEndpoints(ctx); ok {
+				toGoogleApiEndpoints.SyncFieldsDuringRead(ctx, fromGoogleApiEndpoints)
+				to.SetGoogleApiEndpoints(ctx, toGoogleApiEndpoints)
+			}
+		}
+	}
 }
 
 func (m GcpEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_vpc_sc_services"] = attrs["all_vpc_sc_services"].SetOptional()
+	attrs["google_api_endpoints"] = attrs["google_api_endpoints"].SetOptional()
+	attrs["google_api_endpoints"] = attrs["google_api_endpoints"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["psc_endpoint_uri"] = attrs["psc_endpoint_uri"].SetComputed()
 	attrs["service_attachment"] = attrs["service_attachment"].SetOptional()
 
@@ -11770,7 +11796,9 @@ func (m GcpEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m GcpEndpoint_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"google_api_endpoints": reflect.TypeOf(GoogleApiEndpoints_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -11780,8 +11808,10 @@ func (m GcpEndpoint_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"psc_endpoint_uri":   m.PscEndpointUri,
-			"service_attachment": m.ServiceAttachment,
+			"all_vpc_sc_services":  m.AllVpcScServices,
+			"google_api_endpoints": m.GoogleApiEndpoints,
+			"psc_endpoint_uri":     m.PscEndpointUri,
+			"service_attachment":   m.ServiceAttachment,
 		})
 }
 
@@ -11789,10 +11819,40 @@ func (m GcpEndpoint_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (m GcpEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"all_vpc_sc_services": types.BoolType,
+			"google_api_endpoints": basetypes.ListType{
+				ElemType: GoogleApiEndpoints_SdkV2{}.Type(ctx),
+			},
 			"psc_endpoint_uri":   types.StringType,
 			"service_attachment": types.StringType,
 		},
 	}
+}
+
+// GetGoogleApiEndpoints returns the value of the GoogleApiEndpoints field in GcpEndpoint_SdkV2 as
+// a GoogleApiEndpoints_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GcpEndpoint_SdkV2) GetGoogleApiEndpoints(ctx context.Context) (GoogleApiEndpoints_SdkV2, bool) {
+	var e GoogleApiEndpoints_SdkV2
+	if m.GoogleApiEndpoints.IsNull() || m.GoogleApiEndpoints.IsUnknown() {
+		return e, false
+	}
+	var v []GoogleApiEndpoints_SdkV2
+	d := m.GoogleApiEndpoints.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGoogleApiEndpoints sets the value of the GoogleApiEndpoints field in GcpEndpoint_SdkV2.
+func (m *GcpEndpoint_SdkV2) SetGoogleApiEndpoints(ctx context.Context, v GoogleApiEndpoints_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["google_api_endpoints"]
+	m.GoogleApiEndpoints = types.ListValueMust(t, vs)
 }
 
 type GenericWebhookConfig_SdkV2 struct {
@@ -14019,6 +14079,99 @@ func (m GetWorkspaceNetworkOptionRequest_SdkV2) Type(ctx context.Context) attr.T
 			"workspace_id": types.Int64Type,
 		},
 	}
+}
+
+// Wrapper for a list of Google API hostnames. Wrapped in a message because
+// proto3 oneof does not support repeated fields directly.
+type GoogleApiEndpoints_SdkV2 struct {
+	// Google API hostnames, e.g. "storage.googleapis.com",
+	// "bigquery.googleapis.com". Use "googleapis.com" to cover all Google APIs.
+	Endpoints types.List `tfsdk:"endpoints"`
+}
+
+func (to *GoogleApiEndpoints_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GoogleApiEndpoints_SdkV2) {
+	if !from.Endpoints.IsNull() && !from.Endpoints.IsUnknown() && to.Endpoints.IsNull() && len(from.Endpoints.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Endpoints, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Endpoints = from.Endpoints
+	}
+}
+
+func (to *GoogleApiEndpoints_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GoogleApiEndpoints_SdkV2) {
+	if !from.Endpoints.IsNull() && !from.Endpoints.IsUnknown() && to.Endpoints.IsNull() && len(from.Endpoints.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Endpoints, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Endpoints = from.Endpoints
+	}
+}
+
+func (m GoogleApiEndpoints_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoints"] = attrs["endpoints"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GoogleApiEndpoints.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GoogleApiEndpoints_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"endpoints": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GoogleApiEndpoints_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GoogleApiEndpoints_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"endpoints": m.Endpoints,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GoogleApiEndpoints_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"endpoints": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetEndpoints returns the value of the Endpoints field in GoogleApiEndpoints_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GoogleApiEndpoints_SdkV2) GetEndpoints(ctx context.Context) ([]types.String, bool) {
+	if m.Endpoints.IsNull() || m.Endpoints.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Endpoints.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEndpoints sets the value of the Endpoints field in GoogleApiEndpoints_SdkV2.
+func (m *GoogleApiEndpoints_SdkV2) SetEndpoints(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["endpoints"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Endpoints = types.ListValueMust(t, vs)
 }
 
 // Definition of an IP Access list

@@ -99,9 +99,6 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // ModelProviderServiceData extends the main model with additional fields.
 type ModelProviderServiceData struct {
-	// Whether the caller sees only metadata available through the BROWSE
-	// privilege.
-	BrowseOnly types.Bool `tfsdk:"browse_only"`
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
 	// Behavioral configuration: provider connection, model catalog, and
@@ -165,7 +162,6 @@ func (m ModelProviderServiceData) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"browse_only":     m.BrowseOnly,
 			"comment":         m.Comment,
 			"config":          m.Config,
 			"create_time":     m.CreateTime,
@@ -188,7 +184,6 @@ func (m ModelProviderServiceData) ToObjectValue(ctx context.Context) basetypes.O
 func (m ModelProviderServiceData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"browse_only":     types.BoolType,
 			"comment":         types.StringType,
 			"config":          catalog_tf.ModelProviderServiceConfig{}.Type(ctx),
 			"create_time":     timetypes.RFC3339{}.Type(ctx),
@@ -207,7 +202,6 @@ func (m ModelProviderServiceData) Type(ctx context.Context) attr.Type {
 }
 
 func (m ModelProviderServiceData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["browse_only"] = attrs["browse_only"].SetComputed()
 	attrs["comment"] = attrs["comment"].SetComputed()
 	attrs["config"] = attrs["config"].SetComputed()
 	attrs["create_time"] = attrs["create_time"].SetComputed()

@@ -13,9 +13,8 @@ subcategory: "Unity Catalog"
 
 ## Arguments
 The following arguments are supported:
-* `model_service_id` (string, required) - Leaf identifier for the model service (the unqualified name within the
-  parent schema, e.g. "my_model_service")
-* `parent` (string, required) - Resource name of the parent schema.
+* `model_service_id` (string, required) - Name for the model service, e.g. "my_model_service"
+* `parent` (string, required) - Name of the parent schema.
   Format: `schemas/{catalog}.{schema}`.
   Each `{...}` component is capped at 255 characters individually
 * `comment` (string, optional) - User-provided description
@@ -130,8 +129,6 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `browse_only` (boolean) - Whether the caller sees only metadata available through the BROWSE
-  privilege
 * `create_time` (string) - When the model service was created
 * `created_by` (string) - Creator identity
 * `effective_owner` (string) - The resolved owner of the ModelService. Falls back to the caller's identity

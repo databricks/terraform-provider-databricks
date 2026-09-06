@@ -545,7 +545,7 @@ func TestResourceGrantCreateNoSecurable(t *testing.T) {
 		principal = "me"
 		privileges = ["MODIFY", "SELECT"]
 		`,
-	}.ExpectError(t, "invalid config supplied. [catalog] Missing required argument. [credential] Missing required argument. [external_location] Missing required argument. [foreign_connection] Missing required argument. [function] Missing required argument. [metastore] Missing required argument. [model] Missing required argument. [pipeline] Missing required argument. [recipient] Missing required argument. [schema] Missing required argument. [share] Missing required argument. [storage_credential] Missing required argument. [table] Missing required argument. [volume] Missing required argument")
+	}.ExpectError(t, "invalid config supplied. [catalog] Missing required argument. [credential] Missing required argument. [external_location] Missing required argument. [foreign_connection] Missing required argument. [function] Missing required argument. [mcp_service] Missing required argument. [metastore] Missing required argument. [model] Missing required argument. [model_provider_service] Missing required argument. [model_service] Missing required argument. [pipeline] Missing required argument. [recipient] Missing required argument. [schema] Missing required argument. [share] Missing required argument. [storage_credential] Missing required argument. [table] Missing required argument. [volume] Missing required argument")
 }
 
 func TestResourceGrantCreateOneSecurableOnly(t *testing.T) {

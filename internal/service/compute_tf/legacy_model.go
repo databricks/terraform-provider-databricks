@@ -1361,7 +1361,7 @@ type ClusterAttributes_SdkV2 struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 	// If set, what the total initial volume size (in GB) of the remote disks
-	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	// should be. Supported for GCP.
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
@@ -2443,7 +2443,7 @@ type ClusterDetails_SdkV2 struct {
 	// when the cluster is in a `TERMINATING` or `TERMINATED` state.
 	TerminationReason types.List `tfsdk:"termination_reason"`
 	// If set, what the total initial volume size (in GB) of the remote disks
-	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	// should be. Supported for GCP.
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
@@ -5367,7 +5367,7 @@ type ClusterSpec_SdkV2 struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 	// If set, what the total initial volume size (in GB) of the remote disks
-	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	// should be. Supported for GCP.
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
@@ -6677,7 +6677,7 @@ type CreateCluster_SdkV2 struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 	// If set, what the total initial volume size (in GB) of the remote disks
-	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	// should be. Supported for GCP.
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
@@ -9607,7 +9607,7 @@ type EditCluster_SdkV2 struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 	// If set, what the total initial volume size (in GB) of the remote disks
-	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	// should be. Supported for GCP.
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
@@ -11206,7 +11206,7 @@ type EnforcePolicyComplianceForClusterResponseClusterSettings_SdkV2 struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 	// If set, what the total initial volume size (in GB) of the remote disks
-	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	// should be. Supported for GCP.
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
@@ -21191,6 +21191,9 @@ type NodeTypeFlexibility_SdkV2 struct {
 	// A list of node type IDs to use as fallbacks when the primary node type is
 	// unavailable.
 	AlternateNodeTypeIds types.List `tfsdk:"alternate_node_type_ids"`
+	// The AWS Context ID for EC2 Fleet. When set (non-empty), the value is
+	// passed to AWS CreateFleet API to create the EC2 Fleet.
+	AwsContextId types.String `tfsdk:"aws_context_id"`
 }
 
 func (to *NodeTypeFlexibility_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from NodeTypeFlexibility_SdkV2) {
@@ -21213,6 +21216,7 @@ func (to *NodeTypeFlexibility_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 
 func (m NodeTypeFlexibility_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alternate_node_type_ids"] = attrs["alternate_node_type_ids"].SetOptional()
+	attrs["aws_context_id"] = attrs["aws_context_id"].SetOptional()
 
 	return attrs
 }
@@ -21238,6 +21242,7 @@ func (m NodeTypeFlexibility_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"alternate_node_type_ids": m.AlternateNodeTypeIds,
+			"aws_context_id":          m.AwsContextId,
 		})
 }
 
@@ -21248,6 +21253,7 @@ func (m NodeTypeFlexibility_SdkV2) Type(ctx context.Context) attr.Type {
 			"alternate_node_type_ids": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"aws_context_id": types.StringType,
 		},
 	}
 }
@@ -23646,7 +23652,7 @@ type UpdateClusterResource_SdkV2 struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 	// If set, what the total initial volume size (in GB) of the remote disks
-	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	// should be. Supported for GCP.
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//

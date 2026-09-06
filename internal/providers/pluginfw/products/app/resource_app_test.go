@@ -31,6 +31,13 @@ func TestResourceApp_SchemaPreserved(t *testing.T) {
 	require.True(t, ok, "name must be a string attribute")
 	assert.Len(t, strAttr.PlanModifiers, 1, "name should have RequiresReplace plan modifier")
 
+	forwardTokenAttr, ok := s.Attributes["forward_user_access_token"]
+	require.True(t, ok, "forward_user_access_token attribute must exist")
+	forwardTokenBool, ok := forwardTokenAttr.(schema.BoolAttribute)
+	require.True(t, ok, "forward_user_access_token must be a bool attribute")
+	assert.True(t, forwardTokenBool.Optional, "forward_user_access_token should be optional")
+	assert.True(t, forwardTokenBool.Computed, "forward_user_access_token should be computed")
+
 	// Verify computed fields have UseStateForUnknown plan modifiers
 	for _, field := range []string{"create_time", "creator", "service_principal_client_id", "service_principal_name", "url"} {
 		attr, ok := s.Attributes[field]

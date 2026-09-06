@@ -387,8 +387,9 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 	//    cache so that WorkspaceClient() returns it without recreating.
 	newDatabricksClient := func(dc *client.DatabricksClient) *DatabricksClient {
 		result := &DatabricksClient{
-			DatabricksClient: dc,
-			commandFactory:   c.commandFactory,
+			DatabricksClient:     dc,
+			commandFactory:       c.commandFactory,
+			httpTimeoutSetByUser: c.httpTimeoutSetByUser,
 		}
 		if wc, ok := c.cachedWorkspaceClients[parsedID]; ok {
 			result.cachedWorkspaceClient = wc

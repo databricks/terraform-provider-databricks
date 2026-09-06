@@ -126,20 +126,23 @@ func (sm SecurableMapping) Id(d *schema.ResourceData) string {
 // See https://docs.databricks.com/api/workspace/grants/update for full list
 // Omitting provider as a reserved keyword
 var Mappings = SecurableMapping{
-	"catalog":            catalog.SecurableType("catalog"),
-	"credential":         catalog.SecurableType("credential"),
-	"foreign_connection": catalog.SecurableType("connection"),
-	"external_location":  catalog.SecurableType("external_location"),
-	"function":           catalog.SecurableType("function"),
-	"metastore":          catalog.SecurableType("metastore"),
-	"model":              catalog.SecurableType("function"),
-	"pipeline":           catalog.SecurableType("pipeline"),
-	"recipient":          catalog.SecurableType("recipient"),
-	"schema":             catalog.SecurableType("schema"),
-	"share":              catalog.SecurableType("share"),
-	"storage_credential": catalog.SecurableType("storage_credential"),
-	"table":              catalog.SecurableType("table"),
-	"volume":             catalog.SecurableType("volume"),
+	"catalog":                catalog.SecurableType("catalog"),
+	"credential":             catalog.SecurableType("credential"),
+	"foreign_connection":     catalog.SecurableType("connection"),
+	"external_location":      catalog.SecurableType("external_location"),
+	"function":               catalog.SecurableType("function"),
+	"mcp_service":            catalog.SecurableType("mcp_service"),
+	"metastore":              catalog.SecurableType("metastore"),
+	"model":                  catalog.SecurableType("function"),
+	"model_provider_service": catalog.SecurableType("model_provider_service"),
+	"model_service":          catalog.SecurableType("model_service"),
+	"pipeline":               catalog.SecurableType("pipeline"),
+	"recipient":              catalog.SecurableType("recipient"),
+	"schema":                 catalog.SecurableType("schema"),
+	"share":                  catalog.SecurableType("share"),
+	"storage_credential":     catalog.SecurableType("storage_credential"),
+	"table":                  catalog.SecurableType("table"),
+	"volume":                 catalog.SecurableType("volume"),
 }
 
 // Unity Catalog accepts privileges with spaces, but will automatically convert them to underscores

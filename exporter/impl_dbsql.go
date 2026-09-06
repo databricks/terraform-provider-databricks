@@ -105,6 +105,67 @@ func importSqlEndpoint(ic *importContext, r *resource) error {
 	return nil
 }
 
+// defaultWarehouseOverrideId extracts the ID component (user ID) from a default warehouse
+// override resource name in the format `default-warehouse-overrides/{default_warehouse_override_id}`.
+// It returns an empty string if the name doesn't match the expected format.
+func defaultWarehouseOverrideId(name string) string {
+	const prefix = "default-warehouse-overrides/"
+	if id, ok := strings.CutPrefix(name, prefix); ok && id != "" {
+		return id
+	}
+	return ""
+}
+
+func listWarehouseDefaultOverrides(ic *importContext) error {
+	it := ic.workspaceClient.Warehouses.ListDefaultWarehouseOverrides(ic.Context,
+		sql.ListDefaultWarehouseOverridesRequest{})
+	i := 0
+	for it.HasNext(ic.Context) {
+		o, err := it.Next(ic.Context)
+		if err != nil {
+			return err
+		}
+		ic.Emit(&resource{
+			Resource: "databricks_warehouses_default_warehouse_override",
+			ID:       o.Name,
+		})
+		i++
+	}
+	log.Printf("[INFO] Listed %d default warehouse overrides", i)
+	return nil
+}
+
+func importWarehouseDefaultOverride(ic *importContext, r *resource) error {
+	overrideId := defaultWarehouseOverrideId(r.ID)
+	if r.DataWrapper != nil {
+		// The read API may not return the `default_warehouse_override_id` field, so we
+		// derive it from the resource name and set it explicitly. It's a required field
+		// and also references the user the override applies to.
+		if _, ok := r.DataWrapper.GetOk("default_warehouse_override_id"); !ok && overrideId != "" {
+			if err := r.DataWrapper.Set("default_warehouse_override_id", overrideId); err != nil {
+				return err
+			}
+		}
+		// Emit the warehouse referenced when the override type is CUSTOM.
+		if wid, ok := r.DataWrapper.GetOk("warehouse_id"); ok {
+			if warehouseId, ok := wid.(string); ok && warehouseId != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_sql_endpoint",
+					ID:       warehouseId,
+				})
+			}
+		}
+	}
+	// The override ID component is the user ID this override belongs to.
+	if overrideId != "" && overrideId != "me" {
+		ic.Emit(&resource{
+			Resource: "databricks_user",
+			ID:       overrideId,
+		})
+	}
+	return nil
+}
+
 func listRedashDashboards(ic *importContext) error {
 	qs, err := dbsqlListObjects(ic, "/preview/sql/dashboards")
 	if err != nil {

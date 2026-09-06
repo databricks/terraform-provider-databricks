@@ -108,7 +108,7 @@ The following arguments are supported:
 * `principal_type` (string, optional) - Possible values are: `PRINCIPAL_TYPE_SERVICE_PRINCIPAL`, `PRINCIPAL_TYPE_USER`
 
 ### CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess
-* `restriction_mode` (string, required) - Possible values are: `FULL_ACCESS`, `RESTRICTED_ACCESS`
+* `restriction_mode` (string, required) - Possible values are: `FULL_ACCESS`, `LEGACY_MODE`, `RESTRICTED_ACCESS`
 * `allow_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule, optional)
 * `deny_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule, optional)
 

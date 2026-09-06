@@ -425,6 +425,10 @@ func listMwsPermissionAssignments(ic *importContext) error {
 		return err
 	}
 	for _, ws := range workspaces {
+		if ws.WorkspaceStatus != "RUNNING" {
+			log.Printf("[DEBUG] skipping workspace '%s' that is not running", ws.WorkspaceName)
+			continue
+		}
 		// list only specific workspaces if ic.match is set
 		if !ic.MatchesName(strconv.FormatInt(ws.WorkspaceId, 10)) {
 			log.Printf("[DEBUG] Skipping workspace %d because it doesn't match to the filter", ws.WorkspaceId)

@@ -36,8 +36,14 @@ type model struct {
 }
 
 type gcpEndpointModel struct {
-	PscEndpointUri    types.String `tfsdk:"psc_endpoint_uri"`
-	ServiceAttachment types.String `tfsdk:"service_attachment"`
+	AllVpcScServices   types.Bool                `tfsdk:"all_vpc_sc_services"`
+	GoogleApiEndpoints []googleApiEndpointsModel `tfsdk:"google_api_endpoints"`
+	PscEndpointUri     types.String              `tfsdk:"psc_endpoint_uri"`
+	ServiceAttachment  types.String              `tfsdk:"service_attachment"`
+}
+
+type googleApiEndpointsModel struct {
+	Endpoints types.List `tfsdk:"endpoints"`
 }
 
 // emptyModel returns a model with list fields set to typed-null. The
@@ -84,6 +90,8 @@ func (m *model) toCreateRequest(ctx context.Context) (*settings.CreatePrivateEnd
 	diags.Append(d...)
 	resources, d := stringsFromList(ctx, m.ResourceNames)
 	diags.Append(d...)
+	gcpEndpoint, d := gcpEndpointToAPI(ctx, m.GcpEndpoint)
+	diags.Append(d...)
 	return &settings.CreatePrivateEndpointRuleRequest{
 		NetworkConnectivityConfigId: m.NetworkConnectivityConfigId.ValueString(),
 		PrivateEndpointRule: settings.CreatePrivateEndpointRule{
@@ -92,21 +100,48 @@ func (m *model) toCreateRequest(ctx context.Context) (*settings.CreatePrivateEnd
 			ResourceId:      m.ResourceId.ValueString(),
 			DomainNames:     domains,
 			ResourceNames:   resources,
-			GcpEndpoint:     gcpEndpointToAPI(m.GcpEndpoint),
+			GcpEndpoint:     gcpEndpoint,
 		},
 	}, diags
 }
 
 // gcpEndpointToAPI converts the size-0-or-1 slice (schema enforces
 // SizeAtMost(1)) back to the SDK's pointer-to-struct.
-func gcpEndpointToAPI(gcp []gcpEndpointModel) *settings.GcpEndpoint {
+func gcpEndpointToAPI(ctx context.Context, gcp []gcpEndpointModel) (*settings.GcpEndpoint, diag.Diagnostics) {
 	if len(gcp) == 0 {
-		return nil
+		return nil, nil
 	}
-	return &settings.GcpEndpoint{
+	var diags diag.Diagnostics
+	endpoint := &settings.GcpEndpoint{
+		AllVpcScServices:  gcp[0].AllVpcScServices.ValueBool(),
 		PscEndpointUri:    gcp[0].PscEndpointUri.ValueString(),
 		ServiceAttachment: gcp[0].ServiceAttachment.ValueString(),
 	}
+	if !gcp[0].AllVpcScServices.IsNull() && !gcp[0].AllVpcScServices.IsUnknown() && !gcp[0].AllVpcScServices.ValueBool() {
+		endpoint.ForceSendFields = append(endpoint.ForceSendFields, "AllVpcScServices")
+	}
+	if len(gcp[0].GoogleApiEndpoints) > 0 {
+		endpoints, d := stringsFromList(ctx, gcp[0].GoogleApiEndpoints[0].Endpoints)
+		diags.Append(d...)
+		endpoint.GoogleApiEndpoints = &settings.GoogleApiEndpoints{Endpoints: endpoints}
+	}
+	return endpoint, diags
+}
+
+// gcpFirstPartyTargetEqual compares the two target selectors that the API
+// permits updating in place. Service attachments are replaced by the schema.
+func gcpFirstPartyTargetEqual(a, b []gcpEndpointModel) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	if len(a) == 0 {
+		return true
+	}
+	if !a[0].AllVpcScServices.Equal(b[0].AllVpcScServices) ||
+		len(a[0].GoogleApiEndpoints) != len(b[0].GoogleApiEndpoints) {
+		return false
+	}
+	return len(a[0].GoogleApiEndpoints) == 0 || a[0].GoogleApiEndpoints[0].Endpoints.Equal(b[0].GoogleApiEndpoints[0].Endpoints)
 }
 
 // toUpdateRequest builds the SDK update request with an update_mask of fields
@@ -136,6 +171,12 @@ func (m *model) toUpdateRequest(ctx context.Context, prev model) (*settings.Upda
 		names, d := stringsFromList(ctx, m.ResourceNames)
 		diags.Append(d...)
 		rule.ResourceNames = names
+	}
+	if !gcpFirstPartyTargetEqual(m.GcpEndpoint, prev.GcpEndpoint) {
+		mask = append(mask, "gcp_endpoint")
+		gcpEndpoint, d := gcpEndpointToAPI(ctx, m.GcpEndpoint)
+		diags.Append(d...)
+		rule.GcpEndpoint = gcpEndpoint
 	}
 	return &settings.UpdateNccPrivateEndpointRuleRequest{
 		NetworkConnectivityConfigId: nccId,
@@ -182,7 +223,7 @@ func (m *model) fromAPI(ctx context.Context, rule *settings.NccPrivateEndpointRu
 	m.DomainNames = stringsToList(ctx, rule.DomainNames, &diags)
 	m.ResourceNames = stringsToList(ctx, rule.ResourceNames, &diags)
 
-	m.GcpEndpoint = gcpEndpointFromAPI(rule.GcpEndpoint)
+	m.GcpEndpoint = gcpEndpointFromAPI(ctx, rule.GcpEndpoint, m.GcpEndpoint, &diags)
 	return diags
 }
 
@@ -210,12 +251,24 @@ func stringsToList(ctx context.Context, vals []string, diags *diag.Diagnostics) 
 // gcpEndpointFromAPI converts the SDK's pointer-to-struct into the
 // size-0-or-1 slice the schema expects. Returning nil omits the block from
 // state.
-func gcpEndpointFromAPI(gcp *settings.GcpEndpoint) []gcpEndpointModel {
+func gcpEndpointFromAPI(ctx context.Context, gcp *settings.GcpEndpoint, previous []gcpEndpointModel, diags *diag.Diagnostics) []gcpEndpointModel {
 	if gcp == nil {
 		return nil
 	}
+	allVpcScServices := types.BoolValue(gcp.AllVpcScServices)
+	if !gcp.AllVpcScServices && (len(previous) == 0 || previous[0].AllVpcScServices.IsNull() || previous[0].AllVpcScServices.IsUnknown()) {
+		allVpcScServices = types.BoolNull()
+	}
+	var googleApiEndpoints []googleApiEndpointsModel
+	if gcp.GoogleApiEndpoints != nil {
+		googleApiEndpoints = []googleApiEndpointsModel{{
+			Endpoints: stringsToList(ctx, gcp.GoogleApiEndpoints.Endpoints, diags),
+		}}
+	}
 	return []gcpEndpointModel{{
-		PscEndpointUri:    types.StringValue(gcp.PscEndpointUri),
-		ServiceAttachment: types.StringValue(gcp.ServiceAttachment),
+		AllVpcScServices:   allVpcScServices,
+		GoogleApiEndpoints: googleApiEndpoints,
+		PscEndpointUri:     types.StringValue(gcp.PscEndpointUri),
+		ServiceAttachment:  types.StringValue(gcp.ServiceAttachment),
 	}}
 }

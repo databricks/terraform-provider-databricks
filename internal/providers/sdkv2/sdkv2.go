@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"regexp"
 	"sort"
 	"strings"
 	"sync"
-	"unicode"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -34,14 +32,9 @@ func init() {
 	// internal purposes at Databricks.
 	useragent.WithProduct(providercommon.ProviderName, common.Version())
 
-	userAgentExtraEnv := os.Getenv("DATABRICKS_USER_AGENT_EXTRA")
-	out, err := ParseUserAgentExtra(userAgentExtraEnv)
+	err := providercommon.ApplyUserAgentExtra(os.Getenv("DATABRICKS_USER_AGENT_EXTRA"))
 	if err != nil {
 		panic(fmt.Errorf("failed to parse DATABRICKS_USER_AGENT_EXTRA: %s", err))
-	}
-
-	for _, extra := range out {
-		useragent.WithUserAgentExtra(extra.Key, extra.Value)
 	}
 }
 
@@ -178,10 +171,21 @@ func providerSchema() map[string]*schema.Schema {
 			}
 		}
 	}
+	// user_agent_extra is not an SDK configuration attribute: it is handled
+	// by the provider itself in ConfigureDatabricksClient.
+	ps["user_agent_extra"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+	}
 	return ps
 }
 
 func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData, configCustomizer func(*config.Config) error) (any, diag.Diagnostics) {
+	if v, ok := d.GetOk("user_agent_extra"); ok {
+		if err := providercommon.ApplyUserAgentExtra(v.(string)); err != nil {
+			return nil, diag.Errorf("failed to parse user_agent_extra: %s", err)
+		}
+	}
 	cfg := &config.Config{}
 	attrsUsed := []string{}
 	for _, attr := range config.ConfigAttributes {
@@ -216,44 +220,4 @@ func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData, conf
 		return nil, diag.FromErr(err)
 	}
 	return databricksClient, nil
-}
-
-type UserAgentExtra struct {
-	Key   string
-	Value string
-}
-
-// Regex for product strings. See RFC 9110.
-//
-// product = token ["/" product-version]
-// product-version = token
-// token = 1*tchar
-// tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~" / DIGIT / ALPHA
-var productRegexRfc9110 = regexp.MustCompile("^([!#$%&'*+\\-.^_`|~0-9A-Za-z]+)(/([!#$%&'*+\\-.^_`|~0-9A-Za-z]+))?$")
-
-func ParseUserAgentExtra(env string) ([]UserAgentExtra, error) {
-	out := []UserAgentExtra{}
-
-	products := strings.FieldsFunc(env, func(r rune) bool {
-		return unicode.IsSpace(r)
-	})
-
-	for _, product := range products {
-		match := productRegexRfc9110.FindStringSubmatch(product)
-
-		if len(match) != 4 {
-			return nil, fmt.Errorf("product string must follow RFC 9110: %s", product)
-		}
-
-		if match[3] == "" {
-			return nil, fmt.Errorf("product string must include version: %s", product)
-		}
-
-		out = append(out, UserAgentExtra{
-			Key:   match[1],
-			Value: match[3],
-		})
-	}
-
-	return out, nil
 }

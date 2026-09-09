@@ -135,6 +135,21 @@ resource "databricks_grants" "some" {
 		principal  = "%s"
 		privileges = ["ALL_PRIVILEGES"]
 	}
+}
+
+resource "databricks_secret_uc" "this" {
+	catalog_name = databricks_catalog.sandbox.id
+	schema_name  = databricks_schema.things.name
+	name         = "secret-{var.STICKY_RANDOM}"
+	value        = "sensitive-value"
+}
+
+resource "databricks_grants" "secret" {
+	secret = databricks_secret_uc.this.full_name
+	grant {
+		principal  = "%s"
+		privileges = ["READ_SECRET"]
+	}
 }`
 
 func TestUcAccGrants(t *testing.T) {
@@ -211,5 +226,43 @@ func TestUcAccGrantsForIdChange(t *testing.T) {
 	}, acceptance.Step{
 		Template:    grantsTemplateForNamePermissionChange("-fail", "abc"),
 		ExpectError: regexp.MustCompile(`Error: cannot create grants: Privilege ABC is not applicable to this entity`),
+	})
+}
+
+// secretGrantsTemplate is a minimal-dependency variant that exercises only the secret securable
+// and READ_SECRET via the authoritative databricks_grants resource. It creates no storage
+// credential or external location, so it needs no TEST_METASTORE_DATA_ACCESS_ARN / TEST_BUCKET /
+// TEST_METASTORE_ID, and grants to the built-in "account users" group so no test group env var is
+// required.
+var secretGrantsTemplate = `
+resource "databricks_catalog" "sandbox" {
+	name    = "sandbox{var.STICKY_RANDOM}"
+	comment = "this catalog is managed by terraform"
+}
+
+resource "databricks_schema" "things" {
+	catalog_name = databricks_catalog.sandbox.id
+	name         = "things{var.STICKY_RANDOM}"
+	comment      = "this database is managed by terraform"
+}
+
+resource "databricks_secret_uc" "this" {
+	catalog_name = databricks_catalog.sandbox.id
+	schema_name  = databricks_schema.things.name
+	name         = "secret-{var.STICKY_RANDOM}"
+	value        = "sensitive-value"
+}
+
+resource "databricks_grants" "secret" {
+	secret = databricks_secret_uc.this.full_name
+	grant {
+		principal  = "account users"
+		privileges = ["READ_SECRET"]
+	}
+}`
+
+func TestUcAccSecretGrants(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: secretGrantsTemplate,
 	})
 }

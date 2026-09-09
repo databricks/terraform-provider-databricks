@@ -9,7 +9,7 @@ Allows you to create a private endpoint in a [Network Connectivity Config](mws_n
 
 -> This resource can only be used with an account-level provider!
 
--> This feature is available on Azure, and in Public Preview on AWS.
+-> This feature is available on Azure and in Public Preview on AWS and GCP. GCP Google API targets require Private Preview access.
 
 ## Plugin Framework Opt-In
 
@@ -72,6 +72,21 @@ resource "databricks_mws_ncc_private_endpoint_rule" "vpce" {
 }
 ```
 
+Create a GCP Private Service Connect rule for selected Google APIs.
+
+```hcl
+resource "databricks_mws_ncc_private_endpoint_rule" "google_apis" {
+  provider                       = databricks.account
+  network_connectivity_config_id = databricks_mws_network_connectivity_config.ncc.network_connectivity_config_id
+
+  gcp_endpoint {
+    google_api_endpoints {
+      endpoints = ["storage.googleapis.com", "bigquery.googleapis.com"]
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are available:
@@ -84,7 +99,8 @@ The following arguments are available:
   * On AWS: List of target resource FQDNs accessible via the VPC endpoint service. Only used by private endpoints towards a VPC endpoint service behind a customer-managed VPC endpoint service. Conflicts with `resource_names`.
 * `endpoint_service` - (AWS only) Example `com.amazonaws.vpce.us-east-1.vpce-svc-123abcc1298abc123`. The full target AWS endpoint service name that connects to the destination resources of the private endpoint. Change forces creation of a new resource.
 * `resource_names` - (AWS only) Only used by private endpoints towards AWS S3 service. List of globally unique S3 bucket names that will be accessed via the VPC endpoint. The bucket names must be in the same region as the NCC/endpoint service. Conflict with `domain_names`.
-* `enabled` - (AWS only) Activation status. Only used by private endpoints towards an AWS S3 service. Update this field to activate/deactivate this private endpoint to allow egress access from serverless compute resources. Can only be updated after a private endpoint rule towards an AWS S3 service is successfully created.
+* `gcp_endpoint` - (GCP only) Private Service Connect target. Configure one of `service_attachment`, `google_api_endpoints`, or `all_vpc_sc_services`. Google API targets can be updated in place; changing `service_attachment` forces a new resource.
+* `enabled` - Activation status for first-party endpoints on AWS or GCP. Can only be updated after the private endpoint rule is successfully created.
 
 ## Attribute Reference
 
@@ -108,8 +124,9 @@ The possible values are:
 * `deactivated_at` - Time in epoch milliseconds when this object was deactivated.
 * `creation_time` - Time in epoch milliseconds when this object was created.
 * `updated_time` - Time in epoch milliseconds when this object was updated.
-* `enabled` - Activation status. Only used by private endpoints towards an AWS S3 service.
+* `enabled` - Activation status for first-party endpoints on AWS or GCP.
 * `vpc_endpoint_id` - The AWS VPC endpoint ID. You can use this ID to identify the VPC endpoint created by Databricks.
+* `gcp_endpoint.psc_endpoint_uri` - (GCP only) URI of the Private Service Connect endpoint created by Databricks.
 
 ## Import
 

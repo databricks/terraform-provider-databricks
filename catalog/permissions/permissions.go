@@ -139,6 +139,7 @@ var Mappings = SecurableMapping{
 	"pipeline":               catalog.SecurableType("pipeline"),
 	"recipient":              catalog.SecurableType("recipient"),
 	"schema":                 catalog.SecurableType("schema"),
+	"secret":                 catalog.SecurableType("secret"),
 	"share":                  catalog.SecurableType("share"),
 	"storage_credential":     catalog.SecurableType("storage_credential"),
 	"table":                  catalog.SecurableType("table"),

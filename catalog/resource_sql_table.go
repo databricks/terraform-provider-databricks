@@ -94,6 +94,13 @@ func (ti SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Cus
 	s.SchemaPath("column", "type").SetCustomSuppressDiff(func(k, old, new string, d *schema.ResourceData) bool {
 		return getColumnType(old) == getColumnType(new)
 	})
+	s.SchemaPath("column", "nullable").SetCustomSuppressDiff(func(k, old, new string, d *schema.ResourceData) bool {
+		// A view column's nullability is derived from the view query, so the
+		// server-reported value regularly differs from the configured one (SELECT 1 AS
+		// id yields a NOT NULL column, while the schema default is nullable = true).
+		// Nothing can be applied to reconcile that, so suppress the diff for views.
+		return d.Get("table_type") == "VIEW"
+	})
 	common.NamespaceCustomizeSchema(s)
 	return s
 }
@@ -232,7 +239,9 @@ func (ti *SqlTableInfo) serializeColumnInfo(col SqlColumnInfo) string {
 	var colType = col.getColumnType()
 
 	notNull := ""
-	if !col.Nullable {
+	// Views don't support NOT NULL column constraints: a view column's nullability is
+	// derived from the view query, so CREATE VIEW ... (col NOT NULL) is rejected.
+	if !col.Nullable && ti.TableType != "VIEW" {
 		notNull = " NOT NULL"
 	}
 
@@ -359,10 +368,56 @@ func (ti *SqlTableInfo) getWrappedClusterKeys() string {
 }
 
 func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, statements []string, typestring string) []string {
+	if ti.TableType == "VIEW" {
+		// A view's columns are derived from its query. They cannot be added, dropped,
+		// renamed, or have their nullability changed independently of that query, and
+		// ALTER VIEW has no ADD COLUMN, DROP COLUMN, RENAME COLUMN or ALTER COLUMN
+		// clause: Databricks rejects all of them with a PARSE_SYNTAX_ERROR. The only
+		// column attribute the provider can set on a view is the comment.
+		return ti.viewColumnCommentStatements(oldti, statements)
+	}
 	if len(ti.ColumnInfos) != len(oldti.ColumnInfos) {
 		statements = ti.addOrRemoveColumnStatements(oldti, statements, typestring)
 	} else {
 		statements = ti.alterExistingColumnStatements(oldti, statements, typestring)
+	}
+	return statements
+}
+
+// viewColumnCommentStatements returns the COMMENT ON COLUMN statements that bring a
+// view's column comments to the configured state.
+//
+// Columns are matched by name rather than by position: a view's column list comes from
+// the server, so a query change can reorder it without the configuration having said
+// anything about it.
+//
+// When the view definition changed, the ALTER VIEW ... AS queued earlier in diff() drops
+// every column comment as a side effect, so the configured comments are re-emitted
+// unconditionally instead of being compared against the pre-ALTER state. Without this the
+// comments silently disappear on any apply that edits the query, and only come back on
+// the following apply.
+func (ti *SqlTableInfo) viewColumnCommentStatements(oldti *SqlTableInfo, statements []string) []string {
+	viewDefinitionChanged := ti.ViewDefinition != oldti.ViewDefinition
+
+	oldComments := make(map[string]string, len(oldti.ColumnInfos))
+	for _, oldCi := range oldti.ColumnInfos {
+		oldComments[oldCi.Name] = oldCi.Comment
+	}
+
+	for _, ci := range ti.ColumnInfos {
+		oldComment, exists := oldComments[ci.Name]
+		if viewDefinitionChanged {
+			// The comment is about to be dropped by ALTER VIEW ... AS, so the only
+			// thing worth emitting is a non-empty configured comment.
+			if ci.Comment == "" {
+				continue
+			}
+		} else if !exists || ci.Comment == oldComment {
+			// Nothing to do, or the column is not part of the view: commenting on a
+			// column that does not exist would fail the whole apply.
+			continue
+		}
+		statements = append(statements, fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'", ti.SQLFullName(), ci.getWrappedColumnName(), parseComment(ci.Comment)))
 	}
 	return statements
 }
@@ -414,14 +469,7 @@ func (ti *SqlTableInfo) alterExistingColumnStatements(oldti *SqlTableInfo, state
 			statements = append(statements, fmt.Sprintf("ALTER %s %s RENAME COLUMN %s to %s", typestring, ti.SQLFullName(), oldCi.getWrappedColumnName(), ci.getWrappedColumnName()))
 		}
 		if ci.Comment != oldCi.Comment {
-			if ti.TableType == "VIEW" {
-				// ALTER VIEW ... ALTER COLUMN ... COMMENT is not valid Databricks SQL
-				// (it fails with PARSE_SYNTAX_ERROR). COMMENT ON COLUMN updates a view
-				// column comment in place.
-				statements = append(statements, fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'", ti.SQLFullName(), ci.getWrappedColumnName(), parseComment(ci.Comment)))
-			} else {
-				statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s COMMENT '%s'", typestring, ti.SQLFullName(), ci.getWrappedColumnName(), parseComment(ci.Comment)))
-			}
+			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s COMMENT '%s'", typestring, ti.SQLFullName(), ci.getWrappedColumnName(), parseComment(ci.Comment)))
 		}
 		if ci.Nullable != oldCi.Nullable {
 			var keyWord string

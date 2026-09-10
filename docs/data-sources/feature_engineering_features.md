@@ -27,14 +27,10 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `created_by` (string) - Username of the feature creator
 * `description` (string) - The description of the feature
 * `entities` (list of EntityColumn) - The entity columns for the feature, used as aggregation keys and for query-time lookup
-* `filter_condition` (string, deprecated) - Deprecated: Use DeltaTableSource.filter_condition or KafkaSource.filter_condition instead. Kept for backwards compatibility.
-  The filter condition applied to the source data before aggregation
 * `full_name` (string) - The full three-part name (catalog, schema, name) of the feature. This is the
   feature's resource identifier; the catalog_name, schema_name, and name fields
   below are OUTPUT_ONLY decomposed views of this value
 * `function` (Function) - The function by which the feature is computed
-* `inputs` (list of string, deprecated) - Deprecated: Use AggregationFunction.inputs instead. Kept for backwards compatibility.
-  The input columns from which the feature is computed
 * `lineage_context` (LineageContext) - Lineage context information for this feature.
   WARNING: This field is primarily intended for internal use by Databricks systems and
   is automatically populated when features are created through Databricks notebooks or jobs.
@@ -43,8 +39,6 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `name` (string) - Name of the feature, extracted from the full three-part name (catalog.schema.name)
 * `schema_name` (string) - Name of parent schema relative to its parent catalog
 * `source` (DataSource) - The data source of the feature
-* `time_window` (TimeWindow, deprecated) - Deprecated: Use Function.aggregation_function.time_window instead. Kept for backwards compatibility.
-  The time window in which the feature is computed
 * `timeseries_column` (TimeseriesColumn) - Column recording time, used for point-in-time joins, backfills, and aggregations
 
 ### AggregationFunction
@@ -82,16 +76,8 @@ This data source exports a single attribute, `features`. It is a list of resourc
   Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
-### ColumnIdentifier
-* `variant_expr_path` (string) - String representation of the column name using dot-prefixed path notation. For nested fields, the leaf value is what will be present in materialized tables
-  and expected to match at query time. For example, the leaf node of value.trip_details.location_details.pickup_zip is pickup_zip
-
 ### ColumnSelection
 * `column` (string) - Column name from source to select as the feature value
-
-### ContinuousWindow
-* `offset` (string) - The offset of the continuous window (must be non-positive)
-* `window_duration` (string) - The duration of the continuous window (must be positive)
 
 ### CountFunction
 * `input` (string) - The input column from which the count is computed. For Kafka sources, use dot-prefixed path
@@ -107,6 +93,8 @@ This data source exports a single attribute, `features`. It is a list of resourc
 ### DataSource
 * `delta_table_source` (DeltaTableSource) - A Delta table data source
 * `kafka_source` (KafkaSource) - A Kafka stream data source
+* `lateness` (SourceLateness) - Completeness timing for this Feature's use of the source. This configuration is part of the
+  Feature definition; it does not modify the underlying table or stream
 * `request_source` (RequestSource) - A request-time data source
 * `stream_source` (StreamSource) - A Stream data source
 
@@ -114,12 +102,8 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `dataframe_schema` (string) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
   Required if transformation_sql is specified.
   Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
-* `entity_columns` (list of string, deprecated) - Deprecated: Use Feature.entity instead. Kept for backwards compatibility.
-  The entity columns of the Delta table
 * `filter_condition` (string) - Single WHERE clause to filter delta table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections
 * `full_name` (string) - The full three-part (catalog, schema, table) name of the Delta table
-* `timeseries_column` (string, deprecated) - Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility.
-  The timeseries column of the Delta table
 * `transformation_sql` (string) - A single SQL SELECT expression applied after filter_condition.
   Should contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
   If transformation_sql is not provided, all columns of the delta table are present in the DataSource dataframe
@@ -154,14 +138,6 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `aggregation_function` (AggregationFunction) - An aggregation function applied over a time window
 * `column_selection` (ColumnSelection) - Selects the latest value of a single column in a data source
 * `custom_udf` (CustomUdf) - Applies a registered Unity Catalog function row-wise to source columns
-* `extra_parameters` (list of FunctionExtraParameter, deprecated) - Deprecated: Use the function oneof with AggregationFunction instead. Kept for backwards compatibility.
-  Extra parameters for parameterized functions
-* `function_type` (string, deprecated) - Deprecated: Use the function oneof with AggregationFunction instead. Kept for backwards compatibility.
-  The type of the function. Possible values are: `APPROX_COUNT_DISTINCT`, `APPROX_PERCENTILE`, `AVG`, `COUNT`, `FIRST`, `LAST`, `MAX`, `MIN`, `STDDEV_POP`, `STDDEV_SAMP`, `SUM`, `VAR_POP`, `VAR_SAMP`
-
-### FunctionExtraParameter
-* `key` (string) - The name of the parameter
-* `value` (string) - The value of the parameter
 
 ### InputBinding
 * `column` (string) - Source column whose value is passed for this parameter at execution time
@@ -172,12 +148,8 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `job_run_id` (integer) - The job run ID where this API was invoked
 
 ### KafkaSource
-* `entity_column_identifiers` (list of ColumnIdentifier, deprecated) - Deprecated: Use Feature.entity instead. Kept for backwards compatibility.
-  The entity column identifiers of the Kafka source
 * `filter_condition` (string) - The filter condition applied to the source data before aggregation
 * `name` (string) - Name of the Kafka source, used to identify it. This is used to look up the corresponding KafkaConfig object. Can be distinct from topic name
-* `timeseries_column_identifier` (ColumnIdentifier, deprecated) - Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility.
-  The timeseries column identifier of the Kafka source
 
 ### LastDistinctFunction
 * `input` (string) - The input column from which the last N distinct values are returned
@@ -218,9 +190,22 @@ This data source exports a single attribute, `features`. It is a list of resourc
   (aggregate over the entity's entire history)
 
 ### SlidingWindow
+* `delay` (string) - Non-negative analytic lag that evaluates the window this far in the past. Use this for timing
+  variations unrelated to source lateness, such as a 30-day count as of one week ago. If unset,
+  the analytic lag is zero. It composes with source.lateness when both are set
+* `offset` (string) - Non-negative phase shift from the default midnight UTC alignment. For example, offset=22h on
+  a 24h slide produces boundaries at 22:00 UTC (17:00 New York in standard time) instead of
+  midnight UTC. If unset, the offset is zero. Must be shorter than slide_duration (and therefore
+  window_duration)
 * `slide_duration` (string) - The slide duration (interval by which windows advance, must be positive and less than duration)
 * `window_duration` (string) - The duration of the sliding window. Must be positive when set; absent means lifetime
   (aggregate over the entity's entire history)
+
+### SourceLateness
+* `settling_delay` (string) - Non-negative time to wait after a window ends before treating its source data as complete.
+  Training shifts the eligible evaluation time backwards by this duration so it does not join
+  data that would still have been settling online. Materialization waits for the duration to
+  elapse before publishing the window. If unset, source data is considered settled immediately
 
 ### StddevPopFunction
 * `input` (string) - The input column from which the population standard deviation is computed. For Kafka sources,
@@ -247,10 +232,16 @@ This data source exports a single attribute, `features`. It is a list of resourc
   compatibility but is deprecated; migrate to dot notation
 
 ### TimeWindow
-* `continuous` (ContinuousWindow, deprecated)
 * `rolling` (RollingWindow)
 * `sawtooth` (SawtoothWindow) - A sawtooth window served via the hybrid batch + streaming path
 * `sliding` (SlidingWindow)
+* `start_time` (string) - Earliest event-time boundary at which the Feature may emit an output. This gates outputs, not
+  the historical inputs read by a window. For example, a 365-day window with
+  start_time=2026-01-01 begins emitting partial-window values on that date instead of waiting
+  for 365 days of data; a lifetime window produces no output before start_time. If unset,
+  tumbling and fixed-duration sliding windows first emit at an offset-aligned boundary after a
+  full window can be formed. If unset, lifetime sliding windows and rolling windows emit as soon as
+  eligible source data exists
 * `tumbling` (TumblingWindow)
 
 ### TimeseriesColumn
@@ -262,6 +253,12 @@ This data source exports a single attribute, `features`. It is a list of resourc
   backwards compatibility but is deprecated; migrate to dot notation
 
 ### TumblingWindow
+* `delay` (string) - Non-negative analytic lag that evaluates the window this far in the past. Use this for timing
+  variations unrelated to source lateness, such as a 30-day count as of one week ago. If unset,
+  the analytic lag is zero. It composes with source.lateness when both are set
+* `offset` (string) - Non-negative phase shift from the default midnight UTC alignment. For example, offset=22h on
+  a 24h window produces boundaries at 22:00 UTC (17:00 New York in standard time) instead of
+  midnight UTC. If unset, the offset is zero. Must be shorter than window_duration
 * `window_duration` (string) - The duration of each tumbling window (non-overlapping, fixed-duration windows)
 
 ### VarPopFunction

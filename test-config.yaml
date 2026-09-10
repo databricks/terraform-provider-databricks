@@ -22,6 +22,9 @@ ignored_tests:
       test_name: TestAccEntitlementsSomeTrueSomeFalse/service_principal
       comment: Failures due to read-after-write inconsistency in the SCIM API; tracked internally.
     - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsSomeTrueSomeFalse/group
+      comment: Failures due to read-after-write inconsistency in the SCIM API; tracked internally.
+    - package: github.com/databricks/terraform-provider-databricks/scim
       test_name: TestAccEntitlementsRemoveExisting
       comment: Failures due to read-after-write inconsistency in the SCIM API; tracked internally.
     - package: github.com/databricks/terraform-provider-databricks/scim

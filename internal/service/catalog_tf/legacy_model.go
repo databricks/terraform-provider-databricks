@@ -3794,10 +3794,10 @@ func (m *ColumnInfo_SdkV2) SetMask(ctx context.Context, v ColumnMask_SdkV2) {
 type ColumnMask_SdkV2 struct {
 	// The full name of the column mask SQL UDF.
 	FunctionName types.String `tfsdk:"function_name"`
-	// The list of additional table columns or literals to be passed as
-	// additional arguments to a column mask function. This is the replacement
-	// of the deprecated using_column_names field and carries information about
-	// the types (alias or constant) of the arguments to the mask function.
+	// The list of table columns or literals to be passed as additional
+	// arguments to a column mask function, carrying the type (column reference
+	// vs constant literal) of each argument. Deprecated: use using_column_names
+	// instead.
 	UsingArguments types.List `tfsdk:"using_arguments"`
 	// The list of additional table columns to be passed as input to the column
 	// mask function. The first arg of the mask function should be of the type
@@ -4143,6 +4143,61 @@ func (m ColumnRelationship_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"source": types.StringType,
 			"target": types.StringType,
+		},
+	}
+}
+
+// Extracts the value of a column-level tag: get_column_tag_value(col,
+// "tagKey").
+type ColumnTagValueExtraction_SdkV2 struct {
+	// The alias from MATCH COLUMNS that identifies the column.
+	ColumnAlias types.String `tfsdk:"column_alias"`
+	// 1024 matches the max_length on FunctionArgument.constant above.
+	TagKey types.String `tfsdk:"tag_key"`
+}
+
+func (to *ColumnTagValueExtraction_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ColumnTagValueExtraction_SdkV2) {
+}
+
+func (to *ColumnTagValueExtraction_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ColumnTagValueExtraction_SdkV2) {
+}
+
+func (m ColumnTagValueExtraction_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column_alias"] = attrs["column_alias"].SetRequired()
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ColumnTagValueExtraction.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ColumnTagValueExtraction_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ColumnTagValueExtraction_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ColumnTagValueExtraction_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"column_alias": m.ColumnAlias,
+			"tag_key":      m.TagKey,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ColumnTagValueExtraction_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"column_alias": types.StringType,
+			"tag_key":      types.StringType,
 		},
 	}
 }
@@ -15876,22 +15931,143 @@ func (m *ForeignKeyConstraint_SdkV2) SetParentColumns(ctx context.Context, v []t
 	m.ParentColumns = types.ListValueMust(t, vs)
 }
 
+// An expression that is evaluated at query time against per-request context.
+// New variants (e.g., identity attributes) are added as additional oneof cases.
+type FunctionArgExpression_SdkV2 struct {
+	// An expression that introspects tags at query time.
+	TagIntrospection types.List `tfsdk:"tag_introspection"`
+}
+
+func (to *FunctionArgExpression_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FunctionArgExpression_SdkV2) {
+	if !from.TagIntrospection.IsNull() && !from.TagIntrospection.IsUnknown() {
+		if toTagIntrospection, ok := to.GetTagIntrospection(ctx); ok {
+			if fromTagIntrospection, ok := from.GetTagIntrospection(ctx); ok {
+				// Recursively sync the fields of TagIntrospection
+				toTagIntrospection.SyncFieldsDuringCreateOrUpdate(ctx, fromTagIntrospection)
+				to.SetTagIntrospection(ctx, toTagIntrospection)
+			}
+		}
+	}
+}
+
+func (to *FunctionArgExpression_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FunctionArgExpression_SdkV2) {
+	if !from.TagIntrospection.IsNull() && !from.TagIntrospection.IsUnknown() {
+		if toTagIntrospection, ok := to.GetTagIntrospection(ctx); ok {
+			if fromTagIntrospection, ok := from.GetTagIntrospection(ctx); ok {
+				toTagIntrospection.SyncFieldsDuringRead(ctx, fromTagIntrospection)
+				to.SetTagIntrospection(ctx, toTagIntrospection)
+			}
+		}
+	}
+}
+
+func (m FunctionArgExpression_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_introspection"] = attrs["tag_introspection"].SetOptional()
+	attrs["tag_introspection"] = attrs["tag_introspection"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FunctionArgExpression.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m FunctionArgExpression_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"tag_introspection": reflect.TypeOf(TagIntrospectionExpression_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FunctionArgExpression_SdkV2
+// only implements ToObjectValue() and Type().
+func (m FunctionArgExpression_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"tag_introspection": m.TagIntrospection,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m FunctionArgExpression_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"tag_introspection": basetypes.ListType{
+				ElemType: TagIntrospectionExpression_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetTagIntrospection returns the value of the TagIntrospection field in FunctionArgExpression_SdkV2 as
+// a TagIntrospectionExpression_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *FunctionArgExpression_SdkV2) GetTagIntrospection(ctx context.Context) (TagIntrospectionExpression_SdkV2, bool) {
+	var e TagIntrospectionExpression_SdkV2
+	if m.TagIntrospection.IsNull() || m.TagIntrospection.IsUnknown() {
+		return e, false
+	}
+	var v []TagIntrospectionExpression_SdkV2
+	d := m.TagIntrospection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTagIntrospection sets the value of the TagIntrospection field in FunctionArgExpression_SdkV2.
+func (m *FunctionArgExpression_SdkV2) SetTagIntrospection(ctx context.Context, v TagIntrospectionExpression_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tag_introspection"]
+	m.TagIntrospection = types.ListValueMust(t, vs)
+}
+
 type FunctionArgument_SdkV2 struct {
 	// The alias of a matched column.
 	Alias types.String `tfsdk:"alias"`
 	// A constant literal.
 	Constant types.String `tfsdk:"constant"`
+	// An expression evaluated at query time. Wraps per-request expression
+	// variants (e.g., tag introspection) so new variants can be added without
+	// extending the FunctionArgument oneof.
+	FunctionArgExpression types.List `tfsdk:"function_arg_expression"`
 }
 
 func (to *FunctionArgument_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FunctionArgument_SdkV2) {
+	if !from.FunctionArgExpression.IsNull() && !from.FunctionArgExpression.IsUnknown() {
+		if toFunctionArgExpression, ok := to.GetFunctionArgExpression(ctx); ok {
+			if fromFunctionArgExpression, ok := from.GetFunctionArgExpression(ctx); ok {
+				// Recursively sync the fields of FunctionArgExpression
+				toFunctionArgExpression.SyncFieldsDuringCreateOrUpdate(ctx, fromFunctionArgExpression)
+				to.SetFunctionArgExpression(ctx, toFunctionArgExpression)
+			}
+		}
+	}
 }
 
 func (to *FunctionArgument_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FunctionArgument_SdkV2) {
+	if !from.FunctionArgExpression.IsNull() && !from.FunctionArgExpression.IsUnknown() {
+		if toFunctionArgExpression, ok := to.GetFunctionArgExpression(ctx); ok {
+			if fromFunctionArgExpression, ok := from.GetFunctionArgExpression(ctx); ok {
+				toFunctionArgExpression.SyncFieldsDuringRead(ctx, fromFunctionArgExpression)
+				to.SetFunctionArgExpression(ctx, toFunctionArgExpression)
+			}
+		}
+	}
 }
 
 func (m FunctionArgument_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alias"] = attrs["alias"].SetOptional()
 	attrs["constant"] = attrs["constant"].SetOptional()
+	attrs["function_arg_expression"] = attrs["function_arg_expression"].SetOptional()
+	attrs["function_arg_expression"] = attrs["function_arg_expression"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -15904,7 +16080,9 @@ func (m FunctionArgument_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m FunctionArgument_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"function_arg_expression": reflect.TypeOf(FunctionArgExpression_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -15914,8 +16092,9 @@ func (m FunctionArgument_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"alias":    m.Alias,
-			"constant": m.Constant,
+			"alias":                   m.Alias,
+			"constant":                m.Constant,
+			"function_arg_expression": m.FunctionArgExpression,
 		})
 }
 
@@ -15925,8 +16104,37 @@ func (m FunctionArgument_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"alias":    types.StringType,
 			"constant": types.StringType,
+			"function_arg_expression": basetypes.ListType{
+				ElemType: FunctionArgExpression_SdkV2{}.Type(ctx),
+			},
 		},
 	}
+}
+
+// GetFunctionArgExpression returns the value of the FunctionArgExpression field in FunctionArgument_SdkV2 as
+// a FunctionArgExpression_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *FunctionArgument_SdkV2) GetFunctionArgExpression(ctx context.Context) (FunctionArgExpression_SdkV2, bool) {
+	var e FunctionArgExpression_SdkV2
+	if m.FunctionArgExpression.IsNull() || m.FunctionArgExpression.IsUnknown() {
+		return e, false
+	}
+	var v []FunctionArgExpression_SdkV2
+	d := m.FunctionArgExpression.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFunctionArgExpression sets the value of the FunctionArgExpression field in FunctionArgument_SdkV2.
+func (m *FunctionArgument_SdkV2) SetFunctionArgExpression(ctx context.Context, v FunctionArgExpression_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["function_arg_expression"]
+	m.FunctionArgExpression = types.ListValueMust(t, vs)
 }
 
 // A function that is dependent on a SQL object.
@@ -38112,10 +38320,10 @@ func (m *TableInfo_SdkV2) SetViewDependencies(ctx context.Context, v DependencyL
 type TableRowFilter_SdkV2 struct {
 	// The full name of the row filter SQL UDF.
 	FunctionName types.String `tfsdk:"function_name"`
-	// The list of additional table columns or literals to be passed as
-	// additional arguments to a row filter function. This is the replacement of
-	// the deprecated input_column_names field and carries information about the
-	// types (alias or constant) of the arguments to the filter function.
+	// The list of table columns or literals to be passed as additional
+	// arguments to a row filter function, carrying the type (column reference
+	// vs constant literal) of each argument. Deprecated: use input_column_names
+	// instead.
 	InputArguments types.List `tfsdk:"input_arguments"`
 	// The list of table columns to be passed as input to the row filter
 	// function. The column types should match the types of the filter function
@@ -38374,6 +38582,155 @@ func (m *TableSummary_SdkV2) SetSecurableKindManifest(ctx context.Context, v Sec
 	m.SecurableKindManifest = types.ListValueMust(t, vs)
 }
 
+// An expression that introspects tags at query time.
+type TagIntrospectionExpression_SdkV2 struct {
+	// Extracts the value of a column-level tag.
+	ColumnTagValue types.List `tfsdk:"column_tag_value"`
+	// Extracts the value of a securable-level tag.
+	TagValue types.List `tfsdk:"tag_value"`
+}
+
+func (to *TagIntrospectionExpression_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TagIntrospectionExpression_SdkV2) {
+	if !from.ColumnTagValue.IsNull() && !from.ColumnTagValue.IsUnknown() {
+		if toColumnTagValue, ok := to.GetColumnTagValue(ctx); ok {
+			if fromColumnTagValue, ok := from.GetColumnTagValue(ctx); ok {
+				// Recursively sync the fields of ColumnTagValue
+				toColumnTagValue.SyncFieldsDuringCreateOrUpdate(ctx, fromColumnTagValue)
+				to.SetColumnTagValue(ctx, toColumnTagValue)
+			}
+		}
+	}
+	if !from.TagValue.IsNull() && !from.TagValue.IsUnknown() {
+		if toTagValue, ok := to.GetTagValue(ctx); ok {
+			if fromTagValue, ok := from.GetTagValue(ctx); ok {
+				// Recursively sync the fields of TagValue
+				toTagValue.SyncFieldsDuringCreateOrUpdate(ctx, fromTagValue)
+				to.SetTagValue(ctx, toTagValue)
+			}
+		}
+	}
+}
+
+func (to *TagIntrospectionExpression_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TagIntrospectionExpression_SdkV2) {
+	if !from.ColumnTagValue.IsNull() && !from.ColumnTagValue.IsUnknown() {
+		if toColumnTagValue, ok := to.GetColumnTagValue(ctx); ok {
+			if fromColumnTagValue, ok := from.GetColumnTagValue(ctx); ok {
+				toColumnTagValue.SyncFieldsDuringRead(ctx, fromColumnTagValue)
+				to.SetColumnTagValue(ctx, toColumnTagValue)
+			}
+		}
+	}
+	if !from.TagValue.IsNull() && !from.TagValue.IsUnknown() {
+		if toTagValue, ok := to.GetTagValue(ctx); ok {
+			if fromTagValue, ok := from.GetTagValue(ctx); ok {
+				toTagValue.SyncFieldsDuringRead(ctx, fromTagValue)
+				to.SetTagValue(ctx, toTagValue)
+			}
+		}
+	}
+}
+
+func (m TagIntrospectionExpression_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column_tag_value"] = attrs["column_tag_value"].SetOptional()
+	attrs["column_tag_value"] = attrs["column_tag_value"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["tag_value"] = attrs["tag_value"].SetOptional()
+	attrs["tag_value"] = attrs["tag_value"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TagIntrospectionExpression.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TagIntrospectionExpression_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"column_tag_value": reflect.TypeOf(ColumnTagValueExtraction_SdkV2{}),
+		"tag_value":        reflect.TypeOf(TagValueExtraction_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TagIntrospectionExpression_SdkV2
+// only implements ToObjectValue() and Type().
+func (m TagIntrospectionExpression_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"column_tag_value": m.ColumnTagValue,
+			"tag_value":        m.TagValue,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TagIntrospectionExpression_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"column_tag_value": basetypes.ListType{
+				ElemType: ColumnTagValueExtraction_SdkV2{}.Type(ctx),
+			},
+			"tag_value": basetypes.ListType{
+				ElemType: TagValueExtraction_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetColumnTagValue returns the value of the ColumnTagValue field in TagIntrospectionExpression_SdkV2 as
+// a ColumnTagValueExtraction_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TagIntrospectionExpression_SdkV2) GetColumnTagValue(ctx context.Context) (ColumnTagValueExtraction_SdkV2, bool) {
+	var e ColumnTagValueExtraction_SdkV2
+	if m.ColumnTagValue.IsNull() || m.ColumnTagValue.IsUnknown() {
+		return e, false
+	}
+	var v []ColumnTagValueExtraction_SdkV2
+	d := m.ColumnTagValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetColumnTagValue sets the value of the ColumnTagValue field in TagIntrospectionExpression_SdkV2.
+func (m *TagIntrospectionExpression_SdkV2) SetColumnTagValue(ctx context.Context, v ColumnTagValueExtraction_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["column_tag_value"]
+	m.ColumnTagValue = types.ListValueMust(t, vs)
+}
+
+// GetTagValue returns the value of the TagValue field in TagIntrospectionExpression_SdkV2 as
+// a TagValueExtraction_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TagIntrospectionExpression_SdkV2) GetTagValue(ctx context.Context) (TagValueExtraction_SdkV2, bool) {
+	var e TagValueExtraction_SdkV2
+	if m.TagValue.IsNull() || m.TagValue.IsUnknown() {
+		return e, false
+	}
+	var v []TagValueExtraction_SdkV2
+	d := m.TagValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTagValue sets the value of the TagValue field in TagIntrospectionExpression_SdkV2.
+func (m *TagIntrospectionExpression_SdkV2) SetTagValue(ctx context.Context, v TagValueExtraction_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tag_value"]
+	m.TagValue = types.ListValueMust(t, vs)
+}
+
 type TagKeyValue_SdkV2 struct {
 	// name of the tag
 	Key types.String `tfsdk:"key"`
@@ -38423,6 +38780,55 @@ func (m TagKeyValue_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"key":   types.StringType,
 			"value": types.StringType,
+		},
+	}
+}
+
+// Extracts the value of a securable-level tag: get_tag_value("tagKey").
+type TagValueExtraction_SdkV2 struct {
+	// 1024 matches the max_length on FunctionArgument.constant above.
+	TagKey types.String `tfsdk:"tag_key"`
+}
+
+func (to *TagValueExtraction_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TagValueExtraction_SdkV2) {
+}
+
+func (to *TagValueExtraction_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TagValueExtraction_SdkV2) {
+}
+
+func (m TagValueExtraction_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TagValueExtraction.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TagValueExtraction_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TagValueExtraction_SdkV2
+// only implements ToObjectValue() and Type().
+func (m TagValueExtraction_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"tag_key": m.TagKey,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TagValueExtraction_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"tag_key": types.StringType,
 		},
 	}
 }

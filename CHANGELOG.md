@@ -1,5 +1,27 @@
 # Version changelog
 
+## Release v1.131.0 (2026-09-07)
+
+### New Features and Improvements
+* Add data source for `databricks_account_iam_external_user_v2`.
+* Add data source for `databricks_account_iam_external_service_principal_v2`.
+* Add data source for `databricks_account_iam_external_group_v2`.
+* Add data source for `databricks_workspace_iam_external_user_v2`.
+* Add data source for `databricks_workspace_iam_external_service_principal_v2`.
+* Add data source for `databricks_workspace_iam_external_group_v2`.
+* Add resource and data source for `databricks_postgres_snapshot_schedule`.
+
+
+## Release v1.130.0 (2026-08-31)
+
+### Bug Fixes
+* Default to a 600 second HTTP timeout for `databricks_repo` operations that run git commands inline (the clone on create and the branch/tag checkout on update), so larger repositories no longer fail with `request timed out after 1m5s of inactivity`. An explicitly configured `http_timeout_seconds` still takes precedence.
+
+### Exporter
+
+* Add support for Lakebase autoscaling resources ([#5965](https://github.com/databricks/terraform-provider-databricks/pull/5965)).
+
+
 ## Release v1.129.0 (2026-08-24)
 
 ### Exporter

@@ -30,8 +30,8 @@ func DataSourceDirectGroupMembers() datasource.DataSource {
 type DirectGroupMembersData struct {
 	WorkspaceIamV2 types.List `tfsdk:"direct_group_members"`
 	// The maximum number of members to return. The service may return fewer
-	// than this value. If not provided, defaults to 1000 (also the maximum
-	// allowed).
+	// than this value. If not provided, defaults to 1000, which is also the
+	// maximum allowed. Requests for more than the maximum are clamped to 1000.
 	PageSize           types.Int64  `tfsdk:"page_size"`
 	GroupId            types.Int64  `tfsdk:"group_id"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`

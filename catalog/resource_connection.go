@@ -3,6 +3,7 @@ package catalog
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -25,8 +26,22 @@ func suppressComputedFields(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
+// schemaParentFromFullName rebuilds a schema-level connection's parent
+// ("schemas/{catalog}.{schema}") from its 3-part full_name. A metastore-level
+// (L1) connection has a 1-part full_name and therefore no parent.
+func schemaParentFromFullName(fullName string) string {
+	parts := strings.Split(fullName, ".")
+	if len(parts) == 3 {
+		return "schemas/" + parts[0] + "." + parts[1]
+	}
+	return ""
+}
+
 type ConnectionSchemaStruct struct {
 	catalog.ConnectionInfo
+	// Parent schema for schema-level (L3) connections, in format
+	// "schemas/{catalog}.{schema}". Absent for metastore-level (L1) connections.
+	Parent string `json:"parent,omitempty"`
 	common.Namespace
 }
 
@@ -40,7 +55,7 @@ func ResourceConnection() common.Resource {
 			for _, v := range []string{"owner", "read_only"} {
 				common.CustomizeSchemaPath(m, v).SetComputed()
 			}
-			for _, v := range []string{"read_only", "properties", "comment", "connection_type"} {
+			for _, v := range []string{"read_only", "properties", "comment", "connection_type", "parent"} {
 				common.CustomizeSchemaPath(m, v).SetForceNew()
 			}
 			common.CustomizeSchemaPath(m, "options").SetSensitive().SetCustomSuppressDiff(suppressComputedFields)
@@ -48,7 +63,7 @@ func ResourceConnection() common.Resource {
 			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
-	pi := common.NewPairID("metastore_id", "name").Schema(
+	pi := common.NewPairID("metastore_id", "full_name").Schema(
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return s
 		})
@@ -81,7 +96,9 @@ func ResourceConnection() common.Resource {
 				}
 			}
 			d.Set("metastore_id", conn.MetastoreId)
-			pi.Pack(d)
+			// Address connections by full_name: for L3 it is catalog.schema.name, and for L1 it
+			// equals the name, so this preserves the existing metastore_id|name id for L1 (no migration).
+			d.SetId(conn.MetastoreId + "|" + conn.FullName)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -116,7 +133,12 @@ func ResourceConnection() common.Resource {
 					conn.Options[key] = element
 				}
 			}
-			return common.StructToData(conn, s, d)
+			if err := common.StructToData(conn, s, d); err != nil {
+				return err
+			}
+			// The API returns only full_name, not parent; rebuild the caller's parent from it so a
+			// schema-level connection round-trips without a spurious diff (empty for L1 connections).
+			return d.Set("parent", schemaParentFromFullName(conn.FullName))
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)

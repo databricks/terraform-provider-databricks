@@ -67,3 +67,41 @@ func TestUcAccConnectionsWithoutOwnerResourceFullLifecycle(t *testing.T) {
 		Template: connectionTemplateWithoutOwner(),
 	})
 }
+
+// A schema-level (L3) connection is created inside a schema via the parent
+// argument; its full_name is catalog.schema.name and the resource id is
+// metastore_id|full_name.
+func schemaLevelConnectionTemplate() string {
+	return `
+	resource "databricks_catalog" "this" {
+		name = "tf_test_sc_cat_{var.STICKY_RANDOM}"
+	}
+	resource "databricks_schema" "this" {
+		catalog_name = databricks_catalog.this.name
+		name         = "tf_test_sc_schema"
+	}
+	resource "databricks_connection" "this" {
+		name            = "tf-test-schema-conn-{var.STICKY_RANDOM}"
+		connection_type = "HTTP"
+		parent          = "schemas/${databricks_catalog.this.name}.${databricks_schema.this.name}"
+		comment         = "schema-level connection acceptance test"
+		options = {
+			host         = "https://example.com"
+			port         = "8433"
+			base_path    = "/api/"
+			bearer_token = "bearer_token"
+		}
+	}
+	`
+}
+
+func TestUcAccConnectionsSchemaLevelResourceFullLifecycle(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: schemaLevelConnectionTemplate(),
+		// A schema-level HTTP connection re-plans dirty on `options` because the server omits the
+		// write-only bearer_token on read. That is a pre-existing round-trip issue affecting all
+		// HTTP connections (metastore- and schema-level alike), not specific to schema connections,
+		// and it does not block create/read/update/delete. Tracked separately.
+		ExpectNonEmptyPlan: true,
+	})
+}

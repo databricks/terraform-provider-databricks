@@ -125,11 +125,29 @@ resource "databricks_connection" "pbi" {
 }
 ```
 
+Create a schema-level connection inside a Unity Catalog schema by setting `parent`
+
+```hcl
+resource "databricks_connection" "schema_scoped" {
+  name            = "my_conn"
+  connection_type = "HTTP"
+  parent          = "schemas/main.default"
+  comment         = "This is a schema-level connection"
+  options = {
+    host         = "https://example.com"
+    port         = "8433"
+    base_path    = "/api/"
+    bearer_token = "bearer_token"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 - `name` - (Required) Name of the connection.
+- `parent` - (Optional) Parent schema of a schema-level connection, in the format `schemas/{catalog}.{schema}`. When set, the connection is created inside that schema and its `full_name` becomes `{catalog}.{schema}.{name}`; when omitted, the connection is metastore-level. Change forces creation of a new resource.
 - `connection_type` - (Required) The type of connection. Possible values are: `BIGQUERY`, `CONFLUENCE`, `DATABRICKS`, `GA4_RAW_DATA`, `GITHUB`, `GLUE`, `HIVE_METASTORE`, `HTTP`, `HUBSPOT`, `META_MARKETING`, `MYSQL`, `ORACLE`, `OUTLOOK`, `POSTGRESQL`, `POWER_BI`, `REDSHIFT`, `SALESFORCE`, `SALESFORCE_DATA_CLOUD`, `SERVICENOW`, `SMARTSHEET`, `SNOWFLAKE`, `SQLDW`, `SQLSERVER`, `TERADATA`, `WORKDAY_RAAS`, or `ZENDESK`. For an up-to-date list of connection types and required options, see the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources). Change forces creation of a new resource.
 - `options` - (Required) A map of key-value properties attached to the securable. The required keys depend on the connection type, e.g. `host`, `port`, `user`, `password`, `authorization_endpoint`, `client_id`, `client_secret`, or `GoogleServiceAccountKeyJson`. Please consult the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources) for the required options. This field is sensitive.
 - `comment` - (Optional) User-provided free-form text description. Change forces creation of a new resource.

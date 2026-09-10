@@ -514,3 +514,68 @@ func TestConnectionDelete_Error(t *testing.T) {
 		ID:       "abc|testConnectionName",
 	}.ExpectError(t, "Something went wrong")
 }
+
+// schemaParentFromFullName underpins the read round-trip for schema-level (L3)
+// connections: the API returns only full_name, so the resource rebuilds the
+// user-supplied parent from it. An L1 connection has a 1-part full_name and no parent.
+func TestSchemaParentFromFullName(t *testing.T) {
+	assert.Equal(t, "", schemaParentFromFullName("my_conn"))
+	assert.Equal(t, "schemas/main.default", schemaParentFromFullName("main.default.my_conn"))
+}
+
+func TestConnectionsCreate_SchemaLevel(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.1/unity-catalog/connections",
+				ExpectedRequest: catalog.CreateConnection{
+					Name:           "my_conn",
+					ConnectionType: catalog.ConnectionType("HTTP"),
+					Parent:         "schemas/main.default",
+					Options: map[string]string{
+						"host": "test.com",
+					},
+				},
+				Response: catalog.ConnectionInfo{
+					Name:           "my_conn",
+					ConnectionType: catalog.ConnectionType("HTTP"),
+					FullName:       "main.default.my_conn",
+					MetastoreId:    "abc",
+					Options: map[string]string{
+						"host": "test.com",
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/connections/main.default.my_conn?",
+				Response: catalog.ConnectionInfo{
+					Name:           "my_conn",
+					ConnectionType: catalog.ConnectionType("HTTP"),
+					FullName:       "main.default.my_conn",
+					MetastoreId:    "abc",
+					Options: map[string]string{
+						"host": "test.com",
+					},
+				},
+			},
+		},
+		Resource: ResourceConnection(),
+		Create:   true,
+		HCL: `
+		name = "my_conn"
+		connection_type = "HTTP"
+		parent = "schemas/main.default"
+		options = {
+			host = "test.com"
+		}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	// L3 identity is metastore_id|full_name, and parent round-trips from full_name.
+	assert.Equal(t, "abc|main.default.my_conn", d.Id())
+	assert.Equal(t, "my_conn", d.Get("name"))
+	assert.Equal(t, "schemas/main.default", d.Get("parent"))
+	assert.Equal(t, "main.default.my_conn", d.Get("full_name"))
+}

@@ -109,6 +109,12 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 
 // MaterializedFeature extends the main model with additional fields.
 type MaterializedFeature struct {
+	// The ID of the budget policy used to attribute the serverless compute cost
+	// of this materialization. If not specified, a default budget policy may be
+	// applied.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+
+	CronSchedule types.String `tfsdk:"cron_schedule"`
 	// A cron-based schedule trigger for the materialization pipeline.
 	CronScheduleTrigger types.Object `tfsdk:"cron_schedule_trigger"`
 	// The full name of the feature in Unity Catalog.
@@ -119,6 +125,9 @@ type MaterializedFeature struct {
 	// The timestamp when the pipeline last ran and updated the materialized
 	// feature values. If the pipeline has not run yet, this field will be null.
 	LastMaterializationTime types.String `tfsdk:"last_materialization_time"`
+	// Name of the latest backfill operation on this materialized feature.
+	// Format: operations/{operation_id}.
+	LatestBackfillOperation types.String `tfsdk:"latest_backfill_operation"`
 	// Server-assigned unique identifier for the materialized feature.
 	MaterializedFeatureId types.String `tfsdk:"materialized_feature_id"`
 	// Destination for writing feature values to an offline Delta table.
@@ -137,7 +146,17 @@ type MaterializedFeature struct {
 	// materialized feature (Delta table or Lakebase table). Output only.
 	TableName types.String `tfsdk:"table_name"`
 	// A trigger that fires when the upstream source table changes.
-	TableTrigger   types.Object `tfsdk:"table_trigger"`
+	TableTrigger types.Object `tfsdk:"table_trigger"`
+	// Custom tags to associate with this materialization. They are applied to
+	// the materialization job (for batch features) or pipeline (for streaming
+	// features) and forwarded to the underlying compute as cluster tags, so
+	// materialization cost can be attributed in the billing system tables.
+	// These tags apply only to the materialization compute; they are not
+	// applied to the Unity Catalog Feature resource itself, whose tags are
+	// managed separately through the Unity Catalog tagging API. A maximum of 25
+	// tags is supported; keys and values are subject to the same limitations as
+	// cluster tags.
+	Tags           types.Map    `tfsdk:"tags"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
@@ -155,6 +174,7 @@ func (m MaterializedFeature) GetComplexFieldTypes(ctx context.Context) map[strin
 		"online_store_config":   reflect.TypeOf(ml_tf.OnlineStoreConfig{}),
 		"streaming_mode":        reflect.TypeOf(ml_tf.StreamingMode{}),
 		"table_trigger":         reflect.TypeOf(ml_tf.TableTrigger{}),
+		"tags":                  reflect.TypeOf(types.String{}),
 		"provider_config":       reflect.TypeOf(ProviderConfig{}),
 	}
 }
@@ -168,10 +188,13 @@ func (m MaterializedFeature) GetComplexFieldTypes(ctx context.Context) map[strin
 func (m MaterializedFeature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{"cron_schedule_trigger": m.CronScheduleTrigger,
+		map[string]attr.Value{"budget_policy_id": m.BudgetPolicyId,
+			"cron_schedule":             m.CronSchedule,
+			"cron_schedule_trigger":     m.CronScheduleTrigger,
 			"feature_name":              m.FeatureName,
 			"is_online":                 m.IsOnline,
 			"last_materialization_time": m.LastMaterializationTime,
+			"latest_backfill_operation": m.LatestBackfillOperation,
 			"materialized_feature_id":   m.MaterializedFeatureId,
 			"offline_store_config":      m.OfflineStoreConfig,
 			"online_store_config":       m.OnlineStoreConfig,
@@ -179,6 +202,7 @@ func (m MaterializedFeature) ToObjectValue(ctx context.Context) basetypes.Object
 			"streaming_mode":            m.StreamingMode,
 			"table_name":                m.TableName,
 			"table_trigger":             m.TableTrigger,
+			"tags":                      m.Tags,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -189,10 +213,13 @@ func (m MaterializedFeature) ToObjectValue(ctx context.Context) basetypes.Object
 // and contains additional fields.
 func (m MaterializedFeature) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"cron_schedule_trigger": ml_tf.CronSchedule{}.Type(ctx),
+		AttrTypes: map[string]attr.Type{"budget_policy_id": types.StringType,
+			"cron_schedule":             types.StringType,
+			"cron_schedule_trigger":     ml_tf.CronSchedule{}.Type(ctx),
 			"feature_name":              types.StringType,
 			"is_online":                 types.BoolType,
 			"last_materialization_time": types.StringType,
+			"latest_backfill_operation": types.StringType,
 			"materialized_feature_id":   types.StringType,
 			"offline_store_config":      ml_tf.OfflineStoreConfig{}.Type(ctx),
 			"online_store_config":       ml_tf.OnlineStoreConfig{}.Type(ctx),
@@ -200,6 +227,9 @@ func (m MaterializedFeature) Type(ctx context.Context) attr.Type {
 			"streaming_mode":            ml_tf.StreamingMode{}.Type(ctx),
 			"table_name":                types.StringType,
 			"table_trigger":             ml_tf.TableTrigger{}.Type(ctx),
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -308,10 +338,13 @@ func (to *MaterializedFeature) SyncFieldsDuringRead(ctx context.Context, from Ma
 }
 
 func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["cron_schedule"] = attrs["cron_schedule"].SetOptional()
 	attrs["cron_schedule_trigger"] = attrs["cron_schedule_trigger"].SetOptional()
 	attrs["feature_name"] = attrs["feature_name"].SetRequired()
 	attrs["is_online"] = attrs["is_online"].SetComputed()
 	attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
+	attrs["latest_backfill_operation"] = attrs["latest_backfill_operation"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetOptional()
@@ -322,6 +355,7 @@ func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["streaming_mode"] = attrs["streaming_mode"].SetOptional()
 	attrs["table_name"] = attrs["table_name"].SetComputed()
 	attrs["table_trigger"] = attrs["table_trigger"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
 
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -454,6 +488,32 @@ func (m *MaterializedFeature) GetTableTrigger(ctx context.Context) (ml_tf.TableT
 func (m *MaterializedFeature) SetTableTrigger(ctx context.Context, v ml_tf.TableTrigger) {
 	vs := v.ToObjectValue(ctx)
 	m.TableTrigger = vs
+}
+
+// GetTags returns the value of the Tags field in MaterializedFeature as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializedFeature) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if m.Tags.IsNull() || m.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in MaterializedFeature.
+func (m *MaterializedFeature) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Tags = types.MapValueMust(t, vs)
 }
 
 func (r *MaterializedFeatureResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -610,7 +670,7 @@ func (r *MaterializedFeatureResource) update(ctx context.Context, plan Materiali
 	updateRequest := ml.UpdateMaterializedFeatureRequest{
 		MaterializedFeature:   materialized_feature,
 		MaterializedFeatureId: plan.MaterializedFeatureId.ValueString(),
-		UpdateMask:            "cron_schedule_trigger,feature_name,pipeline_schedule_state,streaming_mode,table_trigger",
+		UpdateMask:            "budget_policy_id,cron_schedule,cron_schedule_trigger,feature_name,pipeline_schedule_state,streaming_mode,table_trigger,tags",
 	}
 
 	var namespace ProviderConfig

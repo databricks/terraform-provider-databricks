@@ -100,29 +100,22 @@ func schemaLevelConnectionTemplate() string {
 func TestUcAccConnectionsSchemaLevelResourceFullLifecycle(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: schemaLevelConnectionTemplate(),
-		// Non-empty because the HTTP backend adds a server-managed `auth_scheme` option that is not
-		// in config — a pre-existing round-trip diff affecting all HTTP connections, tracked
-		// separately. The next step's plan check proves this is only an in-place update, not drift.
-		ExpectNonEmptyPlan: true,
 	}, acceptance.Step{
-		// Re-apply the identical config. The plan check asserts an in-place update, never a
-		// destroy/recreate: this is what guards the schema-level round-trip (parent rebuilt from
-		// full_name, stable id) against a ForceNew regression. The plan is non-empty only because
-		// the HTTP backend adds a server-managed `auth_scheme` option that is not in config — a
-		// pre-existing round-trip diff affecting all HTTP connections (L1 and L3 alike), tracked
-		// separately, not introduced by schema-level support.
+		// Re-apply the identical config and assert the plan is a no-op. This proves the schema-level
+		// round-trip fully converges: parent is rebuilt from full_name, the id is stable, and the
+		// server-managed fields (empty environment_settings, auth_scheme option) are stripped so
+		// there is no perpetual diff and no ForceNew drift.
 		Template: schemaLevelConnectionTemplate(),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_connection.this", plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction("databricks_connection.this", plancheck.ResourceActionNoop),
 			},
 		},
-		ExpectNonEmptyPlan: true,
 	}, acceptance.Step{
 		// Import exercises the schema-level import path: the metastore_id|full_name id must parse,
 		// GetByName(full_name) must resolve, and parent must be reconstructed on read. (Attribute
-		// verification is omitted because the API never returns the write-only bearer_token and adds
-		// a server-managed auth_scheme, so a freshly imported options map cannot match config.)
+		// verification is omitted because the API never returns the write-only bearer_token, so a
+		// freshly imported options map cannot match config.)
 		ResourceName: "databricks_connection.this",
 		ImportState:  true,
 	})

@@ -153,6 +153,10 @@ func ResourceConnection() common.Resource {
 				delete(conn.Options, "home_workspace_id")
 				delete(conn.Options, "database")
 			}
+			// The HTTP connection backend returns a server-managed `auth_scheme` option (e.g. "bearer")
+			// that is not part of the user's configuration; drop it so it does not produce a perpetual
+			// options diff. Affects both metastore- and schema-level HTTP connections.
+			delete(conn.Options, "auth_scheme")
 			// We need to preserve original sensitive options as API doesn't return them
 			var cOrig catalog.CreateConnection
 			common.DataToStructPointer(d, s, &cOrig)

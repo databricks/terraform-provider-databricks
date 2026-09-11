@@ -141,6 +141,35 @@ resource "databricks_cluster_policy" "personal_vm" {
 }
 ```
 
+### AWS Context ID
+
+Use fixed rules in `definition` to configure the AWS EC2 Fleet context value for worker and driver nodes:
+
+```hcl
+variable "aws_context_id" {
+  type = string
+}
+
+resource "databricks_cluster_policy" "aws_context" {
+  name = "AWS Context ID"
+
+  definition = jsonencode({
+    "worker_node_type_flexibility.aws_context_id" = {
+      type  = "fixed"
+      value = var.aws_context_id
+    }
+    "driver_node_type_flexibility.aws_context_id" = {
+      type  = "fixed"
+      value = var.aws_context_id
+    }
+  })
+}
+```
+
+The worker and driver rules can be configured independently, with different context values if needed. When using `policy_family_id`, supply the same rules through `policy_family_definition_overrides` instead of `definition`.
+
+These are nested [Clusters API](https://docs.databricks.com/api/workspace/clusters/create) attributes expressed as dotted paths in the [policy definition language](https://docs.databricks.com/aws/en/admin/clusters/policy-definition). The provider passes these rules through as JSON; Databricks validates whether they are supported in the target AWS workspace. A non-empty context value is passed to the AWS CreateFleet API. Setting it alone does not configure alternate node types or establish eligibility for pricing benefits.
+
 ## Argument Reference
 
 The following arguments are supported:

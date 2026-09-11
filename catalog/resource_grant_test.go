@@ -545,7 +545,7 @@ func TestResourceGrantCreateNoSecurable(t *testing.T) {
 		principal = "me"
 		privileges = ["MODIFY", "SELECT"]
 		`,
-	}.ExpectError(t, "invalid config supplied. [catalog] Missing required argument. [credential] Missing required argument. [external_location] Missing required argument. [foreign_connection] Missing required argument. [function] Missing required argument. [mcp_service] Missing required argument. [metastore] Missing required argument. [model] Missing required argument. [model_provider_service] Missing required argument. [model_service] Missing required argument. [pipeline] Missing required argument. [recipient] Missing required argument. [schema] Missing required argument. [share] Missing required argument. [storage_credential] Missing required argument. [table] Missing required argument. [volume] Missing required argument")
+	}.ExpectError(t, "invalid config supplied. [catalog] Missing required argument. [credential] Missing required argument. [external_location] Missing required argument. [foreign_connection] Missing required argument. [function] Missing required argument. [mcp_service] Missing required argument. [metastore] Missing required argument. [model] Missing required argument. [model_provider_service] Missing required argument. [model_service] Missing required argument. [pipeline] Missing required argument. [recipient] Missing required argument. [schema] Missing required argument. [secret] Missing required argument. [share] Missing required argument. [storage_credential] Missing required argument. [table] Missing required argument. [volume] Missing required argument")
 }
 
 func TestResourceGrantCreateOneSecurableOnly(t *testing.T) {
@@ -929,6 +929,64 @@ func TestResourceGrantModelGrantCreate(t *testing.T) {
 
 		principal = "me"
 		privileges = ["EXECUTE"]
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourceGrantSecretGrantCreate(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/secret/main.default.mysecret?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/secret/main.default.mysecret",
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
+						{
+							Principal: "me",
+							Add:       []catalog.Privilege{"READ_SECRET"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/secret/main.default.mysecret?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"READ_SECRET"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/secret/main.default.mysecret?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"READ_SECRET"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrant(),
+		Create:   true,
+		HCL: `
+		secret = "main.default.mysecret"
+
+		principal = "me"
+		privileges = ["READ_SECRET"]
 		`,
 	}.ApplyNoError(t)
 }

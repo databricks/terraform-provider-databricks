@@ -238,6 +238,19 @@ resource "databricks_grant" "udf_data_analysts" {
 }
 ```
 
+## Secret grants
+
+See [databricks_grants Secret grants](grants.md#secret-grants) for the list of privileges that apply to Secrets.
+
+```hcl
+resource "databricks_grant" "secret" {
+  secret = "main.default.my_secret"
+
+  principal  = "Data Engineers"
+  privileges = ["READ_SECRET"]
+}
+```
+
 ## Model service grants
 
 See [databricks_grants Model service grants](grants.md#model-service-grants) for the list of privileges that apply to model services.

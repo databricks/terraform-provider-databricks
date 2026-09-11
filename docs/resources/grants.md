@@ -231,6 +231,20 @@ resource "databricks_grants" "udf" {
 }
 ```
 
+## Secret grants
+
+You can grant `ALL_PRIVILEGES`, `MANAGE`, and `READ_SECRET` privileges to a Unity Catalog secret ([databricks_secret_uc](secret_uc.md)) specified in the `secret` attribute.
+
+```hcl
+resource "databricks_grants" "secret" {
+  secret = "main.default.my_secret"
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["READ_SECRET"]
+  }
+}
+```
+
 ## Model service grants
 
 You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `EXECUTE`, `MANAGE`, and `READ_METADATA` privileges to a Unity AI Gateway model service ([databricks_ai_gateway_model_service](ai_gateway_model_service.md)) specified in the `model_service` attribute.

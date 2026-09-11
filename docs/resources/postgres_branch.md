@@ -26,6 +26,7 @@ Branches exist within the Lakebase Autoscaling resource hierarchy:
 - **Development environments**: Create isolated branches for feature development without affecting production
 - **Testing**: Spin up temporary branches for testing changes before applying to production
 - **Point-in-time recovery**: Create a branch from a specific point in time on another branch
+- **Restore from a snapshot**: Create a branch whose data comes from an existing snapshot
 - **Data exploration**: Safely query and analyze data without risking production workloads
 
 
@@ -94,6 +95,21 @@ resource "databricks_postgres_branch" "temporary" {
 }
 ```
 
+### Branch from a Snapshot
+
+Create a branch whose data comes from an existing snapshot instead of a source branch. The snapshot must be `AVAILABLE` and belong to the same project. `source_snapshot` is immutable and mutually exclusive with `source_branch`. The restored snapshot is reported back in `status.source_snapshot`.
+
+```hcl
+resource "databricks_postgres_branch" "from_snapshot" {
+  branch_id = "restored-branch"
+  parent    = databricks_postgres_project.this.name
+  spec = {
+    source_snapshot = "projects/my-project/snapshots/my-snapshot"
+    no_expiry       = true
+  }
+}
+```
+
 
 ## Arguments
 The following arguments are supported:
@@ -113,11 +129,11 @@ The following arguments are supported:
 
 ### BranchSpec
 * `expire_time` (string, optional) - Absolute expiration timestamp. When set, the branch will expire at this time.
-  Mutually exclusive with `ttl` and `no_expiry`. When updating, use `spec.expiration` in the update_mask
+  Mutually exclusive with `ttl` and `no_expiry`
 * `is_protected` (boolean, optional) - When set to true, protects the branch from deletion and reset. Associated compute endpoints and the project cannot be deleted while the branch is protected
 * `no_expiry` (boolean, optional) - Explicitly disable expiration. When set to true, the branch will not expire.
   If set to false, the request is invalid; provide either ttl or expire_time instead.
-  Mutually exclusive with `expire_time` and `ttl`. When updating, use `spec.expiration` in the update_mask
+  Mutually exclusive with `expire_time` and `ttl`
 * `source_branch` (string, optional) - The name of the source branch from which this branch was created (data lineage for point-in-time recovery).
   If not specified, defaults to the project's default branch.
   Format: projects/{project_id}/branches/{branch_id}
@@ -129,7 +145,7 @@ The following arguments are supported:
   be AVAILABLE and belong to this branch's project.
   Format: projects/{project_id}/snapshots/{snapshot_id}
 * `ttl` (string, optional) - Relative time-to-live duration. When set, the branch will expire at creation_time + ttl.
-  Mutually exclusive with `expire_time` and `no_expiry`. When updating, use `spec.expiration` in the update_mask
+  Mutually exclusive with `expire_time` and `no_expiry`
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

@@ -8295,9 +8295,9 @@ type ListPipelinesRequest struct {
 	// Composite filters are not supported. This field is optional.
 	Filter types.String `tfsdk:"-"`
 	// The maximum number of entries to return in a single page. The system may
-	// return fewer than max_results events in a response, even if there are
-	// more events available. This field is optional. The default value is 25.
-	// The maximum value is 100. An error is returned if the value of
+	// return fewer than max_results pipelines in a response, even if there are
+	// more pipelines available. This field is optional. The default value is
+	// 25. The maximum value is 100. An error is returned if the value of
 	// max_results is greater than 100.
 	MaxResults types.Int64 `tfsdk:"-"`
 	// A list of strings specifying the order of results. Supported order_by
@@ -8402,9 +8402,9 @@ func (m *ListPipelinesRequest) SetOrderBy(ctx context.Context, v []types.String)
 }
 
 type ListPipelinesResponse struct {
-	// If present, a token to fetch the next page of events.
+	// If present, a token to fetch the next page of pipelines.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-	// The list of events matching the request criteria.
+	// The list of pipelines matching the request criteria.
 	Statuses types.List `tfsdk:"statuses"`
 }
 

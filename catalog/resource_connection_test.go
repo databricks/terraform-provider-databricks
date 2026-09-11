@@ -333,6 +333,7 @@ func TestConnectionsUpdate(t *testing.T) {
 		Update:   true,
 		ID:       "abc|testConnectionName",
 		InstanceState: map[string]string{
+			"name":            "testConnectionName",
 			"connection_type": "testConnectionType",
 			"comment":         "testComment",
 		},
@@ -421,6 +422,7 @@ func TestConnectionsUpdateOwnerAndOtherFields(t *testing.T) {
 		Update:   true,
 		ID:       "abc|testConnectionName",
 		InstanceState: map[string]string{
+			"name":            "testConnectionName",
 			"connection_type": "testConnectionType",
 			"comment":         "testComment",
 		},
@@ -464,6 +466,7 @@ func TestConnectionUpdate_Error(t *testing.T) {
 		Update:   true,
 		ID:       "abc|testConnectionName",
 		InstanceState: map[string]string{
+			"name":            "testConnectionName",
 			"connection_type": "testConnectionType",
 			"comment":         "testComment",
 		},
@@ -519,8 +522,10 @@ func TestConnectionDelete_Error(t *testing.T) {
 // connections: the API returns only full_name, so the resource rebuilds the
 // user-supplied parent from it. An L1 connection has a 1-part full_name and no parent.
 func TestSchemaParentFromFullName(t *testing.T) {
-	assert.Equal(t, "", schemaParentFromFullName("my_conn"))
-	assert.Equal(t, "schemas/main.default", schemaParentFromFullName("main.default.my_conn"))
+	assert.Equal(t, "", schemaParentFromFullName("my_conn", "my_conn"))
+	assert.Equal(t, "schemas/main.default", schemaParentFromFullName("main.default.my_conn", "my_conn"))
+	// A metastore-level name containing dots must not be misread as schema-level.
+	assert.Equal(t, "", schemaParentFromFullName("a.b.c", "a.b.c"))
 }
 
 func TestConnectionsCreate_SchemaLevel(t *testing.T) {
@@ -578,4 +583,118 @@ func TestConnectionsCreate_SchemaLevel(t *testing.T) {
 	assert.Equal(t, "my_conn", d.Get("name"))
 	assert.Equal(t, "schemas/main.default", d.Get("parent"))
 	assert.Equal(t, "main.default.my_conn", d.Get("full_name"))
+}
+
+// A schema-level connection created WITH an owner must address the post-create owner
+// update by full_name; addressing it by the short name would 404 (or hit a different
+// metastore-level connection with the same leaf name).
+func TestConnectionsCreate_SchemaLevelWithOwner(t *testing.T) {
+	resp := catalog.ConnectionInfo{
+		Name:           "my_conn",
+		ConnectionType: catalog.ConnectionType("HTTP"),
+		FullName:       "main.default.my_conn",
+		MetastoreId:    "abc",
+		Owner:          "InitialOwner",
+		Options:        map[string]string{"host": "test.com"},
+	}
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.1/unity-catalog/connections",
+				ExpectedRequest: catalog.CreateConnection{
+					Name:           "my_conn",
+					ConnectionType: catalog.ConnectionType("HTTP"),
+					Parent:         "schemas/main.default",
+					Options:        map[string]string{"host": "test.com"},
+				},
+				Response: resp,
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/connections/main.default.my_conn",
+				// The owner update must target the full name, not "my_conn".
+				ExpectedRequest: catalog.UpdateConnection{
+					Name:    "main.default.my_conn",
+					Options: map[string]string{"host": "test.com"},
+					Owner:   "InitialOwner",
+				},
+				Response: resp,
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/connections/main.default.my_conn?",
+				Response: resp,
+			},
+		},
+		Resource: ResourceConnection(),
+		Create:   true,
+		HCL: `
+		name = "my_conn"
+		connection_type = "HTTP"
+		parent = "schemas/main.default"
+		owner = "InitialOwner"
+		options = {
+			host = "test.com"
+		}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc|main.default.my_conn", d.Id())
+	assert.Equal(t, "schemas/main.default", d.Get("parent"))
+	assert.Equal(t, "InitialOwner", d.Get("owner"))
+}
+
+func TestValidateConnectionParent(t *testing.T) {
+	for _, v := range []string{"schemas/main.default", "schemas/my_cat.my_schema"} {
+		_, errs := validateConnectionParent(v, "parent")
+		assert.Empty(t, errs, "expected %q to be valid", v)
+	}
+	for _, v := range []string{"main.default", "schemas/main", "schemas/main.default.extra", "schemas/", "schemas/.default", "schemas/main."} {
+		_, errs := validateConnectionParent(v, "parent")
+		assert.NotEmpty(t, errs, "expected %q to be invalid", v)
+	}
+}
+
+// name and parent must be ForceNew: the resource does not implement rename, and parent
+// changes the connection's schema, so both require replacement rather than in-place update.
+func TestConnectionSchemaForceNew(t *testing.T) {
+	s := ResourceConnection().Schema
+	assert.True(t, s["name"].ForceNew, "name should be ForceNew")
+	assert.True(t, s["parent"].ForceNew, "parent should be ForceNew")
+}
+
+// The schema-level backend returns an empty environment_settings object; it must not
+// materialize as a block, or every plan would diff it against a config that omits it.
+func TestConnectionsRead_SchemaLevelDropsEmptyEnvironmentSettings(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/connections/main.default.my_conn?",
+				Response: catalog.ConnectionInfo{
+					Name:                "my_conn",
+					ConnectionType:      catalog.ConnectionType("HTTP"),
+					FullName:            "main.default.my_conn",
+					MetastoreId:         "abc",
+					EnvironmentSettings: &catalog.EnvironmentSettings{},
+					Options:             map[string]string{"host": "test.com"},
+				},
+			},
+		},
+		Resource: ResourceConnection(),
+		Read:     true,
+		ID:       "abc|main.default.my_conn",
+		HCL: `
+		name = "my_conn"
+		connection_type = "HTTP"
+		parent = "schemas/main.default"
+		options = {
+			host = "test.com"
+		}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "schemas/main.default", d.Get("parent"))
+	assert.Empty(t, d.Get("environment_settings"), "empty environment_settings must not materialize")
 }

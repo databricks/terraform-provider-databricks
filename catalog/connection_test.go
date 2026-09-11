@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
 
 func connectionTemplateWithOwner(host string, owner string) string {
@@ -98,10 +100,30 @@ func schemaLevelConnectionTemplate() string {
 func TestUcAccConnectionsSchemaLevelResourceFullLifecycle(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: schemaLevelConnectionTemplate(),
-		// A schema-level HTTP connection re-plans dirty on `options` because the server omits the
-		// write-only bearer_token on read. That is a pre-existing round-trip issue affecting all
-		// HTTP connections (metastore- and schema-level alike), not specific to schema connections,
-		// and it does not block create/read/update/delete. Tracked separately.
+		// Non-empty because the HTTP backend adds a server-managed `auth_scheme` option that is not
+		// in config — a pre-existing round-trip diff affecting all HTTP connections, tracked
+		// separately. The next step's plan check proves this is only an in-place update, not drift.
 		ExpectNonEmptyPlan: true,
+	}, acceptance.Step{
+		// Re-apply the identical config. The plan check asserts an in-place update, never a
+		// destroy/recreate: this is what guards the schema-level round-trip (parent rebuilt from
+		// full_name, stable id) against a ForceNew regression. The plan is non-empty only because
+		// the HTTP backend adds a server-managed `auth_scheme` option that is not in config — a
+		// pre-existing round-trip diff affecting all HTTP connections (L1 and L3 alike), tracked
+		// separately, not introduced by schema-level support.
+		Template: schemaLevelConnectionTemplate(),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				plancheck.ExpectResourceAction("databricks_connection.this", plancheck.ResourceActionUpdate),
+			},
+		},
+		ExpectNonEmptyPlan: true,
+	}, acceptance.Step{
+		// Import exercises the schema-level import path: the metastore_id|full_name id must parse,
+		// GetByName(full_name) must resolve, and parent must be reconstructed on read. (Attribute
+		// verification is omitted because the API never returns the write-only bearer_token and adds
+		// a server-managed auth_scheme, so a freshly imported options map cannot match config.)
+		ResourceName: "databricks_connection.this",
+		ImportState:  true,
 	})
 }

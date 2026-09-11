@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
@@ -27,14 +28,33 @@ func suppressComputedFields(k, old, new string, d *schema.ResourceData) bool {
 }
 
 // schemaParentFromFullName rebuilds a schema-level connection's parent
-// ("schemas/{catalog}.{schema}") from its 3-part full_name. A metastore-level
-// (L1) connection has a 1-part full_name and therefore no parent.
-func schemaParentFromFullName(fullName string) string {
-	parts := strings.Split(fullName, ".")
-	if len(parts) == 3 {
-		return "schemas/" + parts[0] + "." + parts[1]
+// ("schemas/{catalog}.{schema}") from its full_name and leaf name. A metastore-level
+// (L1) connection's full_name equals its leaf name and has no parent. Stripping the leaf
+// name (rather than counting dots) keeps a metastore-level name that happens to contain
+// dots from being misread as schema-level.
+func schemaParentFromFullName(fullName, name string) string {
+	if fullName == "" || fullName == name || !strings.HasSuffix(fullName, "."+name) {
+		return ""
 	}
-	return ""
+	return "schemas/" + strings.TrimSuffix(fullName, "."+name)
+}
+
+// validateConnectionParent checks that a schema-level connection's parent is in the
+// "schemas/{catalog}.{schema}" form, so a malformed value fails at plan time rather than apply.
+func validateConnectionParent(i any, k string) (warnings []string, errors []error) {
+	v, ok := i.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected %q to be a string", k))
+		return
+	}
+	if !strings.HasPrefix(v, "schemas/") {
+		errors = append(errors, fmt.Errorf("%q must be in the format \"schemas/{catalog}.{schema}\", got %q", k, v))
+		return
+	}
+	if parts := strings.Split(strings.TrimPrefix(v, "schemas/"), "."); len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		errors = append(errors, fmt.Errorf("%q must be in the format \"schemas/{catalog}.{schema}\", got %q", k, v))
+	}
+	return
 }
 
 type ConnectionSchemaStruct struct {
@@ -55,11 +75,17 @@ func ResourceConnection() common.Resource {
 			for _, v := range []string{"owner", "read_only"} {
 				common.CustomizeSchemaPath(m, v).SetComputed()
 			}
-			for _, v := range []string{"read_only", "properties", "comment", "connection_type", "parent"} {
+			// name is ForceNew: the resource does not implement rename (the update path never sends
+			// new_name and the id embeds the name via full_name), so a name change must recreate.
+			for _, v := range []string{"name", "read_only", "properties", "comment", "connection_type", "parent"} {
 				common.CustomizeSchemaPath(m, v).SetForceNew()
 			}
 			common.CustomizeSchemaPath(m, "options").SetSensitive().SetCustomSuppressDiff(suppressComputedFields)
 			common.CustomizeSchemaPath(m, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			// parent uses the same case-insensitive suppression as name (UC identifiers are
+			// case-insensitive) so a case-only difference does not force a spurious recreate, and is
+			// format-validated at plan time.
+			common.CustomizeSchemaPath(m, "parent").SetCustomSuppressDiff(common.EqualFoldDiffSuppress).SetValidateFunc(validateConnectionParent)
 			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
@@ -89,7 +115,9 @@ func ResourceConnection() common.Resource {
 			if d.Get("owner") != "" {
 				var updateConnectionRequest catalog.UpdateConnection
 				common.DataToStructPointer(d, s, &updateConnectionRequest)
-				updateConnectionRequest.Name = createConnectionRequest.Name
+				// Address the connection by its full name so the owner update resolves a schema-level
+				// connection; for a metastore-level connection full_name equals the name.
+				updateConnectionRequest.Name = conn.FullName
 				conn, err = w.Connections.Update(ctx, updateConnectionRequest)
 				if err != nil {
 					return err
@@ -133,12 +161,17 @@ func ResourceConnection() common.Resource {
 					conn.Options[key] = element
 				}
 			}
+			// The schema-level backend returns an empty environment_settings object; drop it so it does
+			// not materialize as an empty block that perpetually diffs against a config that omits it.
+			if es := conn.EnvironmentSettings; es != nil && es.EnvironmentVersion == "" && len(es.JavaDependencies) == 0 {
+				conn.EnvironmentSettings = nil
+			}
 			if err := common.StructToData(conn, s, d); err != nil {
 				return err
 			}
 			// The API returns only full_name, not parent; rebuild the caller's parent from it so a
 			// schema-level connection round-trips without a spurious diff (empty for L1 connections).
-			return d.Set("parent", schemaParentFromFullName(conn.FullName))
+			return d.Set("parent", schemaParentFromFullName(conn.FullName, conn.Name))
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)

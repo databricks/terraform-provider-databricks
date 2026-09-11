@@ -664,9 +664,10 @@ func TestConnectionSchemaForceNew(t *testing.T) {
 	assert.True(t, s["parent"].ForceNew, "parent should be ForceNew")
 }
 
-// The schema-level backend returns an empty environment_settings object; it must not
-// materialize as a block, or every plan would diff it against a config that omits it.
-func TestConnectionsRead_SchemaLevelDropsEmptyEnvironmentSettings(t *testing.T) {
+// The schema-level backend returns server-managed fields the user did not configure: an empty
+// environment_settings object and an auth_scheme option. Neither must surface in state, or every
+// plan would diff against a config that omits them.
+func TestConnectionsRead_SchemaLevelStripsServerManagedFields(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -678,7 +679,7 @@ func TestConnectionsRead_SchemaLevelDropsEmptyEnvironmentSettings(t *testing.T) 
 					FullName:            "main.default.my_conn",
 					MetastoreId:         "abc",
 					EnvironmentSettings: &catalog.EnvironmentSettings{},
-					Options:             map[string]string{"host": "test.com"},
+					Options:             map[string]string{"host": "test.com", "auth_scheme": "bearer"},
 				},
 			},
 		},
@@ -697,4 +698,6 @@ func TestConnectionsRead_SchemaLevelDropsEmptyEnvironmentSettings(t *testing.T) 
 	assert.NoError(t, err)
 	assert.Equal(t, "schemas/main.default", d.Get("parent"))
 	assert.Empty(t, d.Get("environment_settings"), "empty environment_settings must not materialize")
+	_, hasAuthScheme := d.Get("options").(map[string]any)["auth_scheme"]
+	assert.False(t, hasAuthScheme, "server-managed auth_scheme must be stripped from options")
 }

@@ -2,6 +2,7 @@ package mws
 
 import (
 	"context"
+	"sort"
 
 	"github.com/databricks/databricks-sdk-go/service/provisioning"
 
@@ -10,6 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+func suppressVPCEndpointOrderDiff(_ string, _ string, _ string, d *schema.ResourceData) bool {
+	oldValue, newValue := d.GetChange("allowed_vpc_endpoint_ids")
+	oldIDs, newIDs := oldValue.([]any), newValue.([]any)
+	return schema.NewSet(schema.HashString, oldIDs).Equal(schema.NewSet(schema.HashString, newIDs))
+}
 
 func ResourceMwsPrivateAccessSettings() common.Resource {
 	pasSchema := common.StructToSchema(provisioning.PrivateAccessSettings{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -22,6 +29,7 @@ func ResourceMwsPrivateAccessSettings() common.Resource {
 
 		common.CustomizeSchemaPath(m, "private_access_level").SetValidateFunc(validation.StringInSlice([]string{"ACCOUNT", "ENDPOINT"}, true))
 		common.CustomizeSchemaPath(m, "private_access_level").SetDefault("ACCOUNT")
+		common.CustomizeSchemaPath(m, "allowed_vpc_endpoint_ids").SetCustomSuppressDiff(suppressVPCEndpointOrderDiff)
 
 		common.AddAccountIdField(m)
 		return m
@@ -55,6 +63,7 @@ func ResourceMwsPrivateAccessSettings() common.Resource {
 			if err != nil {
 				return err
 			}
+			sort.Strings(pas.AllowedVpcEndpointIds)
 			return common.StructToData(pas, pasSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

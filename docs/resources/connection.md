@@ -164,7 +164,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-- `id` - ID of this connection in form of `<metastore_id>|<name>`.
+- `id` - ID of this connection, in the form `<metastore_id>|<full_name>`. For a metastore-level connection `full_name` is the connection `name`; for a schema-level connection (`parent` set) it is `<catalog>.<schema>.<name>`.
 - `connection_id` - Unique identifier of the Connection.
 - `created_at` - Time at which this connection was created, in epoch milliseconds.
 - `created_by` - Username of connection creator.
@@ -180,17 +180,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-This resource can be imported by `id`:
+This resource can be imported by `id`, which is `<metastore_id>|<full_name>`. For a metastore-level connection `full_name` is the connection name; for a schema-level connection it is `<catalog>.<schema>.<name>`:
 
 ```hcl
 import {
   to = databricks_connection.this
-  id = "<metastore_id>|<name>"
+  id = "<metastore_id>|<full_name>"
 }
 ```
 
 Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
-terraform import databricks_connection.this "<metastore_id>|<name>"
+terraform import databricks_connection.this "<metastore_id>|<full_name>"
 ```

@@ -26,10 +26,12 @@ The following attributes are exported:
 * `created_by` (string) - Username of the feature creator
 * `description` (string) - The description of the feature
 * `entities` (list of EntityColumn) - The entity columns for the feature, used as aggregation keys and for query-time lookup
+* `filter_condition` (string, deprecated)
 * `full_name` (string) - The full three-part name (catalog, schema, name) of the feature. This is the
   feature's resource identifier; the catalog_name, schema_name, and name fields
   below are OUTPUT_ONLY decomposed views of this value
 * `function` (Function) - The function by which the feature is computed
+* `inputs` (list of string, deprecated)
 * `lineage_context` (LineageContext) - Lineage context information for this feature.
   WARNING: This field is primarily intended for internal use by Databricks systems and
   is automatically populated when features are created through Databricks notebooks or jobs.
@@ -38,6 +40,7 @@ The following attributes are exported:
 * `name` (string) - Name of the feature, extracted from the full three-part name (catalog.schema.name)
 * `schema_name` (string) - Name of parent schema relative to its parent catalog
 * `source` (DataSource) - The data source of the feature
+* `time_window` (TimeWindow, deprecated)
 * `timeseries_column` (TimeseriesColumn) - Column recording time, used for point-in-time joins, backfills, and aggregations
 
 ### AggregationFunction
@@ -75,8 +78,15 @@ The following attributes are exported:
   Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
+### ColumnIdentifier
+* `variant_expr_path` (string) - String representation of the column name using dot-prefixed path notation
+
 ### ColumnSelection
 * `column` (string) - Column name from source to select as the feature value
+
+### ContinuousWindow
+* `offset` (string) - The offset of the continuous window (must be non-positive)
+* `window_duration` (string) - The duration of the continuous window (must be positive)
 
 ### CountFunction
 * `input` (string) - The input column from which the count is computed. For Kafka sources, use dot-prefixed path
@@ -101,8 +111,10 @@ The following attributes are exported:
 * `dataframe_schema` (string) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
   Required if transformation_sql is specified.
   Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
+* `entity_columns` (list of string, deprecated)
 * `filter_condition` (string) - Single WHERE clause to filter delta table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections
 * `full_name` (string) - The full three-part (catalog, schema, table) name of the Delta table
+* `timeseries_column` (string, deprecated)
 * `transformation_sql` (string) - A single SQL SELECT expression applied after filter_condition.
   Should contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
   If transformation_sql is not provided, all columns of the delta table are present in the DataSource dataframe
@@ -137,6 +149,12 @@ The following attributes are exported:
 * `aggregation_function` (AggregationFunction) - An aggregation function applied over a time window
 * `column_selection` (ColumnSelection) - Selects the latest value of a single column in a data source
 * `custom_udf` (CustomUdf) - Applies a registered Unity Catalog function row-wise to source columns
+* `extra_parameters` (list of FunctionExtraParameter, deprecated)
+* `function_type` (string, deprecated) - Possible values are: `APPROX_COUNT_DISTINCT`, `APPROX_PERCENTILE`, `AVG`, `COUNT`, `FIRST`, `FUNCTION_TYPE_UNSPECIFIED`, `LAST`, `MAX`, `MIN`, `STDDEV_POP`, `STDDEV_SAMP`, `SUM`, `VAR_POP`, `VAR_SAMP`
+
+### FunctionExtraParameter
+* `key` (string) - The name of the parameter
+* `value` (string) - The value of the parameter
 
 ### InputBinding
 * `column` (string) - Source column whose value is passed for this parameter at execution time
@@ -147,8 +165,10 @@ The following attributes are exported:
 * `job_run_id` (integer) - The job run ID where this API was invoked
 
 ### KafkaSource
+* `entity_column_identifiers` (list of ColumnIdentifier, deprecated)
 * `filter_condition` (string) - The filter condition applied to the source data before aggregation
 * `name` (string) - Name of the Kafka source, used to identify it. This is used to look up the corresponding KafkaConfig object. Can be distinct from topic name
+* `timeseries_column_identifier` (ColumnIdentifier, deprecated)
 
 ### LastDistinctFunction
 * `input` (string) - The input column from which the last N distinct values are returned
@@ -231,6 +251,7 @@ The following attributes are exported:
   compatibility but is deprecated; migrate to dot notation
 
 ### TimeWindow
+* `continuous` (ContinuousWindow, deprecated)
 * `rolling` (RollingWindow)
 * `sawtooth` (SawtoothWindow) - A sawtooth window served via the hybrid batch + streaming path
 * `sliding` (SlidingWindow)
@@ -240,7 +261,8 @@ The following attributes are exported:
   for 365 days of data; a lifetime window produces no output before start_time. If unset,
   tumbling and fixed-duration sliding windows first emit at an offset-aligned boundary after a
   full window can be formed. If unset, lifetime sliding windows and rolling windows emit as soon as
-  eligible source data exists
+  eligible source data exists.
+  Not currently supported for sawtooth windows or for Features with a stream source
 * `tumbling` (TumblingWindow)
 
 ### TimeseriesColumn

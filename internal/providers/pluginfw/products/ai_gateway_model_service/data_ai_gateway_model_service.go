@@ -101,23 +101,20 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 type ModelServiceData struct {
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
-	// Operational configuration: destinations, routing, rate limits, inference
-	// table. Required on CreateModelService; on UpdateModelService it is
-	// required only when `config` (or a `config.*` subpath) appears in
-	// `update_mask`.
+	// Destinations, routing, rate limits, and payload logging configuration.
+	// Required on Create. On Update, provide this field when `update_mask`
+	// contains `config` or one of its subpaths.
 	Config types.Object `tfsdk:"config"`
-	// When the model service was created.
+	// Time the model service was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Creator identity.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// The resolved owner of the ModelService. Falls back to the caller's
-	// identity when `owner` is not explicitly set on creation.
+	// Owner of the model service.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
-	// Optimistic concurrency control token. Server-generated from the entity's
-	// state and returned on every read. To use it as an if-match precondition
-	// on a mutation, echo the last-read value back via the dedicated `etag`
-	// field on the Update / Delete request; the server rejects the mutation if
-	// the stored etag differs.
+	// Optimistic concurrency token returned on every read. To make an Update or
+	// Delete conditional, pass the last-read value in that request's `etag`
+	// field. In REST responses, this value is a base64 string; URL-encode it
+	// when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"etag"`
 	// Metastore hosting the model service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
@@ -127,14 +124,12 @@ type ModelServiceData struct {
 	// Create from `parent` + `model_service_id`; required and immutable on
 	// Update/Get/Delete.
 	Name types.String `tfsdk:"name"`
-	// The owner of the model service. Write-only; read owner via
-	// effective_owner.
-	Owner types.String `tfsdk:"owner"`
-	// Unified API types this endpoint supports (e.g. "chat", "embeddings",
-	// "completions"). Derived from the destinations' backing models / providers
-	// at read time.
+	// API types supported across this service's destinations, such as
+	// `openai/v1/chat/completions`, `openai/v1/embeddings`, and
+	// `mlflow/v1/chat/completions`. Derived from the backing models and
+	// providers at read time.
 	SupportedApiTypes types.Set `tfsdk:"supported_api_types"`
-	// When the model service was last modified.
+	// Time the model service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// Identity of the last updater.
 	UpdatedBy          types.String `tfsdk:"updated_by"`
@@ -174,7 +169,6 @@ func (m ModelServiceData) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"etag":                m.Etag,
 			"metastore_id":        m.MetastoreId,
 			"name":                m.Name,
-			"owner":               m.Owner,
 			"supported_api_types": m.SupportedApiTypes,
 			"update_time":         m.UpdateTime,
 			"updated_by":          m.UpdatedBy,
@@ -197,7 +191,6 @@ func (m ModelServiceData) Type(ctx context.Context) attr.Type {
 			"etag":            types.StringType,
 			"metastore_id":    types.StringType,
 			"name":            types.StringType,
-			"owner":           types.StringType,
 			"supported_api_types": basetypes.SetType{
 				ElemType: types.StringType,
 			},
@@ -218,7 +211,6 @@ func (m ModelServiceData) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["owner"] = attrs["owner"].SetComputed()
 	attrs["supported_api_types"] = attrs["supported_api_types"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updated_by"] = attrs["updated_by"].SetComputed()

@@ -47,6 +47,9 @@ This data source exports a single attribute, `policies`. It is a list of resourc
 * `comment` (string) - Optional description of the policy
 * `created_at` (integer) - Time at which the policy was created, in epoch milliseconds. Output only
 * `created_by` (string) - Username of the user who created the policy. Output only
+* `deny` (DenyOptions) - Options for deny policies. Valid only if `policy_type` is `POLICY_TYPE_DENY`.
+  Required on create and optional on update. When specified on update,
+  the new options will replace the existing options as a whole
 * `except_principals` (list of string) - Optional list of user or group names that should be excluded from the policy
 * `for_securable_type` (string) - Type of securables that the policy should take effect on.
   Required on create and optional on update. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `MCP_SERVICE`, `METASTORE`, `MODEL`, `MODEL_PROVIDER_SERVICE`, `MODEL_SERVICE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
@@ -64,7 +67,7 @@ This data source exports a single attribute, `policies`. It is a list of resourc
 * `on_securable_type` (string) - Type of the securable on which the policy is defined.
   Only `CATALOG`, `SCHEMA` and `TABLE` are supported at this moment.
   Required on create. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `MCP_SERVICE`, `METASTORE`, `MODEL`, `MODEL_PROVIDER_SERVICE`, `MODEL_SERVICE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
-* `policy_type` (string) - Type of the policy. Required on create. Possible values are: `POLICY_TYPE_COLUMN_MASK`, `POLICY_TYPE_GRANT`, `POLICY_TYPE_ROW_FILTER`
+* `policy_type` (string) - Type of the policy. Required on create. Possible values are: `POLICY_TYPE_COLUMN_MASK`, `POLICY_TYPE_DENY`, `POLICY_TYPE_GRANT`, `POLICY_TYPE_ROW_FILTER`
 * `row_filter` (RowFilterOptions) - Options for row filter policies. Valid only if `policy_type` is `POLICY_TYPE_ROW_FILTER`.
   Required on create and optional on update. When specified on update,
   the new options will replace the existing options as a whole
@@ -88,6 +91,12 @@ This data source exports a single attribute, `policies`. It is a list of resourc
 ### ColumnTagValueExtraction
 * `column_alias` (string) - The alias from MATCH COLUMNS that identifies the column
 * `tag_key` (string) - 1024 matches the max_length on FunctionArgument.constant above
+
+### DenyOptions
+* `privileges` (list of string) - List of privileges to deny.
+  When any of these privileges are requested, the policy will deny access
+  if the principal and condition match.
+  Required on create and update
 
 ### FunctionArgExpression
 * `tag_introspection` (TagIntrospectionExpression) - An expression that introspects tags at query time

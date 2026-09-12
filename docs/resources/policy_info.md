@@ -105,13 +105,16 @@ resource "databricks_policy_info" "sensitive_column_mask" {
 The following arguments are supported:
 * `for_securable_type` (string, required) - Type of securables that the policy should take effect on.
   Required on create and optional on update. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `MCP_SERVICE`, `METASTORE`, `MODEL`, `MODEL_PROVIDER_SERVICE`, `MODEL_SERVICE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
-* `policy_type` (string, required) - Type of the policy. Required on create. Possible values are: `POLICY_TYPE_COLUMN_MASK`, `POLICY_TYPE_GRANT`, `POLICY_TYPE_ROW_FILTER`
+* `policy_type` (string, required) - Type of the policy. Required on create. Possible values are: `POLICY_TYPE_COLUMN_MASK`, `POLICY_TYPE_DENY`, `POLICY_TYPE_GRANT`, `POLICY_TYPE_ROW_FILTER`
 * `to_principals` (list of string, required) - List of user or group names that the policy applies to.
   Required on create and optional on update
 * `column_mask` (ColumnMaskOptions, optional) - Options for column mask policies. Valid only if `policy_type` is `POLICY_TYPE_COLUMN_MASK`.
   Required on create and optional on update. When specified on update,
   the new options will replace the existing options as a whole
 * `comment` (string, optional) - Optional description of the policy
+* `deny` (DenyOptions, optional) - Options for deny policies. Valid only if `policy_type` is `POLICY_TYPE_DENY`.
+  Required on create and optional on update. When specified on update,
+  the new options will replace the existing options as a whole
 * `except_principals` (list of string, optional) - Optional list of user or group names that should be excluded from the policy
 * `grant` (GrantOptions, optional) - Options for grant policies. Valid only if `policy_type` is `POLICY_TYPE_GRANT`.
   Required on create and optional on update. When specified on update,
@@ -149,6 +152,12 @@ The following arguments are supported:
 ### ColumnTagValueExtraction
 * `column_alias` (string, required) - The alias from MATCH COLUMNS that identifies the column
 * `tag_key` (string, required) - 1024 matches the max_length on FunctionArgument.constant above
+
+### DenyOptions
+* `privileges` (list of string, required) - List of privileges to deny.
+  When any of these privileges are requested, the policy will deny access
+  if the principal and condition match.
+  Required on create and update
 
 ### FunctionArgExpression
 * `tag_introspection` (TagIntrospectionExpression, optional) - An expression that introspects tags at query time

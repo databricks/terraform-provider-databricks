@@ -110,12 +110,16 @@ type FeatureData struct {
 	// The entity columns for the feature, used as aggregation keys and for
 	// query-time lookup.
 	Entities types.List `tfsdk:"entities"`
+
+	FilterCondition types.String `tfsdk:"filter_condition"`
 	// The full three-part name (catalog, schema, name) of the feature. This is
 	// the feature's resource identifier; the catalog_name, schema_name, and
 	// name fields below are OUTPUT_ONLY decomposed views of this value.
 	FullName types.String `tfsdk:"full_name"`
 	// The function by which the feature is computed.
 	Function types.Object `tfsdk:"function"`
+
+	Inputs types.List `tfsdk:"inputs"`
 	// Lineage context information for this feature. WARNING: This field is
 	// primarily intended for internal use by Databricks systems and is
 	// automatically populated when features are created through Databricks
@@ -131,6 +135,8 @@ type FeatureData struct {
 	SchemaName types.String `tfsdk:"schema_name"`
 	// The data source of the feature.
 	Source types.Object `tfsdk:"source"`
+
+	TimeWindow types.Object `tfsdk:"time_window"`
 	// Column recording time, used for point-in-time joins, backfills, and
 	// aggregations.
 	TimeseriesColumn   types.Object `tfsdk:"timeseries_column"`
@@ -148,8 +154,10 @@ func (m FeatureData) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	return map[string]reflect.Type{
 		"entities":          reflect.TypeOf(ml_tf.EntityColumn{}),
 		"function":          reflect.TypeOf(ml_tf.Function{}),
+		"inputs":            reflect.TypeOf(types.String{}),
 		"lineage_context":   reflect.TypeOf(ml_tf.LineageContext{}),
 		"source":            reflect.TypeOf(ml_tf.DataSource{}),
+		"time_window":       reflect.TypeOf(ml_tf.TimeWindow{}),
 		"timeseries_column": reflect.TypeOf(ml_tf.TimeseriesColumn{}),
 		"provider_config":   reflect.TypeOf(ProviderConfigData{}),
 	}
@@ -170,12 +178,15 @@ func (m FeatureData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"created_by":        m.CreatedBy,
 			"description":       m.Description,
 			"entities":          m.Entities,
+			"filter_condition":  m.FilterCondition,
 			"full_name":         m.FullName,
 			"function":          m.Function,
+			"inputs":            m.Inputs,
 			"lineage_context":   m.LineageContext,
 			"name":              m.Name,
 			"schema_name":       m.SchemaName,
 			"source":            m.Source,
+			"time_window":       m.TimeWindow,
 			"timeseries_column": m.TimeseriesColumn,
 
 			"provider_config": m.ProviderConfigData,
@@ -195,12 +206,17 @@ func (m FeatureData) Type(ctx context.Context) attr.Type {
 			"entities": basetypes.ListType{
 				ElemType: ml_tf.EntityColumn{}.Type(ctx),
 			},
-			"full_name":         types.StringType,
-			"function":          ml_tf.Function{}.Type(ctx),
+			"filter_condition": types.StringType,
+			"full_name":        types.StringType,
+			"function":         ml_tf.Function{}.Type(ctx),
+			"inputs": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"lineage_context":   ml_tf.LineageContext{}.Type(ctx),
 			"name":              types.StringType,
 			"schema_name":       types.StringType,
 			"source":            ml_tf.DataSource{}.Type(ctx),
+			"time_window":       ml_tf.TimeWindow{}.Type(ctx),
 			"timeseries_column": ml_tf.TimeseriesColumn{}.Type(ctx),
 
 			"provider_config": ProviderConfigData{}.Type(ctx),
@@ -214,12 +230,15 @@ func (m FeatureData) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["description"] = attrs["description"].SetComputed()
 	attrs["entities"] = attrs["entities"].SetComputed()
+	attrs["filter_condition"] = attrs["filter_condition"].SetComputed()
 	attrs["full_name"] = attrs["full_name"].SetRequired()
 	attrs["function"] = attrs["function"].SetComputed()
+	attrs["inputs"] = attrs["inputs"].SetComputed()
 	attrs["lineage_context"] = attrs["lineage_context"].SetComputed()
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["schema_name"] = attrs["schema_name"].SetComputed()
 	attrs["source"] = attrs["source"].SetComputed()
+	attrs["time_window"] = attrs["time_window"].SetComputed()
 	attrs["timeseries_column"] = attrs["timeseries_column"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()

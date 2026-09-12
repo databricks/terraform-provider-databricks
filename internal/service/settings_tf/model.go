@@ -3886,10 +3886,15 @@ func (m CustomerFacingIngressNetworkPolicyAuthenticationIdentity) Type(ctx conte
 }
 
 type CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess struct {
+	// Allow rules are evaluated after deny rules. A request matching any allow
+	// rule is allowed; a request matching no rule is denied by default. Only
+	// applies when restriction_mode is RESTRICTED_ACCESS.
 	AllowRules types.List `tfsdk:"allow_rules"`
-
+	// Deny rules are evaluated first. A request matching any deny rule is
+	// denied, regardless of allow rules. Only applies when restriction_mode is
+	// RESTRICTED_ACCESS.
 	DenyRules types.List `tfsdk:"deny_rules"`
-
+	// The restriction mode for cross-workspace access.
 	RestrictionMode types.String `tfsdk:"restriction_mode"`
 }
 
@@ -4075,13 +4080,20 @@ func (m *CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess) SetDenyRules(ct
 	m.DenyRules = types.ListValueMust(t, vs)
 }
 
+// An ingress rule is enforced when a request satisfies all specified attributes
+// — including request origin, destination, and authentication.
 type CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule struct {
+	// The authenticated identity the request must match. When unset, the rule
+	// matches all users and service principals.
 	Authentication types.Object `tfsdk:"authentication"`
-
+	// The destination the request must match — the resource being accessed,
+	// for example the workspace UI or workspace APIs. See RequestDestination.
 	Destination types.Object `tfsdk:"destination"`
 	// The label for this ingress rule.
 	Label types.String `tfsdk:"label"`
-
+	// The origin the request must match — the source workspace the request
+	// comes from, either specific source workspaces or any source workspace in
+	// any account. See CrossWorkspaceRequestOrigin.
 	Origin types.Object `tfsdk:"origin"`
 }
 

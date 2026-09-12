@@ -2501,6 +2501,11 @@ type ComputeSpec struct {
 	// number of accelerators per node is encoded in the enum value —
 	// `GPU_8xH100` means 8 H100 GPUs per node.
 	AcceleratorType types.String `tfsdk:"accelerator_type"`
+	// Optional ID of a pre-provisioned accelerator capacity reservation to run
+	// this AI Runtime workload on. When set, the workload is scheduled onto the
+	// referenced reserved capacity instead of the on-demand capacity shared
+	// among all Databricks customers.
+	ProvisionedCapacityId types.String `tfsdk:"provisioned_capacity_id"`
 }
 
 func (to *ComputeSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ComputeSpec) {
@@ -2512,6 +2517,7 @@ func (to *ComputeSpec) SyncFieldsDuringRead(ctx context.Context, from ComputeSpe
 func (m ComputeSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["accelerator_count"] = attrs["accelerator_count"].SetRequired()
 	attrs["accelerator_type"] = attrs["accelerator_type"].SetRequired()
+	attrs["provisioned_capacity_id"] = attrs["provisioned_capacity_id"].SetOptional()
 
 	return attrs
 }
@@ -2534,8 +2540,9 @@ func (m ComputeSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"accelerator_count": m.AcceleratorCount,
-			"accelerator_type":  m.AcceleratorType,
+			"accelerator_count":       m.AcceleratorCount,
+			"accelerator_type":        m.AcceleratorType,
+			"provisioned_capacity_id": m.ProvisionedCapacityId,
 		})
 }
 
@@ -2543,8 +2550,9 @@ func (m ComputeSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m ComputeSpec) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"accelerator_count": types.Int64Type,
-			"accelerator_type":  types.StringType,
+			"accelerator_count":       types.Int64Type,
+			"accelerator_type":        types.StringType,
+			"provisioned_capacity_id": types.StringType,
 		},
 	}
 }

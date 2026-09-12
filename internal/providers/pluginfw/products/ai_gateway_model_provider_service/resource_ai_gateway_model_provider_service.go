@@ -112,24 +112,21 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 type ModelProviderService struct {
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
-	// Behavioral configuration: provider connection, model catalog, and
-	// passthrough policy. See `ModelProviderServiceConfig` for the per-field
-	// contract. Required on CreateModelProviderService; on Update it is
-	// required only when `config` (or a `config.*` subpath) appears in
+	// Provider authentication, exposed models, request-forwarding controls,
+	// rate limits, and payload logging. Required on Create. On Update, it is
+	// required only when `config` or one of its subpaths appears in
 	// `update_mask`.
 	Config types.Object `tfsdk:"config"`
-	// When the provider service was created.
+	// Time the provider service was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Creator identity.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// The resolved owner of the model provider service. Falls back to the
-	// caller's identity when `owner` is not explicitly set on creation.
+	// Owner of the model provider service.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
-	// Optimistic concurrency control token. Server-generated from the entity's
-	// state and returned on every read. To use it as an if-match precondition
-	// on a mutation, echo the last-read value back via the dedicated `etag`
-	// field on the Update / Delete request; the server rejects the mutation if
-	// the stored etag differs.
+	// Optimistic concurrency token returned on every read. To make an Update or
+	// Delete conditional, pass the last-read value in that request's `etag`
+	// field. In REST responses, this value is a base64 string; URL-encode it
+	// when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"etag"`
 	// Metastore hosting the provider service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
@@ -141,13 +138,10 @@ type ModelProviderService struct {
 	// Server-derived on Create from `parent` + `model_provider_service_id`;
 	// required and immutable on Update/Get/Delete.
 	Name types.String `tfsdk:"name"`
-	// The owner of the model provider service. Write-only; read owner via
-	// effective_owner.
-	Owner types.String `tfsdk:"owner"`
 	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
 	// `{...}` component is capped at 255 characters individually.
 	Parent types.String `tfsdk:"parent"`
-	// When the provider service was last modified.
+	// Time the provider service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// Identity of the last updater.
 	UpdatedBy      types.String `tfsdk:"updated_by"`
@@ -186,7 +180,6 @@ func (m ModelProviderService) ToObjectValue(ctx context.Context) basetypes.Objec
 			"metastore_id":              m.MetastoreId,
 			"model_provider_service_id": m.ModelProviderServiceId,
 			"name":                      m.Name,
-			"owner":                     m.Owner,
 			"parent":                    m.Parent,
 			"update_time":               m.UpdateTime,
 			"updated_by":                m.UpdatedBy,
@@ -209,7 +202,6 @@ func (m ModelProviderService) Type(ctx context.Context) attr.Type {
 			"metastore_id":              types.StringType,
 			"model_provider_service_id": types.StringType,
 			"name":                      types.StringType,
-			"owner":                     types.StringType,
 			"parent":                    types.StringType,
 			"update_time":               timetypes.RFC3339{}.Type(ctx),
 			"updated_by":                types.StringType,
@@ -235,10 +227,6 @@ func (to *ModelProviderService) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 	if !from.ModelProviderServiceId.IsUnknown() {
 		to.ModelProviderServiceId = from.ModelProviderServiceId
 	}
-	if !from.Owner.IsUnknown() && !from.Owner.IsNull() {
-		// Owner is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Owner = from.Owner
-	}
 	if !from.Parent.IsUnknown() {
 		to.Parent = from.Parent
 	}
@@ -261,10 +249,6 @@ func (to *ModelProviderService) SyncFieldsDuringRead(ctx context.Context, from M
 	if !from.ModelProviderServiceId.IsUnknown() {
 		to.ModelProviderServiceId = from.ModelProviderServiceId
 	}
-	if !from.Owner.IsUnknown() && !from.Owner.IsNull() {
-		// Owner is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Owner = from.Owner
-	}
 	if !from.Parent.IsUnknown() {
 		to.Parent = from.Parent
 	}
@@ -282,9 +266,6 @@ func (m ModelProviderService) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetComputed()
-	attrs["owner"] = attrs["owner"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updated_by"] = attrs["updated_by"].SetComputed()
 	attrs["model_provider_service_id"] = attrs["model_provider_service_id"].SetRequired()
@@ -482,7 +463,7 @@ func (r *ModelProviderServiceResource) update(ctx context.Context, plan ModelPro
 	updateRequest := catalog.UpdateModelProviderServiceRequest{
 		ModelProviderService: model_provider_service,
 		Name:                 plan.Name.ValueString(),
-		UpdateMask:           *fieldmask.New(strings.Split("comment,config,owner", ",")),
+		UpdateMask:           *fieldmask.New(strings.Split("comment,config", ",")),
 	}
 
 	var namespace ProviderConfig

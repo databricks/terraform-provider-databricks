@@ -7,6 +7,8 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+* Add resource and data sources for `databricks_domain`.
+* Add resource and data sources for `databricks_sandbox`.
 
 * Add support for the `secret` securable in `databricks_grant` and `databricks_grants`. ([#5996](https://github.com/databricks/terraform-provider-databricks/pull/5996))
 

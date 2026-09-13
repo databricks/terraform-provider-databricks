@@ -12,6 +12,9 @@ subcategory: "Machine Learning"
 ## Arguments
 The following arguments are supported:
 * `feature_name` (string, required) - The full name of the feature in Unity Catalog
+* `budget_policy_id` (string, optional) - The ID of the budget policy used to attribute the serverless compute cost of this
+  materialization. If not specified, a default budget policy may be applied
+* `cron_schedule` (string, optional, deprecated)
 * `cron_schedule_trigger` (CronSchedule, optional) - A cron-based schedule trigger for the materialization pipeline
 * `offline_store_config` (OfflineStoreConfig, optional) - Destination for writing feature values to an offline Delta table
 * `online_store_config` (OnlineStoreConfig, optional) - Destination for writing feature values to an online Lakebase table
@@ -21,13 +24,24 @@ The following arguments are supported:
   sub-second latency for operational workloads; micro-batch mode (MBM) favors cost efficiency
   for ETL and analytics workloads
 * `table_trigger` (TableTrigger, optional) - A trigger that fires when the upstream source table changes
+* `tags` (object, optional) - Custom tags to associate with this materialization. They are applied to the materialization
+  job (for batch features) or pipeline (for streaming features) and forwarded to the underlying
+  compute as cluster tags, so materialization cost can be attributed in the billing system
+  tables. These tags apply only to the materialization compute; they are not applied to the
+  Unity Catalog Feature resource itself, whose tags are managed separately through the Unity
+  Catalog tagging API. A maximum of 25 tags is supported; keys and values are subject to the
+  same limitations as cluster tags
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
 * `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### CronSchedule
-* `cron_expression` (string, optional) - The cron expression defining the schedule (e.g., "0 0 * * *" for daily at midnight)
+* `cron_expression` (string, optional) - The cron expression defining the schedule (e.g., "0 0 * * *" for daily at midnight). The
+  schedule is interpreted in the UTC time zone. Required when mode is MANUAL (or unset). Left
+  empty when mode is DERIVED, where the service computes it (aligned to UTC) from the features'
+  window timing and fills it in on the response
+* `mode` (string, optional) - How the schedule is determined. Defaults to MANUAL when unset. Possible values are: `DERIVED`, `MANUAL`
 
 ### OfflineStoreConfig
 * `catalog_name` (string, required) - The Unity Catalog catalog name
@@ -54,6 +68,7 @@ In addition to the above arguments, the following attributes are exported:
 * `is_online` (boolean) - True if this is an online materialized feature. False if it is an offline materialized feature
 * `last_materialization_time` (string) - The timestamp when the pipeline last ran and updated the materialized feature values.
   If the pipeline has not run yet, this field will be null
+* `latest_backfill_operation` (string) - Name of the latest backfill operation on this materialized feature. Format: operations/{operation_id}
 * `materialized_feature_id` (string) - Server-assigned unique identifier for the materialized feature
 * `table_name` (string) - The fully qualified Unity Catalog path to the table containing the materialized feature (Delta table or Lakebase table). Output only
 

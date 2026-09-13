@@ -2,13 +2,31 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_ai_gateway_mcp_service Resource
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/aigateway)
 
+Manages an MCP service in Unity Catalog. An MCP service governs access to an MCP server hosted through a Unity Catalog connection.
+
+The Unity Catalog connection must exist before you create the MCP service. MCP services are contained in a Unity Catalog schema and governed by Unity Catalog permissions.
 
 
 ## Example Usage
+The following example registers an MCP service backed by a Unity Catalog connection:
+
+```hcl
+resource "databricks_ai_gateway_mcp_service" "example" {
+  parent         = "schemas/main.default"
+  mcp_service_id = "knowledge_tools"
+  comment        = "Provides governed access to knowledge tools"
+
+  config = {
+    source_connection = {
+      name = "connections/main.default.mcp_connection"
+    }
+  }
+}
+```
 
 
 ## Arguments
@@ -18,69 +36,62 @@ The following arguments are supported:
   Format: `schemas/{catalog}.{schema}`.
   Each `{...}` component is capped at 255 characters individually
 * `comment` (string, optional) - User-provided description
-* `config` (McpServiceConfig, optional) - Operational configuration: connection, tool selectors, rate limit.
-  Required on CreateMcpService; on
-  UpdateMcpService it is required only when `config` (or a `config.*`
-  subpath) appears in `update_mask`
-* `owner` (string, optional) - The owner of the MCP service. Write-only; read owner via effective_owner
+* `config` (McpServiceConfig, optional) - Connection, tool selectors, and rate limits. Required on Create. On Update,
+  provide this field when `update_mask` contains `config` or one of its
+  subpaths
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
 * `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### McpServiceConfig
-* `include_tool_selectors` (list of string, optional) - Glob or exact-match patterns selecting which tools from the MCP server
-  to expose. Prefix match for patterns with `*`, exact match otherwise.
-  An empty list means all tools are included. Per-element max 256 chars
-* `rate_limits` (list of RateLimit, optional) - Per-principal rate limits applied to tool invocations routed through this
-  MCP service. Repeated to support per-USER / USER_GROUP / SERVICE_PRINCIPAL
-  / SERVICE / USER_DEFAULT scopes simultaneously, mirroring the
-  `ModelServiceConfig.rate_limits` shape. Empty when no rate limit is
-  configured
-* `source_connection` (McpServiceConfigSourceConnection, optional) - UC Connection referencing the MCP server
+* `include_tool_selectors` (list of string, optional) - Tool names or prefix patterns to expose from the MCP server. Use exact
+  tool names or prefix patterns such as `read_*`. An empty list exposes all
+  tools. At most 1,024 selectors are allowed, and each selector can contain
+  at most 256 characters
+* `rate_limits` (list of RateLimit, optional) - Rate limits for tool invocations. Supported scopes are user, group, service
+  principal, the service as a whole, and each user by default. Request and
+  token limits are supported. Empty when no rate limit is configured
+* `source_connection` (McpServiceConfigSourceConnection, optional) - Unity Catalog connection referencing the MCP server. Required on Create
 
 ### McpServiceConfigSourceConnection
-* `name` (string, required) - Name of the UC connection that hosts the MCP server, as
-  `connections/{catalog}.{schema}.{connection}`
+* `name` (string, required) - Resource name of the Unity Catalog connection used to access the MCP
+  server, in the form `connections/{catalog}.{schema}.{connection}`
 
 ### RateLimit
-* `key` (string, required) - Scope key. Determines whether `principal` is required. Possible values are: `RATE_LIMIT_KEY_REQUEST_TAG`, `RATE_LIMIT_KEY_SERVICE`, `RATE_LIMIT_KEY_SERVICE_PRINCIPAL`, `RATE_LIMIT_KEY_USER`, `RATE_LIMIT_KEY_USER_DEFAULT`, `RATE_LIMIT_KEY_USER_GROUP`
+* `key` (string, required) - Scope of the rate limit. Depending on this value, the limit applies to a
+  principal, the service as a whole, or each user by default. Possible values are: `RATE_LIMIT_KEY_SERVICE`, `RATE_LIMIT_KEY_SERVICE_PRINCIPAL`, `RATE_LIMIT_KEY_USER`, `RATE_LIMIT_KEY_USER_DEFAULT`, `RATE_LIMIT_KEY_USER_GROUP`
 * `renewal_period` (string, required) - Renewal period. Possible values are: `RATE_LIMIT_RENEWAL_PERIOD_HOUR`, `RATE_LIMIT_RENEWAL_PERIOD_MINUTE`
 * `principal` (string, optional) - Principal this limit applies to: user email, group name, or service
-  principal application ID. Required unless `key` is
-  `RATE_LIMIT_KEY_SERVICE`, `RATE_LIMIT_KEY_USER_DEFAULT`, or
-  `RATE_LIMIT_KEY_REQUEST_TAG` (which must not set a principal)
-* `request_tag_key` (string, optional) - Request tag key this limit applies to. Required when `key` is
-  `RATE_LIMIT_KEY_REQUEST_TAG`, forbidden otherwise
-* `request_tag_value` (string, optional) - Request tag value this limit applies to. Only valid when `key` is
-  `RATE_LIMIT_KEY_REQUEST_TAG`. Leave unset to apply the limit to every
-  value of `request_tag_key` (an any-value default); a set value is a
-  specific override for that value
-* `requests` (integer, optional) - Max requests allowed within a renewal period. Leave unset for no request limit
-* `tokens` (integer, optional) - Max tokens allowed within a renewal period. Leave unset for no token limit
+  principal application ID. Required when `key` applies to a user, group, or
+  service principal; otherwise it must be unset
+* `requests` (integer, optional) - Maximum requests allowed in one renewal period. Leave unset for no request
+  limit. Set to `0` to deny all requests
+* `tokens` (integer, optional) - Maximum tokens allowed in one renewal period. Leave unset for no token
+  limit. Set to `0` to deny all requests
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `create_time` (string) - When the MCP service was created
+* `create_time` (string) - Time the MCP service was created
 * `created_by` (string) - Creator identity
-* `effective_owner` (string) - The resolved owner of the MCP service. Falls back to the caller's identity
-  when `owner` is not explicitly set on creation
-* `etag` (string) - Optimistic concurrency control token. Server-generated from the
-  entity's state and returned on every read. To use it as an if-match
-  precondition on a mutation, echo the last-read value back via the dedicated
-  `etag` field on the Update / Delete request; the server rejects the mutation
-  if the stored etag differs
+* `effective_owner` (string) - Owner of the MCP service
+* `etag` (string) - Optimistic concurrency token returned on every read. To make an Update or
+  Delete conditional, pass the last-read value in that request's `etag`
+  field. In REST responses, this value is a base64 string; URL-encode it when
+  setting the `etag` query parameter
 * `metastore_id` (string) - Metastore hosting the MCP service
 * `name` (string) - Resource name of the MCP service.
   Format: `mcp-services/{catalog}.{schema}.{mcp_service}`.
   Each `{...}` component is capped at 255 characters individually.
   Server-derived on Create from `parent` +
   `mcp_service_id`; required and immutable on Update/Get/Delete
-* `update_time` (string) - When the MCP service was last modified
+* `update_time` (string) - Time the MCP service was last modified
 * `updated_by` (string) - Identity of the last updater
 
 ### McpServiceConfigSourceConnection
-* `is_deleted` (boolean)
+* `is_deleted` (boolean) - Whether the referenced connection has been deleted. The MCP service keeps
+  the reference so callers can identify the broken dependency; tool
+  invocation fails until the source connection is updated
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

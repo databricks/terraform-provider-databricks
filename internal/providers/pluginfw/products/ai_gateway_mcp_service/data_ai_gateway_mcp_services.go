@@ -32,13 +32,14 @@ type McpServicesData struct {
 	// Maximum number of MCP services to return. Defaults to 100 when unset or
 	// 0; the maximum is 100. Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"page_size"`
-	// Name of the parent schema to list within, as
-	// `schemas/{catalog}.{schema}`. Each `{...}` component is capped at 255
-	// characters individually.
+	// Parent schema to list within, in the form `schemas/{catalog}.{schema}`.
+	// Required. Each `{...}` component is capped at 255 characters
+	// individually.
 	Parent types.String `tfsdk:"parent"`
-	// View selector controlling which fields are populated per row. `FULL`
-	// returns the full representation of the service; `BASIC` returns a more
-	// compact version. Defaults to `BASIC` when unset.
+	// Fields to return for each service. `FULL` includes source-connection
+	// details and rate-limit principal names. `BASIC` omits the source
+	// connection and omits principal names from rate limits. Defaults to
+	// `BASIC` when unset.
 	View               types.String `tfsdk:"view"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

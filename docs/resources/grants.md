@@ -247,7 +247,7 @@ resource "databricks_grants" "secret" {
 
 ## Model service grants
 
-You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `EXECUTE`, `MANAGE`, and `READ_METADATA` privileges to a Unity AI Gateway model service ([databricks_ai_gateway_model_service](ai_gateway_model_service.md)) specified in the `model_service` attribute.
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `EXECUTE`, `MANAGE`, and `READ_METADATA` privileges to a Unity AI Gateway model service ([databricks_ai_gateway_model_service](ai_gateway_model_service.md)) specified in the `model_service` attribute. Pass either the bare full name (`catalog.schema.name`) or the resource's `name` attribute (`databricks_ai_gateway_model_service.this.name`); the provider strips the `model-services/` resource-name prefix that `name` carries.
 
 ```hcl
 resource "databricks_grants" "model_service" {
@@ -261,7 +261,7 @@ resource "databricks_grants" "model_service" {
 
 ## Model provider service grants
 
-You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `EXECUTE`, `MANAGE`, and `READ_METADATA` privileges to a Unity AI Gateway model provider service ([databricks_ai_gateway_model_provider_service](ai_gateway_model_provider_service.md)) specified in the `model_provider_service` attribute.
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `EXECUTE`, `MANAGE`, and `READ_METADATA` privileges to a Unity AI Gateway model provider service ([databricks_ai_gateway_model_provider_service](ai_gateway_model_provider_service.md)) specified in the `model_provider_service` attribute. Pass either the bare full name (`catalog.schema.name`) or the resource's `name` attribute (`databricks_ai_gateway_model_provider_service.this.name`); the provider strips the `model-provider-services/` resource-name prefix that `name` carries.
 
 ```hcl
 resource "databricks_grants" "model_provider_service" {
@@ -275,7 +275,7 @@ resource "databricks_grants" "model_provider_service" {
 
 ## MCP service grants
 
-You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `EXECUTE`, `MANAGE`, and `READ_METADATA` privileges to a Unity AI Gateway MCP service ([databricks_ai_gateway_mcp_service](ai_gateway_mcp_service.md)) specified in the `mcp_service` attribute.
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `EXECUTE`, `MANAGE`, and `READ_METADATA` privileges to a Unity AI Gateway MCP service ([databricks_ai_gateway_mcp_service](ai_gateway_mcp_service.md)) specified in the `mcp_service` attribute. Pass either the bare full name (`catalog.schema.name`) or the resource's `name` attribute (`databricks_ai_gateway_mcp_service.this.name`); the provider strips the `mcp-services/` resource-name prefix that `name` carries.
 
 ```hcl
 resource "databricks_grants" "mcp_service" {

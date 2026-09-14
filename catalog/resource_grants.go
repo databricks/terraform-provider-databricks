@@ -153,9 +153,10 @@ func ResourceGrants() common.Resource {
 			alof := []string{}
 			for field := range permissions.Mappings {
 				s[field] = &schema.Schema{
-					Type:     schema.TypeString,
-					ForceNew: true,
-					Optional: true,
+					Type:             schema.TypeString,
+					ForceNew:         true,
+					Optional:         true,
+					DiffSuppressFunc: permissions.SuppressResourceNamePrefixDiff(field),
 				}
 				alof = append(alof, field)
 			}

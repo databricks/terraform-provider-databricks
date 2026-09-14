@@ -112,22 +112,20 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 type McpService struct {
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
-	// Operational configuration: connection, tool selectors, rate limit.
-	// Required on CreateMcpService; on UpdateMcpService it is required only
-	// when `config` (or a `config.*` subpath) appears in `update_mask`.
+	// Connection, tool selectors, and rate limits. Required on Create. On
+	// Update, provide this field when `update_mask` contains `config` or one of
+	// its subpaths.
 	Config types.Object `tfsdk:"config"`
-	// When the MCP service was created.
+	// Time the MCP service was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Creator identity.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// The resolved owner of the MCP service. Falls back to the caller's
-	// identity when `owner` is not explicitly set on creation.
+	// Owner of the MCP service.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
-	// Optimistic concurrency control token. Server-generated from the entity's
-	// state and returned on every read. To use it as an if-match precondition
-	// on a mutation, echo the last-read value back via the dedicated `etag`
-	// field on the Update / Delete request; the server rejects the mutation if
-	// the stored etag differs.
+	// Optimistic concurrency token returned on every read. To make an Update or
+	// Delete conditional, pass the last-read value in that request's `etag`
+	// field. In REST responses, this value is a base64 string; URL-encode it
+	// when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"etag"`
 	// Name for the MCP service, e.g. "my_mcp_service".
 	McpServiceId types.String `tfsdk:"mcp_service_id"`
@@ -138,12 +136,10 @@ type McpService struct {
 	// is capped at 255 characters individually. Server-derived on Create from
 	// `parent` + `mcp_service_id`; required and immutable on Update/Get/Delete.
 	Name types.String `tfsdk:"name"`
-	// The owner of the MCP service. Write-only; read owner via effective_owner.
-	Owner types.String `tfsdk:"owner"`
 	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
 	// `{...}` component is capped at 255 characters individually.
 	Parent types.String `tfsdk:"parent"`
-	// When the MCP service was last modified.
+	// Time the MCP service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// Identity of the last updater.
 	UpdatedBy      types.String `tfsdk:"updated_by"`
@@ -182,7 +178,6 @@ func (m McpService) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"mcp_service_id":  m.McpServiceId,
 			"metastore_id":    m.MetastoreId,
 			"name":            m.Name,
-			"owner":           m.Owner,
 			"parent":          m.Parent,
 			"update_time":     m.UpdateTime,
 			"updated_by":      m.UpdatedBy,
@@ -205,7 +200,6 @@ func (m McpService) Type(ctx context.Context) attr.Type {
 			"mcp_service_id":  types.StringType,
 			"metastore_id":    types.StringType,
 			"name":            types.StringType,
-			"owner":           types.StringType,
 			"parent":          types.StringType,
 			"update_time":     timetypes.RFC3339{}.Type(ctx),
 			"updated_by":      types.StringType,
@@ -231,10 +225,6 @@ func (to *McpService) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from M
 	if !from.McpServiceId.IsUnknown() {
 		to.McpServiceId = from.McpServiceId
 	}
-	if !from.Owner.IsUnknown() && !from.Owner.IsNull() {
-		// Owner is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Owner = from.Owner
-	}
 	if !from.Parent.IsUnknown() {
 		to.Parent = from.Parent
 	}
@@ -257,10 +247,6 @@ func (to *McpService) SyncFieldsDuringRead(ctx context.Context, from McpService)
 	if !from.McpServiceId.IsUnknown() {
 		to.McpServiceId = from.McpServiceId
 	}
-	if !from.Owner.IsUnknown() && !from.Owner.IsNull() {
-		// Owner is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Owner = from.Owner
-	}
 	if !from.Parent.IsUnknown() {
 		to.Parent = from.Parent
 	}
@@ -278,9 +264,6 @@ func (m McpService) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetComputed()
-	attrs["owner"] = attrs["owner"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updated_by"] = attrs["updated_by"].SetComputed()
 	attrs["mcp_service_id"] = attrs["mcp_service_id"].SetRequired()
@@ -478,7 +461,7 @@ func (r *McpServiceResource) update(ctx context.Context, plan McpService, diags 
 	updateRequest := catalog.UpdateMcpServiceRequest{
 		McpService: mcp_service,
 		Name:       plan.Name.ValueString(),
-		UpdateMask: *fieldmask.New(strings.Split("comment,config,owner", ",")),
+		UpdateMask: *fieldmask.New(strings.Split("comment,config", ",")),
 	}
 
 	var namespace ProviderConfig

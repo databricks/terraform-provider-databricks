@@ -18,11 +18,14 @@ The following arguments are supported:
 * `source` (DataSource, required) - The data source of the feature
 * `description` (string, optional) - The description of the feature
 * `entities` (list of EntityColumn, optional) - The entity columns for the feature, used as aggregation keys and for query-time lookup
+* `filter_condition` (string, optional, deprecated)
+* `inputs` (list of string, optional, deprecated)
 * `lineage_context` (LineageContext, optional) - Lineage context information for this feature.
   WARNING: This field is primarily intended for internal use by Databricks systems and
   is automatically populated when features are created through Databricks notebooks or jobs.
   Users should not manually set this field as incorrect values may lead to inaccurate lineage tracking or unexpected behavior.
   This field will be set by feature-engineering client and should be left unset by SDK and terraform users
+* `time_window` (TimeWindow, optional, deprecated)
 * `timeseries_column` (TimeseriesColumn, optional) - Column recording time, used for point-in-time joins, backfills, and aggregations
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
@@ -64,8 +67,15 @@ The following arguments are supported:
   Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
+### ColumnIdentifier
+* `variant_expr_path` (string, required) - String representation of the column name using dot-prefixed path notation
+
 ### ColumnSelection
 * `column` (string, required) - Column name from source to select as the feature value
+
+### ContinuousWindow
+* `window_duration` (string, required) - The duration of the continuous window (must be positive)
+* `offset` (string, optional) - The offset of the continuous window (must be non-positive)
 
 ### CountFunction
 * `input` (string, required) - The input column from which the count is computed. For Kafka sources, use dot-prefixed path
@@ -91,7 +101,9 @@ The following arguments are supported:
 * `dataframe_schema` (string, optional) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
   Required if transformation_sql is specified.
   Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
+* `entity_columns` (list of string, optional, deprecated)
 * `filter_condition` (string, optional) - Single WHERE clause to filter delta table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections
+* `timeseries_column` (string, optional, deprecated)
 * `transformation_sql` (string, optional) - A single SQL SELECT expression applied after filter_condition.
   Should contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
   If transformation_sql is not provided, all columns of the delta table are present in the DataSource dataframe
@@ -126,6 +138,12 @@ The following arguments are supported:
 * `aggregation_function` (AggregationFunction, optional) - An aggregation function applied over a time window
 * `column_selection` (ColumnSelection, optional) - Selects the latest value of a single column in a data source
 * `custom_udf` (CustomUdf, optional) - Applies a registered Unity Catalog function row-wise to source columns
+* `extra_parameters` (list of FunctionExtraParameter, optional, deprecated)
+* `function_type` (string, optional, deprecated) - Possible values are: `APPROX_COUNT_DISTINCT`, `APPROX_PERCENTILE`, `AVG`, `COUNT`, `FIRST`, `FUNCTION_TYPE_UNSPECIFIED`, `LAST`, `MAX`, `MIN`, `STDDEV_POP`, `STDDEV_SAMP`, `SUM`, `VAR_POP`, `VAR_SAMP`
+
+### FunctionExtraParameter
+* `key` (string, required) - The name of the parameter
+* `value` (string, required) - The value of the parameter
 
 ### InputBinding
 * `column` (string, required) - Source column whose value is passed for this parameter at execution time
@@ -137,7 +155,9 @@ The following arguments are supported:
 
 ### KafkaSource
 * `name` (string, required) - Name of the Kafka source, used to identify it. This is used to look up the corresponding KafkaConfig object. Can be distinct from topic name
+* `entity_column_identifiers` (list of ColumnIdentifier, optional, deprecated)
 * `filter_condition` (string, optional) - The filter condition applied to the source data before aggregation
+* `timeseries_column_identifier` (ColumnIdentifier, optional, deprecated)
 
 ### LastDistinctFunction
 * `input` (string, required) - The input column from which the last N distinct values are returned
@@ -220,6 +240,7 @@ The following arguments are supported:
   compatibility but is deprecated; migrate to dot notation
 
 ### TimeWindow
+* `continuous` (ContinuousWindow, optional, deprecated)
 * `rolling` (RollingWindow, optional)
 * `sawtooth` (SawtoothWindow, optional) - A sawtooth window served via the hybrid batch + streaming path
 * `sliding` (SlidingWindow, optional)
@@ -229,7 +250,8 @@ The following arguments are supported:
   for 365 days of data; a lifetime window produces no output before start_time. If unset,
   tumbling and fixed-duration sliding windows first emit at an offset-aligned boundary after a
   full window can be formed. If unset, lifetime sliding windows and rolling windows emit as soon as
-  eligible source data exists
+  eligible source data exists.
+  Not currently supported for sawtooth windows or for Features with a stream source
 * `tumbling` (TumblingWindow, optional)
 
 ### TimeseriesColumn

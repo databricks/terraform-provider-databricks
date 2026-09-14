@@ -13,6 +13,7 @@ subcategory: "Postgres"
 
 ## Arguments
 The following arguments are supported:
+* `parent` (string, required) - The resource name of the parent
 * `schedule` (list of ScheduleCadence, optional) - The cadences at which automatic snapshots are taken. Update replaces the
   whole set; an empty set disables automatic snapshots. Order is not
   significant. When several cadences fire together, one snapshot is taken,

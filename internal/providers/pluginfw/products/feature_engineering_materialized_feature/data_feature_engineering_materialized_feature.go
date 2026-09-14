@@ -98,6 +98,12 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // MaterializedFeatureData extends the main model with additional fields.
 type MaterializedFeatureData struct {
+	// The ID of the budget policy used to attribute the serverless compute cost
+	// of this materialization. If not specified, a default budget policy may be
+	// applied.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+
+	CronSchedule types.String `tfsdk:"cron_schedule"`
 	// A cron-based schedule trigger for the materialization pipeline.
 	CronScheduleTrigger types.Object `tfsdk:"cron_schedule_trigger"`
 	// The full name of the feature in Unity Catalog.
@@ -108,6 +114,9 @@ type MaterializedFeatureData struct {
 	// The timestamp when the pipeline last ran and updated the materialized
 	// feature values. If the pipeline has not run yet, this field will be null.
 	LastMaterializationTime types.String `tfsdk:"last_materialization_time"`
+	// Name of the latest backfill operation on this materialized feature.
+	// Format: operations/{operation_id}.
+	LatestBackfillOperation types.String `tfsdk:"latest_backfill_operation"`
 	// Server-assigned unique identifier for the materialized feature.
 	MaterializedFeatureId types.String `tfsdk:"materialized_feature_id"`
 	// Destination for writing feature values to an offline Delta table.
@@ -126,7 +135,17 @@ type MaterializedFeatureData struct {
 	// materialized feature (Delta table or Lakebase table). Output only.
 	TableName types.String `tfsdk:"table_name"`
 	// A trigger that fires when the upstream source table changes.
-	TableTrigger       types.Object `tfsdk:"table_trigger"`
+	TableTrigger types.Object `tfsdk:"table_trigger"`
+	// Custom tags to associate with this materialization. They are applied to
+	// the materialization job (for batch features) or pipeline (for streaming
+	// features) and forwarded to the underlying compute as cluster tags, so
+	// materialization cost can be attributed in the billing system tables.
+	// These tags apply only to the materialization compute; they are not
+	// applied to the Unity Catalog Feature resource itself, whose tags are
+	// managed separately through the Unity Catalog tagging API. A maximum of 25
+	// tags is supported; keys and values are subject to the same limitations as
+	// cluster tags.
+	Tags               types.Map    `tfsdk:"tags"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
@@ -144,6 +163,7 @@ func (m MaterializedFeatureData) GetComplexFieldTypes(ctx context.Context) map[s
 		"online_store_config":   reflect.TypeOf(ml_tf.OnlineStoreConfig{}),
 		"streaming_mode":        reflect.TypeOf(ml_tf.StreamingMode{}),
 		"table_trigger":         reflect.TypeOf(ml_tf.TableTrigger{}),
+		"tags":                  reflect.TypeOf(types.String{}),
 		"provider_config":       reflect.TypeOf(ProviderConfigData{}),
 	}
 }
@@ -158,10 +178,13 @@ func (m MaterializedFeatureData) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"budget_policy_id":          m.BudgetPolicyId,
+			"cron_schedule":             m.CronSchedule,
 			"cron_schedule_trigger":     m.CronScheduleTrigger,
 			"feature_name":              m.FeatureName,
 			"is_online":                 m.IsOnline,
 			"last_materialization_time": m.LastMaterializationTime,
+			"latest_backfill_operation": m.LatestBackfillOperation,
 			"materialized_feature_id":   m.MaterializedFeatureId,
 			"offline_store_config":      m.OfflineStoreConfig,
 			"online_store_config":       m.OnlineStoreConfig,
@@ -169,6 +192,7 @@ func (m MaterializedFeatureData) ToObjectValue(ctx context.Context) basetypes.Ob
 			"streaming_mode":            m.StreamingMode,
 			"table_name":                m.TableName,
 			"table_trigger":             m.TableTrigger,
+			"tags":                      m.Tags,
 
 			"provider_config": m.ProviderConfigData,
 		},
@@ -180,10 +204,13 @@ func (m MaterializedFeatureData) ToObjectValue(ctx context.Context) basetypes.Ob
 func (m MaterializedFeatureData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"budget_policy_id":          types.StringType,
+			"cron_schedule":             types.StringType,
 			"cron_schedule_trigger":     ml_tf.CronSchedule{}.Type(ctx),
 			"feature_name":              types.StringType,
 			"is_online":                 types.BoolType,
 			"last_materialization_time": types.StringType,
+			"latest_backfill_operation": types.StringType,
 			"materialized_feature_id":   types.StringType,
 			"offline_store_config":      ml_tf.OfflineStoreConfig{}.Type(ctx),
 			"online_store_config":       ml_tf.OnlineStoreConfig{}.Type(ctx),
@@ -191,6 +218,9 @@ func (m MaterializedFeatureData) Type(ctx context.Context) attr.Type {
 			"streaming_mode":            ml_tf.StreamingMode{}.Type(ctx),
 			"table_name":                types.StringType,
 			"table_trigger":             ml_tf.TableTrigger{}.Type(ctx),
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 
 			"provider_config": ProviderConfigData{}.Type(ctx),
 		},
@@ -198,10 +228,13 @@ func (m MaterializedFeatureData) Type(ctx context.Context) attr.Type {
 }
 
 func (m MaterializedFeatureData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetComputed()
+	attrs["cron_schedule"] = attrs["cron_schedule"].SetComputed()
 	attrs["cron_schedule_trigger"] = attrs["cron_schedule_trigger"].SetComputed()
 	attrs["feature_name"] = attrs["feature_name"].SetComputed()
 	attrs["is_online"] = attrs["is_online"].SetComputed()
 	attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
+	attrs["latest_backfill_operation"] = attrs["latest_backfill_operation"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetRequired()
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetComputed()
 	attrs["online_store_config"] = attrs["online_store_config"].SetComputed()
@@ -209,6 +242,7 @@ func (m MaterializedFeatureData) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["streaming_mode"] = attrs["streaming_mode"].SetComputed()
 	attrs["table_name"] = attrs["table_name"].SetComputed()
 	attrs["table_trigger"] = attrs["table_trigger"].SetComputed()
+	attrs["tags"] = attrs["tags"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 

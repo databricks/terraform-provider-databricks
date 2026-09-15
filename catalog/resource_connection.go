@@ -75,9 +75,7 @@ func ResourceConnection() common.Resource {
 			for _, v := range []string{"owner", "read_only"} {
 				common.CustomizeSchemaPath(m, v).SetComputed()
 			}
-			// name is ForceNew: the resource does not implement rename (the update path never sends
-			// new_name and the id embeds the name via full_name), so a name change must recreate.
-			for _, v := range []string{"name", "read_only", "properties", "comment", "connection_type", "parent"} {
+			for _, v := range []string{"read_only", "properties", "comment", "connection_type", "parent"} {
 				common.CustomizeSchemaPath(m, v).SetForceNew()
 			}
 			common.CustomizeSchemaPath(m, "options").SetSensitive().SetCustomSuppressDiff(suppressComputedFields)

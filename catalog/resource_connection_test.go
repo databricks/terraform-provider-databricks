@@ -333,7 +333,6 @@ func TestConnectionsUpdate(t *testing.T) {
 		Update:   true,
 		ID:       "abc|testConnectionName",
 		InstanceState: map[string]string{
-			"name":            "testConnectionName",
 			"connection_type": "testConnectionType",
 			"comment":         "testComment",
 		},
@@ -422,7 +421,6 @@ func TestConnectionsUpdateOwnerAndOtherFields(t *testing.T) {
 		Update:   true,
 		ID:       "abc|testConnectionName",
 		InstanceState: map[string]string{
-			"name":            "testConnectionName",
 			"connection_type": "testConnectionType",
 			"comment":         "testComment",
 		},
@@ -466,7 +464,6 @@ func TestConnectionUpdate_Error(t *testing.T) {
 		Update:   true,
 		ID:       "abc|testConnectionName",
 		InstanceState: map[string]string{
-			"name":            "testConnectionName",
 			"connection_type": "testConnectionType",
 			"comment":         "testComment",
 		},
@@ -660,8 +657,11 @@ func TestValidateConnectionParent(t *testing.T) {
 // changes the connection's schema, so both require replacement rather than in-place update.
 func TestConnectionSchemaForceNew(t *testing.T) {
 	s := ResourceConnection().Schema
-	assert.True(t, s["name"].ForceNew, "name should be ForceNew")
+	// parent is ForceNew: moving a connection to a different schema is a replace. name is
+	// intentionally NOT ForceNew — it keeps the existing metastore-level behavior; rename is a
+	// separate, pre-existing concern out of scope for schema-level support.
 	assert.True(t, s["parent"].ForceNew, "parent should be ForceNew")
+	assert.False(t, s["name"].ForceNew, "name should not be ForceNew")
 }
 
 // The schema-level backend returns an empty environment_settings object; it must not

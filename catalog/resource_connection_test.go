@@ -664,6 +664,17 @@ func TestConnectionSchemaForceNew(t *testing.T) {
 	assert.False(t, s["name"].ForceNew, "name should not be ForceNew")
 }
 
+// parent is ForceNew and is rebuilt from the server's full_name on every read; without
+// case-insensitive suppression, a case-only difference between the configured parent and the
+// server-normalized value would diff a ForceNew field and destroy/recreate the connection.
+func TestConnectionParentDiffSuppress(t *testing.T) {
+	suppress := ResourceConnection().Schema["parent"].DiffSuppressFunc
+	// Case-only difference (UC identifiers are case-insensitive) must be suppressed → no recreate.
+	assert.True(t, suppress("parent", "schemas/main.default", "schemas/Main.Default", nil))
+	// A genuine schema change must NOT be suppressed → it correctly forces a replace.
+	assert.False(t, suppress("parent", "schemas/main.default", "schemas/other.schema", nil))
+}
+
 // The schema-level backend returns an empty environment_settings object; it must not
 // materialize as a block, or every plan would diff it against a config that omits it.
 func TestConnectionsRead_SchemaLevelDropsEmptyEnvironmentSettings(t *testing.T) {

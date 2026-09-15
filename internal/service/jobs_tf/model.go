@@ -68,6 +68,15 @@ type AiRuntimeTask struct {
 	// Optional display name for the MLflow run created under `experiment`. If
 	// omitted, MLflow generates a default name.
 	MlflowRun types.String `tfsdk:"mlflow_run"`
+	// Scheduling priority class for the workload. May only be set together with
+	// a pre-provisioned capacity reservation (a deployment's
+	// `compute.provisioned_capacity_id`); it is rejected on a workload that
+	// runs on on-demand capacity.
+	PriorityClass types.String `tfsdk:"priority_class"`
+	// Optional Unity Catalog path for a custom container image. When set, the
+	// task runs on the specified container image instead of the default
+	// Databricks client image. Format: `{catalog}.{schema}.{image_name}:{tag}`
+	UnityCatalogImagePath types.String `tfsdk:"unity_catalog_image_path"`
 }
 
 func (to *AiRuntimeTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiRuntimeTask) {
@@ -109,6 +118,8 @@ func (m AiRuntimeTask) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["mlflow_artifact_location"] = attrs["mlflow_artifact_location"].SetOptional()
 	attrs["mlflow_experiment_directory"] = attrs["mlflow_experiment_directory"].SetOptional()
 	attrs["mlflow_run"] = attrs["mlflow_run"].SetOptional()
+	attrs["priority_class"] = attrs["priority_class"].SetOptional()
+	attrs["unity_catalog_image_path"] = attrs["unity_catalog_image_path"].SetOptional()
 
 	return attrs
 }
@@ -140,6 +151,8 @@ func (m AiRuntimeTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"mlflow_artifact_location":    m.MlflowArtifactLocation,
 			"mlflow_experiment_directory": m.MlflowExperimentDirectory,
 			"mlflow_run":                  m.MlflowRun,
+			"priority_class":              m.PriorityClass,
+			"unity_catalog_image_path":    m.UnityCatalogImagePath,
 		})
 }
 
@@ -156,6 +169,8 @@ func (m AiRuntimeTask) Type(ctx context.Context) attr.Type {
 			"mlflow_artifact_location":    types.StringType,
 			"mlflow_experiment_directory": types.StringType,
 			"mlflow_run":                  types.StringType,
+			"priority_class":              types.StringType,
+			"unity_catalog_image_path":    types.StringType,
 		},
 	}
 }
@@ -2918,12 +2933,16 @@ type CreateJob struct {
 	// begin or complete as well as when this job is deleted.
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
 	// A list of task execution environment specifications that can be
-	// referenced by serverless tasks of this job. For serverless notebook
-	// tasks, if the environment_key is not specified, the notebook environment
-	// will be used if present. If a jobs environment is specified, it will
-	// override the notebook environment. For other serverless tasks, the task
-	// environment is required to be specified using environment_key in the task
-	// settings.
+	// referenced by tasks that use serverless compute or a compute resource
+	// that uses Environments mode.
+	//
+	// For notebook tasks that use serverless compute or a compute resource that
+	// uses Environments mode, if the environment_key is not specified, the
+	// notebook environment will be used if present. If a jobs environment is
+	// specified, it will override the notebook environment. For other tasks
+	// that use serverless compute or a compute resource that uses Environments
+	// mode, the task environment is required to be specified using
+	// environment_key in the task settings.
 	Environments types.List `tfsdk:"environment"`
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
@@ -9321,12 +9340,16 @@ type JobSettings struct {
 	// begin or complete as well as when this job is deleted.
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
 	// A list of task execution environment specifications that can be
-	// referenced by serverless tasks of this job. For serverless notebook
-	// tasks, if the environment_key is not specified, the notebook environment
-	// will be used if present. If a jobs environment is specified, it will
-	// override the notebook environment. For other serverless tasks, the task
-	// environment is required to be specified using environment_key in the task
-	// settings.
+	// referenced by tasks that use serverless compute or a compute resource
+	// that uses Environments mode.
+	//
+	// For notebook tasks that use serverless compute or a compute resource that
+	// uses Environments mode, if the environment_key is not specified, the
+	// notebook environment will be used if present. If a jobs environment is
+	// specified, it will override the notebook environment. For other tasks
+	// that use serverless compute or a compute resource that uses Environments
+	// mode, the task environment is required to be specified using
+	// environment_key in the task settings.
 	Environments types.List `tfsdk:"environment"`
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
@@ -19569,7 +19592,7 @@ type RunTask struct {
 	EndTime types.Int64 `tfsdk:"end_time"`
 	// The key that references an environment spec in a job. This field is
 	// required for Python script, Python wheel and dbt tasks when using
-	// serverless compute.
+	// serverless compute or a compute resource that uses Environments mode.
 	EnvironmentKey types.String `tfsdk:"environment_key"`
 	// The time in milliseconds it took to execute the commands in the JAR or
 	// notebook until they completed, failed, timed out, were cancelled, or
@@ -24266,7 +24289,7 @@ type SubmitTask struct {
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
 	// The key that references an environment spec in a job. This field is
 	// required for Python script, Python wheel and dbt tasks when using
-	// serverless compute.
+	// serverless compute or a compute resource that uses Environments mode.
 	EnvironmentKey types.String `tfsdk:"environment_key"`
 	// If existing_cluster_id, the ID of an existing cluster that is used for
 	// all runs. When running jobs or tasks on an existing cluster, you may need
@@ -26269,7 +26292,7 @@ type Task struct {
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
 	// The key that references an environment spec in a job. This field is
 	// required for Python script, Python wheel and dbt tasks when using
-	// serverless compute.
+	// serverless compute or a compute resource that uses Environments mode.
 	EnvironmentKey types.String `tfsdk:"environment_key"`
 	// If existing_cluster_id, the ID of an existing cluster that is used for
 	// all runs. When running jobs or tasks on an existing cluster, you may need

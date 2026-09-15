@@ -15166,6 +15166,11 @@ func (m StackFrame) Type(ctx context.Context) attr.Type {
 
 type StartUpdate struct {
 	Cause types.String `tfsdk:"cause"`
+	// Whether the update is started in the development mode. This is
+	// recommended for interactive development and testing. Reuses compute for
+	// faster iteration and disables automatic retries. Not recommended for
+	// production.
+	Development types.Bool `tfsdk:"development"`
 	// If true, this update will reset all tables before running.
 	FullRefresh types.Bool `tfsdk:"full_refresh"`
 	// A list of tables to update with fullRefresh. If both refresh_selection
@@ -15297,6 +15302,7 @@ func (to *StartUpdate) SyncFieldsDuringRead(ctx context.Context, from StartUpdat
 
 func (m StartUpdate) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["cause"] = attrs["cause"].SetOptional()
+	attrs["development"] = attrs["development"].SetOptional()
 	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
 	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
@@ -15336,6 +15342,7 @@ func (m StartUpdate) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"cause":                      m.Cause,
+			"development":                m.Development,
 			"full_refresh":               m.FullRefresh,
 			"full_refresh_selection":     m.FullRefreshSelection,
 			"parameters":                 m.Parameters,
@@ -15353,6 +15360,7 @@ func (m StartUpdate) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cause":        types.StringType,
+			"development":  types.BoolType,
 			"full_refresh": types.BoolType,
 			"full_refresh_selection": basetypes.ListType{
 				ElemType: types.StringType,

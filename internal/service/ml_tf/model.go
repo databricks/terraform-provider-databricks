@@ -5538,6 +5538,8 @@ func (m *CustomUdf) SetInputBindings(ctx context.Context, v []InputBinding) {
 type DataSource struct {
 	// A Delta table data source.
 	DeltaTableSource types.Object `tfsdk:"delta_table_source"`
+	// A data source composed from registered upstream Features.
+	FeatureViewSource types.Object `tfsdk:"feature_view_source"`
 	// A Kafka stream data source.
 	KafkaSource types.Object `tfsdk:"kafka_source"`
 	// Completeness timing for this Feature's use of the source. This
@@ -5557,6 +5559,15 @@ func (to *DataSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from D
 				// Recursively sync the fields of DeltaTableSource
 				toDeltaTableSource.SyncFieldsDuringCreateOrUpdate(ctx, fromDeltaTableSource)
 				to.SetDeltaTableSource(ctx, toDeltaTableSource)
+			}
+		}
+	}
+	if !from.FeatureViewSource.IsNull() && !from.FeatureViewSource.IsUnknown() {
+		if toFeatureViewSource, ok := to.GetFeatureViewSource(ctx); ok {
+			if fromFeatureViewSource, ok := from.GetFeatureViewSource(ctx); ok {
+				// Recursively sync the fields of FeatureViewSource
+				toFeatureViewSource.SyncFieldsDuringCreateOrUpdate(ctx, fromFeatureViewSource)
+				to.SetFeatureViewSource(ctx, toFeatureViewSource)
 			}
 		}
 	}
@@ -5607,6 +5618,14 @@ func (to *DataSource) SyncFieldsDuringRead(ctx context.Context, from DataSource)
 			}
 		}
 	}
+	if !from.FeatureViewSource.IsNull() && !from.FeatureViewSource.IsUnknown() {
+		if toFeatureViewSource, ok := to.GetFeatureViewSource(ctx); ok {
+			if fromFeatureViewSource, ok := from.GetFeatureViewSource(ctx); ok {
+				toFeatureViewSource.SyncFieldsDuringRead(ctx, fromFeatureViewSource)
+				to.SetFeatureViewSource(ctx, toFeatureViewSource)
+			}
+		}
+	}
 	if !from.KafkaSource.IsNull() && !from.KafkaSource.IsUnknown() {
 		if toKafkaSource, ok := to.GetKafkaSource(ctx); ok {
 			if fromKafkaSource, ok := from.GetKafkaSource(ctx); ok {
@@ -5643,6 +5662,7 @@ func (to *DataSource) SyncFieldsDuringRead(ctx context.Context, from DataSource)
 
 func (m DataSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["delta_table_source"] = attrs["delta_table_source"].SetOptional()
+	attrs["feature_view_source"] = attrs["feature_view_source"].SetOptional()
 	attrs["kafka_source"] = attrs["kafka_source"].SetOptional()
 	attrs["lateness"] = attrs["lateness"].SetOptional()
 	attrs["request_source"] = attrs["request_source"].SetOptional()
@@ -5660,11 +5680,12 @@ func (m DataSource) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 // SDK values.
 func (m DataSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"delta_table_source": reflect.TypeOf(DeltaTableSource{}),
-		"kafka_source":       reflect.TypeOf(KafkaSource{}),
-		"lateness":           reflect.TypeOf(SourceLateness{}),
-		"request_source":     reflect.TypeOf(RequestSource{}),
-		"stream_source":      reflect.TypeOf(StreamSource{}),
+		"delta_table_source":  reflect.TypeOf(DeltaTableSource{}),
+		"feature_view_source": reflect.TypeOf(FeatureViewSource{}),
+		"kafka_source":        reflect.TypeOf(KafkaSource{}),
+		"lateness":            reflect.TypeOf(SourceLateness{}),
+		"request_source":      reflect.TypeOf(RequestSource{}),
+		"stream_source":       reflect.TypeOf(StreamSource{}),
 	}
 }
 
@@ -5675,11 +5696,12 @@ func (m DataSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"delta_table_source": m.DeltaTableSource,
-			"kafka_source":       m.KafkaSource,
-			"lateness":           m.Lateness,
-			"request_source":     m.RequestSource,
-			"stream_source":      m.StreamSource,
+			"delta_table_source":  m.DeltaTableSource,
+			"feature_view_source": m.FeatureViewSource,
+			"kafka_source":        m.KafkaSource,
+			"lateness":            m.Lateness,
+			"request_source":      m.RequestSource,
+			"stream_source":       m.StreamSource,
 		})
 }
 
@@ -5687,11 +5709,12 @@ func (m DataSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m DataSource) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"delta_table_source": DeltaTableSource{}.Type(ctx),
-			"kafka_source":       KafkaSource{}.Type(ctx),
-			"lateness":           SourceLateness{}.Type(ctx),
-			"request_source":     RequestSource{}.Type(ctx),
-			"stream_source":      StreamSource{}.Type(ctx),
+			"delta_table_source":  DeltaTableSource{}.Type(ctx),
+			"feature_view_source": FeatureViewSource{}.Type(ctx),
+			"kafka_source":        KafkaSource{}.Type(ctx),
+			"lateness":            SourceLateness{}.Type(ctx),
+			"request_source":      RequestSource{}.Type(ctx),
+			"stream_source":       StreamSource{}.Type(ctx),
 		},
 	}
 }
@@ -5719,6 +5742,31 @@ func (m *DataSource) GetDeltaTableSource(ctx context.Context) (DeltaTableSource,
 func (m *DataSource) SetDeltaTableSource(ctx context.Context, v DeltaTableSource) {
 	vs := v.ToObjectValue(ctx)
 	m.DeltaTableSource = vs
+}
+
+// GetFeatureViewSource returns the value of the FeatureViewSource field in DataSource as
+// a FeatureViewSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataSource) GetFeatureViewSource(ctx context.Context) (FeatureViewSource, bool) {
+	var e FeatureViewSource
+	if m.FeatureViewSource.IsNull() || m.FeatureViewSource.IsUnknown() {
+		return e, false
+	}
+	var v FeatureViewSource
+	d := m.FeatureViewSource.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFeatureViewSource sets the value of the FeatureViewSource field in DataSource.
+func (m *DataSource) SetFeatureViewSource(ctx context.Context, v FeatureViewSource) {
+	vs := v.ToObjectValue(ctx)
+	m.FeatureViewSource = vs
 }
 
 // GetKafkaSource returns the value of the KafkaSource field in DataSource as
@@ -10153,6 +10201,57 @@ func (m *FeatureList) SetFeatures(ctx context.Context, v []LinkedFeature) {
 	m.Features = types.ListValueMust(t, vs)
 }
 
+// A reference to one registered upstream Feature. A message rather than a bare
+// name so an upstream can later be pinned more precisely (e.g. by version)
+// without a breaking type change.
+type FeatureReference struct {
+	// The three-part full name of the upstream Feature.
+	Feature types.String `tfsdk:"feature"`
+}
+
+func (to *FeatureReference) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FeatureReference) {
+}
+
+func (to *FeatureReference) SyncFieldsDuringRead(ctx context.Context, from FeatureReference) {
+}
+
+func (m FeatureReference) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["feature"] = attrs["feature"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FeatureReference.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m FeatureReference) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FeatureReference
+// only implements ToObjectValue() and Type().
+func (m FeatureReference) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"feature": m.Feature,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m FeatureReference) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"feature": types.StringType,
+		},
+	}
+}
+
 // Represents a tag on a feature in a feature table.
 type FeatureTag struct {
 	Key types.String `tfsdk:"key"`
@@ -10204,6 +10303,123 @@ func (m FeatureTag) Type(ctx context.Context) attr.Type {
 			"value": types.StringType,
 		},
 	}
+}
+
+// A data source composed from registered upstream Features.
+type FeatureViewSource struct {
+	// The upstream Features this source reads. Must include at least one
+	// feature.
+	FeatureReferences types.List `tfsdk:"feature_references"`
+}
+
+func (to *FeatureViewSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FeatureViewSource) {
+	if !from.FeatureReferences.IsNull() && !from.FeatureReferences.IsUnknown() && to.FeatureReferences.IsNull() && len(from.FeatureReferences.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FeatureReferences, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FeatureReferences = from.FeatureReferences
+	}
+	if !from.FeatureReferences.IsNull() && !from.FeatureReferences.IsUnknown() {
+		if toFeatureReferences, ok := to.GetFeatureReferences(ctx); ok {
+			if fromFeatureReferences, ok := from.GetFeatureReferences(ctx); ok {
+				// Recursively sync the fields of each FeatureReferences element by position.
+				for i := range toFeatureReferences {
+					if i < len(fromFeatureReferences) {
+						toFeatureReferences[i].SyncFieldsDuringCreateOrUpdate(ctx, fromFeatureReferences[i])
+					}
+				}
+				to.SetFeatureReferences(ctx, toFeatureReferences)
+			}
+		}
+	}
+}
+
+func (to *FeatureViewSource) SyncFieldsDuringRead(ctx context.Context, from FeatureViewSource) {
+	if !from.FeatureReferences.IsNull() && !from.FeatureReferences.IsUnknown() && to.FeatureReferences.IsNull() && len(from.FeatureReferences.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FeatureReferences, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FeatureReferences = from.FeatureReferences
+	}
+	if !from.FeatureReferences.IsNull() && !from.FeatureReferences.IsUnknown() {
+		if toFeatureReferences, ok := to.GetFeatureReferences(ctx); ok {
+			if fromFeatureReferences, ok := from.GetFeatureReferences(ctx); ok {
+				for i := range toFeatureReferences {
+					if i < len(fromFeatureReferences) {
+						toFeatureReferences[i].SyncFieldsDuringRead(ctx, fromFeatureReferences[i])
+					}
+				}
+				to.SetFeatureReferences(ctx, toFeatureReferences)
+			}
+		}
+	}
+}
+
+func (m FeatureViewSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["feature_references"] = attrs["feature_references"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FeatureViewSource.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m FeatureViewSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"feature_references": reflect.TypeOf(FeatureReference{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FeatureViewSource
+// only implements ToObjectValue() and Type().
+func (m FeatureViewSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"feature_references": m.FeatureReferences,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m FeatureViewSource) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"feature_references": basetypes.ListType{
+				ElemType: FeatureReference{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetFeatureReferences returns the value of the FeatureReferences field in FeatureViewSource as
+// a slice of FeatureReference values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *FeatureViewSource) GetFeatureReferences(ctx context.Context) ([]FeatureReference, bool) {
+	if m.FeatureReferences.IsNull() || m.FeatureReferences.IsUnknown() {
+		return nil, false
+	}
+	var v []FeatureReference
+	d := m.FeatureReferences.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFeatureReferences sets the value of the FeatureReferences field in FeatureViewSource.
+func (m *FeatureViewSource) SetFeatureReferences(ctx context.Context, v []FeatureReference) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["feature_references"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.FeatureReferences = types.ListValueMust(t, vs)
 }
 
 // A single field definition within a FlatSchema, specifying the field name and
@@ -21559,6 +21775,11 @@ func (m ProtoSchemaSpec) Type(ctx context.Context) attr.Type {
 }
 
 type PublishSpec struct {
+	// Budget policy id used to attribute the serverless compute cost of the
+	// synced online-table sync pipeline. Applied only when the sync pipeline is
+	// first created (the initial publish of a new online table); republishing
+	// to an existing online table does not update it.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// Full Unity Catalog name of one of the features materialized in the source
 	// table, used to derive the synced online table's entity and timeseries
 	// columns. Required for view sources without a UC PrimaryKeyConstraint;
@@ -21571,6 +21792,13 @@ type PublishSpec struct {
 	// The publish mode of the pipeline that syncs the online table with the
 	// source table.
 	PublishMode types.String `tfsdk:"publish_mode"`
+	// Custom tags to apply to the synced online-table sync pipeline created for
+	// this publish. They are forwarded to the pipeline's compute as cluster
+	// tags so its cost can be attributed in the billing system tables. Applied
+	// only when the sync pipeline is first created (the initial publish of a
+	// new online table); republishing to an existing online table does not
+	// update them.
+	Tags types.Map `tfsdk:"tags"`
 }
 
 func (to *PublishSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PublishSpec) {
@@ -21580,10 +21808,12 @@ func (to *PublishSpec) SyncFieldsDuringRead(ctx context.Context, from PublishSpe
 }
 
 func (m PublishSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["full_feature_name"] = attrs["full_feature_name"].SetOptional()
 	attrs["online_store"] = attrs["online_store"].SetRequired()
 	attrs["online_table_name"] = attrs["online_table_name"].SetRequired()
 	attrs["publish_mode"] = attrs["publish_mode"].SetRequired()
+	attrs["tags"] = attrs["tags"].SetOptional()
 
 	return attrs
 }
@@ -21596,7 +21826,9 @@ func (m PublishSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m PublishSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"tags": reflect.TypeOf(types.String{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -21606,10 +21838,12 @@ func (m PublishSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"budget_policy_id":  m.BudgetPolicyId,
 			"full_feature_name": m.FullFeatureName,
 			"online_store":      m.OnlineStore,
 			"online_table_name": m.OnlineTableName,
 			"publish_mode":      m.PublishMode,
+			"tags":              m.Tags,
 		})
 }
 
@@ -21617,12 +21851,42 @@ func (m PublishSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m PublishSpec) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"budget_policy_id":  types.StringType,
 			"full_feature_name": types.StringType,
 			"online_store":      types.StringType,
 			"online_table_name": types.StringType,
 			"publish_mode":      types.StringType,
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
+}
+
+// GetTags returns the value of the Tags field in PublishSpec as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PublishSpec) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if m.Tags.IsNull() || m.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in PublishSpec.
+func (m *PublishSpec) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Tags = types.MapValueMust(t, vs)
 }
 
 type PublishTableRequest struct {
@@ -21991,6 +22255,9 @@ func (m *PurgeFeatureEntitiesRequest) SetFeatures(ctx context.Context, v []types
 
 // Result of a completed feature entity purge.
 type PurgeFeatureEntitiesResponse struct {
+	// Operation-level error, if the purge failed outside an individual feature
+	// target.
+	Error types.Object `tfsdk:"error"`
 	// Metadata about the purge operation.
 	Metadata types.Object `tfsdk:"metadata"`
 	// Per-feature purge results.
@@ -22000,6 +22267,15 @@ type PurgeFeatureEntitiesResponse struct {
 }
 
 func (to *PurgeFeatureEntitiesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PurgeFeatureEntitiesResponse) {
+	if !from.Error.IsNull() && !from.Error.IsUnknown() {
+		if toError, ok := to.GetError(ctx); ok {
+			if fromError, ok := from.GetError(ctx); ok {
+				// Recursively sync the fields of Error
+				toError.SyncFieldsDuringCreateOrUpdate(ctx, fromError)
+				to.SetError(ctx, toError)
+			}
+		}
+	}
 	if !from.Metadata.IsNull() && !from.Metadata.IsUnknown() {
 		if toMetadata, ok := to.GetMetadata(ctx); ok {
 			if fromMetadata, ok := from.GetMetadata(ctx); ok {
@@ -22031,6 +22307,14 @@ func (to *PurgeFeatureEntitiesResponse) SyncFieldsDuringCreateOrUpdate(ctx conte
 }
 
 func (to *PurgeFeatureEntitiesResponse) SyncFieldsDuringRead(ctx context.Context, from PurgeFeatureEntitiesResponse) {
+	if !from.Error.IsNull() && !from.Error.IsUnknown() {
+		if toError, ok := to.GetError(ctx); ok {
+			if fromError, ok := from.GetError(ctx); ok {
+				toError.SyncFieldsDuringRead(ctx, fromError)
+				to.SetError(ctx, toError)
+			}
+		}
+	}
 	if !from.Metadata.IsNull() && !from.Metadata.IsUnknown() {
 		if toMetadata, ok := to.GetMetadata(ctx); ok {
 			if fromMetadata, ok := from.GetMetadata(ctx); ok {
@@ -22060,6 +22344,7 @@ func (to *PurgeFeatureEntitiesResponse) SyncFieldsDuringRead(ctx context.Context
 }
 
 func (m PurgeFeatureEntitiesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["error"] = attrs["error"].SetComputed()
 	attrs["metadata"] = attrs["metadata"].SetComputed()
 	attrs["results"] = attrs["results"].SetComputed()
 	attrs["state"] = attrs["state"].SetComputed()
@@ -22076,6 +22361,7 @@ func (m PurgeFeatureEntitiesResponse) ApplySchemaCustomizations(attrs map[string
 // SDK values.
 func (m PurgeFeatureEntitiesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"error":    reflect.TypeOf(DatabricksServiceExceptionWithDetailsProto{}),
 		"metadata": reflect.TypeOf(PurgeFeatureEntitiesMetadata{}),
 		"results":  reflect.TypeOf(PurgeFeatureEntitiesResult{}),
 	}
@@ -22088,6 +22374,7 @@ func (m PurgeFeatureEntitiesResponse) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"error":    m.Error,
 			"metadata": m.Metadata,
 			"results":  m.Results,
 			"state":    m.State,
@@ -22098,6 +22385,7 @@ func (m PurgeFeatureEntitiesResponse) ToObjectValue(ctx context.Context) basetyp
 func (m PurgeFeatureEntitiesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"error":    DatabricksServiceExceptionWithDetailsProto{}.Type(ctx),
 			"metadata": PurgeFeatureEntitiesMetadata{}.Type(ctx),
 			"results": basetypes.ListType{
 				ElemType: PurgeFeatureEntitiesResult{}.Type(ctx),
@@ -22105,6 +22393,31 @@ func (m PurgeFeatureEntitiesResponse) Type(ctx context.Context) attr.Type {
 			"state": types.StringType,
 		},
 	}
+}
+
+// GetError returns the value of the Error field in PurgeFeatureEntitiesResponse as
+// a DatabricksServiceExceptionWithDetailsProto value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PurgeFeatureEntitiesResponse) GetError(ctx context.Context) (DatabricksServiceExceptionWithDetailsProto, bool) {
+	var e DatabricksServiceExceptionWithDetailsProto
+	if m.Error.IsNull() || m.Error.IsUnknown() {
+		return e, false
+	}
+	var v DatabricksServiceExceptionWithDetailsProto
+	d := m.Error.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetError sets the value of the Error field in PurgeFeatureEntitiesResponse.
+func (m *PurgeFeatureEntitiesResponse) SetError(ctx context.Context, v DatabricksServiceExceptionWithDetailsProto) {
+	vs := v.ToObjectValue(ctx)
+	m.Error = vs
 }
 
 // GetMetadata returns the value of the Metadata field in PurgeFeatureEntitiesResponse as

@@ -1232,6 +1232,9 @@ func (m GenieCancelResponseRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A Genie conversation. Use chat-mode message endpoints for classic chats and
+// agent-mode response and item endpoints for agent conversations. Conversation
+// management, feedback, comments, and attachment operations support both modes.
 type GenieConversation_SdkV2 struct {
 	// Conversation ID
 	ConversationId types.String `tfsdk:"conversation_id"`
@@ -2282,6 +2285,8 @@ func (m *GenieEvalResultDetails_SdkV2) SetExpectedResponse(ctx context.Context, 
 	m.ExpectedResponse = types.ListValueMust(t, vs)
 }
 
+// A benchmark evaluation run. The public benchmark API currently evaluates
+// chat-mode responses.
 type GenieEvalRunResponse_SdkV2 struct {
 	// Timestamp when the evaluation run was created (milliseconds since epoch).
 	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`

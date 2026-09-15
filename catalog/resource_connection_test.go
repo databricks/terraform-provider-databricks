@@ -515,9 +515,7 @@ func TestConnectionDelete_Error(t *testing.T) {
 	}.ExpectError(t, "Something went wrong")
 }
 
-// schemaParentFromFullName underpins the read round-trip for schema-level (L3)
-// connections: the API returns only full_name, so the resource rebuilds the
-// user-supplied parent from it. An L1 connection has a 1-part full_name and no parent.
+// schemaParentFromFullName rebuilds parent from full_name; a 1-part name yields no parent.
 func TestSchemaParentFromFullName(t *testing.T) {
 	assert.Equal(t, "", schemaParentFromFullName("my_conn", "my_conn"))
 	assert.Equal(t, "schemas/main.default", schemaParentFromFullName("main.default.my_conn", "my_conn"))
@@ -582,9 +580,8 @@ func TestConnectionsCreate_SchemaLevel(t *testing.T) {
 	assert.Equal(t, "main.default.my_conn", d.Get("full_name"))
 }
 
-// A schema-level connection created WITH an owner must address the post-create owner
-// update by full_name; addressing it by the short name would 404 (or hit a different
-// metastore-level connection with the same leaf name).
+// A schema-level connection with an owner must address the post-create owner update by
+// full_name; the short name would not resolve the connection.
 func TestConnectionsCreate_SchemaLevelWithOwner(t *testing.T) {
 	resp := catalog.ConnectionInfo{
 		Name:           "my_conn",
@@ -653,20 +650,15 @@ func TestValidateConnectionParent(t *testing.T) {
 	}
 }
 
-// name and parent must be ForceNew: the resource does not implement rename, and parent
-// changes the connection's schema, so both require replacement rather than in-place update.
+// parent is ForceNew (moving to a different schema is a replace); name is not ForceNew.
 func TestConnectionSchemaForceNew(t *testing.T) {
 	s := ResourceConnection().Schema
-	// parent is ForceNew: moving a connection to a different schema is a replace. name is
-	// intentionally NOT ForceNew — it keeps the existing metastore-level behavior; rename is a
-	// separate, pre-existing concern out of scope for schema-level support.
 	assert.True(t, s["parent"].ForceNew, "parent should be ForceNew")
 	assert.False(t, s["name"].ForceNew, "name should not be ForceNew")
 }
 
-// parent is ForceNew and is rebuilt from the server's full_name on every read; without
-// case-insensitive suppression, a case-only difference between the configured parent and the
-// server-normalized value would diff a ForceNew field and destroy/recreate the connection.
+// A case-only difference in parent must be diff-suppressed, so a case-normalized full_name
+// from the server does not trigger a ForceNew recreate.
 func TestConnectionParentDiffSuppress(t *testing.T) {
 	suppress := ResourceConnection().Schema["parent"].DiffSuppressFunc
 	// Case-only difference (UC identifiers are case-insensitive) must be suppressed → no recreate.

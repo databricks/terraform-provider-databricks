@@ -1,148 +1,96 @@
 package storage_test
 
 import (
-	"context"
-	"fmt"
+	"strings"
 	"testing"
 
-	"golang.org/x/exp/maps"
-
-	"github.com/databricks/databricks-sdk-go"
-	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/storage"
 )
 
-var mountHcl = `
-data "databricks_spark_version" "latest" {}
+const (
+	mountClusterID = "test-cluster"
+	mountName      = "test-mount"
+	mountSource    = "s3a://test-bucket"
+)
 
-# Test cluster to create the mount using.
-resource "databricks_cluster" "this" {
-	cluster_name = "acc-test-mounts-{var.STICKY_RANDOM}"
-	spark_version = data.databricks_spark_version.latest.id
-	instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
-	num_workers = 1
-
-	aws_attributes {
-		instance_profile_arn = "{env.TEST_INSTANCE_PROFILE_ARN}"
-	}
-}
-
-resource "databricks_mount" "my_mount" {
-	name = "test-mount-{var.STICKY_RANDOM}"
-	cluster_id = databricks_cluster.this.id
-
-	s3 {
-		bucket_name      = "{env.TEST_S3_BUCKET_NAME}"
-	}
-}`
-
-func TestAccCreateDatabricksMount(t *testing.T) {
-	acceptance.WorkspaceLevel(t,
-		acceptance.Step{
-			Template: mountHcl,
-		})
-}
-
-// TestAccCreateDatabricksMountWithProviderConfig creates a mount using
-// provider_config { workspace_id } pointing at the same workspace the provider
-// is configured for. This exercises getDatabricksClientForUnifiedProvider which
-// creates a new DatabricksClient — verifying that commandFactory (needed by
-// mount's CommandExecutor) is correctly copied to the new client.
-func TestAccCreateDatabricksMountWithProviderConfig(t *testing.T) {
-	workspaceID := acceptance.GetEnvOrSkipTest(t, "THIS_WORKSPACE_ID")
-	mountHclWithProviderConfig := `
-data "databricks_spark_version" "latest" {}
-
-resource "databricks_cluster" "this" {
-	cluster_name = "acc-test-mounts-{var.STICKY_RANDOM}"
-	spark_version = data.databricks_spark_version.latest.id
-	instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
-	num_workers = 1
-
-	aws_attributes {
-		instance_profile_arn = "{env.TEST_INSTANCE_PROFILE_ARN}"
-	}
-
-	provider_config {
-		workspace_id = "` + workspaceID + `"
-	}
-}
-
-resource "databricks_mount" "my_mount" {
-	name = "test-mount-pc-{var.STICKY_RANDOM}"
-	cluster_id = databricks_cluster.this.id
-
-	s3 {
-		bucket_name = "{env.TEST_S3_BUCKET_NAME}"
-	}
-
-	provider_config {
-		workspace_id = "` + workspaceID + `"
-	}
-}`
-
-	acceptance.WorkspaceLevel(t,
-		acceptance.Step{
-			Template: mountHclWithProviderConfig,
-		})
-}
-
-func TestAccCreateDatabricksMountIsFineOnClusterRecreate(t *testing.T) {
-	clusterId1 := ""
-	clusterId2 := ""
-
-	acceptance.WorkspaceLevel(t,
-		// Step 1 creates the cluster and mount.
-		acceptance.Step{
-			Template: mountHcl,
-			Check: func(s *terraform.State) error {
-				resources := s.RootModule().Resources
-				cluster := resources["databricks_cluster.this"]
-				if cluster == nil {
-					return fmt.Errorf("expected to find databricks_cluster.this in resources keys: %v", maps.Keys(resources))
-				}
-				clusterId1 = cluster.Primary.ID
-
-				// Assert cluster id is not empty. This is later used to ensure
-				// the cluster has been recreated.
-				assert.NotEmpty(t, clusterId1)
-
-				// Assert the mount points to the created cluster.
-				mount := resources["databricks_mount.my_mount"]
-				assert.Equal(t, clusterId1, mount.Primary.Attributes["cluster_id"])
-				return nil
+func mountClusterFixture() qa.HTTPFixture {
+	return qa.HTTPFixture{
+		Method:       "GET",
+		ReuseRequest: true,
+		Resource:     "/api/2.0/clusters/get?cluster_id=" + mountClusterID,
+		Response: clusters.ClusterInfo{
+			ClusterID: mountClusterID,
+			State:     clusters.ClusterStateRunning,
+			AwsAttributes: &clusters.AwsAttributes{
+				InstanceProfileArn: "arn:aws:iam::123456789012:instance-profile/test",
 			},
 		},
-		// Step 2: Manually delete the cluster, and then reapply the config. The mount
-		// will be recreated in this case.
-		acceptance.Step{
-			PreConfig: func() {
-				w, err := databricks.NewWorkspaceClient(&databricks.Config{})
-				require.NoError(t, err)
-				err = w.Clusters.PermanentDeleteByClusterId(context.Background(), clusterId1)
-				assert.NoError(t, err, "failed to delete the cluster, id: "+clusterId1)
-			},
-			Template: mountHcl,
-			Check: func(s *terraform.State) error {
-				resources := s.RootModule().Resources
-				cluster := resources["databricks_cluster.this"]
-				if cluster == nil {
-					return fmt.Errorf("expected to find databricks_cluster.this in resources keys: %v", maps.Keys(resources))
-				}
-				clusterId2 = cluster.Primary.ID
+	}
+}
 
-				// Assert cluster was indeed recreated
-				assert.NotEmpty(t, clusterId1)
-				assert.NotEmpty(t, clusterId2)
-				assert.NotEqual(t, clusterId1, clusterId2)
+func mountCommandMock(t *testing.T) common.CommandMock {
+	t.Helper()
+	return func(command string) common.CommandResults {
+		assert.Contains(t, command, "/mnt/"+mountName)
+		if strings.Contains(command, "safe_mount") {
+			assert.Contains(t, command, mountSource)
+		}
+		return common.CommandResults{ResultType: "text", Data: mountSource}
+	}
+}
 
-				// Assert the mount points to the newly recreated cluster.
-				mount := resources["databricks_mount.my_mount"]
-				assert.Equal(t, clusterId2, mount.Primary.Attributes["cluster_id"])
-				return nil
-			},
+func TestCreateDatabricksMount(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures:    []qa.HTTPFixture{mountClusterFixture()},
+		Resource:    storage.ResourceMount(),
+		CommandMock: mountCommandMock(t),
+		State: map[string]any{
+			"cluster_id": mountClusterID,
+			"name":       mountName,
+			"s3": []any{map[string]any{
+				"bucket_name": "test-bucket",
+			}},
 		},
-	)
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":         mountName,
+		"cluster_id": mountClusterID,
+		"source":     mountSource,
+	})
+}
+
+func TestCreateDatabricksMountWithProviderConfig(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures:            []qa.HTTPFixture{mountClusterFixture()},
+		ProviderWorkspaceID: "12345",
+		Resource:            storage.ResourceMount(),
+		CommandMock:         mountCommandMock(t),
+		State: map[string]any{
+			"cluster_id": mountClusterID,
+			"name":       mountName,
+			"provider_config": []any{map[string]any{
+				"workspace_id": "12345",
+			}},
+			"s3": []any{map[string]any{
+				"bucket_name": "test-bucket",
+			}},
+		},
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":         mountName,
+		"cluster_id": mountClusterID,
+		"source":     mountSource,
+	})
+}
+
+func TestDatabricksMountReplacedWithCluster(t *testing.T) {
+	r := storage.ResourceMount().ToResource()
+	require.Contains(t, r.Schema, "cluster_id")
+	assert.True(t, r.Schema["cluster_id"].ForceNew)
 }

@@ -33,7 +33,8 @@ type ServicePrincipalsData struct {
 	// external id.
 	Filter types.String `tfsdk:"filter"`
 	// The maximum number of SPs to return. The service may return fewer than
-	// this value.
+	// this value. If not provided, defaults to 1000, which is also the maximum
+	// allowed. Requests for more than the maximum are clamped to 1000.
 	PageSize           types.Int64  `tfsdk:"page_size"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

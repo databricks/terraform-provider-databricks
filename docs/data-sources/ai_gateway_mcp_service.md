@@ -2,13 +2,25 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_ai_gateway_mcp_service Data Source
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/aigateway)
 
+Retrieves a Unity Catalog MCP service by its full resource name.
 
 
 ## Example Usage
+The following example retrieves the MCP service named `knowledge_tools` from the `main.default` schema:
+
+```hcl
+data "databricks_ai_gateway_mcp_service" "example" {
+  name = "mcp-services/main.default.knowledge_tools"
+}
+
+output "mcp_service_config" {
+  value = data.databricks_ai_gateway_mcp_service.example.config
+}
+```
 
 
 ## Arguments
@@ -26,57 +38,50 @@ The following arguments are supported:
 ## Attributes
 The following attributes are exported:
 * `comment` (string) - User-provided description
-* `config` (McpServiceConfig) - Operational configuration: connection, tool selectors, rate limit.
-  Required on CreateMcpService; on
-  UpdateMcpService it is required only when `config` (or a `config.*`
-  subpath) appears in `update_mask`
-* `create_time` (string) - When the MCP service was created
+* `config` (McpServiceConfig) - Connection, tool selectors, and rate limits. Required on Create. On Update,
+  provide this field when `update_mask` contains `config` or one of its
+  subpaths
+* `create_time` (string) - Time the MCP service was created
 * `created_by` (string) - Creator identity
-* `effective_owner` (string) - The resolved owner of the MCP service. Falls back to the caller's identity
-  when `owner` is not explicitly set on creation
-* `etag` (string) - Optimistic concurrency control token. Server-generated from the
-  entity's state and returned on every read. To use it as an if-match
-  precondition on a mutation, echo the last-read value back via the dedicated
-  `etag` field on the Update / Delete request; the server rejects the mutation
-  if the stored etag differs
+* `effective_owner` (string) - Owner of the MCP service
+* `etag` (string) - Optimistic concurrency token returned on every read. To make an Update or
+  Delete conditional, pass the last-read value in that request's `etag`
+  field. In REST responses, this value is a base64 string; URL-encode it when
+  setting the `etag` query parameter
 * `metastore_id` (string) - Metastore hosting the MCP service
 * `name` (string) - Resource name of the MCP service.
   Format: `mcp-services/{catalog}.{schema}.{mcp_service}`.
   Each `{...}` component is capped at 255 characters individually.
   Server-derived on Create from `parent` +
   `mcp_service_id`; required and immutable on Update/Get/Delete
-* `owner` (string) - The owner of the MCP service. Write-only; read owner via effective_owner
-* `update_time` (string) - When the MCP service was last modified
+* `update_time` (string) - Time the MCP service was last modified
 * `updated_by` (string) - Identity of the last updater
 
 ### McpServiceConfig
-* `include_tool_selectors` (list of string) - Glob or exact-match patterns selecting which tools from the MCP server
-  to expose. Prefix match for patterns with `*`, exact match otherwise.
-  An empty list means all tools are included. Per-element max 256 chars
-* `rate_limits` (list of RateLimit) - Per-principal rate limits applied to tool invocations routed through this
-  MCP service. Repeated to support per-USER / USER_GROUP / SERVICE_PRINCIPAL
-  / SERVICE / USER_DEFAULT scopes simultaneously, mirroring the
-  `ModelServiceConfig.rate_limits` shape. Empty when no rate limit is
-  configured
-* `source_connection` (McpServiceConfigSourceConnection) - UC Connection referencing the MCP server
+* `include_tool_selectors` (list of string) - Tool names or prefix patterns to expose from the MCP server. Use exact
+  tool names or prefix patterns such as `read_*`. An empty list exposes all
+  tools. At most 1,024 selectors are allowed, and each selector can contain
+  at most 256 characters
+* `rate_limits` (list of RateLimit) - Rate limits for tool invocations. Supported scopes are user, group, service
+  principal, the service as a whole, and each user by default. Request and
+  token limits are supported. Empty when no rate limit is configured
+* `source_connection` (McpServiceConfigSourceConnection) - Unity Catalog connection referencing the MCP server. Required on Create
 
 ### McpServiceConfigSourceConnection
-* `is_deleted` (boolean)
-* `name` (string) - Name of the UC connection that hosts the MCP server, as
-  `connections/{catalog}.{schema}.{connection}`
+* `is_deleted` (boolean) - Whether the referenced connection has been deleted. The MCP service keeps
+  the reference so callers can identify the broken dependency; tool
+  invocation fails until the source connection is updated
+* `name` (string) - Resource name of the Unity Catalog connection used to access the MCP
+  server, in the form `connections/{catalog}.{schema}.{connection}`
 
 ### RateLimit
-* `key` (string) - Scope key. Determines whether `principal` is required. Possible values are: `RATE_LIMIT_KEY_REQUEST_TAG`, `RATE_LIMIT_KEY_SERVICE`, `RATE_LIMIT_KEY_SERVICE_PRINCIPAL`, `RATE_LIMIT_KEY_USER`, `RATE_LIMIT_KEY_USER_DEFAULT`, `RATE_LIMIT_KEY_USER_GROUP`
+* `key` (string) - Scope of the rate limit. Depending on this value, the limit applies to a
+  principal, the service as a whole, or each user by default. Possible values are: `RATE_LIMIT_KEY_SERVICE`, `RATE_LIMIT_KEY_SERVICE_PRINCIPAL`, `RATE_LIMIT_KEY_USER`, `RATE_LIMIT_KEY_USER_DEFAULT`, `RATE_LIMIT_KEY_USER_GROUP`
 * `principal` (string) - Principal this limit applies to: user email, group name, or service
-  principal application ID. Required unless `key` is
-  `RATE_LIMIT_KEY_SERVICE`, `RATE_LIMIT_KEY_USER_DEFAULT`, or
-  `RATE_LIMIT_KEY_REQUEST_TAG` (which must not set a principal)
+  principal application ID. Required when `key` applies to a user, group, or
+  service principal; otherwise it must be unset
 * `renewal_period` (string) - Renewal period. Possible values are: `RATE_LIMIT_RENEWAL_PERIOD_HOUR`, `RATE_LIMIT_RENEWAL_PERIOD_MINUTE`
-* `request_tag_key` (string) - Request tag key this limit applies to. Required when `key` is
-  `RATE_LIMIT_KEY_REQUEST_TAG`, forbidden otherwise
-* `request_tag_value` (string) - Request tag value this limit applies to. Only valid when `key` is
-  `RATE_LIMIT_KEY_REQUEST_TAG`. Leave unset to apply the limit to every
-  value of `request_tag_key` (an any-value default); a set value is a
-  specific override for that value
-* `requests` (integer) - Max requests allowed within a renewal period. Leave unset for no request limit
-* `tokens` (integer) - Max tokens allowed within a renewal period. Leave unset for no token limit
+* `requests` (integer) - Maximum requests allowed in one renewal period. Leave unset for no request
+  limit. Set to `0` to deny all requests
+* `tokens` (integer) - Maximum tokens allowed in one renewal period. Leave unset for no token
+  limit. Set to `0` to deny all requests

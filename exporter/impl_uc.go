@@ -628,7 +628,8 @@ func listUcConnections(ic *importContext) error {
 		}
 		ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 			Resource: "databricks_connection",
-			ID:       conn.MetastoreId + "|" + conn.Name,
+			// full_name (not the leaf name) so a schema-level connection's exported id is importable.
+			ID: conn.MetastoreId + "|" + conn.FullName,
 		}, conn.Name, conn.UpdatedAt, fmt.Sprintf("connection '%s'", conn.Name))
 	}
 	return nil

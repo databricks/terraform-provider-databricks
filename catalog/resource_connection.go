@@ -44,11 +44,8 @@ func validateConnectionParent(i any, k string) (warnings []string, errors []erro
 		errors = append(errors, fmt.Errorf("expected %q to be a string", k))
 		return
 	}
-	if !strings.HasPrefix(v, "schemas/") {
-		errors = append(errors, fmt.Errorf("%q must be in the format \"schemas/{catalog}.{schema}\", got %q", k, v))
-		return
-	}
-	if parts := strings.Split(strings.TrimPrefix(v, "schemas/"), "."); len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+	parts := strings.Split(strings.TrimPrefix(v, "schemas/"), ".")
+	if !strings.HasPrefix(v, "schemas/") || len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		errors = append(errors, fmt.Errorf("%q must be in the format \"schemas/{catalog}.{schema}\", got %q", k, v))
 	}
 	return

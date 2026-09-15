@@ -367,6 +367,7 @@ func TestConnections(t *testing.T) {
 				Connections: []sdk_uc.ConnectionInfo{
 					{
 						Name:        "test",
+						FullName:    "test",
 						MetastoreId: "12345",
 					},
 				},
@@ -391,6 +392,33 @@ func TestConnections(t *testing.T) {
 		assert.NoError(t, err)
 		require.Equal(t, 2, len(ic.testEmits))
 		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: foreign_connection/ctest)"])
+	})
+}
+
+func TestConnectionsSchemaLevel(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/connections?max_results=0",
+			Response: sdk_uc.ListConnectionsResponse{
+				Connections: []sdk_uc.ConnectionInfo{
+					{
+						Name:        "my_conn",
+						FullName:    "main.default.my_conn",
+						MetastoreId: "12345",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-connections,uc-grants")
+		err := resourcesMap["databricks_connection"].List(ic)
+		assert.NoError(t, err)
+		// A schema-level connection must export with its full_name in the id; the leaf name
+		// alone is not importable (the read path resolves by full_name).
+		assert.True(t, ic.testEmits["databricks_connection[<unknown>] (id: 12345|main.default.my_conn)"])
 	})
 }
 

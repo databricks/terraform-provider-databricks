@@ -667,9 +667,10 @@ func TestConnectionParentDiffSuppress(t *testing.T) {
 	assert.False(t, suppress("parent", "schemas/main.default", "schemas/other.schema", nil))
 }
 
-// The schema-level backend returns an empty environment_settings object; it must not
-// materialize as a block, or every plan would diff it against a config that omits it.
-func TestConnectionsRead_SchemaLevelDropsEmptyEnvironmentSettings(t *testing.T) {
+// Read must reconstruct parent from full_name and drop the empty environment_settings object
+// the schema-level backend returns. parent is omitted from config here, so the parent
+// assertion can only pass if the reconstruction actually runs.
+func TestConnectionsRead_SchemaLevelReconstructsParentAndDropsEnvSettings(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -691,13 +692,12 @@ func TestConnectionsRead_SchemaLevelDropsEmptyEnvironmentSettings(t *testing.T) 
 		HCL: `
 		name = "my_conn"
 		connection_type = "HTTP"
-		parent = "schemas/main.default"
 		options = {
 			host = "test.com"
 		}
 		`,
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "schemas/main.default", d.Get("parent"))
+	assert.Equal(t, "schemas/main.default", d.Get("parent"), "parent must be reconstructed from full_name on read")
 	assert.Empty(t, d.Get("environment_settings"), "empty environment_settings must not materialize")
 }

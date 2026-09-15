@@ -70,9 +70,8 @@ func TestUcAccConnectionsWithoutOwnerResourceFullLifecycle(t *testing.T) {
 	})
 }
 
-// A schema-level (L3) connection is created inside a schema via the parent
-// argument; its full_name is catalog.schema.name and the resource id is
-// metastore_id|full_name.
+// schemaLevelConnectionTemplate creates a connection inside a schema via parent, with a
+// configurable host option.
 func schemaLevelConnectionTemplate(host string) string {
 	return fmt.Sprintf(`
 	resource "databricks_catalog" "this" {
@@ -100,15 +99,12 @@ func schemaLevelConnectionTemplate(host string) string {
 func TestUcAccConnectionsSchemaLevelResourceFullLifecycle(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: schemaLevelConnectionTemplate("https://example.com"),
-		// Non-empty because the HTTP bearer backend adds a server-managed `auth_scheme` option that
-		// is not in config — a pre-existing round-trip diff affecting all HTTP bearer connections,
-		// tracked separately. The next step's plan check proves this is only an in-place update.
+		// The HTTP bearer backend returns a server-managed auth_scheme option that is not in
+		// config, so the post-apply plan is non-empty.
 		ExpectNonEmptyPlan: true,
 	}, acceptance.Step{
-		// Re-apply the identical config. The plan check asserts an in-place update, never a
-		// destroy/recreate: this guards the schema-level round-trip (parent rebuilt from full_name,
-		// stable id) against a ForceNew regression. The plan is non-empty only because of the
-		// pre-existing server-managed `auth_scheme` option diff (tracked separately).
+		// Re-applying the identical config must be an in-place update, never a destroy/recreate:
+		// this proves the parent/full_name round-trip is stable (no ForceNew drift).
 		Template: schemaLevelConnectionTemplate("https://example.com"),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
@@ -117,10 +113,8 @@ func TestUcAccConnectionsSchemaLevelResourceFullLifecycle(t *testing.T) {
 		},
 		ExpectNonEmptyPlan: true,
 	}, acceptance.Step{
-		// Day-2 in-place update: change a host option. options is updatable (it is a field on
-		// UpdateConnection and the L3 backend applies it) — unlike ForceNew fields such as comment,
-		// which recreate. The Check asserts the read-back host actually changed, proving the backend
-		// applied the update; the plan check confirms it is an in-place update, not a replace.
+		// In-place update of a mutable option (host). The Check confirms the new value round-trips
+		// on read; the plan check confirms an in-place update rather than a replace.
 		Template: schemaLevelConnectionTemplate("https://example2.com"),
 		Check:    resource.TestCheckResourceAttr("databricks_connection.this", "options.host", "https://example2.com"),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -130,10 +124,8 @@ func TestUcAccConnectionsSchemaLevelResourceFullLifecycle(t *testing.T) {
 		},
 		ExpectNonEmptyPlan: true,
 	}, acceptance.Step{
-		// Import exercises the schema-level import path: the metastore_id|full_name id must parse,
-		// GetByName(full_name) must resolve, and parent must be reconstructed on read. (Attribute
-		// verification is omitted because the API never returns the write-only bearer_token and adds
-		// a server-managed auth_scheme, so a freshly imported options map cannot match config.)
+		// Import by metastore_id|full_name. Attribute verification is skipped because options
+		// (write-only bearer_token, server-managed auth_scheme) cannot match config on import.
 		ResourceName: "databricks_connection.this",
 		ImportState:  true,
 	})

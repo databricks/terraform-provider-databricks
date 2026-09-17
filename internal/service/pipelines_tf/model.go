@@ -14163,6 +14163,11 @@ func (m *RewindSpec) SetDatasets(ctx context.Context, v []RewindDatasetSpec) {
 // Only `user_name` or `service_principal_name` can be specified. If both are
 // specified, an error is thrown.
 type RunAs struct {
+	// Group name of an account group assigned to the workspace. When set, the
+	// pipeline runs as the group and the group's permissions are used for data
+	// access. Setting this field requires being a member of the group, or
+	// having the `Assume` permission on the group.
+	GroupName types.String `tfsdk:"group_name"`
 	// Application ID of an active service principal. Setting this field
 	// requires the `servicePrincipal/user` role.
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
@@ -14178,6 +14183,7 @@ func (to *RunAs) SyncFieldsDuringRead(ctx context.Context, from RunAs) {
 }
 
 func (m RunAs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -14202,6 +14208,7 @@ func (m RunAs) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"group_name":             m.GroupName,
 			"service_principal_name": m.ServicePrincipalName,
 			"user_name":              m.UserName,
 		})
@@ -14211,6 +14218,7 @@ func (m RunAs) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m RunAs) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
 			"user_name":              types.StringType,
 		},
@@ -15166,6 +15174,11 @@ func (m StackFrame) Type(ctx context.Context) attr.Type {
 
 type StartUpdate struct {
 	Cause types.String `tfsdk:"cause"`
+	// Whether the update is started in the development mode. This is
+	// recommended for interactive development and testing. Reuses compute for
+	// faster iteration and disables automatic retries. Not recommended for
+	// production.
+	Development types.Bool `tfsdk:"development"`
 	// If true, this update will reset all tables before running.
 	FullRefresh types.Bool `tfsdk:"full_refresh"`
 	// A list of tables to update with fullRefresh. If both refresh_selection
@@ -15297,6 +15310,7 @@ func (to *StartUpdate) SyncFieldsDuringRead(ctx context.Context, from StartUpdat
 
 func (m StartUpdate) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["cause"] = attrs["cause"].SetOptional()
+	attrs["development"] = attrs["development"].SetOptional()
 	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
 	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
@@ -15336,6 +15350,7 @@ func (m StartUpdate) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"cause":                      m.Cause,
+			"development":                m.Development,
 			"full_refresh":               m.FullRefresh,
 			"full_refresh_selection":     m.FullRefreshSelection,
 			"parameters":                 m.Parameters,
@@ -15353,6 +15368,7 @@ func (m StartUpdate) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cause":        types.StringType,
+			"development":  types.BoolType,
 			"full_refresh": types.BoolType,
 			"full_refresh_selection": basetypes.ListType{
 				ElemType: types.StringType,

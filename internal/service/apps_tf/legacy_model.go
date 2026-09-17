@@ -4381,9 +4381,7 @@ func (m *AsyncUpdateAppRequest_SdkV2) SetApp(ctx context.Context, v App_SdkV2) {
 }
 
 type ComputeStatus_SdkV2 struct {
-	// The number of compute instances currently serving requests for this
-	// application. An instance is considered active if it is reachable and
-	// ready to handle requests.
+	// The number of compute instances used and billed for this application.
 	ActiveInstances types.Int64 `tfsdk:"active_instances"`
 	// Compute status message
 	Message types.String `tfsdk:"message"`

@@ -1,15 +1,15 @@
 # NEXT CHANGELOG
 
-## Release v1.125.0
+## Release v1.133.0
 
 ### Important Changes
 
 ### Breaking Changes
 
 ### New Features and Improvements
-* Add optional `git_credential_id` attribute to `databricks_repo` resource to allow explicit credential selection ([#5877](https://github.com/databricks/terraform-provider-databricks/pull/5877)).
 
 ### Bug Fixes
+* Fix `databricks_grant` and `databricks_grants` for the AI Gateway securables (`model_service`, `mcp_service`, `model_provider_service`). Wiring `databricks_ai_gateway_*.<x>.name` into the corresponding grant field previously failed on apply with `No API found for 'GET /unity-catalog/permissions/model_provider_service/model-provider-services/<full_name>'`, because that `name` attribute carries a resource-name prefix (e.g. `model-provider-services/`) that the permissions API does not expect. The prefix is now stripped before it reaches the API path and the resource ID, and a `DiffSuppressFunc` treats the prefixed and bare forms as equal, so both the `.name` reference and a bare full name apply cleanly with no perpetual diff.
 
 ### Documentation
 * Fix the VPC endpoint security group rules in the AWS Private Link guide: add the missing inbound ports (5432 and 8443-8451), source the rules from the workspace security group, and drop the unnecessary egress rules ([#5930](https://github.com/databricks/terraform-provider-databricks/pull/5930)).

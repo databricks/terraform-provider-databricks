@@ -110,9 +110,7 @@ type FeatureData struct {
 	// The entity columns for the feature, used as aggregation keys and for
 	// query-time lookup.
 	Entities types.List `tfsdk:"entities"`
-	// Deprecated: Use DeltaTableSource.filter_condition or
-	// KafkaSource.filter_condition instead. Kept for backwards compatibility.
-	// The filter condition applied to the source data before aggregation.
+
 	FilterCondition types.String `tfsdk:"filter_condition"`
 	// The full three-part name (catalog, schema, name) of the feature. This is
 	// the feature's resource identifier; the catalog_name, schema_name, and
@@ -120,8 +118,7 @@ type FeatureData struct {
 	FullName types.String `tfsdk:"full_name"`
 	// The function by which the feature is computed.
 	Function types.Object `tfsdk:"function"`
-	// Deprecated: Use AggregationFunction.inputs instead. Kept for backwards
-	// compatibility. The input columns from which the feature is computed.
+
 	Inputs types.List `tfsdk:"inputs"`
 	// Lineage context information for this feature. WARNING: This field is
 	// primarily intended for internal use by Databricks systems and is
@@ -138,9 +135,7 @@ type FeatureData struct {
 	SchemaName types.String `tfsdk:"schema_name"`
 	// The data source of the feature.
 	Source types.Object `tfsdk:"source"`
-	// Deprecated: Use Function.aggregation_function.time_window instead. Kept
-	// for backwards compatibility. The time window in which the feature is
-	// computed.
+
 	TimeWindow types.Object `tfsdk:"time_window"`
 	// Column recording time, used for point-in-time joins, backfills, and
 	// aggregations.

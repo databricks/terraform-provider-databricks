@@ -222,7 +222,7 @@ The following arguments are supported:
 
 ### SyncedTableSpecTypeOverride
 * `column_name` (string, required) - Name of the source column whose target PostgreSQL type should be overridden
-* `pg_type` (string, required) - PostgreSQL-specific target type to use for the column. Possible values are: `PG_SPECIFIC_TYPE_VECTOR`
+* `pg_type` (string, required) - PostgreSQL-specific target type to use for the column. Possible values are: `PG_SPECIFIC_TYPE_HALFVEC`, `PG_SPECIFIC_TYPE_VARCHAR`, `PG_SPECIFIC_TYPE_VECTOR`
 * `size` (integer, optional) - Size parameter for the target type, for types that take one (e.g. vector
   dimension, varchar length). Required when the chosen pg_type needs a size
 

@@ -149,6 +149,58 @@ func TestWorkspaceSettingV2ExportWithBooleanValue(t *testing.T) {
 	})
 }
 
+func TestWorkspaceSettingV2ExportWithOnlyEffectiveBooleanValue(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		meAdminFixture,
+		noCurrentMetastoreAttached,
+		emptyDestinationNotficationsList,
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/settings-metadata?",
+			Response: settingsv2.ListWorkspaceSettingsMetadataResponse{
+				SettingsMetadata: []settingsv2.SettingsMetadata{
+					{
+						Name:        "uc_secrets",
+						Description: "Boolean setting whose input value is missing",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/settings/uc_secrets?",
+			Response: settingsv2.Setting{
+				Name: "uc_secrets",
+				EffectiveBooleanVal: &settingsv2.BooleanMessage{
+					Value: true,
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		client.Config.WorkspaceID = testProviderWorkspaceID
+		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		defer os.RemoveAll(tmpDir)
+
+		ic := newImportContext(client)
+		ic.noFormat = true
+		ic.Directory = tmpDir
+		ic.enableListing("settings")
+		ic.enableServices("settings")
+
+		err := ic.Run()
+		assert.NoError(t, err)
+
+		content, err := os.ReadFile(tmpDir + "/settings.tf")
+		assert.NoError(t, err)
+		contentStr := normalizeWhitespace(string(content))
+
+		assert.Contains(t, contentStr, `resource "databricks_workspace_setting_v2" "uc_secrets"`)
+		assert.Contains(t, contentStr, `name = "uc_secrets"`)
+		assert.Contains(t, contentStr, `boolean_val`)
+		assert.Contains(t, contentStr, `value = true`)
+	})
+}
+
 func TestWorkspaceSettingV2ExportWithStringValue(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		meAdminFixture,
@@ -343,6 +395,171 @@ func TestWorkspaceSettingV2ExportWithAutomaticClusterUpdate(t *testing.T) {
 		assert.Contains(t, contentStr, `hours = 2`)
 		assert.Contains(t, contentStr, `minutes = 30`)
 		assert.Contains(t, contentStr, `day_of_week = "SUNDAY"`)
+	})
+}
+
+func TestWorkspaceSettingV2ExportWithFalseBooleanValue(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		meAdminFixture,
+		noCurrentMetastoreAttached,
+		emptyDestinationNotficationsList,
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/settings-metadata?",
+			Response: settingsv2.ListWorkspaceSettingsMetadataResponse{
+				SettingsMetadata: []settingsv2.SettingsMetadata{
+					{
+						Name:        "power_bi_task",
+						Description: "Boolean setting whose value is false",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/settings/power_bi_task?",
+			Response: settingsv2.Setting{
+				Name: "power_bi_task",
+				EffectiveBooleanVal: &settingsv2.BooleanMessage{
+					Value: false,
+				},
+				BooleanVal: &settingsv2.BooleanMessage{
+					Value: false,
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		client.Config.WorkspaceID = testProviderWorkspaceID
+		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		defer os.RemoveAll(tmpDir)
+
+		ic := newImportContext(client)
+		ic.noFormat = true
+		ic.Directory = tmpDir
+		ic.enableListing("settings")
+		ic.enableServices("settings")
+
+		err := ic.Run()
+		assert.NoError(t, err)
+
+		content, err := os.ReadFile(tmpDir + "/settings.tf")
+		assert.NoError(t, err)
+		contentStr := normalizeWhitespace(string(content))
+
+		assert.Contains(t, contentStr, `resource "databricks_workspace_setting_v2" "power_bi_task"`)
+		assert.Contains(t, contentStr, `name = "power_bi_task"`)
+		assert.Contains(t, contentStr, `boolean_val`)
+		assert.Contains(t, contentStr, `value = false`)
+	})
+}
+
+func TestWorkspaceSettingV2ExportWithEmptyStringValue(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		meAdminFixture,
+		noCurrentMetastoreAttached,
+		emptyDestinationNotficationsList,
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/settings-metadata?",
+			Response: settingsv2.ListWorkspaceSettingsMetadataResponse{
+				SettingsMetadata: []settingsv2.SettingsMetadata{
+					{
+						Name:        "example.string.empty",
+						Description: "String setting whose value is empty",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/settings/example.string.empty?",
+			Response: settingsv2.Setting{
+				Name: "example.string.empty",
+				EffectiveStringVal: &settingsv2.StringMessage{
+					Value: "",
+				},
+				StringVal: &settingsv2.StringMessage{
+					Value: "",
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		client.Config.WorkspaceID = testProviderWorkspaceID
+		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		defer os.RemoveAll(tmpDir)
+
+		ic := newImportContext(client)
+		ic.noFormat = true
+		ic.Directory = tmpDir
+		ic.enableListing("settings")
+		ic.enableServices("settings")
+
+		err := ic.Run()
+		assert.NoError(t, err)
+
+		content, err := os.ReadFile(tmpDir + "/settings.tf")
+		assert.NoError(t, err)
+		contentStr := normalizeWhitespace(string(content))
+
+		assert.Contains(t, contentStr, `resource "databricks_workspace_setting_v2" "example_string_empty"`)
+		assert.Contains(t, contentStr, `name = "example.string.empty"`)
+		assert.Contains(t, contentStr, `string_val`)
+		assert.Contains(t, contentStr, `value = ""`)
+	})
+}
+
+func TestWorkspaceSettingV2ExportWithZeroIntegerValue(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		meAdminFixture,
+		noCurrentMetastoreAttached,
+		emptyDestinationNotficationsList,
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/settings-metadata?",
+			Response: settingsv2.ListWorkspaceSettingsMetadataResponse{
+				SettingsMetadata: []settingsv2.SettingsMetadata{
+					{
+						Name:        "example.integer.zero",
+						Description: "Integer setting whose value is zero",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/settings/example.integer.zero?",
+			Response: settingsv2.Setting{
+				Name: "example.integer.zero",
+				EffectiveIntegerVal: &settingsv2.IntegerMessage{
+					Value: 0,
+				},
+				IntegerVal: &settingsv2.IntegerMessage{
+					Value: 0,
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		client.Config.WorkspaceID = testProviderWorkspaceID
+		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		defer os.RemoveAll(tmpDir)
+
+		ic := newImportContext(client)
+		ic.noFormat = true
+		ic.Directory = tmpDir
+		ic.enableListing("settings")
+		ic.enableServices("settings")
+
+		err := ic.Run()
+		assert.NoError(t, err)
+
+		content, err := os.ReadFile(tmpDir + "/settings.tf")
+		assert.NoError(t, err)
+		contentStr := normalizeWhitespace(string(content))
+
+		assert.Contains(t, contentStr, `resource "databricks_workspace_setting_v2" "example_integer_zero"`)
+		assert.Contains(t, contentStr, `name = "example.integer.zero"`)
+		assert.Contains(t, contentStr, `integer_val`)
+		assert.Contains(t, contentStr, `value = 0`)
 	})
 }
 

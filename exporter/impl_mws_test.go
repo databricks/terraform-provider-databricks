@@ -6,10 +6,14 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/databricks/databricks-sdk-go/service/networking"
 	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -248,6 +252,122 @@ func TestListMwsVpcEndpointsAzure(t *testing.T) {
 			err := resourcesMap["databricks_mws_vpc_endpoint"].List(ic)
 			assert.NoError(t, err)
 			require.Equal(t, 0, len(ic.testEmits))
+		})
+}
+
+// Tests for Endpoints (databricks_endpoint)
+
+func TestListEndpoints(t *testing.T) {
+	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
+		setupAwsAccountConfig(ma)
+		ma.GetMockEndpointsAPI().EXPECT().ListEndpoints(mock.Anything, networking.ListEndpointsRequest{
+			Parent: "accounts/" + testAccountID,
+		}).Return(createIteratorFromSlice([]networking.Endpoint{
+			{
+				Name:        "endpoint-1",
+				DisplayName: "Test Endpoint 1",
+				Region:      "us-west-2",
+			},
+			{
+				Name:        "endpoint-2",
+				DisplayName: "Test Endpoint 2",
+				Region:      "us-east-1",
+			},
+		}))
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForAccountTestWithClient(ctx, client, "mws")
+
+		err := resourcesMap["databricks_endpoint"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 2, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_endpoint[<unknown>] (id: endpoint-1)"])
+		assert.True(t, ic.testEmits["databricks_endpoint[<unknown>] (id: endpoint-2)"])
+	})
+}
+
+func TestListEndpointsWithMatch(t *testing.T) {
+	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
+		setupAwsAccountConfig(ma)
+		ma.GetMockEndpointsAPI().EXPECT().ListEndpoints(mock.Anything, networking.ListEndpointsRequest{
+			Parent: "accounts/" + testAccountID,
+		}).Return(createIteratorFromSlice([]networking.Endpoint{
+			{
+				Name:        "endpoint-1",
+				DisplayName: "Test Endpoint",
+			},
+			{
+				Name:        "endpoint-2",
+				DisplayName: "Production Endpoint",
+			},
+		}))
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForAccountTestWithClient(ctx, client, "mws")
+		ic.match = "Test"
+
+		err := resourcesMap["databricks_endpoint"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_endpoint[<unknown>] (id: endpoint-1)"])
+		assert.False(t, ic.testEmits["databricks_endpoint[<unknown>] (id: endpoint-2)"])
+	})
+}
+
+func TestListEndpointsSkipEmptyName(t *testing.T) {
+	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
+		setupAwsAccountConfig(ma)
+		ma.GetMockEndpointsAPI().EXPECT().ListEndpoints(mock.Anything, networking.ListEndpointsRequest{
+			Parent: "accounts/" + testAccountID,
+		}).Return(createIteratorFromSlice([]networking.Endpoint{
+			{
+				Name:        "",
+				DisplayName: "Endpoint Without Name",
+			},
+			{
+				Name:        "endpoint-2",
+				DisplayName: "Valid Endpoint",
+			},
+		}))
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForAccountTestWithClient(ctx, client, "mws")
+
+		err := resourcesMap["databricks_endpoint"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_endpoint[<unknown>] (id: endpoint-2)"])
+	})
+}
+
+// TestImportEndpoint verifies that the required `parent` field (not returned by
+// the read API) is populated from the account being exported.
+func TestImportEndpoint(t *testing.T) {
+	qa.MockAccountsApply(t, setupAwsAccountConfig,
+		func(ctx context.Context, client *common.DatabricksClient) {
+			ic := importContextForAccountTestWithClient(ctx, client, "mws")
+
+			pfSchema := ic.PluginFrameworkSchemas["databricks_endpoint"]
+			attrTypes := make(map[string]attr.Type)
+			for name, schemaAttr := range pfSchema.GetAttributes() {
+				attrTypes[name] = schemaAttr.GetType()
+			}
+			nullObj := basetypes.NewObjectNull(attrTypes)
+			rawValue, err := nullObj.ToTerraformValue(ctx)
+			require.NoError(t, err)
+			state := tfsdk.State{Schema: pfSchema, Raw: rawValue}
+
+			wrapper := &PluginFrameworkResourceData{
+				state:      &state,
+				schema:     pfSchema,
+				resourceId: "endpoint-1",
+			}
+			r := &resource{
+				ID:          "endpoint-1",
+				Resource:    "databricks_endpoint",
+				DataWrapper: wrapper,
+			}
+
+			err = resourcesMap["databricks_endpoint"].Import(ic, r)
+			assert.NoError(t, err)
+			assert.Equal(t, "accounts/"+testAccountID, wrapper.Get("parent"))
 		})
 }
 

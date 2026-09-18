@@ -128,6 +128,9 @@ The following arguments are supported:
 
 ### NewPipelineSpec
 * `budget_policy_id` (string, optional) - Budget policy to set on the newly created pipeline
+* `pipeline_channel` (string, optional) - Release channel of the underlying pipeline's runtime.
+  Some source table configurations (e.g., read-time CDF) require PREVIEW.
+  Defaults to CURRENT if not specified. Possible values are: `CURRENT`, `PREVIEW`
 * `storage_catalog` (string, optional) - UC catalog for the pipeline to store intermediate files (checkpoints, event logs etc).
   This needs to be a standard catalog where the user has permissions to create Delta tables
 * `storage_schema` (string, optional) - UC schema for the pipeline to store intermediate files (checkpoints, event logs etc).
@@ -181,7 +184,7 @@ The following arguments are supported:
 
 ### SyncedTableSyncedTableSpecTypeOverride
 * `column_name` (string, required) - Name of the source column whose target PostgreSQL type should be overridden
-* `pg_type` (string, required) - PostgreSQL-specific target type to use for the column. Possible values are: `PG_SPECIFIC_TYPE_VECTOR`
+* `pg_type` (string, required) - PostgreSQL-specific target type to use for the column. Possible values are: `PG_SPECIFIC_TYPE_HALFVEC`, `PG_SPECIFIC_TYPE_VARCHAR`, `PG_SPECIFIC_TYPE_VECTOR`
 * `size` (integer, optional) - Size parameter for the target type, for types that take one (e.g. vector
   dimension, varchar length). Required when the chosen pg_type needs a size
 

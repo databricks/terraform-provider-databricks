@@ -261,6 +261,7 @@ func (m Secret) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBui
 	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["effective_owner"] = attrs["effective_owner"].SetComputed()
 	attrs["effective_value"] = attrs["effective_value"].SetComputed()
+	attrs["effective_value"] = attrs["effective_value"].SetSensitive()
 	attrs["expire_time"] = attrs["expire_time"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetComputed()
 	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
@@ -274,6 +275,7 @@ func (m Secret) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBui
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updated_by"] = attrs["updated_by"].SetComputed()
 	attrs["value"] = attrs["value"].SetRequired()
+	attrs["value"] = attrs["value"].SetSensitive()
 
 	attrs["full_name"] = attrs["full_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()

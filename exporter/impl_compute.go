@@ -3,15 +3,19 @@ package exporter
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"strings"
 
 	sdk_compute "github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/environments"
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/terraform-provider-databricks/common"
+	environments_wbe "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/environments_workspace_base_environment"
 	tf_dlt "github.com/databricks/terraform-provider-databricks/pipelines"
 	tf_workspace "github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"gopkg.in/yaml.v3"
 )
 
 func listClusters(ic *importContext) error {
@@ -179,6 +183,61 @@ func listClusterPolicies(ic *importContext) error {
 	return nil
 }
 
+// clusterPolicyReferences builds the Depends references for databricks_cluster_policy.
+// The policy JSON is stored escaped in a single string attribute (either `definition`
+// or `policy_family_definition_overrides`), so references to other objects embedded in
+// it are extracted with regexps. The same set of references applies to both fields.
+// All definition references set ContinueMatch so every one is evaluated and their
+// non-overlapping substitutions are combined; secret and init-script references also
+// set MultiMatch because a single definition can embed several of them, each pointing
+// to a different object.
+func clusterPolicyReferences() []reference {
+	var refs []reference
+	for _, f := range []string{"definition", "policy_family_definition_overrides"} {
+		refs = append(refs,
+			reference{Path: f, Resource: "databricks_instance_pool", ContinueMatch: true,
+				MatchType: MatchRegexp, Regexp: policyInstancePoolIdRegex},
+			reference{Path: f, Resource: "databricks_instance_pool", ContinueMatch: true,
+				MatchType: MatchRegexp, Regexp: policyDriverInstancePoolIdRegex},
+			reference{Path: f, Resource: "databricks_instance_profile", ContinueMatch: true,
+				MatchType: MatchRegexp, Regexp: policyInstanceProfileArnRegex},
+			reference{Path: f, Resource: "databricks_secret", Match: "config_reference",
+				ContinueMatch: true, MultiMatch: true, MatchType: MatchRegexp, Regexp: policySecretRegex},
+			// Fallback for scopes without per-secret resources (e.g. Azure Key Vault
+			// backed scopes): substitute only the scope, keeping the key literal. It
+			// runs after the databricks_secret reference, so tokens already resolved to
+			// a secret are left untouched (their span overlaps and is skipped).
+			reference{Path: f, Resource: "databricks_secret_scope",
+				ContinueMatch: true, MultiMatch: true, MatchType: MatchRegexp, Regexp: policySecretScopeRegex},
+			reference{Path: f, Resource: "databricks_dbfs_file", Match: "dbfs_path",
+				ContinueMatch: true, MultiMatch: true, MatchType: MatchRegexp, Regexp: policyInitScriptDbfsRegex},
+			reference{Path: f, Resource: "databricks_workspace_file", Match: "workspace_path",
+				ContinueMatch: true, MultiMatch: true, MatchType: MatchRegexp, Regexp: policyInitScriptWorkspaceRegex},
+			reference{Path: f, Resource: "databricks_workspace_file", Match: "path",
+				ContinueMatch: true, MultiMatch: true, MatchType: MatchRegexp, Regexp: policyInitScriptWorkspaceRegex},
+			reference{Path: f, Resource: "databricks_file", Match: "path",
+				ContinueMatch: true, MultiMatch: true, MatchType: MatchRegexp, Regexp: policyInitScriptVolumesRegex},
+		)
+	}
+	refs = append(refs,
+		reference{Path: "libraries.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		reference{Path: "libraries.jar", Resource: "databricks_file"},
+		reference{Path: "libraries.jar", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		reference{Path: "libraries.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		reference{Path: "libraries.whl", Resource: "databricks_file"},
+		reference{Path: "libraries.whl", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		reference{Path: "libraries.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		reference{Path: "libraries.egg", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		reference{Path: "libraries.whl", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		reference{Path: "libraries.egg", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		reference{Path: "libraries.jar", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+	)
+	return refs
+}
+
 func importClusterPolicy(ic *importContext, r *resource) error {
 	ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/cluster-policies/%s", r.ID),
 		"cluster_policy_"+ic.Importables["databricks_cluster_policy"].Name(ic, r.Data))
@@ -263,9 +322,11 @@ func importClusterPolicy(ic *importContext, r *resource) error {
 			strings.HasSuffix(k, ".workspace.destination") {
 			ic.emitWorkspaceFileOrRepo(eitherString(value, defaultValue))
 		}
-		if typ == "fixed" && (strings.HasPrefix(k, "spark_conf.") || strings.HasPrefix(k, "spark_env_vars.")) {
-			ic.emitSecretsFromSecretPathString(eitherString(value, defaultValue))
-		}
+		// Secret references may appear in any attribute (spark_conf, spark_env_vars,
+		// docker_image credentials, ...) and with any type - notably policy families
+		// often store them in `defaultValue` with a non-fixed type - so emit the scope
+		// for every `{{secrets/scope/key}}` token regardless of key or type.
+		ic.emitSecretScopesFromString(eitherString(value, defaultValue))
 	}
 
 	for _, lib := range clusterPolicy.Libraries {
@@ -480,6 +541,204 @@ func importPipeline(ic *importContext, r *resource) error {
 		for _, dep := range pipeline.Environment.Dependencies {
 			emitEnvironmentDependency(ic, dep)
 		}
+	}
+	return nil
+}
+
+// databricksProvidedBaseEnvPrefix is the resource name prefix used by
+// Databricks-provided (system-managed) workspace base environments, such as
+// `workspace-base-environments/databricks_ml_v5`. These are built into every
+// workspace and should not be exported.
+const databricksProvidedBaseEnvPrefix = "workspace-base-environments/databricks_"
+
+func isDatabricksProvidedBaseEnvironment(name string) bool {
+	return strings.HasPrefix(name, databricksProvidedBaseEnvPrefix)
+}
+
+// isUserManagedBaseEnvironmentRef reports whether a base environment reference
+// points to a user-managed environment. Besides the name check (Databricks-provided
+// environments are named `workspace-base-environments/databricks_*`), it looks up
+// the referenced environment and requires a `filepath` to be set. Relying on
+// `filepath` rather than only the name is more robust, since names can change while
+// Databricks-managed environments never define a `filepath`.
+func (ic *importContext) isUserManagedBaseEnvironmentRef(ref string) bool {
+	if ref == "" || isDatabricksProvidedBaseEnvironment(ref) {
+		return false
+	}
+	env, err := ic.workspaceClient.Environments.GetWorkspaceBaseEnvironment(ic.Context,
+		environments.GetWorkspaceBaseEnvironmentRequest{Name: ref})
+	if err != nil {
+		log.Printf("[WARN] Can't get base environment %s: %s", ref, err)
+		return false
+	}
+	return env.Filepath != ""
+}
+
+// hasUserManagedBaseEnvironment reports whether any of the given base environment
+// references points to a user-managed environment.
+func (ic *importContext) hasUserManagedBaseEnvironment(refs ...string) bool {
+	for _, ref := range refs {
+		if ic.isUserManagedBaseEnvironmentRef(ref) {
+			return true
+		}
+	}
+	return false
+}
+
+func listWorkspaceBaseEnvironments(ic *importContext) error {
+	it := ic.workspaceClient.Environments.ListWorkspaceBaseEnvironments(ic.Context,
+		environments.ListWorkspaceBaseEnvironmentsRequest{})
+	for it.HasNext(ic.Context) {
+		env, err := it.Next(ic.Context)
+		if err != nil {
+			return err
+		}
+		if env.Name == "" {
+			continue
+		}
+		// Skip Databricks-provided base environments - they exist in every
+		// workspace and aren't managed by users.
+		if isDatabricksProvidedBaseEnvironment(env.Name) {
+			log.Printf("[INFO] Skipping Databricks-provided base environment %s", env.Name)
+			continue
+		}
+		if !ic.MatchesName(env.DisplayName) {
+			log.Printf("[INFO] Skipping base environment %s because it doesn't match %s", env.DisplayName, ic.match)
+			continue
+		}
+		ic.Emit(&resource{
+			Resource: "databricks_environments_workspace_base_environment",
+			ID:       env.Name,
+		})
+	}
+	return nil
+}
+
+// importWorkspaceBaseEnvironment emits the WSFS or UC Volumes files referenced by
+// the base environment: the `filepath` environment YAML, and the WSFS/Volumes
+// libraries or `-r requirements.txt` entries listed in `spec.dependencies`. When
+// `filepath` is set, the referenced YAML file is downloaded and parsed, and the
+// files referenced by its own `dependencies` are emitted as well.
+func importWorkspaceBaseEnvironment(ic *importContext, r *resource) error {
+	var env environments.WorkspaceBaseEnvironment
+	if err := convertPluginFrameworkToGoSdk(ic, r.DataWrapper,
+		environments_wbe.WorkspaceBaseEnvironment{}, &env); err != nil {
+		return err
+	}
+	if env.Filepath != "" {
+		ic.emitIfWsfsFile(env.Filepath)
+		ic.emitIfVolumeFile(env.Filepath)
+		ic.emitBaseEnvironmentFileDependencies(env.Filepath)
+	}
+	if env.Spec != nil {
+		for _, dep := range env.Spec.Dependencies {
+			emitEnvironmentDependency(ic, dep)
+		}
+	}
+	return nil
+}
+
+// baseEnvironmentFileSpec is the subset of the environment YAML file that we need
+// to resolve file references from.
+type baseEnvironmentFileSpec struct {
+	Dependencies []string `yaml:"dependencies"`
+}
+
+// emitBaseEnvironmentFileDependencies downloads the environment YAML referenced by
+// `filepath` (from WSFS or UC Volumes), parses its `dependencies`, and emits the
+// WSFS/Volumes files referenced there (direct library paths and `-r` requirements
+// files) so they are exported as well.
+func (ic *importContext) emitBaseEnvironmentFileDependencies(filepath string) {
+	content, err := ic.readWorkspaceOrVolumeFile(filepath)
+	if err != nil {
+		log.Printf("[WARN] Can't read base environment file %s: %s", filepath, err)
+		return
+	}
+	var spec baseEnvironmentFileSpec
+	if err := yaml.Unmarshal(content, &spec); err != nil {
+		log.Printf("[WARN] Can't parse base environment file %s: %s", filepath, err)
+		return
+	}
+	for _, dep := range spec.Dependencies {
+		emitEnvironmentDependency(ic, dep)
+	}
+}
+
+// readWorkspaceOrVolumeFile downloads the content of a file located either on UC
+// Volumes (`/Volumes/...`) or in the workspace file system (WSFS).
+func (ic *importContext) readWorkspaceOrVolumeFile(path string) ([]byte, error) {
+	if strings.HasPrefix(path, "/Volumes/") {
+		resp, err := ic.workspaceClient.Files.DownloadByFilePath(ic.Context, path)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Contents.Close()
+		return io.ReadAll(resp.Contents)
+	}
+	reader, err := ic.workspaceClient.Workspace.Download(ic.Context, maybeStripWorkspacePrefix(path),
+		func(q map[string]any) {
+			q["format"] = "AUTO"
+		})
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+	return io.ReadAll(reader)
+}
+
+// listDefaultWorkspaceBaseEnvironment reads the singleton default workspace base
+// environment and emits it only when it points at a user-managed base environment.
+// Defaults that only reference Databricks-provided base environments are skipped -
+// those are maintained by Databricks and shouldn't be exported.
+func listDefaultWorkspaceBaseEnvironment(ic *importContext) error {
+	env, err := ic.workspaceClient.Environments.GetDefaultWorkspaceBaseEnvironment(ic.Context,
+		environments.GetDefaultWorkspaceBaseEnvironmentRequest{
+			Name: "default-workspace-base-environment",
+		})
+	if err != nil {
+		return err
+	}
+	if !ic.hasUserManagedBaseEnvironment(env.CpuWorkspaceBaseEnvironment, env.GpuWorkspaceBaseEnvironment) {
+		log.Printf("[INFO] Skipping default workspace base environment - it only references Databricks-managed base environments")
+		return nil
+	}
+	ic.Emit(&resource{
+		Resource: "databricks_environments_default_workspace_base_environment",
+		ID:       "default-workspace-base-environment",
+	})
+	return nil
+}
+
+// ignoreDefaultWorkspaceBaseEnvironment ignores the default when it doesn't
+// reference any user-managed base environment (in case it was emitted from
+// elsewhere) - i.e. it only points at Databricks-managed environments.
+func ignoreDefaultWorkspaceBaseEnvironment(ic *importContext, r *resource) bool {
+	if r.DataWrapper == nil {
+		return false
+	}
+	cpu, _ := r.DataWrapper.GetOk("cpu_workspace_base_environment")
+	gpu, _ := r.DataWrapper.GetOk("gpu_workspace_base_environment")
+	cpuStr, _ := cpu.(string)
+	gpuStr, _ := gpu.(string)
+	return !ic.hasUserManagedBaseEnvironment(cpuStr, gpuStr)
+}
+
+// importDefaultWorkspaceBaseEnvironment emits the user-managed base environments
+// referenced by the default so they are exported and referenced by name.
+func importDefaultWorkspaceBaseEnvironment(ic *importContext, r *resource) error {
+	for _, field := range []string{"cpu_workspace_base_environment", "gpu_workspace_base_environment"} {
+		v, ok := r.DataWrapper.GetOk(field)
+		if !ok {
+			continue
+		}
+		name, ok := v.(string)
+		if !ok || name == "" || isDatabricksProvidedBaseEnvironment(name) {
+			continue
+		}
+		ic.Emit(&resource{
+			Resource: "databricks_environments_workspace_base_environment",
+			ID:       name,
+		})
 	}
 	return nil
 }

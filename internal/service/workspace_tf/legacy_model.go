@@ -145,8 +145,7 @@ type CreateCredentialsRequest_SdkV2 struct {
 	// are `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices` (Azure
 	// DevOps Services, including Microsoft Entra ID authentication),
 	// `gitHubEnterprise`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`
-	// (deprecated by AWS, not accepting new customers).
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`.
 	GitProvider types.String `tfsdk:"git_provider"`
 	// The username provided with your Git provider account and associated with
 	// the credential. For most Git providers it is only used to set the Git
@@ -325,8 +324,7 @@ type CreateRepoRequest_SdkV2 struct {
 	// are `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices` (Azure
 	// DevOps Services, including Microsoft Entra ID authentication),
 	// `gitHubEnterprise`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`
-	// (deprecated by AWS, not accepting new customers).
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`.
 	Provider types.String `tfsdk:"provider"`
 	// If specified, the repo will be created with sparse checkout enabled. You
 	// cannot enable/disable sparse checkout after the repo is created.
@@ -450,8 +448,7 @@ type CreateRepoResponse_SdkV2 struct {
 	Path types.String `tfsdk:"path"`
 	// Git provider of the linked Git repository, e.g. `gitHub`,
 	// `azureDevOpsServices`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`
-	// (deprecated).
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`.
 	Provider types.String `tfsdk:"provider"`
 	// Sparse checkout settings for the Git folder (repo).
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
@@ -694,7 +691,7 @@ type CredentialInfo_SdkV2 struct {
 	// `bitbucketCloud`, `gitLab`, `azureDevOpsServices` (Azure DevOps Services,
 	// including Microsoft Entra ID authentication), `gitHubEnterprise`,
 	// `bitbucketServer` (Bitbucket Data Center), `gitLabEnterpriseEdition`
-	// (GitLab Self-Managed), or `awsCodeCommit` (deprecated).
+	// (GitLab Self-Managed), or `awsCodeCommit`.
 	GitProvider types.String `tfsdk:"git_provider"`
 	// The username provided with your Git provider account and associated with
 	// the credential. For most Git providers it is only used to set the Git
@@ -1888,8 +1885,7 @@ type GetRepoResponse_SdkV2 struct {
 	Path types.String `tfsdk:"path"`
 	// Git provider of the linked Git repository, e.g. `gitHub`,
 	// `azureDevOpsServices`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`
-	// (deprecated).
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`.
 	Provider types.String `tfsdk:"provider"`
 	// Sparse checkout settings for the Git folder (repo).
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
@@ -4076,8 +4072,7 @@ type RepoInfo_SdkV2 struct {
 	Path types.String `tfsdk:"path"`
 	// Git provider of the remote git repository, e.g. `gitHub`,
 	// `azureDevOpsServices`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`
-	// (deprecated).
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`.
 	Provider types.String `tfsdk:"provider"`
 	// Sparse checkout config for the git folder (repo).
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
@@ -4953,8 +4948,7 @@ type UpdateCredentialsRequest_SdkV2 struct {
 	// are `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices` (Azure
 	// DevOps Services, including Microsoft Entra ID authentication),
 	// `gitHubEnterprise`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`
-	// (deprecated by AWS, not accepting new customers).
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`.
 	GitProvider types.String `tfsdk:"git_provider"`
 	// The username provided with your Git provider account and associated with
 	// the credential. For most Git providers it is only used to set the Git

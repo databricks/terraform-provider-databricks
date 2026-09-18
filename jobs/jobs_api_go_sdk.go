@@ -233,9 +233,11 @@ func prepareJobSettingsForUpdateGoSdk(d *schema.ResourceData, js *JobSettingsRes
 		}
 	}
 	for i := range js.JobClusters {
-		err := updateJobClusterSpec(d, fmt.Sprintf("job_cluster.%d.new_cluster.0", i), &js.JobClusters[i].NewCluster)
-		if err != nil {
-			return err
+		if js.JobClusters[i].NewCluster != nil {
+			err := updateJobClusterSpec(d, fmt.Sprintf("job_cluster.%d.new_cluster.0", i), js.JobClusters[i].NewCluster)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -253,9 +255,11 @@ func prepareJobSettingsForCreateGoSdk(d *schema.ResourceData, jc *JobCreateStruc
 		}
 	}
 	for i := range jc.JobClusters {
-		err := updateJobClusterSpec(d, fmt.Sprintf("job_cluster.%d.new_cluster.0", i), &jc.JobClusters[i].NewCluster)
-		if err != nil {
-			return err
+		if jc.JobClusters[i].NewCluster != nil {
+			err := updateJobClusterSpec(d, fmt.Sprintf("job_cluster.%d.new_cluster.0", i), jc.JobClusters[i].NewCluster)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

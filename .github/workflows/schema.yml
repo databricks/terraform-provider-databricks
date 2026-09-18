@@ -11,6 +11,9 @@ name: Provider schema
 #   breaking changes are present and no bypass directive is set. The status
 #   job is the required check.
 #
+# - merge-queue-status: posts a synthetic `status` success on merge-queue refs.
+#   See the comment on that job for why the real classifier does not run there.
+#
 # Triggered on `pull_request: [opened, synchronize, edited]` so that editing
 # the PR description to add `ALLOW_SCHEMA_BREAKING_CHANGE=true` re-fires the
 # workflow and the bypass takes effect without needing a new commit.
@@ -25,6 +28,10 @@ name: Provider schema
 on:
   pull_request:
     types: [opened, synchronize, edited]
+
+  # Required checks are enforced on the merge-queue ref too, so `status` must
+  # report there or queued PRs time out. Only merge-queue-status runs here.
+  merge_group:
 
   workflow_dispatch:
     inputs:
@@ -43,12 +50,17 @@ permissions:
 
 jobs:
   classify:
+    # Explicit event allowlist. `merge_group` must not reach this job: the old
+    # `github.event_name != 'pull_request'` form was true there, which would
+    # rebuild the provider on both sides in the queue for no new signal.
+    #
     # Skip non-body PR edits (title-only, base-only) — those don't change the
     # classifier's output and would waste CI time on a rebuild.
     if: |
-      github.event_name != 'pull_request' ||
-      github.event.action != 'edited' ||
-      github.event.changes.body != null
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       (github.event.action != 'edited' ||
+        github.event.changes.body != null))
     runs-on: ubuntu-latest
 
     steps:
@@ -268,3 +280,42 @@ jobs:
             echo "The workflow will re-fire on the next 'edited' event and pick up the bypass."
           fi
           exit 1
+
+  # The squashed merge-queue commit has a different hash than the PR head, so the
+  # PR's `status` check does not carry over. Post a synthetic success rather than
+  # re-run the classifier on the queue ref, mirroring the auto-approve job in
+  # integration-tests.yml:
+  # * The classifier is a double provider build; it already ran on the PR, and
+  #   the queue only squashes commits that each passed it.
+  # * Its bypass reads github.event.pull_request.body, absent from the merge_group
+  #   payload — a PR carrying ALLOW_SCHEMA_BREAKING_CHANGE=true would pass on the
+  #   PR then fail here with no way to unblock.
+  merge-queue-status:
+    if: github.event_name == 'merge_group'
+
+    runs-on:
+      group: databricks-deco-testing-runner-group
+      labels: ubuntu-latest-deco
+
+    permissions:
+      checks: write
+      contents: read
+
+    steps:
+      - name: Post synthetic Provider schema success for merge queue
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            // Must match the required check context: the `status` job id (no name:).
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'status',
+              head_sha: context.sha,
+              status: 'completed',
+              conclusion: 'success',
+              output: {
+                title: 'Provider schema',
+                summary: 'Auto-approved for merge queue (the breaking-change classifier already ran on the pull request).'
+              }
+            });

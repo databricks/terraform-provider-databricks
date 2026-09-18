@@ -61,15 +61,22 @@ This data source exports a single attribute, `items`. It is a list of resources,
 * `principal_type` (string) - Possible values are: `PRINCIPAL_TYPE_SERVICE_PRINCIPAL`, `PRINCIPAL_TYPE_USER`
 
 ### CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess
-* `allow_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule)
-* `deny_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule)
-* `restriction_mode` (string) - Possible values are: `FULL_ACCESS`, `LEGACY_MODE`, `RESTRICTED_ACCESS`
+* `allow_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule) - Allow rules are evaluated after deny rules. A request matching any allow rule is
+  allowed; a request matching no rule is denied by default. Only applies when
+  restriction_mode is RESTRICTED_ACCESS
+* `deny_rules` (list of CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule) - Deny rules are evaluated first. A request matching any deny rule is denied,
+  regardless of allow rules. Only applies when restriction_mode is RESTRICTED_ACCESS
+* `restriction_mode` (string) - The restriction mode for cross-workspace access. Possible values are: `FULL_ACCESS`, `LEGACY_MODE`, `RESTRICTED_ACCESS`
 
 ### CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule
-* `authentication` (CustomerFacingIngressNetworkPolicyAuthentication)
-* `destination` (CustomerFacingIngressNetworkPolicyRequestDestination)
+* `authentication` (CustomerFacingIngressNetworkPolicyAuthentication) - The authenticated identity the request must match. When unset, the rule matches
+  all users and service principals
+* `destination` (CustomerFacingIngressNetworkPolicyRequestDestination) - The destination the request must match — the resource being accessed, for example
+  the workspace UI or workspace APIs. See RequestDestination
 * `label` (string) - The label for this ingress rule
-* `origin` (CustomerFacingIngressNetworkPolicyCrossWorkspaceRequestOrigin)
+* `origin` (CustomerFacingIngressNetworkPolicyCrossWorkspaceRequestOrigin) - The origin the request must match — the source workspace the request comes from,
+  either specific source workspaces or any source workspace in any account. See
+  CrossWorkspaceRequestOrigin
 
 ### CustomerFacingIngressNetworkPolicyCrossWorkspaceRequestOrigin
 * `all_source_workspaces` (boolean) - Matches all source workspaces

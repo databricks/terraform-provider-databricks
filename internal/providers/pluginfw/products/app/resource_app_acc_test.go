@@ -274,6 +274,45 @@ var deletedOutsideTemplate = `
 	}
 `
 
+// TestAccAppResource_GitSource is a regression test for git-backed deployment: setting
+// git_source must not produce "inconsistent result after apply" or a perpetual diff, even
+// though the Apps API classifies git_source (and source_code_path) as input_only and omits
+// them from its response (the read-back is the separate default_git_source). The resource
+// preserves the configured value across reads, and the nested git_source descendants are
+// non-Computed so a configured value is fully known after apply.
+func TestAccAppResource_GitSource(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("not available on GCP")
+	}
+	template := `
+	resource "databricks_app" "this" {
+		no_compute  = true
+		name        = "tf-{var.STICKY_RANDOM}"
+		description = "git-backed app"
+		git_repository = {
+			url      = "https://github.com/databricks/app-templates"
+			provider = "gitHub"
+		}
+		git_source = {
+			branch           = "main"
+			source_code_path = "streamlit-data-app"
+		}
+	}`
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: template,
+		Check: func(s *terraform.State) error {
+			attrs := s.RootModule().Resources["databricks_app.this"].Primary.Attributes
+			assert.Equal(t, "main", attrs["git_source.branch"])
+			assert.Equal(t, "streamlit-data-app", attrs["git_source.source_code_path"])
+			return nil
+		},
+	}, acceptance.Step{
+		// Re-applying the same config must be a no-op (no perpetual diff from the input_only fields).
+		Template: template,
+	})
+}
+
 func TestAccAppResource_DeletedOutsideTerraform(t *testing.T) {
 	var appName string
 	acceptance.LoadWorkspaceEnv(t)

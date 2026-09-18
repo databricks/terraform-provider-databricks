@@ -1172,6 +1172,66 @@ func (m *GenieAttachment_SdkV2) SetViz(ctx context.Context, v GenieVizAttachment
 	m.Viz = types.ListValueMust(t, vs)
 }
 
+// Request to cancel an in-flight agent-mode response.
+type GenieCancelResponseRequest_SdkV2 struct {
+	// The ID of the Genie agent (synonymous with the Genie space ID).
+	AgentId types.String `tfsdk:"-"`
+	// The ID of the conversation containing the response.
+	ConversationId types.String `tfsdk:"-"`
+	// The ID of the response to cancel (the id from the `response.created`
+	// event).
+	ResponseId types.String `tfsdk:"-"`
+}
+
+func (to *GenieCancelResponseRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GenieCancelResponseRequest_SdkV2) {
+}
+
+func (to *GenieCancelResponseRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GenieCancelResponseRequest_SdkV2) {
+}
+
+func (m GenieCancelResponseRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["agent_id"] = attrs["agent_id"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["response_id"] = attrs["response_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieCancelResponseRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GenieCancelResponseRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieCancelResponseRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GenieCancelResponseRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"agent_id":        m.AgentId,
+			"conversation_id": m.ConversationId,
+			"response_id":     m.ResponseId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GenieCancelResponseRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"agent_id":        types.StringType,
+			"conversation_id": types.StringType,
+			"response_id":     types.StringType,
+		},
+	}
+}
+
 type GenieConversation_SdkV2 struct {
 	// Conversation ID
 	ConversationId types.String `tfsdk:"conversation_id"`

@@ -1838,6 +1838,357 @@ func (m DirectGroupMember) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// An external group from the customer's Identity Provider, resolved into
+// Databricks. This is a read-only resource keyed by the IdP external ID. The
+// Get method may trigger an idempotent sync from the customer's IdP to
+// provision or refresh the group's data in Databricks.
+type ExternalGroup struct {
+	// The parent account ID, from Databricks.
+	AccountId types.String `tfsdk:"account_id"`
+	// Display name of the group from the customer's IdP.
+	DisplayName types.String `tfsdk:"display_name"`
+	// The external ID of the group in the customer's IdP.
+	ExternalGroupId types.String `tfsdk:"external_group_id"`
+	// Internal groupId of the group in Databricks.
+	InternalId types.String `tfsdk:"internal_id"`
+	// The resource name of the external group. The format depends on the API
+	// that returned it: - Account-scoped:
+	// accounts/{account_id}/external-groups/{external_group_id} -
+	// Workspace-scoped: external-groups/{external_group_id}
+	Name types.String `tfsdk:"name"`
+}
+
+func (to *ExternalGroup) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExternalGroup) {
+}
+
+func (to *ExternalGroup) SyncFieldsDuringRead(ctx context.Context, from ExternalGroup) {
+}
+
+func (m ExternalGroup) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["display_name"] = attrs["display_name"].SetComputed()
+	attrs["external_group_id"] = attrs["external_group_id"].SetComputed()
+	attrs["internal_id"] = attrs["internal_id"].SetComputed()
+	attrs["name"] = attrs["name"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalGroup.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ExternalGroup) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalGroup
+// only implements ToObjectValue() and Type().
+func (m ExternalGroup) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"account_id":        m.AccountId,
+			"display_name":      m.DisplayName,
+			"external_group_id": m.ExternalGroupId,
+			"internal_id":       m.InternalId,
+			"name":              m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ExternalGroup) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"account_id":        types.StringType,
+			"display_name":      types.StringType,
+			"external_group_id": types.StringType,
+			"internal_id":       types.StringType,
+			"name":              types.StringType,
+		},
+	}
+}
+
+// An external service principal from the customer's Identity Provider, resolved
+// into Databricks. This is a read-only resource keyed by the IdP external ID.
+// The Get method may trigger an idempotent sync from the customer's IdP to
+// provision or refresh the service principal's data in Databricks.
+type ExternalServicePrincipal struct {
+	// The parent account ID, from Databricks.
+	AccountId types.String `tfsdk:"account_id"`
+	// The activity status of the service principal in the Databricks account.
+	AccountSpStatus types.String `tfsdk:"account_sp_status"`
+	// Application ID of the service principal, from the customer's IdP.
+	ApplicationId types.String `tfsdk:"application_id"`
+	// Display name of the service principal, from the customer's IdP.
+	DisplayName types.String `tfsdk:"display_name"`
+	// The external ID of the service principal in the customer's IdP.
+	ExternalServicePrincipalId types.String `tfsdk:"external_service_principal_id"`
+	// Internal servicePrincipalId of the service principal in Databricks.
+	InternalId types.String `tfsdk:"internal_id"`
+	// The resource name of the external service principal. The format depends
+	// on the API that returned it: - Account-scoped:
+	// accounts/{account_id}/external-service-principals/{external_service_principal_id}
+	// - Workspace-scoped:
+	// external-service-principals/{external_service_principal_id}
+	Name types.String `tfsdk:"name"`
+}
+
+func (to *ExternalServicePrincipal) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExternalServicePrincipal) {
+}
+
+func (to *ExternalServicePrincipal) SyncFieldsDuringRead(ctx context.Context, from ExternalServicePrincipal) {
+}
+
+func (m ExternalServicePrincipal) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["account_sp_status"] = attrs["account_sp_status"].SetComputed()
+	attrs["application_id"] = attrs["application_id"].SetComputed()
+	attrs["display_name"] = attrs["display_name"].SetComputed()
+	attrs["external_service_principal_id"] = attrs["external_service_principal_id"].SetComputed()
+	attrs["internal_id"] = attrs["internal_id"].SetComputed()
+	attrs["name"] = attrs["name"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalServicePrincipal.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ExternalServicePrincipal) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalServicePrincipal
+// only implements ToObjectValue() and Type().
+func (m ExternalServicePrincipal) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"account_id":                    m.AccountId,
+			"account_sp_status":             m.AccountSpStatus,
+			"application_id":                m.ApplicationId,
+			"display_name":                  m.DisplayName,
+			"external_service_principal_id": m.ExternalServicePrincipalId,
+			"internal_id":                   m.InternalId,
+			"name":                          m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ExternalServicePrincipal) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"account_id":                    types.StringType,
+			"account_sp_status":             types.StringType,
+			"application_id":                types.StringType,
+			"display_name":                  types.StringType,
+			"external_service_principal_id": types.StringType,
+			"internal_id":                   types.StringType,
+			"name":                          types.StringType,
+		},
+	}
+}
+
+// An external user from the customer's Identity Provider, resolved into
+// Databricks. This is a read-only resource that allows customers to look up
+// external user identities by their IdP external ID and retrieve the
+// corresponding Databricks internal ID and metadata. The Get method may trigger
+// an idempotent sync from the customer's IdP to provision or refresh the user's
+// data in Databricks.
+type ExternalUser struct {
+	// The parent account ID, from Databricks.
+	AccountId types.String `tfsdk:"account_id"`
+	// The activity status of the user in the Databricks account.
+	AccountUserStatus types.String `tfsdk:"account_user_status"`
+	// Display name of the user from the customer's IdP.
+	DisplayName types.String `tfsdk:"display_name"`
+	// The external ID of the user in the customer's IdP.
+	ExternalUserId types.String `tfsdk:"external_user_id"`
+	// The full name of the user, from the customer's IdP.
+	FullName types.Object `tfsdk:"full_name"`
+	// Internal userId of the user in Databricks.
+	InternalId types.String `tfsdk:"internal_id"`
+	// The resource name of the external user. The format depends on the API
+	// that returned it: - Account-scoped:
+	// accounts/{account_id}/external-users/{external_user_id} -
+	// Workspace-scoped: external-users/{external_user_id}
+	Name types.String `tfsdk:"name"`
+	// Username/email of the user, from Databricks.
+	Username types.String `tfsdk:"username"`
+}
+
+func (to *ExternalUser) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExternalUser) {
+	if !from.FullName.IsNull() && !from.FullName.IsUnknown() {
+		if toFullName, ok := to.GetFullName(ctx); ok {
+			if fromFullName, ok := from.GetFullName(ctx); ok {
+				// Recursively sync the fields of FullName
+				toFullName.SyncFieldsDuringCreateOrUpdate(ctx, fromFullName)
+				to.SetFullName(ctx, toFullName)
+			}
+		}
+	}
+}
+
+func (to *ExternalUser) SyncFieldsDuringRead(ctx context.Context, from ExternalUser) {
+	if !from.FullName.IsNull() && !from.FullName.IsUnknown() {
+		if toFullName, ok := to.GetFullName(ctx); ok {
+			if fromFullName, ok := from.GetFullName(ctx); ok {
+				toFullName.SyncFieldsDuringRead(ctx, fromFullName)
+				to.SetFullName(ctx, toFullName)
+			}
+		}
+	}
+}
+
+func (m ExternalUser) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["account_user_status"] = attrs["account_user_status"].SetComputed()
+	attrs["display_name"] = attrs["display_name"].SetComputed()
+	attrs["external_user_id"] = attrs["external_user_id"].SetComputed()
+	attrs["full_name"] = attrs["full_name"].SetComputed()
+	attrs["internal_id"] = attrs["internal_id"].SetComputed()
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["username"] = attrs["username"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalUser.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ExternalUser) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"full_name": reflect.TypeOf(FullName{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalUser
+// only implements ToObjectValue() and Type().
+func (m ExternalUser) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"account_id":          m.AccountId,
+			"account_user_status": m.AccountUserStatus,
+			"display_name":        m.DisplayName,
+			"external_user_id":    m.ExternalUserId,
+			"full_name":           m.FullName,
+			"internal_id":         m.InternalId,
+			"name":                m.Name,
+			"username":            m.Username,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ExternalUser) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"account_id":          types.StringType,
+			"account_user_status": types.StringType,
+			"display_name":        types.StringType,
+			"external_user_id":    types.StringType,
+			"full_name":           FullName{}.Type(ctx),
+			"internal_id":         types.StringType,
+			"name":                types.StringType,
+			"username":            types.StringType,
+		},
+	}
+}
+
+// GetFullName returns the value of the FullName field in ExternalUser as
+// a FullName value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ExternalUser) GetFullName(ctx context.Context) (FullName, bool) {
+	var e FullName
+	if m.FullName.IsNull() || m.FullName.IsUnknown() {
+		return e, false
+	}
+	var v FullName
+	d := m.FullName.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFullName sets the value of the FullName field in ExternalUser.
+func (m *ExternalUser) SetFullName(ctx context.Context, v FullName) {
+	vs := v.ToObjectValue(ctx)
+	m.FullName = vs
+}
+
+// The full name of a user.
+type FullName struct {
+	// The family (last) name of the user, from the customer's IdP.
+	FamilyName types.String `tfsdk:"family_name"`
+	// The given (first) name of the user, from the customer's IdP.
+	GivenName types.String `tfsdk:"given_name"`
+}
+
+func (to *FullName) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FullName) {
+}
+
+func (to *FullName) SyncFieldsDuringRead(ctx context.Context, from FullName) {
+}
+
+func (m FullName) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["family_name"] = attrs["family_name"].SetComputed()
+	attrs["given_name"] = attrs["given_name"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FullName.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m FullName) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FullName
+// only implements ToObjectValue() and Type().
+func (m FullName) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"family_name": m.FamilyName,
+			"given_name":  m.GivenName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m FullName) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"family_name": types.StringType,
+			"given_name":  types.StringType,
+		},
+	}
+}
+
 type GetDirectGroupMemberProxyRequest struct {
 	// Required. Internal ID of the group in Databricks.
 	GroupId types.Int64 `tfsdk:"-"`
@@ -1943,6 +2294,300 @@ func (m GetDirectGroupMemberRequest) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"group_id":     types.Int64Type,
 			"principal_id": types.Int64Type,
+		},
+	}
+}
+
+type GetExternalGroupProxyRequest struct {
+	// Required. The resource name of the external group. Format:
+	// external-groups/{external_group_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetExternalGroupProxyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetExternalGroupProxyRequest) {
+}
+
+func (to *GetExternalGroupProxyRequest) SyncFieldsDuringRead(ctx context.Context, from GetExternalGroupProxyRequest) {
+}
+
+func (m GetExternalGroupProxyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExternalGroupProxyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetExternalGroupProxyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetExternalGroupProxyRequest
+// only implements ToObjectValue() and Type().
+func (m GetExternalGroupProxyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetExternalGroupProxyRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type GetExternalGroupRequest struct {
+	// Required. The resource name of the external group. Format:
+	// accounts/{account_id}/external-groups/{external_group_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetExternalGroupRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetExternalGroupRequest) {
+}
+
+func (to *GetExternalGroupRequest) SyncFieldsDuringRead(ctx context.Context, from GetExternalGroupRequest) {
+}
+
+func (m GetExternalGroupRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExternalGroupRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetExternalGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetExternalGroupRequest
+// only implements ToObjectValue() and Type().
+func (m GetExternalGroupRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetExternalGroupRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type GetExternalServicePrincipalProxyRequest struct {
+	// Required. The resource name of the external service principal. Format:
+	// external-service-principals/{external_service_principal_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetExternalServicePrincipalProxyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetExternalServicePrincipalProxyRequest) {
+}
+
+func (to *GetExternalServicePrincipalProxyRequest) SyncFieldsDuringRead(ctx context.Context, from GetExternalServicePrincipalProxyRequest) {
+}
+
+func (m GetExternalServicePrincipalProxyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExternalServicePrincipalProxyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetExternalServicePrincipalProxyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetExternalServicePrincipalProxyRequest
+// only implements ToObjectValue() and Type().
+func (m GetExternalServicePrincipalProxyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetExternalServicePrincipalProxyRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type GetExternalServicePrincipalRequest struct {
+	// Required. The resource name of the external service principal. Format:
+	// accounts/{account_id}/external-service-principals/{external_service_principal_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetExternalServicePrincipalRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetExternalServicePrincipalRequest) {
+}
+
+func (to *GetExternalServicePrincipalRequest) SyncFieldsDuringRead(ctx context.Context, from GetExternalServicePrincipalRequest) {
+}
+
+func (m GetExternalServicePrincipalRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExternalServicePrincipalRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetExternalServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetExternalServicePrincipalRequest
+// only implements ToObjectValue() and Type().
+func (m GetExternalServicePrincipalRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetExternalServicePrincipalRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type GetExternalUserProxyRequest struct {
+	// Required. The resource name of the external user. Format:
+	// external-users/{external_user_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetExternalUserProxyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetExternalUserProxyRequest) {
+}
+
+func (to *GetExternalUserProxyRequest) SyncFieldsDuringRead(ctx context.Context, from GetExternalUserProxyRequest) {
+}
+
+func (m GetExternalUserProxyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExternalUserProxyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetExternalUserProxyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetExternalUserProxyRequest
+// only implements ToObjectValue() and Type().
+func (m GetExternalUserProxyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetExternalUserProxyRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type GetExternalUserRequest struct {
+	// Required. The resource name of the external user. Format:
+	// accounts/{account_id}/external-users/{external_user_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetExternalUserRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetExternalUserRequest) {
+}
+
+func (to *GetExternalUserRequest) SyncFieldsDuringRead(ctx context.Context, from GetExternalUserRequest) {
+}
+
+func (m GetExternalUserRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExternalUserRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetExternalUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetExternalUserRequest
+// only implements ToObjectValue() and Type().
+func (m GetExternalUserRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetExternalUserRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
 		},
 	}
 }
@@ -2680,8 +3325,8 @@ type ListDirectGroupMembersProxyRequest struct {
 	// being listed.
 	GroupId types.Int64 `tfsdk:"-"`
 	// The maximum number of members to return. The service may return fewer
-	// than this value. If not provided, defaults to 1000 (also the maximum
-	// allowed).
+	// than this value. If not provided, defaults to 1000, which is also the
+	// maximum allowed. Requests for more than the maximum are clamped to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token from a previous list call. Provide this to retrieve the
 	// subsequent page.
@@ -2742,8 +3387,8 @@ type ListDirectGroupMembersRequest struct {
 	// being listed.
 	GroupId types.Int64 `tfsdk:"-"`
 	// The maximum number of members to return. The service may return fewer
-	// than this value. If not provided, defaults to 1000 (also the maximum
-	// allowed).
+	// than this value. If not provided, defaults to 1000, which is also the
+	// maximum allowed. Requests for more than the maximum are clamped to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token, received from a previous ListDirectGroupMembers call.
 	// Provide this to retrieve the subsequent page.
@@ -2926,7 +3571,8 @@ type ListGroupsProxyRequest struct {
 	// Optional. Allows filtering groups by group name or external id.
 	Filter types.String `tfsdk:"-"`
 	// The maximum number of groups to return. The service may return fewer than
-	// this value.
+	// this value. If not provided, defaults to 1000, which is also the maximum
+	// allowed. Requests for more than the maximum are clamped to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token, received from a previous ListGroups call. Provide this to
 	// retrieve the subsequent page.
@@ -2986,7 +3632,8 @@ type ListGroupsRequest struct {
 	// Optional. Allows filtering groups by group name or external id.
 	Filter types.String `tfsdk:"-"`
 	// The maximum number of groups to return. The service may return fewer than
-	// this value.
+	// this value. If not provided, defaults to 1000, which is also the maximum
+	// allowed. Requests for more than the maximum are clamped to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token, received from a previous ListGroups call. Provide this to
 	// retrieve the subsequent page.
@@ -3169,7 +3816,8 @@ type ListServicePrincipalsProxyRequest struct {
 	// external id.
 	Filter types.String `tfsdk:"-"`
 	// The maximum number of SPs to return. The service may return fewer than
-	// this value.
+	// this value. If not provided, defaults to 1000, which is also the maximum
+	// allowed. Requests for more than the maximum are clamped to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token, received from a previous ListServicePrincipals call.
 	// Provide this to retrieve the subsequent page.
@@ -3230,7 +3878,9 @@ type ListServicePrincipalsRequest struct {
 	// external id.
 	Filter types.String `tfsdk:"-"`
 	// The maximum number of service principals to return. The service may
-	// return fewer than this value.
+	// return fewer than this value. If not provided, defaults to 1000, which is
+	// also the maximum allowed. Requests for more than the maximum are clamped
+	// to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token, received from a previous ListServicePrincipals call.
 	// Provide this to retrieve the subsequent page.
@@ -3411,8 +4061,9 @@ func (m *ListServicePrincipalsResponse) SetServicePrincipals(ctx context.Context
 
 type ListTransitiveParentGroupsProxyRequest struct {
 	// The maximum number of parent groups to return. The service may return
-	// fewer than this value. If not provided, defaults to 1000 (also the
-	// maximum allowed).
+	// fewer than this value. If not provided, defaults to 1000, which is also
+	// the maximum allowed. Requests for more than the maximum are clamped to
+	// 1000.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token, received from a previous ListTransitiveParentGroups call.
 	// Provide this to retrieve the subsequent page.
@@ -3473,8 +4124,9 @@ func (m ListTransitiveParentGroupsProxyRequest) Type(ctx context.Context) attr.T
 
 type ListTransitiveParentGroupsRequest struct {
 	// The maximum number of parent groups to return. The service may return
-	// fewer than this value. If not provided, defaults to 1000 (also the
-	// maximum allowed).
+	// fewer than this value. If not provided, defaults to 1000, which is also
+	// the maximum allowed. Requests for more than the maximum are clamped to
+	// 1000.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token, received from a previous ListTransitiveParentGroups call.
 	// Provide this to retrieve the subsequent page.
@@ -3660,7 +4312,8 @@ type ListUsersProxyRequest struct {
 	// Optional. Allows filtering users by username or external id.
 	Filter types.String `tfsdk:"-"`
 	// The maximum number of users to return. The service may return fewer than
-	// this value.
+	// this value. If not provided, defaults to 1000, which is also the maximum
+	// allowed. Requests for more than the maximum are clamped to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token, received from a previous ListUsers call. Provide this to
 	// retrieve the subsequent page.
@@ -3720,7 +4373,8 @@ type ListUsersRequest struct {
 	// Optional. Allows filtering users by username or external id.
 	Filter types.String `tfsdk:"-"`
 	// The maximum number of users to return. The service may return fewer than
-	// this value.
+	// this value. If not provided, defaults to 1000, which is also the maximum
+	// allowed. Requests for more than the maximum are clamped to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token, received from a previous ListUsers call. Provide this to
 	// retrieve the subsequent page.
@@ -3900,7 +4554,9 @@ func (m *ListUsersResponse) SetUsers(ctx context.Context, v []User) {
 
 type ListWorkspaceAssignmentDetailsProxyRequest struct {
 	// The maximum number of workspace assignment details to return. The service
-	// may return fewer than this value.
+	// may return fewer than this value. If not provided, defaults to 1000,
+	// which is also the maximum allowed. Requests for more than the maximum are
+	// clamped to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token from a previous list call. Provide this to retrieve the
 	// subsequent page.
@@ -3955,7 +4611,9 @@ func (m ListWorkspaceAssignmentDetailsProxyRequest) Type(ctx context.Context) at
 
 type ListWorkspaceAssignmentDetailsRequest struct {
 	// The maximum number of workspace assignment details to return. The service
-	// may return fewer than this value.
+	// may return fewer than this value. If not provided, defaults to 1000,
+	// which is also the maximum allowed. Requests for more than the maximum are
+	// clamped to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token, received from a previous ListWorkspaceAssignmentDetails
 	// call. Provide this to retrieve the subsequent page.
@@ -4139,7 +4797,9 @@ func (m *ListWorkspaceAssignmentDetailsResponse) SetWorkspaceAssignmentDetails(c
 
 type ListWorkspaceAssignmentsProxyRequest struct {
 	// The maximum number of workspace assignments to return. The service may
-	// return fewer than this value.
+	// return fewer than this value. If not provided, defaults to 1000, which is
+	// also the maximum allowed. Requests for more than the maximum are clamped
+	// to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token from a previous list call. Provide this to retrieve the
 	// subsequent page.
@@ -4194,7 +4854,9 @@ func (m ListWorkspaceAssignmentsProxyRequest) Type(ctx context.Context) attr.Typ
 
 type ListWorkspaceAssignmentsRequest struct {
 	// The maximum number of workspace assignments to return. The service may
-	// return fewer than this value.
+	// return fewer than this value. If not provided, defaults to 1000, which is
+	// also the maximum allowed. Requests for more than the maximum are clamped
+	// to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token, received from a previous ListWorkspaceAssignments call.
 	// Provide this to retrieve the subsequent page.

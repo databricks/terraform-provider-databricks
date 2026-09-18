@@ -1,6 +1,6 @@
 # NEXT CHANGELOG
 
-## Release v1.129.0
+## Release v1.133.0
 
 ### Important Changes
 
@@ -9,22 +9,12 @@
 ### New Features and Improvements
 
 ### Bug Fixes
+* Fix `databricks_grant` and `databricks_grants` for the AI Gateway securables (`model_service`, `mcp_service`, `model_provider_service`). Wiring `databricks_ai_gateway_*.<x>.name` into the corresponding grant field previously failed on apply with `No API found for 'GET /unity-catalog/permissions/model_provider_service/model-provider-services/<full_name>'`, because that `name` attribute carries a resource-name prefix (e.g. `model-provider-services/`) that the permissions API does not expect. The prefix is now stripped before it reaches the API path and the resource ID, and a `DiffSuppressFunc` treats the prefixed and bare forms as equal, so both the `.name` reference and a bare full name apply cleanly with no perpetual diff.
 
 * Fixed `databricks_pipeline` dropping `serverless = false` from create/update requests. Because `serverless` is `omitempty` in the SDK and was never force-sent, classic (non-serverless) ingestion pipelines failed with `cannot provide cluster settings when using serverless compute` (the API defaults an omitted `serverless` to `true` for ingestion pipelines, then rejects the `cluster` block).
 
 ### Documentation
 
 ### Exporter
-
-* Added support for exporting `databricks_data_classification_catalog_config` resource ([#5961](https://github.com/databricks/terraform-provider-databricks/pull/5961)).
-* Added support for exporting `databricks_warehouses_default_warehouse_override` resource ([#5962](https://github.com/databricks/terraform-provider-databricks/pull/5962)).
-* Added support for exporting `databricks_secret_uc` resource ([#5963](https://github.com/databricks/terraform-provider-databricks/pull/5963)).
-* Skip system-managed jobs during export and add missing file references for job task parameters ([#5956](https://github.com/databricks/terraform-provider-databricks/issues/5956)).
-* Added support for exporting `databricks_endpoint` resource ([#5951](https://github.com/databricks/terraform-provider-databricks/pull/5951)).
-* Added support for exporting `databricks_environments_workspace_base_environment` and `databricks_environments_default_workspace_base_environment` resources ([#5960](https://github.com/databricks/terraform-provider-databricks/pull/5960)).
-* Add an `exporter` dimension to the user agent ([#5954](https://github.com/databricks/terraform-provider-databricks/pull/5954)).
-* Allow to generate named variables from references; introduce `databricks_account_id` variable for account-level exports; bug fixes ([#5952](https://github.com/databricks/terraform-provider-databricks/pull/5952)).
-* Preserve zero `value` fields when exporting `databricks_workspace_setting_v2` and `databricks_account_setting_v2` ([#5955](https://github.com/databricks/terraform-provider-databricks/issues/5955)).
-* Resolve references embedded in `databricks_cluster_policy` definitions instead of emitting hardcoded values ([#5953](https://github.com/databricks/terraform-provider-databricks/issues/5953)).
 
 ### Internal Changes

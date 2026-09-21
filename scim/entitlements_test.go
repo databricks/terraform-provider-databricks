@@ -1,159 +1,170 @@
-package scim
+package scim_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/logger"
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
-type entitlementScenario struct {
-	name          string
-	create        bool
-	initialValues map[string]bool
-	values        map[string]bool
+type entitlement struct {
+	name  string
+	value bool
 }
 
-type entitlementEntity struct {
-	name     string
-	idField  string
-	idPrefix string
-	endpoint string
+func (e entitlement) String() string {
+	return fmt.Sprintf("%s = %t", e.name, e.value)
 }
 
-var entitlementScenarios = []entitlementScenario{
-	{
-		name:   "add_to_empty",
-		values: allEntitlementValues(true),
-	},
-	{
-		name:          "remove_existing",
-		initialValues: allEntitlementValues(true),
-		values:        allEntitlementValues(false),
-	},
-	{
-		name:   "set_explicitly_to_false",
-		create: true,
-		values: allEntitlementValues(false),
-	},
-	{
-		name:   "some_true_some_false",
-		create: true,
-		values: map[string]bool{
-			"allow_cluster_create":       false,
-			"allow_instance_pool_create": false,
-			"databricks_sql_access":      true,
-			"workspace_access":           true,
-		},
-	},
-}
-
-var entitlementEntities = []entitlementEntity{
-	{
-		name:     "group",
-		idField:  "group_id",
-		idPrefix: "group",
-		endpoint: "/api/2.0/preview/scim/v2/Groups/abc",
-	},
-	{
-		name:     "user",
-		idField:  "user_id",
-		idPrefix: "user",
-		endpoint: "/api/2.0/preview/scim/v2/Users/abc",
-	},
-	{
-		name:     "service_principal",
-		idField:  "service_principal_id",
-		idPrefix: "spn",
-		endpoint: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-	},
-}
-
-func allEntitlementValues(value bool) map[string]bool {
-	return map[string]bool{
-		"allow_cluster_create":       value,
-		"allow_instance_pool_create": value,
-		"databricks_sql_access":      value,
-		"workspace_access":           value,
-	}
-}
-
-func entitlementComplexValues(values map[string]bool) []ComplexValue {
-	result := make([]ComplexValue, 0, len(values))
-	for _, entitlement := range possibleEntitlements {
-		if values[entitlementMapping[entitlement]] {
-			result = append(result, ComplexValue{Value: entitlement})
+func entitlementsStepBuilder(t *testing.T, r entitlementResource) func(entitlements []entitlement) acceptance.Step {
+	return func(entitlements []entitlement) acceptance.Step {
+		entitlementsBuf := strings.Builder{}
+		for _, entitlement := range entitlements {
+			entitlementsBuf.WriteString(fmt.Sprintf("%s\n", entitlement.String()))
 		}
-	}
-	if len(result) == 0 {
-		return []ComplexValue{{Value: ""}}
-	}
-	return result
-}
-
-func entitlementHCL(entity entitlementEntity, values map[string]bool) string {
-	var hcl strings.Builder
-	fmt.Fprintf(&hcl, "%s = \"abc\"\n", entity.idField)
-	for _, entitlement := range possibleEntitlements {
-		field := entitlementMapping[entitlement]
-		if value, ok := values[field]; ok {
-			fmt.Fprintf(&hcl, "%s = %t\n", field, value)
+		return acceptance.Step{
+			Template: fmt.Sprintf(`
+			%s
+			resource "databricks_entitlements" "entitlements_users" {
+				%s
+				%s
+			}
+		`, r.dataSourceTemplate(), r.tfReference(), entitlementsBuf.String()),
+			Check: func(s *terraform.State) error {
+				remoteEntitlements, err := r.getEntitlements(context.Background())
+				assert.NoError(t, err)
+				receivedEntitlements := make([]string, 0, len(remoteEntitlements))
+				for _, entitlement := range remoteEntitlements {
+					receivedEntitlements = append(receivedEntitlements, entitlement.Value)
+				}
+				expectedEntitlements := make([]string, 0, len(entitlements))
+				for _, entitlement := range entitlements {
+					if entitlement.value {
+						expectedEntitlements = append(expectedEntitlements, strings.ReplaceAll(entitlement.name, "_", "-"))
+					}
+				}
+				assert.ElementsMatch(t, expectedEntitlements, receivedEntitlements)
+				return nil
+			},
 		}
+
 	}
-	return hcl.String()
 }
 
-func entitlementState(entity entitlementEntity, values map[string]bool) map[string]string {
-	state := map[string]string{entity.idField: "abc"}
-	for field, value := range values {
-		state[field] = fmt.Sprintf("%t", value)
+func makeEntitlementsSteps(t *testing.T, r entitlementResource, entitlementsSteps [][]entitlement) []acceptance.Step {
+	r.setDisplayName(acceptance.RandomName("entitlements-"))
+	makeEntitlementsStep := entitlementsStepBuilder(t, r)
+	steps := make([]acceptance.Step, len(entitlementsSteps))
+	for i, entitlements := range entitlementsSteps {
+		steps[i] = makeEntitlementsStep(entitlements)
 	}
-	return state
+	steps[0].PreConfig = makePreconfig(t, r)
+	return steps
 }
 
-func TestResourceEntitlementsLifecycleScenarios(t *testing.T) {
-	for _, scenario := range entitlementScenarios {
-		for _, entity := range entitlementEntities {
-			t.Run(scenario.name+"/"+entity.name, func(t *testing.T) {
-				remoteEntitlements := entitlementComplexValues(scenario.values)
-				if len(remoteEntitlements) == 1 && remoteEntitlements[0].Value == "" {
-					remoteEntitlements = nil
-				}
-				fixture := qa.ResourceFixture{
-					Fixtures: []qa.HTTPFixture{
-						{
-							Method:   "PATCH",
-							Resource: entity.endpoint,
-							ExpectedRequest: PatchRequestComplexValue([]patchOperation{{
-								"replace", "entitlements", entitlementComplexValues(scenario.values),
-							}}),
-							Response: map[string]any{"id": "abc"},
-						},
-						{
-							Method:   "GET",
-							Resource: entity.endpoint + "?attributes=entitlements",
-							Response: map[string]any{
-								"id":           "abc",
-								"entitlements": remoteEntitlements,
-							},
-						},
-					},
-					Resource:      ResourceEntitlements(),
-					HCL:           entitlementHCL(entity, scenario.values),
-					Create:        scenario.create,
-					Update:        !scenario.create,
-					InstanceState: entitlementState(entity, scenario.initialValues),
-				}
-				if !scenario.create {
-					fixture.ID = entity.idPrefix + "/abc"
-				}
-				expected := map[string]any{"id": entity.idPrefix + "/abc"}
-				for field := range allEntitlementValues(false) {
-					expected[field] = scenario.values[field]
-				}
-				fixture.ApplyAndExpectData(t, expected)
-			})
-		}
+func makePreconfig(t *testing.T, r entitlementResource) func() {
+	logger.DefaultLogger = &logger.SimpleLogger{
+		Level: logger.LevelDebug,
 	}
+	return func() {
+		w := databricks.Must(databricks.NewWorkspaceClient())
+		r.setWorkspaceClient(w)
+		ctx := context.Background()
+		err := r.create(ctx)
+		assert.NoError(t, err)
+		t.Cleanup(func() {
+			r.cleanUp(ctx)
+		})
+	}
+}
+
+func entitlementsTest(t *testing.T, f func(*testing.T, entitlementResource)) {
+	acceptance.LoadWorkspaceEnv(t)
+	sp := &servicePrincipalResource{}
+	if acceptance.IsAzure(t) {
+		// A long-lived application is used in Azure.
+		sp.applicationId = acceptance.GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
+		sp.cleanup = false
+	}
+	resources := []entitlementResource{
+		&groupResource{},
+		&userResource{},
+		sp,
+	}
+	for _, r := range resources {
+		t.Run(r.resourceType(), func(t *testing.T) {
+			f(t, r)
+		})
+	}
+}
+
+func TestAccEntitlementsAddToEmpty(t *testing.T) {
+	entitlementsTest(t, func(t *testing.T, r entitlementResource) {
+		steps := makeEntitlementsSteps(t, r, [][]entitlement{
+			{},
+			{
+				{"allow_cluster_create", true},
+				{"allow_instance_pool_create", true},
+				{"workspace_access", true},
+				{"databricks_sql_access", true},
+			},
+		})
+		acceptance.WorkspaceLevel(t, steps...)
+	})
+}
+
+func TestAccEntitlementsSetExplicitlyToFalse(t *testing.T) {
+	entitlementsTest(t, func(t *testing.T, r entitlementResource) {
+		steps := makeEntitlementsSteps(t, r, [][]entitlement{
+			{
+				{"allow_cluster_create", false},
+				{"allow_instance_pool_create", false},
+				{"workspace_access", false},
+				{"databricks_sql_access", false},
+			},
+			{},
+			{
+				{"allow_cluster_create", false},
+				{"allow_instance_pool_create", false},
+				{"workspace_access", false},
+				{"databricks_sql_access", false},
+			},
+		})
+		acceptance.WorkspaceLevel(t, steps...)
+	})
+}
+
+func TestAccEntitlementsRemoveExisting(t *testing.T) {
+	entitlementsTest(t, func(t *testing.T, r entitlementResource) {
+		steps := makeEntitlementsSteps(t, r, [][]entitlement{
+			{
+				{"allow_cluster_create", true},
+				{"allow_instance_pool_create", true},
+				{"workspace_access", true},
+				{"databricks_sql_access", true},
+			},
+			{},
+		})
+		acceptance.WorkspaceLevel(t, steps...)
+	})
+}
+
+func TestAccEntitlementsSomeTrueSomeFalse(t *testing.T) {
+	entitlementsTest(t, func(t *testing.T, r entitlementResource) {
+		steps := makeEntitlementsSteps(t, r, [][]entitlement{
+			{
+				{"allow_cluster_create", false},
+				{"allow_instance_pool_create", false},
+				{"workspace_access", true},
+				{"databricks_sql_access", true},
+			},
+		})
+		acceptance.WorkspaceLevel(t, steps...)
+	})
 }

@@ -12,6 +12,60 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/scim
       test_name: TestMwsAccServicePrincipalResourceOnAws
       comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsAddToEmpty
+      comment: Flaky due to read-after-write inconsistency in the SCIM API; covered by deterministic unit tests.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsAddToEmpty/group
+      comment: Flaky due to read-after-write inconsistency in the SCIM API; covered by deterministic unit tests.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsAddToEmpty/user
+      comment: Flaky due to read-after-write inconsistency in the SCIM API; covered by deterministic unit tests.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsAddToEmpty/service_principal
+      comment: Flaky due to read-after-write inconsistency in the SCIM API; covered by deterministic unit tests.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsSetExplicitlyToFalse
+      comment: Flaky due to read-after-write inconsistency in the SCIM API; covered by deterministic unit tests.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsSetExplicitlyToFalse/group
+      comment: Flaky due to read-after-write inconsistency in the SCIM API; covered by deterministic unit tests.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsSetExplicitlyToFalse/user
+      comment: Flaky due to read-after-write inconsistency in the SCIM API; covered by deterministic unit tests.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsSetExplicitlyToFalse/service_principal
+      comment: Flaky due to read-after-write inconsistency in the SCIM API; covered by deterministic unit tests.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsRemoveExisting
+      comment: Flaky due to read-after-write inconsistency in the SCIM API; covered by deterministic unit tests.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsRemoveExisting/group
+      comment: Flaky due to read-after-write inconsistency in the SCIM API; covered by deterministic unit tests.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsRemoveExisting/user
+      comment: Flaky due to read-after-write inconsistency in the SCIM API; covered by deterministic unit tests.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsRemoveExisting/service_principal
+      comment: Flaky due to read-after-write inconsistency in the SCIM API; covered by deterministic unit tests.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsSomeTrueSomeFalse
+      comment: Flaky due to read-after-write inconsistency in the SCIM API; covered by deterministic unit tests.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsSomeTrueSomeFalse/group
+      comment: Flaky due to read-after-write inconsistency in the SCIM API; covered by deterministic unit tests.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsSomeTrueSomeFalse/user
+      comment: Flaky due to read-after-write inconsistency in the SCIM API; covered by deterministic unit tests.
+    - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccEntitlementsSomeTrueSomeFalse/service_principal
+      comment: Flaky due to read-after-write inconsistency in the SCIM API; covered by deterministic unit tests.
+    - package: github.com/databricks/terraform-provider-databricks/settings
+      test_name: TestAccDefaultNamespaceSetting_ProviderConfig_EmptyID
+      comment: Flaky acceptance test; covered by a deterministic unit test.
+    - package: github.com/databricks/terraform-provider-databricks/settings
+      test_name: TestAccDefaultNamespaceSetting_ProviderConfig_Recreate
+      comment: Flaky acceptance test; covered by a deterministic unit test.
     - package: github.com/databricks/terraform-provider-databricks/mws
       test_name: TestUcAccAssignGroupToWorkspace
       comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061

@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_permission_assignment Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/permissions)
+
 This resource is used to assign account-level users, service principals and groups to a Databricks workspace. To configure additional entitlements such as cluster creation, please use [databricks_entitlements](entitlements.md)
 
 -> This resource can only be used with a workspace-level provider!

@@ -45,7 +45,7 @@ type InstanceProfilesAPI struct {
 
 // Create creates an instance profile record on Databricks
 func (a InstanceProfilesAPI) Create(ipi InstanceProfileInfo) error {
-	return a.client.Post(a.context, "/instance-profiles/add", ipi, nil)
+	return a.client.Post(a.context, "/instance-profiles/add", ipi, nil, a.client.AddWorkspaceIdHeader)
 }
 
 // Read returns the ARN back if it exists on the Databricks workspace
@@ -72,7 +72,7 @@ func (a InstanceProfilesAPI) Read(instanceProfileARN string) (result InstancePro
 // List lists all the instance profiles in the workspace
 func (a InstanceProfilesAPI) List() ([]InstanceProfileInfo, error) {
 	var instanceProfilesArnList InstanceProfileList
-	err := a.client.Get(a.context, "/instance-profiles/list", nil, &instanceProfilesArnList)
+	err := a.client.Get(a.context, "/instance-profiles/list", nil, &instanceProfilesArnList, a.client.AddWorkspaceIdHeader)
 	return instanceProfilesArnList.InstanceProfiles, err
 }
 
@@ -80,7 +80,7 @@ func (a InstanceProfilesAPI) List() ([]InstanceProfileInfo, error) {
 func (a InstanceProfilesAPI) Delete(instanceProfileARN string) error {
 	return a.client.Post(a.context, "/instance-profiles/remove", map[string]any{
 		"instance_profile_arn": instanceProfileARN,
-	}, nil)
+	}, nil, a.client.AddWorkspaceIdHeader)
 }
 
 // Update updates the IAM role ARN of an existing instance profile
@@ -92,7 +92,7 @@ func (a InstanceProfilesAPI) Update(ipi InstanceProfileInfo) error {
 	if ipi.IamRoleArn != "" {
 		data["iam_role_arn"] = ipi.IamRoleArn
 	}
-	return a.client.Post(a.context, "/instance-profiles/edit", data, nil)
+	return a.client.Post(a.context, "/instance-profiles/edit", data, nil, a.client.AddWorkspaceIdHeader)
 }
 
 // IsRegistered checks if instance profile exists

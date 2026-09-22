@@ -3,7 +3,7 @@ package pipelines
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
@@ -33,7 +33,7 @@ func DataSourcePipelines() common.Resource {
 			data.Ids = append(data.Ids, p.PipelineId)
 		}
 
-		sort.Strings(data.Ids)
+		slices.Sort(data.Ids)
 
 		return nil
 

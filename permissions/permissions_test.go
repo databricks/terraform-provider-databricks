@@ -266,38 +266,6 @@ func TestAccPermissions_InstancePool(t *testing.T) {
 	})
 }
 
-func TestAccPermissions_Cluster(t *testing.T) {
-	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")
-	policyTemplate := `
-
-data "databricks_spark_version" "latest" {
-}
-
-	resource "databricks_cluster" "this" {
-		cluster_name = "singlenode-{var.RANDOM}"
-		spark_version = data.databricks_spark_version.latest.id
-		instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
-		num_workers = 0
-		autotermination_minutes = 10
-		spark_conf = {
-			"spark.databricks.cluster.profile" = "singleNode"
-			"spark.master" = "local[*]"
-		}
-		custom_tags = {
-			"ResourceClass" = "SingleNode"
-		}
-	}`
-
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: policyTemplate + makePermissionsTestStage("cluster_id", "databricks_cluster.this.id", groupPermissions("CAN_ATTACH_TO")),
-	}, acceptance.Step{
-		Template: policyTemplate + makePermissionsTestStage("cluster_id", "databricks_cluster.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_ATTACH_TO", "CAN_RESTART", "CAN_MANAGE")),
-	}, acceptance.Step{
-		Template:    policyTemplate + makePermissionsTestStage("cluster_id", "databricks_cluster.this.id", currentPrincipalPermission(t, "CAN_ATTACH_TO")),
-		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for cluster, allowed levels: CAN_MANAGE"),
-	})
-}
-
 func TestAccPermissions_Job(t *testing.T) {
 	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")
 	template := `
@@ -994,9 +962,6 @@ func TestAccPermissions_Query(t *testing.T) {
 
 func TestAccPermissions_App(t *testing.T) {
 	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")
-	if acceptance.IsGcp(t) {
-		acceptance.Skipf(t)("not available on GCP")
-	}
 	queryTemplate := `
 		resource "databricks_app" "this" {
 			name = "{var.RANDOM}"

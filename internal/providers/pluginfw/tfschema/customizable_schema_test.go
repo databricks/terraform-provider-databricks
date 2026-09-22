@@ -348,7 +348,7 @@ func TestCustomizeSchema_ConfigureAsSdkV2Compatible(t *testing.T) {
 			},
 		},
 		{
-			name: "SingleNestedAttribute/PreservedAsAttribute",
+			name: "SingleNestedBlock/Panics",
 			baseSchema: NestedBlockObject{
 				Attributes: map[string]AttributeBuilder{
 					"single": SingleNestedAttributeBuilder{
@@ -361,20 +361,7 @@ func TestCustomizeSchema_ConfigureAsSdkV2Compatible(t *testing.T) {
 					},
 				},
 			},
-			// SingleNestedAttributeBuilder is preserved as an attribute (not converted to a block)
-			// because types.Object has no SDKv2 block equivalent.
-			want: NestedBlockObject{
-				Attributes: map[string]AttributeBuilder{
-					"single": SingleNestedAttributeBuilder{
-						Attributes: map[string]AttributeBuilder{
-							"attr": StringAttributeBuilder{},
-						},
-						DeprecationMessage: "deprecated",
-						Validators:         []validator.Object{v},
-						PlanModifiers:      []planmodifier.Object{pm},
-					},
-				},
-			},
+			expectPanic: true,
 		},
 	}
 	for _, c := range testCases {

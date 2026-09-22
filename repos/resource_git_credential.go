@@ -60,9 +60,10 @@ func ResourceGitCredential() common.Resource {
 				if !d.Get("force").(bool) || !isOnlyOneGitCredentialForProviderError(err) {
 					return err
 				}
-				var listRequest workspace.ListCredentialsRequest
-				common.DataToStructPointer(d, s, &listRequest)
-				creds, err := w.GitCredentials.ListAll(ctx, listRequest)
+				principalId := int64(d.Get("principal_id").(int))
+				creds, err := w.GitCredentials.ListAll(ctx, workspace.ListCredentialsRequest{
+					PrincipalId: principalId,
+				})
 				if err != nil {
 					return err
 				}
@@ -91,7 +92,11 @@ func ResourceGitCredential() common.Resource {
 			if err != nil {
 				return err
 			}
-			resp, err := w.GitCredentials.Get(ctx, workspace.GetCredentialsRequest{CredentialId: cred_id})
+			principalId := int64(d.Get("principal_id").(int))
+			resp, err := w.GitCredentials.Get(ctx, workspace.GetCredentialsRequest{
+				CredentialId: cred_id,
+				PrincipalId:  principalId,
+			})
 			if err != nil {
 				return err
 			}
@@ -129,7 +134,11 @@ func ResourceGitCredential() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.GitCredentials.DeleteByCredentialId(ctx, cred_id)
+			principalId := int64(d.Get("principal_id").(int))
+			return w.GitCredentials.Delete(ctx, workspace.DeleteCredentialsRequest{
+				CredentialId: cred_id,
+				PrincipalId:  principalId,
+			})
 		},
 	}
 }

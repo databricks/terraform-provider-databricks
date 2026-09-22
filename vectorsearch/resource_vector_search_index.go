@@ -16,10 +16,11 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
 )
 
-const defaultIndexProvisionTimeout = 15 * time.Minute
+const defaultIndexProvisionTimeout = 75 * time.Minute
+const defaultIndexDeletionTimeout = 15 * time.Minute
 
 func waitForVectorSearchIndexDeletion(w *databricks.WorkspaceClient, ctx context.Context, searchIndexName string) error {
-	return retry.RetryContext(ctx, defaultIndexProvisionTimeout, func() *retry.RetryError {
+	return retry.RetryContext(ctx, defaultIndexDeletionTimeout, func() *retry.RetryError {
 		_, err := w.VectorSearchIndexes.GetIndexByIndexName(ctx, searchIndexName)
 		if err == nil {
 			return retry.RetryableError(fmt.Errorf("vector search index %s is still not deleted", searchIndexName))
@@ -31,8 +32,8 @@ func waitForVectorSearchIndexDeletion(w *databricks.WorkspaceClient, ctx context
 	})
 }
 
-func waitForSearchIndexCreation(w *databricks.WorkspaceClient, ctx context.Context, searchIndexName string) error {
-	return retry.RetryContext(ctx, defaultIndexProvisionTimeout-deleteCallTimeout, func() *retry.RetryError {
+func waitForSearchIndexCreation(w *databricks.WorkspaceClient, ctx context.Context, searchIndexName string, timeout time.Duration) error {
+	return retry.RetryContext(ctx, timeout-deleteCallTimeout, func() *retry.RetryError {
 		index, err := w.VectorSearchIndexes.GetIndexByIndexName(ctx, searchIndexName)
 		if err != nil {
 			return retry.NonRetryableError(err)
@@ -86,7 +87,7 @@ func ResourceVectorSearchIndex() common.Resource {
 			if err != nil {
 				return err
 			}
-			err = waitForSearchIndexCreation(w, ctx, req.Name)
+			err = waitForSearchIndexCreation(w, ctx, req.Name, d.Timeout(schema.TimeoutCreate))
 			if err != nil {
 				nestedErr := w.VectorSearchIndexes.DeleteIndexByIndexName(ctx, req.Name)
 				if nestedErr != nil {

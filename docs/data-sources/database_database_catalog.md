@@ -4,6 +4,8 @@ subcategory: "Database Instances"
 # databricks_database_database_catalog Data Source
 [![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/database)
+
 This data source can be used to get a single Database Catalog.
 
 
@@ -29,6 +31,6 @@ The following arguments are supported:
 The following attributes are exported:
 * `create_database_if_not_exists` (boolean)
 * `database_instance_name` (string) - The name of the DatabaseInstance housing the database
-* `database_name` (string) - The name of the database (in a instance) associated with the catalog
+* `database_name` (string) - The name of the database (in an instance) associated with the catalog
 * `name` (string) - The name of the catalog in UC
 * `uid` (string)

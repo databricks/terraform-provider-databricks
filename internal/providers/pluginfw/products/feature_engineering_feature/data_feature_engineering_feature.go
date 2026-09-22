@@ -5,7 +5,6 @@ package feature_engineering_feature
 import (
 	"context"
 	"reflect"
-	"regexp"
 
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
@@ -13,6 +12,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/ml_tf"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -46,8 +46,6 @@ func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -101,21 +99,26 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // FeatureData extends the main model with additional fields.
 type FeatureData struct {
+	// Name of parent catalog.
+	CatalogName types.String `tfsdk:"catalog_name"`
+	// Time at which this feature was created.
+	CreatedAt timetypes.RFC3339 `tfsdk:"created_at"`
+	// Username of the feature creator.
+	CreatedBy types.String `tfsdk:"created_by"`
 	// The description of the feature.
 	Description types.String `tfsdk:"description"`
 	// The entity columns for the feature, used as aggregation keys and for
 	// query-time lookup.
 	Entities types.List `tfsdk:"entities"`
-	// Deprecated: Use DeltaTableSource.filter_condition or
-	// KafkaSource.filter_condition instead. Kept for backwards compatibility.
-	// The filter condition applied to the source data before aggregation.
+
 	FilterCondition types.String `tfsdk:"filter_condition"`
-	// The full three-part name (catalog, schema, name) of the feature.
+	// The full three-part name (catalog, schema, name) of the feature. This is
+	// the feature's resource identifier; the catalog_name, schema_name, and
+	// name fields below are OUTPUT_ONLY decomposed views of this value.
 	FullName types.String `tfsdk:"full_name"`
 	// The function by which the feature is computed.
 	Function types.Object `tfsdk:"function"`
-	// Deprecated: Use AggregationFunction.inputs instead. Kept for backwards
-	// compatibility. The input columns from which the feature is computed.
+
 	Inputs types.List `tfsdk:"inputs"`
 	// Lineage context information for this feature. WARNING: This field is
 	// primarily intended for internal use by Databricks systems and is
@@ -125,11 +128,14 @@ type FeatureData struct {
 	// This field will be set by feature-engineering client and should be left
 	// unset by SDK and terraform users.
 	LineageContext types.Object `tfsdk:"lineage_context"`
+	// Name of the feature, extracted from the full three-part name
+	// (catalog.schema.name).
+	Name types.String `tfsdk:"name"`
+	// Name of parent schema relative to its parent catalog.
+	SchemaName types.String `tfsdk:"schema_name"`
 	// The data source of the feature.
 	Source types.Object `tfsdk:"source"`
-	// Deprecated: Use Function.aggregation_function.time_window instead. Kept
-	// for backwards compatibility. The time window in which the feature is
-	// computed.
+
 	TimeWindow types.Object `tfsdk:"time_window"`
 	// Column recording time, used for point-in-time joins, backfills, and
 	// aggregations.
@@ -167,6 +173,9 @@ func (m FeatureData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"catalog_name":      m.CatalogName,
+			"created_at":        m.CreatedAt,
+			"created_by":        m.CreatedBy,
 			"description":       m.Description,
 			"entities":          m.Entities,
 			"filter_condition":  m.FilterCondition,
@@ -174,6 +183,8 @@ func (m FeatureData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"function":          m.Function,
 			"inputs":            m.Inputs,
 			"lineage_context":   m.LineageContext,
+			"name":              m.Name,
+			"schema_name":       m.SchemaName,
 			"source":            m.Source,
 			"time_window":       m.TimeWindow,
 			"timeseries_column": m.TimeseriesColumn,
@@ -188,7 +199,10 @@ func (m FeatureData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m FeatureData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"description": types.StringType,
+			"catalog_name": types.StringType,
+			"created_at":   timetypes.RFC3339{}.Type(ctx),
+			"created_by":   types.StringType,
+			"description":  types.StringType,
 			"entities": basetypes.ListType{
 				ElemType: ml_tf.EntityColumn{}.Type(ctx),
 			},
@@ -199,6 +213,8 @@ func (m FeatureData) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"lineage_context":   ml_tf.LineageContext{}.Type(ctx),
+			"name":              types.StringType,
+			"schema_name":       types.StringType,
 			"source":            ml_tf.DataSource{}.Type(ctx),
 			"time_window":       ml_tf.TimeWindow{}.Type(ctx),
 			"timeseries_column": ml_tf.TimeseriesColumn{}.Type(ctx),
@@ -209,6 +225,9 @@ func (m FeatureData) Type(ctx context.Context) attr.Type {
 }
 
 func (m FeatureData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetComputed()
+	attrs["created_at"] = attrs["created_at"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["description"] = attrs["description"].SetComputed()
 	attrs["entities"] = attrs["entities"].SetComputed()
 	attrs["filter_condition"] = attrs["filter_condition"].SetComputed()
@@ -216,6 +235,8 @@ func (m FeatureData) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["function"] = attrs["function"].SetComputed()
 	attrs["inputs"] = attrs["inputs"].SetComputed()
 	attrs["lineage_context"] = attrs["lineage_context"].SetComputed()
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["schema_name"] = attrs["schema_name"].SetComputed()
 	attrs["source"] = attrs["source"].SetComputed()
 	attrs["time_window"] = attrs["time_window"].SetComputed()
 	attrs["timeseries_column"] = attrs["timeseries_column"].SetComputed()

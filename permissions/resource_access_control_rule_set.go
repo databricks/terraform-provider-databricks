@@ -141,7 +141,17 @@ func ResourceAccessControlRuleSet() common.Resource {
 			}
 			// Store empty etag in state as we will always use the latest etag
 			data.Etag = ""
-			return common.StructToData(data, s, d)
+			if err := common.StructToData(data, s, d); err != nil {
+				return err
+			}
+
+			// StructToData intentionally skips optional empty collections. For this
+			// authoritative resource, an empty grant_rules response means remote drift
+			// removed all rules, so clear stale Terraform state explicitly.
+			if len(data.GrantRules) == 0 {
+				return d.Set("grant_rules", []interface{}{})
+			}
+			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			c, err := c.DatabricksClientForDualResource(ctx, d)

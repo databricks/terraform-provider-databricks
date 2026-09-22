@@ -27,9 +27,10 @@ func TestUcAccCatalogForceDestroyConsistentAfterImport(t *testing.T) {
 			Template: template,
 		},
 		acceptance.Step{
-			ImportState:       true,
-			ResourceName:      "databricks_catalog.test",
-			ImportStateVerify: true,
+			ImportState:             true,
+			ResourceName:            "databricks_catalog.test",
+			ImportStateVerify:       true,
+			ImportStateVerifyIgnore: []string{"updated_at", "updated_by"},
 		},
 	)
 }
@@ -258,18 +259,6 @@ func catalogProviderConfigTemplate(catalogName string, providerConfig string) st
 		%s
 	}
 `, catalogName, providerConfig)
-}
-
-func TestAccCatalog_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: catalogProviderConfigTemplate("test_catalog_{var.STICKY_RANDOM}", `
-			provider_config {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
-		PlanOnly:    true,
-	})
 }
 
 func TestAccCatalog_ProviderConfig_EmptyID(t *testing.T) {

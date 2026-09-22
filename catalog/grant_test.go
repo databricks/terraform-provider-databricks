@@ -74,12 +74,12 @@ resource "databricks_external_location" "some" {
 	comment         = "Managed by TF"
 }
 
-# resource "databricks_grant" "metastore" {
-# 	metastore = "{env.TEST_METASTORE_ID}"
-#
-# 	principal  = "%s"
-# 	privileges = ["CREATE_STORAGE_CREDENTIAL"]
-# }
+resource "databricks_grant" "metastore" {
+	metastore = "{env.TEST_METASTORE_ID}"
+
+	principal  = "%s"
+	privileges = ["CREATE_STORAGE_CREDENTIAL"]
+}
 
 resource "databricks_grant" "catalog" {
 	catalog = databricks_catalog.sandbox.id
@@ -120,6 +120,20 @@ resource "databricks_grant" "some" {
 
 	principal  = "%s"
 	privileges = ["ALL_PRIVILEGES"]
+}
+
+resource "databricks_secret_uc" "this" {
+	catalog_name = databricks_catalog.sandbox.id
+	schema_name  = databricks_schema.things.name
+	name         = "secret-{var.STICKY_RANDOM}"
+	value        = "sensitive-value"
+}
+
+resource "databricks_grant" "secret" {
+	secret = databricks_secret_uc.this.full_name
+
+	principal  = "%s"
+	privileges = ["READ_SECRET"]
 }`
 
 func TestUcAccGrant(t *testing.T) {
@@ -161,18 +175,6 @@ func grantProviderConfigTemplate(providerConfig string) string {
 	`, providerConfig)
 }
 
-func TestUcAccGrant_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: grantProviderConfigTemplate(`
-			provider_config {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
-		PlanOnly:    true,
-	})
-}
-
 func TestUcAccGrant_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: grantProviderConfigTemplate(`
@@ -204,5 +206,41 @@ func TestUcAccGrantForIdChange(t *testing.T) {
 	}, acceptance.Step{
 		Template:    grantTemplateForNamePermissionChange("-fail", "abc"),
 		ExpectError: regexp.MustCompile(`cannot create grant: Privilege ABC is not applicable to this entity`),
+	})
+}
+
+// secretGrantTemplate is a minimal-dependency variant that exercises only the secret securable
+// and READ_SECRET. Unlike grantTemplate it creates no storage credential or external location, so
+// it needs no TEST_METASTORE_DATA_ACCESS_ARN / TEST_BUCKET / TEST_METASTORE_ID, and grants to the
+// built-in "account users" group so no test group env var is required.
+var secretGrantTemplate = `
+resource "databricks_catalog" "sandbox" {
+	name    = "sandbox{var.STICKY_RANDOM}"
+	comment = "this catalog is managed by terraform"
+}
+
+resource "databricks_schema" "things" {
+	catalog_name = databricks_catalog.sandbox.id
+	name         = "things{var.STICKY_RANDOM}"
+	comment      = "this database is managed by terraform"
+}
+
+resource "databricks_secret_uc" "this" {
+	catalog_name = databricks_catalog.sandbox.id
+	schema_name  = databricks_schema.things.name
+	name         = "secret-{var.STICKY_RANDOM}"
+	value        = "sensitive-value"
+}
+
+resource "databricks_grant" "secret" {
+	secret = databricks_secret_uc.this.full_name
+
+	principal  = "account users"
+	privileges = ["READ_SECRET"]
+}`
+
+func TestUcAccSecretGrant(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: secretGrantTemplate,
 	})
 }

@@ -4,6 +4,8 @@ subcategory: "Settings"
 
 # databricks_compliance_security_profile_workspace_setting Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/compliancesecurityprofile)
+
 The `databricks_compliance_security_profile_workspace_setting` resource allows you to control whether to enable the
 compliance security profile for the current workspace. Enabling it on a workspace is permanent. By default, it is
 turned off.

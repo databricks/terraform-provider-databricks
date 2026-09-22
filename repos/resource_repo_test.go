@@ -4,10 +4,15 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -126,6 +131,136 @@ func TestResourceRepoCreateNoBranch(t *testing.T) {
 	}.ApplyAndExpectData(t,
 		map[string]any{"id": resp.RepoID(), "path": resp.Path, "branch": resp.Branch,
 			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
+}
+
+func TestResourceRepoCreateWithGitCredentialID(t *testing.T) {
+	resp := ReposInformation{
+		ID:           121232342,
+		Url:          "https://github.com/user/test.git",
+		Provider:     "gitHub",
+		Branch:       "main",
+		Path:         "/Repos/user@domain/test",
+		HeadCommitID: "1124323423abc23424",
+	}
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/repos",
+				ExpectedRequest: reposCreateRequest{
+					Url:             "https://github.com/user/test.git",
+					Provider:        "gitHub",
+					GitCredentialID: 388825371666399,
+				},
+				Response: resp,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/repos/121232342",
+				Response: resp,
+			},
+		},
+		Resource: ResourceRepo(),
+		State: map[string]any{
+			"url":               "https://github.com/user/test.git",
+			"git_credential_id": 388825371666399,
+		},
+		Create: true,
+	}.ApplyAndExpectData(t,
+		map[string]any{"id": resp.RepoID(), "path": resp.Path, "branch": resp.Branch,
+			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID,
+			"git_credential_id": 388825371666399})
+}
+
+func TestResourceRepoUpdateGitCredentialID(t *testing.T) {
+	resp := ReposInformation{
+		ID:           121232342,
+		Url:          "https://github.com/user/test.git",
+		Provider:     "gitHub",
+		Branch:       "main",
+		Path:         "/Repos/user@domain/test",
+		HeadCommitID: "1124323423abc23424",
+	}
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/repos/121232342",
+				ExpectedRequest: map[string]any{
+					"branch":            "main",
+					"git_credential_id": 388825371666399,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/repos/121232342",
+				Response: resp,
+			},
+		},
+		Resource: ResourceRepo(),
+		InstanceState: map[string]string{
+			"url":               "https://github.com/user/test.git",
+			"git_provider":      "gitHub",
+			"branch":            "main",
+			"git_credential_id": "1",
+		},
+		State: map[string]any{
+			"url":               "https://github.com/user/test.git",
+			"git_provider":      "gitHub",
+			"branch":            "main",
+			"git_credential_id": 388825371666399,
+		},
+		Update: true,
+		ID:     "121232342",
+	}.ApplyAndExpectData(t,
+		map[string]any{"id": resp.RepoID(), "git_credential_id": 388825371666399})
+}
+
+// git_credential_id authenticates each individual update against the Git remote, so it must be
+// sent even when only the branch changed. Otherwise the checkout would fall back to the caller's
+// default credential.
+func TestResourceRepoUpdateBranchSendsUnchangedGitCredentialID(t *testing.T) {
+	resp := ReposInformation{
+		ID:           121232342,
+		Url:          "https://github.com/user/test.git",
+		Provider:     "gitHub",
+		Branch:       "feature",
+		Path:         "/Repos/user@domain/test",
+		HeadCommitID: "1124323423abc23424",
+	}
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/repos/121232342",
+				ExpectedRequest: map[string]any{
+					"branch":            "feature",
+					"git_credential_id": 388825371666399,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/repos/121232342",
+				Response: resp,
+			},
+		},
+		Resource: ResourceRepo(),
+		InstanceState: map[string]string{
+			"url":               "https://github.com/user/test.git",
+			"git_provider":      "gitHub",
+			"branch":            "main",
+			"git_credential_id": "388825371666399",
+		},
+		State: map[string]any{
+			"url":               "https://github.com/user/test.git",
+			"git_provider":      "gitHub",
+			"branch":            "feature",
+			"git_credential_id": 388825371666399,
+		},
+		Update: true,
+		ID:     "121232342",
+	}.ApplyAndExpectData(t,
+		map[string]any{"id": resp.RepoID(), "branch": "feature", "git_credential_id": 388825371666399})
 }
 
 func TestResourceRepoCreateCustomDirectory(t *testing.T) {
@@ -520,4 +655,62 @@ func TestReposListWithPrefix(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, len(reposList), 1)
 	assert.Equal(t, resp.Branch, reposList[0].Branch)
+}
+
+// TestReposCreateRaisesHTTPTimeout verifies the clone performed by CreateRepo
+// survives a stall longer than the client's configured HTTP timeout, which is
+// the failure customers hit with the provider's 65s default.
+func TestReposCreateRaisesHTTPTimeout(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/2.0/repos" && r.Method == http.MethodPost {
+			// Stall past the 1s timeout configured below.
+			time.Sleep(1200 * time.Millisecond)
+			w.Write([]byte(`{"id": 123, "url": "https://github.com/user/repo.git", "provider": "gitHub"}`))
+			return
+		}
+		w.Write([]byte(`{}`))
+	}))
+	defer server.Close()
+
+	inner, err := client.New(&config.Config{
+		Host:               server.URL,
+		Token:              "dapi123",
+		HTTPTimeoutSeconds: 1,
+		// Fail fast rather than retrying a timed-out request for minutes.
+		RetryTimeoutSeconds: 1,
+	})
+	require.NoError(t, err)
+
+	api := NewReposAPI(context.Background(), &common.DatabricksClient{DatabricksClient: inner})
+	resp, err := api.Create(reposCreateRequest{Url: "https://github.com/user/repo.git", Provider: "gitHub"})
+	require.NoError(t, err)
+	assert.Equal(t, int64(123), resp.ID)
+}
+
+// TestReposUpdateRaisesHTTPTimeout verifies switching branch survives a stall
+// longer than the configured timeout: the checkout happens inline, just like
+// the clone in Create.
+func TestReposUpdateRaisesHTTPTimeout(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/2.0/repos/123" && r.Method == http.MethodPatch {
+			// Stall past the 1s timeout configured below.
+			time.Sleep(1200 * time.Millisecond)
+			w.Write([]byte(`{}`))
+			return
+		}
+		w.Write([]byte(`{}`))
+	}))
+	defer server.Close()
+
+	inner, err := client.New(&config.Config{
+		Host:               server.URL,
+		Token:              "dapi123",
+		HTTPTimeoutSeconds: 1,
+		// Fail fast rather than retrying a timed-out request for minutes.
+		RetryTimeoutSeconds: 1,
+	})
+	require.NoError(t, err)
+
+	api := NewReposAPI(context.Background(), &common.DatabricksClient{DatabricksClient: inner})
+	require.NoError(t, api.Update("123", map[string]any{"branch": "releases"}))
 }

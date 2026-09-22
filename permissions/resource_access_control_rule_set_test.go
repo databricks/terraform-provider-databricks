@@ -129,6 +129,40 @@ func TestResourceRuleSetRead(t *testing.T) {
 	})
 }
 
+func TestResourceRuleSetReadEmptyGrantRulesClearsState(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
+				Response: iam.RuleSetResponse{
+					Name:       testServicePrincipalRuleSetName,
+					Etag:       "etagEx=",
+					GrantRules: []iam.GrantRule{},
+				},
+			},
+		},
+		Resource: ResourceAccessControlRuleSet(),
+		New:      true,
+		Read:     true,
+		ID:       testServicePrincipalRuleSetName,
+		HCL: fmt.Sprintf(`
+        name = "%s"
+
+        grant_rules {
+            principals = [
+                "users/abc@example.com"
+            ]
+            role = "roles/servicePrincipal.manager"
+        }`, testServicePrincipalRuleSetName),
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":        testServicePrincipalRuleSetName,
+		"etag":        "",
+		"id":          testServicePrincipalRuleSetName,
+		"grant_rules": []any{},
+	})
+}
+
 func TestResourceRuleSetUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

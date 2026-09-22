@@ -68,6 +68,102 @@ func TestExperimentCreatePostError(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestExperimentCreateWithTraceLocation(t *testing.T) {
+	req := ml.CreateExperiment{
+		Name: "xyz",
+		TraceLocation: &ml.ExperimentTraceLocation{
+			UcTraceLocation: &ml.UcTraceLocation{
+				Catalog:     "my_catalog",
+				Schema:      "my_schema",
+				TablePrefix: "my_experiment",
+			},
+		},
+	}
+	re := ml.Experiment{
+		Name:         "xyz",
+		ExperimentId: "123456790123456",
+		TraceLocation: &ml.ExperimentTraceLocation{
+			UcTraceLocation: &ml.UcTraceLocation{
+				Catalog: "my_catalog",
+				Schema:  "my_schema",
+				// User-set prefix, so both the echoed and effective fields carry it.
+				TablePrefix:          "my_experiment",
+				EffectiveTablePrefix: "my_experiment",
+			},
+		},
+	}
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:          "POST",
+				Resource:        "/api/2.0/mlflow/experiments/create",
+				ExpectedRequest: req,
+				Response:        re,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
+				Response: ml.GetExperimentResponse{
+					Experiment: &re,
+				},
+			},
+		},
+		Resource: ResourceMlflowExperiment(),
+		Create:   true,
+		HCL: `
+		name = "xyz"
+		trace_location {
+			uc_trace_location {
+				catalog      = "my_catalog"
+				schema       = "my_schema"
+				table_prefix = "my_experiment"
+			}
+		}
+		`,
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	assert.Equal(t, re.ExperimentId, d.Id())
+	assert.Equal(t, "my_catalog", d.Get("trace_location.0.uc_trace_location.0.catalog"))
+	assert.Equal(t, "my_schema", d.Get("trace_location.0.uc_trace_location.0.schema"))
+	assert.Equal(t, "my_experiment", d.Get("trace_location.0.uc_trace_location.0.table_prefix"))
+	assert.Equal(t, "my_experiment", d.Get("trace_location.0.uc_trace_location.0.effective_table_prefix"))
+}
+
+// Reading an experiment whose location was set out-of-band, with config that
+// omits the block, must not pull that location into state. This is what keeps
+// existing experiments from drifting when the field is first adopted.
+func TestExperimentTraceLocationOmittedNotTracked(t *testing.T) {
+	re := ml.Experiment{
+		Name:         "xyz",
+		ExperimentId: "123456790123456",
+		TraceLocation: &ml.ExperimentTraceLocation{
+			UcTraceLocation: &ml.UcTraceLocation{
+				Catalog:              "my_catalog",
+				Schema:               "my_schema",
+				EffectiveTablePrefix: "experiment_123456790123456",
+			},
+		},
+	}
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
+				Response: ml.GetExperimentResponse{Experiment: &re},
+			},
+		},
+		Resource: ResourceMlflowExperiment(),
+		Read:     true,
+		ID:       re.ExperimentId,
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	// The block is not Computed, so a location the config never set is left out
+	// of state instead of being pulled in (which would produce spurious drift).
+	assert.Equal(t, 0, d.Get("trace_location.#"))
+}
+
 func TestExperimentCreateGetError(t *testing.T) {
 	re := e()
 	re.ExperimentId = "123456790123456"

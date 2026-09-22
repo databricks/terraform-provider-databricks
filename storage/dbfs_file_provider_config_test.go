@@ -18,18 +18,6 @@ func dbfsFileProviderConfigTemplate(providerConfig string) string {
 	`, providerConfig)
 }
 
-func TestAccDbfsFile_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: dbfsFileProviderConfigTemplate(`
-			provider_config {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccDbfsFile_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: dbfsFileProviderConfigTemplate(`

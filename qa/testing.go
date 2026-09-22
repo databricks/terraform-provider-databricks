@@ -2,6 +2,7 @@ package qa
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -13,7 +14,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -234,19 +235,22 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 			client.Config.WorkspaceID = f.ProviderWorkspaceID
 			// Override default cached workspace ID (12345) to match ProviderWorkspaceID
 			// so that validateWorkspaceIDFromProvider sees a consistent value.
+			// cachedWorkspaceID is the server-canonical numeric ID; only seed it
+			// when the test's ProviderWorkspaceID is numeric.
 			if wsID, parseErr := strconv.ParseInt(f.ProviderWorkspaceID, 10, 64); parseErr == nil {
 				client.SetCachedWorkspaceID(wsID)
-				// Pre-populate workspace client cache so that NamespaceValidateWorkspaceID
-				// and getDatabricksClientForUnifiedProvider find it without making API calls.
-				// Create a workspace-scoped config (no AccountID) so NewWorkspaceClient
-				// accepts it without treating the host as an account host.
-				wsCfg, cfgErr := client.Config.NewWithWorkspaceHost(s.URL)
-				if cfgErr == nil {
-					wsCfg.WorkspaceID = f.ProviderWorkspaceID
-					wsClient, wsErr := databricks.NewWorkspaceClient((*databricks.Config)(wsCfg))
-					if wsErr == nil {
-						client.SetWorkspaceClientForWorkspace(wsID, wsClient)
-					}
+			}
+			// Pre-populate workspace client cache so that the apply-time
+			// GetWorkspaceClientForUnifiedProvider / getDatabricksClientForUnifiedProvider
+			// routing finds it without making API calls.
+			// Create a workspace-scoped config (no AccountID) so NewWorkspaceClient
+			// accepts it without treating the host as an account host.
+			wsCfg, cfgErr := client.Config.NewWithWorkspaceHost(s.URL)
+			if cfgErr == nil {
+				wsCfg.WorkspaceID = f.ProviderWorkspaceID
+				wsClient, wsErr := databricks.NewWorkspaceClient((*databricks.Config)(wsCfg))
+				if wsErr == nil {
+					client.SetWorkspaceClientForWorkspace(f.ProviderWorkspaceID, wsClient)
 				}
 			}
 		}
@@ -279,12 +283,11 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 	if f.ProviderWorkspaceID != "" {
 		c.Config.WorkspaceID = f.ProviderWorkspaceID
 		// Pre-populate the workspace client cache for this workspace ID so that
-		// NamespaceValidateWorkspaceID and getDatabricksClientForUnifiedProvider
-		// find the mock workspace client without making API calls.
-		if wsID, parseErr := strconv.ParseInt(f.ProviderWorkspaceID, 10, 64); parseErr == nil {
-			mw.WorkspaceClient.Config = (*config.Config)(c.DatabricksClient.Config)
-			c.SetWorkspaceClientForWorkspace(wsID, mw.WorkspaceClient)
-		}
+		// the apply-time GetWorkspaceClientForUnifiedProvider /
+		// getDatabricksClientForUnifiedProvider routing finds the mock workspace
+		// client without making API calls.
+		mw.WorkspaceClient.Config = (*config.Config)(c.DatabricksClient.Config)
+		c.SetWorkspaceClientForWorkspace(f.ProviderWorkspaceID, mw.WorkspaceClient)
 	}
 	// Pre-populate cached workspace ID to prevent lazy CurrentWorkspaceID
 	// API calls in unit tests. When ProviderWorkspaceID is set, use that
@@ -534,8 +537,8 @@ func ResourceCornerCases(t *testing.T, resource common.Resource, cc ...CornerCas
 
 func diagsToString(diags diag.Diagnostics) string {
 	if diags.HasError() {
-		sort.Slice(diags, func(i, j int) bool {
-			return diags[i].Detail < diags[j].Detail
+		slices.SortFunc(diags, func(a, b diag.Diagnostic) int {
+			return cmp.Compare(a.Detail, b.Detail)
 		})
 		issues := []string{}
 		for _, diag := range diags {

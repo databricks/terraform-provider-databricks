@@ -4,6 +4,8 @@ subcategory: "Settings"
 # databricks_workspace_network_option Data Source
 [![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/account/workspacenetworkconfiguration)
+
 This data source can be used to get a single workspace network option.
 
 -> **Note** This data source can only be used with an account-level provider!

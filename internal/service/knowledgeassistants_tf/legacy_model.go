@@ -24,6 +24,108 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+type CreateExampleRequest_SdkV2 struct {
+	// The example to create under the parent Knowledge Assistant.
+	Example types.List `tfsdk:"example"`
+	// Parent resource where this example will be created. Format:
+	// knowledge-assistants/{knowledge_assistant_id}
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *CreateExampleRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateExampleRequest_SdkV2) {
+	if !from.Example.IsNull() && !from.Example.IsUnknown() {
+		if toExample, ok := to.GetExample(ctx); ok {
+			if fromExample, ok := from.GetExample(ctx); ok {
+				// Recursively sync the fields of Example
+				toExample.SyncFieldsDuringCreateOrUpdate(ctx, fromExample)
+				to.SetExample(ctx, toExample)
+			}
+		}
+	}
+}
+
+func (to *CreateExampleRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateExampleRequest_SdkV2) {
+	if !from.Example.IsNull() && !from.Example.IsUnknown() {
+		if toExample, ok := to.GetExample(ctx); ok {
+			if fromExample, ok := from.GetExample(ctx); ok {
+				toExample.SyncFieldsDuringRead(ctx, fromExample)
+				to.SetExample(ctx, toExample)
+			}
+		}
+	}
+}
+
+func (m CreateExampleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["example"] = attrs["example"].SetRequired()
+	attrs["example"] = attrs["example"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExampleRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateExampleRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"example": reflect.TypeOf(Example_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateExampleRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CreateExampleRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"example": m.Example,
+			"parent":  m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateExampleRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"example": basetypes.ListType{
+				ElemType: Example_SdkV2{}.Type(ctx),
+			},
+			"parent": types.StringType,
+		},
+	}
+}
+
+// GetExample returns the value of the Example field in CreateExampleRequest_SdkV2 as
+// a Example_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateExampleRequest_SdkV2) GetExample(ctx context.Context) (Example_SdkV2, bool) {
+	var e Example_SdkV2
+	if m.Example.IsNull() || m.Example.IsUnknown() {
+		return e, false
+	}
+	var v []Example_SdkV2
+	d := m.Example.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExample sets the value of the Example field in CreateExampleRequest_SdkV2.
+func (m *CreateExampleRequest_SdkV2) SetExample(ctx context.Context, v Example_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["example"]
+	m.Example = types.ListValueMust(t, vs)
+}
+
 type CreateKnowledgeAssistantRequest_SdkV2 struct {
 	// The Knowledge Assistant to create.
 	KnowledgeAssistant types.List `tfsdk:"knowledge_assistant"`
@@ -221,6 +323,55 @@ func (m *CreateKnowledgeSourceRequest_SdkV2) SetKnowledgeSource(ctx context.Cont
 	m.KnowledgeSource = types.ListValueMust(t, vs)
 }
 
+type DeleteExampleRequest_SdkV2 struct {
+	// The resource name of the example to delete. Format:
+	// knowledge-assistants/{knowledge_assistant_id}/examples/{example_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteExampleRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteExampleRequest_SdkV2) {
+}
+
+func (to *DeleteExampleRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteExampleRequest_SdkV2) {
+}
+
+func (m DeleteExampleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteExampleRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteExampleRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteExampleRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DeleteExampleRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteExampleRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type DeleteKnowledgeAssistantRequest_SdkV2 struct {
 	// The resource name of the knowledge assistant to be deleted. Format:
 	// knowledge-assistants/{knowledge_assistant_id}
@@ -317,6 +468,126 @@ func (m DeleteKnowledgeSourceRequest_SdkV2) Type(ctx context.Context) attr.Type 
 			"name": types.StringType,
 		},
 	}
+}
+
+// An example associated with a Knowledge Assistant. Contains a question and
+// guidelines for how the assistant should respond.
+type Example_SdkV2 struct {
+	// Timestamp when this example was created.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// The universally unique identifier (UUID) of the example.
+	ExampleId types.String `tfsdk:"example_id"`
+	// Guidelines for answering the question. Optional — examples may be
+	// created with just a question; the front-end form does not require
+	// guidelines.
+	Guidelines types.List `tfsdk:"guidelines"`
+	// Full resource name:
+	// knowledge-assistants/{knowledge_assistant_id}/examples/{example_id}
+	Name types.String `tfsdk:"name"`
+	// The example question.
+	Question types.String `tfsdk:"question"`
+	// Timestamp when this example was last updated.
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
+}
+
+func (to *Example_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Example_SdkV2) {
+	if !from.Guidelines.IsNull() && !from.Guidelines.IsUnknown() && to.Guidelines.IsNull() && len(from.Guidelines.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Guidelines, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Guidelines = from.Guidelines
+	}
+}
+
+func (to *Example_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Example_SdkV2) {
+	if !from.Guidelines.IsNull() && !from.Guidelines.IsUnknown() && to.Guidelines.IsNull() && len(from.Guidelines.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Guidelines, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Guidelines = from.Guidelines
+	}
+}
+
+func (m Example_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["example_id"] = attrs["example_id"].SetComputed()
+	attrs["guidelines"] = attrs["guidelines"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["question"] = attrs["question"].SetRequired()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Example.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Example_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"guidelines": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Example_SdkV2
+// only implements ToObjectValue() and Type().
+func (m Example_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"create_time": m.CreateTime,
+			"example_id":  m.ExampleId,
+			"guidelines":  m.Guidelines,
+			"name":        m.Name,
+			"question":    m.Question,
+			"update_time": m.UpdateTime,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Example_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"example_id":  types.StringType,
+			"guidelines": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"name":        types.StringType,
+			"question":    types.StringType,
+			"update_time": timetypes.RFC3339{}.Type(ctx),
+		},
+	}
+}
+
+// GetGuidelines returns the value of the Guidelines field in Example_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Example_SdkV2) GetGuidelines(ctx context.Context) ([]types.String, bool) {
+	if m.Guidelines.IsNull() || m.Guidelines.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Guidelines.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGuidelines sets the value of the Guidelines field in Example_SdkV2.
+func (m *Example_SdkV2) SetGuidelines(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["guidelines"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Guidelines = types.ListValueMust(t, vs)
 }
 
 // FileTableSpec specifies a file table source configuration.
@@ -423,6 +694,55 @@ func (m FilesSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetExampleRequest_SdkV2 struct {
+	// The resource name of the example. Format:
+	// knowledge-assistants/{knowledge_assistant_id}/examples/{example_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetExampleRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetExampleRequest_SdkV2) {
+}
+
+func (to *GetExampleRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetExampleRequest_SdkV2) {
+}
+
+func (m GetExampleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExampleRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetExampleRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetExampleRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetExampleRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetExampleRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type GetKnowledgeAssistantPermissionLevelsRequest_SdkV2 struct {
 	// The knowledge assistant for which to get or manage permissions.
 	KnowledgeAssistantId types.String `tfsdk:"-"`
@@ -483,6 +803,19 @@ func (to *GetKnowledgeAssistantPermissionLevelsResponse_SdkV2) SyncFieldsDuringC
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
 	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				// Recursively sync the fields of each PermissionLevels element by position.
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
+	}
 }
 
 func (to *GetKnowledgeAssistantPermissionLevelsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetKnowledgeAssistantPermissionLevelsResponse_SdkV2) {
@@ -491,6 +824,18 @@ func (to *GetKnowledgeAssistantPermissionLevelsResponse_SdkV2) SyncFieldsDuringR
 		// If a user specified a non-Null, empty list for PermissionLevels, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.PermissionLevels = from.PermissionLevels
+	}
+	if !from.PermissionLevels.IsNull() && !from.PermissionLevels.IsUnknown() {
+		if toPermissionLevels, ok := to.GetPermissionLevels(ctx); ok {
+			if fromPermissionLevels, ok := from.GetPermissionLevels(ctx); ok {
+				for i := range toPermissionLevels {
+					if i < len(fromPermissionLevels) {
+						toPermissionLevels[i].SyncFieldsDuringRead(ctx, fromPermissionLevels[i])
+					}
+				}
+				to.SetPermissionLevels(ctx, toPermissionLevels)
+			}
+		}
 	}
 }
 
@@ -790,7 +1135,7 @@ type KnowledgeAssistant_SdkV2 struct {
 	ErrorInfo types.String `tfsdk:"error_info"`
 	// The MLflow experiment ID.
 	ExperimentId types.String `tfsdk:"experiment_id"`
-	// The universally unique identifier (UUID) of the Knowledge Assistant.
+	// Deprecated: use knowledge_assistant_id instead.
 	Id types.String `tfsdk:"id"`
 	// Additional global instructions on how the agent should generate answers.
 	// Optional on create and update. When updating a Knowledge Assistant,
@@ -959,6 +1304,19 @@ func (to *KnowledgeAssistantAccessControlResponse_SdkV2) SyncFieldsDuringCreateO
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
 	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				// Recursively sync the fields of each AllPermissions element by position.
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
+	}
 }
 
 func (to *KnowledgeAssistantAccessControlResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from KnowledgeAssistantAccessControlResponse_SdkV2) {
@@ -967,6 +1325,18 @@ func (to *KnowledgeAssistantAccessControlResponse_SdkV2) SyncFieldsDuringRead(ct
 		// If a user specified a non-Null, empty list for AllPermissions, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AllPermissions = from.AllPermissions
+	}
+	if !from.AllPermissions.IsNull() && !from.AllPermissions.IsUnknown() {
+		if toAllPermissions, ok := to.GetAllPermissions(ctx); ok {
+			if fromAllPermissions, ok := from.GetAllPermissions(ctx); ok {
+				for i := range toAllPermissions {
+					if i < len(fromAllPermissions) {
+						toAllPermissions[i].SyncFieldsDuringRead(ctx, fromAllPermissions[i])
+					}
+				}
+				to.SetAllPermissions(ctx, toAllPermissions)
+			}
+		}
 	}
 }
 
@@ -1163,6 +1533,19 @@ func (to *KnowledgeAssistantPermissions_SdkV2) SyncFieldsDuringCreateOrUpdate(ct
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *KnowledgeAssistantPermissions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from KnowledgeAssistantPermissions_SdkV2) {
@@ -1171,6 +1554,18 @@ func (to *KnowledgeAssistantPermissions_SdkV2) SyncFieldsDuringRead(ctx context.
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -1312,6 +1707,19 @@ func (to *KnowledgeAssistantPermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUp
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
 	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				// Recursively sync the fields of each AccessControlList element by position.
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
+	}
 }
 
 func (to *KnowledgeAssistantPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from KnowledgeAssistantPermissionsRequest_SdkV2) {
@@ -1320,6 +1728,18 @@ func (to *KnowledgeAssistantPermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx c
 		// If a user specified a non-Null, empty list for AccessControlList, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.AccessControlList = from.AccessControlList
+	}
+	if !from.AccessControlList.IsNull() && !from.AccessControlList.IsUnknown() {
+		if toAccessControlList, ok := to.GetAccessControlList(ctx); ok {
+			if fromAccessControlList, ok := from.GetAccessControlList(ctx); ok {
+				for i := range toAccessControlList {
+					if i < len(fromAccessControlList) {
+						toAccessControlList[i].SyncFieldsDuringRead(ctx, fromAccessControlList[i])
+					}
+				}
+				to.SetAccessControlList(ctx, toAccessControlList)
+			}
+		}
 	}
 }
 
@@ -1645,6 +2065,189 @@ func (m *KnowledgeSource_SdkV2) SetIndex(ctx context.Context, v IndexSpec_SdkV2)
 	m.Index = types.ListValueMust(t, vs)
 }
 
+type ListExamplesRequest_SdkV2 struct {
+	// The maximum number of examples to return. If unspecified, at most 100
+	// examples will be returned. The maximum value is 100; values above 100
+	// will be coerced to 100.
+	PageSize types.Int64 `tfsdk:"-"`
+	// A page token, received from a previous `ListExamples` call. Provide this
+	// to retrieve the subsequent page. If unspecified, the first page will be
+	// returned.
+	PageToken types.String `tfsdk:"-"`
+	// Parent resource to list from. Format:
+	// knowledge-assistants/{knowledge_assistant_id}
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *ListExamplesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListExamplesRequest_SdkV2) {
+}
+
+func (to *ListExamplesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListExamplesRequest_SdkV2) {
+}
+
+func (m ListExamplesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExamplesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListExamplesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListExamplesRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListExamplesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListExamplesRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+		},
+	}
+}
+
+// A list of Knowledge Assistant examples.
+type ListExamplesResponse_SdkV2 struct {
+	Examples types.List `tfsdk:"examples"`
+
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListExamplesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListExamplesResponse_SdkV2) {
+	if !from.Examples.IsNull() && !from.Examples.IsUnknown() && to.Examples.IsNull() && len(from.Examples.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Examples, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Examples = from.Examples
+	}
+	if !from.Examples.IsNull() && !from.Examples.IsUnknown() {
+		if toExamples, ok := to.GetExamples(ctx); ok {
+			if fromExamples, ok := from.GetExamples(ctx); ok {
+				// Recursively sync the fields of each Examples element by position.
+				for i := range toExamples {
+					if i < len(fromExamples) {
+						toExamples[i].SyncFieldsDuringCreateOrUpdate(ctx, fromExamples[i])
+					}
+				}
+				to.SetExamples(ctx, toExamples)
+			}
+		}
+	}
+}
+
+func (to *ListExamplesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListExamplesResponse_SdkV2) {
+	if !from.Examples.IsNull() && !from.Examples.IsUnknown() && to.Examples.IsNull() && len(from.Examples.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Examples, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Examples = from.Examples
+	}
+	if !from.Examples.IsNull() && !from.Examples.IsUnknown() {
+		if toExamples, ok := to.GetExamples(ctx); ok {
+			if fromExamples, ok := from.GetExamples(ctx); ok {
+				for i := range toExamples {
+					if i < len(fromExamples) {
+						toExamples[i].SyncFieldsDuringRead(ctx, fromExamples[i])
+					}
+				}
+				to.SetExamples(ctx, toExamples)
+			}
+		}
+	}
+}
+
+func (m ListExamplesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["examples"] = attrs["examples"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExamplesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListExamplesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"examples": reflect.TypeOf(Example_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListExamplesResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListExamplesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"examples":        m.Examples,
+			"next_page_token": m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListExamplesResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"examples": basetypes.ListType{
+				ElemType: Example_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetExamples returns the value of the Examples field in ListExamplesResponse_SdkV2 as
+// a slice of Example_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListExamplesResponse_SdkV2) GetExamples(ctx context.Context) ([]Example_SdkV2, bool) {
+	if m.Examples.IsNull() || m.Examples.IsUnknown() {
+		return nil, false
+	}
+	var v []Example_SdkV2
+	d := m.Examples.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExamples sets the value of the Examples field in ListExamplesResponse_SdkV2.
+func (m *ListExamplesResponse_SdkV2) SetExamples(ctx context.Context, v []Example_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["examples"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Examples = types.ListValueMust(t, vs)
+}
+
 type ListKnowledgeAssistantsRequest_SdkV2 struct {
 	// The maximum number of knowledge assistants to return. If unspecified, at
 	// most 100 knowledge assistants will be returned. The maximum value is 100;
@@ -1717,6 +2320,19 @@ func (to *ListKnowledgeAssistantsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(
 		// set the resulting resource state to the empty list to match the planned value.
 		to.KnowledgeAssistants = from.KnowledgeAssistants
 	}
+	if !from.KnowledgeAssistants.IsNull() && !from.KnowledgeAssistants.IsUnknown() {
+		if toKnowledgeAssistants, ok := to.GetKnowledgeAssistants(ctx); ok {
+			if fromKnowledgeAssistants, ok := from.GetKnowledgeAssistants(ctx); ok {
+				// Recursively sync the fields of each KnowledgeAssistants element by position.
+				for i := range toKnowledgeAssistants {
+					if i < len(fromKnowledgeAssistants) {
+						toKnowledgeAssistants[i].SyncFieldsDuringCreateOrUpdate(ctx, fromKnowledgeAssistants[i])
+					}
+				}
+				to.SetKnowledgeAssistants(ctx, toKnowledgeAssistants)
+			}
+		}
+	}
 }
 
 func (to *ListKnowledgeAssistantsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListKnowledgeAssistantsResponse_SdkV2) {
@@ -1725,6 +2341,18 @@ func (to *ListKnowledgeAssistantsResponse_SdkV2) SyncFieldsDuringRead(ctx contex
 		// If a user specified a non-Null, empty list for KnowledgeAssistants, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.KnowledgeAssistants = from.KnowledgeAssistants
+	}
+	if !from.KnowledgeAssistants.IsNull() && !from.KnowledgeAssistants.IsUnknown() {
+		if toKnowledgeAssistants, ok := to.GetKnowledgeAssistants(ctx); ok {
+			if fromKnowledgeAssistants, ok := from.GetKnowledgeAssistants(ctx); ok {
+				for i := range toKnowledgeAssistants {
+					if i < len(fromKnowledgeAssistants) {
+						toKnowledgeAssistants[i].SyncFieldsDuringRead(ctx, fromKnowledgeAssistants[i])
+					}
+				}
+				to.SetKnowledgeAssistants(ctx, toKnowledgeAssistants)
+			}
+		}
 	}
 }
 
@@ -1869,6 +2497,19 @@ func (to *ListKnowledgeSourcesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx
 		// set the resulting resource state to the empty list to match the planned value.
 		to.KnowledgeSources = from.KnowledgeSources
 	}
+	if !from.KnowledgeSources.IsNull() && !from.KnowledgeSources.IsUnknown() {
+		if toKnowledgeSources, ok := to.GetKnowledgeSources(ctx); ok {
+			if fromKnowledgeSources, ok := from.GetKnowledgeSources(ctx); ok {
+				// Recursively sync the fields of each KnowledgeSources element by position.
+				for i := range toKnowledgeSources {
+					if i < len(fromKnowledgeSources) {
+						toKnowledgeSources[i].SyncFieldsDuringCreateOrUpdate(ctx, fromKnowledgeSources[i])
+					}
+				}
+				to.SetKnowledgeSources(ctx, toKnowledgeSources)
+			}
+		}
+	}
 }
 
 func (to *ListKnowledgeSourcesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListKnowledgeSourcesResponse_SdkV2) {
@@ -1877,6 +2518,18 @@ func (to *ListKnowledgeSourcesResponse_SdkV2) SyncFieldsDuringRead(ctx context.C
 		// If a user specified a non-Null, empty list for KnowledgeSources, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.KnowledgeSources = from.KnowledgeSources
+	}
+	if !from.KnowledgeSources.IsNull() && !from.KnowledgeSources.IsUnknown() {
+		if toKnowledgeSources, ok := to.GetKnowledgeSources(ctx); ok {
+			if fromKnowledgeSources, ok := from.GetKnowledgeSources(ctx); ok {
+				for i := range toKnowledgeSources {
+					if i < len(fromKnowledgeSources) {
+						toKnowledgeSources[i].SyncFieldsDuringRead(ctx, fromKnowledgeSources[i])
+					}
+				}
+				to.SetKnowledgeSources(ctx, toKnowledgeSources)
+			}
+		}
 	}
 }
 
@@ -1997,6 +2650,113 @@ func (m SyncKnowledgeSourcesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"name": types.StringType,
 		},
 	}
+}
+
+type UpdateExampleRequest_SdkV2 struct {
+	Example types.List `tfsdk:"example"`
+	// The resource name of the example to update. Format:
+	// knowledge-assistants/{knowledge_assistant_id}/examples/{example_id}
+	Name types.String `tfsdk:"-"`
+	// Comma-delimited list of fields to update on the example. Allowed values:
+	// `question`, `guidelines`. Examples: - `question` - `question,guidelines`
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateExampleRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateExampleRequest_SdkV2) {
+	if !from.Example.IsNull() && !from.Example.IsUnknown() {
+		if toExample, ok := to.GetExample(ctx); ok {
+			if fromExample, ok := from.GetExample(ctx); ok {
+				// Recursively sync the fields of Example
+				toExample.SyncFieldsDuringCreateOrUpdate(ctx, fromExample)
+				to.SetExample(ctx, toExample)
+			}
+		}
+	}
+}
+
+func (to *UpdateExampleRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateExampleRequest_SdkV2) {
+	if !from.Example.IsNull() && !from.Example.IsUnknown() {
+		if toExample, ok := to.GetExample(ctx); ok {
+			if fromExample, ok := from.GetExample(ctx); ok {
+				toExample.SyncFieldsDuringRead(ctx, fromExample)
+				to.SetExample(ctx, toExample)
+			}
+		}
+	}
+}
+
+func (m UpdateExampleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["example"] = attrs["example"].SetRequired()
+	attrs["example"] = attrs["example"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExampleRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateExampleRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"example": reflect.TypeOf(Example_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateExampleRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UpdateExampleRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"example":     m.Example,
+			"name":        m.Name,
+			"update_mask": m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateExampleRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"example": basetypes.ListType{
+				ElemType: Example_SdkV2{}.Type(ctx),
+			},
+			"name":        types.StringType,
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetExample returns the value of the Example field in UpdateExampleRequest_SdkV2 as
+// a Example_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateExampleRequest_SdkV2) GetExample(ctx context.Context) (Example_SdkV2, bool) {
+	var e Example_SdkV2
+	if m.Example.IsNull() || m.Example.IsUnknown() {
+		return e, false
+	}
+	var v []Example_SdkV2
+	d := m.Example.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExample sets the value of the Example field in UpdateExampleRequest_SdkV2.
+func (m *UpdateExampleRequest_SdkV2) SetExample(ctx context.Context, v Example_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["example"]
+	m.Example = types.ListValueMust(t, vs)
 }
 
 type UpdateKnowledgeAssistantRequest_SdkV2 struct {

@@ -20,8 +20,10 @@ import (
 	sdk_compute "github.com/databricks/databricks-sdk-go/service/compute"
 	sdk_dashboards "github.com/databricks/databricks-sdk-go/service/dashboards"
 	"github.com/databricks/databricks-sdk-go/service/database"
+	"github.com/databricks/databricks-sdk-go/service/environments"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
+	"github.com/databricks/databricks-sdk-go/service/knowledgeassistants"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/databricks-sdk-go/service/qualitymonitorv2"
@@ -30,6 +32,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settingsv2"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	sdk_sql "github.com/databricks/databricks-sdk-go/service/sql"
+	"github.com/databricks/databricks-sdk-go/service/supervisoragents"
 	"github.com/databricks/databricks-sdk-go/service/tags"
 	sdk_vs "github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
@@ -50,7 +53,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const testProviderWorkspaceID = "123456789"
+// testProviderWorkspaceID must match the workspace ID that the qa HTTP-fixture
+// client caches (see qa.HttpFixtureClientWithToken, which seeds
+// cachedWorkspaceID = 12345). Workspace-level Read now applies the provider's
+// workspace_id as a fallback and validates it against the cached workspace ID;
+// a value that disagreed with the cache would fail with a workspace_id mismatch.
+const testProviderWorkspaceID = "12345"
 
 // nolint
 func getJSONObject(filename string) any {
@@ -91,7 +99,7 @@ func TestImportingMounts(t *testing.T) {
 		[]qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Me",
+				Resource: "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				Response: scim.User{},
 			},
 			{
@@ -236,7 +244,7 @@ func TestImportingMounts(t *testing.T) {
 var meAdminFixture = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.0/preview/scim/v2/Me",
+	Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 	Response: scim.User{
 		Groups: []scim.ComplexValue{
 			{
@@ -267,6 +275,20 @@ var emptyClusterPolicies = qa.HTTPFixture{
 	Response:     sdk_compute.ListPoliciesResponse{},
 }
 
+var emptyWorkspaceBaseEnvironments = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/environments/v1/workspace-base-environments?",
+	Response:     environments.ListWorkspaceBaseEnvironmentsResponse{},
+}
+
+var emptyDefaultWorkspaceBaseEnvironment = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/environments/v1/default-workspace-base-environment?",
+	Response:     environments.DefaultWorkspaceBaseEnvironment{},
+}
+
 var emptyPolicyFamilies = qa.HTTPFixture{
 	Method:   "GET",
 	Resource: "/api/2.0/policy-families?",
@@ -292,14 +314,14 @@ var emptyAlertsV2 = qa.HTTPFixture{
 
 var emptyExternalLocations = qa.HTTPFixture{
 	Method:   "GET",
-	Resource: "/api/2.1/unity-catalog/external-locations?",
+	Resource: "/api/2.1/unity-catalog/external-locations?max_results=0",
 	Status:   200,
 	Response: &sdk_uc.ListExternalLocationsResponse{},
 }
 
 var emptyStorageCredentials = qa.HTTPFixture{
 	Method:   "GET",
-	Resource: "/api/2.1/unity-catalog/storage-credentials?",
+	Resource: "/api/2.1/unity-catalog/storage-credentials?max_results=0",
 	Status:   200,
 	Response: &sdk_uc.ListStorageCredentialsResponse{},
 }
@@ -313,7 +335,7 @@ var emptyUcCredentials = qa.HTTPFixture{
 
 var emptyConnections = qa.HTTPFixture{
 	Method:   "GET",
-	Resource: "/api/2.1/unity-catalog/connections?",
+	Resource: "/api/2.1/unity-catalog/connections?max_results=0",
 	Response: sdk_uc.ListConnectionsResponse{},
 }
 
@@ -338,24 +360,38 @@ var emptyVectorSearch = qa.HTTPFixture{
 	Response:     sdk_vs.ListEndpointResponse{},
 }
 
+var emptyKnowledgeAssistants = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.1/knowledge-assistants?",
+	Response:     knowledgeassistants.ListKnowledgeAssistantsResponse{},
+}
+
+var emptySupervisorAgents = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.1/supervisor-agents?",
+	Response:     supervisoragents.ListSupervisorAgentsResponse{},
+}
+
 var emptyShares = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.1/unity-catalog/shares?",
+	Resource:     "/api/2.1/unity-catalog/shares?max_results=0",
 	Response:     sharing.ListSharesResponse{},
 }
 
 var emptyRecipients = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.1/unity-catalog/recipients?",
+	Resource:     "/api/2.1/unity-catalog/recipients?max_results=0",
 	Response:     sharing.ListRecipientsResponse{},
 }
 
 var emptyProviders = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.1/unity-catalog/providers?",
+	Resource:     "/api/2.1/unity-catalog/providers?max_results=0",
 	Response:     sharing.ListProvidersResponse{},
 }
 
@@ -445,6 +481,13 @@ var emptySqlEndpoints = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/sql/warehouses?",
 	Response:     map[string]any{},
+	ReuseRequest: true,
+}
+
+var emptyWarehouseDefaultOverrides = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/warehouses/v1/default-warehouse-overrides?",
+	Response:     sdk_sql.ListDefaultWarehouseOverridesResponse{},
 	ReuseRequest: true,
 }
 
@@ -614,6 +657,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyDataQualityMonitors,
 			emptyQualityMonitorsV2,
 			emptyDatabaseInstances,
+			emptyPostgresProjectsFixture,
+			emptyPostgresCatalogsFixture,
 			emptyConnections,
 			emptyTagPolicies,
 			emptyRecipients,
@@ -629,12 +674,17 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyMlflowWebhooks,
 			emptySqlDashboards,
 			emptySqlEndpoints,
+			emptyWarehouseDefaultOverrides,
 			emptySqlQueries,
 			emptySqlAlerts,
 			emptyAlertsV2,
 			emptyVectorSearch,
+			emptyKnowledgeAssistants,
+			emptySupervisorAgents,
 			emptyPipelines,
 			emptyClusterPolicies,
+			emptyWorkspaceBaseEnvironments,
+			emptyDefaultWorkspaceBaseEnvironment,
 			emptyPolicyFamilies,
 			emptyWorkspaceConf,
 			allKnownWorkspaceConfsNoData,
@@ -876,7 +926,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				Response: scim.User{
 					Groups: []scim.ComplexValue{},
 				},
@@ -887,6 +937,8 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyDataQualityMonitors,
 			emptyQualityMonitorsV2,
 			emptyDatabaseInstances,
+			emptyPostgresProjectsFixture,
+			emptyPostgresCatalogsFixture,
 			emptyUsersList,
 			emptySpnsList,
 			noCurrentMetastoreAttached,
@@ -908,13 +960,18 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyWorkspaceConf,
 			emptyInstancePools,
 			emptyClusterPolicies,
+			emptyWorkspaceBaseEnvironments,
+			emptyDefaultWorkspaceBaseEnvironment,
 			allKnownWorkspaceConfsNoData,
 			qa.ListGroupsFixtures([]iam.Group{})[0],
 			emptyGitCredentials,
 			emptyIpAccessLIst,
 			emptyWorkspace,
 			emptySqlEndpoints,
+			emptyWarehouseDefaultOverrides,
 			emptyVectorSearch,
+			emptyKnowledgeAssistants,
+			emptySupervisorAgents,
 			emptySqlQueries,
 			emptySqlDashboards,
 			emptySqlAlerts,
@@ -990,6 +1047,8 @@ func TestImportingClusters(t *testing.T) {
 				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: sdk_jobs.ListJobsResponse{},
 			},
+			emptyWorkspaceBaseEnvironments,
+			emptyDefaultWorkspaceBaseEnvironment,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
@@ -1081,7 +1140,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				ReuseRequest: true,
 				Response:     scim.User{ID: "a", DisplayName: "test@test.com"},
 			},
@@ -1141,10 +1200,22 @@ func TestImportingClusters(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=1",
 				ReuseRequest: true,
-				Response: scim.UserList{
-					Resources: []scim.User{
-						{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
+				Response: iam.ListUsersResponse{
+					Resources: []iam.User{
+						{Id: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
 					},
+					TotalResults: 1,
+					StartIndex:   1,
+				},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=2",
+				ReuseRequest: true,
+				Response: iam.ListUsersResponse{
+					Resources:    []iam.User{},
+					TotalResults: 1,
+					StartIndex:   2,
 				},
 			},
 		},
@@ -1436,7 +1507,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=14",
+				Resource: "/api/2.2/jobs/get?job_id=14",
 				Response: sdk_jobs.Job{
 					JobId: 14,
 					Settings: &sdk_jobs.JobSettings{
@@ -1523,7 +1594,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 						JobClusters: []sdk_jobs.JobCluster{
 							{
 								JobClusterKey: "shared",
-								NewCluster: sdk_compute.ClusterSpec{
+								NewCluster: &sdk_compute.ClusterSpec{
 									InstancePoolId: "pool1",
 									NumWorkers:     2,
 									SparkVersion:   "6.4.x-scala2.11",
@@ -2031,6 +2102,12 @@ func TestImportingSqlObjects(t *testing.T) {
 				Response: getJSONObject("test-data/get-sql-endpoint.json"),
 			},
 			{
+				Method:       "GET",
+				Resource:     "/api/warehouses/v1/default-warehouse-overrides?",
+				Response:     sdk_sql.ListDefaultWarehouseOverridesResponse{},
+				ReuseRequest: true,
+			},
+			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/sql/data_sources",
 				Response: []sdk_sql.DataSource{
@@ -2458,6 +2535,7 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 				Resource: "/api/2.0/sql/warehouses?",
 				Response: sdk_sql.ListWarehousesResponse{},
 			},
+			emptyWarehouseDefaultOverrides,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/sql/config/warehouses",
@@ -2963,8 +3041,8 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 			os.Mkdir(tmpDir, 0700)
 			os.WriteFile(tmpDir+"/import.sh", []byte(
-				`terraform import databricks_pipeline.abc "abc"
-terraform import databricks_pipeline.def "def"
+				`terraform import databricks_pipeline.abc 'abc'
+terraform import databricks_pipeline.def 'def'
 `), 0700)
 
 			os.WriteFile(tmpDir+"/import.tf", []byte(
@@ -3005,8 +3083,8 @@ resource "databricks_pipeline" "def" {
 			content, err := os.ReadFile(tmpDir + "/import.sh")
 			assert.NoError(t, err)
 			contentStr := string(content)
-			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.abc "abc"`))
-			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.def "def"`))
+			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.abc 'abc'`))
+			assert.True(t, strings.Contains(contentStr, `import databricks_pipeline.def 'def'`))
 
 			content, err = os.ReadFile(tmpDir + "/import.tf")
 			assert.NoError(t, err)
@@ -3035,7 +3113,7 @@ func TestImportingRunJobTask(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				Response: scim.User{
 					Groups: []scim.ComplexValue{
 						{
@@ -3060,12 +3138,12 @@ func TestImportingRunJobTask(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=1047501313827425",
+				Resource: "/api/2.2/jobs/get?job_id=1047501313827425",
 				Response: getJSONObject("test-data/run-job-main.json"),
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=932035899730845",
+				Resource: "/api/2.2/jobs/get?job_id=932035899730845",
 				Response: getJSONObject("test-data/run-job-child.json"),
 			},
 		},
@@ -3103,7 +3181,7 @@ func TestImportingLakeviewDashboards(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Resource:     "/api/2.0/preview/scim/v2/Me?excludedAttributes=entitlements",
 				Response: scim.User{
 					Groups: []scim.ComplexValue{
 						{

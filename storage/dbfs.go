@@ -85,16 +85,16 @@ func (a DbfsAPI) Create(path string, contents []byte, overwrite bool) (err error
 
 func (a DbfsAPI) createHandle(path string, overwrite bool) (int64, error) {
 	var h handleResponse
-	err := a.client.Post(a.context, "/dbfs/create", createHandle{path, overwrite}, &h)
+	err := a.client.Post(a.context, "/dbfs/create", createHandle{path, overwrite}, &h, a.client.AddWorkspaceIdHeader)
 	return h.Handle, err
 }
 
 func (a DbfsAPI) addBlock(data string, handle int64) error {
-	return a.client.Post(a.context, "/dbfs/add-block", addBlock{data, handle}, nil)
+	return a.client.Post(a.context, "/dbfs/add-block", addBlock{data, handle}, nil, a.client.AddWorkspaceIdHeader)
 }
 
 func (a DbfsAPI) closeHandle(handle int64) error {
-	return a.client.Post(a.context, "/dbfs/close", handleResponse{handle}, nil)
+	return a.client.Post(a.context, "/dbfs/close", handleResponse{handle}, nil, a.client.AddWorkspaceIdHeader)
 }
 
 // List returns a list of files in DBFS and the recursive flag lets you recursively list files
@@ -132,7 +132,7 @@ func (a DbfsAPI) list(path string) ([]FileInfo, error) {
 	var dbfsList FileList
 	err := a.client.Get(a.context, "/dbfs/list", map[string]any{
 		"path": path,
-	}, &dbfsList)
+	}, &dbfsList, a.client.AddWorkspaceIdHeader)
 	if err != nil {
 		err = fmt.Errorf("cannot list %s: %w", path, err)
 	}
@@ -144,7 +144,7 @@ func (a DbfsAPI) Delete(path string, recursive bool) error {
 	return a.client.Post(a.context, "/dbfs/delete", dbfsRequest{
 		Path:      path,
 		Recursive: recursive,
-	}, nil)
+	}, nil, a.client.AddWorkspaceIdHeader)
 }
 
 type dbfsRequest struct {
@@ -189,7 +189,7 @@ func (a DbfsAPI) readString(path string, offset, length int64) (int64, string, e
 		Path:   path,
 		Offset: offset,
 		Length: length,
-	}, &readBytes)
+	}, &readBytes, a.client.AddWorkspaceIdHeader)
 	return readBytes.BytesRead, readBytes.Data, err
 }
 
@@ -197,6 +197,6 @@ func (a DbfsAPI) readString(path string, offset, length int64) (int64, string, e
 func (a DbfsAPI) Status(path string) (f FileInfo, err error) {
 	err = a.client.Get(a.context, "/dbfs/get-status", map[string]any{
 		"path": path,
-	}, &f)
+	}, &f, a.client.AddWorkspaceIdHeader)
 	return
 }

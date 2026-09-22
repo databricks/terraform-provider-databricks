@@ -5,7 +5,6 @@ package app_space
 import (
 	"context"
 	"reflect"
-	"regexp"
 
 	"github.com/databricks/databricks-sdk-go/service/apps"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
@@ -47,8 +46,6 @@ func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -102,6 +99,11 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // SpaceData extends the main model with additional fields.
 type SpaceData struct {
+	// The group whose permissions users assume via Role Authorization for apps
+	// in this space. When set, user tokens assume the role of this group
+	// instead of doing regular obo token downscoping. Set only at space
+	// creation.
+	AssumeGroupId types.String `tfsdk:"assume_group_id"`
 	// The creation time of the app space. Formatted timestamp in ISO 6801.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// The email of the user that created the app space.
@@ -167,6 +169,7 @@ func (m SpaceData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"assume_group_id":             m.AssumeGroupId,
 			"create_time":                 m.CreateTime,
 			"creator":                     m.Creator,
 			"description":                 m.Description,
@@ -194,6 +197,7 @@ func (m SpaceData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m SpaceData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"assume_group_id":           types.StringType,
 			"create_time":               timetypes.RFC3339{}.Type(ctx),
 			"creator":                   types.StringType,
 			"description":               types.StringType,
@@ -223,6 +227,7 @@ func (m SpaceData) Type(ctx context.Context) attr.Type {
 }
 
 func (m SpaceData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["assume_group_id"] = attrs["assume_group_id"].SetComputed()
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["description"] = attrs["description"].SetComputed()

@@ -3,6 +3,8 @@ subcategory: "Deployment"
 ---
 # databricks_mws_credentials Resource
 
+[API Documentation](https://docs.databricks.com/api/account/credentials)
+
 This resource to configure the cross-account role for creation of new workspaces within AWS.
 
 -> This resource can only be used with an account-level provider!

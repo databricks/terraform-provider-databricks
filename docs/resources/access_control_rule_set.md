@@ -4,6 +4,8 @@ subcategory: "Security"
 
 # databricks_access_control_rule_set Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/accountaccesscontrolproxy)
+
 This resource allows you to manage access rules on Databricks account level resources. For convenience we allow accessing this resource through the Databricks account and workspace.
 
 -> This resource can be used with an account or workspace-level provider.
@@ -159,12 +161,23 @@ data "databricks_user" "john" {
   user_name = "john.doe@example.com"
 }
 
-resource "databricks_access_control_rule_set" "ds_group_rule_set" {
-  name = "accounts/${local.account_id}/groups/${databricks_group.ds.id}/ruleSets/default"
+data "databricks_user" "jane" {
+  user_name = "jane.doe@example.com"
+}
 
+resource "databricks_access_control_rule_set" "ds_group_rule_set" {
+  name = "accounts/${local.account_id}/groups/${data.databricks_group.ds.id}/ruleSets/default"
+
+  // user john can manage the group
   grant_rules {
     principals = [data.databricks_user.john.acl_principal_id]
     role       = "roles/group.manager"
+  }
+
+  // user jane can assume the group as a role
+  grant_rules {
+    principals = [data.databricks_user.jane.acl_principal_id]
+    role       = "roles/group.assumer"
   }
 }
 ```
@@ -347,6 +360,7 @@ Arguments of the `grant_rules` block are:
     * `roles/servicePrincipal.user` - User of a service principal.
   * `accounts/{account_id}/groups/{group_id}/ruleSets/default`
     * `roles/group.manager` - Manager of a group.
+    * `roles/group.assumer` - Assumer of a group, i.e. can assume the group as a role.
   * `accounts/{account_id}/budgetPolicies/{budget_policy_id}/ruleSets/default`
     * `roles/budgetPolicy.manager` - Manager of a budget policy.
     * `roles/budgetPolicy.user` - User of a budget policy.

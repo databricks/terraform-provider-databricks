@@ -17,18 +17,6 @@ func sqlPermissionsProviderConfigTemplate(providerConfig string) string {
 	`, providerConfig)
 }
 
-func TestAccSqlPermissions_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: sqlPermissionsProviderConfigTemplate(`
-			provider_config {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccSqlPermissions_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: sqlPermissionsProviderConfigTemplate(`
@@ -49,6 +37,5 @@ func TestAccSqlPermissions_ProviderConfig_Mismatched(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
-		PlanOnly:    true,
 	})
 }

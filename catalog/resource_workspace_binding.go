@@ -85,12 +85,16 @@ func ResourceWorkspaceBinding() common.Resource {
 					string(catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite),
 					string(catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly),
 				}, false))
-			common.NamespaceCustomizeSchemaMap(m)
+			// workspace_binding has no real Update API (immutable after Create).
+			// Use the *Immutable variant so workspace_id is ForceNew → switching
+			// the provider workspace_id destroys and recreates via the new workspace.
+			common.NamespaceCustomizeSchemaMapImmutable(m)
 			return m
 		},
 	)
 	return common.Resource{
 		Schema:        workspaceBindingSchema,
+		CustomizeDiff: common.NamespaceCustomizeDiffNoForceNew,
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{

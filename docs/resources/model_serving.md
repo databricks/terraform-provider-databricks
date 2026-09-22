@@ -3,6 +3,8 @@ subcategory: "Serving"
 ---
 # databricks_model_serving Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/servingendpoints)
+
 This resource allows you to manage [Model Serving](https://docs.databricks.com/machine-learning/model-serving/index.html) endpoints in Databricks, including custom models, external models, and foundation models. For newer foundation models, including Llama 4, please use the [databricks_model_serving_provisioned_throughput](model_serving_provisioned_throughput.md) resource.
 
 -> This resource can only be used with a workspace-level provider!

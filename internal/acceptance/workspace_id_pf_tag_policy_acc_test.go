@@ -81,16 +81,6 @@ func tagPolicyWithProviderBlock(providerAttrs, providerConfig string) string {
 // Validation Tests
 // ==========================================
 
-// TestMwsAccWorkspaceIDTagPolicy_InvalidWorkspaceID tests that
-// invalid workspace_id values in the provider block are rejected.
-func TestMwsAccWorkspaceIDTagPolicy_InvalidWorkspaceID(t *testing.T) {
-	AccountLevel(t, Step{
-		Template:    tagPolicyWithProviderBlock(`workspace_id = "invalid"`, ""),
-		PlanOnly:    true,
-		ExpectError: regexp.MustCompile(`failed to parse workspace_id`),
-	})
-}
-
 // ==========================================
 // Workspace-Level Lifecycle Tests
 // ==========================================
@@ -147,7 +137,8 @@ func TestAccWorkspaceIDTagPolicy_WS_RemoveProviderConfig(t *testing.T) {
 
 // TestAccWorkspaceIDTagPolicy_WS_ChangeProviderConfig tests changing provider_config.workspace_id to a
 // mismatched value on a workspace-level provider.
-// Expected: error — workspace_id mismatch.
+// Expected: error — workspace_id mismatch. The mismatch is now reported at apply
+// time (plan-time workspace_id validation was removed); the error text is unchanged.
 func TestAccWorkspaceIDTagPolicy_WS_ChangeProviderConfig(t *testing.T) {
 	WorkspaceLevel(t,
 		Step{
@@ -164,7 +155,6 @@ func TestAccWorkspaceIDTagPolicy_WS_ChangeProviderConfig(t *testing.T) {
 					workspace_id = "123"
 				}
 			`),
-			PlanOnly:    true,
 			ExpectError: regexp.MustCompile(`workspace_id mismatch`),
 		},
 	)
@@ -554,8 +544,9 @@ func TestMwsAccWorkspaceIDTagPolicy_ChangeDefaultWithOverride(t *testing.T) {
 // Set workspace_id on Workspace-Level Provider
 // ==========================================
 //
-// workspace_id on a workspace-level provider is validated during ModifyPlan.
-// If it matches the host's workspace ID, no error. If it doesn't, workspace_id mismatch.
+// A provider-level workspace_id on a workspace-level provider is validated when
+// a workspace client is acquired during CRUD (apply). If it matches the host's
+// workspace ID, no error. If it doesn't, workspace_id mismatch.
 
 func TestAccWorkspaceIDTagPolicy_DefaultOnWorkspaceProvider_Same(t *testing.T) {
 	WorkspaceLevel(t, Step{
@@ -567,7 +558,6 @@ func TestAccWorkspaceIDTagPolicy_DefaultOnWorkspaceProvider_Same(t *testing.T) {
 func TestAccWorkspaceIDTagPolicy_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 	WorkspaceLevel(t, Step{
 		Template:    tagPolicyWithProviderBlock(`workspace_id = "12345"`, ""),
-		PlanOnly:    true,
 		ExpectError: regexp.MustCompile(`workspace_id mismatch`),
 	})
 }
@@ -577,12 +567,11 @@ func TestAccWorkspaceIDTagPolicy_DefaultOnWorkspaceProvider_Diff(t *testing.T) {
 // ==========================================
 //
 // Account-level provider with no workspace_id. Resource has no provider_config.
-// Expected: error during CRUD — no workspace_id available for routing.
+// Expected: error during CRUD (apply) — no workspace_id available for routing.
 
 func TestMwsAccWorkspaceIDTagPolicy_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: tagPolicyWithProviderBlock("", ""),
-		PlanOnly: true,
 		ExpectError: regexp.MustCompile(
 			`(?s)managing a workspace-level resource requires a workspace_id.*none\s+was\s+found`,
 		),

@@ -77,6 +77,73 @@ func TestWorkspaceIDPlanModifier(t *testing.T) {
 	}
 }
 
+func TestGetWorkspaceID_SdkV2(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name                string
+		setupProviderConfig func() types.List
+		expectedWorkspaceID string
+		expectError         bool
+	}{
+		{
+			name: "valid workspace ID",
+			setupProviderConfig: func() types.List {
+				providerConfig := ProviderConfig{
+					WorkspaceID: types.StringValue("123456789"),
+				}
+				return types.ListValueMust(
+					ProviderConfig{}.Type(ctx),
+					[]attr.Value{providerConfig.ToObjectValue(ctx)},
+				)
+			},
+			expectedWorkspaceID: "123456789",
+			expectError:         false,
+		},
+		{
+			name: "null provider_config",
+			setupProviderConfig: func() types.List {
+				return types.ListNull(ProviderConfig{}.Type(ctx))
+			},
+			expectedWorkspaceID: "",
+			expectError:         false,
+		},
+		{
+			name: "unknown provider_config",
+			setupProviderConfig: func() types.List {
+				return types.ListUnknown(ProviderConfig{}.Type(ctx))
+			},
+			expectedWorkspaceID: "",
+			expectError:         false,
+		},
+		{
+			name: "empty list",
+			setupProviderConfig: func() types.List {
+				return types.ListValueMust(
+					ProviderConfig{}.Type(ctx),
+					[]attr.Value{},
+				)
+			},
+			expectedWorkspaceID: "",
+			expectError:         false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			providerConfigList := tt.setupProviderConfig()
+			workspaceID, diags := GetWorkspaceID_SdkV2(ctx, providerConfigList)
+
+			if tt.expectError {
+				assert.True(t, diags.HasError(), "Expected diagnostics error")
+			} else {
+				assert.False(t, diags.HasError(), "Expected no diagnostics error")
+			}
+			assert.Equal(t, tt.expectedWorkspaceID, workspaceID, "Workspace ID mismatch")
+		})
+	}
+}
+
 func TestGetWorkspaceIDResource(t *testing.T) {
 	ctx := context.Background()
 
@@ -257,92 +324,30 @@ func TestGetWorkspaceIDDataSource(t *testing.T) {
 	}
 }
 
-// TestWorkspaceIDPlanModifier_WithProviderWorkspaceID tests the plan modifier behavior
-// when workspace_id is involved. These tests document the expected behavior
-// for ForceNew/RequiresReplace when the effective workspace ID changes due to
-// workspace_id interaction.
-//
-// Currently skipped because the plan modifier only sees raw attribute values and
-// doesn't have access to provider-level workspace_id. The implementation
-// approach (ModifyPlan at resource level vs plan modifier config) is TBD.
-func TestWorkspaceIDPlanModifier_WithProviderWorkspaceID(t *testing.T) {
-	tests := []struct {
-		name                    string
-		stateValue              string
-		planValue               string
-		providerWorkspaceID     string
-		expectedRequiresReplace bool
-		description             string
-	}{
-		{
-			name:                    "remove workspace_id with different default - should require replace",
-			stateValue:              "100",
-			planValue:               "",
-			providerWorkspaceID:     "200",
-			expectedRequiresReplace: true,
-			description:             "Removing workspace_id when default differs should trigger replace",
-		},
-		{
-			name:                    "remove workspace_id with same default - no replace",
-			stateValue:              "100",
-			planValue:               "",
-			providerWorkspaceID:     "100",
-			expectedRequiresReplace: false,
-			description:             "Removing workspace_id when default matches should not trigger replace",
-		},
-		{
-			name:                    "add workspace_id different from default - should require replace",
-			stateValue:              "",
-			planValue:               "200",
-			providerWorkspaceID:     "100",
-			expectedRequiresReplace: true,
-			description:             "Adding workspace_id different from default should trigger replace",
-		},
-		{
-			name:                    "add workspace_id same as default - no replace",
-			stateValue:              "",
-			planValue:               "100",
-			providerWorkspaceID:     "100",
-			expectedRequiresReplace: false,
-			description:             "Adding workspace_id matching default should not trigger replace",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Skip("Skipped: PF plan modifier does not yet have access to workspace_id from provider config")
-
-			// When the PF implementation is ready, this test should:
-			// 1. Create a plan modifier that has access to workspace_id
-			// 2. Pass state and plan values
-			// 3. Assert RequiresReplace matches expectedRequiresReplace
-			req := planmodifier.StringRequest{
-				StateValue: types.StringValue(tt.stateValue),
-				PlanValue:  types.StringValue(tt.planValue),
-			}
-			resp := &stringplanmodifier.RequiresReplaceIfFuncResponse{}
-
-			workspaceIDPlanModifier(context.Background(), req, resp)
-
-			assert.Equal(t, tt.expectedRequiresReplace, resp.RequiresReplace, tt.description)
-		})
-	}
-}
-
 // TestValidateWorkspaceID_ReadsFromRespPlan simulates the full ModifyPlan flow:
 // state has workspace_id "111", provider default changes to "999".
 // WorkspaceDriftDetection detects the drift and updates resp.Plan to "999".
-// ValidateWorkspaceID must read from resp.Plan (not req.Plan) to validate "999".
-// With old code (req.Plan), it would validate stale "111" and get a mismatch error.
+// ValidateWorkspaceID is now a no-op (plan-time reachability validation was
+// removed in favor of apply-time validation via GetWorkspaceClientForUnifiedProvider),
+// so it must not add diagnostics regardless of what is in the plan. This test
+// keeps exercising WorkspaceDriftDetection and asserts ValidateWorkspaceID stays
+// inert.
 func TestValidateWorkspaceID_ReadsFromRespPlan(t *testing.T) {
 	ctx := context.Background()
 
 	// Server simulates a workspace with ID 999.
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		switch req.RequestURI {
+		// Match on URL.Path (ignoring the query string) so the mock keeps
+		// matching even when the SDK appends query params like
+		// `?excludedAttributes=entitlements` on the SCIM /Me probe.
+		switch req.URL.Path {
 		case "/.well-known/databricks-config":
 			rw.WriteHeader(404)
 		case "/api/2.0/preview/scim/v2/Me":
+			// The server still emits the legacy X-Databricks-Org-Id response
+			// header on /Me; the SDK's CurrentWorkspaceID reads from it. The
+			// request-side header rename to X-Databricks-Workspace-Id is on a
+			// separate schedule from the response-side rename.
 			rw.Header().Set("X-Databricks-Org-Id", "999")
 			rw.WriteHeader(200)
 			rw.Write([]byte("{}"))
@@ -421,9 +426,8 @@ func TestValidateWorkspaceID_ReadsFromRespPlan(t *testing.T) {
 	require.False(t, resp.Diagnostics.HasError(),
 		"WorkspaceDriftDetection failed: %v", resp.Diagnostics.Errors())
 
-	// ValidateWorkspaceID should read "999" from resp.Plan (updated above),
-	// not "111" from req.Plan. With old code (req.Plan) this would fail with
-	// "workspace_id mismatch: provider is configured for workspace 999 but got 111".
+	// ValidateWorkspaceID is a no-op: it performs no plan-time reachability
+	// validation and must never add diagnostics.
 	ValidateWorkspaceID(ctx, databricksClient, modifyReq, resp)
 	assert.False(t, resp.Diagnostics.HasError(),
 		"expected no error, got: %v", resp.Diagnostics.Errors())

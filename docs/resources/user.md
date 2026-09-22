@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_user Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/users)
+
 This resource allows you to manage [users in Databricks Workspace](https://docs.databricks.com/administration-guide/users-groups/users.html), [Databricks Account Console](https://accounts.cloud.databricks.com/) or [Azure Databricks Account Console](https://accounts.azuredatabricks.net). You can also [associate](group_member.md) Databricks users to [databricks_group](group.md). Upon user creation the user will receive a welcome email. You can also get information about caller identity using [databricks_current_user](../data-sources/current_user.md) data source.
 
 -> This resource can be used with an account or workspace-level provider.

@@ -18,18 +18,6 @@ func metastoreAssignmentProviderConfigTemplate(providerConfig string) string {
 	`, providerConfig)
 }
 
-func TestAccMetastoreAssignment_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: metastoreAssignmentProviderConfigTemplate(`
-			provider_config {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccMetastoreAssignment_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: metastoreAssignmentProviderConfigTemplate(`
@@ -50,6 +38,5 @@ func TestAccMetastoreAssignment_ProviderConfig_Mismatched(t *testing.T) {
 			}
 		`),
 		ExpectError: regexp.MustCompile(`workspace_id mismatch.*please check the workspace_id provided in provider_config`),
-		PlanOnly:    true,
 	})
 }

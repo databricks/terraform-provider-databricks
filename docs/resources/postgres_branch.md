@@ -4,6 +4,8 @@ subcategory: "Postgres"
 # databricks_postgres_branch Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/postgres)
+
 ### Lakebase Autoscaling Terraform Behavior
 
 This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
@@ -24,11 +26,16 @@ Branches exist within the Lakebase Autoscaling resource hierarchy:
 - **Development environments**: Create isolated branches for feature development without affecting production
 - **Testing**: Spin up temporary branches for testing changes before applying to production
 - **Point-in-time recovery**: Create a branch from a specific point in time on another branch
+- **Restore from a snapshot**: Create a branch whose data comes from an existing snapshot
 - **Data exploration**: Safely query and analyze data without risking production workloads
 
 
 ## Example Usage
-### Basic Branch Creation
+### Managing Implicitly Created Root Branch
+
+A root branch named `production` is implicitly created for every project. Since Terraform is declarative, managing an already-existing resource requires `replace_existing = true`: it lets Terraform represent the implicitly created branch in Terraform state and immediately apply the provided configuration to it. Support for providing a custom `branch_id` will be available in later versions.
+
+Terraform uses this resource exclusively for managing updates. It does not control creation or deletion of the branch itself. Removing the resource from your Terraform configuration only removes it from Terraform state; the actual branch is unaffected, because its lifecycle is currently controlled by the parent project. The only way to remove the actual branch is to delete the project it belongs to.
 
 ```hcl
 resource "databricks_postgres_project" "this" {
@@ -39,6 +46,19 @@ resource "databricks_postgres_project" "this" {
   }
 }
 
+resource "databricks_postgres_branch" "production" {
+  branch_id = "production"
+  parent    = databricks_postgres_project.this.name
+  spec = {
+    no_expiry = true
+  }
+  replace_existing = true
+}
+```
+
+### Basic Branch Creation
+
+```hcl
 resource "databricks_postgres_branch" "dev" {
   branch_id = "dev-branch"
   parent    = databricks_postgres_project.this.name
@@ -50,13 +70,15 @@ resource "databricks_postgres_branch" "dev" {
 
 ### Protected Branch
 
+Only one branch per project can be protected at a time.
+
 ```hcl
-resource "databricks_postgres_branch" "production" {
-  branch_id = "production"
+resource "databricks_postgres_branch" "protected" {
+  branch_id = "protected-branch"
   parent    = databricks_postgres_project.this.name
   spec = {
     is_protected = true
-    no_expiry = true
+    no_expiry    = true
   }
 }
 ```
@@ -73,17 +95,31 @@ resource "databricks_postgres_branch" "temporary" {
 }
 ```
 
+### Branch from a Snapshot
+
+Create a branch whose data comes from an existing snapshot instead of a source branch. The snapshot must be `AVAILABLE` and belong to the same project. `source_snapshot` is immutable and mutually exclusive with `source_branch`. The restored snapshot is reported back in `status.source_snapshot`.
+
+```hcl
+resource "databricks_postgres_branch" "from_snapshot" {
+  branch_id = "restored-branch"
+  parent    = databricks_postgres_project.this.name
+  spec = {
+    source_snapshot = "projects/my-project/snapshots/my-snapshot"
+    no_expiry       = true
+  }
+}
+```
+
 
 ## Arguments
 The following arguments are supported:
-* `branch_id` (string, required) - The ID to use for the Branch. This becomes the final component of the branch's resource name.
-  The ID is required and must be 1-63 characters long, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens.
-  For example, `development` becomes `projects/my-app/branches/development`
+* `branch_id` (string, required) - The part of the name, chosen by the user when the resource was created
 * `parent` (string, required) - The project containing this branch (API resource hierarchy).
   Format: projects/{project_id}
   
   Note: This field indicates where the branch exists in the resource hierarchy.
   For point-in-time branching from another branch, see `status.source_branch`
+* `purge_on_delete` (boolean, optional) - If true, permanently delete the branch; if false, soft delete
 * `replace_existing` (boolean, optional) - If true, update the branch if it already exists instead of returning an error
 * `spec` (BranchSpec, optional) - The spec contains the branch configuration
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
@@ -92,16 +128,24 @@ The following arguments are supported:
 * `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### BranchSpec
-* `expire_time` (string, optional) - Absolute expiration timestamp. When set, the branch will expire at this time
+* `expire_time` (string, optional) - Absolute expiration timestamp. When set, the branch will expire at this time.
+  Mutually exclusive with `ttl` and `no_expiry`
 * `is_protected` (boolean, optional) - When set to true, protects the branch from deletion and reset. Associated compute endpoints and the project cannot be deleted while the branch is protected
 * `no_expiry` (boolean, optional) - Explicitly disable expiration. When set to true, the branch will not expire.
-  If set to false, the request is invalid; provide either ttl or expire_time instead
+  If set to false, the request is invalid; provide either ttl or expire_time instead.
+  Mutually exclusive with `expire_time` and `ttl`
 * `source_branch` (string, optional) - The name of the source branch from which this branch was created (data lineage for point-in-time recovery).
   If not specified, defaults to the project's default branch.
   Format: projects/{project_id}/branches/{branch_id}
 * `source_branch_lsn` (string, optional) - The Log Sequence Number (LSN) on the source branch from which this branch was created
 * `source_branch_time` (string, optional) - The point in time on the source branch from which this branch was created
-* `ttl` (string, optional) - Relative time-to-live duration. When set, the branch will expire at creation_time + ttl
+* `source_snapshot` (string, optional) - The snapshot this branch was created from. When set, the branch's data
+  comes from the snapshot rather than a source branch, so source_branch,
+  source_branch_lsn, and source_branch_time must be empty. The snapshot must
+  be AVAILABLE and belong to this branch's project.
+  Format: projects/{project_id}/snapshots/{snapshot_id}
+* `ttl` (string, optional) - Relative time-to-live duration. When set, the branch will expire at creation_time + ttl.
+  Mutually exclusive with `expire_time` and `no_expiry`
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -113,22 +157,24 @@ In addition to the above arguments, the following attributes are exported:
 * `update_time` (string) - A timestamp indicating when the branch was last updated
 
 ### BranchStatus
-* `branch_id` (string) - The short identifier of the branch, suitable for showing to the users.
-  For a branch with name `projects/my-project/branches/my-branch`, the branch_id is `my-branch`.
-  
-  Use this field when building UI components that display branches to users (e.g., a drop-down
-  selector). Prefer showing `branch_id` instead of the full resource name from `Branch.name`,
-  which follows the `projects/{project_id}/branches/{branch_id}` format and is not user-friendly
-* `current_state` (string) - The branch's state, indicating if it is initializing, ready for use, or archived. Possible values are: `ARCHIVED`, `IMPORTING`, `INIT`, `READY`, `RESETTING`
+* `branch_id` (string) - Part of the resource name
+* `current_state` (string) - The branch's state, indicating if it is initializing, ready for use, or archived. Possible values are: `ARCHIVED`, `DELETED`, `IMPORTING`, `INIT`, `READY`, `RESETTING`
 * `default` (boolean) - Whether the branch is the project's default branch
+* `delete_time` (string) - A timestamp indicating when the branch was deleted.
+  Empty if the branch is not deleted
 * `expire_time` (string) - Absolute expiration time for the branch. Empty if expiration is disabled
 * `is_protected` (boolean) - Whether the branch is protected
 * `logical_size_bytes` (integer) - The logical size of the branch
-* `pending_state` (string) - The pending state of the branch, if a state transition is in progress. Possible values are: `ARCHIVED`, `IMPORTING`, `INIT`, `READY`, `RESETTING`
+* `pending_state` (string) - The pending state of the branch, if a state transition is in progress. Possible values are: `ARCHIVED`, `DELETED`, `IMPORTING`, `INIT`, `READY`, `RESETTING`
+* `purge_time` (string) - A timestamp indicating when the branch is scheduled to be purged.
+  Empty if the branch is not deleted, otherwise set to a timestamp in the future
 * `source_branch` (string) - The name of the source branch from which this branch was created.
   Format: projects/{project_id}/branches/{branch_id}
 * `source_branch_lsn` (string) - The Log Sequence Number (LSN) on the source branch from which this branch was created
 * `source_branch_time` (string) - The point in time on the source branch from which this branch was created
+* `source_snapshot` (string) - The snapshot this branch was restored from. Set only for branches created by
+  restoring a snapshot; unset for all other branches.
+  Format: projects/{project_id}/snapshots/{snapshot_id}
 * `state_change_time` (string) - A timestamp indicating when the `current_state` began
 
 ## Import

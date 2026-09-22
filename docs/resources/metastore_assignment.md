@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_metastore_assignment (Resource)
 
+[API Documentation](https://docs.databricks.com/api/account/accountmetastoreassignments)
+
 -> This resource can be used with an account or workspace-level provider.
 
 A single [databricks_metastore](metastore.md) can be shared across Databricks workspaces, and each linked workspace has a consistent view of the data and a single set of access policies. You can only create a single metastore for each region in which your organization operates.

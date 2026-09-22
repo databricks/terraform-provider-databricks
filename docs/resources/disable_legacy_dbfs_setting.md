@@ -4,6 +4,8 @@ subcategory: "Settings"
 
 # databricks_disable_legacy_dbfs_setting Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/disablelegacydbfs)
+
 The `databricks_disable_legacy_dbfs_setting` resource allows you to disable legacy DBFS.
 
 -> This resource can only be used with a workspace-level provider!

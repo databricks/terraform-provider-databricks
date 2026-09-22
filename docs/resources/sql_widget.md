@@ -3,6 +3,8 @@ subcategory: "Databricks SQL"
 ---
 # databricks_sql_widget Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/dashboards)
+
 !> This resource is deprecated and will be removed in future.
 
 -> Please switch to [databricks_dashboard](dashboard.md) to author new AI/BI dashboards using the latest tooling

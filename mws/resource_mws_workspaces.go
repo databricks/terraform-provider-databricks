@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 
@@ -215,7 +216,7 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 	}
 	// make a request to SCIM API, just to verify there are no errors
 	var response map[string]any
-	err = wsClient.Get(ctx, "/preview/scim/v2/Me", nil, &response)
+	err = wsClient.Get(ctx, "/preview/scim/v2/Me?excludedAttributes=entitlements", nil, &response)
 	var dnsError *net.DNSError
 	if errors.As(err, &dnsError) {
 		err = fmt.Errorf("workspace %s is not yet reachable: %s",
@@ -334,6 +335,13 @@ func (a WorkspacesAPI) UpdateRunning(ws Workspace, timeout time.Duration) error 
 	if len(request) == 0 {
 		return nil
 	}
+
+	updateMaskFields := make([]string, 0, len(request))
+	for field := range request {
+		updateMaskFields = append(updateMaskFields, field)
+	}
+	sort.Strings(updateMaskFields)
+	workspacesAPIPath = fmt.Sprintf("%s?update_mask=%s", workspacesAPIPath, strings.Join(updateMaskFields, ","))
 
 	err := a.client.Patch(a.context, workspacesAPIPath, request)
 	if err != nil {

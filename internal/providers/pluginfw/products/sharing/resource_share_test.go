@@ -6,8 +6,99 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestShareCommentChanged(t *testing.T) {
+	for _, tt := range []struct {
+		name  string
+		plan  types.String
+		state types.String
+		want  bool
+	}{
+		// omitted or deferred comment is never sent
+		{"null plan, value in state", types.StringNull(), types.StringValue("x"), false},
+		{"null plan, null state", types.StringNull(), types.StringNull(), false},
+		{"unknown plan, value in state", types.StringUnknown(), types.StringValue("x"), false},
+		// concrete, differing comment is a real change
+		{"set from null", types.StringValue("x"), types.StringNull(), true},
+		{"changed value", types.StringValue("y"), types.StringValue("x"), true},
+		{"explicit clear", types.StringValue(""), types.StringValue("x"), true},
+		// no-op when the known comment already matches state
+		{"unchanged value", types.StringValue("x"), types.StringValue("x"), false},
+		{"unchanged empty", types.StringValue(""), types.StringValue(""), false},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, shareCommentChanged(tt.plan, tt.state))
+		})
+	}
+}
+
+// resolvePlannedComment models the plan value Core produces for an Optional+Computed
+// attribute: config wins when set, otherwise the refreshed state value carries forward.
+func resolvePlannedComment(config, refreshed types.String) types.String {
+	if !config.IsNull() {
+		return config
+	}
+	return refreshed
+}
+
+// TestShareCommentConfigToState covers what the user writes in HCL (null == omitted)
+// versus what ends up in state, given what the server already holds.
+func TestShareCommentConfigToState(t *testing.T) {
+	ctx := context.Background()
+
+	for _, tt := range []struct {
+		name         string
+		config       types.String
+		serverBefore types.String
+		wantSent     bool
+		wantState    types.String
+	}{
+		// explicit value: terraform manages it, state mirrors config
+		{"writes value, server empty", types.StringValue("x"), types.StringNull(), true, types.StringValue("x")},
+		{"writes value, server has different value", types.StringValue("x"), types.StringValue("other"), true, types.StringValue("x")},
+		{"writes value, server already matches", types.StringValue("x"), types.StringValue("x"), false, types.StringValue("x")},
+		// explicit "": clears the description
+		{"writes empty, server has value", types.StringValue(""), types.StringValue("other"), true, types.StringValue("")},
+		{"writes empty, server already empty", types.StringValue(""), types.StringValue(""), false, types.StringValue("")},
+		{"writes empty, server null", types.StringValue(""), types.StringNull(), true, types.StringValue("")},
+		// omitted: not managed, state adopts whatever the server holds
+		{"omits comment, server null", types.StringNull(), types.StringNull(), false, types.StringNull()},
+		{"omits comment, server has value", types.StringNull(), types.StringValue("set in UI"), false, types.StringValue("set in UI")},
+		{"omits comment, server empty string", types.StringNull(), types.StringValue(""), false, types.StringValue("")},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			planned := resolvePlannedComment(tt.config, tt.serverBefore)
+
+			sent := shareCommentChanged(planned, tt.serverBefore)
+			assert.Equal(t, tt.wantSent, sent, "comment sent on the wire")
+
+			serverAfter := tt.serverBefore
+			if sent {
+				serverAfter = planned
+			}
+			apiShare := sharing.ShareInfo{Name: "s"}
+			if !serverAfter.IsNull() {
+				// a present comment lands in ForceSendFields on unmarshal, so "" converts
+				// to a known "" rather than null
+				apiShare.Comment = serverAfter.ValueString()
+				apiShare.ForceSendFields = append(apiShare.ForceSendFields, "Comment")
+			}
+
+			var state ShareInfoExtended
+			assert.False(t, converters.GoSdkToTfSdkStruct(ctx, apiShare, &state).HasError())
+			assert.True(t, state.Comment.Equal(tt.wantState),
+				"state comment: got %v, want %v", state.Comment, tt.wantState)
+
+			// planned must equal post-apply state or core rejects the apply
+			assert.True(t, state.Comment.Equal(planned),
+				"planned %v must equal post-apply state %v", planned, state.Comment)
+		})
+	}
+}
 
 func TestShareSyncEffectiveFields(t *testing.T) {
 	shareName := "test-share-name"
@@ -139,6 +230,46 @@ func TestShareSyncEffectiveFields(t *testing.T) {
 			assert.False(t, diagnostics.HasError())
 		})
 	}
+}
+
+func TestShareSyncEffectiveFieldsCreateOrUpdateSyncsObjectsOnceByName(t *testing.T) {
+	ctx := context.Background()
+	planGoSDK := sharing.ShareInfo{
+		Name: "test-share-name",
+		Objects: []sharing.SharedDataObject{
+			{Name: "obj-1"},
+			{Name: "obj-2", SharedAs: "configured-alias"},
+		},
+	}
+	serverGoSDK := sharing.ShareInfo{
+		Name: "test-share-name",
+		Objects: []sharing.SharedDataObject{
+			{Name: "obj-2", SharedAs: "server-alias-2"},
+			{Name: "obj-1", SharedAs: "server-alias-1"},
+		},
+	}
+
+	var plan ShareInfoExtended
+	diagnostics := converters.GoSdkToTfSdkStruct(ctx, planGoSDK, &plan)
+	assert.False(t, diagnostics.HasError())
+	var serverState ShareInfoExtended
+	diagnostics = converters.GoSdkToTfSdkStruct(ctx, serverGoSDK, &serverState)
+	assert.False(t, diagnostics.HasError())
+
+	result, diagnostics := (&ShareResource{}).syncEffectiveFields(ctx, plan, serverState, effectiveFieldsActionCreateOrUpdate{})
+	assert.False(t, diagnostics.HasError())
+	objects, ok := result.GetObjects(ctx)
+	assert.True(t, ok)
+	assert.Len(t, objects, 2)
+	objectsByName := map[string]sharing_tf.SharedDataObject_SdkV2{}
+	for _, object := range objects {
+		objectsByName[object.Name.ValueString()] = object
+	}
+
+	assert.True(t, objectsByName["obj-1"].SharedAs.IsNull())
+	assert.Equal(t, "server-alias-1", objectsByName["obj-1"].EffectiveSharedAs.ValueString())
+	assert.Equal(t, "configured-alias", objectsByName["obj-2"].SharedAs.ValueString())
+	assert.Equal(t, "server-alias-2", objectsByName["obj-2"].EffectiveSharedAs.ValueString())
 }
 
 // TestDiff tests the diff function that compares two ShareInfo states

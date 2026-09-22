@@ -248,6 +248,58 @@ func TestDeleteAiBiEmbeddingAccessPolicySetting(t *testing.T) {
 	})
 }
 
+// TestAiBiEmbeddingAccessPolicySettingLifecycle mirrors the access-policy half
+// of TestAccAiBiEmbeddings (in internal/acceptance/aibi_embedding_settings_test.go).
+// The acceptance test sets access_policy_type = ALLOW_APPROVED_DOMAINS as a
+// dependency of the approved-domains resource; this exercises Create against
+// mocked SDK calls. Use this as the per-resource expected-behavior check
+// while the acceptance test is skipped.
+func TestAiBiEmbeddingAccessPolicySettingLifecycle(t *testing.T) {
+	t.Run("create with ALLOW_APPROVED_DOMAINS persists into state", func(t *testing.T) {
+		d, err := qa.ResourceFixture{
+			MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+				e := w.GetMockAibiDashboardEmbeddingAccessPolicyAPI().EXPECT()
+				e.Update(mock.Anything, settings.UpdateAibiDashboardEmbeddingAccessPolicySettingRequest{
+					AllowMissing: true,
+					FieldMask:    "aibi_dashboard_embedding_access_policy.access_policy_type",
+					Setting: settings.AibiDashboardEmbeddingAccessPolicySetting{
+						AibiDashboardEmbeddingAccessPolicy: settings.AibiDashboardEmbeddingAccessPolicy{
+							AccessPolicyType: "ALLOW_APPROVED_DOMAINS",
+						},
+						SettingName: "default",
+					},
+				}).Return(&settings.AibiDashboardEmbeddingAccessPolicySetting{
+					Etag: "etag-after-create",
+					AibiDashboardEmbeddingAccessPolicy: settings.AibiDashboardEmbeddingAccessPolicy{
+						AccessPolicyType: "ALLOW_APPROVED_DOMAINS",
+					},
+					SettingName: "default",
+				}, nil)
+				e.Get(mock.Anything, settings.GetAibiDashboardEmbeddingAccessPolicySettingRequest{
+					Etag: "etag-after-create",
+				}).Return(&settings.AibiDashboardEmbeddingAccessPolicySetting{
+					Etag: "etag-after-create",
+					AibiDashboardEmbeddingAccessPolicy: settings.AibiDashboardEmbeddingAccessPolicy{
+						AccessPolicyType: "ALLOW_APPROVED_DOMAINS",
+					},
+					SettingName: "default",
+				}, nil)
+			},
+			Resource: testAiBiEmbeddingAccessPolicySetting,
+			Create:   true,
+			HCL: `
+				aibi_dashboard_embedding_access_policy {
+					access_policy_type = "ALLOW_APPROVED_DOMAINS"
+				}
+			`,
+		}.Apply(t)
+		assert.NoError(t, err)
+		assert.Equal(t, defaultSettingId, d.Id())
+		assert.Equal(t, "etag-after-create", d.Get(etagAttrName).(string))
+		assert.Equal(t, "ALLOW_APPROVED_DOMAINS", d.Get("aibi_dashboard_embedding_access_policy.0.access_policy_type"))
+	})
+}
+
 func TestDeleteAiBiEmbeddingAccessPolicySettingWithConflict(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

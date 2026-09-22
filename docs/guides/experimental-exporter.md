@@ -126,7 +126,7 @@ All arguments are optional, and they tune what code is being generated.
   ```
 
   The script generates comprehensive three-way mappings (~99.5% coverage) using similarity scoring based on cores, memory, category, and disk configuration. See `exporter/AGENTS.md` for detailed algorithm documentation.
-* `-skip-interactive` - optionally run in a non-interactive mode.
+* `-skip-interactive` - run in a non-interactive mode.  *This option is enabled automatically when you specify either `-listing` or `-services` option.*
 * `-includeUserDomains` - optionally include the domain name in the generated resource name for `databricks_user` resource.
 * `-importAllUsers` - optionally includes all users and service principals even if they are only part of the `users` group.
 * `-exportDeletedUsersAssets` - optionally include assets of deleted users and service principals.
@@ -134,10 +134,26 @@ All arguments are optional, and they tune what code is being generated.
 * `-updated-since` - timestamp (in ISO8601 format supported by Go language) for exporting of resources modified since a given timestamp. I.e., `2023-07-24T00:00:00Z`. If not specified, the exporter will try to load the last run timestamp from the `exporter-run-stats.json` file generated during the export and use it.
 * `-notebooksFormat` - optional format for exported notebooks. Supported values are `SOURCE` (default), `DBC`, `JUPYTER`.  This option could be used to export notebooks with embedded dashboards.
 * `-noformat` - optionally turn off the execution of `terraform fmt` on the exported files (enabled by default).
-* `-debug` - turn on debug output.
-* `-trace` - turn on trace output (includes debug level as well).
+* `-debug` - turn on debug output, including Databricks Go SDK HTTP request/response logs.
+* `-trace` - turn on trace output (includes debug level as well), including Databricks Go SDK HTTP request/response logs.
 * `-native-import` - turns on generation of [native import blocks](https://developer.hashicorp.com/terraform/language/import) (requires Terraform 1.5+).  This option is recommended for cases when you want to start managing an existing workspace.
 * `-export-secrets` - enables exporting of the secret values - they will be written into the `terraform.tfvars` file.  **Be very careful with this file!**
+
+### Logging
+
+The exporter also honors the standard `TF_LOG` environment variable:
+
+* `TF_LOG=DEBUG` - enables exporter debug output and Databricks Go SDK HTTP request/response logs.
+* `TF_LOG=TRACE` - enables trace output, debug output, and Databricks Go SDK HTTP request/response logs.
+* `TF_LOG=INFO`, `TF_LOG=WARN`, and `TF_LOG=ERROR` - restrict output to the corresponding level and above.
+
+The `-debug` and `-trace` flags take precedence over `TF_LOG` for backward compatibility. To increase the amount of request or response body included in SDK HTTP logs, set `DATABRICKS_DEBUG_TRUNCATE_BYTES`.
+
+```bash
+TF_LOG=DEBUG \
+DATABRICKS_DEBUG_TRUNCATE_BYTES=250000 \
+./terraform-provider-databricks exporter -skip-interactive -listing jobs -services jobs
+```
 
 ### Use of `-listing` and `-services` for granular resources selection
 
@@ -213,6 +229,10 @@ Migration between Databricks accounts should be done in multiple steps:
 4. Adjust service principal IDs in the workspace export.
 5. Apply workspace export to a new workspace.
 
+### Account ID variable
+
+For account-level exports, the exporter emits a single `databricks_account_id` variable in `vars.tf` (with the current account ID as its default) and references it from the generated provider block and from account-scoped resource attributes (for example, `databricks_endpoint.parent` and `databricks_access_control_rule_set.name`).  To point the generated configuration at a different account, override this one variable (via `-var`, an environment variable, or `terraform.tfvars`) instead of editing every occurrence.
+
 ## Services
 
 Services are just logical groups of resources used for filtering and organization in files written in `-directory`. All resources are globally sorted by their resource name, which allows you to use generated files for compliance purposes. Nevertheless, managing the entire Databricks workspace with Terraform is the preferred way. Except for notebooks and possibly libraries, which may have their own CI/CD processes.
@@ -222,6 +242,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 -> Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.
 
 * `access` -  **listing** [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).   *Please note that for `databricks_permissions` we list only `authorization = "tokens"`, the permissions for other objects (notebooks, ...) will be emitted when corresponding objects are processed!*
+* `agentbricks` - **listing** [databricks_knowledge_assistant](../resources/knowledge_assistant.md) and [databricks_supervisor_agent](../resources/supervisor_agent.md) together with their child resources [databricks_knowledge_assistant_knowledge_source](../resources/knowledge_assistant_knowledge_source.md) and [databricks_supervisor_agent_tool](../resources/supervisor_agent_tool.md).
 * `alerts` - **listing** [databricks_alert](../resources/alert.md) and [databricks_alert_v2](../resources/alert_v2.md).
 * `apps` - **listing** [databricks_app](../resources/app.md) and [databricks_apps_settings_custom_template](../resources/apps_settings_custom_template.md).
 * `billing` - **listing** [databricks_budget](../resources/budget.md) and [databricks_budget_policy](../resources/budget_policy.md).
@@ -233,7 +254,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `groups` - **listing** [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).   If Identity Federation is enabled on the workspace (when UC Metastore is attached), then account-level groups are exposed as data sources because they are defined on account level, and only workspace-level groups are exposed as resources.  See the note above on how to perform migration between workspaces with Identity Federation enabled.
 * `idfed` - **listing** [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) (account-level) and [databricks_permission_assignment](../resources/permission_assignment.md) (workspace-level).  When listing is done on account level, you can filter assignment only to specific workspace IDs as specified by `-match`, `-matchRegex`, and `-excludeRegex` options.  I.e., to export assignments only for two workspaces, use `-matchRegex '^1688808130562317|5493220389262917$'`.
 * `jobs` - **listing** [databricks_job](../resources/job.md). Usually, there are more automated workflows than interactive clusters, so they get their own file in this tool's output.  *Please note that workflows deployed and maintained via [Databricks Asset Bundles](https://docs.databricks.com/en/dev-tools/bundles/index.html) aren't exported!*
-* `lakebase` - **listing** [databricks_database_instance](../resources/database_instance.md).
+* `lakebase` - **listing** [databricks_database_instance](../resources/database_instance.md), [databricks_postgres_project](../resources/postgres_project.md), and [databricks_postgres_catalog](../resources/postgres_catalog.md). [databricks_postgres_branch](../resources/postgres_branch.md), [databricks_postgres_endpoint](../resources/postgres_endpoint.md), [databricks_postgres_database](../resources/postgres_database.md), [databricks_postgres_role](../resources/postgres_role.md), [databricks_postgres_cdf_config](../resources/postgres_cdf_config.md), and [databricks_postgres_data_api](../resources/postgres_data_api.md) are emitted from project, branch, and database Import. [databricks_postgres_synced_table](../resources/postgres_synced_table.md) is supported for import but is not directly listed by the Postgres API.
 * `mlflow-webhooks` - **listing** [databricks_mlflow_webhook](../resources/mlflow_webhook.md).
 * `model-serving` - **listing** [databricks_model_serving](../resources/model_serving.md).
 * `mounts` - **listing** works only in combination with `-mounts` command-line option.
@@ -249,12 +270,13 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `seg` - **listing** [databricks_account_network_policy](../resources/account_network_policy.md).
 * `settings` - **listing** [databricks_notification_destination](../resources/notification_destination.md), [databricks_workspace_setting_v2](../resources/workspace_setting_v2.md), and [databricks_account_setting_v2](../resources/account_setting_v2.md) (account-level).
 * `sql-dashboards` - **listing** Legacy [databricks_sql_dashboard](../resources/sql_dashboard.md) along with associated [databricks_sql_widget](../resources/sql_widget.md) and [databricks_sql_visualization](../resources/sql_visualization.md).
-* `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md).
+* `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md) and [databricks_warehouses_default_warehouse_override](../resources/warehouses_default_warehouse_override.md).
 * `storage` - only [databricks_dbfs_file](../resources/dbfs_file.md) and [databricks_file](../resources/file.md) referenced in other resources (libraries, init scripts, ...) will be downloaded locally and properly arranged into the Terraform state.
 * `uc-artifact-allowlist` - **listing** exports [databricks_artifact_allowlist](../resources/artifact_allowlist.md) resources for Unity Catalog Allow Lists attached to the current metastore.
 * `uc-catalogs` - **listing** [databricks_catalog](../resources/catalog.md) and [databricks_workspace_binding](../resources/workspace_binding.md)
 * `uc-connections` - **listing** [databricks_connection](../resources/connection.md).  *Please note that because the API doesn't return sensitive fields, such as passwords, tokens, ..., the generated `options` block could be incomplete!*
 * `uc-credentials` - **listing** exports [databricks_credential](../resources/credential.md) resources on workspace or account level.  *Please note that it will skip storage credentials! Use the `uc-storage-credentials` service for them*
+* `uc-data-classification` - [databricks_data_classification_catalog_config](../resources/data_classification_catalog_config.md) (*emitted as a dependency from [databricks_catalog](../resources/catalog.md) when a data classification configuration is set for the catalog*).
 * `uc-external-locations` - **listing** exports [databricks_external_location](../resources/external_location.md) resource.
 * `uc-grants` -  [databricks_grants](../resources/grants.md). *Please note that during export, the list of grants is expanded to include the identity that does the export! This is done to allow to creation of objects in case when catalogs/schemas have different owners than the current identity*.
 * `uc-metastores` - **listing** [databricks_metastore](../resources/metastore.md) and [databricks_metastore_assignment](../resource/metastore_assignment.md) (only on account-level).  *Please note that when using workspace-level configuration, only the metastores from the workspace's region are listed!*
@@ -262,6 +284,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `uc-online-tables` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_online_table](../resources/online_table.md)
 * `uc-rfa` - [databricks_rfa_access_request_destinations](../resources/rfa_access_request_destinations.md) (*emitted as dependencies from Unity Catalog resources when access request destinations are configured*)
 * `uc-schemas` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_schema](../resources/schema.md)
+* `uc-secrets` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_secret_uc](../resources/secret_uc.md), emitted as dependencies from [databricks_schema](../resources/schema.md).
 * `uc-shares` - **listing** [databricks_share](../resources/share.md), [databricks_recipient](../resources/recipient.md) and [databricks_provider](../resources/provider.md)
 * `uc-storage-credentials` - **listing** exports [databricks_storage_credential](../resources/storage_credential.md) resources on workspace or account level.
 * `uc-system-schemas` - **listing** exports [databricks_system_schema](../resources/system_schema.md) resources for the UC metastore of the current workspace.
@@ -275,7 +298,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 
 ## Secrets
 
-For security reasons, [databricks_secret](../resources/secret.md) cannot contain actual plaintext secrets. By default, the exporter will create a variable in `vars.tf`, with the same name as the secret. You are supposed to [fill in the value of the secret](https://blog.gruntwork.io/a-comprehensive-guide-to-managing-secrets-in-your-terraform-code-1d586955ace1#0e7d) after that.  You can use `-export-secrets` command-line option to generate the `terraform.tfvars` file with secret values.
+For security reasons, [databricks_secret](../resources/secret.md) and [databricks_secret_uc](../resources/secret_uc.md) cannot contain actual plaintext secrets. By default, the exporter will create a variable in `vars.tf`, with the same name as the secret. You are supposed to [fill in the value of the secret](https://blog.gruntwork.io/a-comprehensive-guide-to-managing-secrets-in-your-terraform-code-1d586955ace1#0e7d) after that.  You can use `-export-secrets` command-line option to generate the `terraform.tfvars` file with secret values.
 
 ## Parallel execution
 
@@ -312,8 +335,21 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_custom_app_integration](../resources/custom_app_integration.md) | Yes | No | No | Yes |
 | [databricks_dashboard](../resources/dashboard.md) | Yes | No | Yes | No |
 | [databricks_database_instance](../resources/database_instance.md) | Yes | No | Yes | No |
+| [databricks_data_classification_catalog_config](../resources/data_classification_catalog_config.md) | Yes | No | Yes | No |
 | [databricks_data_quality_monitor](../resources/data_quality_monitor.md) | Yes | Yes | Yes | No |
+| [databricks_postgres_branch](../resources/postgres_branch.md) | Yes | No | Yes | No |
+| [databricks_postgres_catalog](../resources/postgres_catalog.md) | Yes | Yes | Yes | No |
+| [databricks_postgres_cdf_config](../resources/postgres_cdf_config.md) | Yes | No | Yes | No |
+| [databricks_postgres_data_api](../resources/postgres_data_api.md) | Yes | No | Yes | No |
+| [databricks_postgres_database](../resources/postgres_database.md) | Yes | No | Yes | No |
+| [databricks_postgres_endpoint](../resources/postgres_endpoint.md) | Yes | No | Yes | No |
+| [databricks_postgres_project](../resources/postgres_project.md) | Yes | Yes | Yes | No |
+| [databricks_postgres_role](../resources/postgres_role.md) | Yes | No | Yes | No |
+| [databricks_postgres_synced_table](../resources/postgres_synced_table.md) | Yes | No | Yes | No |
 | [databricks_dbfs_file](../resources/dbfs_file.md) | Yes | No | Yes | No |
+| [databricks_endpoint](../resources/endpoint.md) | Yes | No | No | Yes |
+| [databricks_environments_default_workspace_base_environment](../resources/environments_default_workspace_base_environment.md) | Yes | No | Yes | No |
+| [databricks_environments_workspace_base_environment](../resources/environments_workspace_base_environment.md) | Yes | No | Yes | No |
 | [databricks_external_location](../resources/external_location.md) | Yes | Yes | Yes | No |
 | [databricks_file](../resources/file.md) | Yes | No | Yes | No |
 | [databricks_global_init_script](../resources/global_init_script.md) | Yes | Yes | Yes\*\* | No |
@@ -326,6 +362,8 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_instance_profile](../resources/instance_profile.md) | Yes | No | Yes | No |
 | [databricks_ip_access_list](../resources/ip_access_list.md) | Yes | Yes | Yes\*\* | No |
 | [databricks_job](../resources/job.md) | Yes | No | Yes | No |
+| [databricks_knowledge_assistant](../resources/knowledge_assistant.md) | Yes | Yes | Yes | No |
+| [databricks_knowledge_assistant_knowledge_source](../resources/knowledge_assistant_knowledge_source.md) | Yes | No | Yes | No |
 | [databricks_library](../resources/library.md) | Yes\* | No | Yes | No |
 | [databricks_metastore](../resources/metastore.md) | Yes | Yes | No | Yes |
 | [databricks_metastore_assignment](../resources/metastore_assignment.md) | Yes | No | No | Yes |
@@ -362,6 +400,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_secret](../resources/secret.md) | Yes | No | Yes | No |
 | [databricks_secret_acl](../resources/secret_acl.md) | Yes | No | Yes | No |
 | [databricks_secret_scope](../resources/secret_scope.md) | Yes | No | Yes | No |
+| [databricks_secret_uc](../resources/secret_uc.md) | Yes | No | Yes | No |
 | [databricks_service_principal](../resources/service_principal.md) | Yes | No | Yes | Yes |
 | [databricks_service_principal_federation_policy](../resources/service_principal_federation_policy.md) | Yes | No | No | Yes |
 | [databricks_service_principal_role](../resources/service_principal_role.md) | Yes | No | Yes | Yes |
@@ -376,6 +415,8 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_sql_visualization](../resources/sql_visualization.md) | Yes | Yes | Yes | No |
 | [databricks_sql_widget](../resources/sql_widget.md) | Yes | Yes | Yes | No |
 | [databricks_storage_credential](../resources/storage_credential.md) | Yes | Yes | Yes | No |
+| [databricks_supervisor_agent](../resources/supervisor_agent.md) | Yes | Yes | Yes | No |
+| [databricks_supervisor_agent_tool](../resources/supervisor_agent_tool.md) | Yes | No | Yes | No |
 | [databricks_system_schema](../resources/system_schema.md) | Yes | No | Yes | No |
 | [databricks_tag_policy](../resources/tag_policy.md) | Yes | No | Yes | No |
 | [databricks_token](../resources/token.md) | Not Applicable | No | Yes | No |
@@ -385,6 +426,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_vector_search_endpoint](../resources/vector_search_endpoint.md) | Yes | No | Yes | No |
 | [databricks_vector_search_index](../resources/vector_search_index.md) | Yes | No | Yes | No |
 | [databricks_volume](../resources/volume.md) | Yes | Yes | Yes | No |
+| [databricks_warehouses_default_warehouse_override](../resources/warehouses_default_warehouse_override.md) | Yes | No | Yes | No |
 | [databricks_workspace_binding](../resources/workspace_binding.md) | Yes | No | Yes | No |
 | [databricks_workspace_conf](../resources/workspace_conf.md) | Yes (partial) | No | Yes\*\* | No |
 | [databricks_workspace_file](../resources/workspace_file.md) | Yes | Yes | Yes | No |

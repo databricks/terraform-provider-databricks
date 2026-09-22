@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -33,14 +34,16 @@ func ResourceShare() resource.Resource {
 
 type ShareInfoExtended struct {
 	sharing_tf.ShareInfo_SdkV2
-	tfschema.Namespace
+	tfschema.Namespace_SdkV2
 	ID types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
 }
 
 var _ pluginfwcommon.ComplexFieldTypeProvider = ShareInfoExtended{}
 
 func (s ShareInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return tfschema.AddProviderConfigType(s.ShareInfo_SdkV2.GetComplexFieldTypes(ctx))
+	types := s.ShareInfo_SdkV2.GetComplexFieldTypes(ctx)
+	types["provider_config"] = reflect.TypeOf(tfschema.ProviderConfig{})
+	return types
 }
 
 func matchOrder[T any, K comparable](target, reference []T, keyFunc func(T) K) {
@@ -137,6 +140,13 @@ func shareChanges(si sharing.ShareInfo, action string) sharing.UpdateShare {
 	}
 }
 
+// shareCommentChanged reports whether the plan carries a concrete comment change to send.
+// comment is Optional+Computed, so the planned value can be unknown; IsNull is false for
+// unknown, and ValueString() on it would send a spurious "".
+func shareCommentChanged(planComment, stateComment types.String) bool {
+	return !planComment.IsNull() && !planComment.IsUnknown() && !planComment.Equal(stateComment)
+}
+
 type ShareResource struct {
 	Client *common.DatabricksClient
 }
@@ -154,15 +164,23 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		c.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "created_at")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "created_by")
 
+		// computed so a comment set outside terraform is adopted rather than failing the
+		// apply: the API stores "" instead of dropping the field, so a null config can
+		// never round-trip to a null server value
+		c.SetComputed("comment")
+		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "comment")
+
 		c.SetRequired("object", "data_object_type")
 		c.SetRequired("object", "partition", "value", "op")
 		c.SetRequired("object", "partition", "value", "name")
 
 		c.SetComputed("id")
 
+		// Ensure provider_config list has at most 1 element
+		c.AddValidator(listvalidator.SizeAtMost(1), "provider_config")
+
 		return c
 	})
-	tfschema.ConfigureProviderConfig(attrs)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Share",
 		Attributes:  attrs,
@@ -177,20 +195,24 @@ func (d *ShareResource) Configure(ctx context.Context, req resource.ConfigureReq
 }
 
 func (r *ShareResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	// Skip on destroy (no plan state).
 	if req.Plan.Raw.IsNull() {
 		return
 	}
-	// Guard against nil client (e.g. during acceptance tests before Configure).
 	if r.Client == nil {
 		return
 	}
-
-	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
+	var plan ShareInfoExtended
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -214,7 +236,7 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, plan.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -259,17 +281,7 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	newState.ID = newState.Name
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	// Populate provider_config in state after Create.
-	// If the user set provider_config.workspace_id, it's already copied above.
-	// If the user relies on the provider-level workspace_id, this resolves the
-	// unknown value to the effective workspace ID.
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
 }
 
 func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -294,7 +306,7 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, existingState.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, existingState.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -332,13 +344,6 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	// Populate provider_config in state after Read.
-	// During normal refresh, provider_config is in prior state and was copied above.
-	// During import (no prior state), this resolves the effective workspace ID.
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, existingState.ProviderConfig, &resp.State)...)
 }
 
 func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -366,7 +371,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	getShareRequest.Name = state.Name.ValueString()
 	getShareRequest.IncludeSharedData = true
 
-	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, plan.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -406,14 +411,17 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	upToDateShareInfo := currentShareInfo
-	if len(changes) > 0 || !plan.Comment.IsNull() {
+	commentChanged := shareCommentChanged(plan.Comment, state.Comment)
+	if len(changes) > 0 || commentChanged {
 		// if there are any other changes, update the share with the changes
 		update := sharing.UpdateShare{
 			Name:    plan.Name.ValueString(),
 			Updates: changes,
 		}
-		if !plan.Comment.IsNull() {
+		if commentChanged {
+			// force send so an explicit comment = "" survives omitempty and clears it
 			update.Comment = plan.Comment.ValueString()
+			update.ForceSendFields = append(update.ForceSendFields, "Comment")
 		}
 		upToDateShareInfo, err = w.Shares.Update(ctx, update)
 
@@ -467,7 +475,7 @@ func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, state.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, state.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -508,7 +516,7 @@ type effectiveFieldsAction interface {
 type effectiveFieldsActionCreateOrUpdate struct{}
 
 func (effectiveFieldsActionCreateOrUpdate) resourceLevel(ctx context.Context, state *ShareInfoExtended, plan sharing_tf.ShareInfo_SdkV2) {
-	state.SyncFieldsDuringCreateOrUpdate(ctx, plan)
+	state.SyncFieldsDuringCreateOrUpdate(ctx, withoutObjectsForResourceSync(ctx, plan))
 }
 
 func (effectiveFieldsActionCreateOrUpdate) objectLevel(ctx context.Context, state *sharing_tf.SharedDataObject_SdkV2, plan sharing_tf.SharedDataObject_SdkV2) {
@@ -518,11 +526,18 @@ func (effectiveFieldsActionCreateOrUpdate) objectLevel(ctx context.Context, stat
 type effectiveFieldsActionRead struct{}
 
 func (effectiveFieldsActionRead) resourceLevel(ctx context.Context, state *ShareInfoExtended, plan sharing_tf.ShareInfo_SdkV2) {
-	state.SyncFieldsDuringRead(ctx, plan)
+	state.SyncFieldsDuringRead(ctx, withoutObjectsForResourceSync(ctx, plan))
 }
 
 func (effectiveFieldsActionRead) objectLevel(ctx context.Context, state *sharing_tf.SharedDataObject_SdkV2, plan sharing_tf.SharedDataObject_SdkV2) {
 	state.SyncFieldsDuringRead(ctx, plan)
+}
+
+func withoutObjectsForResourceSync(ctx context.Context, plan sharing_tf.ShareInfo_SdkV2) sharing_tf.ShareInfo_SdkV2 {
+	// Objects are synchronized by name below. Mark them unknown so the generated
+	// parent method does not also synchronize them by list position.
+	plan.Objects = types.ListUnknown(plan.Objects.ElementType(ctx))
+	return plan
 }
 
 // syncEffectiveFields syncs the effective fields between existingState and newState
@@ -554,5 +569,9 @@ func (r *ShareResource) syncEffectiveFields(ctx context.Context, existingState, 
 	}
 	newState.SetObjects(ctx, finalObjects)
 	newState.ProviderConfig = existingState.ProviderConfig // Preserve provider_config from existing state
+	// The synthetic id mirrors the share name. Restore it here so every CRUD path
+	// (notably Read and Update) keeps it set; otherwise a refresh drops id to null,
+	// producing a perpetual plan diff and null downstream references.
+	newState.ID = newState.Name
 	return newState, d
 }

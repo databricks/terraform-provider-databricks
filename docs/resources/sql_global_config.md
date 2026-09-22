@@ -3,6 +3,8 @@ subcategory: "Databricks SQL"
 ---
 # databricks_sql_global_config Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/warehouses)
+
 This resource configures the security policy, [databricks_instance_profile](instance_profile.md), and [data access properties](https://docs.databricks.com/sql/admin/data-access-configuration.html) for all [databricks_sql_endpoint](sql_endpoint.md) of workspace. *Please note that changing parameters of this resource will restart all running [databricks_sql_endpoint](sql_endpoint.md).*  To use this resource you need to be an administrator.
 
 -> This resource can only be used with a workspace-level provider!

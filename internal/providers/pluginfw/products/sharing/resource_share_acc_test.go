@@ -134,6 +134,47 @@ func TestUcAccCreateShare(t *testing.T) {
 	})
 }
 
+// TestUcAccShareConvergesAfterApply guards against the perpetual-diff regression:
+// a refresh runs before every plan, and if it fails to restore the share's computed
+// fields the next plan never settles (it re-marks id, storage_location, effective_*,
+// etc. as "known after apply") and the share id reads back null, breaking downstream
+// references. This asserts that re-planning the identical config after apply is a
+// no-op and that id keeps mirroring name across the refresh.
+func TestUcAccShareConvergesAfterApply(t *testing.T) {
+	template := preTestTemplate + `
+	resource "databricks_share" "myshare" {
+		name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+		owner = "account users"
+		object {
+			name                        = databricks_sql_table.mytable.id
+			data_object_type            = "TABLE"
+			history_data_sharing_status = "ENABLED"
+		}
+		object {
+			name                        = databricks_sql_table.mytable_2.id
+			data_object_type            = "TABLE"
+			history_data_sharing_status = "ENABLED"
+		}
+	}`
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: template,
+		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttrPair("databricks_share.myshare", "id", "databricks_share.myshare", "name"),
+		),
+	}, acceptance.Step{
+		// Re-plan the identical config after a refresh: it must be a no-op.
+		Template: template,
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				plancheck.ExpectEmptyPlan(),
+			},
+		},
+		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttrPair("databricks_share.myshare", "id", "databricks_share.myshare", "name"),
+		),
+	})
+}
+
 func shareTemplateWithOwner(comment string, owner string) string {
 	return fmt.Sprintf(`
 		resource "databricks_share" "myshare" {
@@ -614,6 +655,69 @@ func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 	})
 }
 
+// TestUcAccShareCommentSetOutsideTerraform covers a share managed without a comment in
+// config when a comment is then set outside terraform: the value must be adopted into
+// state rather than failing the apply with "produced an unexpected new value".
+func TestUcAccShareCommentSetOutsideTerraform(t *testing.T) {
+	var shareName string
+	const outOfBandComment = "set outside terraform"
+	shareConfig := preTestTemplateSchema + `
+	resource "databricks_share" "myshare" {
+		name  = "{var.STICKY_RANDOM}-terraform-delta-share-comment-oob"
+		object {
+			name = databricks_schema.schema1.id
+			data_object_type = "SCHEMA"
+		}
+	}`
+
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: shareConfig, // no comment in config
+		Check: func(s *terraform.State) error {
+			share := s.RootModule().Resources["databricks_share.myshare"]
+			if share == nil {
+				return fmt.Errorf("expected databricks_share.myshare in state")
+			}
+			shareName = share.Primary.Attributes["name"]
+			assert.NotEmpty(t, shareName)
+			assert.Empty(t, share.Primary.Attributes["comment"])
+			return nil
+		},
+	}, acceptance.Step{
+		PreConfig: func() {
+			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
+			require.NoError(t, err)
+			// set a comment outside terraform, as a UI edit would
+			_, err = w.Shares.Update(context.Background(), sharing.UpdateShare{
+				Name:            shareName,
+				Comment:         outOfBandComment,
+				ForceSendFields: []string{"Comment"},
+			})
+			require.NoError(t, err)
+		},
+		Template: shareConfig, // still no comment in config
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+		},
+		Check: resource.ComposeAggregateTestCheckFunc(
+			resource.TestCheckResourceAttr("databricks_share.myshare", "comment", outOfBandComment),
+			// the comment must also survive on the server, not just in state
+			func(s *terraform.State) error {
+				w, err := databricks.NewWorkspaceClient(&databricks.Config{})
+				if err != nil {
+					return err
+				}
+				share, err := w.Shares.Get(context.Background(), sharing.GetShareRequest{Name: shareName})
+				if err != nil {
+					return err
+				}
+				assert.Equal(t, outOfBandComment, share.Comment,
+					"out-of-band comment must be preserved on the server")
+				return nil
+			},
+		),
+	})
+}
+
 func shareTemplate(provider_config string) string {
 	return fmt.Sprintf(`
 	resource "databricks_share" "myshare" {
@@ -630,12 +734,13 @@ func shareTemplate(provider_config string) string {
 func TestAccShare_ProviderConfig_Invalid(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config = {
+			provider_config {
 				workspace_id = "invalid"
 			}
 		`),
 		ExpectError: regexp.MustCompile(
-			`(?s)workspace_id must be a valid.*integer`,
+			`(?s)Attribute provider_config\[0\]\.workspace_id ` +
+				`workspace_id must be a valid.*integer, got: invalid`,
 		),
 		PlanOnly: true,
 	})
@@ -644,33 +749,41 @@ func TestAccShare_ProviderConfig_Invalid(t *testing.T) {
 func TestAccShare_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config = {
+			provider_config {
 				workspace_id = "123"
 			}
 		`),
 		ExpectError: regexp.MustCompile(
 			`(?s)failed to get workspace client`,
 		),
-		PlanOnly: true,
 	})
 }
 
 func TestAccShare_ProviderConfig_Multiple(t *testing.T) {
-	// Skip: duplicate attribute is an HCL-level syntax error ("Attribute redefined").
-	// The acceptance test framework's ExpectError matches successfully, but then
-	// post-match state retrieval also fails because the HCL can't be parsed at all,
-	// causing the test to fail. This is a framework limitation, not a provider bug.
-	t.Skip("HCL-level syntax errors break all terraform commands including state retrieval")
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplateSchema + shareTemplate(`
+			provider_config {
+				workspace_id = "123"
+			}
+			provider_config {
+				workspace_id = "456"
+			}
+		`),
+		ExpectError: regexp.MustCompile(
+			`Attribute provider_config list must contain at most 1 element`,
+		),
+		PlanOnly: true,
+	})
 }
 
 func TestAccShare_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config = {
+			provider_config {
 				workspace_id = ""
 			}
 		`),
-		ExpectError: regexp.MustCompile(`Attribute provider_config\.workspace_id string length must be at least 1`),
+		ExpectError: regexp.MustCompile(`Attribute provider_config\[0\]\.workspace_id string length must be at least 1`),
 		PlanOnly:    true,
 	})
 }
@@ -691,16 +804,14 @@ func TestAccShare_ProviderConfig_Match(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(""),
 	}, acceptance.Step{
-		// Adding provider_config with the same workspace_id that's already in state
-		// (populated by PopulateProviderConfigInState during create) is a no-op.
 		Template: preTestTemplateSchema + shareTemplate(fmt.Sprintf(`
-			provider_config = {
+			provider_config {
 				workspace_id = "%s"
 			}
 		`, workspaceIDStr)),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionNoop),
+				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionUpdate),
 			},
 		},
 	})
@@ -716,22 +827,24 @@ func TestAccShare_ProviderConfig_Recreate(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(""),
 	}, acceptance.Step{
-		// Adding matching workspace_id is a no-op (already in state from create).
 		Template: preTestTemplateSchema + shareTemplate(fmt.Sprintf(`
-			provider_config = {
+			provider_config {
 				workspace_id = "%s"
 			}
 		`, workspaceIDStr)),
 	}, acceptance.Step{
-		// Changing to a mismatched workspace_id triggers ValidateWorkspaceID
-		// failure during ModifyPlan because the workspace client can't be created.
 		Template: preTestTemplateSchema + shareTemplate(`
-			provider_config = {
+			provider_config {
 				workspace_id = "123"
 			}
 		`),
-		ExpectError: regexp.MustCompile(`(?s)failed to get workspace client`),
-		PlanOnly:    true,
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PostApplyPreRefresh: []plancheck.PlanCheck{
+				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionDestroyBeforeCreate),
+			},
+		},
+		PlanOnly:           true,
+		ExpectNonEmptyPlan: true,
 	})
 }
 
@@ -745,20 +858,16 @@ func TestAccShare_ProviderConfig_Remove(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: preTestTemplateSchema + shareTemplate(""),
 	}, acceptance.Step{
-		// Adding matching workspace_id is a no-op (already in state from create).
 		Template: preTestTemplateSchema + shareTemplate(fmt.Sprintf(`
-			provider_config = {
+			provider_config {
 				workspace_id = "%s"
 			}
 		`, workspaceIDStr)),
 	}, acceptance.Step{
-		// Removing provider_config from config: ProviderConfigPlanModifier
-		// copies state to plan (UseStateForUnknown behavior). Effective
-		// workspace_id doesn't change, so this is a no-op.
 		Template: preTestTemplateSchema + shareTemplate(""),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionNoop),
+				plancheck.ExpectResourceAction("databricks_share.myshare", plancheck.ResourceActionUpdate),
 			},
 		},
 	})

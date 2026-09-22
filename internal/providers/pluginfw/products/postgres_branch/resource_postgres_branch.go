@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -59,8 +58,6 @@ func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -114,11 +111,7 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 
 // Branch extends the main model with additional fields.
 type Branch struct {
-	// The ID to use for the Branch. This becomes the final component of the
-	// branch's resource name. The ID is required and must be 1-63 characters
-	// long, start with a lowercase letter, and contain only lowercase letters,
-	// numbers, and hyphens. For example, `development` becomes
-	// `projects/my-app/branches/development`.
+	// The part of the name, chosen by the user when the resource was created.
 	BranchId types.String `tfsdk:"branch_id"`
 	// A timestamp indicating when the branch was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
@@ -132,6 +125,8 @@ type Branch struct {
 	// hierarchy. For point-in-time branching from another branch, see
 	// `status.source_branch`.
 	Parent types.String `tfsdk:"parent"`
+	// If true, permanently delete the branch; if false, soft delete.
+	PurgeOnDelete types.Bool `tfsdk:"purge_on_delete"`
 	// If true, update the branch if it already exists instead of returning an
 	// error.
 	ReplaceExisting types.Bool `tfsdk:"replace_existing"`
@@ -174,6 +169,7 @@ func (m Branch) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"create_time":      m.CreateTime,
 			"name":             m.Name,
 			"parent":           m.Parent,
+			"purge_on_delete":  m.PurgeOnDelete,
 			"replace_existing": m.ReplaceExisting,
 			"spec":             m.Spec,
 			"status":           m.Status,
@@ -193,6 +189,7 @@ func (m Branch) Type(ctx context.Context) attr.Type {
 			"create_time":      timetypes.RFC3339{}.Type(ctx),
 			"name":             types.StringType,
 			"parent":           types.StringType,
+			"purge_on_delete":  types.BoolType,
 			"replace_existing": types.BoolType,
 			"spec":             postgres_tf.BranchSpec{}.Type(ctx),
 			"status":           postgres_tf.BranchStatus{}.Type(ctx),
@@ -208,8 +205,8 @@ func (m Branch) Type(ctx context.Context) attr.Type {
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (to *Branch) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Branch) {
-	if !from.BranchId.IsUnknown() {
-		to.BranchId = from.BranchId
+	if !from.PurgeOnDelete.IsUnknown() {
+		to.PurgeOnDelete = from.PurgeOnDelete
 	}
 	if !from.ReplaceExisting.IsUnknown() {
 		to.ReplaceExisting = from.ReplaceExisting
@@ -244,8 +241,8 @@ func (to *Branch) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Branc
 // including both embedded model fields and additional fields. This method is called
 // during read.
 func (to *Branch) SyncFieldsDuringRead(ctx context.Context, from Branch) {
-	if !from.BranchId.IsUnknown() {
-		to.BranchId = from.BranchId
+	if !from.PurgeOnDelete.IsUnknown() {
+		to.PurgeOnDelete = from.PurgeOnDelete
 	}
 	if !from.ReplaceExisting.IsUnknown() {
 		to.ReplaceExisting = from.ReplaceExisting
@@ -275,6 +272,9 @@ func (to *Branch) SyncFieldsDuringRead(ctx context.Context, from Branch) {
 }
 
 func (m Branch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch_id"] = attrs["branch_id"].SetRequired()
+	attrs["branch_id"] = attrs["branch_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["branch_id"] = attrs["branch_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["parent"] = attrs["parent"].SetRequired()
@@ -285,9 +285,7 @@ func (m Branch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBui
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["branch_id"] = attrs["branch_id"].SetRequired()
-	attrs["branch_id"] = attrs["branch_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["branch_id"] = attrs["branch_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["purge_on_delete"] = attrs["purge_on_delete"].SetOptional()
 	attrs["replace_existing"] = attrs["replace_existing"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -579,6 +577,9 @@ func (r *BranchResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+	if !state.PurgeOnDelete.IsNull() && !state.PurgeOnDelete.IsUnknown() {
+		deleteRequest.Purge = state.PurgeOnDelete.ValueBool()
 	}
 
 	var namespace ProviderConfig

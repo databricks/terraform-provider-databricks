@@ -17,18 +17,6 @@ func tokenProviderConfigTemplate(providerConfig string) string {
 	`, providerConfig)
 }
 
-func TestAccToken_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: tokenProviderConfigTemplate(`
-			provider_config {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccToken_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: tokenProviderConfigTemplate(`

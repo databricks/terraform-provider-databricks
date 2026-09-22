@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -56,8 +55,6 @@ func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -212,7 +209,7 @@ func (to *SupervisorAgent) SyncFieldsDuringRead(ctx context.Context, from Superv
 func (m SupervisorAgent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
-	attrs["description"] = attrs["description"].SetRequired()
+	attrs["description"] = attrs["description"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetRequired()
 	attrs["endpoint_name"] = attrs["endpoint_name"].SetComputed()
 	attrs["experiment_id"] = attrs["experiment_id"].SetComputed()

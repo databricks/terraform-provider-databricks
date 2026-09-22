@@ -2,7 +2,9 @@
 subcategory: "Data Classification"
 ---
 # databricks_data_classification_catalog_config Resource
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/dataclassification)
 
 This resource allows you to manage the Data Classification configuration for Unity Catalog catalogs.
 
@@ -19,7 +21,7 @@ To manage Data Classification configuration, you must either:
 ```hcl
 # Enable Data Classification for a set of schemas in a catalog
 resource "databricks_data_classification_catalog_config" "example" {
-  name = "catalogs/prod_catalog/config"
+  parent = "catalogs/prod_catalog"
 
   included_schemas = {
     names = ["sales", "marketing", "customer_data"]
@@ -39,7 +41,7 @@ resource "databricks_data_classification_catalog_config" "example" {
 
 # Enable Data Classification for the entire catalog (all current and future schemas)
 resource "databricks_data_classification_catalog_config" "all_schemas" {
-  name = "catalogs/staging_catalog/config"
+  parent = "catalogs/staging_catalog"
 }
 ```
 
@@ -49,8 +51,14 @@ The following arguments are supported:
 * `parent` (string, required) - Parent resource in the format: catalogs/{catalog_name}
 * `auto_tag_configs` (list of AutoTaggingConfig, optional) - List of auto-tagging configurations for this catalog.
   Empty list means no auto-tagging is enabled
-* `included_schemas` (CatalogConfigSchemaNames, optional) - Schemas to include in the scan. Empty list is not supported as it results in a no-op
-  scan. If `included_schemas` is not set, all schemas are scanned
+* `excluded_schemas` (CatalogConfigSchemaNames, optional) - Schemas to exclude from the scan, each named relative to the parent catalog.
+  If specified, all schemas except the specified ones will be scanned.
+  Mutually exclusive with `included_schemas`: only one may be set per request.
+  If neither `included_schemas` nor `excluded_schemas` is set, all schemas are scanned
+* `included_schemas` (CatalogConfigSchemaNames, optional) - Schemas to include in the scan, each named relative to the parent catalog.
+  If specified, only listed schemas will be scanned.
+  Mutually exclusive with `excluded_schemas`: only one may be set per request.
+  If neither `included_schemas` nor `excluded_schemas` is set, all schemas are scanned
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -58,10 +66,11 @@ The following arguments are supported:
 
 ### AutoTaggingConfig
 * `auto_tagging_mode` (string, required) - Whether auto-tagging is enabled or disabled for this classification tag. Possible values are: `AUTO_TAGGING_DISABLED`, `AUTO_TAGGING_ENABLED`
-* `classification_tag` (string, required) - The Classification Tag (e.g., "class.name", "class.location")
+* `classification_tag` (string, required) - The Classification Tag. For built-in classes this is a system tag (e.g., "class.name",
+  "class.location"); for custom classes it is a user-defined governance tag key
 
 ### CatalogConfigSchemaNames
-* `names` (list of string, required)
+* `names` (list of string, required) - Schema names, each relative to the parent catalog. Must not be empty
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

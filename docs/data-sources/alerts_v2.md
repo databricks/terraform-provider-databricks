@@ -2,7 +2,9 @@
 subcategory: "Databricks SQL"
 ---
 # databricks_alerts_v2 Data Source
-[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/alertsv2)
 
 The SQL Alerts v2 data source allows you to retrieve a list of alerts in Databricks SQL that are accessible to the current user. This data source returns alerts ordered by their creation time.
 
@@ -41,9 +43,20 @@ This data source exports a single attribute, `alerts`. It is a list of resources
   This is an output-only field that shows the resolved run-as identity after applying
   permissions and defaults
 * `evaluation` (AlertV2Evaluation)
-* `id` (string) - UUID identifying the alert
+* `id` (string) - The canonical identifier of the alert to retrieve information about
 * `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: `ACTIVE`, `DELETED`
 * `owner_user_name` (string) - The owner's username. This field is set to "Unavailable" if the user has been deleted
+* `parameters` (list of AlertStatementParameter) - A list of parameters to pass into the alert SQL query statement containing parameter markers. Static values only.
+  
+  Reference a parameter in the query text as `:name`. Each parameter must have a unique, non-empty name.
+  Each parameter consists of a name, a value, and optionally a type. To represent a NULL
+  value, the `value` field may be omitted or set to `null` explicitly. If the `type` field
+  is omitted, the value is interpreted as a string.
+  
+  If the type is given, parameters will be checked for type correctness according
+  to the given type. A value is correct if the provided string can be converted to
+  the requested type using the `cast` function. The exact semantics are described in
+  the section [`cast` function](https://docs.databricks.com/sql/language-manual/functions/cast.html) of the SQL language reference
 * `parent_path` (string) - The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated
 * `query_text` (string) - Text of the query to be run
 * `run_as` (AlertV2RunAs) - Specifies the identity that will be used to run the alert.
@@ -57,6 +70,13 @@ This data source exports a single attribute, `alerts`. It is a list of resources
 * `schedule` (CronSchedule)
 * `update_time` (string) - The timestamp indicating when the alert was updated
 * `warehouse_id` (string) - ID of the SQL warehouse attached to the alert
+
+### AlertStatementParameter
+* `name` (string) - The name of the parameter. Reference it in the query text as `:name`. Required, must be
+  non-empty, and must be unique across the alert's parameters
+* `type` (string) - The SQL data type of the parameter, for example `STRING`, `INT`, or `DECIMAL(10, 2)`. If no type is given
+  the type is assumed to be `STRING`. Complex types such as `ARRAY`, `MAP`, and `STRUCT` are not supported
+* `value` (string) - The value bound to the parameter, represented as a string. If omitted, the value is interpreted as NULL
 
 ### AlertV2Evaluation
 * `comparison_operator` (string) - Operator used for comparison in alert evaluation. Possible values are: `EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `IS_NOT_NULL`, `IS_NULL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`

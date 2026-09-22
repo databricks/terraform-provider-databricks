@@ -2,7 +2,9 @@
 subcategory: "Data Classification"
 ---
 # databricks_data_classification_catalog_config Data Source
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/dataclassification)
 
 This data source can be used to fetch the Data Classification configuration for a Unity Catalog catalog.
 
@@ -42,13 +44,20 @@ The following arguments are supported:
 The following attributes are exported:
 * `auto_tag_configs` (list of AutoTaggingConfig) - List of auto-tagging configurations for this catalog.
   Empty list means no auto-tagging is enabled
-* `included_schemas` (CatalogConfigSchemaNames) - Schemas to include in the scan. Empty list is not supported as it results in a no-op
-  scan. If `included_schemas` is not set, all schemas are scanned
+* `excluded_schemas` (CatalogConfigSchemaNames) - Schemas to exclude from the scan, each named relative to the parent catalog.
+  If specified, all schemas except the specified ones will be scanned.
+  Mutually exclusive with `included_schemas`: only one may be set per request.
+  If neither `included_schemas` nor `excluded_schemas` is set, all schemas are scanned
+* `included_schemas` (CatalogConfigSchemaNames) - Schemas to include in the scan, each named relative to the parent catalog.
+  If specified, only listed schemas will be scanned.
+  Mutually exclusive with `excluded_schemas`: only one may be set per request.
+  If neither `included_schemas` nor `excluded_schemas` is set, all schemas are scanned
 * `name` (string) - Resource name in the format: catalogs/{catalog_name}/config
 
 ### AutoTaggingConfig
 * `auto_tagging_mode` (string) - Whether auto-tagging is enabled or disabled for this classification tag. Possible values are: `AUTO_TAGGING_DISABLED`, `AUTO_TAGGING_ENABLED`
-* `classification_tag` (string) - The Classification Tag (e.g., "class.name", "class.location")
+* `classification_tag` (string) - The Classification Tag. For built-in classes this is a system tag (e.g., "class.name",
+  "class.location"); for custom classes it is a user-defined governance tag key
 
 ### CatalogConfigSchemaNames
-* `names` (list of string)
+* `names` (list of string) - Schema names, each relative to the parent catalog. Must not be empty

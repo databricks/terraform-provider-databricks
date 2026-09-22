@@ -8,6 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 
+	"github.com/databricks/terraform-provider-databricks/catalog/bindings"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/mock"
 )
@@ -152,6 +153,52 @@ func TestCreateIsolatedStorageCredential(t *testing.T) {
 		"storage_credential_id":      "1234-5678",
 		"isolation_mode":             "ISOLATION_MODE_ISOLATED",
 	})
+}
+
+func TestDeleteIsolatedStorageCredential(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockMetastoresAPI().EXPECT().Current(mock.Anything).Return(&catalog.MetastoreAssignment{
+				MetastoreId: "e",
+				WorkspaceId: 123456789101112,
+			}, nil)
+			w.GetMockWorkspaceBindingsAPI().EXPECT().UpdateBindings(mock.Anything, catalog.UpdateWorkspaceBindingsParameters{
+				SecurableName: "a",
+				SecurableType: string(bindings.BindingsSecurableTypeStorageCredential),
+				Add: []catalog.WorkspaceBinding{
+					{
+						WorkspaceId: int64(123456789101112),
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+					},
+				},
+			}).Return(&catalog.UpdateWorkspaceBindingsResponse{
+				Bindings: []catalog.WorkspaceBinding{
+					{
+						WorkspaceId: int64(123456789101112),
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+					},
+				},
+			}, nil)
+			w.GetMockStorageCredentialsAPI().EXPECT().Delete(mock.Anything, catalog.DeleteStorageCredentialRequest{
+				Name: "a",
+			}).Return(nil)
+		},
+		Resource: ResourceStorageCredential(),
+		Delete:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":           "a",
+			"isolation_mode": "ISOLATION_MODE_ISOLATED",
+		},
+		HCL: `
+		name = "a"
+		aws_iam_role {
+			role_arn = "def"
+		}
+		comment = "c"
+		isolation_mode = "ISOLATION_MODE_ISOLATED"
+		`,
+	}.ApplyNoError(t)
 }
 
 func TestCreateStorageCredentialWithOwner(t *testing.T) {

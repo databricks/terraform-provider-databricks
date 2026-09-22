@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_user_role Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/users)
+
 This resource allows you to attach a role or [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_user](user.md).
 
 -> This resource can be used with an account or workspace-level provider.

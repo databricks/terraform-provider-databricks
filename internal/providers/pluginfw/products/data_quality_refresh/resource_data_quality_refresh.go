@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -56,8 +55,6 @@ func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -131,8 +128,8 @@ type Refresh struct {
 	// [schema_id]: https://docs.databricks.com/api/workspace/schemas/get#schema_id
 	// [table_id]: https://docs.databricks.com/api/workspace/tables/get#table_id
 	ObjectId types.String `tfsdk:"object_id"`
-	// The type of the monitored object. Can be one of the following: `schema`or
-	// `table`.
+	// The type of the monitored object. Can be one of the following: `schema`
+	// or `table`.
 	ObjectType types.String `tfsdk:"object_type"`
 	// Unique id of the refresh operation.
 	RefreshId types.Int64 `tfsdk:"refresh_id"`

@@ -176,18 +176,6 @@ func dataUsersProviderConfigTemplate(providerConfig string) string {
 	`, providerConfig)
 }
 
-func TestAccDataSourceUsers_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: dataUsersProviderConfigTemplate(`
-			provider_config = {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(`workspace_id must be a valid integer`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccDataSourceUsers_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: dataUsersProviderConfigTemplate(`

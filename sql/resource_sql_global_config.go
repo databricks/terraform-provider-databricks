@@ -92,13 +92,13 @@ func (a globalConfigAPI) Set(gc GlobalConfig, d *schema.ResourceData) error {
 	}
 	common.SetForceSendFields(&data, d, []string{"enable_serverless_compute"})
 
-	return a.client.Put(a.context, "/sql/config/warehouses", data)
+	return a.client.Put(a.context, "/sql/config/warehouses", data, a.client.AddWorkspaceIdHeader)
 }
 
 func (a globalConfigAPI) Get() (GlobalConfig, error) {
 	gc := GlobalConfig{}
 	gcr := GlobalConfigForRead{}
-	if err := a.client.Get(a.context, "/sql/config/warehouses", nil, &gcr); err != nil {
+	if err := a.client.Get(a.context, "/sql/config/warehouses", nil, &gcr, a.client.AddWorkspaceIdHeader); err != nil {
 		return gc, err
 	}
 	gc.InstanceProfileARN = gcr.InstanceProfileARN

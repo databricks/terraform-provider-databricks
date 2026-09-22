@@ -58,8 +58,9 @@ func ResourceArtifactAllowlist() common.Resource {
 		return nil
 	}
 	return common.Resource{
-		Schema: allowlistSchema,
-		Create: createOrUpdate,
+		Schema:        allowlistSchema,
+		CustomizeDiff: common.NamespaceCustomizeDiffNoForceNew,
+		Create:        createOrUpdate,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {

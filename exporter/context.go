@@ -19,6 +19,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -85,6 +86,7 @@ type importContext struct {
 	nameFixes                []regexFix
 	hclFixes                 []regexFix
 	variables                map[string]string
+	variableDefaults         map[string]string
 	variablesLock            sync.Mutex
 	workspaceConfKeys        map[string]any
 
@@ -348,6 +350,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		nameFixes:                 nameFixes,
 		hclFixes:                  []regexFix{}, // Be careful with that! it may break working code
 		variables:                 map[string]string{},
+		variableDefaults:          map[string]string{},
 		allDirectories:            []workspace.ObjectStatus{},
 		allWorkspaceObjects:       []workspace.ObjectStatus{},
 		oldWorkspaceObjects:       []workspace.ObjectStatus{},
@@ -469,7 +472,7 @@ func (ic *importContext) Run() error {
 		if err != nil {
 			return err
 		}
-		me, err := ic.workspaceClient.CurrentUser.Me(ic.Context)
+		me, err := ic.workspaceClient.CurrentUser.Me(ic.Context, iam.MeRequest{ExcludedAttributes: "entitlements"})
 		if err != nil {
 			return err
 		}
@@ -594,14 +597,20 @@ provider "databricks" {
 `)
 		if ic.accountLevel {
 			dcfile.WriteString(fmt.Sprintf(`  host       = "%s"
-  account_id = "%s"
-`, ic.Client.Config.Host, ic.Client.Config.AccountID))
+  account_id = var.%s
+`, ic.Client.Config.Host, accountIdVariableName))
 		}
 		dcfile.WriteString(`}`)
 		dcfile.Close()
 	}
 	//
 	ic.generateAndWriteResources(sh)
+	// Always emit the shared account ID variable for account-level exports, even
+	// when no resource references it - the provider block references it, and it
+	// keeps the generated configuration portable across accounts.
+	if ic.accountLevel && ic.Client.Config.AccountID != "" {
+		ic.registerVariableWithDefault(accountIdVariableName, accountIdVariableDescription, ic.Client.Config.AccountID)
+	}
 	err = ic.generateVariables()
 	if err != nil {
 		log.Printf("[ERROR] can't write variables file: %s", err.Error())

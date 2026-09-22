@@ -5,7 +5,6 @@ package alert_v2
 import (
 	"context"
 	"reflect"
-	"regexp"
 
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
@@ -46,8 +45,6 @@ func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -115,13 +112,30 @@ type AlertV2Data struct {
 	EffectiveRunAs types.Object `tfsdk:"effective_run_as"`
 
 	Evaluation types.Object `tfsdk:"evaluation"`
-	// UUID identifying the alert.
+	// The canonical identifier of the alert to retrieve information about.
 	Id types.String `tfsdk:"id"`
 	// Indicates whether the query is trashed.
 	LifecycleState types.String `tfsdk:"lifecycle_state"`
 	// The owner's username. This field is set to "Unavailable" if the user has
 	// been deleted.
 	OwnerUserName types.String `tfsdk:"owner_user_name"`
+	// A list of parameters to pass into the alert SQL query statement
+	// containing parameter markers. Static values only.
+	//
+	// Reference a parameter in the query text as `:name`. Each parameter must
+	// have a unique, non-empty name. Each parameter consists of a name, a
+	// value, and optionally a type. To represent a NULL value, the `value`
+	// field may be omitted or set to `null` explicitly. If the `type` field is
+	// omitted, the value is interpreted as a string.
+	//
+	// If the type is given, parameters will be checked for type correctness
+	// according to the given type. A value is correct if the provided string
+	// can be converted to the requested type using the `cast` function. The
+	// exact semantics are described in the section [`cast` function] of the SQL
+	// language reference.
+	//
+	// [`cast` function]: https://docs.databricks.com/sql/language-manual/functions/cast.html
+	Parameters types.Set `tfsdk:"parameters"`
 	// The workspace path of the folder containing the alert. Can only be set on
 	// create, and cannot be updated.
 	ParentPath types.String `tfsdk:"parent_path"`
@@ -161,6 +175,7 @@ func (m AlertV2Data) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	return map[string]reflect.Type{
 		"effective_run_as": reflect.TypeOf(sql_tf.AlertV2RunAs{}),
 		"evaluation":       reflect.TypeOf(sql_tf.AlertV2Evaluation{}),
+		"parameters":       reflect.TypeOf(sql_tf.AlertStatementParameter{}),
 		"run_as":           reflect.TypeOf(sql_tf.AlertV2RunAs{}),
 		"schedule":         reflect.TypeOf(sql_tf.CronSchedule{}),
 		"provider_config":  reflect.TypeOf(ProviderConfigData{}),
@@ -186,6 +201,7 @@ func (m AlertV2Data) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"id":                 m.Id,
 			"lifecycle_state":    m.LifecycleState,
 			"owner_user_name":    m.OwnerUserName,
+			"parameters":         m.Parameters,
 			"parent_path":        m.ParentPath,
 			"query_text":         m.QueryText,
 			"run_as":             m.RunAs,
@@ -213,13 +229,16 @@ func (m AlertV2Data) Type(ctx context.Context) attr.Type {
 			"id":                 types.StringType,
 			"lifecycle_state":    types.StringType,
 			"owner_user_name":    types.StringType,
-			"parent_path":        types.StringType,
-			"query_text":         types.StringType,
-			"run_as":             sql_tf.AlertV2RunAs{}.Type(ctx),
-			"run_as_user_name":   types.StringType,
-			"schedule":           sql_tf.CronSchedule{}.Type(ctx),
-			"update_time":        types.StringType,
-			"warehouse_id":       types.StringType,
+			"parameters": basetypes.SetType{
+				ElemType: sql_tf.AlertStatementParameter{}.Type(ctx),
+			},
+			"parent_path":      types.StringType,
+			"query_text":       types.StringType,
+			"run_as":           sql_tf.AlertV2RunAs{}.Type(ctx),
+			"run_as_user_name": types.StringType,
+			"schedule":         sql_tf.CronSchedule{}.Type(ctx),
+			"update_time":      types.StringType,
+			"warehouse_id":     types.StringType,
 
 			"provider_config": ProviderConfigData{}.Type(ctx),
 		},
@@ -236,6 +255,7 @@ func (m AlertV2Data) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
 	attrs["owner_user_name"] = attrs["owner_user_name"].SetComputed()
+	attrs["parameters"] = attrs["parameters"].SetComputed()
 	attrs["parent_path"] = attrs["parent_path"].SetComputed()
 	attrs["query_text"] = attrs["query_text"].SetComputed()
 	attrs["run_as"] = attrs["run_as"].SetComputed()

@@ -3,6 +3,8 @@ subcategory: "Deployment"
 ---
 # databricks_mws_ncc_binding Resource
 
+[API Documentation](https://docs.databricks.com/api/account/workspaces)
+
 Allows you to attach a [Network Connectivity Config](mws_network_connectivity_config) object to a [databricks_mws_workspaces](mws_workspaces.md) resource to create a [Databricks Workspace that leverages serverless network connectivity configs](https://learn.microsoft.com/en-us/azure/databricks/sql/admin/serverless-firewall).
 
 -> This resource can only be used with an account-level provider!

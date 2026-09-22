@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -35,7 +36,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 					acls_resp, err := w.Secrets.ListAclsByScope(ctx, id)
 					require.NoError(t, err)
 					acls := acls_resp.Items
-					me, err := w.CurrentUser.Me(ctx)
+					me, err := w.CurrentUser.Me(ctx, iam.MeRequest{ExcludedAttributes: "entitlements"})
 					require.NoError(t, err)
 					assert.Equal(t, 1, len(acls))
 					assert.Equal(t, me.UserName, acls[0].Principal)

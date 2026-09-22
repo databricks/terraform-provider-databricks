@@ -4,6 +4,8 @@ subcategory: "Unity Catalog"
 # databricks_rfa_access_request_destinations Data Source
 [![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/rfa)
+
 This data source can be used to get the Request for Access (RFA) access request destinations for a specific securable object.
 
 
@@ -45,7 +47,7 @@ The following attributes are exported:
 * `special_destination` (string) - This field is used to denote whether the destination is the email of the owner of the securable object.
   The special destination cannot be assigned to a securable and only represents the default destination of the securable.
   The securable types that support default special destinations are: "catalog", "external_location", "connection", "credential", and "metastore".
-  The **destination_type** of a **special_destination** is always EMAIL. Possible values are: `SPECIAL_DESTINATION_CATALOG_OWNER`, `SPECIAL_DESTINATION_CONNECTION_OWNER`, `SPECIAL_DESTINATION_CREDENTIAL_OWNER`, `SPECIAL_DESTINATION_EXTERNAL_LOCATION_OWNER`, `SPECIAL_DESTINATION_METASTORE_OWNER`
+  The **destination_type** of a **special_destination** is always EMAIL. Possible values are: `SPECIAL_DESTINATION_CATALOG_OWNER`, `SPECIAL_DESTINATION_CONNECTION_OWNER`, `SPECIAL_DESTINATION_CREDENTIAL_OWNER`, `SPECIAL_DESTINATION_EXTERNAL_LOCATION_OWNER`, `SPECIAL_DESTINATION_FUNCTION_OWNER`, `SPECIAL_DESTINATION_METASTORE_OWNER`, `SPECIAL_DESTINATION_REGISTERED_MODEL_OWNER`, `SPECIAL_DESTINATION_SCHEMA_OWNER`, `SPECIAL_DESTINATION_TABLE_OWNER`, `SPECIAL_DESTINATION_VOLUME_OWNER`
 
 ### Securable
 * `full_name` (string) - Required. The full name of the catalog/schema/table.
@@ -53,4 +55,4 @@ The following attributes are exported:
 * `provider_share` (string) - Optional. The name of the Share object that contains the securable when the securable is
   getting shared in D2D Delta Sharing
 * `type` (string) - Required. The type of securable (catalog/schema/table).
-  Optional if resource_name is present. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `METASTORE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
+  Optional if resource_name is present. Possible values are: `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `MCP_SERVICE`, `METASTORE`, `MODEL`, `MODEL_PROVIDER_SERVICE`, `MODEL_SERVICE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`

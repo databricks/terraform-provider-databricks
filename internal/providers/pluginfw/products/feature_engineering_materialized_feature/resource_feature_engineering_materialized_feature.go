@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -57,8 +56,6 @@ func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(
 		stringplanmodifier.RequiresReplaceIf(ProviderConfigWorkspaceIDPlanModifier, "", ""))
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -112,9 +109,14 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 
 // MaterializedFeature extends the main model with additional fields.
 type MaterializedFeature struct {
-	// The quartz cron expression that defines the schedule of the
-	// materialization pipeline. The schedule is evaluated in the UTC timezone.
+	// The ID of the budget policy used to attribute the serverless compute cost
+	// of this materialization. If not specified, a default budget policy may be
+	// applied.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+
 	CronSchedule types.String `tfsdk:"cron_schedule"`
+	// A cron-based schedule trigger for the materialization pipeline.
+	CronScheduleTrigger types.Object `tfsdk:"cron_schedule_trigger"`
 	// The full name of the feature in Unity Catalog.
 	FeatureName types.String `tfsdk:"feature_name"`
 	// True if this is an online materialized feature. False if it is an offline
@@ -123,17 +125,38 @@ type MaterializedFeature struct {
 	// The timestamp when the pipeline last ran and updated the materialized
 	// feature values. If the pipeline has not run yet, this field will be null.
 	LastMaterializationTime types.String `tfsdk:"last_materialization_time"`
-	// Unique identifier for the materialized feature.
+	// Name of the latest backfill operation on this materialized feature.
+	// Format: operations/{operation_id}.
+	LatestBackfillOperation types.String `tfsdk:"latest_backfill_operation"`
+	// Server-assigned unique identifier for the materialized feature.
 	MaterializedFeatureId types.String `tfsdk:"materialized_feature_id"`
-
+	// Destination for writing feature values to an offline Delta table.
 	OfflineStoreConfig types.Object `tfsdk:"offline_store_config"`
-
+	// Destination for writing feature values to an online Lakebase table.
 	OnlineStoreConfig types.Object `tfsdk:"online_store_config"`
-	// The schedule state of the materialization pipeline.
+	// The schedule state of the materialization pipeline. Hidden from GraphQL:
+	// being deprecated, so not exposed to Catalog Explorer.
 	PipelineScheduleState types.String `tfsdk:"pipeline_schedule_state"`
+	// The Structured Streaming trigger mode used for materialization. Real-time
+	// mode (RTM) targets sub-second latency for operational workloads;
+	// micro-batch mode (MBM) favors cost efficiency for ETL and analytics
+	// workloads.
+	StreamingMode types.Object `tfsdk:"streaming_mode"`
 	// The fully qualified Unity Catalog path to the table containing the
 	// materialized feature (Delta table or Lakebase table). Output only.
-	TableName      types.String `tfsdk:"table_name"`
+	TableName types.String `tfsdk:"table_name"`
+	// A trigger that fires when the upstream source table changes.
+	TableTrigger types.Object `tfsdk:"table_trigger"`
+	// Custom tags to associate with this materialization. They are applied to
+	// the materialization job (for batch features) or pipeline (for streaming
+	// features) and forwarded to the underlying compute as cluster tags, so
+	// materialization cost can be attributed in the billing system tables.
+	// These tags apply only to the materialization compute; they are not
+	// applied to the Unity Catalog Feature resource itself, whose tags are
+	// managed separately through the Unity Catalog tagging API. A maximum of 25
+	// tags is supported; keys and values are subject to the same limitations as
+	// cluster tags.
+	Tags           types.Map    `tfsdk:"tags"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
@@ -146,9 +169,13 @@ type MaterializedFeature struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m MaterializedFeature) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"offline_store_config": reflect.TypeOf(ml_tf.OfflineStoreConfig{}),
-		"online_store_config":  reflect.TypeOf(ml_tf.OnlineStoreConfig{}),
-		"provider_config":      reflect.TypeOf(ProviderConfig{}),
+		"cron_schedule_trigger": reflect.TypeOf(ml_tf.CronSchedule{}),
+		"offline_store_config":  reflect.TypeOf(ml_tf.OfflineStoreConfig{}),
+		"online_store_config":   reflect.TypeOf(ml_tf.OnlineStoreConfig{}),
+		"streaming_mode":        reflect.TypeOf(ml_tf.StreamingMode{}),
+		"table_trigger":         reflect.TypeOf(ml_tf.TableTrigger{}),
+		"tags":                  reflect.TypeOf(types.String{}),
+		"provider_config":       reflect.TypeOf(ProviderConfig{}),
 	}
 }
 
@@ -161,15 +188,21 @@ func (m MaterializedFeature) GetComplexFieldTypes(ctx context.Context) map[strin
 func (m MaterializedFeature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{"cron_schedule": m.CronSchedule,
+		map[string]attr.Value{"budget_policy_id": m.BudgetPolicyId,
+			"cron_schedule":             m.CronSchedule,
+			"cron_schedule_trigger":     m.CronScheduleTrigger,
 			"feature_name":              m.FeatureName,
 			"is_online":                 m.IsOnline,
 			"last_materialization_time": m.LastMaterializationTime,
+			"latest_backfill_operation": m.LatestBackfillOperation,
 			"materialized_feature_id":   m.MaterializedFeatureId,
 			"offline_store_config":      m.OfflineStoreConfig,
 			"online_store_config":       m.OnlineStoreConfig,
 			"pipeline_schedule_state":   m.PipelineScheduleState,
+			"streaming_mode":            m.StreamingMode,
 			"table_name":                m.TableName,
+			"table_trigger":             m.TableTrigger,
+			"tags":                      m.Tags,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -180,15 +213,23 @@ func (m MaterializedFeature) ToObjectValue(ctx context.Context) basetypes.Object
 // and contains additional fields.
 func (m MaterializedFeature) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"cron_schedule": types.StringType,
+		AttrTypes: map[string]attr.Type{"budget_policy_id": types.StringType,
+			"cron_schedule":             types.StringType,
+			"cron_schedule_trigger":     ml_tf.CronSchedule{}.Type(ctx),
 			"feature_name":              types.StringType,
 			"is_online":                 types.BoolType,
 			"last_materialization_time": types.StringType,
+			"latest_backfill_operation": types.StringType,
 			"materialized_feature_id":   types.StringType,
 			"offline_store_config":      ml_tf.OfflineStoreConfig{}.Type(ctx),
 			"online_store_config":       ml_tf.OnlineStoreConfig{}.Type(ctx),
 			"pipeline_schedule_state":   types.StringType,
+			"streaming_mode":            ml_tf.StreamingMode{}.Type(ctx),
 			"table_name":                types.StringType,
+			"table_trigger":             ml_tf.TableTrigger{}.Type(ctx),
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -199,9 +240,14 @@ func (m MaterializedFeature) Type(ctx context.Context) attr.Type {
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (to *MaterializedFeature) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MaterializedFeature) {
-	if !from.OfflineStoreConfig.IsUnknown() && !from.OfflineStoreConfig.IsNull() {
-		// OfflineStoreConfig is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.OfflineStoreConfig = from.OfflineStoreConfig
+	if !from.CronScheduleTrigger.IsNull() && !from.CronScheduleTrigger.IsUnknown() {
+		if toCronScheduleTrigger, ok := to.GetCronScheduleTrigger(ctx); ok {
+			if fromCronScheduleTrigger, ok := from.GetCronScheduleTrigger(ctx); ok {
+				// Recursively sync the fields of CronScheduleTrigger
+				toCronScheduleTrigger.SyncFieldsDuringCreateOrUpdate(ctx, fromCronScheduleTrigger)
+				to.SetCronScheduleTrigger(ctx, toCronScheduleTrigger)
+			}
+		}
 	}
 	if !from.OfflineStoreConfig.IsNull() && !from.OfflineStoreConfig.IsUnknown() {
 		if toOfflineStoreConfig, ok := to.GetOfflineStoreConfig(ctx); ok {
@@ -212,16 +258,30 @@ func (to *MaterializedFeature) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 			}
 		}
 	}
-	if !from.OnlineStoreConfig.IsUnknown() && !from.OnlineStoreConfig.IsNull() {
-		// OnlineStoreConfig is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.OnlineStoreConfig = from.OnlineStoreConfig
-	}
 	if !from.OnlineStoreConfig.IsNull() && !from.OnlineStoreConfig.IsUnknown() {
 		if toOnlineStoreConfig, ok := to.GetOnlineStoreConfig(ctx); ok {
 			if fromOnlineStoreConfig, ok := from.GetOnlineStoreConfig(ctx); ok {
 				// Recursively sync the fields of OnlineStoreConfig
 				toOnlineStoreConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromOnlineStoreConfig)
 				to.SetOnlineStoreConfig(ctx, toOnlineStoreConfig)
+			}
+		}
+	}
+	if !from.StreamingMode.IsNull() && !from.StreamingMode.IsUnknown() {
+		if toStreamingMode, ok := to.GetStreamingMode(ctx); ok {
+			if fromStreamingMode, ok := from.GetStreamingMode(ctx); ok {
+				// Recursively sync the fields of StreamingMode
+				toStreamingMode.SyncFieldsDuringCreateOrUpdate(ctx, fromStreamingMode)
+				to.SetStreamingMode(ctx, toStreamingMode)
+			}
+		}
+	}
+	if !from.TableTrigger.IsNull() && !from.TableTrigger.IsUnknown() {
+		if toTableTrigger, ok := to.GetTableTrigger(ctx); ok {
+			if fromTableTrigger, ok := from.GetTableTrigger(ctx); ok {
+				// Recursively sync the fields of TableTrigger
+				toTableTrigger.SyncFieldsDuringCreateOrUpdate(ctx, fromTableTrigger)
+				to.SetTableTrigger(ctx, toTableTrigger)
 			}
 		}
 	}
@@ -233,9 +293,13 @@ func (to *MaterializedFeature) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 // including both embedded model fields and additional fields. This method is called
 // during read.
 func (to *MaterializedFeature) SyncFieldsDuringRead(ctx context.Context, from MaterializedFeature) {
-	if !from.OfflineStoreConfig.IsUnknown() && !from.OfflineStoreConfig.IsNull() {
-		// OfflineStoreConfig is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.OfflineStoreConfig = from.OfflineStoreConfig
+	if !from.CronScheduleTrigger.IsNull() && !from.CronScheduleTrigger.IsUnknown() {
+		if toCronScheduleTrigger, ok := to.GetCronScheduleTrigger(ctx); ok {
+			if fromCronScheduleTrigger, ok := from.GetCronScheduleTrigger(ctx); ok {
+				toCronScheduleTrigger.SyncFieldsDuringRead(ctx, fromCronScheduleTrigger)
+				to.SetCronScheduleTrigger(ctx, toCronScheduleTrigger)
+			}
+		}
 	}
 	if !from.OfflineStoreConfig.IsNull() && !from.OfflineStoreConfig.IsUnknown() {
 		if toOfflineStoreConfig, ok := to.GetOfflineStoreConfig(ctx); ok {
@@ -245,10 +309,6 @@ func (to *MaterializedFeature) SyncFieldsDuringRead(ctx context.Context, from Ma
 			}
 		}
 	}
-	if !from.OnlineStoreConfig.IsUnknown() && !from.OnlineStoreConfig.IsNull() {
-		// OnlineStoreConfig is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.OnlineStoreConfig = from.OnlineStoreConfig
-	}
 	if !from.OnlineStoreConfig.IsNull() && !from.OnlineStoreConfig.IsUnknown() {
 		if toOnlineStoreConfig, ok := to.GetOnlineStoreConfig(ctx); ok {
 			if fromOnlineStoreConfig, ok := from.GetOnlineStoreConfig(ctx); ok {
@@ -257,24 +317,45 @@ func (to *MaterializedFeature) SyncFieldsDuringRead(ctx context.Context, from Ma
 			}
 		}
 	}
+	if !from.StreamingMode.IsNull() && !from.StreamingMode.IsUnknown() {
+		if toStreamingMode, ok := to.GetStreamingMode(ctx); ok {
+			if fromStreamingMode, ok := from.GetStreamingMode(ctx); ok {
+				toStreamingMode.SyncFieldsDuringRead(ctx, fromStreamingMode)
+				to.SetStreamingMode(ctx, toStreamingMode)
+			}
+		}
+	}
+	if !from.TableTrigger.IsNull() && !from.TableTrigger.IsUnknown() {
+		if toTableTrigger, ok := to.GetTableTrigger(ctx); ok {
+			if fromTableTrigger, ok := from.GetTableTrigger(ctx); ok {
+				toTableTrigger.SyncFieldsDuringRead(ctx, fromTableTrigger)
+				to.SetTableTrigger(ctx, toTableTrigger)
+			}
+		}
+	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
 
 func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["cron_schedule"] = attrs["cron_schedule"].SetOptional()
+	attrs["cron_schedule_trigger"] = attrs["cron_schedule_trigger"].SetOptional()
 	attrs["feature_name"] = attrs["feature_name"].SetRequired()
 	attrs["is_online"] = attrs["is_online"].SetComputed()
 	attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
-	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetOptional()
+	attrs["latest_backfill_operation"] = attrs["latest_backfill_operation"].SetComputed()
+	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetComputed()
+	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetOptional()
-	attrs["offline_store_config"] = attrs["offline_store_config"].SetComputed()
-	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["online_store_config"] = attrs["online_store_config"].SetOptional()
-	attrs["online_store_config"] = attrs["online_store_config"].SetComputed()
-	attrs["online_store_config"] = attrs["online_store_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["online_store_config"] = attrs["online_store_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["pipeline_schedule_state"] = attrs["pipeline_schedule_state"].SetOptional()
+	attrs["streaming_mode"] = attrs["streaming_mode"].SetOptional()
 	attrs["table_name"] = attrs["table_name"].SetComputed()
+	attrs["table_trigger"] = attrs["table_trigger"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
 
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -282,6 +363,31 @@ func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
 
 	return attrs
+}
+
+// GetCronScheduleTrigger returns the value of the CronScheduleTrigger field in MaterializedFeature as
+// a ml_tf.CronSchedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializedFeature) GetCronScheduleTrigger(ctx context.Context) (ml_tf.CronSchedule, bool) {
+	var e ml_tf.CronSchedule
+	if m.CronScheduleTrigger.IsNull() || m.CronScheduleTrigger.IsUnknown() {
+		return e, false
+	}
+	var v ml_tf.CronSchedule
+	d := m.CronScheduleTrigger.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCronScheduleTrigger sets the value of the CronScheduleTrigger field in MaterializedFeature.
+func (m *MaterializedFeature) SetCronScheduleTrigger(ctx context.Context, v ml_tf.CronSchedule) {
+	vs := v.ToObjectValue(ctx)
+	m.CronScheduleTrigger = vs
 }
 
 // GetOfflineStoreConfig returns the value of the OfflineStoreConfig field in MaterializedFeature as
@@ -332,6 +438,82 @@ func (m *MaterializedFeature) GetOnlineStoreConfig(ctx context.Context) (ml_tf.O
 func (m *MaterializedFeature) SetOnlineStoreConfig(ctx context.Context, v ml_tf.OnlineStoreConfig) {
 	vs := v.ToObjectValue(ctx)
 	m.OnlineStoreConfig = vs
+}
+
+// GetStreamingMode returns the value of the StreamingMode field in MaterializedFeature as
+// a ml_tf.StreamingMode value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializedFeature) GetStreamingMode(ctx context.Context) (ml_tf.StreamingMode, bool) {
+	var e ml_tf.StreamingMode
+	if m.StreamingMode.IsNull() || m.StreamingMode.IsUnknown() {
+		return e, false
+	}
+	var v ml_tf.StreamingMode
+	d := m.StreamingMode.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStreamingMode sets the value of the StreamingMode field in MaterializedFeature.
+func (m *MaterializedFeature) SetStreamingMode(ctx context.Context, v ml_tf.StreamingMode) {
+	vs := v.ToObjectValue(ctx)
+	m.StreamingMode = vs
+}
+
+// GetTableTrigger returns the value of the TableTrigger field in MaterializedFeature as
+// a ml_tf.TableTrigger value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializedFeature) GetTableTrigger(ctx context.Context) (ml_tf.TableTrigger, bool) {
+	var e ml_tf.TableTrigger
+	if m.TableTrigger.IsNull() || m.TableTrigger.IsUnknown() {
+		return e, false
+	}
+	var v ml_tf.TableTrigger
+	d := m.TableTrigger.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTableTrigger sets the value of the TableTrigger field in MaterializedFeature.
+func (m *MaterializedFeature) SetTableTrigger(ctx context.Context, v ml_tf.TableTrigger) {
+	vs := v.ToObjectValue(ctx)
+	m.TableTrigger = vs
+}
+
+// GetTags returns the value of the Tags field in MaterializedFeature as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializedFeature) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if m.Tags.IsNull() || m.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in MaterializedFeature.
+func (m *MaterializedFeature) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Tags = types.MapValueMust(t, vs)
 }
 
 func (r *MaterializedFeatureResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -488,7 +670,7 @@ func (r *MaterializedFeatureResource) update(ctx context.Context, plan Materiali
 	updateRequest := ml.UpdateMaterializedFeatureRequest{
 		MaterializedFeature:   materialized_feature,
 		MaterializedFeatureId: plan.MaterializedFeatureId.ValueString(),
-		UpdateMask:            "cron_schedule,feature_name,offline_store_config,online_store_config,pipeline_schedule_state",
+		UpdateMask:            "budget_policy_id,cron_schedule,cron_schedule_trigger,feature_name,pipeline_schedule_state,streaming_mode,table_trigger,tags",
 	}
 
 	var namespace ProviderConfig

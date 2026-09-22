@@ -3,6 +3,8 @@ subcategory: "Quality Monitor"
 ---
 # databricks_lakehouse_monitor Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/qualitymonitors)
+
 !> This resource has been deprecated and will be removed soon. Please use the [databricks_quality_monitor resource](./quality_monitor.md) instead.
 
 This resource allows you to manage [Lakehouse Monitors](https://docs.databricks.com/en/lakehouse-monitoring/index.html) in Databricks. 

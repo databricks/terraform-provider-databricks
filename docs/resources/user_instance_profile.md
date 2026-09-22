@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_user_instance_profile Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/users)
+
 -> **Deprecated** Please rewrite with [databricks_user_role](user_role.md). This resource will be removed in v0.5.x
 
 This resource allows you to attach [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_user](user.md).

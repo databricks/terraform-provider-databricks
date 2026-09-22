@@ -1,6 +1,10 @@
 package entity
 
-import "github.com/databricks/databricks-sdk-go/service/iam"
+import (
+	"strings"
+
+	"github.com/databricks/databricks-sdk-go/service/iam"
+)
 
 // PermissionsEntity is the one used for resource metadata
 type PermissionsEntity struct {
@@ -10,7 +14,7 @@ type PermissionsEntity struct {
 
 func (p PermissionsEntity) ContainsUserOrServicePrincipal(name string) bool {
 	for _, ac := range p.AccessControlList {
-		if ac.UserName == name || ac.ServicePrincipalName == name {
+		if strings.EqualFold(ac.UserName, name) || strings.EqualFold(ac.ServicePrincipalName, name) {
 			return true
 		}
 	}

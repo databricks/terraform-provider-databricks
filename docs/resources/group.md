@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_group Resource
 
+[API Documentation](https://docs.databricks.com/api/workspace/groups)
+
 This resource allows you to manage both [account groups and workspace-local groups](https://docs.databricks.com/administration-guide/users-groups/groups.html). You can use the [databricks_group_member resource](group_member.md) to assign Databricks users, [service principals](service_principal.md) as well as other groups as members of the group. This is useful if you are using an application to sync users & groups with SCIM API.
 
 -> This resource can be used with an account or workspace-level provider.

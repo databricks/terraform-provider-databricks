@@ -10,7 +10,7 @@ func DataSourceMwsWorkspaces() common.Resource {
 	type mwsWorkspacesData struct {
 		Ids map[string]int64 `json:"ids" tf:"computed"`
 	}
-	return common.DataResource(mwsWorkspacesData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
+	r := common.DataResource(mwsWorkspacesData{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
 		data := e.(*mwsWorkspacesData)
 		workspaces, err := NewWorkspacesAPI(ctx, c).List(c.Config.AccountID)
 		if err != nil {
@@ -22,4 +22,7 @@ func DataSourceMwsWorkspaces() common.Resource {
 		}
 		return nil
 	})
+	r.SkipProviderConfigStatePopulation = true
+	common.DeprecateProviderConfigInSchema(r.Schema)
+	return r
 }

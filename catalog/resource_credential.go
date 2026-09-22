@@ -65,7 +65,7 @@ func ResourceCredential() common.Resource {
 	return common.Resource{
 		Schema: credentialSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
-			return common.NamespaceCustomizeDiff(ctx, d, c)
+			return common.NamespaceCustomizeDiffNoForceNew(ctx, d, c)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
@@ -180,6 +180,11 @@ func ResourceCredential() common.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			// If the credential is isolated, re-bind the current workspace so it's accessible for deletion.
+			err = bindings.AddCurrentWorkspaceBindings(ctx, d, w, d.Id(), bindings.BindingsSecurableTypeCredential)
 			if err != nil {
 				return err
 			}

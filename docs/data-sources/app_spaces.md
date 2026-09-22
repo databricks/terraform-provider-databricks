@@ -4,6 +4,8 @@ subcategory: "Apps"
 # databricks_app_spaces Data Source
 [![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/apps)
+
 
 
 ## Example Usage
@@ -20,6 +22,9 @@ The following arguments are supported:
 
 ## Attributes
 This data source exports a single attribute, `spaces`. It is a list of resources, each with the following attributes:
+* `assume_group_id` (string) - The group whose permissions users assume via Role Authorization for apps in this space. When
+  set, user tokens assume the role of this group instead of doing regular obo token downscoping.
+  Set only at space creation
 * `create_time` (string) - The creation time of the app space. Formatted timestamp in ISO 6801
 * `creator` (string) - The email of the user that created the app space
 * `description` (string) - The description of the app space

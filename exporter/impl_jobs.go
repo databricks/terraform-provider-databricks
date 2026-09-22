@@ -101,6 +101,36 @@ func importTask(ic *importContext, task sdk_jobs.Task, jobName, rID string) {
 			ic.emitWorkspaceFileOrRepo(task.SqlTask.File.Path)
 		}
 	}
+	if task.AlertTask != nil {
+		if task.AlertTask.AlertId != "" {
+			ic.Emit(&resource{
+				Resource: "databricks_alert_v2",
+				ID:       task.AlertTask.AlertId,
+			})
+		}
+		if task.AlertTask.WarehouseId != "" {
+			ic.Emit(&resource{
+				Resource: "databricks_sql_endpoint",
+				ID:       task.AlertTask.WarehouseId,
+			})
+		}
+		ic.emitIfWsfsFile(task.AlertTask.WorkspacePath)
+		for _, sub := range task.AlertTask.Subscribers {
+			if sub.UserName != "" {
+				ic.Emit(&resource{
+					Resource:  "databricks_user",
+					Attribute: "user_name",
+					Value:     sub.UserName,
+				})
+			}
+			if sub.DestinationId != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_notification_destination",
+					ID:       sub.DestinationId,
+				})
+			}
+		}
+	}
 	if task.DashboardTask != nil {
 		ic.Emit(&resource{
 			Resource: "databricks_dashboard",
@@ -230,7 +260,7 @@ func importJob(ic *importContext, r *resource) error {
 		importTask(ic, task, job.Name, r.ID)
 	}
 	for _, jc := range job.JobClusters {
-		ic.importCluster(&jc.NewCluster)
+		ic.importCluster(jc.NewCluster)
 	}
 	if job.RunAs != nil {
 		if job.RunAs.UserName != "" {
@@ -314,9 +344,8 @@ func listJobs(ic *importContext) error {
 			log.Printf("[INFO] Job name %s doesn't match selection %s", job.Settings.Name, ic.match)
 			continue
 		}
-		if job.Settings.Deployment != nil && job.Settings.Deployment.Kind == "BUNDLE" &&
-			job.Settings.EditMode == "UI_LOCKED" {
-			log.Printf("[INFO] Skipping job '%s' because it's deployed by DABs", job.Settings.Name)
+		if isManagedJob(job.Settings) {
+			log.Printf("[INFO] Skipping managed job '%s'", job.Settings.Name)
 			continue
 		}
 		ic.Emit(&resource{
@@ -326,6 +355,20 @@ func listJobs(ic *importContext) error {
 	}
 	log.Printf("[INFO] Total %d jobs are going to be exported", i)
 	return nil
+}
+
+func isManagedJob(settings *sdk_jobs.JobSettings) bool {
+	if settings == nil || settings.Deployment == nil {
+		return false
+	}
+	switch settings.Deployment.Kind {
+	case sdk_jobs.JobDeploymentKindBundle:
+		return settings.EditMode == sdk_jobs.JobEditModeUiLocked
+	case sdk_jobs.JobDeploymentKindSystemManaged:
+		return true
+	default:
+		return false
+	}
 }
 
 func shouldOmitFieldInJob(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
@@ -398,6 +441,13 @@ func shouldOmitFieldInJob(ic *importContext, pathString string, as *schema.Schem
 }
 
 func shouldIgnoreJob(ic *importContext, r *resource) bool {
+	var job tf_jobs.JobSettingsResource
+	common.DataToStructPointer(r.Data, ic.Resources["databricks_job"].Schema, &job)
+	if isManagedJob((*sdk_jobs.JobSettings)(&job.JobSettings)) {
+		log.Printf("[WARN] Ignoring managed job with ID %s", r.ID)
+		ic.addIgnoredResource(fmt.Sprintf("databricks_job. id=%s", r.ID))
+		return true
+	}
 	numTasks := r.Data.Get("task.#").(int)
 	if numTasks == 0 {
 		log.Printf("[WARN] Ignoring job with ID %s", r.ID)
@@ -495,15 +545,19 @@ var (
 		{Path: "task.python_wheel_task.named_parameters", Resource: "databricks_file"},
 		{Path: "task.python_wheel_task.named_parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
 		{Path: "task.python_wheel_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.python_wheel_task.parameters", Resource: "databricks_file"},
 		{Path: "task.python_wheel_task.parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
 		{Path: "task.run_job_task.job_id", Resource: "databricks_job"},
 		{Path: "task.run_job_task.job_parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.run_job_task.job_parameters", Resource: "databricks_file"},
 		{Path: "task.run_job_task.job_parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
 		{Path: "task.spark_jar_task.jar_uri", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 		{Path: "task.spark_jar_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 		{Path: "task.spark_jar_task.parameters", Resource: "databricks_file"},
 		{Path: "task.spark_jar_task.parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
 		{Path: "task.spark_python_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.spark_python_task.parameters", Resource: "databricks_file"},
+		{Path: "task.spark_python_task.parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
 		{Path: "task.spark_python_task.python_file", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 		{Path: "task.spark_python_task.python_file", Resource: "databricks_workspace_file", Match: "path"},
 		{Path: "task.spark_python_task.python_file", Resource: "databricks_workspace_file", Match: "workspace_path"},
@@ -515,6 +569,13 @@ var (
 		{Path: "task.dbt_task.project_directory", Resource: "databricks_directory", Match: "path"},
 		{Path: "task.dbt_task.project_directory", Resource: "databricks_directory", Match: "workspace_path"},
 		{Path: "task.sql_task.alert.alert_id", Resource: "databricks_alert"},
+		{Path: "task.alert_task.alert_id", Resource: "databricks_alert_v2"},
+		{Path: "task.alert_task.warehouse_id", Resource: "databricks_sql_endpoint"},
+		{Path: "task.alert_task.workspace_path", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.alert_task.workspace_path", Resource: "databricks_workspace_file", Match: "path"},
+		{Path: "task.alert_task.subscribers.destination_id", Resource: "databricks_notification_destination"},
+		{Path: "task.alert_task.subscribers.user_name", Resource: "databricks_user", Match: "user_name",
+			MatchType: MatchCaseInsensitive},
 		{Path: "task.sql_task.alert.subscriptions.destination_id", Resource: "databricks_notification_destination"},
 		{Path: "task.sql_task.dashboard.dashboard_id", Resource: "databricks_sql_dashboard"},
 		{Path: "task.sql_task.query.query_id", Resource: "databricks_query"},
@@ -583,6 +644,8 @@ var (
 			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		{Path: "task.python_wheel_task.parameters", Resource: "databricks_repo", Match: "workspace_path",
 			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "task.spark_python_task.parameters", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		{Path: "task.run_job_task.job_parameters", Resource: "databricks_repo", Match: "workspace_path",
 			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		{Path: "task.spark_python_task.python_file", Resource: "databricks_repo", Match: "path",
@@ -592,6 +655,8 @@ var (
 		{Path: "task.spark_jar_task.parameters", Resource: "databricks_repo", Match: "workspace_path",
 			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		{Path: "task.spark_submit_task.parameters", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "task.alert_task.workspace_path", Resource: "databricks_repo", Match: "workspace_path",
 			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		{Path: "job_cluster.new_cluster.init_scripts.workspace.destination",
 			Resource: "databricks_repo", Match: "workspace_path",

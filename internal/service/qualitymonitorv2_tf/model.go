@@ -385,6 +385,19 @@ func (to *ListQualityMonitorResponse) SyncFieldsDuringCreateOrUpdate(ctx context
 		// set the resulting resource state to the empty list to match the planned value.
 		to.QualityMonitors = from.QualityMonitors
 	}
+	if !from.QualityMonitors.IsNull() && !from.QualityMonitors.IsUnknown() {
+		if toQualityMonitors, ok := to.GetQualityMonitors(ctx); ok {
+			if fromQualityMonitors, ok := from.GetQualityMonitors(ctx); ok {
+				// Recursively sync the fields of each QualityMonitors element by position.
+				for i := range toQualityMonitors {
+					if i < len(fromQualityMonitors) {
+						toQualityMonitors[i].SyncFieldsDuringCreateOrUpdate(ctx, fromQualityMonitors[i])
+					}
+				}
+				to.SetQualityMonitors(ctx, toQualityMonitors)
+			}
+		}
+	}
 }
 
 func (to *ListQualityMonitorResponse) SyncFieldsDuringRead(ctx context.Context, from ListQualityMonitorResponse) {
@@ -393,6 +406,18 @@ func (to *ListQualityMonitorResponse) SyncFieldsDuringRead(ctx context.Context, 
 		// If a user specified a non-Null, empty list for QualityMonitors, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.QualityMonitors = from.QualityMonitors
+	}
+	if !from.QualityMonitors.IsNull() && !from.QualityMonitors.IsUnknown() {
+		if toQualityMonitors, ok := to.GetQualityMonitors(ctx); ok {
+			if fromQualityMonitors, ok := from.GetQualityMonitors(ctx); ok {
+				for i := range toQualityMonitors {
+					if i < len(fromQualityMonitors) {
+						toQualityMonitors[i].SyncFieldsDuringRead(ctx, fromQualityMonitors[i])
+					}
+				}
+				to.SetQualityMonitors(ctx, toQualityMonitors)
+			}
+		}
 	}
 }
 
@@ -591,6 +616,19 @@ func (to *QualityMonitor) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ValidityCheckConfigurations = from.ValidityCheckConfigurations
 	}
+	if !from.ValidityCheckConfigurations.IsNull() && !from.ValidityCheckConfigurations.IsUnknown() {
+		if toValidityCheckConfigurations, ok := to.GetValidityCheckConfigurations(ctx); ok {
+			if fromValidityCheckConfigurations, ok := from.GetValidityCheckConfigurations(ctx); ok {
+				// Recursively sync the fields of each ValidityCheckConfigurations element by position.
+				for i := range toValidityCheckConfigurations {
+					if i < len(fromValidityCheckConfigurations) {
+						toValidityCheckConfigurations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromValidityCheckConfigurations[i])
+					}
+				}
+				to.SetValidityCheckConfigurations(ctx, toValidityCheckConfigurations)
+			}
+		}
+	}
 }
 
 func (to *QualityMonitor) SyncFieldsDuringRead(ctx context.Context, from QualityMonitor) {
@@ -611,6 +649,18 @@ func (to *QualityMonitor) SyncFieldsDuringRead(ctx context.Context, from Quality
 		// If a user specified a non-Null, empty list for ValidityCheckConfigurations, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ValidityCheckConfigurations = from.ValidityCheckConfigurations
+	}
+	if !from.ValidityCheckConfigurations.IsNull() && !from.ValidityCheckConfigurations.IsUnknown() {
+		if toValidityCheckConfigurations, ok := to.GetValidityCheckConfigurations(ctx); ok {
+			if fromValidityCheckConfigurations, ok := from.GetValidityCheckConfigurations(ctx); ok {
+				for i := range toValidityCheckConfigurations {
+					if i < len(fromValidityCheckConfigurations) {
+						toValidityCheckConfigurations[i].SyncFieldsDuringRead(ctx, fromValidityCheckConfigurations[i])
+					}
+				}
+				to.SetValidityCheckConfigurations(ctx, toValidityCheckConfigurations)
+			}
+		}
 	}
 }
 

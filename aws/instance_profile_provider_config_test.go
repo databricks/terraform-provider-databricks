@@ -18,18 +18,6 @@ func instanceProfileProviderConfigTemplate(providerConfig string) string {
 	`, providerConfig)
 }
 
-func TestAccInstanceProfile_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: instanceProfileProviderConfigTemplate(`
-			provider_config {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccInstanceProfile_ProviderConfig_EmptyID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: instanceProfileProviderConfigTemplate(`

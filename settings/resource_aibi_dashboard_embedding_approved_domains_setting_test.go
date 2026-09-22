@@ -247,6 +247,107 @@ func TestDeleteRestrictAiBiEmbeddingAllowedDomainsSetting(t *testing.T) {
 	})
 }
 
+// TestAiBiEmbeddingApprovedDomainsLifecycle mirrors TestAccAiBiEmbeddings
+// (in internal/acceptance/aibi_embedding_settings_test.go) at the unit level
+// for the approved-domains resource: the acceptance test applies ["test.com"]
+// then updates to ["test.com", "test2.com"]; this exercises the same two
+// transitions against mocked SDK calls. Use this as the per-resource
+// expected-behavior check while the acceptance test is skipped.
+// The companion access-policy resource is covered by
+// TestAiBiEmbeddingAccessPolicySettingLifecycle in its own _test.go.
+func TestAiBiEmbeddingApprovedDomainsLifecycle(t *testing.T) {
+	t.Run("create with single domain persists into state", func(t *testing.T) {
+		d, err := qa.ResourceFixture{
+			MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+				e := w.GetMockAibiDashboardEmbeddingApprovedDomainsAPI().EXPECT()
+				e.Update(mock.Anything, settings.UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest{
+					AllowMissing: true,
+					FieldMask:    "aibi_dashboard_embedding_approved_domains.approved_domains",
+					Setting: settings.AibiDashboardEmbeddingApprovedDomainsSetting{
+						AibiDashboardEmbeddingApprovedDomains: settings.AibiDashboardEmbeddingApprovedDomains{
+							ApprovedDomains: []string{"test.com"},
+						},
+						SettingName: "default",
+					},
+				}).Return(&settings.AibiDashboardEmbeddingApprovedDomainsSetting{
+					Etag: "etag-after-create",
+					AibiDashboardEmbeddingApprovedDomains: settings.AibiDashboardEmbeddingApprovedDomains{
+						ApprovedDomains: []string{"test.com"},
+					},
+					SettingName: "default",
+				}, nil)
+				e.Get(mock.Anything, settings.GetAibiDashboardEmbeddingApprovedDomainsSettingRequest{
+					Etag: "etag-after-create",
+				}).Return(&settings.AibiDashboardEmbeddingApprovedDomainsSetting{
+					Etag: "etag-after-create",
+					AibiDashboardEmbeddingApprovedDomains: settings.AibiDashboardEmbeddingApprovedDomains{
+						ApprovedDomains: []string{"test.com"},
+					},
+					SettingName: "default",
+				}, nil)
+			},
+			Resource: testAiBiEmbeddingAllowedDomainsSetting,
+			Create:   true,
+			HCL: `
+				aibi_dashboard_embedding_approved_domains {
+					approved_domains = ["test.com"]
+				}
+			`,
+		}.Apply(t)
+		assert.NoError(t, err)
+		assert.Equal(t, defaultSettingId, d.Id())
+		assert.Equal(t, "etag-after-create", d.Get(etagAttrName).(string))
+		assert.Equal(t, []any{"test.com"}, d.Get("aibi_dashboard_embedding_approved_domains.0.approved_domains"))
+	})
+
+	t.Run("update appends a second domain", func(t *testing.T) {
+		d, err := qa.ResourceFixture{
+			MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+				e := w.GetMockAibiDashboardEmbeddingApprovedDomainsAPI().EXPECT()
+				e.Update(mock.Anything, settings.UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest{
+					AllowMissing: true,
+					FieldMask:    "aibi_dashboard_embedding_approved_domains.approved_domains",
+					Setting: settings.AibiDashboardEmbeddingApprovedDomainsSetting{
+						Etag: "etag-after-create",
+						AibiDashboardEmbeddingApprovedDomains: settings.AibiDashboardEmbeddingApprovedDomains{
+							ApprovedDomains: []string{"test.com", "test2.com"},
+						},
+						SettingName: "default",
+					},
+				}).Return(&settings.AibiDashboardEmbeddingApprovedDomainsSetting{
+					Etag: "etag-after-update",
+					AibiDashboardEmbeddingApprovedDomains: settings.AibiDashboardEmbeddingApprovedDomains{
+						ApprovedDomains: []string{"test.com", "test2.com"},
+					},
+					SettingName: "default",
+				}, nil)
+				e.Get(mock.Anything, settings.GetAibiDashboardEmbeddingApprovedDomainsSettingRequest{
+					Etag: "etag-after-update",
+				}).Return(&settings.AibiDashboardEmbeddingApprovedDomainsSetting{
+					Etag: "etag-after-update",
+					AibiDashboardEmbeddingApprovedDomains: settings.AibiDashboardEmbeddingApprovedDomains{
+						ApprovedDomains: []string{"test.com", "test2.com"},
+					},
+					SettingName: "default",
+				}, nil)
+			},
+			Resource: testAiBiEmbeddingAllowedDomainsSetting,
+			Update:   true,
+			HCL: `
+				aibi_dashboard_embedding_approved_domains {
+					approved_domains = ["test.com", "test2.com"]
+				}
+				etag = "etag-after-create"
+			`,
+			ID: defaultSettingId,
+		}.Apply(t)
+		assert.NoError(t, err)
+		assert.Equal(t, defaultSettingId, d.Id())
+		assert.Equal(t, "etag-after-update", d.Get(etagAttrName).(string))
+		assert.Equal(t, []any{"test.com", "test2.com"}, d.Get("aibi_dashboard_embedding_approved_domains.0.approved_domains"))
+	})
+}
+
 func TestDeleteRestrictAiBiEmbeddingAllowedDomainsSettingWithConflict(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

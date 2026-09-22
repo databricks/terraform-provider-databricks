@@ -4,6 +4,8 @@ subcategory: "Unity Catalog"
 # databricks_entity_tag_assignment Data Source
 [![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/entitytagassignments)
+
 This data source allows you to get information about a tag assignment for a specific entity using the entity type, entity name, and tag key.
 
 ## Example Usage

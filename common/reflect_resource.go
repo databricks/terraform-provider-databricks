@@ -364,9 +364,28 @@ func chooseFieldName(typeField reflect.StructField) string {
 	return getJsonFieldName(typeField)
 }
 
-func diffSuppressor(fieldName string, v *schema.Schema) func(k, old, new string, d *schema.ResourceData) bool {
+// DiffSuppressorFn is the signature of a schema.Schema DiffSuppressFunc.
+type DiffSuppressorFn = func(k, old, new string, d *schema.ResourceData) bool
+
+// alwaysSuppress is the default enable predicate: suppression is always allowed.
+func alwaysSuppress(_, _, _ string, _ *schema.ResourceData) bool { return true }
+
+// diffSuppressor suppresses the diff for a field that the platform populated
+// with a value the configuration left unset (including an empty nested block).
+func diffSuppressor(fieldName string, v *schema.Schema) DiffSuppressorFn {
+	return conditionalDiffSuppressor(alwaysSuppress, fieldName, v)
+}
+
+// conditionalDiffSuppressor is diffSuppressor gated by an enable predicate: when
+// enable returns false the diff is never suppressed; otherwise suppression
+// follows the same rules as diffSuppressor.
+func conditionalDiffSuppressor(enable DiffSuppressorFn, fieldName string, v *schema.Schema) DiffSuppressorFn {
 	zero := fmt.Sprintf("%v", v.Type.Zero())
 	return func(k, old, new string, d *schema.ResourceData) bool {
+		if !enable(k, old, new, d) {
+			return false
+		}
+
 		// HasChange allows to check if the field is explicitly changed in the configuration.
 		// If the field is explicitly set in the configuration, we should not suppress the diff.
 		if new == zero && old != zero && !d.HasChange(k) {

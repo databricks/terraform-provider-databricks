@@ -22,14 +22,19 @@ The following resources and data sources have been migrated from sdkv2 to plugin
 
 Example: `export USE_SDK_V2_RESOURCES="databricks_library,databricks_quality_monitor"`
 
--> **Note:** The SDKv2 fallback does not support `provider_config` or provider-level `workspace_id` routing. If you need to manage workspace-level resources from an account-level provider using `workspace_id`, you must use the default Plugin Framework implementation.
-
 ### Resources migrated
   - databricks_quality_monitor
   - databricks_library
-  - databricks_share
 ### Data sources migrated
   - databricks_volumes
+
+## Plugin Framework Opt-In Resources
+The following resources and data sources have a plugin framework implementation available, but the SDK V2 implementation remains the default. To opt into the plugin framework implementation, set the `DATABRICKS_TF_ENABLED_PF_RESOURCES` or `DATABRICKS_TF_ENABLED_PF_DATA_SOURCES` environment variable to a comma-separated list of resource names.
+
+Example: `export DATABRICKS_TF_ENABLED_PF_RESOURCES="databricks_mws_ncc_private_endpoint_rule"`
+
+### Resources available behind opt-in
+  - databricks_mws_ncc_private_endpoint_rule
 
 
 ## Typical problems
@@ -273,4 +278,5 @@ You may see several different kinds of timeout messages when using the Terraform
      http_timeout_seconds = 120
    }
    ```
+   A few endpoints that are inherently slow default to a longer timeout, because 65 seconds is not enough to complete them. `databricks_repo` runs git commands inline — cloning on create and checking out a branch or tag on update — so those calls default to 600 seconds. Setting `http_timeout_seconds` explicitly always takes precedence, whether higher or lower.
 3. The **API proxy timeout** is a server-side timeout that controls how long to wait for backend service to handle an API request. This timeout is configured by each API team at Databricks for their API endpoints. If this timeout is exceeded, users see a message like `The service at ... is taking too long to process your request. Please try again later or try a faster operation.`. Users cannot modify this timeout: it is configured by a Databricks team responsible for the backend service. If users see this error, they should reach out to Databricks support to investigate the issue.

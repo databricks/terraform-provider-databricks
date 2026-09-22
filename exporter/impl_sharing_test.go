@@ -79,7 +79,7 @@ func TestListShares(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/shares?",
+			Resource:     "/api/2.1/unity-catalog/shares?max_results=0",
 			Response: sdk_sharing.ListSharesResponse{
 				Shares: []sdk_sharing.ShareInfo{
 					{

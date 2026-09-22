@@ -15,6 +15,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -107,7 +108,7 @@ func NewSqlTablesAPI(ctx context.Context, m any) SqlTablesAPI {
 }
 
 func (a SqlTablesAPI) getTable(name string) (ti SqlTableInfo, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/tables/"+name, nil, &ti)
+	err = a.client.Get(a.context, "/unity-catalog/tables/"+name, nil, &ti, a.client.AddWorkspaceIdHeader)
 	// Copy returned properties & options to read-only attributes
 	ti.EffectiveProperties = ti.Properties
 	ti.Properties = nil
@@ -413,7 +414,14 @@ func (ti *SqlTableInfo) alterExistingColumnStatements(oldti *SqlTableInfo, state
 			statements = append(statements, fmt.Sprintf("ALTER %s %s RENAME COLUMN %s to %s", typestring, ti.SQLFullName(), oldCi.getWrappedColumnName(), ci.getWrappedColumnName()))
 		}
 		if ci.Comment != oldCi.Comment {
-			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s COMMENT '%s'", typestring, ti.SQLFullName(), ci.getWrappedColumnName(), parseComment(ci.Comment)))
+			if ti.TableType == "VIEW" {
+				// ALTER VIEW ... ALTER COLUMN ... COMMENT is not valid Databricks SQL
+				// (it fails with PARSE_SYNTAX_ERROR). COMMENT ON COLUMN updates a view
+				// column comment in place.
+				statements = append(statements, fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'", ti.SQLFullName(), ci.getWrappedColumnName(), parseComment(ci.Comment)))
+			} else {
+				statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s COMMENT '%s'", typestring, ti.SQLFullName(), ci.getWrappedColumnName(), parseComment(ci.Comment)))
+			}
 		}
 		if ci.Nullable != oldCi.Nullable {
 			var keyWord string
@@ -617,6 +625,9 @@ func ResourceSqlTable() common.Resource {
 	return common.Resource{
 		Schema: tableSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			if err := common.NamespaceCustomizeDiffNoForceNew(ctx, d, c); err != nil {
+				return err
+			}
 			if d.HasChange("column") {
 				var newTableStruct SqlTableInfo
 				common.DiffToStructPointer(d, tableSchema, &newTableStruct)
@@ -754,7 +765,7 @@ func ResourceSqlTable() common.Resource {
 			if d.HasChange("owner") {
 				// if new owner is not specified, set it to the current user
 				if newti.Owner == "" {
-					currentUser, err := w.CurrentUser.Me(ctx)
+					currentUser, err := w.CurrentUser.Me(ctx, iam.MeRequest{ExcludedAttributes: "entitlements"})
 					if err != nil {
 						return err
 					}

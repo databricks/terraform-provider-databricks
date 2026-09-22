@@ -19,6 +19,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/logger"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers"
@@ -108,6 +109,7 @@ type Step struct {
 	ImportStateId                        string
 	ImportStateIdFunc                    func(*terraform.State) (string, error)
 	ImportStateVerify                    bool
+	ImportStateVerifyIgnore              []string
 	ImportStateVerifyIdentifierAttribute string
 	ResourceName                         string
 
@@ -173,6 +175,22 @@ func ProvidersWithResourceFallbacks(resourceFallbacks []string) (*schema.Provide
 	pluginFrameworkProvider := PluginFrameworkProviderForTest(pluginfwOpt)
 
 	sdkV2Opt := sdkv2.WithSdkV2ResourceFallbacks(resourceFallbacks)
+	sdkV2Provider := SdkV2ProviderForTest(sdkV2Opt)
+
+	return sdkV2Provider, pluginFrameworkProvider
+}
+
+// ProvidersWithPluginFrameworkOverrides is the mirror of
+// ProvidersWithResourceFallbacks for opt-in plugin framework resources: it
+// forces the named resources through the plugin framework implementation
+// (registering them with the PF provider and dropping them from the SDKv2
+// map), without relying on the DATABRICKS_TF_ENABLED_PF_RESOURCES env var
+// (which would race across parallel acceptance tests).
+func ProvidersWithPluginFrameworkOverrides(resourceOptIns []string) (*schema.Provider, provider.Provider) {
+	pluginfwOpt := pluginfw.WithPluginFrameworkResources(resourceOptIns)
+	pluginFrameworkProvider := PluginFrameworkProviderForTest(pluginfwOpt)
+
+	sdkV2Opt := sdkv2.WithPluginFrameworkResources(resourceOptIns)
 	sdkV2Provider := SdkV2ProviderForTest(sdkV2Opt)
 
 	return sdkV2Provider, pluginFrameworkProvider
@@ -264,6 +282,7 @@ func run(t *testing.T, steps []Step) {
 			ImportStateId:                        s.ImportStateId,
 			ImportStateIdFunc:                    s.ImportStateIdFunc,
 			ImportStateVerify:                    s.ImportStateVerify,
+			ImportStateVerifyIgnore:              s.ImportStateVerifyIgnore,
 			ImportStateVerifyIdentifierAttribute: s.ImportStateVerifyIdentifierAttribute,
 			ResourceName:                         s.ResourceName,
 			ExpectError:                          s.ExpectError,
@@ -305,13 +324,18 @@ func OidcConfigCustomizer(cfg *config.Config) error {
 	if !slices.Contains([]string{"MWS", "ucws", "ucacct"}, os.Getenv("CLOUD_ENV")) {
 		return nil
 	}
-	if _, err := os.Stat("/tmp/ACTIONS_ID_TOKEN_REQUEST_URL"); err == nil {
-		bs, err := os.ReadFile("/tmp/ACTIONS_ID_TOKEN_REQUEST_URL")
-		if err != nil {
-			return fmt.Errorf("cannot read /tmp/ACTIONS_ID_TOKEN_REQUEST_URL: %w", err)
-		}
-		cfg.ActionsIDTokenRequestURL = strings.TrimSpace(string(bs))
+	// The OIDC token files are only written when running in Github Actions. When they are
+	// absent (e.g. running acceptance tests locally against injected credentials), this is a
+	// no-op: leave AuthType untouched so the SDK's default credential chain resolves normally,
+	// rather than pinning auth to github-oidc, which can only work from within a Github action.
+	if _, err := os.Stat("/tmp/ACTIONS_ID_TOKEN_REQUEST_URL"); err != nil {
+		return nil
 	}
+	bs, err := os.ReadFile("/tmp/ACTIONS_ID_TOKEN_REQUEST_URL")
+	if err != nil {
+		return fmt.Errorf("cannot read /tmp/ACTIONS_ID_TOKEN_REQUEST_URL: %w", err)
+	}
+	cfg.ActionsIDTokenRequestURL = strings.TrimSpace(string(bs))
 	if _, err := os.Stat("/tmp/ACTIONS_ID_TOKEN_REQUEST_TOKEN"); err == nil {
 		bs, err := os.ReadFile("/tmp/ACTIONS_ID_TOKEN_REQUEST_TOKEN")
 		if err != nil {
@@ -527,7 +551,7 @@ func LoadDebugEnvIfRunsFromIDE(t *testing.T, key string) {
 
 func isAuthedAsWorkspaceServicePrincipal(ctx context.Context) (bool, error) {
 	w := databricks.Must(databricks.NewWorkspaceClient())
-	user, err := w.CurrentUser.Me(ctx)
+	user, err := w.CurrentUser.Me(ctx, iam.MeRequest{ExcludedAttributes: "entitlements"})
 	if err != nil {
 		return false, err
 	}

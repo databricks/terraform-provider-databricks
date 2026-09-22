@@ -11,22 +11,21 @@ subcategory: "Machine Learning"
 
 ## Arguments
 The following arguments are supported:
-* `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature
+* `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature. This is the
+  feature's resource identifier; the catalog_name, schema_name, and name fields
+  below are OUTPUT_ONLY decomposed views of this value
 * `function` (Function, required) - The function by which the feature is computed
 * `source` (DataSource, required) - The data source of the feature
 * `description` (string, optional) - The description of the feature
 * `entities` (list of EntityColumn, optional) - The entity columns for the feature, used as aggregation keys and for query-time lookup
-* `filter_condition` (string, optional, deprecated) - Deprecated: Use DeltaTableSource.filter_condition or KafkaSource.filter_condition instead. Kept for backwards compatibility.
-  The filter condition applied to the source data before aggregation
-* `inputs` (list of string, optional, deprecated) - Deprecated: Use AggregationFunction.inputs instead. Kept for backwards compatibility.
-  The input columns from which the feature is computed
+* `filter_condition` (string, optional, deprecated)
+* `inputs` (list of string, optional, deprecated)
 * `lineage_context` (LineageContext, optional) - Lineage context information for this feature.
   WARNING: This field is primarily intended for internal use by Databricks systems and
   is automatically populated when features are created through Databricks notebooks or jobs.
   Users should not manually set this field as incorrect values may lead to inaccurate lineage tracking or unexpected behavior.
   This field will be set by feature-engineering client and should be left unset by SDK and terraform users
-* `time_window` (TimeWindow, optional, deprecated) - Deprecated: Use Function.aggregation_function.time_window instead. Kept for backwards compatibility.
-  The time window in which the feature is computed
+* `time_window` (TimeWindow, optional, deprecated)
 * `timeseries_column` (TimeseriesColumn, optional) - Column recording time, used for point-in-time joins, backfills, and aggregations
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
@@ -39,7 +38,11 @@ The following arguments are supported:
 * `avg` (AvgFunction, optional)
 * `count_function` (CountFunction, optional)
 * `first` (FirstFunction, optional)
+* `first_distinct` (FirstDistinctFunction, optional)
+* `first_n` (FirstNFunction, optional)
 * `last` (LastFunction, optional)
+* `last_distinct` (LastDistinctFunction, optional)
+* `last_n` (LastNFunction, optional)
 * `max` (MaxFunction, optional)
 * `min` (MinFunction, optional)
 * `stddev_pop` (StddevPopFunction, optional)
@@ -61,12 +64,11 @@ The following arguments are supported:
 ### AvgFunction
 * `input` (string, required) - The input column from which the average is computed. For Kafka sources, use dot-prefixed path
   notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### ColumnIdentifier
-* `variant_expr_path` (string, required) - String representation of the column name using dot-prefixed path notation. For nested fields, the leaf value is what will be present in materialized tables
-  and expected to match at query time. For example, the leaf node of value.trip_details.location_details.pickup_zip is pickup_zip
+* `variant_expr_path` (string, required) - String representation of the column name using dot-prefixed path notation
 
 ### ColumnSelection
 * `column` (string, required) - Column name from source to select as the feature value
@@ -78,24 +80,30 @@ The following arguments are supported:
 ### CountFunction
 * `input` (string, required) - The input column from which the count is computed. For Kafka sources, use dot-prefixed path
   notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
+
+### CustomUdf
+* `function_path` (string, required) - Fully qualified 3-part Unity Catalog path of the function to apply
+* `input_bindings` (list of InputBinding, optional) - Binds each UC function parameter to a source column.
+  May be empty for zero-argument functions (e.g. a timestamp generator)
 
 ### DataSource
 * `delta_table_source` (DeltaTableSource, optional) - A Delta table data source
 * `kafka_source` (KafkaSource, optional) - A Kafka stream data source
+* `lateness` (SourceLateness, optional) - Completeness timing for this Feature's use of the source. This configuration is part of the
+  Feature definition; it does not modify the underlying table or stream
 * `request_source` (RequestSource, optional) - A request-time data source
+* `stream_source` (StreamSource, optional) - A Stream data source
 
 ### DeltaTableSource
 * `full_name` (string, required) - The full three-part (catalog, schema, table) name of the Delta table
 * `dataframe_schema` (string, optional) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
   Required if transformation_sql is specified.
   Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
-* `entity_columns` (list of string, optional, deprecated) - Deprecated: Use Feature.entity instead. Kept for backwards compatibility.
-  The entity columns of the Delta table
+* `entity_columns` (list of string, optional, deprecated)
 * `filter_condition` (string, optional) - Single WHERE clause to filter delta table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections
-* `timeseries_column` (string, optional, deprecated) - Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility.
-  The timeseries column of the Delta table
+* `timeseries_column` (string, optional, deprecated)
 * `transformation_sql` (string, optional) - A single SQL SELECT expression applied after filter_condition.
   Should contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
   If transformation_sql is not provided, all columns of the delta table are present in the DataSource dataframe
@@ -105,15 +113,23 @@ The following arguments are supported:
   fields within the key or value schema (e.g., "value.user_id", "key.partition_key"). For nested
   fields, the leaf node name (e.g., "user_id" from "value.trip_details.user_id") is what will
   be present in materialized tables and expected to match at query time.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:user_id") is supported for backwards
+  Colon-prefixed notation (e.g., "value:user_id") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### FieldDefinition
 * `data_type` (string, required) - The scalar data type of the field. Possible values are: `BINARY`, `BOOLEAN`, `DATE`, `DECIMAL`, `DOUBLE`, `FLOAT`, `INTEGER`, `LONG`, `SHORT`, `STRING`, `TIMESTAMP`
 * `name` (string, required) - The name of the field
 
+### FirstDistinctFunction
+* `input` (string, required) - The input column from which the first N distinct values are returned
+* `n` (integer, required) - The number of distinct values to return
+
 ### FirstFunction
 * `input` (string, required) - The input column from which the first value is returned
+
+### FirstNFunction
+* `input` (string, required) - The input column from which the first N values are returned
+* `n` (integer, required) - The number of values to return
 
 ### FlatSchema
 * `fields` (list of FieldDefinition, required) - The list of fields in this schema
@@ -121,14 +137,17 @@ The following arguments are supported:
 ### Function
 * `aggregation_function` (AggregationFunction, optional) - An aggregation function applied over a time window
 * `column_selection` (ColumnSelection, optional) - Selects the latest value of a single column in a data source
-* `extra_parameters` (list of FunctionExtraParameter, optional, deprecated) - Deprecated: Use the function oneof with AggregationFunction instead. Kept for backwards compatibility.
-  Extra parameters for parameterized functions
-* `function_type` (string, optional, deprecated) - Deprecated: Use the function oneof with AggregationFunction instead. Kept for backwards compatibility.
-  The type of the function. Possible values are: `APPROX_COUNT_DISTINCT`, `APPROX_PERCENTILE`, `AVG`, `COUNT`, `FIRST`, `LAST`, `MAX`, `MIN`, `STDDEV_POP`, `STDDEV_SAMP`, `SUM`, `VAR_POP`, `VAR_SAMP`
+* `custom_udf` (CustomUdf, optional) - Applies a registered Unity Catalog function row-wise to source columns
+* `extra_parameters` (list of FunctionExtraParameter, optional, deprecated)
+* `function_type` (string, optional, deprecated) - Possible values are: `APPROX_COUNT_DISTINCT`, `APPROX_PERCENTILE`, `AVG`, `COUNT`, `FIRST`, `FUNCTION_TYPE_UNSPECIFIED`, `LAST`, `MAX`, `MIN`, `STDDEV_POP`, `STDDEV_SAMP`, `SUM`, `VAR_POP`, `VAR_SAMP`
 
 ### FunctionExtraParameter
 * `key` (string, required) - The name of the parameter
 * `value` (string, required) - The value of the parameter
+
+### InputBinding
+* `column` (string, required) - Source column whose value is passed for this parameter at execution time
+* `parameter` (string, required) - Name of the UC function parameter
 
 ### JobContext
 * `job_id` (integer, optional) - The job ID where this API invoked
@@ -136,14 +155,20 @@ The following arguments are supported:
 
 ### KafkaSource
 * `name` (string, required) - Name of the Kafka source, used to identify it. This is used to look up the corresponding KafkaConfig object. Can be distinct from topic name
-* `entity_column_identifiers` (list of ColumnIdentifier, optional, deprecated) - Deprecated: Use Feature.entity instead. Kept for backwards compatibility.
-  The entity column identifiers of the Kafka source
+* `entity_column_identifiers` (list of ColumnIdentifier, optional, deprecated)
 * `filter_condition` (string, optional) - The filter condition applied to the source data before aggregation
-* `timeseries_column_identifier` (ColumnIdentifier, optional, deprecated) - Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility.
-  The timeseries column identifier of the Kafka source
+* `timeseries_column_identifier` (ColumnIdentifier, optional, deprecated)
+
+### LastDistinctFunction
+* `input` (string, required) - The input column from which the last N distinct values are returned
+* `n` (integer, required) - The number of distinct values to return
 
 ### LastFunction
 * `input` (string, required) - The input column from which the last value is returned
+
+### LastNFunction
+* `input` (string, required) - The input column from which the last N values are returned
+* `n` (integer, required) - The number of values to return
 
 ### LineageContext
 * `job_context` (JobContext, optional) - Job context information including job ID and run ID
@@ -158,28 +183,75 @@ The following arguments are supported:
 ### RequestSource
 * `flat_schema` (FlatSchema, optional) - A flat schema with scalar-typed fields only
 
+### RollingWindow
+* `delay` (string, optional) - Non-negative analytic lag that evaluates the window this far in the past. Use this for timing
+  variations unrelated to source lateness, such as a 30-day count as of one week ago. If unset,
+  the analytic lag is zero. It composes with source.lateness when both are set
+* `window_duration` (string, optional) - The duration of the rolling window. Must be positive when set; absent means lifetime
+  (aggregate over the entity's entire history)
+
+### SawtoothWindow
+* `delay` (string, optional) - Delay is not currently supported for Sawtooth windows
+* `window_duration` (string, optional) - The duration of the window. Must be positive and span more than two days when set, so that both
+  the batch (N-1 day) and stale-path (N-2 day) partial aggregates are well defined. The duration
+  need not be a whole number of days (e.g. 3 days 15 minutes is allowed). Absent means lifetime
+  (aggregate over the entity's entire history)
+
 ### SlidingWindow
 * `slide_duration` (string, required) - The slide duration (interval by which windows advance, must be positive and less than duration)
-* `window_duration` (string, required) - The duration of the sliding window
+* `delay` (string, optional) - Non-negative analytic lag that evaluates the window this far in the past. Use this for timing
+  variations unrelated to source lateness, such as a 30-day count as of one week ago. If unset,
+  the analytic lag is zero. It composes with source.lateness when both are set
+* `offset` (string, optional) - Non-negative phase shift from the default midnight UTC alignment. For example, offset=22h on
+  a 24h slide produces boundaries at 22:00 UTC (17:00 New York in standard time) instead of
+  midnight UTC. If unset, the offset is zero. Must be shorter than slide_duration (and therefore
+  window_duration)
+* `window_duration` (string, optional) - The duration of the sliding window. Must be positive when set; absent means lifetime
+  (aggregate over the entity's entire history)
+
+### SourceLateness
+* `settling_delay` (string, optional) - Non-negative time to wait after a window ends before treating its source data as complete.
+  Training shifts the eligible evaluation time backwards by this duration so it does not join
+  data that would still have been settling online. Materialization waits for the duration to
+  elapse before publishing the window. If unset, source data is considered settled immediately
 
 ### StddevPopFunction
 * `input` (string, required) - The input column from which the population standard deviation is computed. For Kafka sources,
   use dot-prefixed path notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### StddevSampFunction
 * `input` (string, required) - The input column from which the sample standard deviation is computed
 
+### StreamSource
+* `full_name` (string, required) - Three-part full name of the Stream (catalog.schema.stream)
+* `dataframe_schema` (string, optional) - Schema of the resulting dataframe after transformations, in Spark StructType
+  JSON format (from df.schema.json()).
+  Any subsequent functions operate against this dataframe
+* `filter_condition` (string, optional) - The filter condition applied to the source data before aggregation
+* `transformation_sql` (string, optional) - The pipeline runs these SQL statements immediately after conversion into
+  the schema specified on the Stream object
+
 ### SumFunction
 * `input` (string, required) - The input column from which the sum is computed. For Kafka sources, use dot-prefixed path
   notation (e.g., "value.amount"). For nested fields, the leaf node name is used.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:amount") is supported for backwards
+  Colon-prefixed notation (e.g., "value:amount") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
 
 ### TimeWindow
-* `continuous` (ContinuousWindow, optional)
+* `continuous` (ContinuousWindow, optional, deprecated)
+* `rolling` (RollingWindow, optional)
+* `sawtooth` (SawtoothWindow, optional) - A sawtooth window served via the hybrid batch + streaming path
 * `sliding` (SlidingWindow, optional)
+* `start_time` (string, optional) - Earliest event-time boundary at which the Feature may emit an output. This gates outputs, not
+  the historical inputs read by a window. For example, a 365-day window with
+  start_time=2026-01-01 begins emitting partial-window values on that date instead of waiting
+  for 365 days of data; a lifetime window produces no output before start_time. If unset,
+  tumbling and fixed-duration sliding windows first emit at an offset-aligned boundary after a
+  full window can be formed. If unset, lifetime sliding windows and rolling windows emit as soon as
+  eligible source data exists.
+  Not currently supported for sawtooth windows or for Features with a stream source
 * `tumbling` (TumblingWindow, optional)
 
 ### TimeseriesColumn
@@ -187,11 +259,17 @@ The following arguments are supported:
   reference fields within the key or value schema (e.g., "value.event_timestamp"). For nested
   fields, the leaf node name (e.g., "event_timestamp" from "value.event_details.event_timestamp")
   is what will be present in materialized tables and expected to match at query time.
-  TODO(FS-939): Colon-prefixed notation (e.g., "value:event_timestamp") is supported for
+  Colon-prefixed notation (e.g., "value:event_timestamp") is supported for
   backwards compatibility but is deprecated; migrate to dot notation
 
 ### TumblingWindow
 * `window_duration` (string, required) - The duration of each tumbling window (non-overlapping, fixed-duration windows)
+* `delay` (string, optional) - Non-negative analytic lag that evaluates the window this far in the past. Use this for timing
+  variations unrelated to source lateness, such as a 30-day count as of one week ago. If unset,
+  the analytic lag is zero. It composes with source.lateness when both are set
+* `offset` (string, optional) - Non-negative phase shift from the default midnight UTC alignment. For example, offset=22h on
+  a 24h window produces boundaries at 22:00 UTC (17:00 New York in standard time) instead of
+  midnight UTC. If unset, the offset is zero. Must be shorter than window_duration
 
 ### VarPopFunction
 * `input` (string, required) - The input column from which the population variance is computed
@@ -199,7 +277,13 @@ The following arguments are supported:
 ### VarSampFunction
 * `input` (string, required) - The input column from which the sample variance is computed
 
-
+## Attributes
+In addition to the above arguments, the following attributes are exported:
+* `catalog_name` (string) - Name of parent catalog
+* `created_at` (string) - Time at which this feature was created
+* `created_by` (string) - Username of the feature creator
+* `name` (string) - Name of the feature, extracted from the full three-part name (catalog.schema.name)
+* `schema_name` (string) - Name of parent schema relative to its parent catalog
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

@@ -5,7 +5,6 @@ package postgres_database
 import (
 	"context"
 	"reflect"
-	"regexp"
 
 	"github.com/databricks/databricks-sdk-go/service/postgres"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
@@ -47,8 +46,6 @@ func (r ProviderConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.LengthAtLeast(1))
-	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.StringAttributeBuilder).AddValidator(
-		stringvalidator.RegexMatches(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"))
 	return attrs
 }
 
@@ -104,6 +101,8 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 type DatabaseData struct {
 	// A timestamp indicating when the database was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// The part of the name, chosen by the user when the resource was created.
+	DatabaseId types.String `tfsdk:"database_id"`
 	// The resource name of the database. Format:
 	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
 	Name types.String `tfsdk:"name"`
@@ -145,6 +144,7 @@ func (m DatabaseData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"create_time": m.CreateTime,
+			"database_id": m.DatabaseId,
 			"name":        m.Name,
 			"parent":      m.Parent,
 			"spec":        m.Spec,
@@ -162,6 +162,7 @@ func (m DatabaseData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"database_id": types.StringType,
 			"name":        types.StringType,
 			"parent":      types.StringType,
 			"spec":        postgres_tf.DatabaseDatabaseSpec{}.Type(ctx),
@@ -175,6 +176,7 @@ func (m DatabaseData) Type(ctx context.Context) attr.Type {
 
 func (m DatabaseData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["database_id"] = attrs["database_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetComputed()

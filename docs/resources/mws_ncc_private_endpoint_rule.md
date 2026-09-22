@@ -3,11 +3,17 @@ subcategory: "Deployment"
 ---
 # databricks_mws_ncc_private_endpoint_rule Resource
 
+[API Documentation](https://docs.databricks.com/api/account/networkconnectivity)
+
 Allows you to create a private endpoint in a [Network Connectivity Config](mws_network_connectivity_config.md) that can be used to [configure private connectivity from serverless compute](https://learn.microsoft.com/en-us/azure/databricks/security/network/serverless-network-security/serverless-private-link).
 
 -> This resource can only be used with an account-level provider!
 
 -> This feature is available on Azure, and in Public Preview on AWS.
+
+## Plugin Framework Opt-In
+
+A Plugin Framework implementation of this resource is available. The default remains the SDK V2 implementation; to opt in, set the environment variable `export DATABRICKS_TF_ENABLED_PF_RESOURCES="databricks_mws_ncc_private_endpoint_rule"`. Once opted in, `terraform apply` waits for the rule to leave `CREATING` before returning: `PENDING` and `ESTABLISHED` succeed, while a `CREATE_FAILED`, `REJECTED`, `DISCONNECTED`, or `EXPIRED` connection state surfaces as an apply-time error instead of on the next plan.
 
 ## Example Usage
 
@@ -86,13 +92,18 @@ In addition to all arguments above, the following attributes are exported:
 
 * `rule_id`- the ID of a private endpoint rule.
 * `endpoint_name` - The name of the Azure private endpoint resource, e.g. "databricks-088781b3-77fa-4132-b429-1af0d91bc593-pe-3cb31234"
-* `connection_state` - The current status of this private endpoint. The private endpoint rules are effective only if the connection state is `ESTABLISHED`. Remember that you must approve new endpoints on your resources in the Azure portal before they take effect.
+* `connection_state` - The current status of this private endpoint. The private endpoint rules are effective only if the connection state is `ESTABLISHED`. Remember that you must approve new endpoints on your resources in the cloud console before they take effect.
 The possible values are:
   * `PENDING`: The endpoint has been created and pending approval.
   * `ESTABLISHED`: The endpoint has been approved and is ready to be used in your serverless compute resources.
   * `REJECTED`: Connection was rejected by the private link resource owner.
   * `DISCONNECTED`: Connection was removed by the private link resource owner, the private endpoint becomes informative and should be deleted for clean-up.
   * `EXPIRED`: If the endpoint was created but not approved in 14 days, it will be EXPIRED.
+  * `CREATING`: The endpoint creation is in progress. Once successfully created, the state transitions to `PENDING`.
+  * `CREATE_FAILED`: The endpoint creation failed; see `error_message` for details.
+* `account_id` - The Databricks account ID that owns this private endpoint rule.
+* `error_message` - Error message describing why the rule is in a `CREATE_FAILED` or otherwise failed state, if any.
+* `id` - The composite resource identifier, in the form `<network_connectivity_config_id>/<rule_id>`, used for import.
 * `deactivated` - Whether this private endpoint is deactivated.
 * `deactivated_at` - Time in epoch milliseconds when this object was deactivated.
 * `creation_time` - Time in epoch milliseconds when this object was created.
@@ -102,7 +113,7 @@ The possible values are:
 
 ## Import
 
-This resource can be imported by Databricks account ID and Network Connectivity Config ID.
+This resource can be imported using the Network Connectivity Config ID and the rule ID, separated by a slash.
 
 ```hcl
 import {

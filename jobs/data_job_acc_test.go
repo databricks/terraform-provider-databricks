@@ -68,20 +68,6 @@ func TestAccDataSourceJob(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceJob_InvalidID(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: `
-		data "databricks_job" "this" {
-			job_name = "job-{var.RANDOM}"
-			provider_config {
-				workspace_id = "invalid"
-			}
-		}`,
-		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccDataSourceJob_MismatchedID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `

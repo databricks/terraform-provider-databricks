@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/tags"
 
 	sdk_uc "github.com/databricks/databricks-sdk-go/service/catalog"
+	sdk_dc "github.com/databricks/databricks-sdk-go/service/dataclassification"
 	sdk_sharing "github.com/databricks/databricks-sdk-go/service/sharing"
 	sdk_vs "github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	tf_uc "github.com/databricks/terraform-provider-databricks/catalog"
@@ -134,7 +135,7 @@ func TestListCatalogs(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/catalogs?",
+			Resource:     "/api/2.1/unity-catalog/catalogs?max_results=0",
 			Response: sdk_uc.ListCatalogsResponse{
 				Catalogs: []sdk_uc.CatalogInfo{
 					{
@@ -163,7 +164,7 @@ func TestImportManagedCatalog(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/unity-catalog/schemas?catalog_name=ctest",
+			Resource: "/api/2.1/unity-catalog/schemas?catalog_name=ctest&max_results=0",
 			Response: sdk_uc.ListSchemasResponse{
 				Schemas: []sdk_uc.SchemaInfo{
 					{
@@ -225,12 +226,12 @@ func TestImportIsolatedManagedCatalog(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/unity-catalog/schemas?catalog_name=ctest",
+			Resource: "/api/2.1/unity-catalog/schemas?catalog_name=ctest&max_results=0",
 			Response: sdk_uc.ListSchemasResponse{},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/unity-catalog/bindings/catalog/ctest?",
+			Resource: "/api/2.1/unity-catalog/bindings/catalog/ctest?max_results=0",
 			Response: sdk_uc.UpdateWorkspaceBindingsResponse{
 				Bindings: []sdk_uc.WorkspaceBinding{
 					{
@@ -288,7 +289,7 @@ func TestImportSchema(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/unity-catalog/tables?catalog_name=ctest&schema_name=stest",
+			Resource: "/api/2.1/unity-catalog/tables?catalog_name=ctest&max_results=0&schema_name=stest",
 			Response: sdk_uc.ListTablesResponse{
 				Tables: []sdk_uc.TableInfo{
 					{
@@ -327,12 +328,41 @@ func TestImportSchema(t *testing.T) {
 	})
 }
 
+func TestImportSchemaWithSecrets(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockSecretsUcAPI().EXPECT().ListSecrets(mock.Anything, sdk_uc.ListSecretsRequest{
+			CatalogName: "ctest",
+			SchemaName:  "stest",
+		}).Return(createIteratorFromSlice([]sdk_uc.Secret{
+			{FullName: "ctest.stest.secret1"},
+			{FullName: "ctest.stest.secret2"},
+		}))
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-catalogs,uc-grants,uc-schemas,uc-secrets")
+		// Only uc-secrets is in the listing, so models/volumes/tables are not listed.
+		ic.enableListing("uc-secrets")
+		ic.currentMetastore = currentMetastoreResponse
+		d := tf_uc.ResourceSchema().ToResource().TestResourceData()
+		d.SetId("ctest.stest")
+		d.Set("catalog_name", "ctest")
+		d.Set("name", "stest")
+		err := resourcesMap["databricks_schema"].Import(ic, &resource{
+			ID:   "ctest.stest",
+			Data: d,
+		})
+		assert.NoError(t, err)
+		assert.True(t, ic.testEmits["databricks_secret_uc[<unknown>] (id: ctest.stest.secret1)"])
+		assert.True(t, ic.testEmits["databricks_secret_uc[<unknown>] (id: ctest.stest.secret2)"])
+	})
+}
+
 func TestConnections(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/connections?",
+			Resource:     "/api/2.1/unity-catalog/connections?max_results=0",
 			Response: sdk_uc.ListConnectionsResponse{
 				Connections: []sdk_uc.ConnectionInfo{
 					{
@@ -369,7 +399,7 @@ func TestListExternalLocations(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/external-locations?",
+			Resource:     "/api/2.1/unity-catalog/external-locations?max_results=0",
 			Response: sdk_uc.ListExternalLocationsResponse{
 				ExternalLocations: []sdk_uc.ExternalLocationInfo{
 					{
@@ -445,7 +475,7 @@ func TestStorageCredentials(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/storage-credentials?",
+			Resource:     "/api/2.1/unity-catalog/storage-credentials?max_results=0",
 			Response: sdk_uc.ListStorageCredentialsResponse{
 				StorageCredentials: []sdk_uc.StorageCredentialInfo{
 					{
@@ -478,7 +508,7 @@ func TestListRecipients(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/recipients?",
+			Resource:     "/api/2.1/unity-catalog/recipients?max_results=0",
 			Response: sdk_sharing.ListRecipientsResponse{
 				Recipients: []sdk_sharing.RecipientInfo{
 					{
@@ -764,7 +794,7 @@ func TestListSystemSchemasSuccess(t *testing.T) {
 		currentMetastoreSuccess,
 		{
 			Method:   "GET",
-			Resource: fmt.Sprintf("/api/2.1/unity-catalog/metastores/%s/systemschemas?", currentMetastoreResponse.MetastoreId),
+			Resource: fmt.Sprintf("/api/2.1/unity-catalog/metastores/%s/systemschemas?max_results=0", currentMetastoreResponse.MetastoreId),
 			Response: sdk_uc.ListSystemSchemasResponse{
 				Schemas: []sdk_uc.SystemSchemaInfo{
 					{
@@ -802,7 +832,7 @@ func TestListSystemSchemasErrorListing(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: fmt.Sprintf("/api/2.1/unity-catalog/metastores/%s/systemschemas?", currentMetastoreResponse.MetastoreId),
+			Resource: fmt.Sprintf("/api/2.1/unity-catalog/metastores/%s/systemschemas?max_results=0", currentMetastoreResponse.MetastoreId),
 			Status:   404,
 			Response: &apierr.APIError{
 				ErrorCode:  "NOT_FOUND",
@@ -865,7 +895,7 @@ func TestStorageCredentialListFails(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/unity-catalog/storage-credentials?",
+			Resource: "/api/2.1/unity-catalog/storage-credentials?max_results=0",
 			Status:   200,
 			Response: &sdk_uc.ListStorageCredentialsResponse{},
 		},
@@ -908,7 +938,7 @@ func TestExternalLocationListFails(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/unity-catalog/external-locations?",
+			Resource: "/api/2.1/unity-catalog/external-locations?max_results=0",
 			Status:   200,
 			Response: &sdk_uc.ListExternalLocationsResponse{},
 		},
@@ -1286,6 +1316,134 @@ func TestEmitRfaAccessRequestDestinations_MultipleSecurableTypes(t *testing.T) {
 		assert.True(t, ic.testEmits["databricks_rfa_access_request_destinations[<unknown>] (id: SCHEMA,main.default)"])
 		assert.True(t, ic.testEmits["databricks_rfa_access_request_destinations[<unknown>] (id: TABLE,main.default.users)"])
 	})
+}
+
+func TestImportUcSecretExportSecrets(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockSecretsUcAPI().EXPECT().GetSecret(mock.Anything, sdk_uc.GetSecretRequest{
+			FullName:     "main.default.my_secret",
+			IncludeValue: true,
+		}).Return(&sdk_uc.Secret{
+			FullName:       "main.default.my_secret",
+			EffectiveValue: "super-secret-value",
+		}, nil)
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-secrets")
+		ic.exportSecrets = true
+
+		r := &resource{Resource: "databricks_secret_uc", ID: "main.default.my_secret", Name: "my_secret"}
+		err := importUcSecret(ic, r)
+		assert.NoError(t, err)
+		// The variable name is derived from the field name and the resource name.
+		assert.Equal(t, "super-secret-value", ic.tfvars["value_my_secret"])
+	})
+}
+
+func TestImportUcSecretNoExportSecrets(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("uc-secrets")
+
+	// Without the -export-secrets flag, the value isn't fetched and no tfvar is added.
+	r := &resource{Resource: "databricks_secret_uc", ID: "main.default.my_secret", Name: "my_secret"}
+	err := importUcSecret(ic, r)
+	assert.NoError(t, err)
+	assert.Empty(t, ic.tfvars)
+}
+
+func TestImportUcSecretExportSecretsReadError(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockSecretsUcAPI().EXPECT().GetSecret(mock.Anything, sdk_uc.GetSecretRequest{
+			FullName:     "main.default.my_secret",
+			IncludeValue: true,
+		}).Return(nil, errors.New("PERMISSION_DENIED: no READ_SECRET privilege"))
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-secrets")
+		ic.exportSecrets = true
+
+		// A failure to read the value must NOT drop the resource - it should only skip
+		// populating the tfvar, so the resource is still exported with an empty variable.
+		r := &resource{Resource: "databricks_secret_uc", ID: "main.default.my_secret", Name: "my_secret"}
+		err := importUcSecret(ic, r)
+		assert.NoError(t, err)
+		assert.Empty(t, ic.tfvars)
+	})
+}
+
+func TestDataClassificationCatalogName(t *testing.T) {
+	assert.Equal(t, "main", dataClassificationCatalogName("catalogs/main/config"))
+	assert.Equal(t, "my_catalog", dataClassificationCatalogName("catalogs/my_catalog/config"))
+	assert.Equal(t, "", dataClassificationCatalogName("main"))
+	assert.Equal(t, "", dataClassificationCatalogName("catalogs/main"))
+	assert.Equal(t, "", dataClassificationCatalogName("schemas/main/config"))
+}
+
+func TestEmitDataClassificationCatalogConfig_Exists(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockDataClassificationAPI().EXPECT().GetCatalogConfig(mock.Anything,
+			sdk_dc.GetCatalogConfigRequest{Name: "catalogs/main/config"}).
+			Return(&sdk_dc.CatalogConfig{Name: "catalogs/main/config"}, nil)
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-data-classification")
+
+		ic.emitDataClassificationCatalogConfig("main")
+
+		assert.True(t, ic.testEmits["databricks_data_classification_catalog_config[<unknown>] (id: catalogs/main/config)"],
+			"Should emit data classification config when it exists")
+	})
+}
+
+func TestEmitDataClassificationCatalogConfig_NotConfigured(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockDataClassificationAPI().EXPECT().GetCatalogConfig(mock.Anything,
+			sdk_dc.GetCatalogConfigRequest{Name: "catalogs/no_config/config"}).
+			Return(nil, errors.New("RESOURCE_DOES_NOT_EXIST: config does not exist"))
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-data-classification")
+
+		ic.emitDataClassificationCatalogConfig("no_config")
+
+		assert.False(t, ic.testEmits["databricks_data_classification_catalog_config[<unknown>] (id: catalogs/no_config/config)"],
+			"Should not emit data classification config when the API returns an error")
+	})
+}
+
+func TestEmitDataClassificationCatalogConfig_ServiceNotEnabled(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		// No DataClassification API calls should be made when the service is not enabled.
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		// Note: NOT enabling the 'uc-data-classification' service.
+
+		ic.emitDataClassificationCatalogConfig("main")
+
+		assert.False(t, ic.testEmits["databricks_data_classification_catalog_config[<unknown>] (id: catalogs/main/config)"],
+			"Should not emit data classification config when the service is not enabled")
+	})
+}
+
+func TestImportDataClassificationCatalogConfig(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("uc-data-classification")
+
+	// A valid name is accepted. The parent catalog is not re-emitted here because the
+	// config is only ever emitted from the catalog's own Import function.
+	err := importDataClassificationCatalogConfig(ic, &resource{
+		Resource: "databricks_data_classification_catalog_config",
+		ID:       "catalogs/main/config",
+	})
+	assert.NoError(t, err)
+	assert.Empty(t, ic.testEmits, "Import should not emit any additional resources")
+
+	// An unexpected name format returns an error.
+	err = importDataClassificationCatalogConfig(ic, &resource{
+		Resource: "databricks_data_classification_catalog_config",
+		ID:       "invalid-id",
+	})
+	assert.Error(t, err)
 }
 
 func TestCreateIsMatchingSecurableType(t *testing.T) {

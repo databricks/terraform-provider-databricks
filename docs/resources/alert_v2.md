@@ -2,7 +2,9 @@
 subcategory: "Databricks SQL"
 ---
 # databricks_alert_v2 Resource
-[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/workspace/alertsv2)
 
 The Alert v2 resource allows you to manage SQL alerts in Databricks SQL. Alerts monitor query results and notify you when specific conditions are met.
 
@@ -74,6 +76,17 @@ The following arguments are supported:
 * `warehouse_id` (string, required) - ID of the SQL warehouse attached to the alert
 * `custom_description` (string, optional) - Custom description for the alert. support mustache template
 * `custom_summary` (string, optional) - Custom summary for the alert. support mustache template
+* `parameters` (list of AlertStatementParameter, optional) - A list of parameters to pass into the alert SQL query statement containing parameter markers. Static values only.
+  
+  Reference a parameter in the query text as `:name`. Each parameter must have a unique, non-empty name.
+  Each parameter consists of a name, a value, and optionally a type. To represent a NULL
+  value, the `value` field may be omitted or set to `null` explicitly. If the `type` field
+  is omitted, the value is interpreted as a string.
+  
+  If the type is given, parameters will be checked for type correctness according
+  to the given type. A value is correct if the provided string can be converted to
+  the requested type using the `cast` function. The exact semantics are described in
+  the section [`cast` function](https://docs.databricks.com/sql/language-manual/functions/cast.html) of the SQL language reference
 * `parent_path` (string, optional) - The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated
 * `purge_on_delete` (boolean, optional) - Whether to permanently delete the alert. If not set, the alert will only be soft deleted
 * `run_as` (AlertV2RunAs, optional) - Specifies the identity that will be used to run the alert.
@@ -88,6 +101,13 @@ The following arguments are supported:
 
 ### ProviderConfig
 * `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
+
+### AlertStatementParameter
+* `name` (string, required) - The name of the parameter. Reference it in the query text as `:name`. Required, must be
+  non-empty, and must be unique across the alert's parameters
+* `type` (string, optional) - The SQL data type of the parameter, for example `STRING`, `INT`, or `DECIMAL(10, 2)`. If no type is given
+  the type is assumed to be `STRING`. Complex types such as `ARRAY`, `MAP`, and `STRUCT` are not supported
+* `value` (string, optional) - The value bound to the parameter, represented as a string. If omitted, the value is interpreted as NULL
 
 ### AlertV2Evaluation
 * `comparison_operator` (string, required) - Operator used for comparison in alert evaluation. Possible values are: `EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `IS_NOT_NULL`, `IS_NULL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`
@@ -139,7 +159,7 @@ In addition to the above arguments, the following attributes are exported:
 * `effective_run_as` (AlertV2RunAs) - The actual identity that will be used to execute the alert.
   This is an output-only field that shows the resolved run-as identity after applying
   permissions and defaults
-* `id` (string) - UUID identifying the alert
+* `id` (string) - The canonical identifier of the alert to retrieve information about
 * `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: `ACTIVE`, `DELETED`
 * `owner_user_name` (string) - The owner's username. This field is set to "Unavailable" if the user has been deleted
 * `update_time` (string) - The timestamp indicating when the alert was updated

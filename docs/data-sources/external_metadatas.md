@@ -4,6 +4,8 @@ subcategory: "Unity Catalog"
 # databricks_external_metadatas Data Source
 [![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/externalmetadata)
+
 This data source can be used to fetch the list of external metadata objects.
 
 -> **Note** This resource can only be used with an workspace-level provider!

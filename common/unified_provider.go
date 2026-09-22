@@ -3,7 +3,6 @@ package common
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -28,12 +27,11 @@ type ProviderConfig struct {
 	WorkspaceID string `json:"workspace_id,omitempty"`
 }
 
-// workspaceIDValidateFunc is used to validate the workspace ID for the provider configuration
+// workspaceIDValidateFunc is used to validate the workspace ID for the provider configuration.
+// Accepts either a classic numeric workspace ID or a connection ID that the platform gateway
+// can disambiguate via the X-Databricks-Workspace-Id header.
 func workspaceIDValidateFunc() func(interface{}, string) ([]string, []error) {
-	return validation.All(
-		validation.StringIsNotEmpty,
-		validation.StringMatch(regexp.MustCompile(`^[1-9]\d*$`), "workspace_id must be a positive integer without leading zeros"),
-	)
+	return validation.StringIsNotEmpty
 }
 
 // AddNamespaceInSchema adds the provider_config schema to the given schema map.
@@ -60,6 +58,26 @@ func AddNamespaceInSchema(m map[string]*schema.Schema) map[string]*schema.Schema
 		},
 	}
 	return m
+}
+
+// DeprecateProviderConfigInSchema marks the auto-injected provider_config block
+// (added by AddNamespaceInSchema) and its nested workspace_id as deprecated for
+// account-only resources/data sources. These resources have no workspace
+// context, so the field has never had a meaningful effect; pair this call with
+// SkipProviderConfigStatePopulation = true on the common.Resource to ensure
+// the post-Read provider_config hook is skipped as well. See
+// https://github.com/databricks/terraform-provider-databricks/issues/5672.
+func DeprecateProviderConfigInSchema(s map[string]*schema.Schema) {
+	pc, ok := s["provider_config"]
+	if !ok {
+		return
+	}
+	pc.Deprecated = "provider_config has no effect on this account-only resource and will be removed in a future major release."
+	if elem, ok := pc.Elem.(*schema.Resource); ok {
+		if ws, ok := elem.Schema["workspace_id"]; ok {
+			ws.Deprecated = "workspace_id is ignored for account-only resources."
+		}
+	}
 }
 
 // NamespaceCustomizeSchema is used to customize the schema for the provider configuration
@@ -90,16 +108,35 @@ func NamespaceCustomizeSchemaMap(m map[string]*schema.Schema) map[string]*schema
 	return m
 }
 
+// NamespaceCustomizeSchemaMapImmutable applies NamespaceCustomizeSchemaMap and
+// additionally marks provider_config.workspace_id as ForceNew. Use this for UC
+// resources that have no real Update API (e.g. metastore_data_access,
+// online_table, workspace_binding): a workspace_id switch destroys and
+// recreates the resource via the new workspace, instead of erroring at apply
+// with "doesn't support update". ForceNew must be on the nested attribute (not
+// the list block) so attribute changes inside the block trigger Replace.
+func NamespaceCustomizeSchemaMapImmutable(m map[string]*schema.Schema) map[string]*schema.Schema {
+	m = NamespaceCustomizeSchemaMap(m)
+	elem := m["provider_config"].Elem.(*schema.Resource)
+	elem.Schema["workspace_id"].ForceNew = true
+	return m
+}
+
 // namespaceForceNew is used to customize the diff for the provider configuration
 // in a resource diff. It resolves effective workspace IDs (accounting for
-// workspace_id fallback) and triggers ForceNew when the effective
-// workspace changes.
+// workspace_id fallback) and, when forceNewOnChange is true, triggers ForceNew
+// when the effective workspace changes. When forceNewOnChange is false, it
+// still publishes the new effective workspace_id to the planned state via
+// SetNew (so the next Update sees and persists the new value) but does not
+// trigger resource recreation. This second mode is used by metastore-scoped
+// UC resources, where the underlying object is not bound to a specific
+// workspace and switching workspaces should not destroy and recreate it.
 //
 // With provider_config marked as Optional+Computed, Terraform preserves the state
 // value when the config doesn't specify provider_config. This means d.GetChange()
 // shows no change in that case. We use GetRawConfigAt to inspect the actual user
 // config and determine the true effective new workspace ID.
-func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
+func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient, forceNewOnChange bool) error {
 	workspaceIDKey := workspaceIDSchemaKey
 
 	// Get the old (state) workspace ID.
@@ -134,39 +171,25 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 
 	if oldEffective != "" && newEffective != "" && oldEffective != newEffective {
 		// When Optional+Computed preserves the old state value (config removes
-		// provider_config), the SDK sees no diff for workspace_id. ForceNew
-		// requires HasChange, so we SetNew on the top-level provider_config key
-		// to create the diff entry before calling ForceNew.
+		// provider_config), the SDK sees no diff for workspace_id. Both ForceNew
+		// (which requires HasChange) and the metastore-scoped flow (which needs
+		// the new value committed to state via Update) require us to SetNew on
+		// the top-level provider_config key to create the diff entry.
+		//
+		// Note: SetNew here replaces the ENTIRE provider_config block with a
+		// map containing only workspace_id. If new fields are added to
+		// provider_config in the future, this map literal must be extended to
+		// include them (otherwise they'd be cleared from the planned state).
 		if !d.HasChange(workspaceIDKey) {
 			if err := d.SetNew("provider_config", []map[string]interface{}{{"workspace_id": newEffective}}); err != nil {
 				return err
 			}
 		}
-		if err := d.ForceNew(workspaceIDKey); err != nil {
-			return err
+		if forceNewOnChange {
+			if err := d.ForceNew(workspaceIDKey); err != nil {
+				return err
+			}
 		}
-	}
-	return nil
-}
-
-// NamespaceValidateWorkspaceID validates that the workspace_id in provider_config
-// is reachable during the plan phase.
-// For workspace-level providers, it checks that the workspace_id matches the provider's workspace.
-// For account-level providers, it checks that the workspace is accessible from the account.
-// This is a no-op when provider_config is not set.
-func NamespaceValidateWorkspaceID(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
-	_, newWorkspaceID := d.GetChange(workspaceIDSchemaKey)
-	if newWorkspaceID == nil {
-		return nil
-	}
-	newWSID := newWorkspaceID.(string)
-	// Fall back to provider-level workspace_id only if not set on the resource.
-	if newWSID == "" {
-		newWSID = c.Config.WorkspaceID
-	}
-	_, err := c.GetWorkspaceClientForUnifiedProvider(ctx, newWSID)
-	if err != nil {
-		return err
 	}
 	return nil
 }
@@ -216,13 +239,32 @@ func validateApiLevelForUnifiedHost(apiLevel string, c *DatabricksClient) error 
 	return fmt.Errorf("please set api to account or workspace")
 }
 
-// NamespaceCustomizeDiff is used to customize the diff for the provider configuration
-// in a resource diff.
+// NamespaceCustomizeDiff is the CustomizeDiff entry point for workspace-scoped
+// resources (clusters, notebooks, jobs, ...). When the effective workspace_id
+// changes, it triggers ForceNew so the resource is destroyed in the old
+// workspace and recreated in the new one.
+//
+// workspace_id reachability/mismatch is intentionally NOT validated here at plan
+// time. That validation is enforced at apply time when CRUD acquires a workspace
+// client via GetWorkspaceClientForUnifiedProvider (see common/client.go), which
+// avoids plan-time API calls and the false positives they caused (e.g. limited
+// service principals that lack /Me, or unresolved cross-resource references).
 func NamespaceCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
-	if err := namespaceForceNew(ctx, d, c); err != nil {
-		return err
-	}
-	return NamespaceValidateWorkspaceID(ctx, d, c)
+	return namespaceForceNew(ctx, d, c, true)
+}
+
+// NamespaceCustomizeDiffNoForceNew is the CustomizeDiff entry point for
+// metastore-scoped UC resources (catalog, schema, external_location,
+// storage_credential, ...). The underlying object is owned by a metastore,
+// not by a specific workspace, so changing the effective workspace_id should
+// only switch which workspace's API endpoint the provider routes through —
+// it must not destroy and recreate the resource. This entry point publishes
+// the new effective workspace_id to planned state (so SDKv2's Update is
+// invoked and writes the new value to state) without calling ForceNew.
+func NamespaceCustomizeDiffNoForceNew(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
+	// As in NamespaceCustomizeDiff, workspace_id reachability/mismatch is validated
+	// at apply time (via GetWorkspaceClientForUnifiedProvider) rather than here.
+	return namespaceForceNew(ctx, d, c, false)
 }
 
 // CustomizeDiffDualResources is the CustomizeDiff entry point for dual
@@ -238,6 +280,23 @@ func CustomizeDiffDualResources(ctx context.Context, d *schema.ResourceDiff, c *
 		return nil
 	}
 	return NamespaceCustomizeDiff(ctx, d, c)
+}
+
+// CustomizeDiffDualResourcesNoForceNew is the CustomizeDiff entry point for
+// dual workspace/account UC resources whose underlying object is metastore-
+// scoped (e.g. databricks_metastore, databricks_storage_credential,
+// databricks_metastore_assignment). At account level, workspace tracking is
+// skipped. At workspace level, the new effective workspace_id is published
+// to planned state via SetNew but ForceNew is NOT triggered — the resource
+// is not destroyed and recreated when the user switches workspaces.
+func CustomizeDiffDualResourcesNoForceNew(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient) error {
+	if err := ValidateApiLevelForUnifiedHost(d, c); err != nil {
+		return err
+	}
+	if IsAccountLevelFromDiff(d, c) {
+		return nil
+	}
+	return NamespaceCustomizeDiffNoForceNew(ctx, d, c)
 }
 
 // WorkspaceClientUnifiedProvider returns the WorkspaceClient for the workspace ID from the resource data
@@ -291,6 +350,16 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 		workspaceID = c.Config.WorkspaceID
 	}
 	if workspaceID == "" {
+		// No workspace_id was supplied or resolved. Return the base client
+		// unchanged (original behavior). We deliberately do NOT error here on
+		// account/unified hosts: this legacy accessor is also reached by
+		// account-level resources/data sources that carry a vestigial
+		// provider_config block (e.g. those built via the deprecated
+		// common.DataResource helper, such as databricks_mws_workspaces and
+		// databricks_mws_credentials), which route through the account client and
+		// have no workspace_id. Erroring here would break them. Genuinely
+		// workspace-scoped resources that reach this state will surface a clear
+		// error from the workspace API call at apply.
 		return c, nil
 	}
 	return c.getDatabricksClientForUnifiedProvider(ctx, workspaceID)
@@ -300,7 +369,7 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 // This is used by resources and data sources that are developed
 // over SDKv2 and are not using Go SDK.
 func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Context, workspaceID string) (*DatabricksClient, error) {
-	workspaceIDInt, err := parseWorkspaceID(workspaceID)
+	parsedID, err := parseWorkspaceID(workspaceID)
 	if err != nil {
 		return nil, err
 	}
@@ -316,10 +385,11 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 	//    cache so that WorkspaceClient() returns it without recreating.
 	newDatabricksClient := func(dc *client.DatabricksClient) *DatabricksClient {
 		result := &DatabricksClient{
-			DatabricksClient: dc,
-			commandFactory:   c.commandFactory,
+			DatabricksClient:     dc,
+			commandFactory:       c.commandFactory,
+			httpTimeoutSetByUser: c.httpTimeoutSetByUser,
 		}
-		if wc, ok := c.cachedWorkspaceClients[workspaceIDInt]; ok {
+		if wc, ok := c.cachedWorkspaceClients[parsedID]; ok {
 			result.cachedWorkspaceClient = wc
 		}
 		return result
@@ -327,7 +397,7 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 
 	// If the Databricks Client is cached, we use it
 	if c.cachedDatabricksClients != nil {
-		if client, ok := c.cachedDatabricksClients[workspaceIDInt]; ok && client != nil {
+		if client, ok := c.cachedDatabricksClients[parsedID]; ok && client != nil {
 			return newDatabricksClient(client), nil
 		}
 	}
@@ -340,7 +410,7 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 	}
 
 	// Return the Databricks Client.
-	return newDatabricksClient(c.cachedDatabricksClients[workspaceIDInt]), nil
+	return newDatabricksClient(c.cachedDatabricksClients[parsedID]), nil
 }
 
 // setCachedDatabricksClient sets the cached Databricks Client.
@@ -351,16 +421,16 @@ func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, worksp
 
 	// Initialize the map if it's nil
 	if c.cachedDatabricksClients == nil {
-		c.cachedDatabricksClients = make(map[int64]*client.DatabricksClient)
+		c.cachedDatabricksClients = make(map[string]*client.DatabricksClient)
 	}
 
-	workspaceIDInt, err := parseWorkspaceID(workspaceID)
+	parsedID, err := parseWorkspaceID(workspaceID)
 	if err != nil {
 		return err
 	}
 
 	// Double checked locking
-	if existingClient, ok := c.cachedDatabricksClients[workspaceIDInt]; ok && existingClient != nil {
+	if existingClient, ok := c.cachedDatabricksClients[parsedID]; ok && existingClient != nil {
 		return nil
 	}
 
@@ -376,6 +446,6 @@ func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, worksp
 	if err != nil {
 		return err
 	}
-	c.cachedDatabricksClients[workspaceIDInt] = newClient
+	c.cachedDatabricksClients[parsedID] = newClient
 	return nil
 }

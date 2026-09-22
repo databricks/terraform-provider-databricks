@@ -1,9 +1,10 @@
 package catalog
 
 import (
+	"cmp"
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -59,8 +60,8 @@ func diffPermissionsForPrincipal(principal string, desired []catalog.PrivilegeAs
 		})
 	}
 	// so that we can deterministic tests
-	sort.Slice(diff, func(i, j int) bool {
-		return diff[i].Principal < diff[j].Principal
+	slices.SortFunc(diff, func(a, b catalog.PermissionsChange) int {
+		return cmp.Compare(a.Principal, b.Principal)
 	})
 	return diff
 }
@@ -153,11 +154,12 @@ func ResourceGrant() common.Resource {
 			}
 			for field := range permissions.Mappings {
 				m[field] = &schema.Schema{
-					Type:          schema.TypeString,
-					Optional:      true,
-					ForceNew:      true,
-					AtLeastOneOf:  allFields,
-					ConflictsWith: permissions.SliceWithoutString(allFields, field),
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					AtLeastOneOf:     allFields,
+					ConflictsWith:    permissions.SliceWithoutString(allFields, field),
+					DiffSuppressFunc: permissions.SuppressResourceNamePrefixDiff(field),
 				}
 			}
 			common.NamespaceCustomizeSchemaMap(m)
@@ -165,7 +167,8 @@ func ResourceGrant() common.Resource {
 		})
 
 	return common.Resource{
-		Schema: s,
+		Schema:        s,
+		CustomizeDiff: common.NamespaceCustomizeDiffNoForceNew,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {

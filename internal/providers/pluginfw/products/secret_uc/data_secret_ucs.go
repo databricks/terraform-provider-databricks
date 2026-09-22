@@ -32,15 +32,12 @@ type SecretsData struct {
 	// The name of the catalog under which to list secrets. Both
 	// **catalog_name** and **schema_name** must be specified together.
 	CatalogName types.String `tfsdk:"catalog_name"`
-	// Whether to include secrets in the response for which you only have the
-	// **BROWSE** privilege, which limits access to metadata.
-	IncludeBrowse types.Bool `tfsdk:"include_browse"`
 	// Maximum number of secrets to return.
 	//
-	// - If not specified, at most 10000 secrets are returned. - If set to a
+	// - If not specified, at most 1000 secrets are returned. - If set to a
 	// value greater than 0, the page length is the minimum of this value and
-	// 10000. - If set to 0, the page length is set to 10000. - If set to a
-	// value less than 0, an invalid parameter error is returned.
+	// 1000. - If set to 0, the page length is set to 1000. - If set to a value
+	// less than 0, an invalid parameter error is returned.
 	PageSize types.Int64 `tfsdk:"page_size"`
 	// The name of the schema under which to list secrets. Both **catalog_name**
 	// and **schema_name** must be specified together.
@@ -58,7 +55,6 @@ func (SecretsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type
 func (m SecretsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
 	attrs["schema_name"] = attrs["schema_name"].SetOptional()
-	attrs["include_browse"] = attrs["include_browse"].SetOptional()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["secrets"] = attrs["secrets"].SetComputed()

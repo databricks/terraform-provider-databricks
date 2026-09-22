@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const baseResources = `
+const baseResourcesCore = `
 	resource "databricks_secret_scope" "this" {
 		name = "tf-{var.STICKY_RANDOM}"
 	}
@@ -43,7 +43,9 @@ const baseResources = `
 	resource "databricks_job" "this" {
 		name = "tf-{var.STICKY_RANDOM}"
 	}
+`
 
+const modelServingResource = `
 	resource "databricks_model_serving" "this" {
 		name = "tf-{var.STICKY_RANDOM}"
 		config {
@@ -58,8 +60,25 @@ const baseResources = `
 	}
 `
 
-func makeTemplate(description string) string {
-	appTemplate := baseResources + `
+func makeTemplate(description string, includeModelServing bool) string {
+	base := baseResourcesCore
+	if includeModelServing {
+		base += modelServingResource
+	}
+
+	var servingResourceBlock string
+	if includeModelServing {
+		servingResourceBlock = `, {
+			name = "serving endpoint"
+			description = "serving endpoint for app"
+			serving_endpoint = {
+				name = databricks_model_serving.this.name
+				permission = "CAN_MANAGE"
+			}
+		}`
+	}
+
+	appTemplate := base + `
 	resource "databricks_app" "this" {
 		name = "tf-{var.STICKY_RANDOM}"
 		description = "%s"
@@ -78,14 +97,7 @@ func makeTemplate(description string) string {
 				id = databricks_job.this.id
 				permission = "CAN_MANAGE"
 			}
-		}, {
-			name = "serving endpoint"
-			description = "serving endpoint for app"
-			serving_endpoint = {
-				name = databricks_model_serving.this.name
-				permission = "CAN_MANAGE"
-			}
-		}, {
+		}` + servingResourceBlock + `, {
 			name = "sql warehouse"
 			description = "sql warehouse for app"
 			sql_warehouse = {
@@ -128,17 +140,15 @@ is required`),
 func TestAccAppResource(t *testing.T) {
 	var updateTime string
 	acceptance.LoadWorkspaceEnv(t)
-	if acceptance.IsGcp(t) {
-		acceptance.Skipf(t)("not available on GCP")
-	}
+	includeModelServing := !acceptance.IsGcp(t)
 	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: makeTemplate("My app"),
+		Template: makeTemplate("My app", includeModelServing),
 		Check: func(s *terraform.State) error {
 			updateTime = s.RootModule().Resources["databricks_app.this"].Primary.Attributes["update_time"]
 			return nil
 		},
 	}, acceptance.Step{
-		Template: makeTemplate("My new app"),
+		Template: makeTemplate("My new app", includeModelServing),
 		Check: func(s *terraform.State) error {
 			var newUpdateTime = s.RootModule().Resources["databricks_app.this"].Primary.Attributes["update_time"]
 			assert.NotEqual(t, updateTime, newUpdateTime)
@@ -156,9 +166,6 @@ func TestAccAppResource(t *testing.T) {
 
 func TestAccAppResource_NoCompute(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
-	if acceptance.IsGcp(t) {
-		acceptance.Skipf(t)("not available on GCP")
-	}
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
 	resource "databricks_secret_scope" "this" {
@@ -193,6 +200,53 @@ func TestAccAppResource_NoCompute(t *testing.T) {
 	})
 }
 
+// TestAccAppResource_EmptyUserApiScopes is a regression test for ES-1857512 / #4760:
+// setting user_api_scopes = [] (to disable OBO authorization) must not produce
+// "inconsistent result after apply" or a perpetual diff, even though the Apps API omits
+// user_api_scopes from its response when OBO is inactive.
+func TestAccAppResource_EmptyUserApiScopes(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("not available on GCP")
+	}
+	template := `
+	resource "databricks_secret_scope" "this" {
+		name = "tf-{var.STICKY_RANDOM}"
+	}
+
+	resource "databricks_secret" "this" {
+	    scope = databricks_secret_scope.this.name
+		key = "tf-{var.STICKY_RANDOM}"
+		string_value = "secret"
+	}
+	resource "databricks_app" "this" {
+		no_compute      = true
+		name            = "tf-{var.STICKY_RANDOM}"
+		description     = "empty user_api_scopes"
+		user_api_scopes = []
+		resources = [{
+			name = "secret"
+			description = "secret for app"
+			secret = {
+				scope = databricks_secret_scope.this.name
+				key = databricks_secret.this.key
+				permission = "MANAGE"
+			}
+		}]
+	}`
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: template,
+		Check: func(s *terraform.State) error {
+			// State must hold a known empty list (count "0"), not null/absent.
+			assert.Equal(t, "0", s.RootModule().Resources["databricks_app.this"].Primary.Attributes["user_api_scopes.#"])
+			return nil
+		},
+	}, acceptance.Step{
+		// Re-applying the same config must be a no-op (no perpetual diff).
+		Template: template,
+	})
+}
+
 var deletedOutsideTemplate = `
 	resource "databricks_secret_scope" "this" {
 		name = "tf-{var.STICKY_RANDOM}"
@@ -219,6 +273,45 @@ var deletedOutsideTemplate = `
 		}]
 	}
 `
+
+// TestAccAppResource_GitSource is a regression test for git-backed deployment: setting
+// git_source must not produce "inconsistent result after apply" or a perpetual diff, even
+// though the Apps API classifies git_source (and source_code_path) as input_only and omits
+// them from its response (the read-back is the separate default_git_source). The resource
+// preserves the configured value across reads, and the nested git_source descendants are
+// non-Computed so a configured value is fully known after apply.
+func TestAccAppResource_GitSource(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("not available on GCP")
+	}
+	template := `
+	resource "databricks_app" "this" {
+		no_compute  = true
+		name        = "tf-{var.STICKY_RANDOM}"
+		description = "git-backed app"
+		git_repository = {
+			url      = "https://github.com/databricks/app-templates"
+			provider = "gitHub"
+		}
+		git_source = {
+			branch           = "main"
+			source_code_path = "streamlit-data-app"
+		}
+	}`
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: template,
+		Check: func(s *terraform.State) error {
+			attrs := s.RootModule().Resources["databricks_app.this"].Primary.Attributes
+			assert.Equal(t, "main", attrs["git_source.branch"])
+			assert.Equal(t, "streamlit-data-app", attrs["git_source.source_code_path"])
+			return nil
+		},
+	}, acceptance.Step{
+		// Re-applying the same config must be a no-op (no perpetual diff from the input_only fields).
+		Template: template,
+	})
+}
 
 func TestAccAppResource_DeletedOutsideTerraform(t *testing.T) {
 	var appName string
@@ -280,20 +373,6 @@ func appTemplate(provider_config string) string {
 	`, provider_config)
 }
 
-func TestAccApp_ProviderConfig_Invalid(t *testing.T) {
-	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
-		Template: appTemplate(`
-			provider_config = {
-				workspace_id = "invalid"
-			}
-		`),
-		ExpectError: regexp.MustCompile(
-			`Attribute provider_config\.workspace_id\s+workspace_id must be a valid integer`,
-		),
-		PlanOnly: true,
-	})
-}
-
 func TestAccApp_ProviderConfig_Mismatched(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: appTemplate(`
@@ -304,7 +383,6 @@ func TestAccApp_ProviderConfig_Mismatched(t *testing.T) {
 		ExpectError: regexp.MustCompile(
 			`(?s)failed to get workspace client`,
 		),
-		PlanOnly: true,
 	})
 }
 

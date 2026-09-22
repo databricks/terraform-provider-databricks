@@ -4,6 +4,8 @@ subcategory: "Agent Bricks"
 # databricks_knowledge_assistant Resource
 [![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/knowledgeassistants)
+
 
 
 ## Example Usage
@@ -35,7 +37,7 @@ In addition to the above arguments, the following attributes are exported:
 * `endpoint_name` (string) - The name of the knowledge assistant agent endpoint
 * `error_info` (string) - Error details when the Knowledge Assistant is in FAILED state
 * `experiment_id` (string) - The MLflow experiment ID
-* `id` (string) - The universally unique identifier (UUID) of the Knowledge Assistant
+* `id` (string, deprecated) - Deprecated: use knowledge_assistant_id instead
 * `name` (string) - The resource name of the Knowledge Assistant.
   Format: knowledge-assistants/{knowledge_assistant_id}
 * `state` (string) - State of the Knowledge Assistant. Not returned in List responses. Possible values are: `ACTIVE`, `CREATING`, `FAILED`

@@ -4,6 +4,8 @@ subcategory: "Data Quality Monitoring"
 # databricks_data_quality_monitor Data Source
 [![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/dataquality)
+
 This data source can be used to fetch a data quality monitor.
 
 For the `table` `object_type`, the caller must either:

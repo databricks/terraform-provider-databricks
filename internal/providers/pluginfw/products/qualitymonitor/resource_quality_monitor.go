@@ -16,6 +16,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -62,13 +63,15 @@ type MonitorInfoExtended struct {
 	WarehouseId          types.String `tfsdk:"warehouse_id"`
 	SkipBuiltinDashboard types.Bool   `tfsdk:"skip_builtin_dashboard"`
 	ID                   types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
-	tfschema.Namespace
+	tfschema.Namespace_SdkV2
 }
 
 var _ pluginfwcommon.ComplexFieldTypeProvider = MonitorInfoExtended{}
 
 func (m MonitorInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return tfschema.AddProviderConfigType(m.MonitorInfo_SdkV2.GetComplexFieldTypes(ctx))
+	attrs := m.MonitorInfo_SdkV2.GetComplexFieldTypes(ctx)
+	attrs["provider_config"] = reflect.TypeOf(tfschema.ProviderConfig{})
+	return attrs
 }
 
 type QualityMonitorResource struct {
@@ -93,9 +96,9 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 		c.SetOptional("skip_builtin_dashboard")
 		c.SetComputed("id")
 		c.SetOptional("id")
+		c.AddValidator(listvalidator.SizeAtMost(1), "provider_config")
 		return c
 	})
-	tfschema.ConfigureProviderConfig(attrs)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Quality Monitor",
 		Attributes:  attrs,
@@ -114,19 +117,24 @@ func (d *QualityMonitorResource) ImportState(ctx context.Context, req resource.I
 }
 
 func (r *QualityMonitorResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	// Skip on destroy (no plan state).
 	if req.Plan.Raw.IsNull() {
 		return
 	}
 	if r.Client == nil {
 		return
 	}
-
-	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
+	var plan MonitorInfoExtended
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, validateDiags := r.Client.GetWorkspaceClientForUnifiedProviderWithDiagnostics(ctx, workspaceID)
+	resp.Diagnostics.Append(validateDiags...)
 }
 
 func (r *QualityMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -137,7 +145,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, monitorInfoTfSDK.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, monitorInfoTfSDK.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -178,10 +186,6 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 	newMonitorInfoTfSDK.ProviderConfig = monitorInfoTfSDK.ProviderConfig
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, monitorInfoTfSDK.ProviderConfig, &resp.State)...)
 }
 
 func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -193,7 +197,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, monitorInfoTfSDK.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, monitorInfoTfSDK.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -232,10 +236,6 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 
 	newMonitorInfoTfSDK.ProviderConfig = monitorInfoTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, monitorInfoTfSDK.ProviderConfig, &resp.State)...)
 }
 
 func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -261,7 +261,7 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 		updateMonitorGoSDK.Schedule.PauseStatus = ""
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, monitorInfoTfSDK.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, monitorInfoTfSDK.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -308,7 +308,7 @@ func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	workspaceID, diags := tfschema.GetWorkspaceIDResource(ctx, monitorInfoTfSDK.ProviderConfig)
+	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, monitorInfoTfSDK.ProviderConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

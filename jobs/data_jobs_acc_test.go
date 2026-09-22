@@ -13,20 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccDataSourcesJob_InvalidID(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: `
-		data "databricks_jobs" "all" {
-			key = "id"
-			provider_config {
-				workspace_id = "invalid"
-			}
-		}`,
-		ExpectError: regexp.MustCompile(`workspace_id must be a positive integer without leading zeros`),
-		PlanOnly:    true,
-	})
-}
-
 func TestAccDataSourcesJob_MismatchedID(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `

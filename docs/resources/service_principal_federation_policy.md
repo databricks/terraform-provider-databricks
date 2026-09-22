@@ -4,6 +4,8 @@ subcategory: "OAuth"
 # databricks_service_principal_federation_policy Resource
 [![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/account/serviceprincipalfederationpolicy)
+
 Service principal federation policies allow automated workloads running outside of Databricks to access Databricks APIs without the need for Databricks secrets. Your application (workload) authenticates to Databricks as a Databricks service principal using tokens issued by the workload runtime, for example Github Actions.
 
 A service principal federation policy is associated with a service principal in your Databricks account, and specifies:

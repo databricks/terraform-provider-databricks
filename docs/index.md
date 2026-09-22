@@ -115,6 +115,7 @@ The provider block supports the following arguments:
 
 * `host` - (optional, environment variable `DATABRICKS_HOST`) The host of the Databricks account or workspace. See [`host` argument](#host-argument) for more information.
 * `account_id` - (required for account-level operations, environment variable `DATABRICKS_ACCOUNT_ID`) Account ID found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/). **Note: do NOT set this variable when using a workspace-level provider. If set, you may see `...invalid Databricks Account configuration` errors**.
+* `workspace_id` - (optional, environment variable `DATABRICKS_WORKSPACE_ID`) Databricks Workspace ID used by workspace clients when working with unified hosts. Accepts either a classic numeric workspace ID or a CPDR connection ID; the server disambiguates.
 * `azure_workspace_resource_id` - (optional, environment variable `DATABRICKS_AZURE_RESOURCE_ID`) `id` attribute of [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource. Combination of subscription id, resource group name, and workspace name. Required when authenticating using [Azure MSI](#authenticating-with-azure-msi).
 
 The following arguments control the provider authentication:

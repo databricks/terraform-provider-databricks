@@ -664,6 +664,12 @@ func convertPluginFrameworkToGoType(value attr.Value) interface{} {
 	switch v := value.(type) {
 	case basetypes.StringValue:
 		return v.ValueString()
+	case basetypes.StringValuable:
+		stringValue, diags := v.ToStringValue(context.Background())
+		if diags.HasError() {
+			return fmt.Sprintf("%v", value)
+		}
+		return stringValue.ValueString()
 	case basetypes.Int64Value:
 		return int(v.ValueInt64())
 	case basetypes.BoolValue:

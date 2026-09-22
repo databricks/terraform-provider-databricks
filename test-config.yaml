@@ -4,6 +4,9 @@ ignored_tests:
       test_name: TestAccGroupsUpdateDisplayName
       comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
     - package: github.com/databricks/terraform-provider-databricks/scim
+      test_name: TestAccForceUserImport
+      comment: Failure caused by workspace entitlement migration changing SCIM defaults.
+    - package: github.com/databricks/terraform-provider-databricks/scim
       test_name: TestMwsAccGroupDataSplitMembers
       comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
     - package: github.com/databricks/terraform-provider-databricks/scim

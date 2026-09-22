@@ -92,6 +92,10 @@ In addition to the above arguments, the following attributes are exported:
 * `is_deleted` (boolean) - Whether the referenced connection has been deleted. The MCP service keeps
   the reference so callers can identify the broken dependency; tool
   invocation fails until the source connection is updated
+* `options` (object) - Options needed to build the U2M authorize request, returned as a flat map. When set, it
+  includes: `authorization_endpoint` (OAuth authorize URL), `token_endpoint` (token-exchange
+  URL), `oauth_scope` (space-separated scopes to request), `client_id` (OAuth client id), and
+  `oauth_provider` (the OAuth provider)
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

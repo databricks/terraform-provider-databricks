@@ -6918,6 +6918,103 @@ func (m *CreateMcpServiceRequest) SetMcpService(ctx context.Context, v McpServic
 	m.McpService = vs
 }
 
+type CreateMcpServiceUserMappedCredentialRequest struct {
+	Login types.Object `tfsdk:"login"`
+	// Resource name of the MCP service. Format:
+	// `mcp-services/{catalog}.{schema}.{mcp_service}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *CreateMcpServiceUserMappedCredentialRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateMcpServiceUserMappedCredentialRequest) {
+	if !from.Login.IsNull() && !from.Login.IsUnknown() {
+		if toLogin, ok := to.GetLogin(ctx); ok {
+			if fromLogin, ok := from.GetLogin(ctx); ok {
+				// Recursively sync the fields of Login
+				toLogin.SyncFieldsDuringCreateOrUpdate(ctx, fromLogin)
+				to.SetLogin(ctx, toLogin)
+			}
+		}
+	}
+}
+
+func (to *CreateMcpServiceUserMappedCredentialRequest) SyncFieldsDuringRead(ctx context.Context, from CreateMcpServiceUserMappedCredentialRequest) {
+	if !from.Login.IsNull() && !from.Login.IsUnknown() {
+		if toLogin, ok := to.GetLogin(ctx); ok {
+			if fromLogin, ok := from.GetLogin(ctx); ok {
+				toLogin.SyncFieldsDuringRead(ctx, fromLogin)
+				to.SetLogin(ctx, toLogin)
+			}
+		}
+	}
+}
+
+func (m CreateMcpServiceUserMappedCredentialRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["login"] = attrs["login"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateMcpServiceUserMappedCredentialRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateMcpServiceUserMappedCredentialRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"login": reflect.TypeOf(McpServiceUserMappedCredentialLogin{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateMcpServiceUserMappedCredentialRequest
+// only implements ToObjectValue() and Type().
+func (m CreateMcpServiceUserMappedCredentialRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"login": m.Login,
+			"name":  m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateMcpServiceUserMappedCredentialRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"login": McpServiceUserMappedCredentialLogin{}.Type(ctx),
+			"name":  types.StringType,
+		},
+	}
+}
+
+// GetLogin returns the value of the Login field in CreateMcpServiceUserMappedCredentialRequest as
+// a McpServiceUserMappedCredentialLogin value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateMcpServiceUserMappedCredentialRequest) GetLogin(ctx context.Context) (McpServiceUserMappedCredentialLogin, bool) {
+	var e McpServiceUserMappedCredentialLogin
+	if m.Login.IsNull() || m.Login.IsUnknown() {
+		return e, false
+	}
+	var v McpServiceUserMappedCredentialLogin
+	d := m.Login.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLogin sets the value of the Login field in CreateMcpServiceUserMappedCredentialRequest.
+func (m *CreateMcpServiceUserMappedCredentialRequest) SetLogin(ctx context.Context, v McpServiceUserMappedCredentialLogin) {
+	vs := v.ToObjectValue(ctx)
+	m.Login = vs
+}
+
 type CreateMetastore struct {
 	// Whether to allow non-DBR clients to directly access entities under the
 	// metastore.
@@ -10611,6 +10708,98 @@ func (m DeleteMcpServiceRequest) Type(ctx context.Context) attr.Type {
 			"etag": types.StringType,
 			"name": types.StringType,
 		},
+	}
+}
+
+type DeleteMcpServiceUserMappedCredentialRequest struct {
+	// Resource name of the MCP service. Format:
+	// `mcp-services/{catalog}.{schema}.{mcp_service}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteMcpServiceUserMappedCredentialRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteMcpServiceUserMappedCredentialRequest) {
+}
+
+func (to *DeleteMcpServiceUserMappedCredentialRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteMcpServiceUserMappedCredentialRequest) {
+}
+
+func (m DeleteMcpServiceUserMappedCredentialRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteMcpServiceUserMappedCredentialRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteMcpServiceUserMappedCredentialRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteMcpServiceUserMappedCredentialRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteMcpServiceUserMappedCredentialRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteMcpServiceUserMappedCredentialRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+// Delete returns no resource; a dedicated (empty) response keeps the revoke
+// RPC's shape owned here rather than google.protobuf.Empty.
+type DeleteMcpServiceUserMappedCredentialResponse struct {
+}
+
+func (to *DeleteMcpServiceUserMappedCredentialResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteMcpServiceUserMappedCredentialResponse) {
+}
+
+func (to *DeleteMcpServiceUserMappedCredentialResponse) SyncFieldsDuringRead(ctx context.Context, from DeleteMcpServiceUserMappedCredentialResponse) {
+}
+
+func (m DeleteMcpServiceUserMappedCredentialResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteMcpServiceUserMappedCredentialResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteMcpServiceUserMappedCredentialResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteMcpServiceUserMappedCredentialResponse
+// only implements ToObjectValue() and Type().
+func (m DeleteMcpServiceUserMappedCredentialResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteMcpServiceUserMappedCredentialResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -18948,6 +19137,55 @@ func (m GetMcpServiceRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetMcpServiceUserMappedCredentialRequest struct {
+	// Resource name of the MCP service. Format:
+	// `mcp-services/{catalog}.{schema}.{mcp_service}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetMcpServiceUserMappedCredentialRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetMcpServiceUserMappedCredentialRequest) {
+}
+
+func (to *GetMcpServiceUserMappedCredentialRequest) SyncFieldsDuringRead(ctx context.Context, from GetMcpServiceUserMappedCredentialRequest) {
+}
+
+func (m GetMcpServiceUserMappedCredentialRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetMcpServiceUserMappedCredentialRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetMcpServiceUserMappedCredentialRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetMcpServiceUserMappedCredentialRequest
+// only implements ToObjectValue() and Type().
+func (m GetMcpServiceUserMappedCredentialRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetMcpServiceUserMappedCredentialRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type GetMetastoreRequest struct {
 	// Unique ID of the metastore.
 	Id types.String `tfsdk:"-"`
@@ -26078,6 +26316,12 @@ type McpServiceConfigSourceConnection struct {
 	// Resource name of the Unity Catalog connection used to access the MCP
 	// server, in the form `connections/{catalog}.{schema}.{connection}`.
 	Name types.String `tfsdk:"name"`
+	// Options needed to build the U2M authorize request, returned as a flat
+	// map. When set, it includes: `authorization_endpoint` (OAuth authorize
+	// URL), `token_endpoint` (token-exchange URL), `oauth_scope`
+	// (space-separated scopes to request), `client_id` (OAuth client id), and
+	// `oauth_provider` (the OAuth provider).
+	Options types.Map `tfsdk:"options"`
 }
 
 func (to *McpServiceConfigSourceConnection) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from McpServiceConfigSourceConnection) {
@@ -26089,6 +26333,7 @@ func (to *McpServiceConfigSourceConnection) SyncFieldsDuringRead(ctx context.Con
 func (m McpServiceConfigSourceConnection) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["is_deleted"] = attrs["is_deleted"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["options"] = attrs["options"].SetComputed()
 
 	return attrs
 }
@@ -26101,7 +26346,9 @@ func (m McpServiceConfigSourceConnection) ApplySchemaCustomizations(attrs map[st
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m McpServiceConfigSourceConnection) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"options": reflect.TypeOf(types.String{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -26113,6 +26360,7 @@ func (m McpServiceConfigSourceConnection) ToObjectValue(ctx context.Context) bas
 		map[string]attr.Value{
 			"is_deleted": m.IsDeleted,
 			"name":       m.Name,
+			"options":    m.Options,
 		})
 }
 
@@ -26122,8 +26370,250 @@ func (m McpServiceConfigSourceConnection) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"is_deleted": types.BoolType,
 			"name":       types.StringType,
+			"options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
+}
+
+// GetOptions returns the value of the Options field in McpServiceConfigSourceConnection as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *McpServiceConfigSourceConnection) GetOptions(ctx context.Context) (map[string]types.String, bool) {
+	if m.Options.IsNull() || m.Options.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOptions sets the value of the Options field in McpServiceConfigSourceConnection.
+func (m *McpServiceConfigSourceConnection) SetOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Options = types.MapValueMust(t, vs)
+}
+
+// A caller's per-user OAuth credential for an MCP service.
+type McpServiceUserMappedCredential struct {
+	// Token-expiry info for the credential, returned as a flat map:
+	// `access_token_expiration` (always set) and `refresh_token_expiration`
+	// (set when the credential has a refresh token). Both values are
+	// timestamps.
+	Options types.Map `tfsdk:"options"`
+	// Provisioning state of the credential. `ACTIVE` means the caller is logged
+	// in and the credential is usable; any other state means the login has not
+	// completed.
+	ProvisioningInfo types.Object `tfsdk:"provisioning_info"`
+}
+
+func (to *McpServiceUserMappedCredential) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from McpServiceUserMappedCredential) {
+	if !from.ProvisioningInfo.IsNull() && !from.ProvisioningInfo.IsUnknown() {
+		if toProvisioningInfo, ok := to.GetProvisioningInfo(ctx); ok {
+			if fromProvisioningInfo, ok := from.GetProvisioningInfo(ctx); ok {
+				// Recursively sync the fields of ProvisioningInfo
+				toProvisioningInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromProvisioningInfo)
+				to.SetProvisioningInfo(ctx, toProvisioningInfo)
+			}
+		}
+	}
+}
+
+func (to *McpServiceUserMappedCredential) SyncFieldsDuringRead(ctx context.Context, from McpServiceUserMappedCredential) {
+	if !from.ProvisioningInfo.IsNull() && !from.ProvisioningInfo.IsUnknown() {
+		if toProvisioningInfo, ok := to.GetProvisioningInfo(ctx); ok {
+			if fromProvisioningInfo, ok := from.GetProvisioningInfo(ctx); ok {
+				toProvisioningInfo.SyncFieldsDuringRead(ctx, fromProvisioningInfo)
+				to.SetProvisioningInfo(ctx, toProvisioningInfo)
+			}
+		}
+	}
+}
+
+func (m McpServiceUserMappedCredential) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["options"] = attrs["options"].SetComputed()
+	attrs["provisioning_info"] = attrs["provisioning_info"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in McpServiceUserMappedCredential.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m McpServiceUserMappedCredential) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"options":           reflect.TypeOf(types.String{}),
+		"provisioning_info": reflect.TypeOf(ProvisioningInfo{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, McpServiceUserMappedCredential
+// only implements ToObjectValue() and Type().
+func (m McpServiceUserMappedCredential) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"options":           m.Options,
+			"provisioning_info": m.ProvisioningInfo,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m McpServiceUserMappedCredential) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"provisioning_info": ProvisioningInfo{}.Type(ctx),
+		},
+	}
+}
+
+// GetOptions returns the value of the Options field in McpServiceUserMappedCredential as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *McpServiceUserMappedCredential) GetOptions(ctx context.Context) (map[string]types.String, bool) {
+	if m.Options.IsNull() || m.Options.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOptions sets the value of the Options field in McpServiceUserMappedCredential.
+func (m *McpServiceUserMappedCredential) SetOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Options = types.MapValueMust(t, vs)
+}
+
+// GetProvisioningInfo returns the value of the ProvisioningInfo field in McpServiceUserMappedCredential as
+// a ProvisioningInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *McpServiceUserMappedCredential) GetProvisioningInfo(ctx context.Context) (ProvisioningInfo, bool) {
+	var e ProvisioningInfo
+	if m.ProvisioningInfo.IsNull() || m.ProvisioningInfo.IsUnknown() {
+		return e, false
+	}
+	var v ProvisioningInfo
+	d := m.ProvisioningInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProvisioningInfo sets the value of the ProvisioningInfo field in McpServiceUserMappedCredential.
+func (m *McpServiceUserMappedCredential) SetProvisioningInfo(ctx context.Context, v ProvisioningInfo) {
+	vs := v.ToObjectValue(ctx)
+	m.ProvisioningInfo = vs
+}
+
+// Login input for an MCP service user credential. Carries the OAuth exchange
+// fields as a flat map.
+type McpServiceUserMappedCredentialLogin struct {
+	// OAuth exchange fields: `pkce_verifier`, `authorization_code`, and
+	// `oauth_redirect_uri`.
+	Options types.Map `tfsdk:"options"`
+}
+
+func (to *McpServiceUserMappedCredentialLogin) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from McpServiceUserMappedCredentialLogin) {
+}
+
+func (to *McpServiceUserMappedCredentialLogin) SyncFieldsDuringRead(ctx context.Context, from McpServiceUserMappedCredentialLogin) {
+}
+
+func (m McpServiceUserMappedCredentialLogin) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["options"] = attrs["options"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in McpServiceUserMappedCredentialLogin.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m McpServiceUserMappedCredentialLogin) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"options": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, McpServiceUserMappedCredentialLogin
+// only implements ToObjectValue() and Type().
+func (m McpServiceUserMappedCredentialLogin) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"options": m.Options,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m McpServiceUserMappedCredentialLogin) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetOptions returns the value of the Options field in McpServiceUserMappedCredentialLogin as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *McpServiceUserMappedCredentialLogin) GetOptions(ctx context.Context) (map[string]types.String, bool) {
+	if m.Options.IsNull() || m.Options.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOptions sets the value of the Options field in McpServiceUserMappedCredentialLogin.
+func (m *McpServiceUserMappedCredentialLogin) SetOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Options = types.MapValueMust(t, vs)
 }
 
 type MetastoreAssignment struct {
@@ -28052,6 +28542,109 @@ func (m *ModelProviderServiceConfigAzureOpenAiProviderDirectConfig) SetServiceCr
 	m.ServiceCredential = vs
 }
 
+// Header-based API-key authentication for a custom provider: the secret is
+// forwarded on outbound requests under a caller-chosen HTTP header, as
+// `<api_key_name>: <api_key_value>`.
+type ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth struct {
+	// HTTP header name that carries the API key on outbound requests (e.g.,
+	// `Ocp-Apim-Subscription-Key`). The value forwarded under this header is
+	// supplied via `api_key_value`.
+	ApiKeyName types.String `tfsdk:"api_key_name"`
+	// Secret value forwarded under the `api_key_name` header on outbound
+	// requests. Supplied as inline plaintext via `ProviderSecret.plaintext`.
+	ApiKeyValue types.Object `tfsdk:"api_key_value"`
+}
+
+func (to *ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth) {
+	if !from.ApiKeyValue.IsNull() && !from.ApiKeyValue.IsUnknown() {
+		if toApiKeyValue, ok := to.GetApiKeyValue(ctx); ok {
+			if fromApiKeyValue, ok := from.GetApiKeyValue(ctx); ok {
+				// Recursively sync the fields of ApiKeyValue
+				toApiKeyValue.SyncFieldsDuringCreateOrUpdate(ctx, fromApiKeyValue)
+				to.SetApiKeyValue(ctx, toApiKeyValue)
+			}
+		}
+	}
+}
+
+func (to *ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth) SyncFieldsDuringRead(ctx context.Context, from ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth) {
+	if !from.ApiKeyValue.IsNull() && !from.ApiKeyValue.IsUnknown() {
+		if toApiKeyValue, ok := to.GetApiKeyValue(ctx); ok {
+			if fromApiKeyValue, ok := from.GetApiKeyValue(ctx); ok {
+				toApiKeyValue.SyncFieldsDuringRead(ctx, fromApiKeyValue)
+				to.SetApiKeyValue(ctx, toApiKeyValue)
+			}
+		}
+	}
+}
+
+func (m ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["api_key_name"] = attrs["api_key_name"].SetOptional()
+	attrs["api_key_value"] = attrs["api_key_value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"api_key_value": reflect.TypeOf(ModelProviderServiceConfigProviderSecret{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth
+// only implements ToObjectValue() and Type().
+func (m ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"api_key_name":  m.ApiKeyName,
+			"api_key_value": m.ApiKeyValue,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"api_key_name":  types.StringType,
+			"api_key_value": ModelProviderServiceConfigProviderSecret{}.Type(ctx),
+		},
+	}
+}
+
+// GetApiKeyValue returns the value of the ApiKeyValue field in ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth as
+// a ModelProviderServiceConfigProviderSecret value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth) GetApiKeyValue(ctx context.Context) (ModelProviderServiceConfigProviderSecret, bool) {
+	var e ModelProviderServiceConfigProviderSecret
+	if m.ApiKeyValue.IsNull() || m.ApiKeyValue.IsUnknown() {
+		return e, false
+	}
+	var v ModelProviderServiceConfigProviderSecret
+	d := m.ApiKeyValue.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetApiKeyValue sets the value of the ApiKeyValue field in ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth.
+func (m *ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth) SetApiKeyValue(ctx context.Context, v ModelProviderServiceConfigProviderSecret) {
+	vs := v.ToObjectValue(ctx)
+	m.ApiKeyValue = vs
+}
+
 // Custom OpenAI-compatible provider configuration with bearer-token
 // authentication.
 type ModelProviderServiceConfigCustomProviderConfig struct {
@@ -28146,8 +28739,9 @@ func (m *ModelProviderServiceConfigCustomProviderConfig) SetDirect(ctx context.C
 	m.Direct = vs
 }
 
-// Direct form of a custom provider configuration. Set `api_key` to the bearer
-// token sent in the `Authorization` header.
+// Direct form of a custom provider configuration. Set `api_key` to send the
+// secret as an `Authorization` bearer token, or `header_auth` to forward it
+// under a caller-chosen HTTP header.
 type ModelProviderServiceConfigCustomProviderDirectConfig struct {
 	// Bearer token forwarded in the `Authorization` header. Supply the value in
 	// `api_key.plaintext`.
@@ -28155,6 +28749,10 @@ type ModelProviderServiceConfigCustomProviderDirectConfig struct {
 	// Endpoint URL of the OpenAI-compatible service (e.g.,
 	// `https://api.example.com/v1`). Required on Create.
 	BaseUrl types.String `tfsdk:"base_url"`
+	// Header-based API-key auth: the secret is forwarded on outbound requests
+	// under a caller-chosen HTTP header rather than as an `Authorization`
+	// bearer token. Set this instead of `api_key` for header auth.
+	HeaderAuth types.Object `tfsdk:"header_auth"`
 }
 
 func (to *ModelProviderServiceConfigCustomProviderDirectConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigCustomProviderDirectConfig) {
@@ -28164,6 +28762,15 @@ func (to *ModelProviderServiceConfigCustomProviderDirectConfig) SyncFieldsDuring
 				// Recursively sync the fields of ApiKey
 				toApiKey.SyncFieldsDuringCreateOrUpdate(ctx, fromApiKey)
 				to.SetApiKey(ctx, toApiKey)
+			}
+		}
+	}
+	if !from.HeaderAuth.IsNull() && !from.HeaderAuth.IsUnknown() {
+		if toHeaderAuth, ok := to.GetHeaderAuth(ctx); ok {
+			if fromHeaderAuth, ok := from.GetHeaderAuth(ctx); ok {
+				// Recursively sync the fields of HeaderAuth
+				toHeaderAuth.SyncFieldsDuringCreateOrUpdate(ctx, fromHeaderAuth)
+				to.SetHeaderAuth(ctx, toHeaderAuth)
 			}
 		}
 	}
@@ -28178,11 +28785,20 @@ func (to *ModelProviderServiceConfigCustomProviderDirectConfig) SyncFieldsDuring
 			}
 		}
 	}
+	if !from.HeaderAuth.IsNull() && !from.HeaderAuth.IsUnknown() {
+		if toHeaderAuth, ok := to.GetHeaderAuth(ctx); ok {
+			if fromHeaderAuth, ok := from.GetHeaderAuth(ctx); ok {
+				toHeaderAuth.SyncFieldsDuringRead(ctx, fromHeaderAuth)
+				to.SetHeaderAuth(ctx, toHeaderAuth)
+			}
+		}
+	}
 }
 
 func (m ModelProviderServiceConfigCustomProviderDirectConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["api_key"] = attrs["api_key"].SetOptional()
 	attrs["base_url"] = attrs["base_url"].SetOptional()
+	attrs["header_auth"] = attrs["header_auth"].SetOptional()
 
 	return attrs
 }
@@ -28196,7 +28812,8 @@ func (m ModelProviderServiceConfigCustomProviderDirectConfig) ApplySchemaCustomi
 // SDK values.
 func (m ModelProviderServiceConfigCustomProviderDirectConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"api_key": reflect.TypeOf(ModelProviderServiceConfigProviderSecret{}),
+		"api_key":     reflect.TypeOf(ModelProviderServiceConfigProviderSecret{}),
+		"header_auth": reflect.TypeOf(ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth{}),
 	}
 }
 
@@ -28207,8 +28824,9 @@ func (m ModelProviderServiceConfigCustomProviderDirectConfig) ToObjectValue(ctx 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"api_key":  m.ApiKey,
-			"base_url": m.BaseUrl,
+			"api_key":     m.ApiKey,
+			"base_url":    m.BaseUrl,
+			"header_auth": m.HeaderAuth,
 		})
 }
 
@@ -28216,8 +28834,9 @@ func (m ModelProviderServiceConfigCustomProviderDirectConfig) ToObjectValue(ctx 
 func (m ModelProviderServiceConfigCustomProviderDirectConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"api_key":  ModelProviderServiceConfigProviderSecret{}.Type(ctx),
-			"base_url": types.StringType,
+			"api_key":     ModelProviderServiceConfigProviderSecret{}.Type(ctx),
+			"base_url":    types.StringType,
+			"header_auth": ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth{}.Type(ctx),
 		},
 	}
 }
@@ -28245,6 +28864,31 @@ func (m *ModelProviderServiceConfigCustomProviderDirectConfig) GetApiKey(ctx con
 func (m *ModelProviderServiceConfigCustomProviderDirectConfig) SetApiKey(ctx context.Context, v ModelProviderServiceConfigProviderSecret) {
 	vs := v.ToObjectValue(ctx)
 	m.ApiKey = vs
+}
+
+// GetHeaderAuth returns the value of the HeaderAuth field in ModelProviderServiceConfigCustomProviderDirectConfig as
+// a ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ModelProviderServiceConfigCustomProviderDirectConfig) GetHeaderAuth(ctx context.Context) (ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth, bool) {
+	var e ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth
+	if m.HeaderAuth.IsNull() || m.HeaderAuth.IsUnknown() {
+		return e, false
+	}
+	var v ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth
+	d := m.HeaderAuth.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetHeaderAuth sets the value of the HeaderAuth field in ModelProviderServiceConfigCustomProviderDirectConfig.
+func (m *ModelProviderServiceConfigCustomProviderDirectConfig) SetHeaderAuth(ctx context.Context, v ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth) {
+	vs := v.ToObjectValue(ctx)
+	m.HeaderAuth = vs
 }
 
 // Entra ID (Azure AD) service-principal authentication. The `tenant_id` and
@@ -40306,8 +40950,7 @@ type UpdateMcpServiceRequest struct {
 	// replacement must include every required field; any optional field you
 	// omit is cleared. To preserve sibling fields, use one or more granular
 	// paths: `comment`, `config.source_connection.name`,
-	// `config.include_tool_selectors`, or `config.rate_limits`. Wildcard paths
-	// such as `*` are not supported.
+	// `config.include_tool_selectors`, or `config.rate_limits`.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -40584,8 +41227,7 @@ type UpdateModelProviderServiceRequest struct {
 	// remains `config.provider`); `config.allow_all_targets`, `config.targets`,
 	// `config.forward_headers`, `config.forward_query_parameters`,
 	// `config.forward_unmanaged_paths`, `config.rate_limits`, or
-	// `config.inference_table`. The provider type is immutable, and wildcard
-	// paths such as `*` are not supported.
+	// `config.inference_table`. The provider type is immutable.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -40708,8 +41350,7 @@ type UpdateModelServiceRequest struct {
 	// paths: `comment`, `config.routing.destinations`,
 	// `config.routing.fallback.destinations`, `config.rate_limits`, or
 	// `config.inference_table`. Intermediate paths such as `config.routing` and
-	// `config.routing.fallback`, and wildcard paths such as `*`, are not
-	// supported.
+	// `config.routing.fallback` are not supported.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

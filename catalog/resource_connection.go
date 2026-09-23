@@ -150,11 +150,6 @@ func ResourceConnection() common.Resource {
 					conn.Options[key] = element
 				}
 			}
-			// Drop an empty environment_settings object so it does not materialize as a block
-			// that diffs against a config which omits it.
-			if es := conn.EnvironmentSettings; es != nil && es.EnvironmentVersion == "" && len(es.JavaDependencies) == 0 {
-				conn.EnvironmentSettings = nil
-			}
 			if err := common.StructToData(conn, s, d); err != nil {
 				return err
 			}

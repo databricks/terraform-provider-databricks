@@ -15,3 +15,5 @@
 ### Exporter
 
 ### Internal Changes
+
+* Updated the Databricks API definitions to the latest version ([#6020](https://github.com/databricks/terraform-provider-databricks/pull/6020)).

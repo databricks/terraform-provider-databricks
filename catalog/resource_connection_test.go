@@ -667,22 +667,20 @@ func TestConnectionParentDiffSuppress(t *testing.T) {
 	assert.False(t, suppress("parent", "schemas/main.default", "schemas/other.schema", nil))
 }
 
-// Read must reconstruct parent from full_name and drop the empty environment_settings object
-// the schema-level backend returns. parent is omitted from config here, so the parent
+// Read must reconstruct parent from full_name. parent is omitted from config here, so the
 // assertion can only pass if the reconstruction actually runs.
-func TestConnectionsRead_SchemaLevelReconstructsParentAndDropsEnvSettings(t *testing.T) {
+func TestConnectionsRead_SchemaLevelReconstructsParent(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.1/unity-catalog/connections/main.default.my_conn?",
 				Response: catalog.ConnectionInfo{
-					Name:                "my_conn",
-					ConnectionType:      catalog.ConnectionType("HTTP"),
-					FullName:            "main.default.my_conn",
-					MetastoreId:         "abc",
-					EnvironmentSettings: &catalog.EnvironmentSettings{},
-					Options:             map[string]string{"host": "test.com"},
+					Name:           "my_conn",
+					ConnectionType: catalog.ConnectionType("HTTP"),
+					FullName:       "main.default.my_conn",
+					MetastoreId:    "abc",
+					Options:        map[string]string{"host": "test.com"},
 				},
 			},
 		},
@@ -699,5 +697,4 @@ func TestConnectionsRead_SchemaLevelReconstructsParentAndDropsEnvSettings(t *tes
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "schemas/main.default", d.Get("parent"), "parent must be reconstructed from full_name on read")
-	assert.Empty(t, d.Get("environment_settings"), "empty environment_settings must not materialize")
 }

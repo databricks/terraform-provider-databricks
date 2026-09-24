@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestAccDataSourceMwsWorkspaces(t *testing.T) {
+func TestMwsAccDataSourceMwsWorkspaces(t *testing.T) {
 	acceptance.AccountLevel(t, acceptance.Step{
 		Template: `
 		data "databricks_mws_workspaces" "this" {

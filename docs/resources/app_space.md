@@ -15,6 +15,9 @@ subcategory: "Apps"
 The following arguments are supported:
 * `name` (string, required) - The name of the app space. The name must contain only lowercase alphanumeric characters and hyphens.
   It must be unique within the workspace
+* `assume_group_id` (string, optional) - The group whose permissions users assume via Role Authorization for apps in this space. When
+  set, user tokens assume the role of this group instead of doing regular obo token downscoping.
+  Set only at space creation
 * `description` (string, optional) - The description of the app space
 * `resources` (list of AppResource, optional) - Resources for the app space. Resources configured at the space level are available to all apps in the space
 * `usage_policy_id` (string, optional) - The usage policy ID for managing cost at the space level

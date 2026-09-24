@@ -1013,21 +1013,20 @@ func (m *AlertQuery_SdkV2) SetTags(ctx context.Context, v []types.String) {
 	m.Tags = types.ListValueMust(t, vs)
 }
 
-// Redash-owned copy of the internal StatementParameter for the external AlertV2
-// API. The internal `ordinal` and `args` fields are intentionally omitted: the
-// public API supports only flat, named scalar parameters; complex types (ARRAY,
-// MAP, STRUCT) are not supported. This mirrors SEA's public StatementParameter
-// schema, see: cmdexec/sql-exec-api/proto/sql_exec_api_service.proto:763-779
+// A named parameter bound to the alert query. Only flat, named scalar
+// parameters are supported; complex types such as ARRAY, MAP, and STRUCT are
+// not.
 type AlertStatementParameter_SdkV2 struct {
-	// The name of the parameter, referenced in the query as `:name`.
+	// The name of the parameter. Reference it in the query text as `:name`.
+	// Required, must be non-empty, and must be unique across the alert's
+	// parameters.
 	Name types.String `tfsdk:"name"`
-	// The SQL data type of the parameter, e.g. STRING, INT, or DATE. Defaults
-	// to STRING. This is a string rather than an enum because scalar subtypes
-	// such as DECIMAL(10, 4) cannot be enumerated. Complex types such as ARRAY,
-	// MAP, and STRUCT are not supported.
+	// The SQL data type of the parameter, for example `STRING`, `INT`, or
+	// `DECIMAL(10, 2)`. If no type is given the type is assumed to be `STRING`.
+	// Complex types such as `ARRAY`, `MAP`, and `STRUCT` are not supported.
 	Type_ types.String `tfsdk:"type"`
-	// The bound value for the parameter, given as a string. If omitted, the
-	// value is interpreted as NULL.
+	// The value bound to the parameter, represented as a string. If omitted,
+	// the value is interpreted as NULL.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -1095,15 +1094,29 @@ type AlertV2_SdkV2 struct {
 	EffectiveRunAs types.List `tfsdk:"effective_run_as"`
 
 	Evaluation types.List `tfsdk:"evaluation"`
-	// UUID identifying the alert.
+	// The canonical identifier of the alert to retrieve information about.
 	Id types.String `tfsdk:"id"`
 	// Indicates whether the query is trashed.
 	LifecycleState types.String `tfsdk:"lifecycle_state"`
 	// The owner's username. This field is set to "Unavailable" if the user has
 	// been deleted.
 	OwnerUserName types.String `tfsdk:"owner_user_name"`
-	// Query parameters bound when executing the alert query, referenced in the
-	// query text with `:name` syntax. Static values only.
+	// A list of parameters to pass into the alert SQL query statement
+	// containing parameter markers. Static values only.
+	//
+	// Reference a parameter in the query text as `:name`. Each parameter must
+	// have a unique, non-empty name. Each parameter consists of a name, a
+	// value, and optionally a type. To represent a NULL value, the `value`
+	// field may be omitted or set to `null` explicitly. If the `type` field is
+	// omitted, the value is interpreted as a string.
+	//
+	// If the type is given, parameters will be checked for type correctness
+	// according to the given type. A value is correct if the provided string
+	// can be converted to the requested type using the `cast` function. The
+	// exact semantics are described in the section [`cast` function] of the SQL
+	// language reference.
+	//
+	// [`cast` function]: https://docs.databricks.com/sql/language-manual/functions/cast.html
 	Parameters types.Set `tfsdk:"parameters"`
 	// The workspace path of the folder containing the alert. Can only be set on
 	// create, and cannot be updated.
@@ -6820,8 +6833,9 @@ type ExecuteStatementRequest_SdkV2 struct {
 	// access token, OAuth token, or similar) _must be removed_ when fetching
 	// from these links.
 	//
-	// 2. These are URLs with a specific expiration, indicated in the response.
-	// The behavior when attempting to use an expired link is cloud specific.
+	// 2. These are short-lived cloud-storage URLs with a specific expiration,
+	// indicated in the response. The behavior when attempting to use an expired
+	// link is cloud specific.
 	Disposition types.String `tfsdk:"disposition"`
 	// Statement execution supports three result formats: `JSON_ARRAY`
 	// (default), `ARROW_STREAM`, and `CSV`.
@@ -7165,10 +7179,10 @@ type ExternalLink_SdkV2 struct {
 	// becomes invalid, after which point a new `external_link` must be
 	// requested.
 	Expiration types.String `tfsdk:"expiration"`
-	// A URL pointing to a chunk of result data, hosted by an external service,
-	// with a short expiration time (<= 15 minutes). As this URL contains a
-	// temporary credential, it should be considered sensitive and the client
-	// should not expose this URL in a log.
+	// A short-lived cloud-storage URL pointing to a chunk of result data,
+	// hosted by an external service, with a short expiration time (<= 15
+	// minutes). As this URL contains a temporary credential, it should be
+	// considered sensitive and the client should not expose this URL in a log.
 	ExternalLink types.String `tfsdk:"external_link"`
 	// HTTP headers that must be included with a GET request to the
 	// `external_link`. Each header is provided as a key-value pair. Headers are
@@ -14951,10 +14965,10 @@ func (m RestoreResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Contains the result data of a single chunk when using `INLINE` disposition.
 // When using `EXTERNAL_LINKS` disposition, the array `external_links` is used
-// instead to provide URLs to the result data in cloud storage. Exactly one of
-// these alternatives is used. (While the `external_links` array prepares the
-// API to return multiple links in a single response. Currently only a single
-// link is returned.)
+// instead to provide short-lived cloud-storage URLs to the result data in cloud
+// storage. Exactly one of these alternatives is used. (While the
+// `external_links` array prepares the API to return multiple links in a single
+// response. Currently only a single link is returned.)
 type ResultData_SdkV2 struct {
 	// The number of bytes in the result chunk. This field is not available when
 	// using `INLINE` disposition.
@@ -17777,7 +17791,7 @@ func (m *UpdateAlertRequestAlert_SdkV2) SetCondition(ctx context.Context, v Aler
 
 type UpdateAlertV2Request_SdkV2 struct {
 	Alert types.List `tfsdk:"alert"`
-	// UUID identifying the alert.
+	// The canonical identifier of the alert to retrieve information about.
 	Id types.String `tfsdk:"-"`
 	// The field mask must be a single string, with multiple fields separated by
 	// commas (no spaces). The field path is relative to the resource object,

@@ -109,6 +109,11 @@ type PolicyInfoData struct {
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of the user who created the policy. Output only.
 	CreatedBy types.String `tfsdk:"created_by"`
+	// Options for deny policies. Valid only if `policy_type` is
+	// `POLICY_TYPE_DENY`. Required on create and optional on update. When
+	// specified on update, the new options will replace the existing options as
+	// a whole.
+	Deny types.Object `tfsdk:"deny"`
 	// Optional list of user or group names that should be excluded from the
 	// policy.
 	ExceptPrincipals types.List `tfsdk:"except_principals"`
@@ -166,6 +171,7 @@ type PolicyInfoData struct {
 func (m PolicyInfoData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"column_mask":       reflect.TypeOf(catalog_tf.ColumnMaskOptions{}),
+		"deny":              reflect.TypeOf(catalog_tf.DenyOptions{}),
 		"except_principals": reflect.TypeOf(types.String{}),
 		"grant":             reflect.TypeOf(catalog_tf.GrantOptions{}),
 		"match_columns":     reflect.TypeOf(catalog_tf.MatchColumn{}),
@@ -189,6 +195,7 @@ func (m PolicyInfoData) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"comment":               m.Comment,
 			"created_at":            m.CreatedAt,
 			"created_by":            m.CreatedBy,
+			"deny":                  m.Deny,
 			"except_principals":     m.ExceptPrincipals,
 			"for_securable_type":    m.ForSecurableType,
 			"grant":                 m.Grant,
@@ -218,6 +225,7 @@ func (m PolicyInfoData) Type(ctx context.Context) attr.Type {
 			"comment":     types.StringType,
 			"created_at":  types.Int64Type,
 			"created_by":  types.StringType,
+			"deny":        catalog_tf.DenyOptions{}.Type(ctx),
 			"except_principals": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -249,6 +257,7 @@ func (m PolicyInfoData) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["comment"] = attrs["comment"].SetComputed()
 	attrs["created_at"] = attrs["created_at"].SetComputed()
 	attrs["created_by"] = attrs["created_by"].SetComputed()
+	attrs["deny"] = attrs["deny"].SetComputed()
 	attrs["except_principals"] = attrs["except_principals"].SetComputed()
 	attrs["for_securable_type"] = attrs["for_securable_type"].SetComputed()
 	attrs["grant"] = attrs["grant"].SetComputed()

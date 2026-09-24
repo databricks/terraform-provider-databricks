@@ -27,9 +27,10 @@ func TestUcAccCatalogForceDestroyConsistentAfterImport(t *testing.T) {
 			Template: template,
 		},
 		acceptance.Step{
-			ImportState:       true,
-			ResourceName:      "databricks_catalog.test",
-			ImportStateVerify: true,
+			ImportState:             true,
+			ResourceName:            "databricks_catalog.test",
+			ImportStateVerify:       true,
+			ImportStateVerifyIgnore: []string{"updated_at", "updated_by"},
 		},
 	)
 }

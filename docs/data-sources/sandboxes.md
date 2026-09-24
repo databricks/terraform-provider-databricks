@@ -28,8 +28,9 @@ The following arguments are supported:
 ## Attributes
 This data source exports a single attribute, `sandboxes`. It is a list of resources, each with the following attributes:
 * `create_time` (string) - Output only. The creation time of the sandbox
-* `display_name` (string) - Human-readable display label for the sandbox. At most 256 bytes
-* `name` (string) - The AIP-compliant resource name, such as "sandboxes/my-sandbox"
+* `display_name` (string) - Human-readable display label for the sandbox. At most 256 characters
+* `name` (string) - The sandbox resource name, in the form `sandboxes/{sandbox_id}`. Derived from
+  `sandbox_id`; any value supplied in a create or update request body is ignored
 * `spec` (SandboxSpec) - The desired configuration of the sandbox, supplied by the caller at creation time
 * `status` (SandboxStatus) - The observed runtime state of the sandbox, populated by the server
 * `update_time` (string) - Output only. The last update time of the sandbox metadata and spec

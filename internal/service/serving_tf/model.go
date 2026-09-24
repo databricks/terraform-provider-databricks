@@ -1016,6 +1016,9 @@ type AmazonBedrockConfig struct {
 	// `aws_access_key_id`, `aws_access_key_id_plaintext`,
 	// `aws_secret_access_key` and `aws_secret_access_key_plaintext`.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	// The name of the Unity Catalog service credential that the external model
+	// uses to access AWS resources.
+	UcServiceCredentialName types.String `tfsdk:"uc_service_credential_name"`
 }
 
 func (to *AmazonBedrockConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AmazonBedrockConfig) {
@@ -1052,6 +1055,7 @@ func (m AmazonBedrockConfig) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["aws_secret_access_key_plaintext"] = attrs["aws_secret_access_key_plaintext"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["bedrock_provider"] = attrs["bedrock_provider"].SetRequired()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["uc_service_credential_name"] = attrs["uc_service_credential_name"].SetOptional()
 
 	return attrs
 }
@@ -1081,6 +1085,7 @@ func (m AmazonBedrockConfig) ToObjectValue(ctx context.Context) basetypes.Object
 			"aws_secret_access_key_plaintext": m.AwsSecretAccessKeyPlaintext,
 			"bedrock_provider":                m.BedrockProvider,
 			"instance_profile_arn":            m.InstanceProfileArn,
+			"uc_service_credential_name":      m.UcServiceCredentialName,
 		})
 }
 
@@ -1095,6 +1100,7 @@ func (m AmazonBedrockConfig) Type(ctx context.Context) attr.Type {
 			"aws_secret_access_key_plaintext": types.StringType,
 			"bedrock_provider":                types.StringType,
 			"instance_profile_arn":            types.StringType,
+			"uc_service_credential_name":      types.StringType,
 		},
 	}
 }

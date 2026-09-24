@@ -112,9 +112,11 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 type Sandbox struct {
 	// Output only. The creation time of the sandbox.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Human-readable display label for the sandbox. At most 256 bytes.
+	// Human-readable display label for the sandbox. At most 256 characters.
 	DisplayName types.String `tfsdk:"display_name"`
-	// The AIP-compliant resource name, such as "sandboxes/my-sandbox".
+	// The sandbox resource name, in the form `sandboxes/{sandbox_id}`. Derived
+	// from `sandbox_id`; any value supplied in a create or update request body
+	// is ignored.
 	Name types.String `tfsdk:"name"`
 	// Client-supplied ID that becomes the final path segment of the resource
 	// name.

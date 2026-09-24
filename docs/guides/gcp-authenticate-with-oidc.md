@@ -69,7 +69,7 @@ resource "google_project_iam_member" "token_creator_binding" {
 }
 ```
 
-Finally, grant the service principal access to the workspace by following the instructions in the [Databricks documentation](https://docs.gcp.databricks.com/en/dev-tools/google-id-auth.html#step-2-assign-your-google-cloud-service-account-to-your-databricks-account).
+Finally, grant the service principal access to the workspace by following the instructions in the [Databricks documentation](https://docs.databricks.com/gcp/en/dev-tools/auth/google-id-auth#step-2-assign-your-google-cloud-service-account-to-your-databricks-account).
 
 ### Configure the Databricks provider to use the service principal
 

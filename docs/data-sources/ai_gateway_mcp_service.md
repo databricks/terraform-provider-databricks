@@ -73,6 +73,10 @@ The following attributes are exported:
   invocation fails until the source connection is updated
 * `name` (string) - Resource name of the Unity Catalog connection used to access the MCP
   server, in the form `connections/{catalog}.{schema}.{connection}`
+* `options` (object) - Options needed to build the U2M authorize request, returned as a flat map. When set, it
+  includes: `authorization_endpoint` (OAuth authorize URL), `token_endpoint` (token-exchange
+  URL), `oauth_scope` (space-separated scopes to request), `client_id` (OAuth client id), and
+  `oauth_provider` (the OAuth provider)
 
 ### RateLimit
 * `key` (string) - Scope of the rate limit. Depending on this value, the limit applies to a

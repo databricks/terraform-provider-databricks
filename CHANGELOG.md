@@ -1,5 +1,12 @@
 # Version changelog
 
+## Release v1.134.0 (2026-09-23)
+
+### Internal Changes
+
+* Updated the Databricks API definitions to the latest version ([#6020](https://github.com/databricks/terraform-provider-databricks/pull/6020)).
+
+
 ## Release v1.133.0 (2026-09-21)
 
 ### Bug Fixes

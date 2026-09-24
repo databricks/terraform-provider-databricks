@@ -102,6 +102,7 @@ This data source exports a single attribute, `features`. It is a list of resourc
 
 ### DataSource
 * `delta_table_source` (DeltaTableSource) - A Delta table data source
+* `feature_view_source` (FeatureViewSource) - A data source composed from registered upstream Features
 * `kafka_source` (KafkaSource) - A Kafka stream data source
 * `lateness` (SourceLateness) - Completeness timing for this Feature's use of the source. This configuration is part of the
   Feature definition; it does not modify the underlying table or stream
@@ -127,6 +128,12 @@ This data source exports a single attribute, `features`. It is a list of resourc
   be present in materialized tables and expected to match at query time.
   Colon-prefixed notation (e.g., "value:user_id") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
+
+### FeatureReference
+* `feature` (string) - The three-part full name of the upstream Feature
+
+### FeatureViewSource
+* `feature_references` (list of FeatureReference) - The upstream Features this source reads. Must include at least one feature
 
 ### FieldDefinition
 * `data_type` (string) - The scalar data type of the field. Possible values are: `BINARY`, `BOOLEAN`, `DATE`, `DECIMAL`, `DOUBLE`, `FLOAT`, `INTEGER`, `LONG`, `SHORT`, `STRING`, `TIMESTAMP`

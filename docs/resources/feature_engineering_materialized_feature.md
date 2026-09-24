@@ -38,10 +38,13 @@ The following arguments are supported:
 
 ### CronSchedule
 * `cron_expression` (string, optional) - The cron expression defining the schedule (e.g., "0 0 * * *" for daily at midnight). The
-  schedule is interpreted in the UTC time zone. Required when mode is MANUAL (or unset). Left
-  empty when mode is DERIVED, where the service computes it (aligned to UTC) from the features'
-  window timing and fills it in on the response
+  schedule is interpreted in timezone_id (defaults to UTC). Required when mode is MANUAL (or
+  unset). Left empty when mode is DERIVED, where the service computes it (aligned to UTC) from
+  the features' window timing and fills it in on the response
 * `mode` (string, optional) - How the schedule is determined. Defaults to MANUAL when unset. Possible values are: `DERIVED`, `MANUAL`
+* `timezone_id` (string, optional) - A Java timezone ID. The schedule is resolved with respect to this timezone. Defaults to UTC
+  when omitted. Can only be configured for MANUAL schedules; DERIVED schedules are always aligned
+  to UTC
 
 ### OfflineStoreConfig
 * `catalog_name` (string, required) - The Unity Catalog catalog name

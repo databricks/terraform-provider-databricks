@@ -1795,6 +1795,62 @@ func TestResourceJobCreate_Trigger_PeriodicCreate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourceJobCreate_Trigger_PeriodicMinutesCreate(t *testing.T) {
+	qa.ResourceFixture{
+		Create:   true,
+		Resource: ResourceJob(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/create",
+				ExpectedRequest: JobSettings{
+					MaxConcurrentRuns: 1,
+					Name:              "Test",
+					Trigger: &Trigger{
+						PauseStatus: "UNPAUSED",
+						Periodic: &Periodic{
+							Interval: 15,
+							Unit:     "MINUTES",
+						},
+					},
+				},
+				Response: Job{
+					JobID: 1042,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=1042",
+				Response: Job{
+					JobID: 1042,
+					Settings: &JobSettings{
+						MaxConcurrentRuns: 1,
+						Name:              "Test",
+						Trigger: &Trigger{
+							PauseStatus: "UNPAUSED",
+							Periodic: &Periodic{
+								Interval: 15,
+								Unit:     "MINUTES",
+							},
+						},
+					},
+				},
+			},
+		},
+		HCL: `
+		trigger {
+			pause_status = "UNPAUSED"
+			periodic {
+				interval = 15
+				unit = "MINUTES"
+			}
+		}
+		max_concurrent_runs = 1
+		name = "Test"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestResourceJobUpdate_ControlRunState_ContinuousUpdateRunNow(t *testing.T) {
 	qa.ResourceFixture{
 		Update:   true,

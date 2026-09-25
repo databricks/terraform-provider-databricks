@@ -14,6 +14,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -3787,4 +3788,77 @@ func TestJobResource_SparkConfDiffSuppress(t *testing.T) {
 	scs := common.MustSchemaPath(jr.Schema, "new_cluster", "spark_conf")
 	assert.True(t, scs.DiffSuppressFunc("new_cluster.0.spark_conf.%", "1", "0", nil))
 	assert.False(t, scs.DiffSuppressFunc("new_cluster.0.spark_conf.%", "1", "1", nil))
+}
+
+func TestJobResource_TaskDisabledFieldPassedInCreateRequest(t *testing.T) {
+	// The disabled field is present in the schema and serialization via SDK
+	// embedding: JobSettingsResource → jobs.JobSettings → []jobs.Task → Disabled.
+	// This test verifies that setting disabled = true in HCL results in the
+	// field being sent in the API create request.
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.2/jobs/create",
+				ExpectedRequest: jobs.CreateJob{
+					Name: "DisabledFieldTest",
+					Tasks: []jobs.Task{
+						{
+							TaskKey:           "a",
+							ExistingClusterId: "abc",
+							Disabled:          true,
+							NotebookTask: &jobs.NotebookTask{
+								NotebookPath: "/test",
+							},
+						},
+					},
+					MaxConcurrentRuns: 1,
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
+				},
+				Response: Job{
+					JobID: 123,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.2/jobs/get?job_id=123",
+				Response: Job{
+					Settings: &JobSettings{
+						Tasks: []JobTaskSettings{
+							{
+								TaskKey: "a",
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "DisabledFieldTest"
+
+		task {
+			task_key = "a"
+			existing_cluster_id = "abc"
+			disabled = true
+
+			notebook_task {
+				notebook_path = "/test"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "123", d.Id())
+}
+
+func TestJobResource_TaskDisabledFieldInSchema(t *testing.T) {
+	jr := ResourceJob()
+	taskSchema := common.MustSchemaPath(jr.Schema, "task")
+	s, ok := taskSchema.Elem.(*schema.Resource).Schema["disabled"]
+	assert.True(t, ok, "disabled field should be in the task schema via SDK embedding (jobs.JobSettings → []jobs.Task → Disabled)")
+	assert.Equal(t, schema.TypeBool, s.Type)
+	assert.True(t, s.Optional)
 }

@@ -2,12 +2,14 @@ package mws
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func ResourceMwsNccPrivateEndpointRule() common.Resource {
@@ -27,6 +29,19 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 			common.CustomizeSchemaPath(m, p).SetReadOnly()
 		}
 		common.CustomizeSchemaPath(m, "gcp_endpoint", "psc_endpoint_uri").SetReadOnly()
+		common.CustomizeSchemaPath(m, "gcp_endpoint", "service_attachment").SetForceNew()
+		gcpTargets := []string{"gcp_endpoint.0.service_attachment", "gcp_endpoint.0.google_api_endpoints", "gcp_endpoint.0.all_vpc_sc_services"}
+		for _, field := range []string{"service_attachment", "google_api_endpoints", "all_vpc_sc_services"} {
+			common.CustomizeSchemaPath(m, "gcp_endpoint", field).SetExactlyOneOf(gcpTargets)
+		}
+		common.CustomizeSchemaPath(m, "gcp_endpoint", "service_attachment").SetValidateFunc(validation.StringIsNotEmpty)
+		common.CustomizeSchemaPath(m, "gcp_endpoint", "all_vpc_sc_services").SetValidateFunc(func(v any, k string) ([]string, []error) {
+			if !v.(bool) {
+				return nil, []error{fmt.Errorf("%s must be true when configured; omit it to select another GCP target", k)}
+			}
+			return nil, nil
+		})
+		common.CustomizeSchemaPath(m, "gcp_endpoint", "google_api_endpoints", "endpoints").SetRequired().SetMinItems(1)
 
 		common.CustomizeSchemaPath(m, "network_connectivity_config_id").SetRequired().SetForceNew()
 		common.CustomizeSchemaPath(m, "enabled").SetOptional().SetComputed()
@@ -89,9 +104,8 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 				return err
 			}
 
-			// only enabled, domain names & resource names are updatable
-			// they do require update_mask to be set
-			// resource_names are not applicable to Azure, so we exclude them from the update
+			// Updatable fields require update_mask to be set. GCP service
+			// attachments are ForceNew, so only first-party target changes reach Update.
 			updateMask := []string{}
 			updatePrivateEndpointRule := settings.UpdatePrivateEndpointRule{}
 
@@ -114,6 +128,18 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 					newResourceNames = append(newResourceNames, v.(string))
 				}
 				updatePrivateEndpointRule.ResourceNames = newResourceNames
+			}
+			if d.HasChange("gcp_endpoint.0.all_vpc_sc_services") || d.HasChange("gcp_endpoint.0.google_api_endpoints") {
+				// The API replaces the target oneof through the parent mask.
+				updateMask = append(updateMask, "gcp_endpoint")
+				var gcpUpdate settings.UpdatePrivateEndpointRule
+				common.DataToStructPointer(d, s, &gcpUpdate)
+				if gcpUpdate.GcpEndpoint != nil {
+					updatePrivateEndpointRule.GcpEndpoint = &settings.GcpEndpoint{
+						AllVpcScServices:   gcpUpdate.GcpEndpoint.AllVpcScServices,
+						GoogleApiEndpoints: gcpUpdate.GcpEndpoint.GoogleApiEndpoints,
+					}
+				}
 			}
 			_, err = acc.NetworkConnectivity.UpdatePrivateEndpointRule(ctx, settings.UpdateNccPrivateEndpointRuleRequest{
 				NetworkConnectivityConfigId: nccId,

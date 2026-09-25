@@ -161,6 +161,13 @@ The following arguments are supported:
   `entra_service_principal`. The credential is referenced by name; its value
   is not carried here. Only supported on Azure-hosted workspaces
 
+### ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth
+* `api_key_name` (string, optional) - HTTP header name that carries the API key on outbound requests (e.g.,
+  `Ocp-Apim-Subscription-Key`). The value forwarded under this header is
+  supplied via `api_key_value`
+* `api_key_value` (ModelProviderServiceConfigProviderSecret, optional) - Secret value forwarded under the `api_key_name` header on outbound
+  requests. Supplied as inline plaintext via `ProviderSecret.plaintext`
+
 ### ModelProviderServiceConfigCustomProviderConfig
 * `direct` (ModelProviderServiceConfigCustomProviderDirectConfig, optional) - Endpoint and authentication configuration for the custom provider
 
@@ -169,6 +176,9 @@ The following arguments are supported:
   in `api_key.plaintext`
 * `base_url` (string, optional) - Endpoint URL of the OpenAI-compatible service (e.g.,
   `https://api.example.com/v1`). Required on Create
+* `header_auth` (ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth, optional) - Header-based API-key auth: the secret is forwarded on outbound requests
+  under a caller-chosen HTTP header rather than as an `Authorization`
+  bearer token. Set this instead of `api_key` for header auth
 
 ### ModelProviderServiceConfigEntraServicePrincipal
 * `client_id` (string, optional) - Entra ID client (application) ID. Required on Create

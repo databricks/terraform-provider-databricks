@@ -36,12 +36,14 @@ The following arguments are supported:
 * `effective_automatic_cluster_update_workspace` (ClusterAutoRestartMessage, optional) - Effective setting value for automatic_cluster_update_workspace setting. This is the final effective value of setting. To set a value use automatic_cluster_update_workspace
 * `effective_personal_compute` (PersonalComputeMessage, optional) - Effective setting value for personal_compute setting. This is the final effective value of setting. To set a value use personal_compute
 * `effective_restrict_workspace_admins` (RestrictWorkspaceAdminsMessage, optional) - Effective setting value for restrict_workspace_admins setting. This is the final effective value of setting. To set a value use restrict_workspace_admins
+* `effective_workspace_label` (WorkspaceLabelMessage, optional) - Effective setting value for workspace_label setting. This is the final effective value of setting. To set a value use workspace_label
 * `integer_val` (IntegerMessage, optional) - Setting value for integer type setting. This is the setting value set by consumers, check effective_integer_val for final setting value
 * `name` (string, optional) - Name of the setting
 * `operational_email_custom_recipient` (OperationalEmailCustomRecipientMessage, optional) - Setting value for operational_email_custom_recipient setting. This is the setting value set by consumers, check effective_operational_email_custom_recipient for final setting value
 * `personal_compute` (PersonalComputeMessage, optional) - Setting value for personal_compute setting. This is the setting value set by consumers, check effective_personal_compute for final setting value
 * `restrict_workspace_admins` (RestrictWorkspaceAdminsMessage, optional) - Setting value for restrict_workspace_admins setting. This is the setting value set by consumers, check effective_restrict_workspace_admins for final setting value
 * `string_val` (StringMessage, optional) - Setting value for string type setting. This is the setting value set by consumers, check effective_string_val for final setting value
+* `workspace_label` (WorkspaceLabelMessage, optional) - Setting value for workspace_label setting. This is the setting value set by consumers, check effective_workspace_label for final setting value
 
 ### AibiDashboardEmbeddingAccessPolicy
 * `access_policy_type` (string, required) - Possible values are: `ALLOW_ALL_DOMAINS`, `ALLOW_APPROVED_DOMAINS`, `DENY_ALL_DOMAINS`
@@ -98,6 +100,10 @@ The following arguments are supported:
 
 ### StringMessage
 * `value` (string, optional) - Represents a generic string value
+
+### WorkspaceLabelMessage
+* `color` (string, optional)
+* `label` (string, optional)
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

@@ -6,9 +6,21 @@ subcategory: "Postgres"
 
 [API Documentation](https://docs.databricks.com/api/workspace/postgres)
 
+This data source retrieves the snapshot schedule for a branch.
 
 
 ## Example Usage
+### Retrieve a Branch's Snapshot Schedule
+
+```hcl
+data "databricks_postgres_snapshot_schedule" "this" {
+  name = "projects/my-project/branches/production/snapshot-schedule"
+}
+
+output "cadences" {
+  value = data.databricks_postgres_snapshot_schedule.this.schedule
+}
+```
 
 
 ## Arguments

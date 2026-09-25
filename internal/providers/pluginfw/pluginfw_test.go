@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
@@ -63,6 +64,21 @@ func TestGetPluginFrameworkResources_NoFallbackNoWarning(t *testing.T) {
 	_ = getPluginFrameworkResourcesToRegister(nil, nil)
 
 	assert.Empty(t, buf.String(), "no warning should be emitted when no fallback is configured")
+}
+
+func TestEphemeralResources(t *testing.T) {
+	p, ok := GetDatabricksProviderPluginFramework().(provider.ProviderWithEphemeralResources)
+	if !assert.True(t, ok) {
+		return
+	}
+
+	resources := p.EphemeralResources(context.Background())
+	if !assert.Len(t, resources, 1) {
+		return
+	}
+	response := &ephemeral.MetadataResponse{}
+	resources[0]().Metadata(context.Background(), ephemeral.MetadataRequest{}, response)
+	assert.Equal(t, "databricks_postgres_database_credential", response.TypeName)
 }
 
 func TestConfigure(t *testing.T) {
@@ -134,6 +150,7 @@ func TestConfigure(t *testing.T) {
 			// Get the client from the response
 			client, ok := resp.ResourceData.(*common.DatabricksClient)
 			assert.True(t, ok, "ResourceData should be a DatabricksClient")
+			assert.Same(t, client, resp.EphemeralResourceData, "EphemeralResourceData should use the configured DatabricksClient")
 			tc.validateResourceData(client)
 		})
 	}

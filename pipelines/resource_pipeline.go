@@ -39,6 +39,11 @@ func Create(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	var createPipelineRequest createPipelineRequestStruct
 	common.DataToStructPointer(d, pipelineSchema, &createPipelineRequest)
 	adjustForceSendFields(&createPipelineRequest.Clusters)
+	// `serverless` is `omitempty` in the SDK, so `serverless = false` is dropped
+	// from the request. For ingestion pipelines the API then defaults serverless
+	// to true and rejects the `clusters` block with "cannot provide cluster
+	// settings when using serverless compute". Always send the configured value.
+	createPipelineRequest.ForceSendFields = append(createPipelineRequest.ForceSendFields, "Serverless")
 
 	createdPipeline, err := w.Pipelines.Create(ctx, createPipelineRequest.CreatePipeline)
 	if err != nil {
@@ -71,6 +76,9 @@ func Update(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	common.DataToStructPointer(d, pipelineSchema, &updatePipelineRequest)
 	updatePipelineRequest.EditPipeline.PipelineId = d.Id()
 	adjustForceSendFields(&updatePipelineRequest.Clusters)
+	// See Create: force-send `serverless` so `serverless = false` is not dropped
+	// from the edit request (which would flip ingestion pipelines to serverless).
+	updatePipelineRequest.ForceSendFields = append(updatePipelineRequest.ForceSendFields, "Serverless")
 	err := w.Pipelines.Update(ctx, updatePipelineRequest.EditPipeline)
 	if err != nil {
 		return err

@@ -220,7 +220,7 @@ func (m *CreateDirectGroupMemberRequest) SetDirectGroupMember(ctx context.Contex
 }
 
 type CreateGroupProxyRequest struct {
-	// Required. Group to be created in <Databricks>
+	// Required. Group to be created in Databricks
 	Group types.Object `tfsdk:"group"`
 }
 
@@ -312,7 +312,7 @@ func (m *CreateGroupProxyRequest) SetGroup(ctx context.Context, v Group) {
 }
 
 type CreateGroupRequest struct {
-	// Required. Group to be created in <Databricks>
+	// Required. Group to be created in Databricks
 	Group types.Object `tfsdk:"group"`
 }
 
@@ -405,7 +405,7 @@ func (m *CreateGroupRequest) SetGroup(ctx context.Context, v Group) {
 }
 
 type CreateServicePrincipalProxyRequest struct {
-	// Required. Service principal to be created in <Databricks>
+	// Required. Service principal to be created in Databricks
 	ServicePrincipal types.Object `tfsdk:"service_principal"`
 }
 
@@ -497,7 +497,7 @@ func (m *CreateServicePrincipalProxyRequest) SetServicePrincipal(ctx context.Con
 }
 
 type CreateServicePrincipalRequest struct {
-	// Required. Service principal to be created in <Databricks>
+	// Required. Service principal to be created in Databricks
 	ServicePrincipal types.Object `tfsdk:"service_principal"`
 }
 
@@ -590,7 +590,7 @@ func (m *CreateServicePrincipalRequest) SetServicePrincipal(ctx context.Context,
 }
 
 type CreateUserProxyRequest struct {
-	// Required. User to be created in <Databricks>
+	// Required. User to be created in Databricks
 	User types.Object `tfsdk:"user"`
 }
 
@@ -682,7 +682,7 @@ func (m *CreateUserProxyRequest) SetUser(ctx context.Context, v User) {
 }
 
 type CreateUserRequest struct {
-	// Required. User to be created in <Databricks>
+	// Required. User to be created in Databricks
 	User types.Object `tfsdk:"user"`
 }
 
@@ -775,7 +775,7 @@ func (m *CreateUserRequest) SetUser(ctx context.Context, v User) {
 }
 
 type CreateWorkspaceAssignmentDetailProxyRequest struct {
-	// Required. Workspace assignment detail to be created in <Databricks>.
+	// Required. Workspace assignment detail to be created in Databricks.
 	WorkspaceAssignmentDetail types.Object `tfsdk:"workspace_assignment_detail"`
 }
 
@@ -867,7 +867,7 @@ func (m *CreateWorkspaceAssignmentDetailProxyRequest) SetWorkspaceAssignmentDeta
 }
 
 type CreateWorkspaceAssignmentDetailRequest struct {
-	// Required. Workspace assignment detail to be created in <Databricks>.
+	// Required. Workspace assignment detail to be created in Databricks.
 	WorkspaceAssignmentDetail types.Object `tfsdk:"workspace_assignment_detail"`
 	// Required. The workspace ID for which the workspace assignment detail is
 	// being created.
@@ -966,7 +966,7 @@ func (m *CreateWorkspaceAssignmentDetailRequest) SetWorkspaceAssignmentDetail(ct
 }
 
 type CreateWorkspaceAssignmentProxyRequest struct {
-	// Required. Workspace assignment to be created in <Databricks>.
+	// Required. Workspace assignment to be created in Databricks.
 	WorkspaceAssignment types.Object `tfsdk:"workspace_assignment"`
 }
 
@@ -1058,7 +1058,7 @@ func (m *CreateWorkspaceAssignmentProxyRequest) SetWorkspaceAssignment(ctx conte
 }
 
 type CreateWorkspaceAssignmentRequest struct {
-	// Required. Workspace assignment to be created in <Databricks>.
+	// Required. Workspace assignment to be created in Databricks.
 	WorkspaceAssignment types.Object `tfsdk:"workspace_assignment"`
 	// Required. The workspace ID for which the workspace assignment is being
 	// created.
@@ -5759,7 +5759,7 @@ func (m TransitiveParentGroup) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateGroupProxyRequest struct {
-	// Required. Group to be updated in <Databricks>
+	// Required. Group to be updated in Databricks
 	Group types.Object `tfsdk:"group"`
 	// Required. Internal ID of the group in Databricks.
 	GroupId types.String `tfsdk:"-"`
@@ -5861,7 +5861,7 @@ func (m *UpdateGroupProxyRequest) SetGroup(ctx context.Context, v Group) {
 }
 
 type UpdateGroupRequest struct {
-	// Required. Group to be updated in <Databricks>
+	// Required. Group to be updated in Databricks
 	Group types.Object `tfsdk:"group"`
 	// Required. Internal ID of the group in Databricks.
 	GroupId types.String `tfsdk:"-"`
@@ -5964,7 +5964,7 @@ func (m *UpdateGroupRequest) SetGroup(ctx context.Context, v Group) {
 }
 
 type UpdateServicePrincipalProxyRequest struct {
-	// Required. Service principal to be updated in <Databricks>
+	// Required. Service principal to be updated in Databricks
 	ServicePrincipal types.Object `tfsdk:"service_principal"`
 	// Required. Internal ID of the service principal in Databricks.
 	ServicePrincipalId types.String `tfsdk:"-"`
@@ -6066,7 +6066,7 @@ func (m *UpdateServicePrincipalProxyRequest) SetServicePrincipal(ctx context.Con
 }
 
 type UpdateServicePrincipalRequest struct {
-	// Required. Service Principal to be updated in <Databricks>
+	// Required. Service Principal to be updated in Databricks
 	ServicePrincipal types.Object `tfsdk:"service_principal"`
 	// Required. Internal ID of the service principal in Databricks.
 	ServicePrincipalId types.String `tfsdk:"-"`
@@ -6171,7 +6171,7 @@ func (m *UpdateServicePrincipalRequest) SetServicePrincipal(ctx context.Context,
 type UpdateUserProxyRequest struct {
 	// Optional. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
-	// Required. User to be updated in <Databricks>
+	// Required. User to be updated in Databricks
 	User types.Object `tfsdk:"user"`
 	// Required. Internal ID of the user in Databricks.
 	UserId types.String `tfsdk:"-"`
@@ -6273,7 +6273,7 @@ func (m *UpdateUserProxyRequest) SetUser(ctx context.Context, v User) {
 type UpdateUserRequest struct {
 	// Optional. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
-	// Required. User to be updated in <Databricks>
+	// Required. User to be updated in Databricks
 	User types.Object `tfsdk:"user"`
 	// Required. Internal ID of the user in Databricks.
 	UserId types.String `tfsdk:"-"`
@@ -6378,7 +6378,7 @@ type UpdateWorkspaceAssignmentDetailProxyRequest struct {
 	PrincipalId types.Int64 `tfsdk:"-"`
 	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
-	// Required. Workspace assignment detail to be updated in <Databricks>.
+	// Required. Workspace assignment detail to be updated in Databricks.
 	WorkspaceAssignmentDetail types.Object `tfsdk:"workspace_assignment_detail"`
 }
 
@@ -6480,7 +6480,7 @@ type UpdateWorkspaceAssignmentDetailRequest struct {
 	PrincipalId types.Int64 `tfsdk:"-"`
 	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
-	// Required. Workspace assignment detail to be updated in <Databricks>.
+	// Required. Workspace assignment detail to be updated in Databricks.
 	WorkspaceAssignmentDetail types.Object `tfsdk:"workspace_assignment_detail"`
 	// Required. The workspace ID for which the workspace assignment detail is
 	// being updated.
@@ -6589,7 +6589,7 @@ type UpdateWorkspaceAssignmentProxyRequest struct {
 	PrincipalId types.Int64 `tfsdk:"-"`
 	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
-	// Required. Workspace assignment to be updated in <Databricks>.
+	// Required. Workspace assignment to be updated in Databricks.
 	WorkspaceAssignment types.Object `tfsdk:"workspace_assignment"`
 }
 
@@ -6691,7 +6691,7 @@ type UpdateWorkspaceAssignmentRequest struct {
 	PrincipalId types.Int64 `tfsdk:"-"`
 	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
-	// Required. Workspace assignment to be updated in <Databricks>.
+	// Required. Workspace assignment to be updated in Databricks.
 	WorkspaceAssignment types.Object `tfsdk:"workspace_assignment"`
 	// Required. The workspace ID for which the workspace assignment is being
 	// updated.
@@ -6800,7 +6800,7 @@ type UpdateWorkspaceIdentityDetailRequest struct {
 	PrincipalId types.Int64 `tfsdk:"-"`
 	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
-	// Required. Workspace identity detail to be updated in <Databricks>.
+	// Required. Workspace identity detail to be updated in Databricks.
 	WorkspaceIdentityDetail types.Object `tfsdk:"workspace_identity_detail"`
 }
 

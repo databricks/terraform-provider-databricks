@@ -48,8 +48,10 @@ This data source exports a single attribute, `kafka_configs`. It is a list of re
 * `dataframe_schema` (string) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
   Required if transformation_sql is specified.
   Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
+* `entity_columns` (list of string, deprecated)
 * `filter_condition` (string) - Single WHERE clause to filter delta table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections
 * `full_name` (string) - The full three-part (catalog, schema, table) name of the Delta table
+* `timeseries_column` (string, deprecated)
 * `transformation_sql` (string) - A single SQL SELECT expression applied after filter_condition.
   Should contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
   If transformation_sql is not provided, all columns of the delta table are present in the DataSource dataframe
@@ -58,7 +60,10 @@ This data source exports a single attribute, `kafka_configs`. It is a list of re
 * `backfill_job_id` (integer) - The ID of the Databricks Job that performs the historical backfill of the ingestion Delta table
 * `backfill_source` (BackfillSource) - A user-provided source for backfilling data. Historical data is used when creating a training set from streaming features linked to this Stream.
   The backfill data stored in this location will be copied into the ingestion table for offline querying and training.
-  The schema for this source must match exactly that of the key and payload schemas specified for this Stream
+  The schema for this source must match exactly that of the key and payload schemas specified for this Stream,
+  except that it may omit any columns listed in excluded_columns
+* `budget_policy_id` (string) - The ID of the budget policy used to attribute the serverless compute cost of this stream's
+  managed ingestion. If not specified, a default budget policy may be applied
 * `deduplication_columns` (list of string) - Column paths used to identify duplicate rows during ingestion; only one row per
   distinct combination of these values is kept. Use dot notation for nested fields
   (e.g. `value.user_id`). Empty list means every column is compared
@@ -68,6 +73,13 @@ This data source exports a single attribute, `kafka_configs`. It is a list of re
 * `ingestion_job_id` (integer) - The ID of the Databricks Job that performs the forward-fill ingestion
 * `ingestion_pipeline_id` (string) - The ID of the SDP pipeline that continuously copies new events from the streaming source
   into the ingestion Delta table
+* `tags` (object) - Custom tags to associate with this stream's managed ingestion. They are applied to the
+  ingestion pipeline and its forward-fill and backfill jobs, and forwarded to the underlying
+  compute as cluster tags, so ingestion cost can be attributed in the billing system tables.
+  These tags apply only to the managed ingestion compute; they are not applied to the Stream
+  entity itself, and are distinct from any Unity Catalog tags on the Stream.
+  A maximum of 25 tags is supported; keys and values are subject to the same limitations as
+  cluster tags
 
 ### IngestionDestination
 * `delta_table_name` (string) - The full three-part name (catalog, schema, name) of the Delta table to be created for ingestion

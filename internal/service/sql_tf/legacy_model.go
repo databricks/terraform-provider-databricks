@@ -6833,8 +6833,9 @@ type ExecuteStatementRequest_SdkV2 struct {
 	// access token, OAuth token, or similar) _must be removed_ when fetching
 	// from these links.
 	//
-	// 2. These are URLs with a specific expiration, indicated in the response.
-	// The behavior when attempting to use an expired link is cloud specific.
+	// 2. These are short-lived cloud-storage URLs with a specific expiration,
+	// indicated in the response. The behavior when attempting to use an expired
+	// link is cloud specific.
 	Disposition types.String `tfsdk:"disposition"`
 	// Statement execution supports three result formats: `JSON_ARRAY`
 	// (default), `ARROW_STREAM`, and `CSV`.
@@ -7178,10 +7179,10 @@ type ExternalLink_SdkV2 struct {
 	// becomes invalid, after which point a new `external_link` must be
 	// requested.
 	Expiration types.String `tfsdk:"expiration"`
-	// A URL pointing to a chunk of result data, hosted by an external service,
-	// with a short expiration time (<= 15 minutes). As this URL contains a
-	// temporary credential, it should be considered sensitive and the client
-	// should not expose this URL in a log.
+	// A short-lived cloud-storage URL pointing to a chunk of result data,
+	// hosted by an external service, with a short expiration time (<= 15
+	// minutes). As this URL contains a temporary credential, it should be
+	// considered sensitive and the client should not expose this URL in a log.
 	ExternalLink types.String `tfsdk:"external_link"`
 	// HTTP headers that must be included with a GET request to the
 	// `external_link`. Each header is provided as a key-value pair. Headers are
@@ -14964,10 +14965,10 @@ func (m RestoreResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Contains the result data of a single chunk when using `INLINE` disposition.
 // When using `EXTERNAL_LINKS` disposition, the array `external_links` is used
-// instead to provide URLs to the result data in cloud storage. Exactly one of
-// these alternatives is used. (While the `external_links` array prepares the
-// API to return multiple links in a single response. Currently only a single
-// link is returned.)
+// instead to provide short-lived cloud-storage URLs to the result data in cloud
+// storage. Exactly one of these alternatives is used. (While the
+// `external_links` array prepares the API to return multiple links in a single
+// response. Currently only a single link is returned.)
 type ResultData_SdkV2 struct {
 	// The number of bytes in the result chunk. This field is not available when
 	// using `INLINE` disposition.

@@ -328,6 +328,119 @@ func (m AutoFullRefreshPolicy_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type AvroTransformerOptions_SdkV2 struct {
+	// (Optional) Parse mode for Avro data. Valid values: FAILFAST, PERMISSIVE.
+	// Defaults to FAILFAST.
+	ParseMode types.String `tfsdk:"parse_mode"`
+	// Inline Avro JSON schema string.
+	Schema types.String `tfsdk:"schema"`
+	// Path to a schema file (.avsc).
+	SchemaFilePath types.String `tfsdk:"schema_file_path"`
+	// (Optional) Schema registry to resolve the Avro schema at runtime instead
+	// of providing it inline or via a file path.
+	SchemaRegistry types.List `tfsdk:"schema_registry"`
+}
+
+func (to *AvroTransformerOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AvroTransformerOptions_SdkV2) {
+	if !from.SchemaRegistry.IsNull() && !from.SchemaRegistry.IsUnknown() {
+		if toSchemaRegistry, ok := to.GetSchemaRegistry(ctx); ok {
+			if fromSchemaRegistry, ok := from.GetSchemaRegistry(ctx); ok {
+				// Recursively sync the fields of SchemaRegistry
+				toSchemaRegistry.SyncFieldsDuringCreateOrUpdate(ctx, fromSchemaRegistry)
+				to.SetSchemaRegistry(ctx, toSchemaRegistry)
+			}
+		}
+	}
+}
+
+func (to *AvroTransformerOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AvroTransformerOptions_SdkV2) {
+	if !from.SchemaRegistry.IsNull() && !from.SchemaRegistry.IsUnknown() {
+		if toSchemaRegistry, ok := to.GetSchemaRegistry(ctx); ok {
+			if fromSchemaRegistry, ok := from.GetSchemaRegistry(ctx); ok {
+				toSchemaRegistry.SyncFieldsDuringRead(ctx, fromSchemaRegistry)
+				to.SetSchemaRegistry(ctx, toSchemaRegistry)
+			}
+		}
+	}
+}
+
+func (m AvroTransformerOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parse_mode"] = attrs["parse_mode"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["schema_file_path"] = attrs["schema_file_path"].SetOptional()
+	attrs["schema_registry"] = attrs["schema_registry"].SetOptional()
+	attrs["schema_registry"] = attrs["schema_registry"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AvroTransformerOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AvroTransformerOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"schema_registry": reflect.TypeOf(SchemaRegistryConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AvroTransformerOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AvroTransformerOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"parse_mode":       m.ParseMode,
+			"schema":           m.Schema,
+			"schema_file_path": m.SchemaFilePath,
+			"schema_registry":  m.SchemaRegistry,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AvroTransformerOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"parse_mode":       types.StringType,
+			"schema":           types.StringType,
+			"schema_file_path": types.StringType,
+			"schema_registry": basetypes.ListType{
+				ElemType: SchemaRegistryConfig_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSchemaRegistry returns the value of the SchemaRegistry field in AvroTransformerOptions_SdkV2 as
+// a SchemaRegistryConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AvroTransformerOptions_SdkV2) GetSchemaRegistry(ctx context.Context) (SchemaRegistryConfig_SdkV2, bool) {
+	var e SchemaRegistryConfig_SdkV2
+	if m.SchemaRegistry.IsNull() || m.SchemaRegistry.IsUnknown() {
+		return e, false
+	}
+	var v []SchemaRegistryConfig_SdkV2
+	d := m.SchemaRegistry.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchemaRegistry sets the value of the SchemaRegistry field in AvroTransformerOptions_SdkV2.
+func (m *AvroTransformerOptions_SdkV2) SetSchemaRegistry(ctx context.Context, v SchemaRegistryConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schema_registry"]
+	m.SchemaRegistry = types.ListValueMust(t, vs)
+}
+
 type ClonePipelineRequest_SdkV2 struct {
 	// If false, deployment will fail if name conflicts with that of another
 	// pipeline.
@@ -1326,6 +1439,54 @@ func (m *ConfluenceConnectorOptions_SdkV2) SetIncludeConfluenceSpaces(ctx contex
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["include_confluence_spaces"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.IncludeConfluenceSpaces = types.ListValueMust(t, vs)
+}
+
+type ConfluentSchemaRegistryOptions_SdkV2 struct {
+	// Required: subject name to resolve in the registry.
+	Subject types.String `tfsdk:"subject"`
+}
+
+func (to *ConfluentSchemaRegistryOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ConfluentSchemaRegistryOptions_SdkV2) {
+}
+
+func (to *ConfluentSchemaRegistryOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ConfluentSchemaRegistryOptions_SdkV2) {
+}
+
+func (m ConfluentSchemaRegistryOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["subject"] = attrs["subject"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ConfluentSchemaRegistryOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ConfluentSchemaRegistryOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ConfluentSchemaRegistryOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ConfluentSchemaRegistryOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"subject": m.Subject,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ConfluentSchemaRegistryOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"subject": types.StringType,
+		},
+	}
 }
 
 type ConnectionParameters_SdkV2 struct {
@@ -8528,9 +8689,9 @@ type ListPipelinesRequest_SdkV2 struct {
 	// Composite filters are not supported. This field is optional.
 	Filter types.String `tfsdk:"-"`
 	// The maximum number of entries to return in a single page. The system may
-	// return fewer than max_results events in a response, even if there are
-	// more events available. This field is optional. The default value is 25.
-	// The maximum value is 100. An error is returned if the value of
+	// return fewer than max_results pipelines in a response, even if there are
+	// more pipelines available. This field is optional. The default value is
+	// 25. The maximum value is 100. An error is returned if the value of
 	// max_results is greater than 100.
 	MaxResults types.Int64 `tfsdk:"-"`
 	// A list of strings specifying the order of results. Supported order_by
@@ -8635,9 +8796,9 @@ func (m *ListPipelinesRequest_SdkV2) SetOrderBy(ctx context.Context, v []types.S
 }
 
 type ListPipelinesResponse_SdkV2 struct {
-	// If present, a token to fetch the next page of events.
+	// If present, a token to fetch the next page of pipelines.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-	// The list of events matching the request criteria.
+	// The list of pipelines matching the request criteria.
 	Statuses types.List `tfsdk:"statuses"`
 }
 
@@ -13721,6 +13882,127 @@ func (m PostgresSlotConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type ProtobufTransformerOptions_SdkV2 struct {
+	// Required: path to the .desc file (dbfs:/... or /Volumes/...).
+	DescFilePath types.String `tfsdk:"desc_file_path"`
+	// Required: fully-qualified message type name.
+	MessageName types.String `tfsdk:"message_name"`
+	// (Optional) Parse mode for Protobuf data. Valid values: FAILFAST,
+	// PERMISSIVE. Defaults to FAILFAST.
+	ParseMode types.String `tfsdk:"parse_mode"`
+	// (Optional) Maximum expansion depth for recursive protobuf fields. Spark
+	// SQL does not natively support recursive types, so recursive fields are
+	// expanded up to this depth and truncated beyond it. Valid values: -1
+	// (disallow recursive fields), 0 (drop), 1-10.
+	RecursiveFieldsMaxDepth types.Int64 `tfsdk:"recursive_fields_max_depth"`
+	// (Optional) Schema registry to resolve the Protobuf schema at runtime
+	// instead of providing it via desc_file_path.
+	SchemaRegistry types.List `tfsdk:"schema_registry"`
+}
+
+func (to *ProtobufTransformerOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ProtobufTransformerOptions_SdkV2) {
+	if !from.SchemaRegistry.IsNull() && !from.SchemaRegistry.IsUnknown() {
+		if toSchemaRegistry, ok := to.GetSchemaRegistry(ctx); ok {
+			if fromSchemaRegistry, ok := from.GetSchemaRegistry(ctx); ok {
+				// Recursively sync the fields of SchemaRegistry
+				toSchemaRegistry.SyncFieldsDuringCreateOrUpdate(ctx, fromSchemaRegistry)
+				to.SetSchemaRegistry(ctx, toSchemaRegistry)
+			}
+		}
+	}
+}
+
+func (to *ProtobufTransformerOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ProtobufTransformerOptions_SdkV2) {
+	if !from.SchemaRegistry.IsNull() && !from.SchemaRegistry.IsUnknown() {
+		if toSchemaRegistry, ok := to.GetSchemaRegistry(ctx); ok {
+			if fromSchemaRegistry, ok := from.GetSchemaRegistry(ctx); ok {
+				toSchemaRegistry.SyncFieldsDuringRead(ctx, fromSchemaRegistry)
+				to.SetSchemaRegistry(ctx, toSchemaRegistry)
+			}
+		}
+	}
+}
+
+func (m ProtobufTransformerOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["desc_file_path"] = attrs["desc_file_path"].SetOptional()
+	attrs["message_name"] = attrs["message_name"].SetOptional()
+	attrs["parse_mode"] = attrs["parse_mode"].SetOptional()
+	attrs["recursive_fields_max_depth"] = attrs["recursive_fields_max_depth"].SetOptional()
+	attrs["schema_registry"] = attrs["schema_registry"].SetOptional()
+	attrs["schema_registry"] = attrs["schema_registry"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ProtobufTransformerOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ProtobufTransformerOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"schema_registry": reflect.TypeOf(SchemaRegistryConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ProtobufTransformerOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ProtobufTransformerOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"desc_file_path":             m.DescFilePath,
+			"message_name":               m.MessageName,
+			"parse_mode":                 m.ParseMode,
+			"recursive_fields_max_depth": m.RecursiveFieldsMaxDepth,
+			"schema_registry":            m.SchemaRegistry,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ProtobufTransformerOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"desc_file_path":             types.StringType,
+			"message_name":               types.StringType,
+			"parse_mode":                 types.StringType,
+			"recursive_fields_max_depth": types.Int64Type,
+			"schema_registry": basetypes.ListType{
+				ElemType: SchemaRegistryConfig_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSchemaRegistry returns the value of the SchemaRegistry field in ProtobufTransformerOptions_SdkV2 as
+// a SchemaRegistryConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ProtobufTransformerOptions_SdkV2) GetSchemaRegistry(ctx context.Context) (SchemaRegistryConfig_SdkV2, bool) {
+	var e SchemaRegistryConfig_SdkV2
+	if m.SchemaRegistry.IsNull() || m.SchemaRegistry.IsUnknown() {
+		return e, false
+	}
+	var v []SchemaRegistryConfig_SdkV2
+	d := m.SchemaRegistry.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchemaRegistry sets the value of the SchemaRegistry field in ProtobufTransformerOptions_SdkV2.
+func (m *ProtobufTransformerOptions_SdkV2) SetSchemaRegistry(ctx context.Context, v SchemaRegistryConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schema_registry"]
+	m.SchemaRegistry = types.ListValueMust(t, vs)
+}
+
 // RabbitMQ specific options for ingestion. Performance tuning options
 // (consumers_per_task, max_messages_per_fetch, etc.) are intentionally not
 // exposed in the public API. The managed connector uses sensible defaults
@@ -14504,6 +14786,11 @@ func (m *RewindSpec_SdkV2) SetDatasets(ctx context.Context, v []RewindDatasetSpe
 // Only `user_name` or `service_principal_name` can be specified. If both are
 // specified, an error is thrown.
 type RunAs_SdkV2 struct {
+	// Group name of an account group assigned to the workspace. When set, the
+	// pipeline runs as the group and the group's permissions are used for data
+	// access. Setting this field requires being a member of the group, or
+	// having the `Assume` permission on the group.
+	GroupName types.String `tfsdk:"group_name"`
 	// Application ID of an active service principal. Setting this field
 	// requires the `servicePrincipal/user` role.
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
@@ -14519,6 +14806,7 @@ func (to *RunAs_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RunAs_SdkV
 }
 
 func (m RunAs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -14543,6 +14831,7 @@ func (m RunAs_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"group_name":             m.GroupName,
 			"service_principal_name": m.ServicePrincipalName,
 			"user_name":              m.UserName,
 		})
@@ -14552,10 +14841,121 @@ func (m RunAs_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m RunAs_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
 			"user_name":              types.StringType,
 		},
 	}
+}
+
+type SchemaRegistryConfig_SdkV2 struct {
+	// Required: Confluent-compatible schema registry options.
+	ConfluentOptions types.List `tfsdk:"confluent_options"`
+	// (Optional) UC connection for registry authentication. Specify if
+	// different from the top-level source connection.
+	ConnectionName types.String `tfsdk:"connection_name"`
+	// (Optional, Protobuf only) Selects a specific message from a schema that
+	// defines multiple Protobuf messages. Simple ("Location") or
+	// fully-qualified ("com.example.protos.Location"). Defaults to the first
+	// message.
+	ProtobufMessageName types.String `tfsdk:"protobuf_message_name"`
+}
+
+func (to *SchemaRegistryConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SchemaRegistryConfig_SdkV2) {
+	if !from.ConfluentOptions.IsNull() && !from.ConfluentOptions.IsUnknown() {
+		if toConfluentOptions, ok := to.GetConfluentOptions(ctx); ok {
+			if fromConfluentOptions, ok := from.GetConfluentOptions(ctx); ok {
+				// Recursively sync the fields of ConfluentOptions
+				toConfluentOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromConfluentOptions)
+				to.SetConfluentOptions(ctx, toConfluentOptions)
+			}
+		}
+	}
+}
+
+func (to *SchemaRegistryConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SchemaRegistryConfig_SdkV2) {
+	if !from.ConfluentOptions.IsNull() && !from.ConfluentOptions.IsUnknown() {
+		if toConfluentOptions, ok := to.GetConfluentOptions(ctx); ok {
+			if fromConfluentOptions, ok := from.GetConfluentOptions(ctx); ok {
+				toConfluentOptions.SyncFieldsDuringRead(ctx, fromConfluentOptions)
+				to.SetConfluentOptions(ctx, toConfluentOptions)
+			}
+		}
+	}
+}
+
+func (m SchemaRegistryConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["confluent_options"] = attrs["confluent_options"].SetOptional()
+	attrs["confluent_options"] = attrs["confluent_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["connection_name"] = attrs["connection_name"].SetOptional()
+	attrs["protobuf_message_name"] = attrs["protobuf_message_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SchemaRegistryConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SchemaRegistryConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"confluent_options": reflect.TypeOf(ConfluentSchemaRegistryOptions_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SchemaRegistryConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SchemaRegistryConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"confluent_options":     m.ConfluentOptions,
+			"connection_name":       m.ConnectionName,
+			"protobuf_message_name": m.ProtobufMessageName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SchemaRegistryConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"confluent_options": basetypes.ListType{
+				ElemType: ConfluentSchemaRegistryOptions_SdkV2{}.Type(ctx),
+			},
+			"connection_name":       types.StringType,
+			"protobuf_message_name": types.StringType,
+		},
+	}
+}
+
+// GetConfluentOptions returns the value of the ConfluentOptions field in SchemaRegistryConfig_SdkV2 as
+// a ConfluentSchemaRegistryOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SchemaRegistryConfig_SdkV2) GetConfluentOptions(ctx context.Context) (ConfluentSchemaRegistryOptions_SdkV2, bool) {
+	var e ConfluentSchemaRegistryOptions_SdkV2
+	if m.ConfluentOptions.IsNull() || m.ConfluentOptions.IsUnknown() {
+		return e, false
+	}
+	var v []ConfluentSchemaRegistryOptions_SdkV2
+	d := m.ConfluentOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfluentOptions sets the value of the ConfluentOptions field in SchemaRegistryConfig_SdkV2.
+func (m *SchemaRegistryConfig_SdkV2) SetConfluentOptions(ctx context.Context, v ConfluentSchemaRegistryOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["confluent_options"]
+	m.ConfluentOptions = types.ListValueMust(t, vs)
 }
 
 type SchemaSpec_SdkV2 struct {
@@ -15543,6 +15943,11 @@ func (m StackFrame_SdkV2) Type(ctx context.Context) attr.Type {
 
 type StartUpdate_SdkV2 struct {
 	Cause types.String `tfsdk:"cause"`
+	// Whether the update is started in the development mode. This is
+	// recommended for interactive development and testing. Reuses compute for
+	// faster iteration and disables automatic retries. Not recommended for
+	// production.
+	Development types.Bool `tfsdk:"development"`
 	// If true, this update will reset all tables before running.
 	FullRefresh types.Bool `tfsdk:"full_refresh"`
 	// A list of tables to update with fullRefresh. If both refresh_selection
@@ -15674,6 +16079,7 @@ func (to *StartUpdate_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Star
 
 func (m StartUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["cause"] = attrs["cause"].SetOptional()
+	attrs["development"] = attrs["development"].SetOptional()
 	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
 	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
@@ -15714,6 +16120,7 @@ func (m StartUpdate_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"cause":                      m.Cause,
+			"development":                m.Development,
 			"full_refresh":               m.FullRefresh,
 			"full_refresh_selection":     m.FullRefreshSelection,
 			"parameters":                 m.Parameters,
@@ -15731,6 +16138,7 @@ func (m StartUpdate_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cause":        types.StringType,
+			"development":  types.BoolType,
 			"full_refresh": types.BoolType,
 			"full_refresh_selection": basetypes.ListType{
 				ElemType: types.StringType,
@@ -17140,6 +17548,7 @@ func (m *TikTokAdsOptionsTikTokAdsCustomReportOptions_SdkV2) SetMetrics(ctx cont
 
 // Specifies how to transform binary data into structured data.
 type Transformer_SdkV2 struct {
+	AvroOptions types.List `tfsdk:"avro_options"`
 	// Required: the wire format of the data.
 	Format types.String `tfsdk:"format"`
 	// Optional input column to transform. When set, the transformer reads from
@@ -17150,9 +17559,20 @@ type Transformer_SdkV2 struct {
 	// Optional output column name. When set, the transformed result is written
 	// to this column instead of replacing the input column.
 	OutputColumn types.String `tfsdk:"output_column"`
+
+	ProtobufOptions types.List `tfsdk:"protobuf_options"`
 }
 
 func (to *Transformer_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Transformer_SdkV2) {
+	if !from.AvroOptions.IsNull() && !from.AvroOptions.IsUnknown() {
+		if toAvroOptions, ok := to.GetAvroOptions(ctx); ok {
+			if fromAvroOptions, ok := from.GetAvroOptions(ctx); ok {
+				// Recursively sync the fields of AvroOptions
+				toAvroOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromAvroOptions)
+				to.SetAvroOptions(ctx, toAvroOptions)
+			}
+		}
+	}
 	if !from.JsonOptions.IsNull() && !from.JsonOptions.IsUnknown() {
 		if toJsonOptions, ok := to.GetJsonOptions(ctx); ok {
 			if fromJsonOptions, ok := from.GetJsonOptions(ctx); ok {
@@ -17162,9 +17582,26 @@ func (to *Transformer_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 			}
 		}
 	}
+	if !from.ProtobufOptions.IsNull() && !from.ProtobufOptions.IsUnknown() {
+		if toProtobufOptions, ok := to.GetProtobufOptions(ctx); ok {
+			if fromProtobufOptions, ok := from.GetProtobufOptions(ctx); ok {
+				// Recursively sync the fields of ProtobufOptions
+				toProtobufOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromProtobufOptions)
+				to.SetProtobufOptions(ctx, toProtobufOptions)
+			}
+		}
+	}
 }
 
 func (to *Transformer_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Transformer_SdkV2) {
+	if !from.AvroOptions.IsNull() && !from.AvroOptions.IsUnknown() {
+		if toAvroOptions, ok := to.GetAvroOptions(ctx); ok {
+			if fromAvroOptions, ok := from.GetAvroOptions(ctx); ok {
+				toAvroOptions.SyncFieldsDuringRead(ctx, fromAvroOptions)
+				to.SetAvroOptions(ctx, toAvroOptions)
+			}
+		}
+	}
 	if !from.JsonOptions.IsNull() && !from.JsonOptions.IsUnknown() {
 		if toJsonOptions, ok := to.GetJsonOptions(ctx); ok {
 			if fromJsonOptions, ok := from.GetJsonOptions(ctx); ok {
@@ -17173,14 +17610,26 @@ func (to *Transformer_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Tran
 			}
 		}
 	}
+	if !from.ProtobufOptions.IsNull() && !from.ProtobufOptions.IsUnknown() {
+		if toProtobufOptions, ok := to.GetProtobufOptions(ctx); ok {
+			if fromProtobufOptions, ok := from.GetProtobufOptions(ctx); ok {
+				toProtobufOptions.SyncFieldsDuringRead(ctx, fromProtobufOptions)
+				to.SetProtobufOptions(ctx, toProtobufOptions)
+			}
+		}
+	}
 }
 
 func (m Transformer_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["avro_options"] = attrs["avro_options"].SetOptional()
+	attrs["avro_options"] = attrs["avro_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["format"] = attrs["format"].SetOptional()
 	attrs["input_column"] = attrs["input_column"].SetOptional()
 	attrs["json_options"] = attrs["json_options"].SetOptional()
 	attrs["json_options"] = attrs["json_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["output_column"] = attrs["output_column"].SetOptional()
+	attrs["protobuf_options"] = attrs["protobuf_options"].SetOptional()
+	attrs["protobuf_options"] = attrs["protobuf_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -17194,7 +17643,9 @@ func (m Transformer_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // SDK values.
 func (m Transformer_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"json_options": reflect.TypeOf(JsonTransformerOptions_SdkV2{}),
+		"avro_options":     reflect.TypeOf(AvroTransformerOptions_SdkV2{}),
+		"json_options":     reflect.TypeOf(JsonTransformerOptions_SdkV2{}),
+		"protobuf_options": reflect.TypeOf(ProtobufTransformerOptions_SdkV2{}),
 	}
 }
 
@@ -17205,10 +17656,12 @@ func (m Transformer_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"format":        m.Format,
-			"input_column":  m.InputColumn,
-			"json_options":  m.JsonOptions,
-			"output_column": m.OutputColumn,
+			"avro_options":     m.AvroOptions,
+			"format":           m.Format,
+			"input_column":     m.InputColumn,
+			"json_options":     m.JsonOptions,
+			"output_column":    m.OutputColumn,
+			"protobuf_options": m.ProtobufOptions,
 		})
 }
 
@@ -17216,14 +17669,46 @@ func (m Transformer_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (m Transformer_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"avro_options": basetypes.ListType{
+				ElemType: AvroTransformerOptions_SdkV2{}.Type(ctx),
+			},
 			"format":       types.StringType,
 			"input_column": types.StringType,
 			"json_options": basetypes.ListType{
 				ElemType: JsonTransformerOptions_SdkV2{}.Type(ctx),
 			},
 			"output_column": types.StringType,
+			"protobuf_options": basetypes.ListType{
+				ElemType: ProtobufTransformerOptions_SdkV2{}.Type(ctx),
+			},
 		},
 	}
+}
+
+// GetAvroOptions returns the value of the AvroOptions field in Transformer_SdkV2 as
+// a AvroTransformerOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Transformer_SdkV2) GetAvroOptions(ctx context.Context) (AvroTransformerOptions_SdkV2, bool) {
+	var e AvroTransformerOptions_SdkV2
+	if m.AvroOptions.IsNull() || m.AvroOptions.IsUnknown() {
+		return e, false
+	}
+	var v []AvroTransformerOptions_SdkV2
+	d := m.AvroOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAvroOptions sets the value of the AvroOptions field in Transformer_SdkV2.
+func (m *Transformer_SdkV2) SetAvroOptions(ctx context.Context, v AvroTransformerOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["avro_options"]
+	m.AvroOptions = types.ListValueMust(t, vs)
 }
 
 // GetJsonOptions returns the value of the JsonOptions field in Transformer_SdkV2 as
@@ -17250,6 +17735,32 @@ func (m *Transformer_SdkV2) SetJsonOptions(ctx context.Context, v JsonTransforme
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["json_options"]
 	m.JsonOptions = types.ListValueMust(t, vs)
+}
+
+// GetProtobufOptions returns the value of the ProtobufOptions field in Transformer_SdkV2 as
+// a ProtobufTransformerOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Transformer_SdkV2) GetProtobufOptions(ctx context.Context) (ProtobufTransformerOptions_SdkV2, bool) {
+	var e ProtobufTransformerOptions_SdkV2
+	if m.ProtobufOptions.IsNull() || m.ProtobufOptions.IsUnknown() {
+		return e, false
+	}
+	var v []ProtobufTransformerOptions_SdkV2
+	d := m.ProtobufOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetProtobufOptions sets the value of the ProtobufOptions field in Transformer_SdkV2.
+func (m *Transformer_SdkV2) SetProtobufOptions(ctx context.Context, v ProtobufTransformerOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["protobuf_options"]
+	m.ProtobufOptions = types.ListValueMust(t, vs)
 }
 
 // Information about truncations applied to this event.

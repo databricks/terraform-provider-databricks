@@ -254,7 +254,8 @@ type CleanRoomAsset struct {
 	// *shared_catalog*.*shared_schema*.*asset_name*
 	//
 	// For notebooks, the name is the notebook file name. For jar analyses, the
-	// name is the jar analysis name.
+	// name is the jar analysis name. For Genie spaces, the name is derived from
+	// the clean room; the caller does not choose it.
 	Name types.String `tfsdk:"name"`
 	// Notebook details available to all collaborators of the clean room.
 	// Present if and only if **asset_type** is **NOTEBOOK_FILE**
@@ -264,10 +265,10 @@ type CleanRoomAsset struct {
 	// Status of the asset
 	Status types.String `tfsdk:"status"`
 	// Table details available to all collaborators of the clean room. Present
-	// if and only if **asset_type** is **TABLE**
+	// if and only if **asset_type** is **TABLE** or **STREAMING_TABLE**
 	Table types.Object `tfsdk:"table"`
 	// Local details for a table that are only available to its owner. Present
-	// if and only if **asset_type** is **TABLE**
+	// if and only if **asset_type** is **TABLE** or **STREAMING_TABLE**
 	TableLocalDetails types.Object `tfsdk:"table_local_details"`
 	// View details available to all collaborators of the clean room. Present if
 	// and only if **asset_type** is **VIEW**
@@ -5723,7 +5724,8 @@ type UpdateCleanRoomAssetRequest struct {
 	// *shared_catalog*.*shared_schema*.*asset_name*
 	//
 	// For notebooks, the name is the notebook file name. For jar analyses, the
-	// name is the jar analysis name.
+	// name is the jar analysis name. For Genie spaces, the name is derived from
+	// the clean room; the caller does not choose it.
 	Name types.String `tfsdk:"-"`
 }
 

@@ -1,6 +1,6 @@
 package common
 
-var version = "1.131.0"
+var version = "1.134.0"
 
 // Version returns version of provider
 func Version() string {

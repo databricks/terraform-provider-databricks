@@ -69,6 +69,15 @@ type AiRuntimeTask_SdkV2 struct {
 	// Optional display name for the MLflow run created under `experiment`. If
 	// omitted, MLflow generates a default name.
 	MlflowRun types.String `tfsdk:"mlflow_run"`
+	// Scheduling priority class for the workload. May only be set together with
+	// a pre-provisioned capacity reservation (a deployment's
+	// `compute.provisioned_capacity_id`); it is rejected on a workload that
+	// runs on on-demand capacity.
+	PriorityClass types.String `tfsdk:"priority_class"`
+	// Optional Unity Catalog path for a custom container image. When set, the
+	// task runs on the specified container image instead of the default
+	// Databricks client image. Format: `{catalog}.{schema}.{image_name}:{tag}`
+	UnityCatalogImagePath types.String `tfsdk:"unity_catalog_image_path"`
 }
 
 func (to *AiRuntimeTask_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiRuntimeTask_SdkV2) {
@@ -110,6 +119,8 @@ func (m AiRuntimeTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["mlflow_artifact_location"] = attrs["mlflow_artifact_location"].SetOptional()
 	attrs["mlflow_experiment_directory"] = attrs["mlflow_experiment_directory"].SetOptional()
 	attrs["mlflow_run"] = attrs["mlflow_run"].SetOptional()
+	attrs["priority_class"] = attrs["priority_class"].SetOptional()
+	attrs["unity_catalog_image_path"] = attrs["unity_catalog_image_path"].SetOptional()
 
 	return attrs
 }
@@ -141,6 +152,8 @@ func (m AiRuntimeTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 			"mlflow_artifact_location":    m.MlflowArtifactLocation,
 			"mlflow_experiment_directory": m.MlflowExperimentDirectory,
 			"mlflow_run":                  m.MlflowRun,
+			"priority_class":              m.PriorityClass,
+			"unity_catalog_image_path":    m.UnityCatalogImagePath,
 		})
 }
 
@@ -157,6 +170,8 @@ func (m AiRuntimeTask_SdkV2) Type(ctx context.Context) attr.Type {
 			"mlflow_artifact_location":    types.StringType,
 			"mlflow_experiment_directory": types.StringType,
 			"mlflow_run":                  types.StringType,
+			"priority_class":              types.StringType,
+			"unity_catalog_image_path":    types.StringType,
 		},
 	}
 }
@@ -833,9 +848,11 @@ type BaseRun_SdkV2 struct {
 	// request depending on whether the performance mode is supported by the job
 	// type.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// The id of the usage policy used by this run for cost attribution
 	// purposes.
@@ -2558,6 +2575,11 @@ type ComputeSpec_SdkV2 struct {
 	// number of accelerators per node is encoded in the enum value —
 	// `GPU_8xH100` means 8 H100 GPUs per node.
 	AcceleratorType types.String `tfsdk:"accelerator_type"`
+	// Optional ID of a pre-provisioned accelerator capacity reservation to run
+	// this AI Runtime workload on. When set, the workload is scheduled onto the
+	// referenced reserved capacity instead of the on-demand capacity shared
+	// among all Databricks customers.
+	ProvisionedCapacityId types.String `tfsdk:"provisioned_capacity_id"`
 }
 
 func (to *ComputeSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ComputeSpec_SdkV2) {
@@ -2569,6 +2591,7 @@ func (to *ComputeSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Comp
 func (m ComputeSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["accelerator_count"] = attrs["accelerator_count"].SetRequired()
 	attrs["accelerator_type"] = attrs["accelerator_type"].SetRequired()
+	attrs["provisioned_capacity_id"] = attrs["provisioned_capacity_id"].SetOptional()
 
 	return attrs
 }
@@ -2591,8 +2614,9 @@ func (m ComputeSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"accelerator_count": m.AcceleratorCount,
-			"accelerator_type":  m.AcceleratorType,
+			"accelerator_count":       m.AcceleratorCount,
+			"accelerator_type":        m.AcceleratorType,
+			"provisioned_capacity_id": m.ProvisionedCapacityId,
 		})
 }
 
@@ -2600,8 +2624,9 @@ func (m ComputeSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (m ComputeSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"accelerator_count": types.Int64Type,
-			"accelerator_type":  types.StringType,
+			"accelerator_count":       types.Int64Type,
+			"accelerator_type":        types.StringType,
+			"provisioned_capacity_id": types.StringType,
 		},
 	}
 }
@@ -2975,12 +3000,16 @@ type CreateJob_SdkV2 struct {
 	// begin or complete as well as when this job is deleted.
 	EmailNotifications types.List `tfsdk:"email_notifications"`
 	// A list of task execution environment specifications that can be
-	// referenced by serverless tasks of this job. For serverless notebook
-	// tasks, if the environment_key is not specified, the notebook environment
-	// will be used if present. If a jobs environment is specified, it will
-	// override the notebook environment. For other serverless tasks, the task
-	// environment is required to be specified using environment_key in the task
-	// settings.
+	// referenced by tasks that use serverless compute or a compute resource
+	// that uses Environments mode.
+	//
+	// For notebook tasks that use serverless compute or a compute resource that
+	// uses Environments mode, if the environment_key is not specified, the
+	// notebook environment will be used if present. If a jobs environment is
+	// specified, it will override the notebook environment. For other tasks
+	// that use serverless compute or a compute resource that uses Environments
+	// mode, the task environment is required to be specified using
+	// environment_key in the task settings.
 	Environments types.List `tfsdk:"environment"`
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
@@ -3031,9 +3060,11 @@ type CreateJob_SdkV2 struct {
 	// of compute performance or cost-efficiency for the run. The performance
 	// target does not apply to tasks that run on Serverless GPU compute.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// The queue settings of the job.
 	Queue types.List `tfsdk:"queue"`
@@ -9385,14 +9416,16 @@ func (m *JobPermissionsRequest_SdkV2) SetAccessControlList(ctx context.Context, 
 	m.AccessControlList = types.ListValueMust(t, vs)
 }
 
-// Write-only setting. Specifies the user or service principal that the job runs
-// as. If not specified, the job runs as the user who created the job.
+// Write-only setting. Specifies the user, service principal, or group that the
+// job runs as. If not specified, the job runs as the user who created the job.
 //
-// Either `user_name` or `service_principal_name` should be specified. If not,
-// an error is thrown.
+// One of `user_name`, `service_principal_name`, or `group_name` should be
+// specified. If not, an error is thrown.
 type JobRunAs_SdkV2 struct {
-	// Group name of an account group assigned to the workspace. Setting this
-	// field requires being a member of the group.
+	// Group name of an account group assigned to the workspace. When set, all
+	// tasks run as the group and the group's permissions are used for data
+	// access. Setting this field requires being a member of the group, or
+	// having the `Assume` permission on the group.
 	GroupName types.String `tfsdk:"group_name"`
 	// Application ID of an active service principal. Setting this field
 	// requires the `servicePrincipal/user` role.
@@ -9478,12 +9511,16 @@ type JobSettings_SdkV2 struct {
 	// begin or complete as well as when this job is deleted.
 	EmailNotifications types.List `tfsdk:"email_notifications"`
 	// A list of task execution environment specifications that can be
-	// referenced by serverless tasks of this job. For serverless notebook
-	// tasks, if the environment_key is not specified, the notebook environment
-	// will be used if present. If a jobs environment is specified, it will
-	// override the notebook environment. For other serverless tasks, the task
-	// environment is required to be specified using environment_key in the task
-	// settings.
+	// referenced by tasks that use serverless compute or a compute resource
+	// that uses Environments mode.
+	//
+	// For notebook tasks that use serverless compute or a compute resource that
+	// uses Environments mode, if the environment_key is not specified, the
+	// notebook environment will be used if present. If a jobs environment is
+	// specified, it will override the notebook environment. For other tasks
+	// that use serverless compute or a compute resource that uses Environments
+	// mode, the task environment is required to be specified using
+	// environment_key in the task settings.
 	Environments types.List `tfsdk:"environment"`
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
@@ -9534,9 +9571,11 @@ type JobSettings_SdkV2 struct {
 	// of compute performance or cost-efficiency for the run. The performance
 	// target does not apply to tasks that run on Serverless GPU compute.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// The queue settings of the job.
 	Queue types.List `tfsdk:"queue"`
@@ -13697,9 +13736,11 @@ type RepairHistoryItem_SdkV2 struct {
 	// request depending on whether the performance mode is supported by the job
 	// type.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// The end time of the (repaired) run.
 	EndTime types.Int64 `tfsdk:"end_time"`
@@ -13975,9 +14016,11 @@ type RepairRun_SdkV2 struct {
 	// run. This field overrides the performance target defined on the job
 	// level.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// Controls whether the pipeline should perform a full refresh
 	PipelineParams types.List `tfsdk:"pipeline_params"`
@@ -16098,9 +16141,11 @@ type Run_SdkV2 struct {
 	// request depending on whether the performance mode is supported by the job
 	// type.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// The id of the usage policy used by this run for cost attribution
 	// purposes.
@@ -17930,9 +17975,11 @@ type RunNow_SdkV2 struct {
 	// run. This field overrides the performance target defined on the job
 	// level.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// Controls whether the pipeline should perform a full refresh
 	PipelineParams types.List `tfsdk:"pipeline_params"`
@@ -19958,9 +20005,11 @@ type RunTask_SdkV2 struct {
 	// request depending on whether the performance mode is supported by the job
 	// type.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// The id of the serverless compute this task ran on, either explicitly
 	// configured on the task or the workspace default. Only set once the
@@ -19974,7 +20023,7 @@ type RunTask_SdkV2 struct {
 	EndTime types.Int64 `tfsdk:"end_time"`
 	// The key that references an environment spec in a job. This field is
 	// required for Python script, Python wheel and dbt tasks when using
-	// serverless compute.
+	// serverless compute or a compute resource that uses Environments mode.
 	EnvironmentKey types.String `tfsdk:"environment_key"`
 	// The time in milliseconds it took to execute the commands in the JAR or
 	// notebook until they completed, failed, timed out, were cancelled, or
@@ -24093,9 +24142,11 @@ type SubmitRun_SdkV2 struct {
 	// performance target does not apply to tasks that run on Serverless GPU
 	// compute.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// The queue settings of the one-time run.
 	Queue types.List `tfsdk:"queue"`
@@ -24851,7 +24902,7 @@ type SubmitTask_SdkV2 struct {
 	EmailNotifications types.List `tfsdk:"email_notifications"`
 	// The key that references an environment spec in a job. This field is
 	// required for Python script, Python wheel and dbt tasks when using
-	// serverless compute.
+	// serverless compute or a compute resource that uses Environments mode.
 	EnvironmentKey types.String `tfsdk:"environment_key"`
 	// If existing_cluster_id, the ID of an existing cluster that is used for
 	// all runs. When running jobs or tasks on an existing cluster, you may need
@@ -26958,7 +27009,7 @@ type Task_SdkV2 struct {
 	EmailNotifications types.List `tfsdk:"email_notifications"`
 	// The key that references an environment spec in a job. This field is
 	// required for Python script, Python wheel and dbt tasks when using
-	// serverless compute.
+	// serverless compute or a compute resource that uses Environments mode.
 	EnvironmentKey types.String `tfsdk:"environment_key"`
 	// If existing_cluster_id, the ID of an existing cluster that is used for
 	// all runs. When running jobs or tasks on an existing cluster, you may need

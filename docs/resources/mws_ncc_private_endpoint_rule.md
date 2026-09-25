@@ -99,8 +99,13 @@ The following arguments are available:
   * On AWS: List of target resource FQDNs accessible via the VPC endpoint service. Only used by private endpoints towards a VPC endpoint service behind a customer-managed VPC endpoint service. Conflicts with `resource_names`.
 * `endpoint_service` - (AWS only) Example `com.amazonaws.vpce.us-east-1.vpce-svc-123abcc1298abc123`. The full target AWS endpoint service name that connects to the destination resources of the private endpoint. Change forces creation of a new resource.
 * `resource_names` - (AWS only) Only used by private endpoints towards AWS S3 service. List of globally unique S3 bucket names that will be accessed via the VPC endpoint. The bucket names must be in the same region as the NCC/endpoint service. Conflict with `domain_names`.
-* `gcp_endpoint` - (GCP only) Private Service Connect target. Configure one of `service_attachment`, `google_api_endpoints`, or `all_vpc_sc_services`. Google API targets can be updated in place; changing `service_attachment` forces a new resource.
+* `gcp_endpoint` - (GCP only) Private Service Connect target. Configure exactly one of the following and omit the other two. Google API targets can be updated in place; changing `service_attachment` forces a new resource.
+  * `service_attachment` - Nonempty service attachment URL, for example `projects/my-project/regions/us-east4/serviceAttachments/my-attachment`.
+  * `google_api_endpoints` - Block containing a required, nonempty `endpoints` list of Google API hostnames.
+  * `all_vpc_sc_services` - Must be `true` when configured. Omit this argument instead of setting it to `false`.
 * `enabled` - Activation status for first-party endpoints on AWS or GCP. Can only be updated after the private endpoint rule is successfully created.
+
+When upgrading an existing configuration, remove explicit defaults for unused GCP targets (`all_vpc_sc_services = false` or `service_attachment = ""`). These values are rejected rather than treated as absent. Unused targets in existing state are handled during refresh; no manual state editing is needed.
 
 ## Attribute Reference
 

@@ -30,6 +30,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/catalog"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/cluster"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/dashboards"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/iamv2"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/library"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/networks/privateendpointrule"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/notificationdestinations"
@@ -95,6 +96,9 @@ var pluginFwOnlyDataSources = append(
 		app.DataSourceApps,
 		catalog.DataSourceFunctions,
 		dashboards.DataSourceDashboards,
+		iamv2.DataSourceGroupByExternalId,
+		iamv2.DataSourceServicePrincipalByExternalId,
+		iamv2.DataSourceUserByExternalId,
 		notificationdestinations.DataSourceNotificationDestinations,
 		registered_model.DataSourceRegisteredModel,
 		registered_model.DataSourceRegisteredModelVersions,

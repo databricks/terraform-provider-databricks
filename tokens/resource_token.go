@@ -107,7 +107,7 @@ func ResourceToken() common.Resource {
 		},
 		"comment": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Required: true,
 			ForceNew: true,
 		},
 		"token_value": {

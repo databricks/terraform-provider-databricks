@@ -347,7 +347,7 @@ func TestWorkspaceClientUnifiedProvider(t *testing.T) {
 				},
 			},
 			expectError:   true,
-			errorContains: "managing workspace-level resources requires a workspace_id, but none was found in the resource's provider_config block or the provider's workspace_id attribute",
+			errorContains: "managing workspace-level resources requires a workspace_id, but none was found in any of the following sources (checked in order): the resource's provider_config block, the provider's workspace_id attribute, the workspace_id in the configured profile, or the DATABRICKS_WORKSPACE_ID environment variable",
 			description:   "Account-level provider requires workspace_id to be set",
 		},
 	}

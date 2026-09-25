@@ -161,21 +161,16 @@ resource "aws_route_table_association" "dataplane_vpce_rtb" {
 }
 ```
 
-Define security group for data plane VPC endpoint backend/relay connections:
+Define security group for data plane VPC endpoint backend/relay connections.
+
+The endpoint security group only needs inbound rules, sourced from the workspace
+security group. Security groups are stateful, so return traffic is allowed
+automatically. The ports below follow the [customer-managed VPC security group
+requirements](https://docs.databricks.com/aws/en/security/network/classic/customer-managed-vpc#security-groups)
+and the least-privilege pattern described in [Configure classic private
+connectivity to Databricks](https://docs.databricks.com/aws/en/security/network/classic/privatelink).
 
 ```hcl
-data "aws_subnet" "ws_vpc_subnets" {
-  for_each = toset(var.subnet_ids)
-  id       = each.value
-}
-
-locals {
-  vpc_cidr_blocks = [
-    for subnet in data.aws_subnet.ws_vpc_subnets :
-    subnet.cidr_block
-  ]
-}
-
 resource "aws_security_group" "dataplane_vpce" {
   name        = "Data Plane VPC endpoint security group"
   description = "Security group shared with relay and workspace endpoints"
@@ -183,34 +178,27 @@ resource "aws_security_group" "dataplane_vpce" {
 
   dynamic "ingress" {
     for_each = toset([
-      443,
+      443,  # workspace REST API
       2443, # FIPS port for CSP
-      6666,
+      5432, # classic compute plane to Lakebase
+      6666, # secure cluster connectivity relay
     ])
 
     content {
-      description = "Inbound rules"
-      from_port   = ingress.value
-      to_port     = ingress.value
-      protocol    = "tcp"
-      cidr_blocks = concat([var.vpce_subnet_cidr], local.vpc_cidr_blocks)
+      description     = "Inbound rules"
+      from_port       = ingress.value
+      to_port         = ingress.value
+      protocol        = "tcp"
+      security_groups = [var.security_group_id]
     }
   }
 
-  dynamic "egress" {
-    for_each = toset([
-      443,
-      2443, # FIPS port for CSP
-      6666,
-    ])
-
-    content {
-      description = "Outbound rules"
-      from_port   = egress.value
-      to_port     = egress.value
-      protocol    = "tcp"
-      cidr_blocks = concat([var.vpce_subnet_cidr], local.vpc_cidr_blocks)
-    }
+  ingress {
+    description     = "Compute plane to control plane API (8443, 8445), Unity Catalog logging and lineage (8444), 8446-8451 reserved for future use"
+    from_port       = 8443
+    to_port         = 8451
+    protocol        = "tcp"
+    security_groups = [var.security_group_id]
   }
 
   tags = merge(data.aws_vpc.prod.tags, {

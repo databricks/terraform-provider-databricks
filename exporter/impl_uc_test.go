@@ -1276,6 +1276,23 @@ func TestEmitRfaAccessRequestDestinations_ApiError(t *testing.T) {
 	})
 }
 
+func TestEmitRfaAccessRequestDestinations_AccountLevelNoPanic(t *testing.T) {
+	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
+		setupAwsAccountConfig(ma)
+		// No RFA API calls should be made: there is no workspace client in account-level mode.
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForAccountTestWithClient(ctx, client, "uc-rfa")
+
+		// In account-level export ic.workspaceClient is nil. This must not panic
+		// (regression test for the nil pointer dereference in emitRfaAccessRequestDestinations).
+		ic.emitRfaAccessRequestDestinations("METASTORE", "metastore-id")
+
+		// RFA destinations are a workspace-level API, so nothing should be emitted.
+		assert.False(t, ic.testEmits["databricks_rfa_access_request_destinations[<unknown>] (id: METASTORE,metastore-id)"],
+			"Should not emit RFA destinations in account-level mode")
+	})
+}
+
 func TestEmitRfaAccessRequestDestinations_MultipleSecurableTypes(t *testing.T) {
 	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
 		rfaAPI := mw.GetMockRfaAPI().EXPECT()

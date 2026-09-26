@@ -809,6 +809,13 @@ func (ic *importContext) emitRfaAccessRequestDestinations(securableType, fullNam
 		return
 	}
 
+	// Access request destinations are a workspace-level API, so there's no workspace
+	// client in account-level exports. Skip instead of dereferencing a nil client.
+	if ic.workspaceClient == nil {
+		log.Printf("[DEBUG] Skipping RFA access request destinations for %s %s: no workspace client (account-level export)", securableType, fullName)
+		return
+	}
+
 	// Try to get access request destinations for this securable
 	destinations, err := ic.workspaceClient.Rfa.GetAccessRequestDestinations(ic.Context, catalog.GetAccessRequestDestinationsRequest{
 		SecurableType: securableType,

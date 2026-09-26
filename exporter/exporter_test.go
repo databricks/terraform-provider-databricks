@@ -3107,6 +3107,76 @@ resource "databricks_pipeline" "def" {
 		})
 }
 
+func TestImportingJobsDbtCloudTaskOmittedWhenPlatformPresent(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			noCurrentMetastoreAttached,
+			emptyRepos,
+			{
+				Method:   "GET",
+				Resource: "/api/2.2/jobs/list?limit=100",
+				Response: sdk_jobs.ListJobsResponse{
+					Jobs: []sdk_jobs.BaseJob{
+						{
+							JobId: 17,
+							Settings: &sdk_jobs.JobSettings{
+								Name: "dbtmigration",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.2/jobs/get?job_id=17",
+				Response: sdk_jobs.Job{
+					JobId: 17,
+					Settings: &sdk_jobs.JobSettings{
+						Name:   "dbtmigration",
+						Format: "MULTI_TASK",
+						Tasks: []sdk_jobs.Task{
+							{
+								TaskKey: "dbt",
+								// The Jobs API returns both the deprecated dbt_cloud_task and its
+								// replacement dbt_platform_task on migrated tasks.
+								DbtPlatformTask: &sdk_jobs.DbtPlatformTask{
+									ConnectionResourceName: "my_conn",
+									DbtPlatformJobId:       "123",
+								},
+								DbtCloudTask: &sdk_jobs.DbtCloudTask{
+									ConnectionResourceName: "my_conn",
+									DbtCloudJobId:          456,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.enableServices("jobs")
+			ic.enableListing("jobs")
+			ic.noFormat = true
+			ic.Directory = tmpDir
+
+			err := ic.Run()
+			assert.NoError(t, err)
+
+			content, err := os.ReadFile(tmpDir + "/jobs.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_job" "dbtmigration_17"`))
+			// only the replacement task must be generated, not the deprecated one
+			assert.True(t, strings.Contains(contentStr, "dbt_platform_task {"))
+			assert.False(t, strings.Contains(contentStr, "dbt_cloud_task {"))
+		})
+}
+
 func TestImportingRunJobTask(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{

@@ -14,8 +14,10 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/client"
 	providercommon "github.com/databricks/terraform-provider-databricks/internal/providers/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/postgres_database_credential"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -48,7 +50,10 @@ type DatabricksProviderPluginFramework struct {
 	configCustomizer         func(*config.Config) error
 }
 
-var _ provider.Provider = (*DatabricksProviderPluginFramework)(nil)
+var (
+	_ provider.Provider                       = (*DatabricksProviderPluginFramework)(nil)
+	_ provider.ProviderWithEphemeralResources = (*DatabricksProviderPluginFramework)(nil)
+)
 
 func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []func() resource.Resource {
 	return getPluginFrameworkResourcesToRegister(p.sdkV2ResourceFallbacks, p.resourceOptIns)
@@ -56,6 +61,12 @@ func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []fun
 
 func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return getPluginFrameworkDataSourcesToRegister(p.sdkV2DataSourceFallbacks, p.dataSourceOptIns)
+}
+
+func (p *DatabricksProviderPluginFramework) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
+	return []func() ephemeral.EphemeralResource{
+		postgres_database_credential.New,
+	}
 }
 
 func (p *DatabricksProviderPluginFramework) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
@@ -70,6 +81,7 @@ func (p *DatabricksProviderPluginFramework) Metadata(ctx context.Context, req pr
 func (p *DatabricksProviderPluginFramework) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	client := p.configureDatabricksClient(ctx, req, resp)
 	resp.DataSourceData = client
+	resp.EphemeralResourceData = client
 	resp.ResourceData = client
 }
 

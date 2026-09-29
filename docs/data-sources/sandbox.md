@@ -20,7 +20,8 @@ data "databricks_sandbox" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `name` (string, required) - The AIP-compliant resource name, such as "sandboxes/my-sandbox"
+* `name` (string, required) - The sandbox resource name, in the form `sandboxes/{sandbox_id}`. Derived from
+  `sandbox_id`; any value supplied in a create or update request body is ignored
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -29,8 +30,9 @@ The following arguments are supported:
 ## Attributes
 The following attributes are exported:
 * `create_time` (string) - Output only. The creation time of the sandbox
-* `display_name` (string) - Human-readable display label for the sandbox. At most 256 bytes
-* `name` (string) - The AIP-compliant resource name, such as "sandboxes/my-sandbox"
+* `display_name` (string) - Human-readable display label for the sandbox. At most 256 characters
+* `name` (string) - The sandbox resource name, in the form `sandboxes/{sandbox_id}`. Derived from
+  `sandbox_id`; any value supplied in a create or update request body is ignored
 * `spec` (SandboxSpec) - The desired configuration of the sandbox, supplied by the caller at creation time
 * `status` (SandboxStatus) - The observed runtime state of the sandbox, populated by the server
 * `update_time` (string) - Output only. The last update time of the sandbox metadata and spec

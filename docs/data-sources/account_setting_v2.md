@@ -43,12 +43,14 @@ The following attributes are exported:
 * `effective_personal_compute` (PersonalComputeMessage) - Effective setting value for personal_compute setting. This is the final effective value of setting. To set a value use personal_compute
 * `effective_restrict_workspace_admins` (RestrictWorkspaceAdminsMessage) - Effective setting value for restrict_workspace_admins setting. This is the final effective value of setting. To set a value use restrict_workspace_admins
 * `effective_string_val` (StringMessage) - Effective setting value for string type setting. This is the final effective value of setting. To set a value use string_val
+* `effective_workspace_label` (WorkspaceLabelMessage) - Effective setting value for workspace_label setting. This is the final effective value of setting. To set a value use workspace_label
 * `integer_val` (IntegerMessage) - Setting value for integer type setting. This is the setting value set by consumers, check effective_integer_val for final setting value
 * `name` (string) - Name of the setting
 * `operational_email_custom_recipient` (OperationalEmailCustomRecipientMessage) - Setting value for operational_email_custom_recipient setting. This is the setting value set by consumers, check effective_operational_email_custom_recipient for final setting value
 * `personal_compute` (PersonalComputeMessage) - Setting value for personal_compute setting. This is the setting value set by consumers, check effective_personal_compute for final setting value
 * `restrict_workspace_admins` (RestrictWorkspaceAdminsMessage) - Setting value for restrict_workspace_admins setting. This is the setting value set by consumers, check effective_restrict_workspace_admins for final setting value
 * `string_val` (StringMessage) - Setting value for string type setting. This is the setting value set by consumers, check effective_string_val for final setting value
+* `workspace_label` (WorkspaceLabelMessage) - Setting value for workspace_label setting. This is the setting value set by consumers, check effective_workspace_label for final setting value
 
 ### AibiDashboardEmbeddingAccessPolicy
 * `access_policy_type` (string) - Possible values are: `ALLOW_ALL_DOMAINS`, `ALLOW_APPROVED_DOMAINS`, `DENY_ALL_DOMAINS`
@@ -105,3 +107,7 @@ The following attributes are exported:
 
 ### StringMessage
 * `value` (string) - Represents a generic string value
+
+### WorkspaceLabelMessage
+* `color` (string)
+* `label` (string)

@@ -43,7 +43,7 @@ resource "databricks_workspace_entity_tag_assignment" "geniespace_tag" {
 ## Arguments
 The following arguments are supported:
 * `entity_id` (string, required) - The identifier of the entity to which the tag is assigned. For apps, the entity_id is the app name
-* `entity_type` (string, required) - The type of entity to which the tag is assigned. Allowed values are apps, dashboards, geniespaces, notebooks
+* `entity_type` (string, required) - The type of entity to which the tag is assigned. Allowed values are apps, dashboards, designerfiles, geniespaces, notebooks
 * `tag_key` (string, required) - The key of the tag. The characters , . : / - = and leading/trailing spaces are not allowed
 * `tag_value` (string, optional) - The value of the tag
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.

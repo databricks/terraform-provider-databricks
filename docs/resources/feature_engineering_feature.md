@@ -90,6 +90,7 @@ The following arguments are supported:
 
 ### DataSource
 * `delta_table_source` (DeltaTableSource, optional) - A Delta table data source
+* `feature_view_source` (FeatureViewSource, optional) - A data source composed from registered upstream Features
 * `kafka_source` (KafkaSource, optional) - A Kafka stream data source
 * `lateness` (SourceLateness, optional) - Completeness timing for this Feature's use of the source. This configuration is part of the
   Feature definition; it does not modify the underlying table or stream
@@ -115,6 +116,12 @@ The following arguments are supported:
   be present in materialized tables and expected to match at query time.
   Colon-prefixed notation (e.g., "value:user_id") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
+
+### FeatureReference
+* `feature` (string, required) - The three-part full name of the upstream Feature
+
+### FeatureViewSource
+* `feature_references` (list of FeatureReference, optional) - The upstream Features this source reads. Must include at least one feature
 
 ### FieldDefinition
 * `data_type` (string, required) - The scalar data type of the field. Possible values are: `BINARY`, `BOOLEAN`, `DATE`, `DECIMAL`, `DOUBLE`, `FLOAT`, `INTEGER`, `LONG`, `SHORT`, `STRING`, `TIMESTAMP`

@@ -6,9 +6,68 @@ subcategory: "Postgres"
 
 [API Documentation](https://docs.databricks.com/api/workspace/postgres)
 
+### Lakebase Autoscaling Terraform Behavior
+
+This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
+
+### Overview
+
+A snapshot schedule defines the cadences at which Lakebase automatically takes snapshots of a branch. There is exactly one snapshot schedule per branch (a singleton): it always exists — a branch with no cadences has an empty schedule — and is identified by the branch's resource name. You address it with `parent` (the branch) rather than a separate ID; Terraform manages the singleton in place, so applying the resource sets the branch's cadences.
+
+Updating the resource replaces the entire set of cadences; an empty set disables automatic snapshots for the branch.
+
+### Hierarchy Context
+
+Snapshot schedules exist within the Lakebase Autoscaling resource hierarchy:
+- A **snapshot schedule** belongs to a **branch** within a **project**
+- Each branch has exactly one snapshot schedule
+
+### Configuration
+
+`schedule` is the set of cadences at which snapshots are taken. Each cadence sets exactly one recurrence pattern plus a `retention`:
+- `daily_schedule` — a snapshot once per day, at `hour` (UTC, `0`–`23`).
+- `weekly_schedule` — a snapshot once per week, on `day_of_week` (`MONDAY`–`SUNDAY`) at `hour` (UTC, `0`–`23`).
+- `monthly_schedule` — a snapshot once per month, on `day` (`1`–`31`) at `hour` (UTC, `0`–`23`). In shorter months the snapshot is taken on the last day instead.
+
+`retention` is how long snapshots from that cadence are kept before automatic deletion; it must be at least 1 hour, written as a duration string in hours/minutes/seconds — for example `168h0m0s` (7 days). When several cadences fire at the same time, one snapshot is taken and kept for the longest of their retentions.
 
 
 ## Example Usage
+### Managing a Branch's Snapshot Schedule
+
+A branch's snapshot schedule is a singleton addressed by the branch it belongs
+to. Set `parent` to the branch's resource name and provide the desired cadences;
+Terraform applies them in place. The example below takes a daily snapshot at
+03:00 UTC and keeps it for 7 days.
+
+```hcl
+resource "databricks_postgres_project" "this" {
+  project_id = "my-project"
+  spec = {
+    pg_version   = 17
+    display_name = "My Project"
+  }
+}
+
+resource "databricks_postgres_snapshot_schedule" "this" {
+  parent = "${databricks_postgres_project.this.name}/branches/production"
+  schedule = [
+    {
+      daily_schedule = {
+        hour = 3
+      }
+      retention = "168h0m0s" # keep daily snapshots for 7 days
+    }
+  ]
+}
+```
+
+The `schedule` set can hold more than one cadence — for example, add a weekly
+cadence alongside the daily one to keep some snapshots longer than others.
+
+To disable automatic snapshots, set `schedule = []` and apply. Removing the
+resource from your configuration only removes it from Terraform state; it does
+not change the schedule on the branch.
 
 
 ## Arguments

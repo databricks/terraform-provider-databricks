@@ -8,7 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
-
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -35,6 +35,17 @@ func readSecret(ctx context.Context, w *databricks.WorkspaceClient, scope string
 	}
 }
 
+func getStringValue(d *schema.ResourceData) (string, error) {
+	woValue, diags := d.GetRawConfigAt(cty.GetAttrPath("string_value_wo"))
+	if !diags.HasError() && woValue.Type().Equals(cty.String) && !woValue.IsNull() {
+		return woValue.AsString(), nil
+	}
+	if v, ok := d.GetOk("string_value"); ok {
+		return v.(string), nil
+	}
+	return "", fmt.Errorf("failed to get one of attributes `string_value_wo` or `string_value`")
+}
+
 // ResourceSecret manages secrets
 func ResourceSecret() common.Resource {
 	p := common.NewPairSeparatedID("scope", "key", "|||")
@@ -42,9 +53,23 @@ func ResourceSecret() common.Resource {
 		"string_value": {
 			Type:         schema.TypeString,
 			ValidateFunc: validation.StringIsNotEmpty,
-			Required:     true,
-			ForceNew:     true,
+			Optional:     true,
 			Sensitive:    true,
+			ExactlyOneOf: []string{"string_value", "string_value_wo"},
+		},
+		"string_value_wo": {
+			Type:         schema.TypeString,
+			ValidateFunc: validation.StringIsNotEmpty,
+			Optional:     true,
+			WriteOnly:    true,
+			Sensitive:    true,
+			RequiredWith: []string{"string_value_wo_version"},
+			ExactlyOneOf: []string{"string_value", "string_value_wo"},
+		},
+		"string_value_wo_version": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			RequiredWith: []string{"string_value_wo"},
 		},
 		"scope": {
 			Type:         schema.TypeString,
@@ -69,25 +94,32 @@ func ResourceSecret() common.Resource {
 	}
 	common.AddNamespaceInSchema(s)
 	common.NamespaceCustomizeSchemaMap(s)
+	upsertSecret := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+		w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+		if err != nil {
+			return err
+		}
+		var putSecretReq workspace.PutSecret
+		common.DataToStructPointer(d, s, &putSecretReq)
+		stringValue, err := getStringValue(d)
+		if err != nil {
+			return err
+		}
+		putSecretReq.StringValue = stringValue
+		err = w.Secrets.PutSecret(ctx, putSecretReq)
+		if err != nil {
+			return err
+		}
+		p.Pack(d)
+		return nil
+	}
 	return common.Resource{
 		Schema: s,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			return common.NamespaceCustomizeDiff(ctx, d, c)
 		},
-		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
-			if err != nil {
-				return err
-			}
-			var putSecretReq workspace.PutSecret
-			common.DataToStructPointer(d, s, &putSecretReq)
-			err = w.Secrets.PutSecret(ctx, putSecretReq)
-			if err != nil {
-				return err
-			}
-			p.Pack(d)
-			return nil
-		},
+		Create: upsertSecret,
+		Update: upsertSecret,
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			scope, key, err := p.Unpack(d)
 			if err != nil {

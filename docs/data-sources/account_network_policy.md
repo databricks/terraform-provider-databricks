@@ -155,6 +155,9 @@ The following attributes are exported:
 * `workspace_ui` (CustomerFacingIngressNetworkPolicyWorkspaceUiDestination)
 
 ### CustomerFacingIngressNetworkPolicyWorkspaceApiDestination
+* `excluded_scopes` (list of string) - Inverse of `scopes`: matches every API scope EXCEPT those listed here
+  ("allow all except"). Mutually exclusive with `scopes` — a single
+  destination may set at most one of the two
 * `scope_qualifier` (string) - Qualifies the breadth of API access for the listed scopes. See ApiScopeQualifier. Possible values are: `API_SCOPE_QUALIFIER_ALL`, `API_SCOPE_QUALIFIER_READ`
 * `scopes` (list of string)
 

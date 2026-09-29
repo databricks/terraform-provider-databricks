@@ -105,6 +105,9 @@ type Setting struct {
 	// Effective setting value for string type setting. This is the final
 	// effective value of setting. To set a value use string_val.
 	EffectiveStringVal types.Object `tfsdk:"effective_string_val"`
+	// Effective setting value for workspace_label setting. This is the final
+	// effective value of setting. To set a value use workspace_label.
+	EffectiveWorkspaceLabel types.Object `tfsdk:"effective_workspace_label"`
 	// Setting value for integer type setting. This is the setting value set by
 	// consumers, check effective_integer_val for final setting value.
 	IntegerVal types.Object `tfsdk:"integer_val"`
@@ -124,6 +127,9 @@ type Setting struct {
 	// Setting value for string type setting. This is the setting value set by
 	// consumers, check effective_string_val for final setting value.
 	StringVal types.Object `tfsdk:"string_val"`
+	// Setting value for workspace_label setting. This is the setting value set
+	// by consumers, check effective_workspace_label for final setting value.
+	WorkspaceLabel types.Object `tfsdk:"workspace_label"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -152,11 +158,13 @@ func (m Setting) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 		"effective_personal_compute":                          reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
 		"effective_restrict_workspace_admins":                 reflect.TypeOf(settingsv2_tf.RestrictWorkspaceAdminsMessage{}),
 		"effective_string_val":                                reflect.TypeOf(settingsv2_tf.StringMessage{}),
+		"effective_workspace_label":                           reflect.TypeOf(settingsv2_tf.WorkspaceLabelMessage{}),
 		"integer_val":                                         reflect.TypeOf(settingsv2_tf.IntegerMessage{}),
 		"operational_email_custom_recipient":                  reflect.TypeOf(settingsv2_tf.OperationalEmailCustomRecipientMessage{}),
 		"personal_compute":                                    reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
 		"restrict_workspace_admins":                           reflect.TypeOf(settingsv2_tf.RestrictWorkspaceAdminsMessage{}),
 		"string_val":                                          reflect.TypeOf(settingsv2_tf.StringMessage{}),
+		"workspace_label":                                     reflect.TypeOf(settingsv2_tf.WorkspaceLabelMessage{}),
 	}
 }
 
@@ -186,12 +194,14 @@ func (m Setting) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"effective_personal_compute":                          m.EffectivePersonalCompute,
 			"effective_restrict_workspace_admins":                 m.EffectiveRestrictWorkspaceAdmins,
 			"effective_string_val":                                m.EffectiveStringVal,
+			"effective_workspace_label":                           m.EffectiveWorkspaceLabel,
 			"integer_val":                                         m.IntegerVal,
 			"name":                                                m.Name,
 			"operational_email_custom_recipient":                  m.OperationalEmailCustomRecipient,
 			"personal_compute":                                    m.PersonalCompute,
 			"restrict_workspace_admins":                           m.RestrictWorkspaceAdmins,
 			"string_val":                                          m.StringVal,
+			"workspace_label":                                     m.WorkspaceLabel,
 		},
 	)
 }
@@ -217,12 +227,14 @@ func (m Setting) Type(ctx context.Context) attr.Type {
 			"effective_personal_compute":                          settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
 			"effective_restrict_workspace_admins":                 settingsv2_tf.RestrictWorkspaceAdminsMessage{}.Type(ctx),
 			"effective_string_val":                                settingsv2_tf.StringMessage{}.Type(ctx),
+			"effective_workspace_label":                           settingsv2_tf.WorkspaceLabelMessage{}.Type(ctx),
 			"integer_val":                                         settingsv2_tf.IntegerMessage{}.Type(ctx),
 			"name":                                                types.StringType,
 			"operational_email_custom_recipient":                  settingsv2_tf.OperationalEmailCustomRecipientMessage{}.Type(ctx),
 			"personal_compute":                                    settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
 			"restrict_workspace_admins":                           settingsv2_tf.RestrictWorkspaceAdminsMessage{}.Type(ctx),
 			"string_val":                                          settingsv2_tf.StringMessage{}.Type(ctx),
+			"workspace_label":                                     settingsv2_tf.WorkspaceLabelMessage{}.Type(ctx),
 		},
 	}
 }
@@ -384,6 +396,15 @@ func (to *Setting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sett
 			}
 		}
 	}
+	if !from.EffectiveWorkspaceLabel.IsNull() && !from.EffectiveWorkspaceLabel.IsUnknown() {
+		if toEffectiveWorkspaceLabel, ok := to.GetEffectiveWorkspaceLabel(ctx); ok {
+			if fromEffectiveWorkspaceLabel, ok := from.GetEffectiveWorkspaceLabel(ctx); ok {
+				// Recursively sync the fields of EffectiveWorkspaceLabel
+				toEffectiveWorkspaceLabel.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveWorkspaceLabel)
+				to.SetEffectiveWorkspaceLabel(ctx, toEffectiveWorkspaceLabel)
+			}
+		}
+	}
 	if !from.IntegerVal.IsNull() && !from.IntegerVal.IsUnknown() {
 		if toIntegerVal, ok := to.GetIntegerVal(ctx); ok {
 			if fromIntegerVal, ok := from.GetIntegerVal(ctx); ok {
@@ -426,6 +447,15 @@ func (to *Setting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sett
 				// Recursively sync the fields of StringVal
 				toStringVal.SyncFieldsDuringCreateOrUpdate(ctx, fromStringVal)
 				to.SetStringVal(ctx, toStringVal)
+			}
+		}
+	}
+	if !from.WorkspaceLabel.IsNull() && !from.WorkspaceLabel.IsUnknown() {
+		if toWorkspaceLabel, ok := to.GetWorkspaceLabel(ctx); ok {
+			if fromWorkspaceLabel, ok := from.GetWorkspaceLabel(ctx); ok {
+				// Recursively sync the fields of WorkspaceLabel
+				toWorkspaceLabel.SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceLabel)
+				to.SetWorkspaceLabel(ctx, toWorkspaceLabel)
 			}
 		}
 	}
@@ -571,6 +601,14 @@ func (to *Setting) SyncFieldsDuringRead(ctx context.Context, from Setting) {
 			}
 		}
 	}
+	if !from.EffectiveWorkspaceLabel.IsNull() && !from.EffectiveWorkspaceLabel.IsUnknown() {
+		if toEffectiveWorkspaceLabel, ok := to.GetEffectiveWorkspaceLabel(ctx); ok {
+			if fromEffectiveWorkspaceLabel, ok := from.GetEffectiveWorkspaceLabel(ctx); ok {
+				toEffectiveWorkspaceLabel.SyncFieldsDuringRead(ctx, fromEffectiveWorkspaceLabel)
+				to.SetEffectiveWorkspaceLabel(ctx, toEffectiveWorkspaceLabel)
+			}
+		}
+	}
 	if !from.IntegerVal.IsNull() && !from.IntegerVal.IsUnknown() {
 		if toIntegerVal, ok := to.GetIntegerVal(ctx); ok {
 			if fromIntegerVal, ok := from.GetIntegerVal(ctx); ok {
@@ -611,6 +649,14 @@ func (to *Setting) SyncFieldsDuringRead(ctx context.Context, from Setting) {
 			}
 		}
 	}
+	if !from.WorkspaceLabel.IsNull() && !from.WorkspaceLabel.IsUnknown() {
+		if toWorkspaceLabel, ok := to.GetWorkspaceLabel(ctx); ok {
+			if fromWorkspaceLabel, ok := from.GetWorkspaceLabel(ctx); ok {
+				toWorkspaceLabel.SyncFieldsDuringRead(ctx, fromWorkspaceLabel)
+				to.SetWorkspaceLabel(ctx, toWorkspaceLabel)
+			}
+		}
+	}
 }
 
 func (m Setting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -631,12 +677,14 @@ func (m Setting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["effective_personal_compute"] = attrs["effective_personal_compute"].SetOptional()
 	attrs["effective_restrict_workspace_admins"] = attrs["effective_restrict_workspace_admins"].SetOptional()
 	attrs["effective_string_val"] = attrs["effective_string_val"].SetComputed()
+	attrs["effective_workspace_label"] = attrs["effective_workspace_label"].SetOptional()
 	attrs["integer_val"] = attrs["integer_val"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["operational_email_custom_recipient"] = attrs["operational_email_custom_recipient"].SetOptional()
 	attrs["personal_compute"] = attrs["personal_compute"].SetOptional()
 	attrs["restrict_workspace_admins"] = attrs["restrict_workspace_admins"].SetOptional()
 	attrs["string_val"] = attrs["string_val"].SetOptional()
+	attrs["workspace_label"] = attrs["workspace_label"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	return attrs
@@ -1067,6 +1115,31 @@ func (m *Setting) SetEffectiveStringVal(ctx context.Context, v settingsv2_tf.Str
 	m.EffectiveStringVal = vs
 }
 
+// GetEffectiveWorkspaceLabel returns the value of the EffectiveWorkspaceLabel field in Setting as
+// a settingsv2_tf.WorkspaceLabelMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Setting) GetEffectiveWorkspaceLabel(ctx context.Context) (settingsv2_tf.WorkspaceLabelMessage, bool) {
+	var e settingsv2_tf.WorkspaceLabelMessage
+	if m.EffectiveWorkspaceLabel.IsNull() || m.EffectiveWorkspaceLabel.IsUnknown() {
+		return e, false
+	}
+	var v settingsv2_tf.WorkspaceLabelMessage
+	d := m.EffectiveWorkspaceLabel.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectiveWorkspaceLabel sets the value of the EffectiveWorkspaceLabel field in Setting.
+func (m *Setting) SetEffectiveWorkspaceLabel(ctx context.Context, v settingsv2_tf.WorkspaceLabelMessage) {
+	vs := v.ToObjectValue(ctx)
+	m.EffectiveWorkspaceLabel = vs
+}
+
 // GetIntegerVal returns the value of the IntegerVal field in Setting as
 // a settingsv2_tf.IntegerMessage value.
 // If the field is unknown or null, the boolean return value is false.
@@ -1190,6 +1263,31 @@ func (m *Setting) GetStringVal(ctx context.Context) (settingsv2_tf.StringMessage
 func (m *Setting) SetStringVal(ctx context.Context, v settingsv2_tf.StringMessage) {
 	vs := v.ToObjectValue(ctx)
 	m.StringVal = vs
+}
+
+// GetWorkspaceLabel returns the value of the WorkspaceLabel field in Setting as
+// a settingsv2_tf.WorkspaceLabelMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Setting) GetWorkspaceLabel(ctx context.Context) (settingsv2_tf.WorkspaceLabelMessage, bool) {
+	var e settingsv2_tf.WorkspaceLabelMessage
+	if m.WorkspaceLabel.IsNull() || m.WorkspaceLabel.IsUnknown() {
+		return e, false
+	}
+	var v settingsv2_tf.WorkspaceLabelMessage
+	d := m.WorkspaceLabel.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkspaceLabel sets the value of the WorkspaceLabel field in Setting.
+func (m *Setting) SetWorkspaceLabel(ctx context.Context, v settingsv2_tf.WorkspaceLabelMessage) {
+	vs := v.ToObjectValue(ctx)
+	m.WorkspaceLabel = vs
 }
 
 func (r *SettingResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

@@ -1,5 +1,11 @@
 # Version changelog
 
+## Release v1.135.0 (2026-09-28)
+
+### New Features and Improvements
+* Add `string_value_wo` and `string_value_wo_version` attributes to `databricks_secret` resource ([#5480](https://github.com/databricks/terraform-provider-databricks/pull/5480)).
+
+
 ## Release v1.134.0 (2026-09-23)
 
 ### Internal Changes

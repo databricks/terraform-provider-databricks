@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -363,11 +364,70 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, a.client, app.ProviderConfig, &resp.State)...)
 }
 
+// updatableFields are the app fields the update API accepts in update_mask.
+var updatableFields = []struct {
+	name string
+	get  func(apps.App) any
+}{
+	{"description", func(a apps.App) any { return a.Description }},
+	{"budget_policy_id", func(a apps.App) any { return a.BudgetPolicyId }},
+	{"usage_policy_id", func(a apps.App) any { return a.UsagePolicyId }},
+	{"resources", func(a apps.App) any { return a.Resources }},
+	{"user_api_scopes", func(a apps.App) any { return a.UserApiScopes }},
+	{"compute_size", func(a apps.App) any { return a.ComputeSize }},
+	{"compute_min_instances", func(a apps.App) any { return a.ComputeMinInstances }},
+	{"compute_max_instances", func(a apps.App) any { return a.ComputeMaxInstances }},
+	{"telemetry_export_destinations", func(a apps.App) any { return a.TelemetryExportDestinations }},
+}
+
+// changedUpdateMask returns the update_mask for the fields that differ between
+// the prior state and the plan. The API requires compute_min_instances and
+// compute_max_instances to be masked together, so a change to either includes both.
+func changedUpdateMask(prior, plan apps.App) []string {
+	var mask []string
+	for _, f := range updatableFields {
+		if !reflect.DeepEqual(f.get(prior), f.get(plan)) {
+			mask = append(mask, f.name)
+		}
+	}
+	if slices.Contains(mask, "compute_min_instances") != slices.Contains(mask, "compute_max_instances") {
+		mask = slices.DeleteFunc(mask, func(n string) bool { return strings.HasPrefix(n, "compute_m") })
+		mask = append(mask, "compute_min_instances", "compute_max_instances")
+	}
+	return mask
+}
+
+// applyUpdate sends the changed fields through the asynchronous update API and
+// waits for the app to settle. The synchronous Apps.Update sends the whole app
+// and the backend rejects any request that carries compute_size, changed or not.
+func (a *resourceApp) applyUpdate(ctx context.Context, w *databricks.WorkspaceClient, prior, plan AppResource) (*apps.App, error) {
+	var priorGoSdk, planGoSdk apps.App
+	if diags := converters.TfSdkToGoSdkStruct(ctx, prior, &priorGoSdk); diags.HasError() {
+		return nil, fmt.Errorf("failed to convert prior state: %v", diags)
+	}
+	if diags := converters.TfSdkToGoSdkStruct(ctx, plan, &planGoSdk); diags.HasError() {
+		return nil, fmt.Errorf("failed to convert plan: %v", diags)
+	}
+	mask := changedUpdateMask(priorGoSdk, planGoSdk)
+	if len(mask) > 0 {
+		_, err := w.Apps.CreateUpdateAndWait(ctx, apps.AsyncUpdateAppRequest{
+			App:        &planGoSdk,
+			AppName:    plan.Name.ValueString(),
+			UpdateMask: strings.Join(mask, ","),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	return a.waitForApp(ctx, w, plan.Name.ValueString())
+}
+
 func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var app AppResource
+	var app, prior AppResource
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &app)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &prior)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -384,13 +444,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	// Update the app
-	var appGoSdk apps.App
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, app, &appGoSdk)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	response, err := w.Apps.Update(ctx, apps.UpdateAppRequest{App: appGoSdk, Name: app.Name.ValueString()})
+	response, err := a.applyUpdate(ctx, w, prior, app)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to update app", err.Error())
 		return
@@ -406,6 +460,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	newApp.NoCompute = app.NoCompute
 	newApp.ProviderConfig = app.ProviderConfig
 	newApp.App.SyncFieldsDuringCreateOrUpdate(ctx, app.App)
+	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	// No PopulateProviderConfigInState needed for Update: provider_config.workspace_id
 	// is already in state from a previous Create, and if the workspace ID had changed,

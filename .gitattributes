@@ -77,6 +77,8 @@ docs/data-sources/feature_engineering_kafka_config.md linguist-generated=true
 docs/data-sources/feature_engineering_kafka_configs.md linguist-generated=true
 docs/data-sources/feature_engineering_materialized_feature.md linguist-generated=true
 docs/data-sources/feature_engineering_materialized_features.md linguist-generated=true
+docs/data-sources/recipient_federation_policies.md linguist-generated=true
+docs/data-sources/recipient_federation_policy.md linguist-generated=true
 docs/data-sources/knowledge_assistant.md linguist-generated=true
 docs/data-sources/knowledge_assistant_knowledge_source.md linguist-generated=true
 docs/data-sources/knowledge_assistant_knowledge_sources.md linguist-generated=true
@@ -141,6 +143,7 @@ docs/data-sources/workspace_iam_workspace_identity_detail_v2.md linguist-generat
 docs/data-sources/workspace_network_option.md linguist-generated=true
 docs/data-sources/workspace_setting_v2.md linguist-generated=true
 docs/resources/account_federation_policy.md linguist-generated=true
+docs/resources/recipient_federation_policy.md linguist-generated=true
 docs/resources/account_iam_direct_group_member_v2.md linguist-generated=true
 docs/resources/account_iam_group_v2.md linguist-generated=true
 docs/resources/account_iam_service_principal_v2.md linguist-generated=true
@@ -369,6 +372,9 @@ internal/providers/pluginfw/products/postgres_synced_table/data_postgres_synced_
 internal/providers/pluginfw/products/postgres_synced_table/resource_postgres_synced_table.go linguist-generated=true
 internal/providers/pluginfw/products/quality_monitor_v2/data_quality_monitor_v2.go linguist-generated=true
 internal/providers/pluginfw/products/quality_monitor_v2/data_quality_monitors_v2.go linguist-generated=true
+internal/providers/pluginfw/products/recipient_federation_policy/data_recipient_federation_policies.go linguist-generated=true
+internal/providers/pluginfw/products/recipient_federation_policy/data_recipient_federation_policy.go linguist-generated=true
+internal/providers/pluginfw/products/recipient_federation_policy/resource_recipient_federation_policy.go linguist-generated=true
 internal/providers/pluginfw/products/quality_monitor_v2/resource_quality_monitor_v2.go linguist-generated=true
 internal/providers/pluginfw/products/rfa_access_request_destinations/data_rfa_access_request_destinations.go linguist-generated=true
 internal/providers/pluginfw/products/rfa_access_request_destinations/resource_rfa_access_request_destinations.go linguist-generated=true

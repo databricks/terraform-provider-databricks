@@ -64,7 +64,7 @@ jobs:
 
       - name: Classify changed files
         id: classify
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             // Fail open: any error here -> inert_only=false -> full suite runs.
@@ -135,7 +135,7 @@ jobs:
 
       - name: Evaluate and carry forward
         id: carry
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const fail = (reason) => {
@@ -289,7 +289,7 @@ jobs:
 
     steps:
       - name: Post synthetic Integration Tests success
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             await github.rest.checks.create({
@@ -328,7 +328,7 @@ jobs:
 
     steps:
       - name: Auto-approve Check for Merge Queue
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             await github.rest.checks.create({

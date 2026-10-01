@@ -629,44 +629,27 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 			return wrapMissingClusterError(err, d.Id())
 		}
 
-		isNumWorkersResizeForNonAutoscalingCluster := hasOnlyResizeClusterConfigChanged &&
-			hasNumWorkersChanged &&
-			!hasAutoscaleChanged &&
-			clusterInfo.State == ClusterStateRunning
-		isAutoScalingToNonAutoscalingResize := hasOnlyResizeClusterConfigChanged &&
-			hasAutoscaleChanged &&
-			hasNumWorkersChanged &&
-			cluster.Autoscale == nil &&
-			clusterInfo.State == ClusterStateRunning
-		isAutoscaleConfigResizeForAutoscalingCluster := hasOnlyResizeClusterConfigChanged &&
-			hasAutoscaleChanged &&
-			!hasNumWorkersChanged &&
-			clusterInfo.State == ClusterStateRunning
-		isNonAutoScalingToAutoscalingResize := hasOnlyResizeClusterConfigChanged &&
-			hasAutoscaleChanged &&
-			hasNumWorkersChanged &&
-			cluster.Autoscale != nil &&
+		// We prefer to use the resize API in cases when only the cluster size is
+		// changed because a resizing cluster can still serve queries.
+		isRunningResize := hasOnlyResizeClusterConfigChanged &&
+			(hasNumWorkersChanged || hasAutoscaleChanged) &&
 			clusterInfo.State == ClusterStateRunning
 
-		// We prefer to use the resize API in cases when only the number of
-		// workers is changed because a resizing cluster can still serve queries
-
-		if isNumWorkersResizeForNonAutoscalingCluster ||
-			isAutoScalingToNonAutoscalingResize {
-			_, err = clusters.Resize(ctx, compute.ResizeCluster{
-				ClusterId:       clusterId,
-				NumWorkers:      cluster.NumWorkers,
-				ForceSendFields: []string{"NumWorkers"},
-			})
+		if isRunningResize {
+			// The target size is decided by the desired configuration, not by
+			// which of the two fields changed in the diff: an autoscale block in
+			// the configuration must never be overridden by a num_workers change.
+			resizeRequest := compute.ResizeCluster{ClusterId: clusterId}
+			if cluster.Autoscale != nil {
+				resizeRequest.Autoscale = cluster.Autoscale
+			} else {
+				resizeRequest.NumWorkers = cluster.NumWorkers
+				resizeRequest.ForceSendFields = []string{"NumWorkers"}
+			}
+			_, err = clusters.Resize(ctx, resizeRequest)
 			if err != nil {
 				return err
 			}
-		} else if isAutoscaleConfigResizeForAutoscalingCluster ||
-			isNonAutoScalingToAutoscalingResize {
-			_, err = clusters.Resize(ctx, compute.ResizeCluster{
-				ClusterId: clusterId,
-				Autoscale: cluster.Autoscale,
-			})
 		} else {
 			SetForceSendFieldsForCluster(&cluster, d)
 

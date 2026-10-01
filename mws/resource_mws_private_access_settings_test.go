@@ -333,3 +333,77 @@ func TestResourcePASUpdateAccountIdNoDiff(t *testing.T) {
 		`,
 	}.ApplyNoError(t)
 }
+
+func TestResourcePASAllowedVpcEndpointIdsOrderDoesNotCauseDiff(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceMwsPrivateAccessSettings(),
+		ID:       "abc/pas_id",
+		InstanceState: map[string]string{
+			"account_id":                   "abc",
+			"allowed_vpc_endpoint_ids.#":   "2",
+			"allowed_vpc_endpoint_ids.0":   "a",
+			"allowed_vpc_endpoint_ids.1":   "b",
+			"private_access_level":         "ENDPOINT",
+			"private_access_settings_id":   "pas_id",
+			"private_access_settings_name": "pas_name",
+			"public_access_enabled":        "true",
+			"region":                       "eu-west-1",
+		},
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{},
+		HCL: `
+		account_id = "abc"
+		private_access_settings_name = "pas_name"
+		public_access_enabled = true
+		region = "eu-west-1"
+		private_access_level = "ENDPOINT"
+		allowed_vpc_endpoint_ids = ["b", "a"]
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestResourcePASReadSortsAllowedVpcEndpointIds(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			a.GetMockPrivateAccessAPI().EXPECT().GetByPrivateAccessSettingsId(mock.Anything, "pas_id").Return(&provisioning.PrivateAccessSettings{
+				PrivateAccessSettingsId: "pas_id",
+				AllowedVpcEndpointIds:   []string{"b", "a"},
+			}, nil)
+		},
+		Resource: ResourceMwsPrivateAccessSettings(),
+		Read:     true,
+		New:      true,
+		ID:       "abc/pas_id",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, []any{"a", "b"}, d.Get("allowed_vpc_endpoint_ids"))
+}
+
+func TestResourcePASAllowedVpcEndpointIdsMembershipChangeCausesDiff(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceMwsPrivateAccessSettings(),
+		ID:       "abc/pas_id",
+		InstanceState: map[string]string{
+			"account_id":                   "abc",
+			"allowed_vpc_endpoint_ids.#":   "2",
+			"allowed_vpc_endpoint_ids.0":   "a",
+			"allowed_vpc_endpoint_ids.1":   "b",
+			"private_access_level":         "ENDPOINT",
+			"private_access_settings_id":   "pas_id",
+			"private_access_settings_name": "pas_name",
+			"public_access_enabled":        "true",
+			"region":                       "eu-west-1",
+		},
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
+			"allowed_vpc_endpoint_ids.0": {Old: "a", New: "b"},
+			"allowed_vpc_endpoint_ids.1": {Old: "b", New: "c"},
+		},
+		HCL: `
+		account_id = "abc"
+		private_access_settings_name = "pas_name"
+		public_access_enabled = true
+		region = "eu-west-1"
+		private_access_level = "ENDPOINT"
+		allowed_vpc_endpoint_ids = ["b", "c"]
+		`,
+	}.ApplyNoError(t)
+}

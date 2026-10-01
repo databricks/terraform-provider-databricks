@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
 
 func connectionTemplateWithOwner(host string, owner string) string {
@@ -65,5 +67,66 @@ func TestUcAccConnectionsWithoutOwnerResourceFullLifecycle(t *testing.T) {
 		Template: connectionTemplateWithoutOwner(),
 	}, acceptance.Step{
 		Template: connectionTemplateWithoutOwner(),
+	})
+}
+
+// schemaLevelConnectionTemplate creates a connection inside a schema via parent, with a
+// configurable host option.
+func schemaLevelConnectionTemplate(host string) string {
+	return fmt.Sprintf(`
+	resource "databricks_catalog" "this" {
+		name = "tf_test_sc_cat_{var.STICKY_RANDOM}"
+	}
+	resource "databricks_schema" "this" {
+		catalog_name = databricks_catalog.this.name
+		name         = "tf_test_sc_schema"
+	}
+	resource "databricks_connection" "this" {
+		name            = "tf-test-schema-conn-{var.STICKY_RANDOM}"
+		connection_type = "HTTP"
+		parent          = "schemas/${databricks_catalog.this.name}.${databricks_schema.this.name}"
+		comment         = "schema-level connection acceptance test"
+		options = {
+			host         = "%s"
+			port         = "8433"
+			base_path    = "/api/"
+			bearer_token = "bearer_token"
+		}
+	}
+	`, host)
+}
+
+func TestUcAccConnectionsSchemaLevelResourceFullLifecycle(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: schemaLevelConnectionTemplate("https://example.com"),
+		// The HTTP bearer backend returns a server-managed auth_scheme option that is not in
+		// config, so the post-apply plan is non-empty.
+		ExpectNonEmptyPlan: true,
+	}, acceptance.Step{
+		// Re-applying the identical config must be an in-place update, never a destroy/recreate:
+		// this proves the parent/full_name round-trip is stable (no ForceNew drift).
+		Template: schemaLevelConnectionTemplate("https://example.com"),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				plancheck.ExpectResourceAction("databricks_connection.this", plancheck.ResourceActionUpdate),
+			},
+		},
+		ExpectNonEmptyPlan: true,
+	}, acceptance.Step{
+		// In-place update of a mutable option (host). The Check confirms the new value round-trips
+		// on read; the plan check confirms an in-place update rather than a replace.
+		Template: schemaLevelConnectionTemplate("https://example2.com"),
+		Check:    resource.TestCheckResourceAttr("databricks_connection.this", "options.host", "https://example2.com"),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				plancheck.ExpectResourceAction("databricks_connection.this", plancheck.ResourceActionUpdate),
+			},
+		},
+		ExpectNonEmptyPlan: true,
+	}, acceptance.Step{
+		// Import by metastore_id|full_name. Attribute verification is skipped because options
+		// (write-only bearer_token, server-managed auth_scheme) cannot match config on import.
+		ResourceName: "databricks_connection.this",
+		ImportState:  true,
 	})
 }

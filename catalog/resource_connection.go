@@ -2,7 +2,9 @@ package catalog
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -25,8 +27,35 @@ func suppressComputedFields(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
+// schemaParentFromFullName derives a schema-level connection's parent
+// ("schemas/{catalog}.{schema}") from its full_name by stripping the leaf name. A
+// metastore-level connection's full_name equals its name and has no parent.
+func schemaParentFromFullName(fullName, name string) string {
+	if fullName == "" || fullName == name || !strings.HasSuffix(fullName, "."+name) {
+		return ""
+	}
+	return "schemas/" + strings.TrimSuffix(fullName, "."+name)
+}
+
+// validateConnectionParent ensures parent is in "schemas/{catalog}.{schema}" form.
+func validateConnectionParent(i any, k string) (warnings []string, errors []error) {
+	v, ok := i.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected %q to be a string", k))
+		return
+	}
+	parts := strings.Split(strings.TrimPrefix(v, "schemas/"), ".")
+	if !strings.HasPrefix(v, "schemas/") || len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		errors = append(errors, fmt.Errorf("%q must be in the format \"schemas/{catalog}.{schema}\", got %q", k, v))
+	}
+	return
+}
+
 type ConnectionSchemaStruct struct {
 	catalog.ConnectionInfo
+	// Parent schema for a schema-level connection, in format "schemas/{catalog}.{schema}".
+	// Omitted for a metastore-level connection.
+	Parent string `json:"parent,omitempty"`
 	common.Namespace
 }
 
@@ -40,15 +69,18 @@ func ResourceConnection() common.Resource {
 			for _, v := range []string{"owner", "read_only"} {
 				common.CustomizeSchemaPath(m, v).SetComputed()
 			}
-			for _, v := range []string{"read_only", "properties", "comment", "connection_type"} {
+			for _, v := range []string{"read_only", "properties", "comment", "connection_type", "parent"} {
 				common.CustomizeSchemaPath(m, v).SetForceNew()
 			}
 			common.CustomizeSchemaPath(m, "options").SetSensitive().SetCustomSuppressDiff(suppressComputedFields)
 			common.CustomizeSchemaPath(m, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			// Suppress case-only diffs (UC identifiers are case-insensitive) so a case difference
+			// does not trigger a spurious ForceNew recreate; validate the format at plan time.
+			common.CustomizeSchemaPath(m, "parent").SetCustomSuppressDiff(common.EqualFoldDiffSuppress).SetValidateFunc(validateConnectionParent)
 			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
-	pi := common.NewPairID("metastore_id", "name").Schema(
+	pi := common.NewPairID("metastore_id", "full_name").Schema(
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return s
 		})
@@ -74,14 +106,16 @@ func ResourceConnection() common.Resource {
 			if d.Get("owner") != "" {
 				var updateConnectionRequest catalog.UpdateConnection
 				common.DataToStructPointer(d, s, &updateConnectionRequest)
-				updateConnectionRequest.Name = createConnectionRequest.Name
+				// Address the owner update by full_name so it resolves a schema-level connection.
+				updateConnectionRequest.Name = conn.FullName
 				conn, err = w.Connections.Update(ctx, updateConnectionRequest)
 				if err != nil {
 					return err
 				}
 			}
 			d.Set("metastore_id", conn.MetastoreId)
-			pi.Pack(d)
+			// The id is metastore_id|full_name; for a metastore-level connection full_name is the name.
+			d.SetId(conn.MetastoreId + "|" + conn.FullName)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -116,7 +150,12 @@ func ResourceConnection() common.Resource {
 					conn.Options[key] = element
 				}
 			}
-			return common.StructToData(conn, s, d)
+			if err := common.StructToData(conn, s, d); err != nil {
+				return err
+			}
+			// The API returns full_name, not parent; rebuild parent from it (empty for a
+			// metastore-level connection).
+			return d.Set("parent", schemaParentFromFullName(conn.FullName, conn.Name))
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)

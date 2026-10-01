@@ -17,5 +17,6 @@
 ### Exporter
 
 * Fixed a nil pointer panic in `emitRfaAccessRequestDestinations` when exporting workspace-level UC securables with an account-level provider ([#6028](https://github.com/databricks/terraform-provider-databricks/issues/6028)).
+* Export dependencies for Databricks Apps telemetry tables and Unity Catalog securables ([#6036](https://github.com/databricks/terraform-provider-databricks/pull/6036)).
 
 ### Internal Changes

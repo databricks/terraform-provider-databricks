@@ -14,6 +14,8 @@
 
 ### Documentation
 
+* Document that Databricks plans to deprecate classic AWS workspace creation with a Databricks-managed VPC in `databricks_mws_workspaces`, `databricks_mws_credentials`, and `databricks_aws_crossaccount_policy`, and use `policy_type = "customer"` in examples.
+
 ### Exporter
 
 * Fixed a nil pointer panic in `emitRfaAccessRequestDestinations` when exporting workspace-level UC securables with an account-level provider ([#6028](https://github.com/databricks/terraform-provider-databricks/issues/6028)).

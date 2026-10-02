@@ -12,12 +12,14 @@ This data source constructs necessary AWS cross-account policy for you, which is
 For more detailed usage please see [databricks_aws_assume_role_policy](aws_assume_role_policy.md) or [databricks_aws_s3_mount](../resources/mount.md) pages.
 
 ```hcl
-data "databricks_aws_crossaccount_policy" "this" {}
+data "databricks_aws_crossaccount_policy" "this" {
+  policy_type = "customer"
+}
 ```
 
 ## Argument Reference
 
-* `policy_type` (Optional) The type of cross account policy to generated: `managed` for Databricks-managed VPC and `customer` for customer-managed VPC, `restricted` for customer-managed VPC with policy restrictions
+* `policy_type` (Optional) The type of cross account policy to generated: `managed` for Databricks-managed VPC and `customer` for customer-managed VPC, `restricted` for customer-managed VPC with policy restrictions. Defaults to `managed`. Databricks plans to deprecate classic workspace creation with a Databricks-managed VPC, so set `customer` or `restricted` for new workspaces.
 * `pass_roles` (Optional) (List) List of Data IAM role ARNs that are explicitly granted `iam:PassRole` action.
 The below arguments are only valid for `restricted` policy type
 * `aws_account_id` — Your AWS account ID, which is a number.

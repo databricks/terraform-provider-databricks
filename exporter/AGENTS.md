@@ -124,7 +124,7 @@ For a resource with `node_count` (input-only) and `effective_node_count` (API-re
 - Generated HCL includes: `node_count = 2` (non-zero)
 - Generated HCL omits: `enable_readable_secondaries = false` (zero value)
 
-For more details, see `exporter/EFFECTIVE_FIELDS_PATTERN.md`.
+For more details, see `exporter/EFFECTIVE_FIELDS_PATTERN.md` and `exporter/COMPLEX_TYPES_HANDLING.md`.
 
 ## Cloud Attribute Conversion
 

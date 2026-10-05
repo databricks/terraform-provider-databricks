@@ -12,6 +12,8 @@
 
 ### Documentation
 
+* Document that Databricks plans to deprecate classic AWS workspace creation with a Databricks-managed VPC in `databricks_mws_workspaces`, `databricks_mws_credentials`, and `databricks_aws_crossaccount_policy`, and use `policy_type = "customer"` in examples.
+
 ### Exporter
 * Rewrite portable cluster policy attributes for the target cloud and omit attributes that cannot be safely converted ([#6040](https://github.com/databricks/terraform-provider-databricks/pull/6040)).
 

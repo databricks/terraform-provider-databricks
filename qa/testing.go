@@ -70,6 +70,7 @@ type HTTPFixture struct {
 	Response        any
 	Status          int
 	ExpectedRequest any
+	ExpectedHeaders map[string]string
 	ReuseRequest    bool
 	MatchAny        bool
 }
@@ -589,6 +590,16 @@ func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.Dat
 
 // HttpFixtureClientWithToken creates client for emulated HTTP server
 func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token string) (*common.DatabricksClient, *httptest.Server, error) {
+	return httpFixtureClientWithToken(t, fixtures, token, false)
+}
+
+// StrictHTTPFixtureClient creates a client backed by an HTTP fixture server and
+// fails the test if any non-reusable fixture is not consumed.
+func StrictHTTPFixtureClient(t *testing.T, fixtures []HTTPFixture) (*common.DatabricksClient, *httptest.Server, error) {
+	return httpFixtureClientWithToken(t, fixtures, "...", true)
+}
+
+func httpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token string, strict bool) (*common.DatabricksClient, *httptest.Server, error) {
 	// Auto-inject a 404 stub for /.well-known/databricks-config so that
 	// the SDK's host-metadata resolution doesn't cause "Missing stub" failures.
 	hasMetadata := false
@@ -614,6 +625,9 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 		found := false
 		for i, fixture := range fixtures {
 			if (req.Method == fixture.Method && req.RequestURI == fixture.Resource) || fixture.MatchAny {
+				for name, expected := range fixture.ExpectedHeaders {
+					assert.Equal(t, expected, req.Header.Get(name), "unexpected %s header", name)
+				}
 				if fixture.Status == 0 {
 					rw.WriteHeader(200)
 				} else {
@@ -650,12 +664,14 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 			}
 		}
 		if !found {
-			receivedRequest := map[string]any{}
 			buf := new(bytes.Buffer)
 			_, err := buf.ReadFrom(req.Body)
 			assert.NoError(t, err)
-			err = json.Unmarshal(buf.Bytes(), &receivedRequest)
-			assert.NoError(t, err)
+			receivedRequest := map[string]any{}
+			if buf.Len() > 0 {
+				err = json.Unmarshal(buf.Bytes(), &receivedRequest)
+				assert.NoError(t, err)
+			}
 
 			expectedRequest := ""
 			if len(receivedRequest) > 0 {
@@ -705,6 +721,16 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 	// Pre-populate cached workspace ID to prevent lazy CurrentWorkspaceID
 	// API calls in unit tests.
 	dc.SetCachedWorkspaceID(12345)
+	if strict {
+		t.Cleanup(func() {
+			server.Close()
+			for _, fixture := range fixtures {
+				if fixture.Method != "" && !fixture.ReuseRequest {
+					t.Errorf("expected HTTP fixture was not consumed: %s %s", fixture.Method, fixture.Resource)
+				}
+			}
+		})
+	}
 	return dc, server, nil
 }
 

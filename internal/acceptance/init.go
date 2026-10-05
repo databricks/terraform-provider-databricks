@@ -216,7 +216,11 @@ func run(t *testing.T, steps []Step) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	t.Parallel()
-	protoV6ProviderFactories := map[string]func() (tfprotov6.ProviderServer, error){
+	runWithProviderFactories(t, steps, cloudEnv, defaultProviderFactories())
+}
+
+func defaultProviderFactories() map[string]func() (tfprotov6.ProviderServer, error) {
+	return map[string]func() (tfprotov6.ProviderServer, error){
 		"databricks": func() (tfprotov6.ProviderServer, error) {
 			ctx := context.Background()
 
@@ -228,6 +232,44 @@ func run(t *testing.T, steps []Step) {
 			return providers.GetProviderServer(ctx, providers.WithSdkV2Provider(sdkPluginProvider), providers.WithPluginFrameworkProvider(pluginFrameworkProvider))
 		},
 	}
+}
+
+// HTTPFixtures runs Terraform against the production provider and a local HTTP
+// fixture server. Unlike live acceptance helpers, it requires no credentials or
+// CLOUD_ENV and runs as part of the unit-test suite.
+func HTTPFixtures(t *testing.T, fixtures []qa.HTTPFixture, steps ...Step) {
+	_, server, err := qa.StrictHTTPFixtureClient(t, fixtures)
+	if err != nil {
+		t.Fatal(err)
+	}
+	customizer := func(cfg *config.Config) error {
+		cfg.Host = server.URL
+		cfg.Token = "..."
+		cfg.AuthType = "pat"
+		cfg.AzureEnvironment = "PUBLIC"
+		return nil
+	}
+	providerFactories := map[string]func() (tfprotov6.ProviderServer, error){
+		"databricks": func() (tfprotov6.ProviderServer, error) {
+			sdkV2Provider := sdkv2.DatabricksProvider(sdkv2.WithConfigCustomizer(customizer))
+			pluginFrameworkProvider := pluginfw.GetDatabricksProviderPluginFramework(
+				pluginfw.WithConfigCustomizer(customizer),
+			)
+			return providers.GetProviderServer(context.Background(),
+				providers.WithSdkV2Provider(sdkV2Provider),
+				providers.WithPluginFrameworkProvider(pluginFrameworkProvider),
+			)
+		},
+	}
+	runWithProviderFactories(t, steps, "http-fixture", providerFactories)
+}
+
+func runWithProviderFactories(
+	t *testing.T,
+	steps []Step,
+	cloudEnv string,
+	protoV6ProviderFactories map[string]func() (tfprotov6.ProviderServer, error),
+) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Skip(err.Error())

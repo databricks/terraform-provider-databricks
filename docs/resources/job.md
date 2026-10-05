@@ -437,7 +437,7 @@ This block describes the queue settings of the job:
 * `pause_status` - (Optional) Indicate whether this trigger is paused or not. Either `PAUSED` or `UNPAUSED`. When the `pause_status` field is omitted in the block, the server will default to using `UNPAUSED` as a value for `pause_status`.
 * `periodic` - (Optional) configuration block to define a trigger for Periodic Triggers consisting of the following attributes:
   * `interval` - (Required, integer) Specifies the interval at which the job should run.
-  * `unit` - (Required, string) The unit of time for the interval.  Possible values are: `DAYS`, `HOURS`, `WEEKS`.
+  * `unit` - (Required, string) The unit of time for the interval.  Possible values are: `DAYS`, `HOURS`, `MINUTES`, `WEEKS`.
 * `file_arrival` - (Optional) configuration block to define a trigger for [File Arrival events](https://learn.microsoft.com/en-us/azure/databricks/workflows/jobs/file-arrival-triggers) consisting of following attributes:
   * `url` - (Required) URL to be monitored for file arrivals. The path must point to the root or a subpath of the external location. Please note that the URL must have a trailing slash character (`/`).
   * `min_time_between_triggers_seconds` - (Optional, integer) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.

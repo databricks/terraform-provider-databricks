@@ -1,11 +1,15 @@
 package tokens
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestResourceOboTokenRead(t *testing.T) {
@@ -237,4 +241,100 @@ func TestResourceOboTokenCreateNoLifetimeOrComment(t *testing.T) {
 	}.ApplyAndExpectData(t, map[string]any{
 		"id": "bcd",
 	})
+}
+
+func TestResourceOboTokenCreateWithScopesAndAutoscopeDisabled(t *testing.T) {
+	autoscopeEnabled := false
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/token-management/on-behalf-of/tokens",
+				ExpectedRequest: oboTokenRequest{
+					OboToken: OboToken{
+						ApplicationID:   "abc",
+						LifetimeSeconds: 60,
+						Scopes:          []string{"sql", "unity-catalog"},
+					},
+					AutoscopeEnabled: &autoscopeEnabled,
+				},
+				Response: TokenResponse{
+					TokenValue: "s#Cr3t!11",
+					TokenInfo: &TokenInfo{
+						TokenID:    "bcd",
+						ExpiryTime: time.Now().UnixMilli() + 1000,
+						Scopes:     []string{"sql", "unity-catalog"},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/token-management/tokens/bcd",
+				Response: TokenResponse{
+					TokenInfo: &TokenInfo{
+						TokenID:    "bcd",
+						ExpiryTime: time.Now().UnixMilli() + 1000,
+						Scopes:     []string{"sql", "unity-catalog"},
+					},
+				},
+			},
+		},
+		Resource: ResourceOboToken(),
+		Create:   true,
+		HCL: `
+		application_id = "abc"
+		lifetime_seconds = 60
+		scopes = ["sql", "unity-catalog"]
+		autoscope_enabled = false
+		`,
+		New: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "bcd", d.Id())
+	assert.ElementsMatch(t, []any{"sql", "unity-catalog"}, d.Get("scopes").(*schema.Set).List())
+	assert.Equal(t, false, d.Get("autoscope_enabled"))
+}
+
+func TestResourceOboTokenRead_ScopesChanged(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/token-management/tokens/abc",
+				Response: TokenResponse{
+					TokenInfo: &TokenInfo{
+						ExpiryTime: time.Now().UnixMilli() + 1000,
+						Scopes:     []string{"sql"},
+					},
+				},
+			},
+		},
+		Resource: ResourceOboToken(),
+		Read:     true,
+		New:      true,
+		ID:       "abc",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.ElementsMatch(t, []any{"sql"}, d.Get("scopes").(*schema.Set).List())
+}
+
+func TestResourceOboTokenScopesChangeRequiresNew(t *testing.T) {
+	r := ResourceOboToken().ToResource()
+	r.CustomizeDiff = nil
+	state := &terraform.InstanceState{
+		ID: "bcd",
+		Attributes: map[string]string{
+			"id":             "bcd",
+			"application_id": "abc",
+			"scopes.#":       "1",
+			"scopes.0":       "sql",
+		},
+	}
+	config := terraform.NewResourceConfigRaw(map[string]any{
+		"application_id": "abc",
+		"scopes":         []any{"sql", "unity-catalog"},
+	})
+	diff, err := r.SimpleDiff(context.Background(), state, config, nil)
+	assert.NoError(t, err)
+	assert.True(t, diff.RequiresNew())
 }

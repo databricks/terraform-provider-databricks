@@ -330,7 +330,7 @@ func (m AutoFullRefreshPolicy_SdkV2) Type(ctx context.Context) attr.Type {
 
 type AvroTransformerOptions_SdkV2 struct {
 	// (Optional) Parse mode for Avro data. Valid values: FAILFAST, PERMISSIVE.
-	// Defaults to FAILFAST.
+	// Defaults to PERMISSIVE.
 	ParseMode types.String `tfsdk:"parse_mode"`
 	// Inline Avro JSON schema string.
 	Schema types.String `tfsdk:"schema"`
@@ -471,6 +471,8 @@ type ClonePipelineRequest_SdkV2 struct {
 	// Deployment type of this pipeline.
 	Deployment types.List `tfsdk:"deployment"`
 	// Whether the pipeline is in Development mode. Defaults to false.
+	//
+	// Deprecated: set development mode for each update instead.
 	Development types.Bool `tfsdk:"development"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition"`
@@ -2446,6 +2448,8 @@ type CreatePipeline_SdkV2 struct {
 	// Deployment type of this pipeline.
 	Deployment types.List `tfsdk:"deployment"`
 	// Whether the pipeline is in Development mode. Defaults to false.
+	//
+	// Deprecated: set development mode for each update instead.
 	Development types.Bool `tfsdk:"development"`
 
 	DryRun types.Bool `tfsdk:"dry_run"`
@@ -3757,6 +3761,8 @@ type EditPipeline_SdkV2 struct {
 	// Deployment type of this pipeline.
 	Deployment types.List `tfsdk:"deployment"`
 	// Whether the pipeline is in Development mode. Defaults to false.
+	//
+	// Deprecated: set development mode for each update instead.
 	Development types.Bool `tfsdk:"development"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition"`
@@ -12504,6 +12510,8 @@ type PipelineSpec_SdkV2 struct {
 	// Deployment type of this pipeline.
 	Deployment types.List `tfsdk:"deployment"`
 	// Whether the pipeline is in Development mode. Defaults to false.
+	//
+	// Deprecated: set development mode for each update instead.
 	Development types.Bool `tfsdk:"development"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition"`
@@ -13888,7 +13896,7 @@ type ProtobufTransformerOptions_SdkV2 struct {
 	// Required: fully-qualified message type name.
 	MessageName types.String `tfsdk:"message_name"`
 	// (Optional) Parse mode for Protobuf data. Valid values: FAILFAST,
-	// PERMISSIVE. Defaults to FAILFAST.
+	// PERMISSIVE. Defaults to PERMISSIVE.
 	ParseMode types.String `tfsdk:"parse_mode"`
 	// (Optional) Maximum expansion depth for recursive protobuf fields. Spark
 	// SQL does not natively support recursive types, so recursive fields are

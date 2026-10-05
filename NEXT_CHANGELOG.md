@@ -7,6 +7,11 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+* Add resource and data sources for `databricks_mason_managed_memory_store`.
+* Add resource and data sources for `databricks_mason_managed_memory_entry`.
+* Add resource and data sources for `databricks_mason_session_store`.
+* Add resource and data sources for `databricks_mason_session`.
+* Add resource and data sources for `databricks_private_network_gateway`.
 
 ### Bug Fixes
 

@@ -3,6 +3,9 @@ package exporter
 import (
 	"bytes"
 	"context"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/client"
@@ -18,7 +21,19 @@ func (d dummyReader) Read(p []byte) (int, error) {
 	return n, nil
 }
 
+// isolateDatabricksEnv makes sure that the test isn't affected by DATABRICKS_* environment
+// variables or ~/.databrickscfg of the developer running it.
+func isolateDatabricksEnv(t *testing.T) {
+	for _, kv := range os.Environ() {
+		if k, _, _ := strings.Cut(kv, "="); strings.HasPrefix(k, "DATABRICKS_") {
+			t.Setenv(k, "")
+		}
+	}
+	t.Setenv("HOME", t.TempDir())
+}
+
 func TestInteractivePrompts(t *testing.T) {
+	isolateDatabricksEnv(t)
 	originalInput := cliInput
 	originalOutput := cliOutput
 	t.Cleanup(func() {
@@ -50,13 +65,43 @@ func TestInteractivePrompts(t *testing.T) {
 			},
 		},
 	}
-	services := ic.interactivePrompts()
+	services, err := ic.interactivePrompts()
+	assert.NoError(t, err)
 	assert.Equal(t, "y", ic.match)
 	assert.True(t, ic.mounts)
 	assert.Equal(t, "a,mounts", services)
 }
 
+func TestInteractivePromptsStopsAfterFailedAuthAttempts(t *testing.T) {
+	isolateDatabricksEnv(t)
+	// a missing profile can't be fixed by entering host & token
+	cfgFile := filepath.Join(t.TempDir(), ".databrickscfg")
+	assert.NoError(t, os.WriteFile(cfgFile, []byte("[DEFAULT]\n"), 0600))
+	t.Setenv("DATABRICKS_CONFIG_FILE", cfgFile)
+	t.Setenv("DATABRICKS_CONFIG_PROFILE", "doesnotexist")
+	originalInput := cliInput
+	originalOutput := cliOutput
+	t.Cleanup(func() {
+		cliInput = originalInput
+		cliOutput = originalOutput
+	})
+
+	cliInput = dummyReader("y\n")
+	cliOutput = &bytes.Buffer{}
+	ic := &importContext{
+		Client: &common.DatabricksClient{
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{},
+			},
+		},
+		Context: context.Background(),
+	}
+	_, err := ic.interactivePrompts()
+	assert.ErrorContains(t, err, "can't authenticate after 3 attempts")
+}
+
 func TestRunSkipsInteractivePromptsWhenServicesOrListingIsConfigured(t *testing.T) {
+	isolateDatabricksEnv(t)
 	originalInput := cliInput
 	originalOutput := cliOutput
 	t.Cleanup(func() {

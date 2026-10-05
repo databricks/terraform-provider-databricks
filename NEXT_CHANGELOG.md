@@ -14,4 +14,6 @@
 
 ### Exporter
 
+* Fix infinite loop in interactive mode when authentication keeps failing or standard input is closed: the exporter now gives up after 3 failed authentication attempts.
+
 ### Internal Changes

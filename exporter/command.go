@@ -16,11 +16,29 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func (ic *importContext) interactivePrompts() string {
+const maxInteractiveAuthAttempts = 3
+
+// ensureAuthenticated prompts for workspace URL & PAT until authentication succeeds,
+// giving up after maxInteractiveAuthAttempts attempts.
+func (ic *importContext) ensureAuthenticated() error {
+	cfg := ic.Client.DatabricksClient.Config
 	req, _ := http.NewRequest("GET", "/", nil)
-	for ic.Client.DatabricksClient.Config.Authenticate(req) != nil {
-		ic.Client.DatabricksClient.Config.Host = askFor("🔑 Databricks Workspace URL:")
-		ic.Client.DatabricksClient.Config.Token = askFor("🔑 Databricks Workspace PAT:")
+	for attempt := 0; ; attempt++ {
+		err := cfg.Authenticate(req)
+		if err == nil {
+			return nil
+		}
+		if attempt == maxInteractiveAuthAttempts {
+			return fmt.Errorf("can't authenticate after %d attempts: %w", maxInteractiveAuthAttempts, err)
+		}
+		cfg.Host = askFor("🔑 Databricks Workspace URL:")
+		cfg.Token = askFor("🔑 Databricks Workspace PAT:")
+	}
+}
+
+func (ic *importContext) interactivePrompts() (string, error) {
+	if err := ic.ensureAuthenticated(); err != nil {
+		return "", err
 	}
 	ic.match = askFor("🔍 Match entity names (optional):")
 
@@ -54,7 +72,7 @@ func (ic *importContext) interactivePrompts() string {
 	}
 	keys = maps.Keys(enabledServices)
 	slices.Sort(keys)
-	return strings.Join(keys, ",")
+	return strings.Join(keys, ","), nil
 }
 
 // Run import according to flags
@@ -154,7 +172,10 @@ func Run(args ...string) error {
 	databricksClient.DatabricksClient = client
 
 	if !skipInteractive {
-		configuredListing = ic.interactivePrompts()
+		configuredListing, err = ic.interactivePrompts()
+		if err != nil {
+			return err
+		}
 	}
 	if len(prefix) > 0 {
 		ic.prefix = prefix + "_"

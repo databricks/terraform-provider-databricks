@@ -111,6 +111,9 @@ type MaterializedFeatureData struct {
 	// True if this is an online materialized feature. False if it is an offline
 	// materialized feature.
 	IsOnline types.Bool `tfsdk:"is_online"`
+	// The ID of the job that materializes the feature. This is present for both
+	// batch and streaming features.
+	JobId types.Int64 `tfsdk:"job_id"`
 	// The timestamp when the pipeline last ran and updated the materialized
 	// feature values. If the pipeline has not run yet, this field will be null.
 	LastMaterializationTime types.String `tfsdk:"last_materialization_time"`
@@ -123,6 +126,9 @@ type MaterializedFeatureData struct {
 	OfflineStoreConfig types.Object `tfsdk:"offline_store_config"`
 	// Destination for writing feature values to an online Lakebase table.
 	OnlineStoreConfig types.Object `tfsdk:"online_store_config"`
+	// The ID of the pipeline that materializes this feature. This is only
+	// present for streaming features.
+	PipelineId types.String `tfsdk:"pipeline_id"`
 	// The schedule state of the materialization pipeline. Hidden from GraphQL:
 	// being deprecated, so not exposed to Catalog Explorer.
 	PipelineScheduleState types.String `tfsdk:"pipeline_schedule_state"`
@@ -183,11 +189,13 @@ func (m MaterializedFeatureData) ToObjectValue(ctx context.Context) basetypes.Ob
 			"cron_schedule_trigger":     m.CronScheduleTrigger,
 			"feature_name":              m.FeatureName,
 			"is_online":                 m.IsOnline,
+			"job_id":                    m.JobId,
 			"last_materialization_time": m.LastMaterializationTime,
 			"latest_backfill_operation": m.LatestBackfillOperation,
 			"materialized_feature_id":   m.MaterializedFeatureId,
 			"offline_store_config":      m.OfflineStoreConfig,
 			"online_store_config":       m.OnlineStoreConfig,
+			"pipeline_id":               m.PipelineId,
 			"pipeline_schedule_state":   m.PipelineScheduleState,
 			"streaming_mode":            m.StreamingMode,
 			"table_name":                m.TableName,
@@ -209,11 +217,13 @@ func (m MaterializedFeatureData) Type(ctx context.Context) attr.Type {
 			"cron_schedule_trigger":     ml_tf.CronSchedule{}.Type(ctx),
 			"feature_name":              types.StringType,
 			"is_online":                 types.BoolType,
+			"job_id":                    types.Int64Type,
 			"last_materialization_time": types.StringType,
 			"latest_backfill_operation": types.StringType,
 			"materialized_feature_id":   types.StringType,
 			"offline_store_config":      ml_tf.OfflineStoreConfig{}.Type(ctx),
 			"online_store_config":       ml_tf.OnlineStoreConfig{}.Type(ctx),
+			"pipeline_id":               types.StringType,
 			"pipeline_schedule_state":   types.StringType,
 			"streaming_mode":            ml_tf.StreamingMode{}.Type(ctx),
 			"table_name":                types.StringType,
@@ -233,11 +243,13 @@ func (m MaterializedFeatureData) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["cron_schedule_trigger"] = attrs["cron_schedule_trigger"].SetComputed()
 	attrs["feature_name"] = attrs["feature_name"].SetComputed()
 	attrs["is_online"] = attrs["is_online"].SetComputed()
+	attrs["job_id"] = attrs["job_id"].SetComputed()
 	attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
 	attrs["latest_backfill_operation"] = attrs["latest_backfill_operation"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetRequired()
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetComputed()
 	attrs["online_store_config"] = attrs["online_store_config"].SetComputed()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetComputed()
 	attrs["pipeline_schedule_state"] = attrs["pipeline_schedule_state"].SetComputed()
 	attrs["streaming_mode"] = attrs["streaming_mode"].SetComputed()
 	attrs["table_name"] = attrs["table_name"].SetComputed()

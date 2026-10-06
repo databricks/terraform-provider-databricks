@@ -200,6 +200,8 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `input` (string) - The input column from which the minimum is computed
 
 ### RequestSource
+* `dataframe_schema` (string) - A schema containing scalar or nested fields, in Spark StructType JSON format
+  (from df.schema.json()). This preserves field, array-element, and map-value nullability
 * `flat_schema` (FlatSchema) - A flat schema with scalar-typed fields only
 
 ### RollingWindow

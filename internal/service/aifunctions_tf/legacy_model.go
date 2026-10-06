@@ -359,6 +359,393 @@ func (m AiClassifyResponseMetadata_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// ai_decide
+type AiDecideOptions_SdkV2 struct {
+	// The function API version to invoke. Defaults to "1.0". Supported
+	// versions: ["1.0"].
+	Version types.String `tfsdk:"version"`
+}
+
+func (to *AiDecideOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiDecideOptions_SdkV2) {
+}
+
+func (to *AiDecideOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AiDecideOptions_SdkV2) {
+}
+
+func (m AiDecideOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["version"] = attrs["version"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiDecideOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AiDecideOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AiDecideOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AiDecideOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"version": m.Version,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AiDecideOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"version": types.StringType,
+		},
+	}
+}
+
+type AiDecideRequest_SdkV2 struct {
+	// Function options. Omitted fields fall back to their documented defaults.
+	Options types.List `tfsdk:"options"`
+	// A JSON object mapping question IDs to their definitions. Choose a
+	// nonempty string for each ID; its answer is returned with the same ID in
+	// `response.answers`.
+	//
+	// Each definition is an object with the required fields `type` and
+	// `instructions`. The `criteria` field is optional for the type `noul` but
+	// is required for the types `choice` and `score`.
+	//
+	// The `instructions` field describes the judgment to make and can be a
+	// string, object, or array. Use an object or array to include supporting
+	// context alongside the instructions.
+	//
+	// The `type` can be one of:
+	//
+	// - `choice`: Selects one option from a defined set. Requires `criteria` to
+	// be an object mapping 1 to 255 nonempty option names to descriptions. The
+	// criteria description can be a string, object, array, or null when the
+	// name needs no additional detail. For example:
+	//
+	// ```json { "team": { "type": "choice", "instructions": "Which team should
+	// handle this ticket?", "criteria": { "billing": "Payments, charges, and
+	// refunds", "technical_support": null } } } ```
+	//
+	// - `noul`: Estimates the probability that the answer to a true-or-false
+	// question is true. `criteria` can take the fields `true` or `false`, or
+	// both, with descriptions that are strings, objects, or arrays. Omit
+	// `criteria` to use the question alone. For example, both of the following
+	// are valid:
+	//
+	// ```json { "escalate": { "type": "noul", "instructions": "Does this ticket
+	// need escalation?", "criteria": { "true": "Suspected fraud or an exception
+	// to standard policy", "false": "A routine issue frontline support can
+	// resolve" } } } ```
+	//
+	// or
+	//
+	// ```json { "escalate": { "type": "noul", "instructions": "Does this ticket
+	// need escalation?" } } ```
+	//
+	// - `score`: Rates the state on an ordered scale. Requires `criteria` to be
+	// an array of 2 to 10 level descriptions, ordered from low to high.
+	// Descriptions can be strings, objects, or arrays. Array positions define
+	// levels starting at 0. For example:
+	//
+	// ```json { "urgency": { "type": "score", "instructions": "How urgent is
+	// this ticket?", "criteria": [ "Routine: can wait a few days",
+	// "Time-sensitive: needs attention today", "Critical: needs immediate
+	// action" ] } } ```
+	Questions jsontypes.Normalized `tfsdk:"questions"`
+	// A string, JSON object, or array containing the content, related context,
+	// and examples needed to answer the provided questions. For example,
+	// provide a support message, a conversation, or records describing the
+	// current state of an application. All questions receive this same state.
+	State jsontypes.Normalized `tfsdk:"state"`
+}
+
+func (to *AiDecideRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiDecideRequest_SdkV2) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				// Recursively sync the fields of Options
+				toOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
+			}
+		}
+	}
+}
+
+func (to *AiDecideRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AiDecideRequest_SdkV2) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() {
+		if toOptions, ok := to.GetOptions(ctx); ok {
+			if fromOptions, ok := from.GetOptions(ctx); ok {
+				toOptions.SyncFieldsDuringRead(ctx, fromOptions)
+				to.SetOptions(ctx, toOptions)
+			}
+		}
+	}
+}
+
+func (m AiDecideRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["options"] = attrs["options"].SetOptional()
+	attrs["options"] = attrs["options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["questions"] = attrs["questions"].SetRequired()
+	attrs["state"] = attrs["state"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiDecideRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AiDecideRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"options": reflect.TypeOf(AiDecideOptions_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AiDecideRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AiDecideRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"options":   m.Options,
+			"questions": m.Questions,
+			"state":     m.State,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AiDecideRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"options": basetypes.ListType{
+				ElemType: AiDecideOptions_SdkV2{}.Type(ctx),
+			},
+			"questions": jsontypes.NormalizedType{},
+			"state":     jsontypes.NormalizedType{},
+		},
+	}
+}
+
+// GetOptions returns the value of the Options field in AiDecideRequest_SdkV2 as
+// a AiDecideOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AiDecideRequest_SdkV2) GetOptions(ctx context.Context) (AiDecideOptions_SdkV2, bool) {
+	var e AiDecideOptions_SdkV2
+	if m.Options.IsNull() || m.Options.IsUnknown() {
+		return e, false
+	}
+	var v []AiDecideOptions_SdkV2
+	d := m.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOptions sets the value of the Options field in AiDecideRequest_SdkV2.
+func (m *AiDecideRequest_SdkV2) SetOptions(ctx context.Context, v AiDecideOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	m.Options = types.ListValueMust(t, vs)
+}
+
+type AiDecideResponse_SdkV2 struct {
+	// Metadata identifying the function API version used for this request.
+	Metadata types.List `tfsdk:"metadata"`
+	// A JSON object containing an `answers` map with one answer for each
+	// question, keyed by the same IDs as `questions`.
+	//
+	// Each answer has a `type` matching its question and the following fields:
+	//
+	// - `choice`: choice is the highest-probability option from `criteria`.
+	// `probabilities` maps every option name to its probability. `confidence`
+	// is a number from 0 to 1 indicating how well the state supports the
+	// assessment. The `probabilities` values sum to 1. For example:
+	//
+	// ```json { "answers": { "team": { "type": "choice", "choice": "billing",
+	// "probabilities": { "billing": 0.85, "technical_support": 0.15 },
+	// "confidence": 0.9 } } } ```
+	//
+	// - `noul`: `probability` is a number from 0 to 1 estimating the
+	// probability that the answer is true. For example:
+	//
+	// ```json { "answers": { "escalate": { "type": "noul", "probability": 0.8 }
+	// } } ```
+	//
+	// - `score`: score is the probability-weighted mean of the zero-based level
+	// indices. It can fall between levels, from 0 to the number of levels minus
+	// 1. `probabilities` maps each level index to its probability, and `legend`
+	// maps each index to its original description. Both maps use string keys
+	// such as "0", "1", and "2". `confidence` is a number from 0 to 1
+	// indicating how well the state supports the assessment. The
+	// `probabilities` values sum to 1. For example:
+	//
+	// ```json { "answers": { "urgency": { "type": "score", "score": 1.6,
+	// "probabilities": { "0": 0.1, "1": 0.2, "2": 0.7 }, "legend": { "0":
+	// "Routine: can wait a few days", "1": "Time-sensitive: needs attention
+	// today", "2": "Critical: needs immediate action" }, "confidence": 0.85 } }
+	// } ```
+	Response jsontypes.Normalized `tfsdk:"response"`
+}
+
+func (to *AiDecideResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiDecideResponse_SdkV2) {
+	if !from.Metadata.IsNull() && !from.Metadata.IsUnknown() {
+		if toMetadata, ok := to.GetMetadata(ctx); ok {
+			if fromMetadata, ok := from.GetMetadata(ctx); ok {
+				// Recursively sync the fields of Metadata
+				toMetadata.SyncFieldsDuringCreateOrUpdate(ctx, fromMetadata)
+				to.SetMetadata(ctx, toMetadata)
+			}
+		}
+	}
+}
+
+func (to *AiDecideResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AiDecideResponse_SdkV2) {
+	if !from.Metadata.IsNull() && !from.Metadata.IsUnknown() {
+		if toMetadata, ok := to.GetMetadata(ctx); ok {
+			if fromMetadata, ok := from.GetMetadata(ctx); ok {
+				toMetadata.SyncFieldsDuringRead(ctx, fromMetadata)
+				to.SetMetadata(ctx, toMetadata)
+			}
+		}
+	}
+}
+
+func (m AiDecideResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["metadata"] = attrs["metadata"].SetOptional()
+	attrs["metadata"] = attrs["metadata"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["response"] = attrs["response"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiDecideResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AiDecideResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"metadata": reflect.TypeOf(AiDecideResponseMetadata_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AiDecideResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AiDecideResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"metadata": m.Metadata,
+			"response": m.Response,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AiDecideResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"metadata": basetypes.ListType{
+				ElemType: AiDecideResponseMetadata_SdkV2{}.Type(ctx),
+			},
+			"response": jsontypes.NormalizedType{},
+		},
+	}
+}
+
+// GetMetadata returns the value of the Metadata field in AiDecideResponse_SdkV2 as
+// a AiDecideResponseMetadata_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AiDecideResponse_SdkV2) GetMetadata(ctx context.Context) (AiDecideResponseMetadata_SdkV2, bool) {
+	var e AiDecideResponseMetadata_SdkV2
+	if m.Metadata.IsNull() || m.Metadata.IsUnknown() {
+		return e, false
+	}
+	var v []AiDecideResponseMetadata_SdkV2
+	d := m.Metadata.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMetadata sets the value of the Metadata field in AiDecideResponse_SdkV2.
+func (m *AiDecideResponse_SdkV2) SetMetadata(ctx context.Context, v AiDecideResponseMetadata_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["metadata"]
+	m.Metadata = types.ListValueMust(t, vs)
+}
+
+type AiDecideResponseMetadata_SdkV2 struct {
+	// The function API version used to evaluate the request.
+	Version types.String `tfsdk:"version"`
+}
+
+func (to *AiDecideResponseMetadata_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiDecideResponseMetadata_SdkV2) {
+}
+
+func (to *AiDecideResponseMetadata_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AiDecideResponseMetadata_SdkV2) {
+}
+
+func (m AiDecideResponseMetadata_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["version"] = attrs["version"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiDecideResponseMetadata.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AiDecideResponseMetadata_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AiDecideResponseMetadata_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AiDecideResponseMetadata_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"version": m.Version,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AiDecideResponseMetadata_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"version": types.StringType,
+		},
+	}
+}
+
 // A bounding box on a source page; used by bbox-input citations.
 type AiExtractBbox_SdkV2 struct {
 	// Pixel coordinates on the page image as [x0, y0, x1, y1].

@@ -8901,6 +8901,117 @@ func (m *CreateSecretRequest_SdkV2) SetSecret(ctx context.Context, v Secret_SdkV
 	m.Secret = types.ListValueMust(t, vs)
 }
 
+type CreateSkillRequest_SdkV2 struct {
+	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
+	// `{...}` component is capped at 255 characters individually.
+	Parent types.String `tfsdk:"-"`
+	// The skill to create. `comment` is the only accepted client input and may
+	// be omitted. Do not set `name`; the server derives it from `parent` and
+	// `skill_id`.
+	Skill types.List `tfsdk:"skill"`
+	// Name for the skill, e.g. "basic-math". The server normalizes this
+	// identifier to lowercase. It is independent of the bundle name read from
+	// SKILL.md.
+	SkillId types.String `tfsdk:"-"`
+}
+
+func (to *CreateSkillRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateSkillRequest_SdkV2) {
+	if !from.Skill.IsNull() && !from.Skill.IsUnknown() {
+		if toSkill, ok := to.GetSkill(ctx); ok {
+			if fromSkill, ok := from.GetSkill(ctx); ok {
+				// Recursively sync the fields of Skill
+				toSkill.SyncFieldsDuringCreateOrUpdate(ctx, fromSkill)
+				to.SetSkill(ctx, toSkill)
+			}
+		}
+	}
+}
+
+func (to *CreateSkillRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateSkillRequest_SdkV2) {
+	if !from.Skill.IsNull() && !from.Skill.IsUnknown() {
+		if toSkill, ok := to.GetSkill(ctx); ok {
+			if fromSkill, ok := from.GetSkill(ctx); ok {
+				toSkill.SyncFieldsDuringRead(ctx, fromSkill)
+				to.SetSkill(ctx, toSkill)
+			}
+		}
+	}
+}
+
+func (m CreateSkillRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["skill"] = attrs["skill"].SetRequired()
+	attrs["skill"] = attrs["skill"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["skill_id"] = attrs["skill_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateSkillRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateSkillRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"skill": reflect.TypeOf(Skill_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateSkillRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CreateSkillRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"parent":   m.Parent,
+			"skill":    m.Skill,
+			"skill_id": m.SkillId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateSkillRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"parent": types.StringType,
+			"skill": basetypes.ListType{
+				ElemType: Skill_SdkV2{}.Type(ctx),
+			},
+			"skill_id": types.StringType,
+		},
+	}
+}
+
+// GetSkill returns the value of the Skill field in CreateSkillRequest_SdkV2 as
+// a Skill_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateSkillRequest_SdkV2) GetSkill(ctx context.Context) (Skill_SdkV2, bool) {
+	var e Skill_SdkV2
+	if m.Skill.IsNull() || m.Skill.IsUnknown() {
+		return e, false
+	}
+	var v []Skill_SdkV2
+	d := m.Skill.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSkill sets the value of the Skill field in CreateSkillRequest_SdkV2.
+func (m *CreateSkillRequest_SdkV2) SetSkill(ctx context.Context, v Skill_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["skill"]
+	m.Skill = types.ListValueMust(t, vs)
+}
+
 type CreateStorageCredential_SdkV2 struct {
 	// The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
@@ -11888,6 +11999,64 @@ func (m DeleteSecretRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"full_name": types.StringType,
+		},
+	}
+}
+
+type DeleteSkillRequest_SdkV2 struct {
+	// Optimistic concurrency token from the most recent read. When set, the
+	// delete succeeds only if the resource has not changed. Leave unset for an
+	// unconditional delete. For REST requests, URL-encode the base64 string
+	// returned by the API when setting the `etag` query parameter.
+	Etag types.String `tfsdk:"-"`
+	// Full resource name of the skill. Format:
+	// `skills/{catalog}.{schema}.{skill}`. Each `{...}` component is capped at
+	// 255 characters individually.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteSkillRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteSkillRequest_SdkV2) {
+}
+
+func (to *DeleteSkillRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteSkillRequest_SdkV2) {
+}
+
+func (m DeleteSkillRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["etag"] = attrs["etag"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSkillRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteSkillRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteSkillRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DeleteSkillRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": m.Etag,
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteSkillRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -16082,6 +16251,56 @@ func (m *FileEventQueue_SdkV2) SetProvidedSqs(ctx context.Context, v AwsSqsQueue
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["provided_sqs"]
 	m.ProvidedSqs = types.ListValueMust(t, vs)
+}
+
+type FinalizeSkillRequest_SdkV2 struct {
+	// Full resource name of the skill. Format:
+	// `skills/{catalog}.{schema}.{skill}`. Each `{...}` component is capped at
+	// 255 characters individually.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *FinalizeSkillRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FinalizeSkillRequest_SdkV2) {
+}
+
+func (to *FinalizeSkillRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FinalizeSkillRequest_SdkV2) {
+}
+
+func (m FinalizeSkillRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FinalizeSkillRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m FinalizeSkillRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FinalizeSkillRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m FinalizeSkillRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m FinalizeSkillRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
 }
 
 type ForeignKeyConstraint_SdkV2 struct {
@@ -20684,6 +20903,56 @@ func (m GetSecretRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"full_name":     types.StringType,
 			"include_value": types.BoolType,
+		},
+	}
+}
+
+type GetSkillRequest_SdkV2 struct {
+	// Full resource name of the skill. Format:
+	// `skills/{catalog}.{schema}.{skill}`. Each `{...}` component is capped at
+	// 255 characters individually.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetSkillRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetSkillRequest_SdkV2) {
+}
+
+func (to *GetSkillRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetSkillRequest_SdkV2) {
+}
+
+func (m GetSkillRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSkillRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetSkillRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetSkillRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetSkillRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetSkillRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
 		},
 	}
 }
@@ -25388,6 +25657,190 @@ func (m *ListSecretsResponse_SdkV2) SetSecrets(ctx context.Context, v []Secret_S
 	m.Secrets = types.ListValueMust(t, vs)
 }
 
+type ListSkillsRequest_SdkV2 struct {
+	// Maximum number of skills to return. Defaults to 100 when unset or 0; the
+	// maximum is 100. Use `page_token` to retrieve additional pages.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Opaque pagination token from a previous request.
+	PageToken types.String `tfsdk:"-"`
+	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
+	// `{...}` component is capped at 255 characters individually.
+	//
+	// Required: skill listing is schema-scoped, so `parent` must be set; an
+	// unset or empty `parent` is rejected with INVALID_PARAMETER_VALUE.
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *ListSkillsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListSkillsRequest_SdkV2) {
+}
+
+func (to *ListSkillsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListSkillsRequest_SdkV2) {
+}
+
+func (m ListSkillsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSkillsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListSkillsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSkillsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListSkillsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListSkillsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+		},
+	}
+}
+
+// Response for listing skills.
+type ListSkillsResponse_SdkV2 struct {
+	// Pagination token for retrieving the next page of results.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// The list of skills.
+	Skills types.List `tfsdk:"skills"`
+}
+
+func (to *ListSkillsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListSkillsResponse_SdkV2) {
+	if !from.Skills.IsNull() && !from.Skills.IsUnknown() && to.Skills.IsNull() && len(from.Skills.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Skills, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Skills = from.Skills
+	}
+	if !from.Skills.IsNull() && !from.Skills.IsUnknown() {
+		if toSkills, ok := to.GetSkills(ctx); ok {
+			if fromSkills, ok := from.GetSkills(ctx); ok {
+				// Recursively sync the fields of each Skills element by position.
+				for i := range toSkills {
+					if i < len(fromSkills) {
+						toSkills[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSkills[i])
+					}
+				}
+				to.SetSkills(ctx, toSkills)
+			}
+		}
+	}
+}
+
+func (to *ListSkillsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListSkillsResponse_SdkV2) {
+	if !from.Skills.IsNull() && !from.Skills.IsUnknown() && to.Skills.IsNull() && len(from.Skills.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Skills, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Skills = from.Skills
+	}
+	if !from.Skills.IsNull() && !from.Skills.IsUnknown() {
+		if toSkills, ok := to.GetSkills(ctx); ok {
+			if fromSkills, ok := from.GetSkills(ctx); ok {
+				for i := range toSkills {
+					if i < len(fromSkills) {
+						toSkills[i].SyncFieldsDuringRead(ctx, fromSkills[i])
+					}
+				}
+				to.SetSkills(ctx, toSkills)
+			}
+		}
+	}
+}
+
+func (m ListSkillsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["skills"] = attrs["skills"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSkillsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListSkillsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"skills": reflect.TypeOf(Skill_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSkillsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListSkillsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token": m.NextPageToken,
+			"skills":          m.Skills,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListSkillsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"skills": basetypes.ListType{
+				ElemType: Skill_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSkills returns the value of the Skills field in ListSkillsResponse_SdkV2 as
+// a slice of Skill_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListSkillsResponse_SdkV2) GetSkills(ctx context.Context) ([]Skill_SdkV2, bool) {
+	if m.Skills.IsNull() || m.Skills.IsUnknown() {
+		return nil, false
+	}
+	var v []Skill_SdkV2
+	d := m.Skills.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSkills sets the value of the Skills field in ListSkillsResponse_SdkV2.
+func (m *ListSkillsResponse_SdkV2) SetSkills(ctx context.Context, v []Skill_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["skills"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Skills = types.ListValueMust(t, vs)
+}
+
 type ListStorageCredentialsRequest_SdkV2 struct {
 	// Whether to include credentials not bound to the workspace. Effective only
 	// if the user has permission to update the credential–workspace binding.
@@ -29719,6 +30172,14 @@ type ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2 struct
 	// GCP region of the Gemini Enterprise endpoint (e.g., `us-central1`).
 	// Required on Create.
 	Region types.String `tfsdk:"region"`
+	// Reference to a Unity Catalog service credential authorizing Gemini
+	// Enterprise requests. On Create, supply `service_credential.name` as
+	// `credentials/{name}`; required when using service-credential
+	// authentication and mutually exclusive with `api_key`. The credential is
+	// referenced by name; its value is not carried here. On read, the resolved
+	// `id` and `is_deleted` are also populated. Supported only on GCP-hosted
+	// workspaces.
+	ServiceCredential types.List `tfsdk:"service_credential"`
 }
 
 func (to *ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) {
@@ -29728,6 +30189,15 @@ func (to *ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) 
 				// Recursively sync the fields of ApiKey
 				toApiKey.SyncFieldsDuringCreateOrUpdate(ctx, fromApiKey)
 				to.SetApiKey(ctx, toApiKey)
+			}
+		}
+	}
+	if !from.ServiceCredential.IsNull() && !from.ServiceCredential.IsUnknown() {
+		if toServiceCredential, ok := to.GetServiceCredential(ctx); ok {
+			if fromServiceCredential, ok := from.GetServiceCredential(ctx); ok {
+				// Recursively sync the fields of ServiceCredential
+				toServiceCredential.SyncFieldsDuringCreateOrUpdate(ctx, fromServiceCredential)
+				to.SetServiceCredential(ctx, toServiceCredential)
 			}
 		}
 	}
@@ -29742,6 +30212,14 @@ func (to *ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) 
 			}
 		}
 	}
+	if !from.ServiceCredential.IsNull() && !from.ServiceCredential.IsUnknown() {
+		if toServiceCredential, ok := to.GetServiceCredential(ctx); ok {
+			if fromServiceCredential, ok := from.GetServiceCredential(ctx); ok {
+				toServiceCredential.SyncFieldsDuringRead(ctx, fromServiceCredential)
+				to.SetServiceCredential(ctx, toServiceCredential)
+			}
+		}
+	}
 }
 
 func (m ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -29749,6 +30227,8 @@ func (m ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) Ap
 	attrs["api_key"] = attrs["api_key"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["project_id"] = attrs["project_id"].SetOptional()
 	attrs["region"] = attrs["region"].SetOptional()
+	attrs["service_credential"] = attrs["service_credential"].SetOptional()
+	attrs["service_credential"] = attrs["service_credential"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -29762,7 +30242,8 @@ func (m ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) Ap
 // SDK values.
 func (m ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"api_key": reflect.TypeOf(ModelProviderServiceConfigProviderSecret_SdkV2{}),
+		"api_key":            reflect.TypeOf(ModelProviderServiceConfigProviderSecret_SdkV2{}),
+		"service_credential": reflect.TypeOf(ModelProviderServiceConfigServiceCredential_SdkV2{}),
 	}
 }
 
@@ -29773,9 +30254,10 @@ func (m ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) To
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"api_key":    m.ApiKey,
-			"project_id": m.ProjectId,
-			"region":     m.Region,
+			"api_key":            m.ApiKey,
+			"project_id":         m.ProjectId,
+			"region":             m.Region,
+			"service_credential": m.ServiceCredential,
 		})
 }
 
@@ -29788,6 +30270,9 @@ func (m ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) Ty
 			},
 			"project_id": types.StringType,
 			"region":     types.StringType,
+			"service_credential": basetypes.ListType{
+				ElemType: ModelProviderServiceConfigServiceCredential_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -29816,6 +30301,32 @@ func (m *ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) S
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["api_key"]
 	m.ApiKey = types.ListValueMust(t, vs)
+}
+
+// GetServiceCredential returns the value of the ServiceCredential field in ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2 as
+// a ModelProviderServiceConfigServiceCredential_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) GetServiceCredential(ctx context.Context) (ModelProviderServiceConfigServiceCredential_SdkV2, bool) {
+	var e ModelProviderServiceConfigServiceCredential_SdkV2
+	if m.ServiceCredential.IsNull() || m.ServiceCredential.IsUnknown() {
+		return e, false
+	}
+	var v []ModelProviderServiceConfigServiceCredential_SdkV2
+	d := m.ServiceCredential.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetServiceCredential sets the value of the ServiceCredential field in ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2.
+func (m *ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) SetServiceCredential(ctx context.Context, v ModelProviderServiceConfigServiceCredential_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["service_credential"]
+	m.ServiceCredential = types.ListValueMust(t, vs)
 }
 
 // Microsoft Foundry provider configuration.
@@ -30459,12 +30970,28 @@ type ModelProviderServiceConfigProviderSecret_SdkV2 struct {
 	// reads. Get and List responses omit `plaintext`; the enclosing secret
 	// object remains present to indicate that a secret is configured.
 	Plaintext types.String `tfsdk:"plaintext"`
+	// Reference to a customer-owned UC Secret that carries this secret value.
+	// The value is read at invoke time under the model provider service owner's
+	// access and is never copied onto the model provider service, so rotating
+	// the UC Secret takes effect with no change to the model provider service.
+	// On Create, supply `secret_reference.name` as
+	// `secrets/{catalog}.{schema}.{secret}`.
+	SecretReference types.List `tfsdk:"secret_reference"`
 }
 
 func (to *ModelProviderServiceConfigProviderSecret_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigProviderSecret_SdkV2) {
 	if !from.Plaintext.IsUnknown() && !from.Plaintext.IsNull() {
 		// Plaintext is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Plaintext = from.Plaintext
+	}
+	if !from.SecretReference.IsNull() && !from.SecretReference.IsUnknown() {
+		if toSecretReference, ok := to.GetSecretReference(ctx); ok {
+			if fromSecretReference, ok := from.GetSecretReference(ctx); ok {
+				// Recursively sync the fields of SecretReference
+				toSecretReference.SyncFieldsDuringCreateOrUpdate(ctx, fromSecretReference)
+				to.SetSecretReference(ctx, toSecretReference)
+			}
+		}
 	}
 }
 
@@ -30473,12 +31000,22 @@ func (to *ModelProviderServiceConfigProviderSecret_SdkV2) SyncFieldsDuringRead(c
 		// Plaintext is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Plaintext = from.Plaintext
 	}
+	if !from.SecretReference.IsNull() && !from.SecretReference.IsUnknown() {
+		if toSecretReference, ok := to.GetSecretReference(ctx); ok {
+			if fromSecretReference, ok := from.GetSecretReference(ctx); ok {
+				toSecretReference.SyncFieldsDuringRead(ctx, fromSecretReference)
+				to.SetSecretReference(ctx, toSecretReference)
+			}
+		}
+	}
 }
 
 func (m ModelProviderServiceConfigProviderSecret_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["plaintext"] = attrs["plaintext"].SetOptional()
 	attrs["plaintext"] = attrs["plaintext"].SetComputed()
 	attrs["plaintext"] = attrs["plaintext"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["secret_reference"] = attrs["secret_reference"].SetOptional()
+	attrs["secret_reference"] = attrs["secret_reference"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -30491,7 +31028,9 @@ func (m ModelProviderServiceConfigProviderSecret_SdkV2) ApplySchemaCustomization
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ModelProviderServiceConfigProviderSecret_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"secret_reference": reflect.TypeOf(ModelProviderServiceConfigSecretReference_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -30501,7 +31040,8 @@ func (m ModelProviderServiceConfigProviderSecret_SdkV2) ToObjectValue(ctx contex
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"plaintext": m.Plaintext,
+			"plaintext":        m.Plaintext,
+			"secret_reference": m.SecretReference,
 		})
 }
 
@@ -30510,6 +31050,87 @@ func (m ModelProviderServiceConfigProviderSecret_SdkV2) Type(ctx context.Context
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"plaintext": types.StringType,
+			"secret_reference": basetypes.ListType{
+				ElemType: ModelProviderServiceConfigSecretReference_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSecretReference returns the value of the SecretReference field in ModelProviderServiceConfigProviderSecret_SdkV2 as
+// a ModelProviderServiceConfigSecretReference_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ModelProviderServiceConfigProviderSecret_SdkV2) GetSecretReference(ctx context.Context) (ModelProviderServiceConfigSecretReference_SdkV2, bool) {
+	var e ModelProviderServiceConfigSecretReference_SdkV2
+	if m.SecretReference.IsNull() || m.SecretReference.IsUnknown() {
+		return e, false
+	}
+	var v []ModelProviderServiceConfigSecretReference_SdkV2
+	d := m.SecretReference.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSecretReference sets the value of the SecretReference field in ModelProviderServiceConfigProviderSecret_SdkV2.
+func (m *ModelProviderServiceConfigProviderSecret_SdkV2) SetSecretReference(ctx context.Context, v ModelProviderServiceConfigSecretReference_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["secret_reference"]
+	m.SecretReference = types.ListValueMust(t, vs)
+}
+
+// Reference to a customer-owned UC Secret backing a secret-bearing provider
+// field, in the `ProviderSecret.secret_reference` arm.
+type ModelProviderServiceConfigSecretReference_SdkV2 struct {
+	// Resource name of the bound UC Secret, in the form
+	// `secrets/{catalog}.{schema}.{secret}`. On Create the caller supplies the
+	// name here. On read it reflects the secret's current name at read time.
+	Name types.String `tfsdk:"name"`
+}
+
+func (to *ModelProviderServiceConfigSecretReference_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigSecretReference_SdkV2) {
+}
+
+func (to *ModelProviderServiceConfigSecretReference_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ModelProviderServiceConfigSecretReference_SdkV2) {
+}
+
+func (m ModelProviderServiceConfigSecretReference_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelProviderServiceConfigSecretReference.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ModelProviderServiceConfigSecretReference_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelProviderServiceConfigSecretReference_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ModelProviderServiceConfigSecretReference_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ModelProviderServiceConfigSecretReference_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
 		},
 	}
 }
@@ -37414,6 +38035,129 @@ func (m SetRegisteredModelAliasRequest_SdkV2) Type(ctx context.Context) attr.Typ
 	}
 }
 
+// A Skill is an agentskills.io bundle registered in Unity Catalog. Clients
+// transfer bundle bytes through the Files API. FinalizeSkill reads the uploaded
+// SKILL.md and projects its frontmatter onto the Skill metadata.
+type Skill_SdkV2 struct {
+	// Name from the most recently successfully finalized SKILL.md. It may
+	// differ from the final component of the Skill resource name. Unset until
+	// FinalizeSkill succeeds.
+	BundleName types.String `tfsdk:"bundle_name"`
+	// User-provided comment for the skill. Free-text, user-editable via
+	// UpdateSkill (listed in its `update_mask`). DISTINCT from `description`,
+	// which is the server-parsed, OUTPUT_ONLY SKILL.md frontmatter value:
+	// `comment` is the customer's own annotation and is preserved across bundle
+	// re-uploads. When `comment` is in the update mask, omitting it clears the
+	// field, while an explicitly empty string is retained.
+	Comment types.String `tfsdk:"comment"`
+	// Time the skill was created.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// Creator identity.
+	CreatedBy types.String `tfsdk:"created_by"`
+	// Description from the most recently successfully finalized SKILL.md. Unset
+	// until FinalizeSkill succeeds.
+	Description types.String `tfsdk:"description"`
+	// Owner of the skill.
+	EffectiveOwner types.String `tfsdk:"effective_owner"`
+	// Optimistic concurrency token returned on every read. To make an Update or
+	// Delete conditional, pass the last-read value in that request's `etag`
+	// field. In REST responses, this value is a base64 string; URL-encode it
+	// when setting the `etag` query parameter.
+	Etag types.String `tfsdk:"etag"`
+	// Time of the most recent successful FinalizeSkill. Unset until one
+	// succeeds.
+	FinalizeTime timetypes.RFC3339 `tfsdk:"finalize_time"`
+	// Metastore hosting the skill.
+	MetastoreId types.String `tfsdk:"metastore_id"`
+	// Resource name of the skill. Format: `skills/{catalog}.{schema}.{skill}`.
+	// Each `{...}` component is capped at 255 characters individually.
+	// Server-derived on Create from `parent` + `skill_id`; required and
+	// immutable on Update/Get/Delete.
+	Name types.String `tfsdk:"name"`
+	// Time of the most recent Skill metadata mutation. Uploading bundle files
+	// alone does not change this value.
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
+	// Identity of the last updater.
+	UpdatedBy types.String `tfsdk:"updated_by"`
+}
+
+func (to *Skill_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Skill_SdkV2) {
+}
+
+func (to *Skill_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Skill_SdkV2) {
+}
+
+func (m Skill_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["bundle_name"] = attrs["bundle_name"].SetComputed()
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
+	attrs["description"] = attrs["description"].SetComputed()
+	attrs["effective_owner"] = attrs["effective_owner"].SetComputed()
+	attrs["etag"] = attrs["etag"].SetComputed()
+	attrs["finalize_time"] = attrs["finalize_time"].SetComputed()
+	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["updated_by"] = attrs["updated_by"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Skill.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Skill_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Skill_SdkV2
+// only implements ToObjectValue() and Type().
+func (m Skill_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"bundle_name":     m.BundleName,
+			"comment":         m.Comment,
+			"create_time":     m.CreateTime,
+			"created_by":      m.CreatedBy,
+			"description":     m.Description,
+			"effective_owner": m.EffectiveOwner,
+			"etag":            m.Etag,
+			"finalize_time":   m.FinalizeTime,
+			"metastore_id":    m.MetastoreId,
+			"name":            m.Name,
+			"update_time":     m.UpdateTime,
+			"updated_by":      m.UpdatedBy,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Skill_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"bundle_name":     types.StringType,
+			"comment":         types.StringType,
+			"create_time":     timetypes.RFC3339{}.Type(ctx),
+			"created_by":      types.StringType,
+			"description":     types.StringType,
+			"effective_owner": types.StringType,
+			"etag":            types.StringType,
+			"finalize_time":   timetypes.RFC3339{}.Type(ctx),
+			"metastore_id":    types.StringType,
+			"name":            types.StringType,
+			"update_time":     timetypes.RFC3339{}.Type(ctx),
+			"updated_by":      types.StringType,
+		},
+	}
+}
+
 // Server-Side Encryption properties for clients communicating with AWS s3.
 type SseEncryptionDetails_SdkV2 struct {
 	// Sets the value of the 'x-amz-server-side-encryption' header in S3
@@ -42164,7 +42908,10 @@ type UpdateModelProviderServiceRequest_SdkV2 struct {
 	// remains `config.provider`); `config.allow_all_targets`, `config.targets`,
 	// `config.forward_headers`, `config.forward_query_parameters`,
 	// `config.forward_unmanaged_paths`, `config.rate_limits`, or
-	// `config.inference_table`. The provider type is immutable.
+	// `config.inference_table`. The provider type is immutable. A `config` or
+	// `config.provider` replacement that carries no authentication material
+	// preserves the existing authentication binding; input-only plaintext does
+	// not need to be read back and re-sent.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -44246,6 +44993,127 @@ func (m *UpdateSecretRequest_SdkV2) SetSecret(ctx context.Context, v Secret_SdkV
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["secret"]
 	m.Secret = types.ListValueMust(t, vs)
+}
+
+type UpdateSkillRequest_SdkV2 struct {
+	// Optimistic concurrency token from the most recent read. When set, the
+	// update succeeds only if the resource has not changed. Leave unset for an
+	// unconditional update. For REST requests, URL-encode the base64 string
+	// returned by the API when setting the `etag` query parameter.
+	Etag types.String `tfsdk:"-"`
+	// Resource name of the skill. Format: `skills/{catalog}.{schema}.{skill}`.
+	// Each `{...}` component is capped at 255 characters individually.
+	// Server-derived on Create from `parent` + `skill_id`; required and
+	// immutable on Update/Get/Delete.
+	Name types.String `tfsdk:"-"`
+	// The skill with the updated field values. `name` identifies the resource
+	// (`skills/{catalog}.{schema}.{skill}`); only fields listed in
+	// `update_mask` are applied.
+	Skill types.List `tfsdk:"skill"`
+	// Fields to update; validated against `skill`. REQUIRED, matching the
+	// sibling Update RPCs. `comment` is the only mutable field.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateSkillRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateSkillRequest_SdkV2) {
+	if !from.Skill.IsNull() && !from.Skill.IsUnknown() {
+		if toSkill, ok := to.GetSkill(ctx); ok {
+			if fromSkill, ok := from.GetSkill(ctx); ok {
+				// Recursively sync the fields of Skill
+				toSkill.SyncFieldsDuringCreateOrUpdate(ctx, fromSkill)
+				to.SetSkill(ctx, toSkill)
+			}
+		}
+	}
+}
+
+func (to *UpdateSkillRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateSkillRequest_SdkV2) {
+	if !from.Skill.IsNull() && !from.Skill.IsUnknown() {
+		if toSkill, ok := to.GetSkill(ctx); ok {
+			if fromSkill, ok := from.GetSkill(ctx); ok {
+				toSkill.SyncFieldsDuringRead(ctx, fromSkill)
+				to.SetSkill(ctx, toSkill)
+			}
+		}
+	}
+}
+
+func (m UpdateSkillRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["skill"] = attrs["skill"].SetRequired()
+	attrs["skill"] = attrs["skill"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+	attrs["etag"] = attrs["etag"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateSkillRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateSkillRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"skill": reflect.TypeOf(Skill_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateSkillRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UpdateSkillRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag":        m.Etag,
+			"name":        m.Name,
+			"skill":       m.Skill,
+			"update_mask": m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateSkillRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+			"name": types.StringType,
+			"skill": basetypes.ListType{
+				ElemType: Skill_SdkV2{}.Type(ctx),
+			},
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetSkill returns the value of the Skill field in UpdateSkillRequest_SdkV2 as
+// a Skill_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateSkillRequest_SdkV2) GetSkill(ctx context.Context) (Skill_SdkV2, bool) {
+	var e Skill_SdkV2
+	if m.Skill.IsNull() || m.Skill.IsUnknown() {
+		return e, false
+	}
+	var v []Skill_SdkV2
+	d := m.Skill.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSkill sets the value of the Skill field in UpdateSkillRequest_SdkV2.
+func (m *UpdateSkillRequest_SdkV2) SetSkill(ctx context.Context, v Skill_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["skill"]
+	m.Skill = types.ListValueMust(t, vs)
 }
 
 type UpdateStorageCredential_SdkV2 struct {

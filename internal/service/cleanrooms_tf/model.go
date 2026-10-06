@@ -271,10 +271,10 @@ type CleanRoomAsset struct {
 	// if and only if **asset_type** is **TABLE** or **STREAMING_TABLE**
 	TableLocalDetails types.Object `tfsdk:"table_local_details"`
 	// View details available to all collaborators of the clean room. Present if
-	// and only if **asset_type** is **VIEW**
+	// and only if **asset_type** is **VIEW** or **METRIC_VIEW**
 	View types.Object `tfsdk:"view"`
 	// Local details for a view that are only available to its owner. Present if
-	// and only if **asset_type** is **VIEW**
+	// and only if **asset_type** is **VIEW** or **METRIC_VIEW**
 	ViewLocalDetails types.Object `tfsdk:"view_local_details"`
 	// Local details for a volume that are only available to its owner. Present
 	// if and only if **asset_type** is **VOLUME**
@@ -927,7 +927,7 @@ type CleanRoomAssetJarAnalysis struct {
 	// Optional description of the jar analysis shown to all collaborators.
 	Description types.String `tfsdk:"description"`
 	// The serverless environment version used to execute the JAR analysis (e.g.
-	// "4"). Defaults to "4-scala-preview" if not specified.
+	// "4"). If not specified, uses the service-configured JAR analysis default.
 	EnvironmentVersion types.String `tfsdk:"environment_version"`
 	// Server generated etag that represents the jar analysis version.
 	Etag types.String `tfsdk:"etag"`

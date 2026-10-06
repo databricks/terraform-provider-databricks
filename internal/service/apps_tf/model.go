@@ -34,11 +34,11 @@ type App struct {
 	AppStatus types.Object `tfsdk:"app_status"`
 
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
-	// Maximum number of app instances. Must be set together with
-	// `compute_min_instances`.
+	// Maximum number of app instances the app is configured to run. Must be set
+	// together with `compute_min_instances`.
 	ComputeMaxInstances types.Int64 `tfsdk:"compute_max_instances"`
-	// Minimum number of app instances. Must be set together with
-	// `compute_max_instances`.
+	// Minimum number of app instances the app is configured to run. Must be set
+	// together with `compute_max_instances`.
 	ComputeMinInstances types.Int64 `tfsdk:"compute_min_instances"`
 
 	ComputeSize types.String `tfsdk:"compute_size"`
@@ -3750,11 +3750,11 @@ func (m AppThumbnail) Type(ctx context.Context) attr.Type {
 
 type AppUpdate struct {
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
-	// Maximum number of app instances. Must be set together with
-	// `compute_min_instances`.
+	// Maximum number of app instances the app is configured to run. Must be set
+	// together with `compute_min_instances`.
 	ComputeMaxInstances types.Int64 `tfsdk:"compute_max_instances"`
-	// Minimum number of app instances. Must be set together with
-	// `compute_max_instances`.
+	// Minimum number of app instances the app is configured to run. Must be set
+	// together with `compute_max_instances`.
 	ComputeMinInstances types.Int64 `tfsdk:"compute_min_instances"`
 
 	ComputeSize types.String `tfsdk:"compute_size"`
@@ -4168,7 +4168,7 @@ func (m AppUpdateUpdateStatus) Type(ctx context.Context) attr.Type {
 type ApplicationStatus struct {
 	// Application status message
 	Message types.String `tfsdk:"message"`
-	// The number of running instances of this application.
+	// The number of app instances whose application process is running.
 	RunningInstances types.Int64 `tfsdk:"running_instances"`
 	// State of the application.
 	State types.String `tfsdk:"state"`
@@ -4335,7 +4335,8 @@ func (m *AsyncUpdateAppRequest) SetApp(ctx context.Context, v App) {
 }
 
 type ComputeStatus struct {
-	// The number of compute instances used and billed for this application.
+	// The number of active compute instances currently used and billed for this
+	// application.
 	ActiveInstances types.Int64 `tfsdk:"active_instances"`
 	// Compute status message
 	Message types.String `tfsdk:"message"`

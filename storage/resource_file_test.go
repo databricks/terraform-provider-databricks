@@ -17,25 +17,28 @@ func TestResourceFileCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.0/fs/files/Volumes/CatalogName/SchemaName/VolumeName/fileName",
-				Status:   http.StatusOK,
-				Response: nil,
+				Method:          http.MethodPut,
+				Resource:        "/api/2.0/fs/files/Volumes/CatalogName/SchemaName/VolumeName/fileName",
+				ExpectedHeaders: map[string]string{"Content-Type": "application/octet-stream"},
+				ExpectedBody:    []byte("abc\n"),
+				Status:          http.StatusNoContent,
 			},
 			{
 				Method:   http.MethodHead,
 				Resource: "/api/2.0/fs/files/Volumes/CatalogName/SchemaName/VolumeName/fileName?",
-				Response: files.GetMetadataResponse{
-					LastModified:  "Wed, 21 Oct 2015 07:28:00 GMT",
-					ContentLength: 1024,
+				ResponseHeaders: map[string]string{
+					"Content-Length": "4",
+					"Content-Type":   "text/plain",
+					"Last-Modified":  "Wed, 21 Oct 2015 07:28:00 GMT",
 				},
 			},
 			{
 				Method:   http.MethodHead,
 				Resource: "/api/2.0/fs/files/Volumes/CatalogName/SchemaName/VolumeName/fileName?",
-				Response: files.GetMetadataResponse{
-					LastModified:  "Wed, 21 Oct 2015 07:28:00 GMT",
-					ContentLength: 1024,
+				ResponseHeaders: map[string]string{
+					"Content-Length": "4",
+					"Content-Type":   "text/plain",
+					"Last-Modified":  "Wed, 21 Oct 2015 07:28:00 GMT",
 				},
 			},
 		},
@@ -48,6 +51,8 @@ func TestResourceFileCreate(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, path, d.Id())
+	assert.Equal(t, "Wed, 21 Oct 2015 07:28:00 GMT", d.Get("modification_time"))
+	assert.Equal(t, 4, d.Get("file_size"))
 }
 
 func TestResourceFileCreateSource(t *testing.T) {

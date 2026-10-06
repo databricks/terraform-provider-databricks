@@ -167,12 +167,7 @@ func importTask(ic *importContext, task sdk_jobs.Task, jobName, rID string) {
 				ID:       task.PowerBiTask.WarehouseId,
 			})
 		}
-		if task.PowerBiTask.ConnectionResourceName != "" && ic.currentMetastore != nil {
-			ic.Emit(&resource{
-				Resource: "databricks_connection",
-				ID:       ic.currentMetastore.MetastoreId + "|" + task.PowerBiTask.ConnectionResourceName,
-			})
-		}
+		ic.emitConnectionByName(task.PowerBiTask.ConnectionResourceName)
 		for _, table := range task.PowerBiTask.Tables {
 			if table.Catalog != "" && table.Schema != "" && table.Name != "" {
 				ic.Emit(&resource{
@@ -227,6 +222,45 @@ func importTask(ic *importContext, task sdk_jobs.Task, jobName, rID string) {
 			ID:       strconv.FormatInt(task.RunJobTask.JobId, 10),
 		})
 		ic.emitFilesFromMap(task.RunJobTask.JobParameters)
+	}
+	// dbt_platform_task supersedes the deprecated dbt_cloud_task; both authenticate
+	// against a UC connection referenced by name.
+	if task.DbtPlatformTask != nil {
+		ic.emitConnectionByName(task.DbtPlatformTask.ConnectionResourceName)
+	}
+	if task.DbtCloudTask != nil {
+		ic.emitConnectionByName(task.DbtCloudTask.ConnectionResourceName)
+	}
+	if task.GenAiComputeTask != nil {
+		if task.GenAiComputeTask.Source != "GIT" {
+			p := task.GenAiComputeTask.TrainingScriptPath
+			ic.emitIfDbfsFile(p)
+			ic.emitIfWsfsFile(p)
+			ic.emitIfVolumeFile(p)
+		}
+		ic.emitIfWsfsFile(task.GenAiComputeTask.YamlParametersFilePath)
+		ic.emitIfVolumeFile(task.GenAiComputeTask.YamlParametersFilePath)
+	}
+	if task.AiRuntimeTask != nil {
+		ic.emitIfWsfsFile(task.AiRuntimeTask.CodeSourcePath)
+		ic.emitIfVolumeFile(task.AiRuntimeTask.CodeSourcePath)
+		if hasWorkspacePrefix(task.AiRuntimeTask.MlflowExperimentDirectory) {
+			ic.emitDirectoryOrRepo(maybeStripWorkspacePrefix(task.AiRuntimeTask.MlflowExperimentDirectory))
+		}
+		for _, deployment := range task.AiRuntimeTask.Deployments {
+			ic.emitIfWsfsFile(deployment.CommandPath)
+			ic.emitIfVolumeFile(deployment.CommandPath)
+		}
+	}
+	if task.CleanRoomsNotebookTask != nil {
+		ic.emitFilesFromMap(task.CleanRoomsNotebookTask.NotebookBaseParameters)
+	}
+	if task.PythonOperatorTask != nil {
+		for _, param := range task.PythonOperatorTask.Parameters {
+			ic.emitIfDbfsFile(param.Value)
+			ic.emitIfWsfsFile(param.Value)
+			ic.emitIfVolumeFile(param.Value)
+		}
 	}
 	if task.ForEachTask != nil {
 		importTask(ic, task.ForEachTask.Task, jobName, rID)
@@ -316,6 +350,18 @@ func emitEnvironmentDependency(ic *importContext, dep string) {
 	}
 	ic.emitIfWsfsFile(v)
 	ic.emitIfVolumeFile(v)
+}
+
+// emitConnectionByName emits a databricks_connection referenced by its resource name.
+// UC connections are addressed as "<metastore_id>|<name>", so the current metastore
+// must be known.
+func (ic *importContext) emitConnectionByName(name string) {
+	if name != "" && ic.currentMetastore != nil {
+		ic.Emit(&resource{
+			Resource: "databricks_connection",
+			ID:       ic.currentMetastore.MetastoreId + "|" + name,
+		})
+	}
 }
 
 func emitWebhookNotifications(ic *importContext, notifications *sdk_jobs.WebhookNotifications) {
@@ -410,6 +456,16 @@ func shouldOmitFieldInJob(ic *importContext, pathString string, as *schema.Schem
 			if err == nil && taskIndex >= 0 && taskIndex < len(js.Tasks) {
 				blockName := parts[len(parts)-1]
 				switch blockName {
+				case "dbt_cloud_task":
+					// The Jobs API returns the deprecated dbt_cloud_task alongside its
+					// replacement dbt_platform_task on migrated tasks. Emit only the
+					// replacement so the generated configuration isn't ambiguous.
+					task := js.Tasks[taskIndex]
+					if len(parts) > 5 && parts[2] == "for_each_task" && parts[4] == "task" &&
+						task.ForEachTask != nil {
+						task = task.ForEachTask.Task
+					}
+					return task.DbtPlatformTask != nil
 				case "notification_settings":
 					if js.Tasks[taskIndex].NotificationSettings != nil {
 						return reflect.DeepEqual(*js.Tasks[taskIndex].NotificationSettings,
@@ -568,6 +624,24 @@ var (
 		{Path: "task.sql_task.file.path", Resource: "databricks_workspace_file", Match: "workspace_path"},
 		{Path: "task.dbt_task.project_directory", Resource: "databricks_directory", Match: "path"},
 		{Path: "task.dbt_task.project_directory", Resource: "databricks_directory", Match: "workspace_path"},
+		{Path: "task.dbt_cloud_task.connection_resource_name", Resource: "databricks_connection", Match: "name"},
+		{Path: "task.dbt_platform_task.connection_resource_name", Resource: "databricks_connection", Match: "name"},
+		{Path: "task.gen_ai_compute_task.training_script_path", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.gen_ai_compute_task.training_script_path", Resource: "databricks_file"},
+		{Path: "task.gen_ai_compute_task.training_script_path", Resource: "databricks_workspace_file", Match: "path"},
+		{Path: "task.gen_ai_compute_task.training_script_path", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.gen_ai_compute_task.yaml_parameters_file_path", Resource: "databricks_file"},
+		{Path: "task.gen_ai_compute_task.yaml_parameters_file_path", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.ai_runtime_task.code_source_path", Resource: "databricks_file"},
+		{Path: "task.ai_runtime_task.code_source_path", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.ai_runtime_task.deployments.command_path", Resource: "databricks_file"},
+		{Path: "task.ai_runtime_task.deployments.command_path", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.ai_runtime_task.mlflow_experiment_directory", Resource: "databricks_directory", Match: "path"},
+		{Path: "task.ai_runtime_task.mlflow_experiment_directory", Resource: "databricks_directory", Match: "workspace_path"},
+		{Path: "task.clean_rooms_notebook_task.notebook_base_parameters", Resource: "databricks_file"},
+		{Path: "task.clean_rooms_notebook_task.notebook_base_parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.python_operator_task.parameters.value", Resource: "databricks_file"},
+		{Path: "task.python_operator_task.parameters.value", Resource: "databricks_workspace_file", Match: "workspace_path"},
 		{Path: "task.sql_task.alert.alert_id", Resource: "databricks_alert"},
 		{Path: "task.alert_task.alert_id", Resource: "databricks_alert_v2"},
 		{Path: "task.alert_task.warehouse_id", Resource: "databricks_sql_endpoint"},

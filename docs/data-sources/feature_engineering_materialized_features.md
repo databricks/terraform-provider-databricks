@@ -27,12 +27,14 @@ This data source exports a single attribute, `materialized_features`. It is a li
 * `cron_schedule_trigger` (CronSchedule) - A cron-based schedule trigger for the materialization pipeline
 * `feature_name` (string) - The full name of the feature in Unity Catalog
 * `is_online` (boolean) - True if this is an online materialized feature. False if it is an offline materialized feature
+* `job_id` (integer) - The ID of the job that materializes the feature. This is present for both batch and streaming features
 * `last_materialization_time` (string) - The timestamp when the pipeline last ran and updated the materialized feature values.
   If the pipeline has not run yet, this field will be null
 * `latest_backfill_operation` (string) - Name of the latest backfill operation on this materialized feature. Format: operations/{operation_id}
 * `materialized_feature_id` (string) - Server-assigned unique identifier for the materialized feature
 * `offline_store_config` (OfflineStoreConfig) - Destination for writing feature values to an offline Delta table
 * `online_store_config` (OnlineStoreConfig) - Destination for writing feature values to an online Lakebase table
+* `pipeline_id` (string) - The ID of the pipeline that materializes this feature. This is only present for streaming features
 * `pipeline_schedule_state` (string) - The schedule state of the materialization pipeline.
   Hidden from GraphQL: being deprecated, so not exposed to Catalog Explorer. Possible values are: `ACTIVE`, `PAUSED`, `SNAPSHOT`
 * `streaming_mode` (StreamingMode) - The Structured Streaming trigger mode used for materialization. Real-time mode (RTM) targets

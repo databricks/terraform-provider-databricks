@@ -69,10 +69,12 @@ The following arguments are supported:
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 * `is_online` (boolean) - True if this is an online materialized feature. False if it is an offline materialized feature
+* `job_id` (integer) - The ID of the job that materializes the feature. This is present for both batch and streaming features
 * `last_materialization_time` (string) - The timestamp when the pipeline last ran and updated the materialized feature values.
   If the pipeline has not run yet, this field will be null
 * `latest_backfill_operation` (string) - Name of the latest backfill operation on this materialized feature. Format: operations/{operation_id}
 * `materialized_feature_id` (string) - Server-assigned unique identifier for the materialized feature
+* `pipeline_id` (string) - The ID of the pipeline that materializes this feature. This is only present for streaming features
 * `table_name` (string) - The fully qualified Unity Catalog path to the table containing the materialized feature (Delta table or Lakebase table). Output only
 
 ## Import

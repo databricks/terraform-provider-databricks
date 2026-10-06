@@ -188,6 +188,8 @@ The following arguments are supported:
 * `input` (string, required) - The input column from which the minimum is computed
 
 ### RequestSource
+* `dataframe_schema` (string, optional) - A schema containing scalar or nested fields, in Spark StructType JSON format
+  (from df.schema.json()). This preserves field, array-element, and map-value nullability
 * `flat_schema` (FlatSchema, optional) - A flat schema with scalar-typed fields only
 
 ### RollingWindow

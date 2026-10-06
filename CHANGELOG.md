@@ -1,5 +1,27 @@
 # Version changelog
 
+## Release v1.137.0 (2026-10-06)
+
+### New Features and Improvements
+* Add resource and data sources for `databricks_mason_managed_memory_store`.
+* Add resource and data sources for `databricks_mason_managed_memory_entry`.
+* Add resource and data sources for `databricks_mason_session_store`.
+* Add resource and data sources for `databricks_mason_session`.
+* Add resource and data sources for `databricks_private_network_gateway`.
+
+### Exporter
+
+* Export resources referenced by Lakeflow pipeline ingestion and schema transformation settings ([#6038](https://github.com/databricks/terraform-provider-databricks/pull/6038)).
+* Export service credentials, instance profiles, and budget policies referenced by model serving endpoints ([#6037](https://github.com/databricks/terraform-provider-databricks/pull/6037)).
+* Rewrite portable cluster policy attributes for the target cloud and omit attributes that cannot be safely converted ([#6040](https://github.com/databricks/terraform-provider-databricks/pull/6040)).
+* Export dependencies for Databricks Apps telemetry tables and Unity Catalog securables ([#6036](https://github.com/databricks/terraform-provider-databricks/pull/6036)).
+* Add support for exporting dependencies of the `ai_runtime_task`, `clean_rooms_notebook_task`, `dbt_cloud_task`, `dbt_platform_task`, `gen_ai_compute_task`, and `python_operator_task` job task types. ([#6027](https://github.com/databricks/terraform-provider-databricks/pull/6027)).
+
+### Internal Changes
+
+* Bump staticcheck from v0.6.0 to v0.8.1 and the minimum Go toolchain from 1.25.8 to 1.26.8, so `make lint` no longer panics with `unexpected expr: *ast.KeyValueExpr` when run with Go 1.27 ([#6043](https://github.com/databricks/terraform-provider-databricks/pull/6043)).
+
+
 ## Release v1.136.0 (2026-10-05)
 
 ### New Features and Improvements

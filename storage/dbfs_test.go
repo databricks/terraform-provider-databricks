@@ -1,14 +1,105 @@
 package storage
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestDbfsCreateChunksContentsAndClosesHandle(t *testing.T) {
+	contents := bytes.Repeat([]byte("a"), 1_000_003)
+	client, _, err := qa.StrictHTTPFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:          "POST",
+			Resource:        "/api/2.0/dbfs/create",
+			ExpectedRequest: createHandle{Path: "/fixture", Overwrite: true},
+			Response:        handleResponse{Handle: 42},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/dbfs/add-block",
+			ExpectedRequest: addBlock{
+				Data:   base64.StdEncoding.EncodeToString(contents[:1_000_000]),
+				Handle: 42,
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/dbfs/add-block",
+			ExpectedRequest: addBlock{
+				Data:   base64.StdEncoding.EncodeToString(contents[1_000_000:]),
+				Handle: 42,
+			},
+		},
+		{
+			Method:          "POST",
+			Resource:        "/api/2.0/dbfs/close",
+			ExpectedRequest: handleResponse{Handle: 42},
+		},
+	})
+	require.NoError(t, err)
+
+	err = NewDbfsAPI(context.Background(), client).Create("/fixture", contents, true)
+	require.NoError(t, err)
+}
+
+func TestDbfsReadAndRecursiveListAtHTTPBoundary(t *testing.T) {
+	firstChunk := bytes.Repeat([]byte("a"), 1_000_000)
+	lastChunk := []byte("xyz")
+	client, _, err := qa.StrictHTTPFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/dbfs/read?length=1000000&path=%2Ffixture",
+			Response: ReadResponse{
+				BytesRead: int64(len(firstChunk)),
+				Data:      base64.StdEncoding.EncodeToString(firstChunk),
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/dbfs/read?length=1000000&offset=1000000&path=%2Ffixture",
+			Response: ReadResponse{
+				BytesRead: int64(len(lastChunk)),
+				Data:      base64.StdEncoding.EncodeToString(lastChunk),
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/dbfs/list?path=%2Froot",
+			Response: FileList{Files: []FileInfo{
+				{Path: "/root/file", IsDir: false},
+				{Path: "/root/subdir", IsDir: true},
+			}},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/dbfs/list?path=%2Froot%2Fsubdir",
+			Response: FileList{Files: []FileInfo{
+				{Path: "/root/subdir/nested", IsDir: false},
+			}},
+		},
+	})
+	require.NoError(t, err)
+
+	api := NewDbfsAPI(context.Background(), client)
+	contents, err := api.Read("/fixture")
+	require.NoError(t, err)
+	assert.Equal(t, append(firstChunk, lastChunk...), contents)
+
+	files, err := api.List("/root", true)
+	require.NoError(t, err)
+	assert.Equal(t, []FileInfo{
+		{Path: "/root/file", IsDir: false},
+		{Path: "/root/subdir/nested", IsDir: false},
+	}, files)
+}
 
 func TestCreateFileFails(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{

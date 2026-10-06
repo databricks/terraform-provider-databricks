@@ -17,6 +17,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -68,8 +69,11 @@ type HTTPFixture struct {
 	Method          string
 	Resource        string
 	Response        any
+	ResponseHeaders map[string]string
 	Status          int
 	ExpectedRequest any
+	ExpectedBody    []byte
+	ExpectedHeaders map[string]string
 	ReuseRequest    bool
 	MatchAny        bool
 }
@@ -582,6 +586,138 @@ func UnionFixturesLists(fixturesLists ...[]HTTPFixture) (fixtureList []HTTPFixtu
 	return
 }
 
+// HTTPFixtureHandler serves one strict phase of HTTP fixtures at a time.
+type HTTPFixtureHandler struct {
+	t        *testing.T
+	mu       sync.Mutex
+	fixtures []HTTPFixture
+}
+
+// NewHTTPFixtureHandler creates the HTTP fixture server core shared by the existing static
+// HttpFixtureClient helper and multi-step tests that replace fixtures between lifecycle phases.
+func NewHTTPFixtureHandler(t *testing.T) *HTTPFixtureHandler {
+	return &HTTPFixtureHandler{t: t}
+}
+
+// SetFixtures verifies the previous phase and installs fixtures for the next one.
+func (h *HTTPFixtureHandler) SetFixtures(fixtures []HTTPFixture) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.assertAllFixturesConsumed()
+	h.fixtures = append([]HTTPFixture(nil), fixtures...)
+}
+
+// AssertAllFixturesConsumed fails if the active phase has unused strict fixtures.
+func (h *HTTPFixtureHandler) AssertAllFixturesConsumed() {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.assertAllFixturesConsumed()
+}
+
+func (h *HTTPFixtureHandler) assertAllFixturesConsumed() {
+	for _, fixture := range h.fixtures {
+		if fixture.Method != "" && !fixture.ReuseRequest {
+			h.t.Errorf("expected HTTP fixture was not consumed: %s %s", fixture.Method, fixture.Resource)
+		}
+	}
+}
+
+func (h *HTTPFixtureHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	found := false
+	for i, fixture := range h.fixtures {
+		if (req.Method == fixture.Method && req.RequestURI == fixture.Resource) || fixture.MatchAny {
+			for name, expected := range fixture.ExpectedHeaders {
+				assert.Equal(h.t, expected, req.Header.Get(name), "unexpected %s header", name)
+			}
+			for name, value := range fixture.ResponseHeaders {
+				rw.Header().Set(name, value)
+			}
+			if fixture.Status == 0 {
+				rw.WriteHeader(http.StatusOK)
+			} else {
+				rw.WriteHeader(fixture.Status)
+			}
+			if fixture.ExpectedRequest != nil {
+				buf := new(bytes.Buffer)
+				_, err := buf.ReadFrom(req.Body)
+				assert.NoError(h.t, err)
+				jsonStr, err := json.Marshal(fixture.ExpectedRequest)
+				assert.NoError(h.t, err)
+				assert.JSONEq(h.t, string(jsonStr), buf.String(), "json strings do not match")
+			} else if fixture.ExpectedBody != nil {
+				buf := new(bytes.Buffer)
+				_, err := buf.ReadFrom(req.Body)
+				assert.NoError(h.t, err)
+				assert.Equal(h.t, fixture.ExpectedBody, buf.Bytes(), "request bodies do not match")
+			}
+			if fixture.Response != nil {
+				if alreadyJSON, ok := fixture.Response.(string); ok {
+					_, err := rw.Write([]byte(alreadyJSON))
+					assert.NoError(h.t, err)
+				} else {
+					responseBytes, err := json.Marshal(fixture.Response)
+					if err != nil {
+						assert.NoError(h.t, err)
+						h.t.FailNow()
+					}
+					_, err = rw.Write(responseBytes)
+					assert.NoError(h.t, err)
+				}
+			}
+			found = true
+			if !fixture.ReuseRequest {
+				h.fixtures[i] = HTTPFixture{}
+			}
+			break
+		}
+	}
+	if !found {
+		h.failMissingFixture(req)
+	}
+}
+
+func (h *HTTPFixtureHandler) failMissingFixture(req *http.Request) {
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(req.Body)
+	assert.NoError(h.t, err)
+	receivedRequest := map[string]any{}
+	if buf.Len() > 0 {
+		err = json.Unmarshal(buf.Bytes(), &receivedRequest)
+		assert.NoError(h.t, err)
+	}
+
+	expectedRequest := ""
+	if len(receivedRequest) > 0 {
+		expectedRequest += "ExpectedRequest: XXX {\n"
+		for key, value := range receivedRequest {
+			camel := ""
+			for _, part := range strings.Split(key, "_") {
+				if len(key) < 4 {
+					camel += strings.ToUpper(key)
+				} else {
+					camel += strings.Title(part)
+				}
+			}
+			expectedRequest += fmt.Sprintf("\t\t\t\t\t%s: %#v,\n", camel, value)
+		}
+		expectedRequest += "\t\t\t\t},\n"
+		expectedRequest += fmt.Sprintf("\t\t\t\t// ExpectedRequest: %#v,\n", receivedRequest)
+	}
+	stub := fmt.Sprintf(`{
+				Method:   "%s",
+				Resource: "%s",
+				%s
+				Response: XXX {
+					// fill in specific fields...
+				},
+			}`, req.Method, req.RequestURI, expectedRequest)
+	assert.Fail(h.t, fmt.Sprintf("Missing stub, please add: %s", stub))
+	h.t.FailNow()
+}
+
 // HttpFixtureClient creates client for emulated HTTP server
 func HttpFixtureClient(t *testing.T, fixtures []HTTPFixture) (client *common.DatabricksClient, server *httptest.Server, err error) {
 	return HttpFixtureClientWithToken(t, fixtures, "...")
@@ -610,86 +746,9 @@ func HttpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 			},
 		}}, fixtures...)
 	}
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		found := false
-		for i, fixture := range fixtures {
-			if (req.Method == fixture.Method && req.RequestURI == fixture.Resource) || fixture.MatchAny {
-				if fixture.Status == 0 {
-					rw.WriteHeader(200)
-				} else {
-					rw.WriteHeader(fixture.Status)
-				}
-				if fixture.ExpectedRequest != nil {
-					buf := new(bytes.Buffer)
-					_, err := buf.ReadFrom(req.Body)
-					assert.NoError(t, err)
-					jsonStr, err := json.Marshal(fixture.ExpectedRequest)
-					assert.NoError(t, err)
-					assert.JSONEq(t, string(jsonStr), buf.String(), "json strings do not match")
-				}
-				if fixture.Response != nil {
-					if alreadyJSON, ok := fixture.Response.(string); ok {
-						_, err := rw.Write([]byte(alreadyJSON))
-						assert.NoError(t, err)
-					} else {
-						responseBytes, err := json.Marshal(fixture.Response)
-						if err != nil {
-							assert.NoError(t, err)
-							t.FailNow()
-						}
-						_, err = rw.Write(responseBytes)
-						assert.NoError(t, err)
-					}
-				}
-				found = true
-				// Reset the request if it is already used
-				if !fixture.ReuseRequest {
-					fixtures[i] = HTTPFixture{}
-				}
-				break
-			}
-		}
-		if !found {
-			receivedRequest := map[string]any{}
-			buf := new(bytes.Buffer)
-			_, err := buf.ReadFrom(req.Body)
-			assert.NoError(t, err)
-			err = json.Unmarshal(buf.Bytes(), &receivedRequest)
-			assert.NoError(t, err)
-
-			expectedRequest := ""
-			if len(receivedRequest) > 0 {
-				// guessing model name would require going over AST,
-				// which is not something i'm willing to write on my weekend
-				expectedRequest += "ExpectedRequest: XXX {\n"
-				for key, value := range receivedRequest {
-					camel := ""
-					for _, part := range strings.Split(key, "_") {
-						if len(key) < 4 {
-							// golang styles, meh...
-							camel += strings.ToUpper(key)
-						} else {
-							camel += strings.Title(part)
-						}
-					}
-					// best effort prediction of what struct should look like...
-					expectedRequest += fmt.Sprintf("					%s: %#v,\n", camel, value)
-				}
-				expectedRequest += "				},\n"
-				expectedRequest += fmt.Sprintf("				// ExpectedRequest: %#v,\n", receivedRequest)
-			}
-			stub := fmt.Sprintf(`{
-				Method:   "%s",
-				Resource: "%s",
-				%s
-				Response: XXX {
-					// fill in specific fields...
-				},
-			},`, req.Method, req.RequestURI, expectedRequest)
-			assert.Fail(t, fmt.Sprintf("Missing stub, please add: %s", stub))
-			t.FailNow()
-		}
-	}))
+	handler := NewHTTPFixtureHandler(t)
+	handler.SetFixtures(fixtures)
+	server := httptest.NewServer(handler)
 	cfg := &config.Config{
 		Host:             server.URL,
 		Token:            token,

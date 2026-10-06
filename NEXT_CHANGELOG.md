@@ -14,6 +14,7 @@
 
 ### Exporter
 
+* Fix infinite loop in interactive mode when authentication keeps failing or standard input is closed: the exporter now gives up after 3 failed authentication attempts ([#6045](https://github.com/databricks/terraform-provider-databricks/pull/6045)).
 * Export resources referenced by Lakeflow pipeline ingestion and schema transformation settings ([#6038](https://github.com/databricks/terraform-provider-databricks/pull/6038)).
 * Export service credentials, instance profiles, and budget policies referenced by model serving endpoints ([#6037](https://github.com/databricks/terraform-provider-databricks/pull/6037)).
 * Rewrite portable cluster policy attributes for the target cloud and omit attributes that cannot be safely converted ([#6040](https://github.com/databricks/terraform-provider-databricks/pull/6040)).

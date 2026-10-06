@@ -395,6 +395,7 @@ func importPipeline(ic *importContext, r *resource) error {
 	var pipeline tf_dlt.Pipeline
 	s := ic.Resources["databricks_pipeline"].Schema
 	common.DataToStructPointer(r.Data, s, &pipeline)
+	emitPipelineIngestionDependencies(ic, &pipeline)
 	if pipeline.Deployment != nil && pipeline.Deployment.Kind == "BUNDLE" {
 		log.Printf("[INFO] Skipping processing of DLT Pipeline with ID %s (%s) as deployed with DABs",
 			r.ID, pipeline.Name)
@@ -543,6 +544,61 @@ func importPipeline(ic *importContext, r *resource) error {
 		}
 	}
 	return nil
+}
+
+func emitPipelineIngestionDependencies(ic *importContext, pipeline *tf_dlt.Pipeline) {
+	if pipeline.BudgetPolicyId != "" {
+		ic.Emit(&resource{Resource: "databricks_budget_policy", ID: pipeline.BudgetPolicyId})
+	}
+	if gateway := pipeline.GatewayDefinition; gateway != nil {
+		ic.Emit(&resource{Resource: "databricks_connection", ID: gateway.ConnectionName})
+		emitPipelineSchema(ic, gateway.GatewayStorageCatalog, gateway.GatewayStorageSchema)
+	}
+	ingestion := pipeline.IngestionDefinition
+	if ingestion == nil {
+		return
+	}
+	ic.Emit(&resource{Resource: "databricks_connection", ID: ingestion.ConnectionName})
+	ic.Emit(&resource{Resource: "databricks_pipeline", ID: ingestion.IngestionGatewayId})
+	ic.emitFilesFromSlice([]string{ingestion.NetsuiteJarPath})
+	for _, object := range ingestion.Objects {
+		if object.Schema != nil {
+			emitPipelineSchema(ic, object.Schema.DestinationCatalog, object.Schema.DestinationSchema)
+			if object.Schema.FanoutOptions != nil {
+				emitPipelineTransformDependencies(ic, object.Schema.FanoutOptions.Transforms)
+			}
+		}
+		if object.Table != nil {
+			emitPipelineSchema(ic, object.Table.DestinationCatalog, object.Table.DestinationSchema)
+		}
+		if object.Report != nil {
+			emitPipelineSchema(ic, object.Report.DestinationCatalog, object.Report.DestinationSchema)
+		}
+	}
+}
+
+func emitPipelineSchema(ic *importContext, catalog, schema string) {
+	ic.Emit(&resource{Resource: "databricks_catalog", ID: catalog})
+	if catalog != "" && schema != "" {
+		ic.Emit(&resource{Resource: "databricks_schema", ID: catalog + "." + schema})
+	}
+}
+
+func emitPipelineTransformDependencies(ic *importContext, transforms []pipelines.Transformer) {
+	for _, transform := range transforms {
+		if transform.AvroOptions != nil {
+			ic.emitFilesFromSlice([]string{transform.AvroOptions.SchemaFilePath})
+			if transform.AvroOptions.SchemaRegistry != nil {
+				ic.Emit(&resource{Resource: "databricks_connection", ID: transform.AvroOptions.SchemaRegistry.ConnectionName})
+			}
+		}
+		if transform.ProtobufOptions != nil {
+			ic.emitFilesFromSlice([]string{transform.ProtobufOptions.DescFilePath})
+			if transform.ProtobufOptions.SchemaRegistry != nil {
+				ic.Emit(&resource{Resource: "databricks_connection", ID: transform.ProtobufOptions.SchemaRegistry.ConnectionName})
+			}
+		}
+	}
 }
 
 // databricksProvidedBaseEnvPrefix is the resource name prefix used by

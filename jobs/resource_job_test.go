@@ -3699,12 +3699,12 @@ func TestJobsAPIListMultiplePages(t *testing.T) {
 					},
 				},
 				HasMore:       true,
-				NextPageToken: "aaaa",
+				NextPageToken: "page two",
 			},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&page_token=aaaa",
+			Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25&page_token=page%20two",
 			Response: JobListResponse{
 				Jobs: []Job{
 					{

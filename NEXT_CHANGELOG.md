@@ -9,6 +9,7 @@
 ### New Features and Improvements
 
 ### Bug Fixes
+* Restore `recipient_federation_policy` resources and data sources removed in v1.95.0.
 
 ### Documentation
 

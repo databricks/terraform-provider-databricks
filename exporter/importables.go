@@ -1043,7 +1043,15 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "resources.secret.scope", Resource: "databricks_secret_scope"},
 			{Path: "resources.secret.key", Resource: "databricks_secret", Match: "key",
 				IsValidApproximation: createIsMatchingScopeAndKey("scope", "key")},
-			{Path: "resources.uc_securable.securable_full_name", Resource: "databricks_volume"},
+			{Path: "resources.uc_securable.securable_full_name", Resource: "databricks_connection", Match: "name",
+				IsValidApproximation: createIsAppUcSecurableType("CONNECTION")},
+			{Path: "resources.uc_securable.securable_full_name", Resource: "databricks_sql_table",
+				IsValidApproximation: createIsAppUcSecurableType("TABLE")},
+			{Path: "resources.uc_securable.securable_full_name", Resource: "databricks_volume",
+				IsValidApproximation: createIsAppUcSecurableType("VOLUME")},
+			{Path: "telemetry_export_destinations.unity_catalog.logs_table", Resource: "databricks_sql_table"},
+			{Path: "telemetry_export_destinations.unity_catalog.metrics_table", Resource: "databricks_sql_table"},
+			{Path: "telemetry_export_destinations.unity_catalog.traces_table", Resource: "databricks_sql_table"},
 			{Path: "resources.database.instance_name", Resource: "databricks_database_instance", Match: "name"},
 			{Path: "budget_policy_id", Resource: "databricks_budget_policy", Match: "policy_id"},
 		},
@@ -1269,6 +1277,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			s := ic.Resources["databricks_model_serving"].Schema
 			var mse serving.CreateServingEndpoint
 			common.DataToStructPointer(r.Data, s, &mse)
+			if mse.BudgetPolicyId != "" {
+				ic.Emit(&resource{Resource: "databricks_budget_policy", ID: mse.BudgetPolicyId})
+			}
 			if mse.Config != nil {
 				for _, se := range mse.Config.ServedEntities {
 					if se.EntityName != "" {
@@ -1303,6 +1314,12 @@ var resourcesMap map[string]importable = map[string]importable{
 						if se.ExternalModel.AmazonBedrockConfig != nil {
 							ic.emitSecretsFromSecretPathString(se.ExternalModel.AmazonBedrockConfig.AwsAccessKeyId)
 							ic.emitSecretsFromSecretPathString(se.ExternalModel.AmazonBedrockConfig.AwsSecretAccessKey)
+							if se.ExternalModel.AmazonBedrockConfig.InstanceProfileArn != "" {
+								ic.Emit(&resource{Resource: "databricks_instance_profile", ID: se.ExternalModel.AmazonBedrockConfig.InstanceProfileArn})
+							}
+							if se.ExternalModel.AmazonBedrockConfig.UcServiceCredentialName != "" {
+								ic.Emit(&resource{Resource: "databricks_credential", ID: se.ExternalModel.AmazonBedrockConfig.UcServiceCredentialName})
+							}
 						}
 						if se.ExternalModel.CohereConfig != nil {
 							ic.emitSecretsFromSecretPathString(se.ExternalModel.CohereConfig.CohereApiKey)
@@ -1419,9 +1436,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			return pathString == "config.0.auto_capture_config.0.enabled" || pathString == "ai_gateway.0.inference_table_config.0.enabled"
 		},
 		Depends: []reference{
+			{Path: "budget_policy_id", Resource: "databricks_budget_policy", Match: "policy_id"},
 			{Path: "config.served_entities.entity_name", Resource: "databricks_registered_model"},
 			{Path: "config.served_entities.instance_profile_arn", Resource: "databricks_instance_profile",
 				Match: "instance_profile_arn"},
+			{Path: "config.served_entities.external_model.amazon_bedrock_config.instance_profile_arn",
+				Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
+			{Path: "config.served_entities.external_model.amazon_bedrock_config.uc_service_credential_name",
+				Resource: "databricks_credential", Match: "name"},
 			{Path: "config.auto_capture_config.catalog_name", Resource: "databricks_catalog"},
 			{Path: "config.served_entities.external_model.databricks_model_serving_config.databricks_api_token",
 				Resource: "databricks_secret", Match: "config_reference"},

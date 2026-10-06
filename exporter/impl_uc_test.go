@@ -367,6 +367,7 @@ func TestConnections(t *testing.T) {
 				Connections: []sdk_uc.ConnectionInfo{
 					{
 						Name:        "test",
+						FullName:    "test",
 						MetastoreId: "12345",
 					},
 				},
@@ -391,6 +392,34 @@ func TestConnections(t *testing.T) {
 		assert.NoError(t, err)
 		require.Equal(t, 2, len(ic.testEmits))
 		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: foreign_connection/ctest)"])
+	})
+}
+
+func TestImportSchemaWithConnections(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(mw *mocks.MockWorkspaceClient) {
+		mw.GetMockConnectionsAPI().EXPECT().List(mock.Anything, sdk_uc.ListConnectionsRequest{
+			Parent: "schemas/ctest.stest",
+		}).Return(createIteratorFromSlice([]sdk_uc.ConnectionInfo{
+			{Name: "conn1", FullName: "ctest.stest.conn1", MetastoreId: "12345"},
+		}))
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-catalogs,uc-grants,uc-schemas,uc-connections")
+		// Only uc-connections is in the listing, so models/volumes/tables/secrets are not listed.
+		ic.enableListing("uc-connections")
+		ic.currentMetastore = currentMetastoreResponse
+		d := tf_uc.ResourceSchema().ToResource().TestResourceData()
+		d.SetId("ctest.stest")
+		d.Set("catalog_name", "ctest")
+		d.Set("name", "stest")
+		err := resourcesMap["databricks_schema"].Import(ic, &resource{
+			ID:   "ctest.stest",
+			Data: d,
+		})
+		assert.NoError(t, err)
+		// The exported id must carry the full_name (catalog.schema.name), not the leaf, or the
+		// generated config cannot be re-imported (the read path resolves by full_name).
+		assert.True(t, ic.testEmits["databricks_connection[<unknown>] (id: 12345|ctest.stest.conn1)"])
 	})
 }
 
@@ -1273,6 +1302,23 @@ func TestEmitRfaAccessRequestDestinations_ApiError(t *testing.T) {
 		// Should NOT emit when API returns error
 		assert.False(t, ic.testEmits["databricks_rfa_access_request_destinations[<unknown>] (id: CATALOG,missing)"],
 			"Should not emit RFA destinations when API returns error")
+	})
+}
+
+func TestEmitRfaAccessRequestDestinations_AccountLevelNoPanic(t *testing.T) {
+	qa.MockAccountsApply(t, func(ma *mocks.MockAccountClient) {
+		setupAwsAccountConfig(ma)
+		// No RFA API calls should be made: there is no workspace client in account-level mode.
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForAccountTestWithClient(ctx, client, "uc-rfa")
+
+		// In account-level export ic.workspaceClient is nil. This must not panic
+		// (regression test for the nil pointer dereference in emitRfaAccessRequestDestinations).
+		ic.emitRfaAccessRequestDestinations("METASTORE", "metastore-id")
+
+		// RFA destinations are a workspace-level API, so nothing should be emitted.
+		assert.False(t, ic.testEmits["databricks_rfa_access_request_destinations[<unknown>] (id: METASTORE,metastore-id)"],
+			"Should not emit RFA destinations in account-level mode")
 	})
 }
 

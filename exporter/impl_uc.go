@@ -151,6 +151,25 @@ func importUcSchema(ic *importContext, r *resource) error {
 			}, volume.UpdatedAt, fmt.Sprintf("volume '%s'", volume.FullName))
 		}
 	}
+	if ic.isServiceInListing("uc-connections") {
+		// Schema-level (L3) connections live inside a schema, so they are listed per-schema via the
+		// parent filter; metastore-level connections are listed separately by listUcConnections.
+		it := ic.workspaceClient.Connections.List(ic.Context,
+			catalog.ListConnectionsRequest{
+				Parent: "schemas/" + catalogName + "." + schemaName,
+			})
+		for it.HasNext(ic.Context) {
+			conn, err := it.Next(ic.Context)
+			if err != nil {
+				return err
+			}
+			ic.EmitIfUpdatedAfterMillis(&resource{
+				Resource:  "databricks_connection",
+				ID:        conn.MetastoreId + "|" + conn.FullName,
+				DependsOn: dependsOn,
+			}, conn.UpdatedAt, fmt.Sprintf("connection '%s'", conn.FullName))
+		}
+	}
 	isTablesListingEnabled := ic.isServiceInListing("uc-tables")
 	isOnlineTablesListingEnabled := ic.isServiceInListing("uc-online-tables")
 	isVectorSearchListingEnabled := ic.isServiceInListing("vector-search")
@@ -628,7 +647,8 @@ func listUcConnections(ic *importContext) error {
 		}
 		ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 			Resource: "databricks_connection",
-			ID:       conn.MetastoreId + "|" + conn.Name,
+			// full_name (not the leaf name) so a schema-level connection's exported id is importable.
+			ID: conn.MetastoreId + "|" + conn.FullName,
 		}, conn.Name, conn.UpdatedAt, fmt.Sprintf("connection '%s'", conn.Name))
 	}
 	return nil
@@ -806,6 +826,13 @@ func importSqlTable(ic *importContext, r *resource) error {
 // This is a reusable function that can be called from Import functions of various UC resources.
 func (ic *importContext) emitRfaAccessRequestDestinations(securableType, fullName string) {
 	if !ic.isServiceEnabled("uc-rfa") {
+		return
+	}
+
+	// Access request destinations are a workspace-level API, so there's no workspace
+	// client in account-level exports. Skip instead of dereferencing a nil client.
+	if ic.workspaceClient == nil {
+		log.Printf("[DEBUG] Skipping RFA access request destinations for %s %s: no workspace client (account-level export)", securableType, fullName)
 		return
 	}
 

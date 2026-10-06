@@ -3,13 +3,14 @@ package qa_test
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/databricks/terraform-provider-databricks/qa/terraformtest"
 	"github.com/databricks/terraform-provider-databricks/tokens"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestTerraformTokenLifecycleWithHTTPFixtures(t *testing.T) {
-	acceptance.HTTPFixtures(t, []qa.HTTPFixture{
+	terraformtest.HTTPFixtures(t, []qa.HTTPFixture{
 		{
 			Method:       "GET",
 			Resource:     "/.well-known/databricks-config",
@@ -54,8 +55,8 @@ func TestTerraformTokenLifecycleWithHTTPFixtures(t *testing.T) {
 			ExpectedHeaders: map[string]string{"Authorization": "Bearer ..."},
 			ExpectedRequest: map[string]interface{}{"token_id": "abc"},
 		},
-	}, acceptance.Step{
-		Template: `resource "databricks_token" "this" {
+	}, resource.TestStep{
+		Config: `resource "databricks_token" "this" {
 			lifetime_seconds = 6000
 			comment = "Testing token"
 		}`,

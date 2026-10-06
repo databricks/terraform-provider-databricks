@@ -68,8 +68,10 @@ type HTTPFixture struct {
 	Method          string
 	Resource        string
 	Response        any
+	ResponseHeaders map[string]string
 	Status          int
 	ExpectedRequest any
+	ExpectedBody    []byte
 	ExpectedHeaders map[string]string
 	ReuseRequest    bool
 	MatchAny        bool
@@ -628,6 +630,9 @@ func httpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 				for name, expected := range fixture.ExpectedHeaders {
 					assert.Equal(t, expected, req.Header.Get(name), "unexpected %s header", name)
 				}
+				for name, value := range fixture.ResponseHeaders {
+					rw.Header().Set(name, value)
+				}
 				if fixture.Status == 0 {
 					rw.WriteHeader(200)
 				} else {
@@ -640,6 +645,11 @@ func httpFixtureClientWithToken(t *testing.T, fixtures []HTTPFixture, token stri
 					jsonStr, err := json.Marshal(fixture.ExpectedRequest)
 					assert.NoError(t, err)
 					assert.JSONEq(t, string(jsonStr), buf.String(), "json strings do not match")
+				} else if fixture.ExpectedBody != nil {
+					buf := new(bytes.Buffer)
+					_, err := buf.ReadFrom(req.Body)
+					assert.NoError(t, err)
+					assert.Equal(t, fixture.ExpectedBody, buf.Bytes(), "request bodies do not match")
 				}
 				if fixture.Response != nil {
 					if alreadyJSON, ok := fixture.Response.(string); ok {

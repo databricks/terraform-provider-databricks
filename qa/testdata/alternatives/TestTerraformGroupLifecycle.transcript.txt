@@ -1,0 +1,81 @@
+=== STEP 0 create_group
+=== POST /api/2.0/preview/scim/v2/Groups
+> {
+  "displayName": "Initial Group",
+  "entitlements": [
+    {}
+  ],
+  "schemas": [
+    "urn:ietf:params:scim:schemas:core:2.0:Group"
+  ]
+}
+< 200
+{
+  "id": "group-id"
+}
+
+=== GET /api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements
+< 200
+{
+  "displayName": "Initial Group",
+  "id": "group-id"
+}
+
+=== GET /api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements
+< 200
+{
+  "displayName": "Initial Group",
+  "id": "group-id"
+}
+
+=== STEP 1 update_group
+=== GET /api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements
+< 200
+{
+  "displayName": "Initial Group",
+  "id": "group-id"
+}
+
+=== GET /api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,entitlements,groups,members,externalId
+< 200
+{
+  "displayName": "Initial Group",
+  "id": "group-id"
+}
+
+=== PUT /api/2.0/preview/scim/v2/Groups/group-id
+> {
+  "displayName": "Updated Group",
+  "entitlements": [
+    {}
+  ],
+  "schemas": [
+    "urn:ietf:params:scim:schemas:core:2.0:Group"
+  ]
+}
+< 200 (empty)
+
+=== GET /api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements
+< 200
+{
+  "displayName": "Updated Group",
+  "id": "group-id"
+}
+
+=== GET /api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements
+< 200
+{
+  "displayName": "Updated Group",
+  "id": "group-id"
+}
+
+=== STEP 2 destroy
+=== GET /api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements
+< 200
+{
+  "displayName": "Updated Group",
+  "id": "group-id"
+}
+
+=== DELETE /api/2.0/preview/scim/v2/Groups/group-id
+< 200 (empty)

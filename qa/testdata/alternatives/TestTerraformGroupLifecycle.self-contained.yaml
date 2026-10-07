@@ -1,0 +1,218 @@
+# Discussion-only executable format. These comments explain the proposal and
+# would not be written into recorded test data. A generic runner would discover
+# this file, so this test would not need a resource-specific Go file.
+#
+# `host_metadata` generates the reusable Databricks discovery response.
+# `initial_state` is the normalized Terraform state before the first step.
+# `terraform` is the configuration applied in that step. `state` is the stable,
+# normalized Terraform state recorded after it completes.
+#
+# `resource` identifies an ordering lane, normally by Terraform resource
+# address. Calls in the same step and lane must occur in the listed order;
+# calls assigned to different resources may interleave. Calls without a
+# resource are unordered.
+# `body.json` contains a payload matched as semantic JSON. `body: null` means
+# that the request or response has no body.
+version: 1
+
+initial_state:
+  resources: {}
+
+host_metadata:
+  workspace_id: "12345"
+
+steps:
+  - name: create_group
+    terraform: |
+      resource "databricks_group" "this" {
+        display_name = "Initial Group"
+      }
+    calls:
+      - resource: databricks_group.this
+        request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          headers:
+            content-type: application/scim+json; charset=utf-8
+          body:
+            json:
+              displayName: Initial Group
+              schemas:
+                - urn:ietf:params:scim:schemas:core:2.0:Group
+              entitlements:
+                - {}
+        response:
+          status: 200
+          headers: {}
+          body:
+            json:
+              id: group-id
+
+      - resource: databricks_group.this
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements
+          headers: {}
+          body: null
+        response:
+          status: 200
+          headers: {}
+          body:
+            json:
+              id: group-id
+              displayName: Initial Group
+
+      - resource: databricks_group.this
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements
+          headers: {}
+          body: null
+        response:
+          status: 200
+          headers: {}
+          body:
+            json:
+              id: group-id
+              displayName: Initial Group
+
+    state:
+      resources:
+        databricks_group.this:
+          id: group-id
+          attributes:
+            acl_principal_id: groups/Initial Group
+            allow_cluster_create: false
+            allow_instance_pool_create: false
+            databricks_sql_access: false
+            display_name: Initial Group
+            external_id: ""
+            force: false
+            workspace_access: false
+            workspace_consume: false
+
+  - name: update_group
+    terraform: |
+      resource "databricks_group" "this" {
+        display_name = "Updated Group"
+      }
+    calls:
+      - resource: databricks_group.this
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements
+          headers: {}
+          body: null
+        response:
+          status: 200
+          headers: {}
+          body:
+            json:
+              id: group-id
+              displayName: Initial Group
+
+      - resource: databricks_group.this
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,entitlements,groups,members,externalId
+          headers: {}
+          body: null
+        response:
+          status: 200
+          headers: {}
+          body:
+            json:
+              id: group-id
+              displayName: Initial Group
+
+      - resource: databricks_group.this
+        request:
+          method: PUT
+          path: /api/2.0/preview/scim/v2/Groups/group-id
+          headers:
+            content-type: application/scim+json; charset=utf-8
+          body:
+            json:
+              displayName: Updated Group
+              schemas:
+                - urn:ietf:params:scim:schemas:core:2.0:Group
+              entitlements:
+                - {}
+        response:
+          status: 200
+          headers: {}
+          body: null
+
+      - resource: databricks_group.this
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements
+          headers: {}
+          body: null
+        response:
+          status: 200
+          headers: {}
+          body:
+            json:
+              id: group-id
+              displayName: Updated Group
+
+      - resource: databricks_group.this
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements
+          headers: {}
+          body: null
+        response:
+          status: 200
+          headers: {}
+          body:
+            json:
+              id: group-id
+              displayName: Updated Group
+
+    state:
+      resources:
+        databricks_group.this:
+          id: group-id
+          attributes:
+            acl_principal_id: groups/Updated Group
+            allow_cluster_create: false
+            allow_instance_pool_create: false
+            databricks_sql_access: false
+            display_name: Updated Group
+            external_id: ""
+            force: false
+            workspace_access: false
+            workspace_consume: false
+
+# Destroy is automatic and uses the final applied configuration and state.
+destroy:
+  calls:
+    - resource: databricks_group.this
+      request:
+        method: GET
+        path: /api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements
+        headers: {}
+        body: null
+      response:
+        status: 200
+        headers: {}
+        body:
+          json:
+            id: group-id
+            displayName: Updated Group
+
+    - resource: databricks_group.this
+      request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Groups/group-id
+        headers: {}
+        body: null
+      response:
+        status: 200
+        headers: {}
+        body: null
+
+  state:
+    resources: {}

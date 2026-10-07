@@ -1,0 +1,215 @@
+[
+  {
+    "version": 1,
+    "step_index": 0,
+    "step_name": "create_group",
+    "sequence": 0,
+    "request": {
+      "method": "POST",
+      "path": "/api/2.0/preview/scim/v2/Groups",
+      "headers": {
+        "content-type": "application/scim+json; charset=utf-8"
+      },
+      "body": {
+        "displayName": "Initial Group",
+        "schemas": [
+          "urn:ietf:params:scim:schemas:core:2.0:Group"
+        ],
+        "entitlements": [
+          {}
+        ]
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "id": "group-id"
+      }
+    }
+  },
+  {
+    "version": 1,
+    "step_index": 0,
+    "step_name": "create_group",
+    "sequence": 1,
+    "request": {
+      "method": "GET",
+      "path": "/api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "id": "group-id",
+        "displayName": "Initial Group"
+      }
+    }
+  },
+  {
+    "version": 1,
+    "step_index": 0,
+    "step_name": "create_group",
+    "sequence": 2,
+    "request": {
+      "method": "GET",
+      "path": "/api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "id": "group-id",
+        "displayName": "Initial Group"
+      }
+    }
+  },
+  {
+    "version": 1,
+    "step_index": 1,
+    "step_name": "update_group",
+    "sequence": 0,
+    "request": {
+      "method": "GET",
+      "path": "/api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "id": "group-id",
+        "displayName": "Initial Group"
+      }
+    }
+  },
+  {
+    "version": 1,
+    "step_index": 1,
+    "step_name": "update_group",
+    "sequence": 1,
+    "request": {
+      "method": "GET",
+      "path": "/api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,entitlements,groups,members,externalId",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "id": "group-id",
+        "displayName": "Initial Group"
+      }
+    }
+  },
+  {
+    "version": 1,
+    "step_index": 1,
+    "step_name": "update_group",
+    "sequence": 2,
+    "request": {
+      "method": "PUT",
+      "path": "/api/2.0/preview/scim/v2/Groups/group-id",
+      "headers": {
+        "content-type": "application/scim+json; charset=utf-8"
+      },
+      "body": {
+        "displayName": "Updated Group",
+        "schemas": [
+          "urn:ietf:params:scim:schemas:core:2.0:Group"
+        ],
+        "entitlements": [
+          {}
+        ]
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {},
+      "body": null
+    }
+  },
+  {
+    "version": 1,
+    "step_index": 1,
+    "step_name": "update_group",
+    "sequence": 3,
+    "request": {
+      "method": "GET",
+      "path": "/api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "id": "group-id",
+        "displayName": "Updated Group"
+      }
+    }
+  },
+  {
+    "version": 1,
+    "step_index": 1,
+    "step_name": "update_group",
+    "sequence": 4,
+    "request": {
+      "method": "GET",
+      "path": "/api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "id": "group-id",
+        "displayName": "Updated Group"
+      }
+    }
+  },
+  {
+    "version": 1,
+    "step_index": 2,
+    "step_name": "destroy",
+    "sequence": 0,
+    "request": {
+      "method": "GET",
+      "path": "/api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName,externalId,entitlements",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "id": "group-id",
+        "displayName": "Updated Group"
+      }
+    }
+  },
+  {
+    "version": 1,
+    "step_index": 2,
+    "step_name": "destroy",
+    "sequence": 1,
+    "request": {
+      "method": "DELETE",
+      "path": "/api/2.0/preview/scim/v2/Groups/group-id",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {},
+      "body": null
+    }
+  }
+]

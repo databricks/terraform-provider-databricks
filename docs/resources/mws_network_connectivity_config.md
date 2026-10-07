@@ -42,16 +42,16 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - combination of `account_id` and `network_connectivity_config_id` separated by `/` character
 * `network_connectivity_config_id` - Canonical unique identifier of Network Connectivity Config in Databricks Account
 * `egress_config` - block containing information about network connectivity rules that apply to network traffic from your serverless compute resources. Consists of the following fields:
-  * `default_rules` - block describing network connectivity rules that are applied by default without resource specific configurations.  Consists of the following fields:
-    * `aws_stable_ip_rule` (AWS only) - block with information about stable AWS IP CIDR blocks. You can use these to configure the firewall of your resources to allow traffic from your Databricks workspace.  Consists of the following fields:
-      * `cidr_blocks` - list of IP CIDR blocks.
-    * `azure_service_endpoint_rule` (Azure only) - block with information about stable Azure service endpoints. You can configure the firewall of your Azure resources to allow traffic from your Databricks serverless compute resources.  Consists of the following fields:
-      * `subnets` - list of subnets from which Databricks network traffic originates when accessing your Azure resources.
-      * `target_region` - the Azure region in which this service endpoint rule applies.
-      * `target_services` - the Azure services to which this service endpoint rule applies to.
-  * `target_rules` - block describing network connectivity rules that configured for each destinations. These rules override default rules.  Consists of the following fields:
-    * `azure_private_endpoint_rules` (Azure only) - list containing information about configure Azure Private Endpoints.
-    * `aws_private_endpoint_rules` (AWS only) - list containing information about configure AWS Private Endpoints.
+   * `default_rules` - block describing network connectivity rules that are applied by default without resource specific configurations.  Consists of the following fields:
+      * `aws_stable_ip_rule` (AWS only) - block with information about stable AWS IP CIDR blocks. You can use these to configure the firewall of your resources to allow traffic from your Databricks workspace.  Consists of the following fields:
+         * `cidr_blocks` - list of IP CIDR blocks.
+      * `azure_service_endpoint_rule` (Azure only) - block with information about stable Azure service endpoints. You can configure the firewall of your Azure resources to allow traffic from your Databricks serverless compute resources.  Consists of the following fields:
+         * `subnets` - list of subnets from which Databricks network traffic originates when accessing your Azure resources.
+         * `target_region` - the Azure region in which this service endpoint rule applies.
+         * `target_services` - the Azure services to which this service endpoint rule applies to.
+   * `target_rules` - block describing network connectivity rules that configured for each destinations. These rules override default rules.  Consists of the following fields:
+      * `azure_private_endpoint_rules` (Azure only) - list containing information about configure Azure Private Endpoints.
+      * `aws_private_endpoint_rules` (AWS only) - list containing information about configure AWS Private Endpoints.
 * `creation_time` - time in epoch milliseconds when this object was created.
 * `updated_time` - time in epoch milliseconds when this object was updated.
 

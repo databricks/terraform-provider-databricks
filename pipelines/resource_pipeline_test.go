@@ -1,9 +1,11 @@
 package pipelines
 
 import (
+	"context"
 	"errors"
 	"testing"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 
@@ -253,6 +255,51 @@ func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) 
 		Resource: ResourcePipeline(),
 		HCL: `name = "test"
 		storage = "/test/storage"
+		library {
+			notebook {
+				path = "/Test"
+			}
+		}
+		filters {
+			include = ["a"]
+		}
+		`,
+		Create: true,
+	}.ExpectError(t, "pipeline abcd has failed")
+}
+
+// When creation fails and the user configured cascade_on_destroy = false, the cleanup
+// delete must respect that value (sending Cascade=false via ForceSendFields) so datasets
+// are preserved rather than always cascading.
+func TestResourcePipelineCreate_ErrorWhenWaitingCleanupNoCascade(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Create(mock.Anything, mock.Anything).Return(&pipelines.CreatePipelineResponse{
+				PipelineId: "abcd",
+			}, nil)
+
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Name:       "test-pipeline",
+				State:      pipelines.PipelineStateFailed,
+			}, nil).Once()
+
+			e.Delete(mock.Anything, pipelines.DeletePipelineRequest{
+				PipelineId:      "abcd",
+				ForceSendFields: []string{"Cascade"},
+			}).Return(nil)
+
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(nil, apierr.ErrNotFound)
+		},
+		Resource: ResourcePipeline(),
+		HCL: `name = "test"
+		storage = "/test/storage"
+		cascade_on_destroy = false
 		library {
 			notebook {
 				path = "/Test"
@@ -556,6 +603,29 @@ func TestResourcePipelineDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abcd", d.Id())
+}
+
+// When cascade is false, Delete must send Cascade=false explicitly. Cascade is
+// tagged `url:"cascade,omitempty"`, so the false (zero) value would be dropped
+// during query-string encoding unless it is listed in ForceSendFields (honored for
+// query parameters as of databricks-sdk-go v0.152.0). cascade=true relies on the API
+// default and omits the parameter, which is covered by TestResourcePipelineDelete.
+func TestDeletePipelineNoCascade(t *testing.T) {
+	qa.MockWorkspaceApply(t, func(w *mocks.MockWorkspaceClient) {
+		e := w.GetMockPipelinesAPI().EXPECT()
+		e.Delete(mock.Anything, pipelines.DeletePipelineRequest{
+			PipelineId:      "abcd",
+			ForceSendFields: []string{"Cascade"},
+		}).Return(nil)
+		e.Get(mock.Anything, pipelines.GetPipelineRequest{
+			PipelineId: "abcd",
+		}).Return(nil, apierr.ErrNotFound)
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		w, err := client.WorkspaceClient()
+		require.NoError(t, err)
+		err = Delete(w, ctx, "abcd", false, DefaultTimeout)
+		require.NoError(t, err)
+	})
 }
 
 func TestStorageSuppressDiff(t *testing.T) {

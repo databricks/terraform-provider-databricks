@@ -45,8 +45,9 @@ var createRequest = pipelines.CreatePipeline{
 		Kind:             "BUNDLE",
 		MetadataFilePath: "/foo/bar",
 	},
-	Edition: "ADVANCED",
-	Channel: "CURRENT",
+	Edition:         "ADVANCED",
+	Channel:         "CURRENT",
+	ForceSendFields: []string{"Serverless"},
 }
 
 var updateRequest = pipelines.EditPipeline{
@@ -64,8 +65,9 @@ var updateRequest = pipelines.EditPipeline{
 	Filters: &pipelines.Filters{
 		Include: []string{"com.databricks.include"},
 	},
-	Channel: "CURRENT",
-	Edition: "ADVANCED",
+	Channel:         "CURRENT",
+	Edition:         "ADVANCED",
+	ForceSendFields: []string{"Serverless"},
 }
 
 var basicPipelineSpec = pipelines.PipelineSpec{
@@ -163,6 +165,86 @@ func TestResourcePipelineCreate(t *testing.T) {
 		"last_modified": 123456,
 		"state":         "RUNNING",
 	})
+}
+
+func TestResourcePipelineCreateClassicIngestion(t *testing.T) {
+	// Regression test: a classic (serverless = false) ingestion pipeline must
+	// send serverless=false explicitly. PipelineSpec.Serverless is `omitempty`,
+	// so without ForceSendFields the field is dropped from the request and the
+	// API defaults ingestion pipelines to serverless, then rejects the cluster
+	// block with "cannot provide cluster settings when using serverless compute".
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Create(mock.Anything, pipelines.CreatePipeline{
+				Name:    "test-ingestion",
+				Channel: "CURRENT",
+				Edition: "ADVANCED",
+				Clusters: []pipelines.PipelineCluster{
+					{
+						Label: "default",
+						Autoscale: &pipelines.PipelineClusterAutoscale{
+							MinWorkers: 1,
+							MaxWorkers: 2,
+							Mode:       "ENHANCED",
+						},
+					},
+				},
+				IngestionDefinition: &pipelines.IngestionPipelineDefinition{
+					ConnectionName: "my_connection",
+					Objects: []pipelines.IngestionConfig{
+						{
+							Table: &pipelines.TableSpec{
+								SourceSchema:       "public",
+								SourceTable:        "orders",
+								DestinationCatalog: "main",
+								DestinationSchema:  "bronze",
+							},
+						},
+					},
+				},
+				ForceSendFields: []string{"Serverless"},
+			}).Return(&pipelines.CreatePipelineResponse{
+				PipelineId: "abcd",
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Name:       "test-ingestion",
+				State:      pipelines.PipelineStateRunning,
+				Spec: &pipelines.PipelineSpec{
+					Name: "test-ingestion",
+				},
+			}, nil)
+		},
+		Resource: ResourcePipeline(),
+		Create:   true,
+		HCL: `
+			name = "test-ingestion"
+			cluster {
+			  label = "default"
+			  autoscale {
+			    min_workers = 1
+			    max_workers = 2
+			    mode        = "ENHANCED"
+			  }
+			}
+			ingestion_definition {
+			  connection_name = "my_connection"
+			  objects {
+			    table {
+			      source_schema       = "public"
+			      source_table        = "orders"
+			      destination_catalog = "main"
+			      destination_schema  = "bronze"
+			    }
+			  }
+			}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abcd", d.Id())
 }
 
 func TestResourcePipelineCreate_Error(t *testing.T) {
@@ -675,6 +757,7 @@ func TestZeroWorkers(t *testing.T) {
 						ForceSendFields: []string{"NumWorkers"},
 					},
 				},
+				ForceSendFields: []string{"Serverless"},
 			}).Return(&pipelines.CreatePipelineResponse{
 				PipelineId: "abcd",
 			}, nil)
@@ -728,6 +811,7 @@ func TestAutoscaling(t *testing.T) {
 						},
 					},
 				},
+				ForceSendFields: []string{"Serverless"},
 			}).Return(&pipelines.CreatePipelineResponse{
 				PipelineId: "abcd",
 			}, nil)
@@ -777,6 +861,7 @@ func TestDefault(t *testing.T) {
 						Label: "default",
 					},
 				},
+				ForceSendFields: []string{"Serverless"},
 			}).Return(&pipelines.CreatePipelineResponse{
 				PipelineId: "abcd",
 			}, nil)
@@ -846,8 +931,9 @@ func TestUpdatePipelineCatalogInPlace(t *testing.T) {
 				Filters: &pipelines.Filters{
 					Include: []string{"com.databricks.include"},
 				},
-				Channel: "CURRENT",
-				Edition: "ADVANCED",
+				Channel:         "CURRENT",
+				Edition:         "ADVANCED",
+				ForceSendFields: []string{"Serverless"},
 			}).Return(nil)
 			e.Get(mock.Anything, pipelines.GetPipelineRequest{
 				PipelineId: "abcd",

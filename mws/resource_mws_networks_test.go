@@ -2,6 +2,7 @@ package mws
 
 import (
 	"testing"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -318,6 +319,65 @@ func TestResourceNetworkDelete(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc/nid", d.Id())
+}
+
+func TestResourceNetworkDelete_RetriesWhileAttachedToWorkspace(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/accounts/abc/networks/nid",
+				Response: apierr.APIError{
+					ErrorCode: "MALFORMED_REQUEST",
+					Message:   "Cannot delete a network while it is attached to a workspace (7474653688444518)",
+				},
+				Status: 400,
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/accounts/abc/networks/nid",
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/networks/nid",
+				Response: apierr.APIError{
+					ErrorCode: "NOT_FOUND",
+					Message:   "Yes, it's not found",
+				},
+				Status: 404,
+			},
+		},
+		Resource: ResourceMwsNetworks(),
+		Delete:   true,
+		ID:       "abc/nid",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc/nid", d.Id())
+}
+
+func TestResourceNetworkDelete_GivesUpWhenStillAttachedAfterTimeout(t *testing.T) {
+	defaultTimeout := deleteWhileAttachedTimeout
+	deleteWhileAttachedTimeout = 2 * time.Second
+	defer func() { deleteWhileAttachedTimeout = defaultTimeout }()
+
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "DELETE",
+				Resource:     "/api/2.0/accounts/abc/networks/nid",
+				ReuseRequest: true,
+				Response: apierr.APIError{
+					ErrorCode: "MALFORMED_REQUEST",
+					Message:   "Cannot delete a network while it is attached to a workspace (7474653688444518)",
+				},
+				Status: 400,
+			},
+		},
+		Resource: ResourceMwsNetworks(),
+		Delete:   true,
+		ID:       "abc/nid",
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Cannot delete a network while it is attached to a workspace")
 }
 
 func TestResourceNetworkDelete_Error(t *testing.T) {

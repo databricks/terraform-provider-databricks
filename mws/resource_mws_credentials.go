@@ -104,8 +104,10 @@ func ResourceMwsCredentials() common.Resource {
 			if err != nil {
 				return err
 			}
-			_, err = acc.Credentials.DeleteByCredentialsId(ctx, credsId)
-			return err
+			return retryDeleteWhileAttached(ctx, func() error {
+				_, err := acc.Credentials.DeleteByCredentialsId(ctx, credsId)
+				return err
+			})
 		},
 		Schema: common.StructToSchema(CredentialInfo{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			// nolint

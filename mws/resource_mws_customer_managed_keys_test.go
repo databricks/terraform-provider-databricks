@@ -208,6 +208,41 @@ func TestResourceCustomerManagedKeyDelete(t *testing.T) {
 	assert.Equal(t, "abc/cmkid", d.Id())
 }
 
+func TestResourceCustomerManagedKeyDelete_RetriesWhileUsedByWorkspace(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/accounts/abc/customer-managed-keys/cmkid",
+				Response: apierr.APIError{
+					ErrorCode: "INVALID_STATE",
+					Message:   "Unable to delete, customer managed key cmkid is being used by active workspace 7474653688444518",
+				},
+				Status: 400,
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/accounts/abc/customer-managed-keys/cmkid",
+				Status:   200,
+			},
+		},
+		Resource: ResourceMwsCustomerManagedKeys(),
+		HCL: `
+			account_id = "abc"
+
+			aws_key_info {
+				key_arn   = "key-arn"
+				key_alias = "key-alias"
+			}
+			use_cases = ["MANAGED_SERVICES"]
+		`,
+		ID:     "abc/cmkid",
+		Delete: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc/cmkid", d.Id())
+}
+
 func TestCmkStateUpgrader(t *testing.T) {
 	state, err := migrateResourceCustomerManagedKeyV0(context.Background(),
 		map[string]any{}, nil)

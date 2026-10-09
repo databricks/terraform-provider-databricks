@@ -803,9 +803,11 @@ func (c *DatabricksClient) Scim(ctx context.Context, method, path string, reques
 	if !isAccountLevelFromApiLevel(apiLevel, c) {
 		visitors = append(visitors, c.AddWorkspaceIdHeader)
 	}
-	return c.Do(ctx, method, path, map[string]string{
-		"Content-Type": "application/scim+json; charset=utf-8",
-	}, nil, request, response, visitors...)
+	return retryScimConcurrentUpdate(ctx, func(ctx context.Context) error {
+		return c.Do(ctx, method, path, map[string]string{
+			"Content-Type": "application/scim+json; charset=utf-8",
+		}, nil, request, response, visitors...)
+	})
 }
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination

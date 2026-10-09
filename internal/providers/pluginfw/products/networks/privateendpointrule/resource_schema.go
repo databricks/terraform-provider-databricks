@@ -1,6 +1,7 @@
 package privateendpointrule
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -19,10 +20,7 @@ import (
 // opting in needs no config or state change. `make diff-schema` does NOT
 // guard this parity: it dumps the default (SDKv2) provider, and this resource
 // is opt-in, so the PF schema below is never introspected by that gate.
-// TestSchema_MatchesSDKv2 asserts the parity instead. The one intentional
-// divergence is gcp_endpoint.service_attachment: SDKv2 leaves it updatable
-// (ForceNew=false), but the Update path never sends gcp_endpoint, so an edit
-// is silently dropped into a perpetual diff; PF marks it RequiresReplace.
+// TestSchema_MatchesSDKv2 asserts the parity instead.
 //
 // Attribute descriptions are sourced from the SDK struct comments
 // (databricks-sdk-go service/settings) and surfaced through
@@ -207,7 +205,15 @@ func resourceSchema() schema.Schema {
 					Attributes: map[string]schema.Attribute{
 						"all_vpc_sc_services": schema.BoolAttribute{
 							Optional:            true,
-							MarkdownDescription: "All Google APIs that support VPC Service Controls.",
+							MarkdownDescription: "All Google APIs that support VPC Service Controls. Must be true when configured; omit to select another target.",
+							Validators: []validator.Bool{
+								boolvalidator.Equals(true),
+								// An omitted nested block is [], not null; match its required attribute.
+								boolvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("service_attachment"),
+									path.MatchRelative().AtParent().AtName("google_api_endpoints").AtAnyListIndex().AtName("endpoints"),
+								),
+							},
 						},
 						"psc_endpoint_uri": schema.StringAttribute{
 							Computed:            true,
@@ -216,13 +222,13 @@ func resourceSchema() schema.Schema {
 								stringplanmodifier.UseStateForUnknown(),
 							},
 						},
-						// service_attachment is create-only: toUpdateRequest never
-						// adds gcp_endpoint to the update mask, so an edit would be
-						// silently dropped and leave a perpetual diff. RequiresReplace
-						// matches its create-only siblings (endpoint_service, etc.).
+						// The API only permits first-party targets to be updated in place.
 						"service_attachment": schema.StringAttribute{
 							Optional:            true,
 							MarkdownDescription: "(GCP only) The full URL of the target service attachment, e.g. `projects/my-project/regions/us-east4/serviceAttachments/my-attachment`. Changing this forces a new resource.",
+							Validators: []validator.String{
+								stringvalidator.LengthAtLeast(1),
+							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
@@ -237,9 +243,12 @@ func resourceSchema() schema.Schema {
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"endpoints": schema.ListAttribute{
-										Optional:            true,
+										Required:            true,
 										ElementType:         types.StringType,
 										MarkdownDescription: "Google API hostnames. Use `googleapis.com` to cover all Google APIs.",
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(1),
+										},
 									},
 								},
 							},

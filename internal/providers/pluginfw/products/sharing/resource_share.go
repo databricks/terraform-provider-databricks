@@ -329,7 +329,6 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	matchOrder(shareInfo.Objects, stateGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
-	suppressCDFEnabledDiff(shareInfo)
 
 	var newState ShareInfoExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, shareInfo, &newState)...)

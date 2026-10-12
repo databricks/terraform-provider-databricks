@@ -6,6 +6,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa/terraformtest"
 )
 
-func TestTerraformGroupLifecycle(t *testing.T) {
-	terraformtest.Run(t)
+func TestTerraform(t *testing.T) {
+	terraformtest.Run(t, "testdata")
 }

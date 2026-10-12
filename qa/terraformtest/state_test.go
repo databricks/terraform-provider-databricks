@@ -58,24 +58,38 @@ func TestSelectedAttributeFailures(t *testing.T) {
 	}
 }
 
-func TestResourceInventoryIncludesModulesAndDataSources(t *testing.T) {
+func TestSelectedResourcesIncludeModulesAndDataSources(t *testing.T) {
 	s := groupAssertion(nil)
 	state := groupState()
 	state.Values.RootModule.ChildModules = []*tfjson.StateModule{{Resources: []*tfjson.StateResource{{Address: `module.child.data.databricks_group.lookup["a"]`}}}}
-	require.ErrorContains(t, s.check(state), "state resource inventory")
+	require.NoError(t, s.check(state))
 	s.expected.Resources[`module.child.data.databricks_group.lookup["a"]`] = expectedResource{}
 	require.NoError(t, s.check(state))
 	delete(s.expected.Resources, "databricks_group.this")
-	require.ErrorContains(t, s.check(state), "state resource inventory")
-	require.ErrorContains(t, groupAssertion(nil).check(stateWithResources()), "state resource inventory")
+	require.NoError(t, s.check(state))
+	state.Values.RootModule.ChildModules = nil
+	require.ErrorContains(t, s.check(state), `step 2 (rename): module.child.data.databricks_group.lookup["a"]: resource missing from state`)
+	require.ErrorContains(t, groupAssertion(nil).check(stateWithResources()), "databricks_group.this: resource missing from state")
+	require.ErrorContains(t, groupAssertion(nil).check(nil), "terraform state is unavailable")
+}
+
+func TestEmptyStepExpectationsDoNotEnforceInventory(t *testing.T) {
+	for _, resources := range []map[string]expectedResource{nil, {}} {
+		s := stateAssertion{expected: expectedState{Resources: resources}}
+		require.NoError(t, s.check(groupState()))
+		require.NoError(t, s.check(stateWithResources()))
+	}
 }
 
 func TestDestroyRequiresEmptyState(t *testing.T) {
-	s := stateAssertion{label: "step 3 (destroy)", expected: expectedState{Resources: map[string]expectedResource{}}}
+	s := emptyStateAssertion{label: "step 3 (destroy)"}
 	require.NoError(t, s.check(&tfjson.State{}))
 	require.NoError(t, s.check(stateWithResources()))
-	require.ErrorContains(t, s.check(groupState()), "step 3 (destroy): state resource inventory")
-	require.ErrorContains(t, s.check(nil), "Terraform state is unavailable")
+	require.ErrorContains(t, s.check(groupState()), "step 3 (destroy): expected empty state after destroy, found resources [databricks_group.this]")
+	require.ErrorContains(t, s.check(nil), "terraform state is unavailable")
+	state := stateWithResources()
+	state.Values.RootModule.ChildModules = []*tfjson.StateModule{{Resources: []*tfjson.StateResource{{Address: "module.child.data.databricks_group.lookup"}}}}
+	require.ErrorContains(t, s.check(state), "found resources [module.child.data.databricks_group.lookup]")
 }
 
 func TestStateNumbersPreserveLargeIntegers(t *testing.T) {

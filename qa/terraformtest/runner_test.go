@@ -17,7 +17,7 @@ import (
 func TestStepsPreserveConfigurationAndAlwaysDestroy(t *testing.T) {
 	h := httpfixture.NewHandler()
 	definition := &testDefinition{Steps: []step{
-		{Name: "create", Terraform: "first", State: &expectedState{Resources: map[string]expectedResource{}}},
+		{Name: "create", Terraform: "first", State: &expectedState{Resources: map[string]expectedResource{"databricks_group.this": {}}}},
 		{Name: "rename", Terraform: "second"},
 	}}
 	steps := testSteps(t, definition, h)
@@ -32,7 +32,20 @@ func TestStepsPreserveConfigurationAndAlwaysDestroy(t *testing.T) {
 	require.Len(t, steps[2].ConfigStateChecks, 1)
 	var resp statecheck.CheckStateResponse
 	steps[2].ConfigStateChecks[0].CheckState(context.Background(), statecheck.CheckStateRequest{State: groupState()}, &resp)
-	require.ErrorContains(t, resp.Error, "step 3 (destroy): state resource inventory")
+	require.ErrorContains(t, resp.Error, "step 3 (destroy): expected empty state after destroy")
+}
+
+func TestStepsKeepStateChecksOptionalAndDestroyMandatory(t *testing.T) {
+	for _, state := range []*expectedState{nil, {}, {Resources: map[string]expectedResource{}}} {
+		steps := testSteps(t, &testDefinition{Steps: []step{{Name: "create", Terraform: "config", State: state}}}, httpfixture.NewHandler())
+		require.Empty(t, steps[0].ConfigStateChecks)
+		require.Len(t, steps[1].ConfigStateChecks, 1)
+		var resp statecheck.CheckStateResponse
+		steps[1].ConfigStateChecks[0].CheckState(context.Background(), statecheck.CheckStateRequest{State: groupState()}, &resp)
+		require.ErrorContains(t, resp.Error, "step 2 (destroy): expected empty state after destroy")
+		steps[1].ConfigStateChecks[0].CheckState(context.Background(), statecheck.CheckStateRequest{State: stateWithResources()}, &resp)
+		require.NoError(t, resp.Error)
+	}
 }
 
 func TestStepInstallsAndVerifiesFixtures(t *testing.T) {

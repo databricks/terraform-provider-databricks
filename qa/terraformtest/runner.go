@@ -74,8 +74,8 @@ func configureTerraform(t *testing.T) {
 	}
 }
 
-// testSteps appends a numbered destroy using the last HCL configuration. Empty
-// state is mandatory even when the YAML omits an explicit destroy assertion.
+// testSteps appends a numbered destroy using the last HCL configuration.
+// Cleanup always requires empty state, independently of optional step checks.
 func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Handler) []resource.TestStep {
 	t.Helper()
 	steps := make([]resource.TestStep, 0, len(definition.Steps)+1)
@@ -84,9 +84,10 @@ func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Ha
 		steps = append(steps, terraformStep(t, handler, label, s.Terraform, s.Calls, s.State))
 	}
 	last := definition.Steps[len(definition.Steps)-1]
-	empty := &expectedState{Resources: map[string]expectedResource{}}
-	cleanup := terraformStep(t, handler, stepLabel(len(definition.Steps), "destroy"), last.Terraform, definition.Destroy.Calls, empty)
+	label := stepLabel(len(definition.Steps), "destroy")
+	cleanup := terraformStep(t, handler, label, last.Terraform, definition.Destroy.Calls, nil)
 	cleanup.Destroy = true
+	cleanup.ConfigStateChecks = []statecheck.StateCheck{emptyStateAssertion{label: label}}
 	steps = append(steps, cleanup)
 	return steps
 }
@@ -109,7 +110,7 @@ func terraformStep(t *testing.T, handler *httpfixture.Handler, label, hcl string
 			}
 		},
 	}
-	if state != nil {
+	if state != nil && len(state.Resources) != 0 {
 		s.ConfigStateChecks = []statecheck.StateCheck{stateAssertion{label: label, expected: *state}}
 	}
 	return s

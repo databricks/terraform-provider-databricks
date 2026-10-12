@@ -23,27 +23,55 @@ func (s stateAssertion) CheckState(_ context.Context, req statecheck.CheckStateR
 	resp.Error = s.check(req.State)
 }
 
-// check requires the exact resource inventory but tolerates unasserted
-// attributes, allowing provider schemas to gain optional fields.
+// check only requires listed resources and attributes, keeping assertions
+// focused on the behavior under test rather than the entire state shape.
 func (s stateAssertion) check(state *tfjson.State) error {
-	if state == nil {
-		return fmt.Errorf("%s: Terraform state is unavailable", s.label)
+	actual, err := resourcesInState(state)
+	if err != nil {
+		return fmt.Errorf("%s: %w", s.label, err)
 	}
-	actual := map[string]*tfjson.StateResource{}
-	if state.Values != nil {
-		collectResources(state.Values.RootModule, actual)
-	}
-	wantedAddresses := slices.Sorted(maps.Keys(s.expected.Resources))
-	actualAddresses := slices.Sorted(maps.Keys(actual))
-	if !slices.Equal(wantedAddresses, actualAddresses) {
-		return fmt.Errorf("%s: state resource inventory: expected %v, got %v", s.label, wantedAddresses, actualAddresses)
-	}
-	for _, address := range wantedAddresses {
-		if err := checkAttributes(address, s.expected.Resources[address].Attributes, actual[address].AttributeValues); err != nil {
+	for _, address := range slices.Sorted(maps.Keys(s.expected.Resources)) {
+		resource, exists := actual[address]
+		if !exists {
+			return fmt.Errorf("%s: %s: resource missing from state", s.label, address)
+		}
+		if err := checkAttributes(address, s.expected.Resources[address].Attributes, resource.AttributeValues); err != nil {
 			return fmt.Errorf("%s: %w", s.label, err)
 		}
 	}
 	return nil
+}
+
+// emptyStateAssertion is mandatory cleanup validation, independent of optional
+// per-step assertions supplied by a test author.
+type emptyStateAssertion struct {
+	label string
+}
+
+func (s emptyStateAssertion) CheckState(_ context.Context, req statecheck.CheckStateRequest, resp *statecheck.CheckStateResponse) {
+	resp.Error = s.check(req.State)
+}
+
+func (s emptyStateAssertion) check(state *tfjson.State) error {
+	actual, err := resourcesInState(state)
+	if err != nil {
+		return fmt.Errorf("%s: %w", s.label, err)
+	}
+	if len(actual) != 0 {
+		return fmt.Errorf("%s: expected empty state after destroy, found resources %v", s.label, slices.Sorted(maps.Keys(actual)))
+	}
+	return nil
+}
+
+func resourcesInState(state *tfjson.State) (map[string]*tfjson.StateResource, error) {
+	if state == nil {
+		return nil, fmt.Errorf("terraform state is unavailable")
+	}
+	resources := map[string]*tfjson.StateResource{}
+	if state.Values != nil {
+		collectResources(state.Values.RootModule, resources)
+	}
+	return resources, nil
 }
 
 func collectResources(module *tfjson.StateModule, result map[string]*tfjson.StateResource) {

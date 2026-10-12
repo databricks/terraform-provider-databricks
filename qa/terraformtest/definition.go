@@ -29,11 +29,10 @@ type step struct {
 
 type destroy struct {
 	Calls []httpfixture.Call `yaml:"calls"`
-	State *expectedState     `yaml:"state,omitempty"`
 }
 
 type expectedState struct {
-	Resources map[string]expectedResource `yaml:"resources"`
+	Resources map[string]expectedResource `yaml:"resources,omitempty"`
 }
 
 type expectedResource struct {
@@ -84,21 +83,12 @@ func (d *testDefinition) validate() error {
 			return fmt.Errorf("%s: %w", label, err)
 		}
 	}
-	if err := validateState(d.Destroy.State); err != nil {
-		return fmt.Errorf("destroy: %w", err)
-	}
-	if d.Destroy.State != nil && len(d.Destroy.State.Resources) != 0 {
-		return fmt.Errorf("destroy must expect empty state")
-	}
 	return d.validateCalls()
 }
 
 func validateState(state *expectedState) error {
 	if state == nil {
 		return nil
-	}
-	if state.Resources == nil {
-		return fmt.Errorf("state.resources must list the expected addresses; use {} for empty state")
 	}
 	for address, resource := range state.Resources {
 		if address == "" {

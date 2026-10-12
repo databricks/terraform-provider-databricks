@@ -21,7 +21,6 @@ steps:
           attributes: {id: group-id}
 destroy:
   calls: []
-  state: {resources: {}}
 `
 
 func TestDecodeDefinition(t *testing.T) {
@@ -33,7 +32,7 @@ func TestDecodeDefinition(t *testing.T) {
 }
 `, d.Steps[0].Terraform)
 	require.Equal(t, "group-id", d.Steps[0].State.Resources["databricks_group.this"].Attributes["id"])
-	require.Empty(t, d.Destroy.State.Resources)
+	require.Empty(t, d.Destroy.Calls)
 }
 
 func TestRejectInvalidDefinition(t *testing.T) {
@@ -45,8 +44,9 @@ func TestRejectInvalidDefinition(t *testing.T) {
 		{"unnamed step", strings.Replace(minimalDefinition, "name: create", "name: ''", 1), "name and terraform"},
 		{"no HCL", "version: 1\nsteps: [{name: create}]", "name and terraform"},
 		{"multiple documents", minimalDefinition + "---\nversion: 1\n", "single YAML document"},
-		{"missing inventory", strings.Replace(minimalDefinition, "state: {resources: {}}", "state: {}", 1), "state.resources"},
-		{"nonempty destroy", strings.Replace(minimalDefinition, "state: {resources: {}}", "state: {resources: {databricks_group.this: {}}}", 1), "destroy must expect empty state"},
+		{"empty resource address", strings.Replace(minimalDefinition, "databricks_group.this:", "'':", 1), "state resource address must not be empty"},
+		{"destroy state override", minimalDefinition + "  state: {resources: {}}\n", "field state not found"},
+		{"nonempty destroy override", minimalDefinition + "  state: {resources: {databricks_group.this: {}}}\n", "field state not found"},
 		{"invalid second step", `version: 1
 steps:
   - name: create
@@ -64,6 +64,32 @@ steps:
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := decodeDefinition(strings.NewReader(tc.yaml))
 			require.ErrorContains(t, err, tc.message)
+		})
+	}
+}
+
+func TestDecodeOptionalStateChecks(t *testing.T) {
+	for _, tc := range []struct {
+		name, expectation string
+	}{
+		{"omitted", ""},
+		{"empty state", "    state: {}\n"},
+		{"empty resources", "    state: {resources: {}}\n"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			d, err := decodeDefinition(strings.NewReader(`version: 1
+steps:
+  - name: read
+    terraform: |
+      provider "databricks" {}
+` + tc.expectation))
+			require.NoError(t, err)
+			if tc.expectation == "" {
+				require.Nil(t, d.Steps[0].State)
+			} else {
+				require.NotNil(t, d.Steps[0].State)
+				require.Empty(t, d.Steps[0].State.Resources)
+			}
 		})
 	}
 }

@@ -75,17 +75,17 @@ func configureTerraform(t *testing.T) {
 }
 
 // testSteps appends a numbered destroy using the last HCL configuration.
-// Cleanup always requires empty state, independently of optional step checks.
+// Cleanup always requires empty state.
 func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Handler) []resource.TestStep {
 	t.Helper()
 	steps := make([]resource.TestStep, 0, len(definition.Steps)+1)
 	for i, s := range definition.Steps {
 		label := stepLabel(i, s.Name)
-		steps = append(steps, terraformStep(t, handler, label, s.Terraform, s.Calls, s.State))
+		steps = append(steps, terraformStep(t, handler, label, s.Terraform, s.Calls))
 	}
 	last := definition.Steps[len(definition.Steps)-1]
 	label := stepLabel(len(definition.Steps), "destroy")
-	cleanup := terraformStep(t, handler, label, last.Terraform, definition.Destroy.Calls, nil)
+	cleanup := terraformStep(t, handler, label, last.Terraform, definition.Destroy.Calls)
 	cleanup.Destroy = true
 	cleanup.ConfigStateChecks = []statecheck.StateCheck{emptyStateAssertion{label: label}}
 	steps = append(steps, cleanup)
@@ -93,7 +93,7 @@ func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Ha
 }
 
 // terraformStep treats plan, apply, and consistency reads as one fixture phase.
-func terraformStep(t *testing.T, handler *httpfixture.Handler, label, hcl string, calls []httpfixture.Call, state *expectedState) resource.TestStep {
+func terraformStep(t *testing.T, handler *httpfixture.Handler, label, hcl string, calls []httpfixture.Call) resource.TestStep {
 	t.Helper()
 	s := resource.TestStep{
 		Config: hcl,
@@ -109,9 +109,6 @@ func terraformStep(t *testing.T, handler *httpfixture.Handler, label, hcl string
 				t.Error(err)
 			}
 		},
-	}
-	if state != nil && len(state.Resources) != 0 {
-		s.ConfigStateChecks = []statecheck.StateCheck{stateAssertion{label: label, expected: *state}}
 	}
 	return s
 }

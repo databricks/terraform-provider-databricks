@@ -15,10 +15,6 @@ steps:
         display_name = "test"
       }
     calls: []
-    state:
-      resources:
-        databricks_group.this:
-          attributes: {id: group-id}
 destroy:
   calls: []
 `
@@ -31,7 +27,6 @@ func TestDecodeDefinition(t *testing.T) {
   display_name = "test"
 }
 `, d.Steps[0].Terraform)
-	require.Equal(t, "group-id", d.Steps[0].State.Resources["databricks_group.this"].Attributes["id"])
 	require.Empty(t, d.Destroy.Calls)
 }
 
@@ -44,7 +39,6 @@ func TestRejectInvalidDefinition(t *testing.T) {
 		{"unnamed step", strings.Replace(minimalDefinition, "name: create", "name: ''", 1), "name and terraform"},
 		{"no HCL", "version: 1\nsteps: [{name: create}]", "name and terraform"},
 		{"multiple documents", minimalDefinition + "---\nversion: 1\n", "single YAML document"},
-		{"empty resource address", strings.Replace(minimalDefinition, "databricks_group.this:", "'':", 1), "state resource address must not be empty"},
 		{"destroy state override", minimalDefinition + "  state: {resources: {}}\n", "field state not found"},
 		{"nonempty destroy override", minimalDefinition + "  state: {resources: {databricks_group.this: {}}}\n", "field state not found"},
 		{"invalid second step", `version: 1
@@ -68,32 +62,6 @@ steps:
 	}
 }
 
-func TestDecodeOptionalStateChecks(t *testing.T) {
-	for _, tc := range []struct {
-		name, expectation string
-	}{
-		{"omitted", ""},
-		{"empty state", "    state: {}\n"},
-		{"empty resources", "    state: {resources: {}}\n"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			d, err := decodeDefinition(strings.NewReader(`version: 1
-steps:
-  - name: read
-    terraform: |
-      provider "databricks" {}
-` + tc.expectation))
-			require.NoError(t, err)
-			if tc.expectation == "" {
-				require.Nil(t, d.Steps[0].State)
-			} else {
-				require.NotNil(t, d.Steps[0].State)
-				require.Empty(t, d.Steps[0].State.Resources)
-			}
-		})
-	}
-}
-
 func TestRejectDeferredFeatures(t *testing.T) {
 	for _, field := range []string{"initial_state", "recording", "environment_template", "initial_state_template", "force_order", "strict"} {
 		t.Run(field, func(t *testing.T) {
@@ -101,7 +69,7 @@ func TestRejectDeferredFeatures(t *testing.T) {
 			require.ErrorContains(t, err, "field "+field+" not found")
 		})
 	}
-	for _, field := range []string{"plan", "plan_only", "expect_error"} {
+	for _, field := range []string{"plan", "plan_only", "expect_error", "state"} {
 		t.Run(field, func(t *testing.T) {
 			input := strings.Replace(minimalDefinition, "    calls: []", "    "+field+": {}\n    calls: []", 1)
 			_, err := decodeDefinition(strings.NewReader(input))
@@ -138,7 +106,7 @@ steps:
 	require.Equal(t, map[string]any{"workspace_id": "12345"}, metadata[0].Response.Body.JSON)
 }
 
-func TestOptionalStateAndMalformedFixtureFields(t *testing.T) {
+func TestMalformedFixtureFields(t *testing.T) {
 	d, err := decodeDefinition(strings.NewReader(`version: 1
 steps:
   - name: read
@@ -146,7 +114,7 @@ steps:
       provider "databricks" {}
 `))
 	require.NoError(t, err)
-	require.Nil(t, d.Steps[0].State)
+	require.Equal(t, "read", d.Steps[0].Name)
 	_, err = decodeDefinition(strings.NewReader(`version: 1
 steps:
   - name: read

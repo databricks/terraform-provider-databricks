@@ -2,7 +2,6 @@
 package terraformtest
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -24,19 +23,10 @@ type step struct {
 	Name      string             `yaml:"name"`
 	Terraform string             `yaml:"terraform"`
 	Calls     []httpfixture.Call `yaml:"calls"`
-	State     *expectedState     `yaml:"state,omitempty"`
 }
 
 type destroy struct {
 	Calls []httpfixture.Call `yaml:"calls"`
-}
-
-type expectedState struct {
-	Resources map[string]expectedResource `yaml:"resources,omitempty"`
-}
-
-type expectedResource struct {
-	Attributes map[string]any `yaml:"attributes"`
 }
 
 func loadDefinition(path string) (*testDefinition, error) {
@@ -79,26 +69,8 @@ func (d *testDefinition) validate() error {
 		if strings.TrimSpace(s.Name) == "" || strings.TrimSpace(s.Terraform) == "" {
 			return fmt.Errorf("%s: name and terraform configuration are required", label)
 		}
-		if err := validateState(s.State); err != nil {
-			return fmt.Errorf("%s: %w", label, err)
-		}
 	}
 	return d.validateCalls()
-}
-
-func validateState(state *expectedState) error {
-	if state == nil {
-		return nil
-	}
-	for address, resource := range state.Resources {
-		if address == "" {
-			return fmt.Errorf("state resource address must not be empty")
-		}
-		if _, err := json.Marshal(resource.Attributes); err != nil {
-			return fmt.Errorf("%s: attributes must contain JSON-compatible values: %w", address, err)
-		}
-	}
-	return nil
 }
 
 // validateCalls checks every fixture set up front, including later steps and

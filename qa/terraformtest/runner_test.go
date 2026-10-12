@@ -17,7 +17,7 @@ import (
 func TestStepsPreserveConfigurationAndAlwaysDestroy(t *testing.T) {
 	h := httpfixture.NewHandler()
 	definition := &testDefinition{Steps: []step{
-		{Name: "create", Terraform: "first", State: &expectedState{Resources: map[string]expectedResource{"databricks_group.this": {}}}},
+		{Name: "create", Terraform: "first"},
 		{Name: "rename", Terraform: "second"},
 	}}
 	steps := testSteps(t, definition, h)
@@ -27,7 +27,7 @@ func TestStepsPreserveConfigurationAndAlwaysDestroy(t *testing.T) {
 	require.Equal(t, "second", steps[2].Config)
 	require.False(t, steps[0].Destroy)
 	require.True(t, steps[2].Destroy)
-	require.Len(t, steps[0].ConfigStateChecks, 1)
+	require.Empty(t, steps[0].ConfigStateChecks)
 	require.Empty(t, steps[1].ConfigStateChecks)
 	require.Len(t, steps[2].ConfigStateChecks, 1)
 	var resp statecheck.CheckStateResponse
@@ -35,25 +35,12 @@ func TestStepsPreserveConfigurationAndAlwaysDestroy(t *testing.T) {
 	require.ErrorContains(t, resp.Error, "step 3 (destroy): expected empty state after destroy")
 }
 
-func TestStepsKeepStateChecksOptionalAndDestroyMandatory(t *testing.T) {
-	for _, state := range []*expectedState{nil, {}, {Resources: map[string]expectedResource{}}} {
-		steps := testSteps(t, &testDefinition{Steps: []step{{Name: "create", Terraform: "config", State: state}}}, httpfixture.NewHandler())
-		require.Empty(t, steps[0].ConfigStateChecks)
-		require.Len(t, steps[1].ConfigStateChecks, 1)
-		var resp statecheck.CheckStateResponse
-		steps[1].ConfigStateChecks[0].CheckState(context.Background(), statecheck.CheckStateRequest{State: groupState()}, &resp)
-		require.ErrorContains(t, resp.Error, "step 2 (destroy): expected empty state after destroy")
-		steps[1].ConfigStateChecks[0].CheckState(context.Background(), statecheck.CheckStateRequest{State: stateWithResources()}, &resp)
-		require.NoError(t, resp.Error)
-	}
-}
-
 func TestStepInstallsAndVerifiesFixtures(t *testing.T) {
 	h := httpfixture.NewHandler()
 	s := terraformStep(t, h, "step 1 (read)", "config", []httpfixture.Call{{
 		Request:  httpfixture.Request{Method: "GET", Path: "/groups"},
 		Response: httpfixture.Response{Status: 200},
-	}}, nil)
+	}})
 	s.PreConfig()
 	require.ErrorContains(t, h.Verify(), "step 1 (read): unconsumed call 1")
 	w := httptest.NewRecorder()

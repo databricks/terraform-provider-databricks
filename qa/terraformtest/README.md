@@ -40,7 +40,7 @@ configured through process environment variables.
 ## Test definition
 
 Use `version: 1`, followed by `steps` and `destroy`. Each step has a human
-`name`, literal `terraform` HCL, `calls`, and optional `state` expectations.
+`name`, literal `terraform` HCL, and `calls`.
 State persists across steps. Destroy always runs using the last configuration;
 its HTTP exchanges belong under `destroy.calls`, and empty state is always
 checked. The testing framework also attempts cleanup after an interrupted test.
@@ -61,22 +61,6 @@ Optional `host_metadata` supplies a reusable JSON response for
 `GET /.well-known/databricks-config` throughout the test, keeping repeated
 client initialization out of the consumable resource exchanges.
 
-State assertions are entirely optional. `state.resources` selects Terraform
-instance addresses to check, including data sources, modules, and indexed
-resources; it is not a complete inventory. Listed resources must exist, but
-unlisted resources are allowed. Each resource's `attributes` selects properties
-to check through the testing framework's supported state-check API. Extra
-attributes are allowed, including within asserted objects. Scalar values and
-lists are compared exactly. A resource entry with no attributes checks only
-that the resource exists.
-
-Omitting `state`, using `state: {}`, or using `state: {resources: {}}` adds no
-explicit state checks to a step. Terraform's normal apply and post-apply
-plan-consistency checks still run. Following
-[HashiCorp's testing guidance](https://developer.hashicorp.com/terraform/plugin/testing/testing-patterns#basic-test-to-verify-attributes),
-assert the attributes relevant to the behavior being tested, especially computed
-values and response-to-state conversions, rather than snapshotting every field.
-
 Destroy always requires an empty resource inventory, including data sources in
 child modules. This is enforced by the engine; `destroy` accepts only `calls`,
 with no configurable final-state assertion.
@@ -86,6 +70,6 @@ with no configurable final-state assertion.
 Tests start with empty Terraform state and handwritten fixtures. YAML has
 strict field validation: initial checkpoints, recording/setup templates,
 plan assertions, plan-only steps, expected client errors, forced HTTP order,
-and strict attribute matching are not yet supported. Unsupported fields fail
-before any Terraform operations. The step/call/state layout is kept stable
+and optional per-step state assertions are not yet supported. Unsupported fields
+fail before any Terraform operations. The step/call layout is kept stable
 so these capabilities can be added independently.

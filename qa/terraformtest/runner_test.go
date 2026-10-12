@@ -15,8 +15,7 @@ import (
 )
 
 func TestStepsPreserveConfigurationAndAlwaysDestroy(t *testing.T) {
-	h, err := httpfixture.NewHandler(nil)
-	require.NoError(t, err)
+	h := httpfixture.NewHandler()
 	definition := &testDefinition{Steps: []step{
 		{Name: "create", Terraform: "first", State: &expectedState{Resources: map[string]expectedResource{}}},
 		{Name: "rename", Terraform: "second"},
@@ -37,8 +36,7 @@ func TestStepsPreserveConfigurationAndAlwaysDestroy(t *testing.T) {
 }
 
 func TestStepInstallsAndVerifiesFixtures(t *testing.T) {
-	h, err := httpfixture.NewHandler(nil)
-	require.NoError(t, err)
+	h := httpfixture.NewHandler()
 	s := terraformStep(t, h, "step 1 (read)", "config", []httpfixture.Call{{
 		Request:  httpfixture.Request{Method: "GET", Path: "/groups"},
 		Response: httpfixture.Response{Status: 200},

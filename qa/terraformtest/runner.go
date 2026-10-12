@@ -26,6 +26,7 @@ import (
 
 // Run loads testdata/<test name>.yaml and runs its steps with the real muxed
 // provider. Terraform must be installed; replay never downloads the CLI.
+// Tests must not use t.Parallel because CLI discovery uses process environment.
 func Run(t *testing.T) {
 	t.Helper()
 	path := filepath.Join("testdata", strings.ReplaceAll(t.Name(), "/", "_")+".yaml")
@@ -36,11 +37,13 @@ func Run(t *testing.T) {
 	run(t, definition)
 }
 
+// run keeps the fixture server alive through the framework's deferred destroy,
+// then checks for requests or fixtures left over after cleanup.
 func run(t *testing.T, definition *testDefinition) {
 	t.Helper()
 	configureTerraform(t)
-	handler, err := httpfixture.NewHandler(definition.metadataCalls())
-	if err != nil {
+	handler := httpfixture.NewHandler()
+	if err := handler.SetReusableFixtures(definition.metadataCalls()); err != nil {
 		t.Fatal(err)
 	}
 	server := httptest.NewServer(handler)
@@ -63,6 +66,8 @@ func run(t *testing.T, definition *testDefinition) {
 	})
 }
 
+// configureTerraform disables implicit CLI downloads and optional extra
+// refreshes so machine-local settings cannot change a recorded HTTP transcript.
 func configureTerraform(t *testing.T) {
 	t.Helper()
 	path := os.Getenv("TF_ACC_TERRAFORM_PATH")
@@ -84,6 +89,8 @@ func configureTerraform(t *testing.T) {
 	}
 }
 
+// testSteps appends a numbered destroy using the last HCL configuration. Empty
+// state is mandatory even when the YAML omits an explicit destroy assertion.
 func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Handler) []resource.TestStep {
 	t.Helper()
 	steps := make([]resource.TestStep, 0, len(definition.Steps)+1)
@@ -99,6 +106,7 @@ func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Ha
 	return steps
 }
 
+// terraformStep treats plan, apply, and consistency reads as one fixture phase.
 func terraformStep(t *testing.T, handler *httpfixture.Handler, label, hcl string, calls []httpfixture.Call, state *expectedState) resource.TestStep {
 	t.Helper()
 	s := resource.TestStep{
@@ -110,6 +118,7 @@ func terraformStep(t *testing.T, handler *httpfixture.Handler, label, hcl string
 			}
 		},
 		PostApplyFunc: func() {
+			// Terraform's post-apply consistency plan can consume additional reads.
 			if err := handler.Verify(); err != nil {
 				t.Error(err)
 			}
@@ -121,6 +130,8 @@ func terraformStep(t *testing.T, handler *httpfixture.Handler, label, hcl string
 	return s
 }
 
+// providerFactories uses the production mux so both provider implementations
+// share the same local HTTP boundary.
 func providerFactories(host string) map[string]func() (tfprotov6.ProviderServer, error) {
 	return map[string]func() (tfprotov6.ProviderServer, error){
 		"databricks": func() (tfprotov6.ProviderServer, error) {
@@ -137,6 +148,8 @@ type fixtureLoader struct{}
 func (fixtureLoader) Name() string                   { return "fixture configuration" }
 func (fixtureLoader) Configure(*config.Config) error { return nil }
 
+// fixtureConfig forces local PAT authentication while retaining routing fields,
+// such as account_id, explicitly set in HCL.
 func fixtureConfig(host string) func(*config.Config) error {
 	return func(cfg *config.Config) error {
 		cfg.Host, cfg.Token, cfg.AuthType = host, "fixture-token", "pat"
@@ -154,6 +167,8 @@ type fixtureTransport struct {
 	transport http.RoundTripper
 }
 
+// RoundTrip also rejects redirects outside the fixture server, preventing
+// fixture responses from causing accidental live API calls.
 func (f fixtureTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	expected, err := url.Parse(f.host)
 	if err != nil {

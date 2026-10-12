@@ -23,6 +23,8 @@ func (s stateAssertion) CheckState(_ context.Context, req statecheck.CheckStateR
 	resp.Error = s.check(req.State)
 }
 
+// check requires the exact resource inventory but tolerates unasserted
+// attributes, allowing provider schemas to gain optional fields.
 func (s stateAssertion) check(state *tfjson.State) error {
 	if state == nil {
 		return fmt.Errorf("%s: Terraform state is unavailable", s.label)
@@ -77,6 +79,8 @@ func checkAttributes(address string, expected, actual map[string]any) error {
 	return nil
 }
 
+// jsonValue normalizes YAML expectations and Terraform attribute values without
+// rounding large numbers. Only attribute values are converted, not the state file.
 func jsonValue(value any) (any, error) {
 	encoded, err := json.Marshal(value)
 	if err != nil {
@@ -125,6 +129,8 @@ func describeValue(value any) string {
 	return fmt.Sprintf("%#v", value)
 }
 
+// checkObject applies selected-property checks recursively; extra object keys
+// are allowed for the same reason as unasserted top-level attributes.
 func checkObject(path string, expected, actual map[string]any) error {
 	for _, name := range slices.Sorted(maps.Keys(expected)) {
 		value, present := actual[name]

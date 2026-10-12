@@ -10,7 +10,8 @@ These hermetic tests run in the normal Go test suite, including `-short`;
 they do not require `TF_ACC`, live credentials, or `CLOUD_ENV`. The runner
 does not download Terraform. Client configuration ignores ambient credential
 profiles and environment defaults; SDK HTTP traffic is restricted to the
-test's local fixture server.
+test's local fixture server. Do not use `t.Parallel`: Terraform CLI discovery is
+configured through process environment variables.
 
 ## Test definition
 

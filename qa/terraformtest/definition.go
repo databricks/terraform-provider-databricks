@@ -49,6 +49,8 @@ func loadDefinition(path string) (*testDefinition, error) {
 	return decodeDefinition(file)
 }
 
+// decodeDefinition rejects misspelled or unsupported fields before Terraform
+// runs; accepting them silently could skip the assertions a test intended.
 func decodeDefinition(reader io.Reader) (*testDefinition, error) {
 	decoder := yaml.NewDecoder(reader)
 	decoder.KnownFields(true)
@@ -109,9 +111,11 @@ func validateState(state *expectedState) error {
 	return nil
 }
 
+// validateCalls checks every fixture set up front, including later steps and
+// destroy, so an invalid cleanup fixture cannot interrupt a running lifecycle.
 func (d *testDefinition) validateCalls() error {
-	handler, err := httpfixture.NewHandler(d.metadataCalls())
-	if err != nil {
+	handler := httpfixture.NewHandler()
+	if err := handler.SetReusableFixtures(d.metadataCalls()); err != nil {
 		return err
 	}
 	for i, s := range d.Steps {
@@ -119,14 +123,13 @@ func (d *testDefinition) validateCalls() error {
 		if err := handler.StartStep(stepLabel(i, s.Name), s.Calls); err != nil {
 			return err
 		}
-		handler, err = httpfixture.NewHandler(nil)
-		if err != nil {
-			return err
-		}
+		handler = httpfixture.NewHandler()
 	}
 	return handler.StartStep("destroy", d.Destroy.Calls)
 }
 
+// metadataCalls keeps host discovery reusable because Terraform configures
+// fresh provider clients multiple times within a single step.
 func (d *testDefinition) metadataCalls() []httpfixture.Call {
 	if d.HostMetadata == nil {
 		return nil

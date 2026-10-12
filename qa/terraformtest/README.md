@@ -1,9 +1,33 @@
 # YAML Terraform lifecycle tests
 
-Call `terraformtest.Run(t)` from a Go test. The runner loads
-`testdata/<test name>.yaml` next to that test, replacing `/` in subtest names
-with `_`. Tests run the actual muxed Databricks provider, supporting both
-SDKv2 and Plugin Framework resources.
+Use one small Go wrapper per fixture folder:
+
+```go
+func TestTerraform(t *testing.T) {
+    terraformtest.Run(t, "testdata")
+}
+```
+
+The runner discovers every `.yaml` and `.yml` file directly in that folder
+(non-recursively), relative to the test package. Each file becomes a Go subtest
+named after its filename without the extension. For example,
+`testdata/TestTerraformGroupLifecycle.yaml` appears as
+`TestTerraform/TestTerraformGroupLifecycle` in test output and CI reports.
+Adding a YAML file requires no additional Go test function. Empty folders and
+duplicate filename stems fail instead of silently skipping tests.
+
+Subtests run sequentially in filename order, each with independent Terraform
+state and an HTTP fixture server. A failing lifecycle does not prevent later
+files from running. Select a single file with normal Go filtering:
+
+```sh
+go test ./qa/terraformtest -run '^TestTerraform$/^TestTerraformGroupLifecycle$'
+```
+
+Only selected files are loaded and validated. `go test -list` lists the Go
+wrapper, not dynamically discovered subtests; `go test -v` shows each subtest.
+Tests run the actual muxed Databricks provider, supporting both SDKv2 and
+Plugin Framework resources.
 
 Install Terraform on `PATH`, or set `TF_ACC_TERRAFORM_PATH` to its executable.
 These hermetic tests run in the normal Go test suite, including `-short`;

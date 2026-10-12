@@ -114,18 +114,18 @@ func validateState(state *expectedState) error {
 // validateCalls checks every fixture set up front, including later steps and
 // destroy, so an invalid cleanup fixture cannot interrupt a running lifecycle.
 func (d *testDefinition) validateCalls() error {
-	handler := httpfixture.NewHandler()
-	if err := handler.SetReusableFixtures(d.metadataCalls()); err != nil {
+	metadataHandler := httpfixture.NewHandler()
+	if err := metadataHandler.SetReusableFixtures(d.metadataCalls()); err != nil {
 		return err
 	}
 	for i, s := range d.Steps {
 		// Independent handlers validate the fixtures without requiring consumption.
+		handler := httpfixture.NewHandler()
 		if err := handler.StartStep(stepLabel(i, s.Name), s.Calls); err != nil {
 			return err
 		}
-		handler = httpfixture.NewHandler()
 	}
-	return handler.StartStep("destroy", d.Destroy.Calls)
+	return httpfixture.NewHandler().StartStep("destroy", d.Destroy.Calls)
 }
 
 // metadataCalls keeps host discovery reusable because Terraform configures

@@ -9,8 +9,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/config"
@@ -23,19 +21,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/databricks/terraform-provider-databricks/qa/httpfixture"
 )
-
-// Run loads testdata/<test name>.yaml and runs its steps with the real muxed
-// provider. Terraform must be installed; replay never downloads the CLI.
-// Tests must not use t.Parallel because CLI discovery uses process environment.
-func Run(t *testing.T) {
-	t.Helper()
-	path := filepath.Join("testdata", strings.ReplaceAll(t.Name(), "/", "_")+".yaml")
-	definition, err := loadDefinition(path)
-	if err != nil {
-		t.Fatalf("%s: %v", path, err)
-	}
-	run(t, definition)
-}
 
 // run keeps the fixture server alive through the framework's deferred destroy,
 // then checks for requests or fixtures left over after cleanup.

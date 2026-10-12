@@ -51,8 +51,10 @@ steps:
       resources:
         databricks_group.this:
           attributes:
-            id: group-id
-            display_name: Lifecycle group
+            - path: [id]
+              equals: group-id
+            - path: [display_name]
+              equals: Lifecycle group
   - name: rename
     terraform: |
       resource "databricks_group" "this" {
@@ -124,8 +126,10 @@ steps:
       resources:
         databricks_group.this:
           attributes:
-            id: group-id
-            display_name: Renamed lifecycle group
+            - path: [id]
+              equals: group-id
+            - path: [display_name]
+              equals: Renamed lifecycle group
 destroy:
   calls:
     - request:

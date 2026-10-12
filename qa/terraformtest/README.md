@@ -1,0 +1,54 @@
+# YAML Terraform lifecycle tests
+
+Call `terraformtest.Run(t)` from a Go test. The runner loads
+`testdata/<test name>.yaml` next to that test, replacing `/` in subtest names
+with `_`. Tests run the actual muxed Databricks provider, supporting both
+SDKv2 and Plugin Framework resources.
+
+Install Terraform on `PATH`, or set `TF_ACC_TERRAFORM_PATH` to its executable.
+These hermetic tests run in the normal Go test suite, including `-short`;
+they do not require `TF_ACC`, live credentials, or `CLOUD_ENV`. The runner
+does not download Terraform. Client configuration ignores ambient credential
+profiles and environment defaults; SDK HTTP traffic is restricted to the
+test's local fixture server.
+
+## Test definition
+
+Use `version: 1`, followed by `steps` and `destroy`. Each step has a human
+`name`, literal `terraform` HCL, `calls`, and optional `state` expectations.
+State persists across steps. Destroy always runs using the last configuration;
+its HTTP exchanges belong under `destroy.calls`, and empty state is always
+checked. The testing framework also attempts cleanup after an interrupted test.
+
+Each exchange contains `request` and `response`. Requests specify `method`,
+`path`, optional `query` (values are lists of strings), optional `headers`,
+and `body`. Responses specify an explicit HTTP `status`, optional `headers`,
+and `body`. Use `body: null` for no HTTP body and `body: {json: null}` for JSON
+null. Other JSON values go under `body.json`; IDs are literal, without substitution.
+
+Matching uses the complete request signature. Independent signatures are
+unordered; repeated identical signatures consume their responses FIFO.
+Every HTTP call needs a consumable fixture, including Terraform's plan
+refreshes and the testing framework's post-apply consistency reads.
+Unexpected calls and unused fixtures fail with the step's index and name.
+
+Optional `host_metadata` supplies a reusable JSON response for
+`GET /.well-known/databricks-config` throughout the test, keeping repeated
+client initialization out of the consumable resource exchanges.
+
+`state.resources` lists the exact expected Terraform instance addresses,
+including data sources, modules, and indexed resources. Each resource's
+`attributes` lists properties to check through the testing framework's
+supported state-check API. Extra attributes are allowed, including within
+asserted objects. Scalar values and lists are compared exactly.
+`state: {resources: {}}` requires empty state; omitting `state` skips that
+step's explicit state check. Destroy always checks empty state.
+
+## MVP scope
+
+Tests start with empty Terraform state and handwritten fixtures. YAML has
+strict field validation: initial checkpoints, recording/setup templates,
+plan assertions, plan-only steps, expected client errors, forced HTTP order,
+and strict attribute matching are not yet supported. Unsupported fields fail
+before any Terraform operations. The step/call/state layout is kept stable
+so these capabilities can be added independently.

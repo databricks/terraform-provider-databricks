@@ -23,10 +23,25 @@ type step struct {
 	Name   string             `yaml:"name"`
 	Config string             `yaml:"config"`
 	Calls  []httpfixture.Call `yaml:"calls"`
+	State  *expectedState     `yaml:"state,omitempty"`
 }
 
 type destroy struct {
 	Calls []httpfixture.Call `yaml:"calls"`
+}
+
+type expectedState struct {
+	Resources map[string]expectedResource `yaml:"resources,omitempty"`
+}
+
+type expectedResource struct {
+	Attributes []expectedAttribute `yaml:"attributes"`
+}
+
+type expectedAttribute struct {
+	Path []any `yaml:"path"`
+	// A node distinguishes explicit null from an accidentally omitted expectation.
+	Equals yaml.Node `yaml:"equals"`
 }
 
 func loadDefinition(path string) (*testDefinition, error) {
@@ -69,8 +84,31 @@ func (d *testDefinition) validate() error {
 		if strings.TrimSpace(s.Name) == "" || strings.TrimSpace(s.Config) == "" {
 			return fmt.Errorf("%s: name and config are required", label)
 		}
+		if err := validateState(s.State); err != nil {
+			return fmt.Errorf("%s: %w", label, err)
+		}
 	}
 	return d.validateCalls()
+}
+
+func validateState(state *expectedState) error {
+	if state == nil {
+		return nil
+	}
+	for address, resource := range state.Resources {
+		if address == "" {
+			return fmt.Errorf("state resource address must not be empty")
+		}
+		for i, attribute := range resource.Attributes {
+			if _, err := attribute.attributePath(); err != nil {
+				return fmt.Errorf("%s: attribute check %d: %w", address, i+1, err)
+			}
+			if _, err := attribute.valueCheck(); err != nil {
+				return fmt.Errorf("%s: attribute check %d: %w", address, i+1, err)
+			}
+		}
+	}
+	return nil
 }
 
 // validateCalls checks every fixture set up front, including later steps and

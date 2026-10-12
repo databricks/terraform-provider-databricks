@@ -1,7 +1,11 @@
 # HTTP fixture replay
 
-`Handler` serves stateless request/response exchanges. `StartStep` installs a
-step's consumable fixtures and returns any failures from the previous step.
+`NewHandler()` creates an empty handler for stateless request/response exchanges.
+`SetReusableFixtures(calls)` replaces the test-wide reusable fallbacks; `nil`
+clears them. Invalid replacements leave the old fixtures intact. Replacing
+reusable fixtures does not reset the current step or its failures.
+`StartStep` installs a step's consumable fixtures and returns any failures from
+the previous step.
 `Verify` checks the current step for unexpected calls and unused fixtures.
 
 Matching includes the method, escaped path, query parameters, JSON body, and

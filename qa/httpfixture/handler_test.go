@@ -27,8 +27,7 @@ func send(h http.Handler, method, path, body string) *httptest.ResponseRecorder 
 }
 
 func TestMatchesWholeSignatureAndConsumesFIFO(t *testing.T) {
-	h, err := NewHandler(nil)
-	require.NoError(t, err)
+	h := NewHandler()
 	require.NoError(t, h.StartStep("step 1 (update)", []Call{
 		call("POST", "/groups", map[string]any{"name": "a"}, "a-first"),
 		call("POST", "/groups", map[string]any{"name": "a"}, "a-second"),
@@ -41,8 +40,7 @@ func TestMatchesWholeSignatureAndConsumesFIFO(t *testing.T) {
 }
 
 func TestSemanticJSONAndQueryMatching(t *testing.T) {
-	h, err := NewHandler(nil)
-	require.NoError(t, err)
+	h := NewHandler()
 	c := call("POST", "/groups", map[string]any{"number": 1, "values": []any{true, "a"}}, "ok")
 	c.Request.Query = map[string][]string{"a": {"one"}, "b": {"two"}}
 	c.Request.Headers = map[string]string{"X-Test": "value"}
@@ -59,8 +57,7 @@ func TestSemanticJSONAndQueryMatching(t *testing.T) {
 func TestUnexpectedRequestsDoNotConsumeFixtures(t *testing.T) {
 	for _, body := range []string{`{"values":[2,1]}`, `null`, "", "not-json", `{"values":[1,2]} {}`} {
 		t.Run(body, func(t *testing.T) {
-			h, err := NewHandler(nil)
-			require.NoError(t, err)
+			h := NewHandler()
 			require.NoError(t, h.StartStep("step 2 (update)", []Call{call("POST", "/groups", map[string]any{"values": []int{1, 2}}, "ok")}))
 			require.Equal(t, 400, send(h, "POST", "/groups", body).Code)
 			require.ErrorContains(t, h.Verify(), "step 2 (update)")
@@ -70,8 +67,7 @@ func TestUnexpectedRequestsDoNotConsumeFixtures(t *testing.T) {
 }
 
 func TestAbsentBodyDiffersFromJSONNull(t *testing.T) {
-	h, err := NewHandler(nil)
-	require.NoError(t, err)
+	h := NewHandler()
 	nullCall := call("POST", "/groups", nil, "null")
 	nullCall.Request.Body = &Body{JSON: nil}
 	require.NoError(t, h.StartStep("bodies", []Call{call("POST", "/groups", nil, "absent"), nullCall}))
@@ -81,8 +77,8 @@ func TestAbsentBodyDiffersFromJSONNull(t *testing.T) {
 }
 
 func TestReusableMetadataAndStepBoundaries(t *testing.T) {
-	h, err := NewHandler([]Call{call("GET", "/metadata", nil, "metadata")})
-	require.NoError(t, err)
+	h := NewHandler()
+	require.NoError(t, h.SetReusableFixtures([]Call{call("GET", "/metadata", nil, "metadata")}))
 	require.NoError(t, h.StartStep("create", []Call{call("GET", "/groups/1", nil, "old")}))
 	require.ErrorContains(t, h.Verify(), "create: unconsumed")
 	require.Equal(t, `"old"`, send(h, "GET", "/groups/1", "").Body.String())
@@ -95,8 +91,7 @@ func TestReusableMetadataAndStepBoundaries(t *testing.T) {
 }
 
 func TestFailedStepCanInstallDestroyFixtures(t *testing.T) {
-	h, err := NewHandler(nil)
-	require.NoError(t, err)
+	h := NewHandler()
 	require.NoError(t, h.StartStep("create", []Call{call("POST", "/groups", nil, "id")}))
 	require.ErrorContains(t, h.StartStep("destroy", []Call{call("DELETE", "/groups/id", nil, "deleted")}), "create: unconsumed")
 	require.Equal(t, `"deleted"`, send(h, "DELETE", "/groups/id", "").Body.String())
@@ -104,8 +99,7 @@ func TestFailedStepCanInstallDestroyFixtures(t *testing.T) {
 }
 
 func TestConcurrentRequestsConsumeExactlyOnce(t *testing.T) {
-	h, err := NewHandler(nil)
-	require.NoError(t, err)
+	h := NewHandler()
 	calls := make([]Call, 32)
 	for i := range calls {
 		calls[i] = call("GET", "/groups/1", nil, fmt.Sprint(i))
@@ -134,14 +128,14 @@ func TestRejectInvalidFixtures(t *testing.T) {
 		{Request: Request{Method: "GET", Path: "/groups?a=b"}, Response: Response{Status: 200}},
 		{Request: Request{Method: "GET", Path: "/groups"}},
 	} {
-		_, err := NewHandler([]Call{c})
-		require.Error(t, err)
+		h := NewHandler()
+		require.Error(t, h.SetReusableFixtures([]Call{c}))
+		require.Error(t, h.StartStep("invalid", []Call{c}))
 	}
 }
 
 func TestJSONNumbersPreserveLargeIntegers(t *testing.T) {
-	h, err := NewHandler(nil)
-	require.NoError(t, err)
+	h := NewHandler()
 	require.NoError(t, h.StartStep("numbers", []Call{
 		call("POST", "/numbers", json.Number("9007199254740993"), "large"),
 		call("POST", "/numbers", json.Number("9007199254740992"), "neighbor"),
@@ -154,8 +148,7 @@ func TestJSONNumbersPreserveLargeIntegers(t *testing.T) {
 }
 
 func TestEscapedPathsRemainDistinct(t *testing.T) {
-	h, err := NewHandler(nil)
-	require.NoError(t, err)
+	h := NewHandler()
 	require.NoError(t, h.StartStep("paths", []Call{
 		call("GET", "/resources/a%2Fb", nil, "escaped"),
 		call("GET", "/resources/a/b", nil, "nested"),
@@ -163,4 +156,32 @@ func TestEscapedPathsRemainDistinct(t *testing.T) {
 	require.Equal(t, `"nested"`, send(h, "GET", "/resources/a/b", "").Body.String())
 	require.Equal(t, `"escaped"`, send(h, "GET", "/resources/a%2Fb", "").Body.String())
 	require.NoError(t, h.Verify())
+}
+
+func TestReusableFixturesCanBeReplacedWithoutResettingStep(t *testing.T) {
+	h := NewHandler()
+	require.NoError(t, h.SetReusableFixtures([]Call{call("GET", "/metadata", nil, "first")}))
+	require.NoError(t, h.StartStep("create", []Call{call("GET", "/metadata", nil, "step")}))
+	require.Equal(t, `"step"`, send(h, "GET", "/metadata", "").Body.String())
+	require.Equal(t, `"first"`, send(h, "GET", "/metadata", "").Body.String())
+	require.NoError(t, h.SetReusableFixtures([]Call{call("GET", "/metadata", nil, "replacement")}))
+	require.Equal(t, `"replacement"`, send(h, "GET", "/metadata", "").Body.String())
+	require.NoError(t, h.Verify())
+	require.NoError(t, h.SetReusableFixtures(nil))
+	require.Equal(t, 400, send(h, "GET", "/metadata", "").Code)
+	require.ErrorContains(t, h.Verify(), "create: unexpected HTTP call")
+}
+
+func TestInvalidReusableReplacementKeepsPreviousFixturesAndFailures(t *testing.T) {
+	h := NewHandler()
+	require.NoError(t, h.SetReusableFixtures([]Call{call("GET", "/metadata", nil, "original")}))
+	require.NoError(t, h.StartStep("create", nil))
+	require.Equal(t, 400, send(h, "GET", "/unexpected", "").Code)
+	invalid := call("GET", "/metadata", nil, "invalid")
+	invalid.Response.Status = 0
+	require.Error(t, h.SetReusableFixtures([]Call{call("GET", "/metadata", nil, "partial"), invalid}))
+	require.Equal(t, `"original"`, send(h, "GET", "/metadata", "").Body.String())
+	require.NoError(t, h.SetReusableFixtures([]Call{call("GET", "/metadata", nil, "valid")}))
+	require.Equal(t, `"valid"`, send(h, "GET", "/metadata", "").Body.String())
+	require.ErrorContains(t, h.Verify(), "create: unexpected HTTP call")
 }

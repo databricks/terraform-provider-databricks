@@ -19,6 +19,7 @@ type Body struct {
 	JSON any `yaml:"json"`
 }
 
+// Request defines a complete signature; only listed headers are compared.
 type Request struct {
 	Method  string              `yaml:"method"`
 	Path    string              `yaml:"path"`
@@ -27,12 +28,14 @@ type Request struct {
 	Body    *Body               `yaml:"body"`
 }
 
+// Response defines the HTTP reply, with an optional JSON body.
 type Response struct {
 	Status  int               `yaml:"status"`
 	Headers map[string]string `yaml:"headers,omitempty"`
 	Body    *Body             `yaml:"body"`
 }
 
+// Call pairs a request signature with its response.
 type Call struct {
 	Request  Request  `yaml:"request"`
 	Response Response `yaml:"response"`
@@ -55,13 +58,23 @@ type Handler struct {
 	failures []error
 }
 
-// NewHandler registers test-wide reusable exchanges, such as host metadata.
-func NewHandler(reusable []Call) (*Handler, error) {
-	compiled, err := compileCalls(reusable)
+// NewHandler returns an empty handler; fixture sets are configured separately.
+func NewHandler() *Handler {
+	return &Handler{}
+}
+
+// SetReusableFixtures replaces test-wide fallback exchanges, such as metadata.
+// They survive step transitions, may be matched repeatedly, and need not be
+// consumed. Invalid fixtures leave the previous set intact.
+func (h *Handler) SetReusableFixtures(calls []Call) error {
+	compiled, err := compileCalls(calls)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &Handler{reusable: compiled}, nil
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.reusable = compiled
+	return nil
 }
 
 // StartStep reports the previous step's failures and installs the next exchanges.
@@ -78,6 +91,8 @@ func (h *Handler) StartStep(label string, calls []Call) error {
 	return err
 }
 
+// compileCalls validates and encodes the entire set before it can replace an
+// active fixture set, so invalid input never installs only some of the calls.
 func compileCalls(calls []Call) ([]exchange, error) {
 	result := make([]exchange, len(calls))
 	for i, call := range calls {
@@ -109,6 +124,7 @@ func compileCalls(calls []Call) ([]exchange, error) {
 	return result, nil
 }
 
+// normalizedValue gives YAML fixture values the same representation as HTTP JSON.
 func normalizedValue(value any) (any, error) {
 	body, err := json.Marshal(value)
 	if err != nil {
@@ -117,6 +133,7 @@ func normalizedValue(value any) (any, error) {
 	return decodeJSON(body)
 }
 
+// decodeJSON preserves large numeric IDs and rejects trailing JSON values.
 func decodeJSON(body []byte) (any, error) {
 	decoder := json.NewDecoder(strings.NewReader(string(body)))
 	decoder.UseNumber()
@@ -131,6 +148,7 @@ func decodeJSON(body []byte) (any, error) {
 	return normalizeNumbers(value), nil
 }
 
+// normalizeNumbers equates spellings such as 1 and 1.0 without float64 rounding.
 func normalizeNumbers(value any) any {
 	switch v := value.(type) {
 	case json.Number:
@@ -148,6 +166,7 @@ func normalizeNumbers(value any) any {
 	return value
 }
 
+// matches checks the whole signature without consuming the exchange.
 func (e *exchange) matches(req *http.Request, body []byte, value any) bool {
 	expected := e.call.Request
 	if e.used || expected.Method != req.Method || expected.Path != req.URL.EscapedPath() {
@@ -167,6 +186,8 @@ func (e *exchange) matches(req *http.Request, body []byte, value any) bool {
 	return len(body) > 0 && reflect.DeepEqual(e.expectedBody, value)
 }
 
+// ServeHTTP prefers consumable step fixtures over reusable fallbacks. Matching
+// and consumption share a lock so concurrent requests cannot consume a call twice.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 	var value any
@@ -212,13 +233,15 @@ func (h *Handler) fail(w http.ResponseWriter, err error) {
 	http.Error(w, err.Error(), http.StatusBadRequest)
 }
 
-// Verify reports unexpected requests and required exchanges not consumed.
+// Verify reports unexpected requests and unconsumed step exchanges without
+// clearing failures. Reusable fixtures are excluded from consumption checks.
 func (h *Handler) Verify() error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	return h.verify()
 }
 
+// verify requires h.mu to be held.
 func (h *Handler) verify() error {
 	failures := append([]error(nil), h.failures...)
 	for i, e := range h.calls {

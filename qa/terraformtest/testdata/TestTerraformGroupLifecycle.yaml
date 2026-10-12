@@ -147,5 +147,3 @@ destroy:
       response:
         status: 204
         body: null
-  state:
-    resources: {}

@@ -30,6 +30,8 @@ Tests run the actual muxed Databricks provider, supporting both SDKv2 and
 Plugin Framework resources.
 
 Install Terraform on `PATH`, or set `TF_ACC_TERRAFORM_PATH` to its executable.
+The normal GitHub Actions tests job installs Terraform 1.13.5 with its wrapper
+disabled so the test runner can invoke the CLI directly.
 These hermetic tests run in the normal Go test suite, including `-short`;
 they do not require `TF_ACC`, live credentials, or `CLOUD_ENV`. The runner
 does not download Terraform. Client configuration ignores ambient credential

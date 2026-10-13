@@ -2,6 +2,7 @@ package sql
 
 import (
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
@@ -79,6 +80,9 @@ func TestWarehouseDataFallback(t *testing.T) {
 			t.Run(fmt.Sprintf("%s/%v", hcl, listErr), func(t *testing.T) {
 				d, err := qa.ResourceFixture{
 					MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+						mockRealtimeWarehouseAPI(t, w, func(rw http.ResponseWriter, r *http.Request) {
+							rw.Write([]byte(`{"statement_timeout":120,"customer_version_label":"2026.10"}`))
+						})
 						w.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return(nil, listErr)
 						if hcl == `name = "abc"` {
 							w.GetMockWarehousesAPI().EXPECT().ListAll(mock.Anything, sql.ListWarehousesRequest{}).Return([]sql.EndpointInfo{
@@ -106,6 +110,8 @@ func TestWarehouseDataFallback(t *testing.T) {
 				assert.Equal(t, "abc", d.Id())
 				assert.Equal(t, "STOPPED", d.Get("state"))
 				assert.Equal(t, "REALTIME", d.Get("warehouse_type"))
+				assert.Equal(t, 120, d.Get("statement_timeout"))
+				assert.Equal(t, "2026.10", d.Get("customer_version_label"))
 				assert.Equal(t, "", d.Get("data_source_id"))
 			})
 		}

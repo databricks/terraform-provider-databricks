@@ -2,11 +2,16 @@ package sql
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/qa/poll"
 	"github.com/databricks/databricks-sdk-go/service/sql"
@@ -335,6 +340,8 @@ func TestResourceSQLEndpointUpdateHealthNoDiff(t *testing.T) {
 			"enable_serverless_compute": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"data_source_id":            {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"creator_name":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"customer_version_label":    {NewComputed: true},
+			"statement_timeout":         {NewComputed: true},
 		},
 		HCL: `
 		name = "foo"
@@ -367,6 +374,8 @@ func TestResourceSQLEndpointUpdateNoAutoTermination(t *testing.T) {
 			"enable_serverless_compute": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"data_source_id":            {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"creator_name":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"customer_version_label":    {NewComputed: true},
+			"statement_timeout":         {NewComputed: true},
 		},
 		HCL: `
 		name = "foo"
@@ -420,8 +429,18 @@ func TestResolveDataSourceIDNotFound(t *testing.T) {
 }
 
 func TestResourceSQLEndpointCreateNoWait(t *testing.T) {
-	for _, warehouseType := range []string{"PRO", "REALTIME"} {
-		t.Run(warehouseType, func(t *testing.T) {
+	for _, tc := range []struct {
+		warehouseType string
+		timeout       int
+	}{{"PRO", -1}, {"REALTIME", -1}, {"REALTIME", 0}, {"REALTIME", 1}} {
+		t.Run(fmt.Sprintf("%s/%d", tc.warehouseType, tc.timeout), func(t *testing.T) {
+			warehouseType := tc.warehouseType
+			expectedTimeout := 3600
+			config := map[string]any{"name": "foo", "cluster_size": "Small", "warehouse_type": warehouseType, "no_wait": warehouseType == "PRO"}
+			if tc.timeout >= 0 {
+				config["statement_timeout"] = tc.timeout
+				expectedTimeout = tc.timeout
+			}
 			request := createRequest
 			request.WarehouseType = sql.CreateWarehouseRequestWarehouseType(warehouseType)
 			response := getResponse
@@ -429,6 +448,7 @@ func TestResourceSQLEndpointCreateNoWait(t *testing.T) {
 			response.State = "STARTING"
 			if warehouseType == "REALTIME" {
 				request.AutoStopMins = 10
+				request.MinNumClusters = 1
 				request.EnableServerlessCompute = true
 				response.WarehouseType = "REYDEN"
 				response.State = "STOPPED"
@@ -438,10 +458,24 @@ func TestResourceSQLEndpointCreateNoWait(t *testing.T) {
 			qa.ResourceFixture{
 				MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 					api := w.GetMockWarehousesAPI()
-					api.EXPECT().Create(mock.Anything, request).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
-						Id:   "abc",
-						Poll: simpleError[sql.GetWarehouseResponse](errors.New("must not wait for RUNNING")),
-					}, nil)
+					if warehouseType == "REALTIME" {
+						mockRealtimeWarehouseAPI(t, w, func(rw http.ResponseWriter, r *http.Request) {
+							if r.Method == http.MethodPost {
+								var body map[string]any
+								require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+								assert.Equal(t, float64(expectedTimeout), body["statement_timeout"])
+								assert.Equal(t, float64(1), body["min_num_clusters"])
+								assert.Equal(t, float64(10), body["auto_stop_mins"])
+								assert.Equal(t, true, body["enable_serverless_compute"])
+							}
+							fmt.Fprintf(rw, `{"id":"abc","statement_timeout":%d,"customer_version_label":"2026.10"}`, expectedTimeout)
+						})
+					} else {
+						api.EXPECT().Create(mock.Anything, request).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+							Id:   "abc",
+							Poll: simpleError[sql.GetWarehouseResponse](errors.New("must not wait for RUNNING")),
+						}, nil)
+					}
 					api.EXPECT().GetById(mock.Anything, "abc").Return(&response, nil)
 					if warehouseType == "PRO" {
 						addDataSourceListHttpFixture(w)
@@ -449,10 +483,7 @@ func TestResourceSQLEndpointCreateNoWait(t *testing.T) {
 				},
 				Resource: ResourceSqlEndpoint(),
 				Create:   true,
-				State: map[string]any{
-					"name": "foo", "cluster_size": "Small", "warehouse_type": warehouseType,
-					"no_wait": warehouseType == "PRO",
-				},
+				State:    config,
 			}.ApplyAndExpectData(t, map[string]any{
 				"id": "abc", "state": string(response.State), "warehouse_type": warehouseType,
 				"auto_stop_mins":            request.AutoStopMins,
@@ -468,6 +499,8 @@ func TestResourceSQLEndpointRealtimeValidation(t *testing.T) {
 		value any
 		error string
 	}{
+		{"auto_stop_mins", 4, "auto_stop_mins must be 0 or at least 5 for REALTIME warehouses"},
+		{"auto_stop_mins", -1, "auto_stop_mins must be 0 or at least 5 for REALTIME warehouses"},
 		{"min_num_clusters", 0, "min_num_clusters must be 1 for REALTIME warehouses"},
 		{"max_num_clusters", 2, "max_num_clusters must be 1 for REALTIME warehouses"},
 		{"enable_photon", false, "enable_photon must be true for REALTIME warehouses"},
@@ -480,4 +513,12 @@ func TestResourceSQLEndpointRealtimeValidation(t *testing.T) {
 			qa.ResourceFixture{Resource: ResourceSqlEndpoint(), Create: true, State: config}.ExpectError(t, tc.error)
 		})
 	}
+}
+
+// The generated SDK mocks cannot represent these fields yet; exercise its HTTP client.
+func mockRealtimeWarehouseAPI(t *testing.T, w *mocks.MockWorkspaceClient, handler http.HandlerFunc) {
+	t.Helper()
+	server := httptest.NewServer(handler)
+	t.Cleanup(server.Close)
+	w.WorkspaceClient.Config = &config.Config{Host: server.URL, Token: "test", AuthType: "pat"}
 }

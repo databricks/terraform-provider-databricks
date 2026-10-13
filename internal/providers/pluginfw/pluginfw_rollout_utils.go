@@ -33,7 +33,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/library"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/networks/privateendpointrule"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/notificationdestinations"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/qualitymonitor"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/registered_model"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/serving"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/sharing"
@@ -50,7 +49,6 @@ import (
 // Keep this list sorted.
 var migratedResources = []func() resource.Resource{
 	library.ResourceLibrary,
-	qualitymonitor.ResourceQualityMonitor,
 	sharing.ResourceShare,
 }
 

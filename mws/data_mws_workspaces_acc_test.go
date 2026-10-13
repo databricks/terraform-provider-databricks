@@ -23,6 +23,10 @@ func TestAccDataSourceMwsWorkspaces(t *testing.T) {
 			if ids == "" {
 				return fmt.Errorf("ids is empty: %v", r.Primary.Attributes)
 			}
+			deploymentNames := r.Primary.Attributes["deployment_names.%"]
+			if deploymentNames == "" {
+				return fmt.Errorf("deployment_names is empty: %v", r.Primary.Attributes)
+			}
 			return nil
 		},
 	})

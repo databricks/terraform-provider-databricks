@@ -37,6 +37,9 @@ func getSqlWarehouse(ctx context.Context, w *databricks.WorkspaceClient, id stri
 	warehouse := SqlWarehouse{
 		GetWarehouseResponse: *se,
 	}
+	if warehouse.WarehouseType == "REYDEN" {
+		warehouse.WarehouseType = "REALTIME"
+	}
 	return &warehouse, nil
 }
 
@@ -58,7 +61,8 @@ func ResourceSqlEndpoint() common.Resource {
 	s := common.StructToSchema(SqlWarehouse{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["id"].Computed = true
-		common.SetDefault(m["auto_stop_mins"], 120)
+		m["auto_stop_mins"].Optional = true
+		m["auto_stop_mins"].Computed = true
 		common.CustomizeSchemaPath(m, "channel").SetSuppressDiff()
 		common.MustSchemaPath(m, "channel", "name").Default = "CHANNEL_NAME_CURRENT"
 		common.SetRequired(m["cluster_size"])
@@ -84,7 +88,7 @@ func ResourceSqlEndpoint() common.Resource {
 		common.SetRequired(common.MustSchemaPath(m, "tags", "custom_tags", "value"))
 		common.CustomizeSchemaPath(m, "warehouse_type").
 			SetSuppressDiff().
-			SetValidateDiagFunc(validation.ToDiagFunc(validation.StringInSlice([]string{"PRO", "CLASSIC"}, false)))
+			SetValidateDiagFunc(validation.ToDiagFunc(validation.StringInSlice([]string{"PRO", "CLASSIC", "REALTIME"}, false)))
 
 		// Add no_wait field to schema
 		m["no_wait"] = &schema.Schema{
@@ -122,9 +126,8 @@ func ResourceSqlEndpoint() common.Resource {
 
 			d.SetId(wait.Id)
 
-			// Check if no_wait flag is set to true
-			noWait, ok := d.GetOk("no_wait")
-			if ok && noWait.(bool) {
+			// REALTIME creation leaves compute stopped until a query starts it.
+			if se.WarehouseType == "REALTIME" || d.Get("no_wait").(bool) {
 				return nil
 			}
 
@@ -149,9 +152,11 @@ func ResourceSqlEndpoint() common.Resource {
 			if err != nil {
 				return err
 			}
-			warehouse.DataSourceId, err = resolveDataSourceID(ctx, w, d.Id())
-			if err != nil {
-				return err
+			if warehouse.WarehouseType != "REALTIME" {
+				warehouse.DataSourceId, err = resolveDataSourceID(ctx, w, d.Id())
+				if err != nil {
+					return err
+				}
 			}
 			return common.StructToData(warehouse, s, d)
 		},
@@ -182,7 +187,62 @@ func ResourceSqlEndpoint() common.Resource {
 			if err := common.NamespaceCustomizeDiff(ctx, d, c); err != nil {
 				return err
 			}
+			if err := customizeSqlWarehouseDiff(d); err != nil {
+				return err
+			}
 			return d.Clear("health")
 		},
 	}
+}
+
+func customizeSqlWarehouseDiff(d *schema.ResourceDiff) error {
+	config := d.GetRawConfig()
+	if config.IsNull() {
+		return nil
+	}
+	isRealtime := d.Get("warehouse_type") == "REALTIME"
+	if d.Id() != "" && d.NewValueKnown("warehouse_type") && d.HasChange("warehouse_type") {
+		oldType, _ := d.GetChange("warehouse_type")
+		if isRealtime || oldType == "REALTIME" {
+			return fmt.Errorf("changing warehouse_type to or from REALTIME is not supported")
+		}
+	}
+	if config.GetAttr("auto_stop_mins").IsNull() {
+		if !d.NewValueKnown("warehouse_type") {
+			return d.SetNewComputed("auto_stop_mins")
+		}
+		defaultAutoStop := 120
+		if isRealtime {
+			defaultAutoStop = 10
+		}
+		if err := d.SetNew("auto_stop_mins", defaultAutoStop); err != nil {
+			return err
+		}
+	}
+	if !isRealtime {
+		return nil
+	}
+	if config.GetAttr("enable_serverless_compute").IsNull() {
+		if err := d.SetNew("enable_serverless_compute", true); err != nil {
+			return err
+		}
+	}
+	return validateRealtimeWarehouse(d)
+}
+
+func validateRealtimeWarehouse(d *schema.ResourceDiff) error {
+	for _, field := range []string{"min_num_clusters", "max_num_clusters"} {
+		if !d.GetRawConfig().GetAttr(field).IsNull() && d.NewValueKnown(field) && d.Get(field).(int) != 1 {
+			return fmt.Errorf("%s must be 1 for REALTIME warehouses", field)
+		}
+	}
+	for _, field := range []string{"enable_photon", "enable_serverless_compute"} {
+		if d.NewValueKnown(field) && !d.Get(field).(bool) {
+			return fmt.Errorf("%s must be true for REALTIME warehouses", field)
+		}
+	}
+	if d.NewValueKnown("spot_instance_policy") && d.Get("spot_instance_policy") != "COST_OPTIMIZED" {
+		return fmt.Errorf("spot_instance_policy cannot be configured for REALTIME warehouses")
+	}
+	return nil
 }

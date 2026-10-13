@@ -8,6 +8,8 @@
 
 ### New Features and Improvements
 
+* Support fixed-size REALTIME warehouses in `databricks_sql_endpoint` and `databricks_sql_warehouse`.
+
 ### Bug Fixes
 
 ### Documentation

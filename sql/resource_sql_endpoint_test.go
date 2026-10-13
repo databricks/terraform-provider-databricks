@@ -420,41 +420,64 @@ func TestResolveDataSourceIDNotFound(t *testing.T) {
 }
 
 func TestResourceSQLEndpointCreateNoWait(t *testing.T) {
-	// Create a specific response for the no_wait test that shows a starting state
-	getResponseStarting := sql.GetWarehouseResponse{
-		Name:           "foo",
-		ClusterSize:    "Small",
-		Id:             "abc",
-		State:          "STARTING", // Important: Warehouse is still starting
-		Tags:           &sql.EndpointTags{},
-		MaxNumClusters: 1,
-		NumClusters:    0, // No clusters running yet
+	for _, warehouseType := range []string{"PRO", "REALTIME"} {
+		t.Run(warehouseType, func(t *testing.T) {
+			request := createRequest
+			request.WarehouseType = sql.CreateWarehouseRequestWarehouseType(warehouseType)
+			response := getResponse
+			response.WarehouseType = sql.GetWarehouseResponseWarehouseType(warehouseType)
+			response.State = "STARTING"
+			if warehouseType == "REALTIME" {
+				request.AutoStopMins = 10
+				request.EnableServerlessCompute = true
+				response.WarehouseType = "REYDEN"
+				response.State = "STOPPED"
+			}
+			response.AutoStopMins = request.AutoStopMins
+			response.EnableServerlessCompute = request.EnableServerlessCompute
+			qa.ResourceFixture{
+				MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+					api := w.GetMockWarehousesAPI()
+					api.EXPECT().Create(mock.Anything, request).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+						Id:   "abc",
+						Poll: simpleError[sql.GetWarehouseResponse](errors.New("must not wait for RUNNING")),
+					}, nil)
+					api.EXPECT().GetById(mock.Anything, "abc").Return(&response, nil)
+					if warehouseType == "PRO" {
+						addDataSourceListHttpFixture(w)
+					}
+				},
+				Resource: ResourceSqlEndpoint(),
+				Create:   true,
+				State: map[string]any{
+					"name": "foo", "cluster_size": "Small", "warehouse_type": warehouseType,
+					"no_wait": warehouseType == "PRO",
+				},
+			}.ApplyAndExpectData(t, map[string]any{
+				"id": "abc", "state": string(response.State), "warehouse_type": warehouseType,
+				"auto_stop_mins":            request.AutoStopMins,
+				"enable_serverless_compute": request.EnableServerlessCompute,
+			})
+		})
 	}
+}
 
-	qa.ResourceFixture{
-		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			api := w.GetMockWarehousesAPI()
-			// The Create should return immediately without waiting due to no_wait=true
-			api.EXPECT().Create(mock.Anything, createRequest).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
-				Id:   "abc",                            // Set the ID directly in the waiter
-				Poll: poll.Simple(getResponseStarting), // Use starting state response
-			}, nil)
-
-			// Read operation will still be called after create to refresh state
-			api.EXPECT().GetById(mock.Anything, "abc").Return(&getResponseStarting, nil)
-			addDataSourceListHttpFixture(w)
-		},
-		Resource: ResourceSqlEndpoint(),
-		Create:   true,
-		HCL: `
-		name = "foo"
-		cluster_size = "Small"
-		no_wait = true
-		`,
-	}.ApplyAndExpectData(t, map[string]interface{}{
-		"id":             "abc",
-		"no_wait":        true,
-		"state":          "STARTING",
-		"data_source_id": "d7c9d05c-7496-4c69-b089-48823edad40c",
-	})
+func TestResourceSQLEndpointRealtimeValidation(t *testing.T) {
+	for _, tc := range []struct {
+		field string
+		value any
+		error string
+	}{
+		{"min_num_clusters", 0, "min_num_clusters must be 1 for REALTIME warehouses"},
+		{"max_num_clusters", 2, "max_num_clusters must be 1 for REALTIME warehouses"},
+		{"enable_photon", false, "enable_photon must be true for REALTIME warehouses"},
+		{"enable_serverless_compute", false, "enable_serverless_compute must be true for REALTIME warehouses"},
+		{"spot_instance_policy", "RELIABILITY_OPTIMIZED", "spot_instance_policy cannot be configured for REALTIME warehouses"},
+	} {
+		t.Run(tc.field, func(t *testing.T) {
+			config := map[string]any{"name": "foo", "cluster_size": "Small", "warehouse_type": "REALTIME"}
+			config[tc.field] = tc.value
+			qa.ResourceFixture{Resource: ResourceSqlEndpoint(), Create: true, State: config}.ExpectError(t, tc.error)
+		})
+	}
 }

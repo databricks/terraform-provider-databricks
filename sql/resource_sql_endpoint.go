@@ -72,7 +72,9 @@ func ResourceSqlEndpoint() common.Resource {
 		common.SetDefault(m["max_num_clusters"], 1)
 		m["max_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(
 			validation.IntBetween(1, MaxNumClusters))
-		common.CustomizeSchemaPath(m, "min_num_clusters").SetSuppressDiff()
+		common.SetDefault(m["min_num_clusters"], 1)
+		m["min_num_clusters"].ValidateDiagFunc = validation.ToDiagFunc(
+			validation.IntBetween(1, MaxNumClusters))
 		common.SetRequired(m["name"])
 		common.SetReadOnly(m["num_active_sessions"])
 		common.SetReadOnly(m["num_clusters"])

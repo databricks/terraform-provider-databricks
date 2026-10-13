@@ -6,6 +6,8 @@
 
 ### Breaking Changes
 
+* Remove the deprecated `databricks_quality_monitor` and `databricks_lakehouse_monitor` resources. Use `databricks_data_quality_monitor` instead.
+
 ### New Features and Improvements
 
 ### Bug Fixes

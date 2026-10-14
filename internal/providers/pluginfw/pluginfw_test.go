@@ -8,8 +8,11 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/useragent"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/stretchr/testify/assert"
 )
@@ -172,4 +175,26 @@ func TestConfigure_InvalidUserAgentExtra(t *testing.T) {
 	p.Configure(context.Background(), req, resp)
 
 	assert.True(t, resp.Diagnostics.HasError(), "invalid user_agent_extra should return an error")
+}
+
+func TestUserAgentExtraValidator(t *testing.T) {
+	testCases := []struct {
+		name    string
+		value   types.String
+		wantErr bool
+	}{
+		{name: "valid", value: types.StringValue("databricks-sra/1.2.0 my-project/0.0.1")},
+		{name: "invalid", value: types.StringValue("not a valid (product)"), wantErr: true},
+		{name: "missing version", value: types.StringValue("databricks-sra"), wantErr: true},
+		{name: "null", value: types.StringNull()},
+		{name: "unknown", value: types.StringUnknown()},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := validator.StringRequest{Path: path.Root("user_agent_extra"), ConfigValue: tc.value}
+			resp := &validator.StringResponse{}
+			userAgentExtraValidator{}.ValidateString(context.Background(), req, resp)
+			assert.Equal(t, tc.wantErr, resp.Diagnostics.HasError())
+		})
+	}
 }

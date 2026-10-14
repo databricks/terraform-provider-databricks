@@ -173,6 +173,9 @@ func providerSchema() map[string]*schema.Schema {
 	}
 	// user_agent_extra is not an SDK configuration attribute: it is handled
 	// by the provider itself in ConfigureDatabricksClient.
+	// Validate-time checks live only in the plugin framework schema: the mux
+	// server fans ValidateProviderConfig out to both providers, so validating
+	// here too would report every error twice.
 	ps["user_agent_extra"] = &schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,

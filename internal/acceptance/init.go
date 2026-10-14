@@ -109,6 +109,7 @@ type Step struct {
 	ImportStateId                        string
 	ImportStateIdFunc                    func(*terraform.State) (string, error)
 	ImportStateVerify                    bool
+	ImportStateVerifyIgnore              []string
 	ImportStateVerifyIdentifierAttribute string
 	ResourceName                         string
 
@@ -281,6 +282,7 @@ func run(t *testing.T, steps []Step) {
 			ImportStateId:                        s.ImportStateId,
 			ImportStateIdFunc:                    s.ImportStateIdFunc,
 			ImportStateVerify:                    s.ImportStateVerify,
+			ImportStateVerifyIgnore:              s.ImportStateVerifyIgnore,
 			ImportStateVerifyIdentifierAttribute: s.ImportStateVerifyIdentifierAttribute,
 			ResourceName:                         s.ResourceName,
 			ExpectError:                          s.ExpectError,

@@ -14,6 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// repoCloneTimeoutSeconds is the HTTP inactivity timeout used for calls that do
+// git work inline: the clone in CreateRepo and the checkout in UpdateRepo. Both
+// are synchronous and unbounded by repo size, and the backend budgets ~10
+// minutes for checkout, so the provider default of 65s is not enough for larger
+// repositories.
+const repoCloneTimeoutSeconds = 600
+
 // ReposAPI exposes the Repos API
 type ReposAPI struct {
 	client  *common.DatabricksClient
@@ -68,7 +75,13 @@ func (a ReposAPI) Create(r reposCreateRequest) (ReposInformation, error) {
 		}
 	}
 
-	err := a.client.Post(a.context, "/repos", r, &resp, a.client.AddWorkspaceIdHeader)
+	// The clone happens inline in this request, so it needs a longer HTTP
+	// timeout than the rest of the Repos API.
+	client, err := a.client.ClientWithDefaultHTTPTimeout(repoCloneTimeoutSeconds)
+	if err != nil {
+		return resp, err
+	}
+	err = client.Post(a.context, "/repos", r, &resp, client.AddWorkspaceIdHeader)
 	return resp, err
 }
 
@@ -82,6 +95,7 @@ func (a ReposAPI) Update(id string, r map[string]any) error {
 	}
 	// TODO: update may change ONE OF (url AND provider (optional)), (path), or (branch OR tag).
 	// for URL/provider force re-create as there are limits on what could be done for changing URL/provider
+	// Moving a Git folder only renames it, so it keeps the default timeout.
 	if path, ok := r["path"]; ok {
 		err := a.client.Patch(a.context, fmt.Sprintf("/repos/%s", id), map[string]any{"path": path}, a.client.AddWorkspaceIdHeader)
 		if err != nil {
@@ -89,7 +103,13 @@ func (a ReposAPI) Update(id string, r map[string]any) error {
 		}
 		delete(r, "path")
 	}
-	return a.client.Patch(a.context, fmt.Sprintf("/repos/%s", id), r, a.client.AddWorkspaceIdHeader)
+	// Switching branch or tag checks out the new ref inline, so this needs the
+	// same longer timeout as the clone in Create.
+	client, err := a.client.ClientWithDefaultHTTPTimeout(repoCloneTimeoutSeconds)
+	if err != nil {
+		return err
+	}
+	return client.Patch(a.context, fmt.Sprintf("/repos/%s", id), r, client.AddWorkspaceIdHeader)
 }
 
 func (a ReposAPI) Read(id string) (ReposInformation, error) {

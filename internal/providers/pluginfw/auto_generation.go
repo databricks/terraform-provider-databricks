@@ -5,6 +5,22 @@ package pluginfw
 import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_federation_policy"
 
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_iam_direct_group_member_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_iam_external_group_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_iam_external_service_principal_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_iam_external_user_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_iam_group_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_iam_service_principal_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_iam_user_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_iam_workspace_assignment_v2"
+
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_network_policy"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_setting_user_preference_v2"
@@ -45,6 +61,8 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/disaster_recovery_stable_url"
 
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/domain"
+
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/endpoint"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/entity_tag_assignment"
@@ -64,6 +82,14 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/knowledge_assistant"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/knowledge_assistant_knowledge_source"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/mason_managed_memory_entry"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/mason_managed_memory_store"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/mason_session"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/mason_session_store"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/materialized_features_feature_tag"
 
@@ -89,11 +115,17 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/postgres_role"
 
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/postgres_snapshot_schedule"
+
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/postgres_synced_table"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/private_network_gateway"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/quality_monitor_v2"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/rfa_access_request_destinations"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/sandbox"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/secret_uc"
 
@@ -109,6 +141,24 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_entity_tag_assignment"
 
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_iam_direct_group_member_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_iam_external_group_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_iam_external_service_principal_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_iam_external_user_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_iam_group_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_iam_service_principal_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_iam_user_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_iam_workspace_assignment_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_iam_workspace_identity_detail_v2"
+
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_network_option"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_setting_v2"
@@ -120,6 +170,11 @@ import (
 // List of resources that are auto generated based on service OpenAPI specs.
 var autoGeneratedResources = []func() resource.Resource{
 	account_federation_policy.ResourceFederationPolicy,
+	account_iam_direct_group_member_v2.ResourceDirectGroupMember,
+	account_iam_group_v2.ResourceGroup,
+	account_iam_service_principal_v2.ResourceServicePrincipal,
+	account_iam_user_v2.ResourceUser,
+	account_iam_workspace_assignment_v2.ResourceWorkspaceAssignment,
 	account_network_policy.ResourceAccountNetworkPolicy,
 	account_setting_user_preference_v2.ResourceUserPreference,
 	account_setting_v2.ResourceSetting,
@@ -140,6 +195,7 @@ var autoGeneratedResources = []func() resource.Resource{
 	database_synced_database_table.ResourceSyncedDatabaseTable,
 	disaster_recovery_failover_group.ResourceFailoverGroup,
 	disaster_recovery_stable_url.ResourceStableUrl,
+	domain.ResourceDomain,
 	endpoint.ResourceEndpoint,
 	entity_tag_assignment.ResourceEntityTagAssignment,
 	environments_default_workspace_base_environment.ResourceDefaultWorkspaceBaseEnvironment,
@@ -150,6 +206,10 @@ var autoGeneratedResources = []func() resource.Resource{
 	feature_engineering_materialized_feature.ResourceMaterializedFeature,
 	knowledge_assistant.ResourceKnowledgeAssistant,
 	knowledge_assistant_knowledge_source.ResourceKnowledgeSource,
+	mason_managed_memory_entry.ResourceManagedMemoryEntry,
+	mason_managed_memory_store.ResourceManagedMemoryStore,
+	mason_session.ResourceSession,
+	mason_session_store.ResourceSessionStore,
 	materialized_features_feature_tag.ResourceFeatureTag,
 	online_store.ResourceOnlineStore,
 	policy_info.ResourcePolicyInfo,
@@ -161,9 +221,12 @@ var autoGeneratedResources = []func() resource.Resource{
 	postgres_endpoint.ResourceEndpoint,
 	postgres_project.ResourceProject,
 	postgres_role.ResourceRole,
+	postgres_snapshot_schedule.ResourceSnapshotSchedule,
 	postgres_synced_table.ResourceSyncedTable,
+	private_network_gateway.ResourcePrivateNetworkGateway,
 	quality_monitor_v2.ResourceQualityMonitor,
 	rfa_access_request_destinations.ResourceAccessRequestDestination,
+	sandbox.ResourceSandbox,
 	secret_uc.ResourceSecret,
 	service_principal_federation_policy.ResourceFederationPolicy,
 	supervisor_agent.ResourceSupervisorAgent,
@@ -171,6 +234,12 @@ var autoGeneratedResources = []func() resource.Resource{
 	tag_policy.ResourceTagPolicy,
 	warehouses_default_warehouse_override.ResourceDefaultWarehouseOverride,
 	workspace_entity_tag_assignment.ResourceTagAssignment,
+	workspace_iam_direct_group_member_v2.ResourceDirectGroupMember,
+	workspace_iam_group_v2.ResourceGroup,
+	workspace_iam_service_principal_v2.ResourceServicePrincipal,
+	workspace_iam_user_v2.ResourceUser,
+	workspace_iam_workspace_assignment_v2.ResourceWorkspaceAssignment,
+	workspace_iam_workspace_identity_detail_v2.ResourceWorkspaceIdentityDetail,
 	workspace_network_option.ResourceWorkspaceNetworkOption,
 	workspace_setting_v2.ResourceSetting,
 }
@@ -178,6 +247,14 @@ var autoGeneratedResources = []func() resource.Resource{
 // List of data sources that are auto generated based on service OpenAPI specs.
 var autoGeneratedDataSources = []func() datasource.DataSource{
 	account_federation_policy.DataSourceFederationPolicy,
+	account_iam_direct_group_member_v2.DataSourceDirectGroupMember,
+	account_iam_external_group_v2.DataSourceExternalGroup,
+	account_iam_external_service_principal_v2.DataSourceExternalServicePrincipal,
+	account_iam_external_user_v2.DataSourceExternalUser,
+	account_iam_group_v2.DataSourceGroup,
+	account_iam_service_principal_v2.DataSourceServicePrincipal,
+	account_iam_user_v2.DataSourceUser,
+	account_iam_workspace_assignment_v2.DataSourceWorkspaceAssignment,
 	account_network_policy.DataSourceAccountNetworkPolicy,
 	account_setting_user_preference_v2.DataSourceUserPreference,
 	account_setting_v2.DataSourceSetting,
@@ -198,6 +275,7 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	database_synced_database_table.DataSourceSyncedDatabaseTable,
 	disaster_recovery_failover_group.DataSourceFailoverGroup,
 	disaster_recovery_stable_url.DataSourceStableUrl,
+	domain.DataSourceDomain,
 	endpoint.DataSourceEndpoint,
 	entity_tag_assignment.DataSourceEntityTagAssignment,
 	environments_default_workspace_base_environment.DataSourceDefaultWorkspaceBaseEnvironment,
@@ -208,6 +286,10 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	feature_engineering_materialized_feature.DataSourceMaterializedFeature,
 	knowledge_assistant.DataSourceKnowledgeAssistant,
 	knowledge_assistant_knowledge_source.DataSourceKnowledgeSource,
+	mason_managed_memory_entry.DataSourceManagedMemoryEntry,
+	mason_managed_memory_store.DataSourceManagedMemoryStore,
+	mason_session.DataSourceSession,
+	mason_session_store.DataSourceSessionStore,
 	materialized_features_feature_tag.DataSourceFeatureTag,
 	online_store.DataSourceOnlineStore,
 	policy_info.DataSourcePolicyInfo,
@@ -220,9 +302,12 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	postgres_endpoint.DataSourceEndpoint,
 	postgres_project.DataSourceProject,
 	postgres_role.DataSourceRole,
+	postgres_snapshot_schedule.DataSourceSnapshotSchedule,
 	postgres_synced_table.DataSourceSyncedTable,
+	private_network_gateway.DataSourcePrivateNetworkGateway,
 	quality_monitor_v2.DataSourceQualityMonitor,
 	rfa_access_request_destinations.DataSourceAccessRequestDestination,
+	sandbox.DataSourceSandbox,
 	secret_uc.DataSourceSecret,
 	service_principal_federation_policy.DataSourceFederationPolicy,
 	supervisor_agent.DataSourceSupervisorAgent,
@@ -230,9 +315,23 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	tag_policy.DataSourceTagPolicy,
 	warehouses_default_warehouse_override.DataSourceDefaultWarehouseOverride,
 	workspace_entity_tag_assignment.DataSourceTagAssignment,
+	workspace_iam_direct_group_member_v2.DataSourceDirectGroupMember,
+	workspace_iam_external_group_v2.DataSourceExternalGroup,
+	workspace_iam_external_service_principal_v2.DataSourceExternalServicePrincipal,
+	workspace_iam_external_user_v2.DataSourceExternalUser,
+	workspace_iam_group_v2.DataSourceGroup,
+	workspace_iam_service_principal_v2.DataSourceServicePrincipal,
+	workspace_iam_user_v2.DataSourceUser,
+	workspace_iam_workspace_assignment_v2.DataSourceWorkspaceAssignment,
+	workspace_iam_workspace_identity_detail_v2.DataSourceWorkspaceIdentityDetail,
 	workspace_network_option.DataSourceWorkspaceNetworkOption,
 	workspace_setting_v2.DataSourceSetting,
 	account_federation_policy.DataSourceFederationPolicies,
+	account_iam_direct_group_member_v2.DataSourceDirectGroupMembers,
+	account_iam_group_v2.DataSourceGroups,
+	account_iam_service_principal_v2.DataSourceServicePrincipals,
+	account_iam_user_v2.DataSourceUsers,
+	account_iam_workspace_assignment_v2.DataSourceWorkspaceAssignments,
 	account_network_policy.DataSourceAccountNetworkPolicies,
 	ai_gateway_mcp_service.DataSourceMcpServices,
 	ai_gateway_model_provider_service.DataSourceModelProviderServices,
@@ -250,6 +349,7 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	database_synced_database_table.DataSourceSyncedDatabaseTables,
 	disaster_recovery_failover_group.DataSourceFailoverGroups,
 	disaster_recovery_stable_url.DataSourceStableUrls,
+	domain.DataSourceDomains,
 	endpoint.DataSourceEndpoints,
 	entity_tag_assignment.DataSourceEntityTagAssignments,
 	environments_workspace_base_environment.DataSourceWorkspaceBaseEnvironments,
@@ -259,6 +359,10 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	feature_engineering_materialized_feature.DataSourceMaterializedFeatures,
 	knowledge_assistant.DataSourceKnowledgeAssistants,
 	knowledge_assistant_knowledge_source.DataSourceKnowledgeSources,
+	mason_managed_memory_entry.DataSourceManagedMemoryEntries,
+	mason_managed_memory_store.DataSourceManagedMemoryStores,
+	mason_session.DataSourceSessions,
+	mason_session_store.DataSourceSessionStores,
 	materialized_features_feature_tag.DataSourceFeatureTags,
 	online_store.DataSourceOnlineStores,
 	policy_info.DataSourcePolicyInfos,
@@ -269,7 +373,9 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	postgres_endpoint.DataSourceEndpoints,
 	postgres_project.DataSourceProjects,
 	postgres_role.DataSourceRoles,
+	private_network_gateway.DataSourcePrivateNetworkGateways,
 	quality_monitor_v2.DataSourceQualityMonitors,
+	sandbox.DataSourceSandboxes,
 	secret_uc.DataSourceSecrets,
 	service_principal_federation_policy.DataSourceFederationPolicies,
 	supervisor_agent.DataSourceSupervisorAgents,
@@ -277,4 +383,9 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	tag_policy.DataSourceTagPolicies,
 	warehouses_default_warehouse_override.DataSourceDefaultWarehouseOverrides,
 	workspace_entity_tag_assignment.DataSourceTagAssignments,
+	workspace_iam_direct_group_member_v2.DataSourceDirectGroupMembers,
+	workspace_iam_group_v2.DataSourceGroups,
+	workspace_iam_service_principal_v2.DataSourceServicePrincipals,
+	workspace_iam_user_v2.DataSourceUsers,
+	workspace_iam_workspace_assignment_v2.DataSourceWorkspaceAssignments,
 }

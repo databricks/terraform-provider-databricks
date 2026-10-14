@@ -11,15 +11,34 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/useragent"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"golang.org/x/exp/maps"
 )
 
-func (ic *importContext) interactivePrompts() string {
+const maxInteractiveAuthAttempts = 3
+
+// ensureAuthenticated prompts for workspace URL & PAT until authentication succeeds,
+// giving up after maxInteractiveAuthAttempts attempts.
+func (ic *importContext) ensureAuthenticated() error {
+	cfg := ic.Client.DatabricksClient.Config
 	req, _ := http.NewRequest("GET", "/", nil)
-	for ic.Client.DatabricksClient.Config.Authenticate(req) != nil {
-		ic.Client.DatabricksClient.Config.Host = askFor("🔑 Databricks Workspace URL:")
-		ic.Client.DatabricksClient.Config.Token = askFor("🔑 Databricks Workspace PAT:")
+	for attempt := 0; ; attempt++ {
+		err := cfg.Authenticate(req)
+		if err == nil {
+			return nil
+		}
+		if attempt == maxInteractiveAuthAttempts {
+			return fmt.Errorf("can't authenticate after %d attempts: %w", maxInteractiveAuthAttempts, err)
+		}
+		cfg.Host = askFor("🔑 Databricks Workspace URL:")
+		cfg.Token = askFor("🔑 Databricks Workspace PAT:")
+	}
+}
+
+func (ic *importContext) interactivePrompts() (string, error) {
+	if err := ic.ensureAuthenticated(); err != nil {
+		return "", err
 	}
 	ic.match = askFor("🔍 Match entity names (optional):")
 
@@ -53,7 +72,7 @@ func (ic *importContext) interactivePrompts() string {
 	}
 	keys = maps.Keys(enabledServices)
 	slices.Sort(keys)
-	return strings.Join(keys, ",")
+	return strings.Join(keys, ","), nil
 }
 
 // Run import according to flags
@@ -133,9 +152,18 @@ func Run(args ...string) error {
 	if err != nil {
 		return err
 	}
+	flags.Visit(func(f *flag.Flag) {
+		if f.Name == "services" || f.Name == "listing" {
+			skipInteractive = true
+		}
+	})
 
 	configureExporterLogging(debug, trace)
 	log.Printf("[WARN] This tooling is experimental and provided as is. It has an evolving interface, which may change or be removed in future versions of the provider.")
+
+	// Mark all requests made by the exporter with a dedicated user agent dimension,
+	// so that exporter usage can be distinguished from regular provider usage.
+	useragent.WithUserAgentExtra("exporter", common.Version())
 
 	client, err := client.New(&config.Config{})
 	if err != nil {
@@ -144,7 +172,10 @@ func Run(args ...string) error {
 	databricksClient.DatabricksClient = client
 
 	if !skipInteractive {
-		configuredListing = ic.interactivePrompts()
+		configuredListing, err = ic.interactivePrompts()
+		if err != nil {
+			return err
+		}
 	}
 	if len(prefix) > 0 {
 		ic.prefix = prefix + "_"

@@ -39,6 +39,19 @@ func (ic *importContext) emitSecretsFromSecretPathString(v string) {
 	}
 }
 
+// emitSecretScopesFromString emits the databricks_secret_scope for every
+// `{{secrets/scope/key}}` reference embedded anywhere in v. Unlike
+// emitSecretsFromSecretPathString it handles tokens embedded in a larger string and
+// multiple tokens in one value, which is the case for cluster policy definitions.
+func (ic *importContext) emitSecretScopesFromString(v string) {
+	for _, m := range policySecretScopeRegex.FindAllStringSubmatch(v, -1) {
+		ic.Emit(&resource{
+			Resource: "databricks_secret_scope",
+			ID:       m[1],
+		})
+	}
+}
+
 func (ic *importContext) emitSecretsFromSecretsPathMap(m map[string]string) {
 	for _, v := range m {
 		ic.emitSecretsFromSecretPathString(v)

@@ -231,6 +231,62 @@ resource "databricks_grants" "udf" {
 }
 ```
 
+## Secret grants
+
+You can grant `ALL_PRIVILEGES`, `MANAGE`, and `READ_SECRET` privileges to a Unity Catalog secret ([databricks_secret_uc](secret_uc.md)) specified in the `secret` attribute.
+
+```hcl
+resource "databricks_grants" "secret" {
+  secret = "main.default.my_secret"
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["READ_SECRET"]
+  }
+}
+```
+
+## Model service grants
+
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `EXECUTE`, `MANAGE`, and `READ_METADATA` privileges to a Unity AI Gateway model service ([databricks_ai_gateway_model_service](ai_gateway_model_service.md)) specified in the `model_service` attribute. Pass either the bare full name (`catalog.schema.name`) or the resource's `name` attribute (`databricks_ai_gateway_model_service.this.name`); the provider strips the `model-services/` resource-name prefix that `name` carries.
+
+```hcl
+resource "databricks_grants" "model_service" {
+  model_service = "main.default.my_model_service"
+  grant {
+    principal  = "account users"
+    privileges = ["EXECUTE"]
+  }
+}
+```
+
+## Model provider service grants
+
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `EXECUTE`, `MANAGE`, and `READ_METADATA` privileges to a Unity AI Gateway model provider service ([databricks_ai_gateway_model_provider_service](ai_gateway_model_provider_service.md)) specified in the `model_provider_service` attribute. Pass either the bare full name (`catalog.schema.name`) or the resource's `name` attribute (`databricks_ai_gateway_model_provider_service.this.name`); the provider strips the `model-provider-services/` resource-name prefix that `name` carries.
+
+```hcl
+resource "databricks_grants" "model_provider_service" {
+  model_provider_service = "main.default.my_provider"
+  grant {
+    principal  = "account users"
+    privileges = ["EXECUTE"]
+  }
+}
+```
+
+## MCP service grants
+
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `EXECUTE`, `MANAGE`, and `READ_METADATA` privileges to a Unity AI Gateway MCP service ([databricks_ai_gateway_mcp_service](ai_gateway_mcp_service.md)) specified in the `mcp_service` attribute. Pass either the bare full name (`catalog.schema.name`) or the resource's `name` attribute (`databricks_ai_gateway_mcp_service.this.name`); the provider strips the `mcp-services/` resource-name prefix that `name` carries.
+
+```hcl
+resource "databricks_grants" "mcp_service" {
+  mcp_service = "main.default.my_mcp_service"
+  grant {
+    principal  = "account users"
+    privileges = ["EXECUTE"]
+  }
+}
+```
+
 ## Service credential grants
 
 You can grant `ALL_PRIVILEGES`, `ACCESS`, `CREATE_CONNECTION`, and `MANAGE` privileges to [databricks_credential](credential.md) id specified in `credential` attribute:

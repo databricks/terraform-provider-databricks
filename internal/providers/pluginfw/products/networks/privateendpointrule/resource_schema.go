@@ -205,6 +205,10 @@ func resourceSchema() schema.Schema {
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
+						"all_vpc_sc_services": schema.BoolAttribute{
+							Optional:            true,
+							MarkdownDescription: "All Google APIs that support VPC Service Controls.",
+						},
 						"psc_endpoint_uri": schema.StringAttribute{
 							Computed:            true,
 							MarkdownDescription: "The URI of the created Private Service Connect endpoint.",
@@ -221,6 +225,23 @@ func resourceSchema() schema.Schema {
 							MarkdownDescription: "(GCP only) The full URL of the target service attachment, e.g. `projects/my-project/regions/us-east4/serviceAttachments/my-attachment`. Changing this forces a new resource.",
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"google_api_endpoints": schema.ListNestedBlock{
+							MarkdownDescription: "Selected Google API hostnames, e.g. `storage.googleapis.com` or `bigquery.googleapis.com`.",
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"endpoints": schema.ListAttribute{
+										Optional:            true,
+										ElementType:         types.StringType,
+										MarkdownDescription: "Google API hostnames. Use `googleapis.com` to cover all Google APIs.",
+									},
+								},
 							},
 						},
 					},

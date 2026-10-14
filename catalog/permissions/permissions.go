@@ -106,13 +106,51 @@ func (sm SecurableMapping) GetSecurableType(securable string) catalog.SecurableT
 	return sm[securable]
 }
 
+// securableResourceNamePrefixes maps a grants field to the resource-name prefix
+// its databricks_ai_gateway_* resource carries on the `name` attribute (e.g.
+// "model-provider-services/{catalog}.{schema}.{name}"). The grants/permissions
+// API addresses these securables by their bare full name
+// ({catalog}.{schema}.{name}), but users naturally wire
+// databricks_ai_gateway_*.<x>.name into databricks_grant(s), so the prefix must
+// be stripped before it reaches the API path and the resource ID.
+var securableResourceNamePrefixes = map[string]string{
+	"mcp_service":            "mcp-services/",
+	"model_provider_service": "model-provider-services/",
+	"model_service":          "model-services/",
+}
+
+// normalizeSecurableName strips the AI Gateway resource-name prefix so a caller
+// can pass either the bare full name or the databricks_ai_gateway_*.name
+// attribute. A bare name, or any non-AI-Gateway securable, is returned unchanged.
+func normalizeSecurableName(field, name string) string {
+	if prefix, ok := securableResourceNamePrefixes[field]; ok {
+		return strings.TrimPrefix(name, prefix)
+	}
+	return name
+}
+
+// SuppressResourceNamePrefixDiff returns a DiffSuppressFunc that treats an AI
+// Gateway securable value as equal whether or not it carries the resource-name
+// prefix. Without it, referencing databricks_ai_gateway_*.<x>.name (prefixed) in
+// config perpetually diffs against the bare full name that Read stores back,
+// forcing replacement on every plan. Returns nil for securables without a
+// prefix, so callers can attach it unconditionally.
+func SuppressResourceNamePrefixDiff(field string) schema.SchemaDiffSuppressFunc {
+	if _, ok := securableResourceNamePrefixes[field]; !ok {
+		return nil
+	}
+	return func(_, old, new string, _ *schema.ResourceData) bool {
+		return normalizeSecurableName(field, old) == normalizeSecurableName(field, new)
+	}
+}
+
 func (sm SecurableMapping) KeyValue(d attributeGetter) (string, string) {
 	for field := range sm {
 		v := d.Get(field).(string)
 		if v == "" {
 			continue
 		}
-		return field, v
+		return field, normalizeSecurableName(field, v)
 	}
 	log.Printf("[WARN] Unexpected resource or permissions. Please proceed at your own risk.")
 	return "unknown", "unknown"
@@ -126,20 +164,24 @@ func (sm SecurableMapping) Id(d *schema.ResourceData) string {
 // See https://docs.databricks.com/api/workspace/grants/update for full list
 // Omitting provider as a reserved keyword
 var Mappings = SecurableMapping{
-	"catalog":            catalog.SecurableType("catalog"),
-	"credential":         catalog.SecurableType("credential"),
-	"foreign_connection": catalog.SecurableType("connection"),
-	"external_location":  catalog.SecurableType("external_location"),
-	"function":           catalog.SecurableType("function"),
-	"metastore":          catalog.SecurableType("metastore"),
-	"model":              catalog.SecurableType("function"),
-	"pipeline":           catalog.SecurableType("pipeline"),
-	"recipient":          catalog.SecurableType("recipient"),
-	"schema":             catalog.SecurableType("schema"),
-	"share":              catalog.SecurableType("share"),
-	"storage_credential": catalog.SecurableType("storage_credential"),
-	"table":              catalog.SecurableType("table"),
-	"volume":             catalog.SecurableType("volume"),
+	"catalog":                catalog.SecurableType("catalog"),
+	"credential":             catalog.SecurableType("credential"),
+	"foreign_connection":     catalog.SecurableType("connection"),
+	"external_location":      catalog.SecurableType("external_location"),
+	"function":               catalog.SecurableType("function"),
+	"mcp_service":            catalog.SecurableType("mcp_service"),
+	"metastore":              catalog.SecurableType("metastore"),
+	"model":                  catalog.SecurableType("function"),
+	"model_provider_service": catalog.SecurableType("model_provider_service"),
+	"model_service":          catalog.SecurableType("model_service"),
+	"pipeline":               catalog.SecurableType("pipeline"),
+	"recipient":              catalog.SecurableType("recipient"),
+	"schema":                 catalog.SecurableType("schema"),
+	"secret":                 catalog.SecurableType("secret"),
+	"share":                  catalog.SecurableType("share"),
+	"storage_credential":     catalog.SecurableType("storage_credential"),
+	"table":                  catalog.SecurableType("table"),
+	"volume":                 catalog.SecurableType("volume"),
 }
 
 // Unity Catalog accepts privileges with spaces, but will automatically convert them to underscores

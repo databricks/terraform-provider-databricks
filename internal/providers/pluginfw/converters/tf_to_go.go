@@ -153,7 +153,7 @@ func tfsdkToGoSdkStructField(
 			d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("Cannot convert %T to time.Duration. %s", v, common.TerraformBugErrorMessage))
 			return d
 		}
-		destField.Set(reflect.ValueOf(duration.New(dur)))
+		setWellKnownField(destField, reflect.ValueOf(duration.New(dur)))
 	case timetypes.RFC3339:
 		if v.IsNull() || v.IsUnknown() {
 			// Leave the destination field as nil
@@ -164,7 +164,7 @@ func tfsdkToGoSdkStructField(
 			d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("Cannot convert %T to time.Time. %s", v, common.TerraformBugErrorMessage))
 			return d
 		}
-		destField.Set(reflect.ValueOf(sdktime.New(t)))
+		setWellKnownField(destField, reflect.ValueOf(sdktime.New(t)))
 	case jsontypes.Normalized:
 		if v.IsNull() || v.IsUnknown() {
 			// Leave the destination field as nil (*json.RawMessage)
@@ -335,6 +335,20 @@ func tfsdkToGoSdkStructField(
 		return
 	}
 	return
+}
+
+// setWellKnownField assigns a well-known-type wrapper to destField. The SDK
+// constructors (duration.New, sdktime.New) always return a pointer, but the
+// generated SDK renders a REQUIRED well-known type as a value and an OPTIONAL
+// one as a pointer. Dereference when the destination is a value so both shapes
+// convert without a reflect.Set type mismatch. The constructors never return
+// nil, so Elem is safe.
+func setWellKnownField(destField, ptr reflect.Value) {
+	if destField.Kind() == reflect.Ptr {
+		destField.Set(ptr)
+	} else {
+		destField.Set(ptr.Elem())
+	}
 }
 
 func shouldSetForceSendFields(srcFieldValue attr.Value, destField reflect.Value) bool {

@@ -2094,6 +2094,9 @@ type Setting_SdkV2 struct {
 	// Effective setting value for string type setting. This is the final
 	// effective value of setting. To set a value use string_val.
 	EffectiveStringVal types.List `tfsdk:"effective_string_val"`
+	// Effective setting value for workspace_label setting. This is the final
+	// effective value of setting. To set a value use workspace_label.
+	EffectiveWorkspaceLabel types.List `tfsdk:"effective_workspace_label"`
 	// Setting value for integer type setting. This is the setting value set by
 	// consumers, check effective_integer_val for final setting value.
 	IntegerVal types.List `tfsdk:"integer_val"`
@@ -2113,6 +2116,9 @@ type Setting_SdkV2 struct {
 	// Setting value for string type setting. This is the setting value set by
 	// consumers, check effective_string_val for final setting value.
 	StringVal types.List `tfsdk:"string_val"`
+	// Setting value for workspace_label setting. This is the setting value set
+	// by consumers, check effective_workspace_label for final setting value.
+	WorkspaceLabel types.List `tfsdk:"workspace_label"`
 }
 
 func (to *Setting_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Setting_SdkV2) {
@@ -2269,6 +2275,15 @@ func (to *Setting_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 			}
 		}
 	}
+	if !from.EffectiveWorkspaceLabel.IsNull() && !from.EffectiveWorkspaceLabel.IsUnknown() {
+		if toEffectiveWorkspaceLabel, ok := to.GetEffectiveWorkspaceLabel(ctx); ok {
+			if fromEffectiveWorkspaceLabel, ok := from.GetEffectiveWorkspaceLabel(ctx); ok {
+				// Recursively sync the fields of EffectiveWorkspaceLabel
+				toEffectiveWorkspaceLabel.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveWorkspaceLabel)
+				to.SetEffectiveWorkspaceLabel(ctx, toEffectiveWorkspaceLabel)
+			}
+		}
+	}
 	if !from.IntegerVal.IsNull() && !from.IntegerVal.IsUnknown() {
 		if toIntegerVal, ok := to.GetIntegerVal(ctx); ok {
 			if fromIntegerVal, ok := from.GetIntegerVal(ctx); ok {
@@ -2311,6 +2326,15 @@ func (to *Setting_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 				// Recursively sync the fields of StringVal
 				toStringVal.SyncFieldsDuringCreateOrUpdate(ctx, fromStringVal)
 				to.SetStringVal(ctx, toStringVal)
+			}
+		}
+	}
+	if !from.WorkspaceLabel.IsNull() && !from.WorkspaceLabel.IsUnknown() {
+		if toWorkspaceLabel, ok := to.GetWorkspaceLabel(ctx); ok {
+			if fromWorkspaceLabel, ok := from.GetWorkspaceLabel(ctx); ok {
+				// Recursively sync the fields of WorkspaceLabel
+				toWorkspaceLabel.SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceLabel)
+				to.SetWorkspaceLabel(ctx, toWorkspaceLabel)
 			}
 		}
 	}
@@ -2453,6 +2477,14 @@ func (to *Setting_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Setting_
 			}
 		}
 	}
+	if !from.EffectiveWorkspaceLabel.IsNull() && !from.EffectiveWorkspaceLabel.IsUnknown() {
+		if toEffectiveWorkspaceLabel, ok := to.GetEffectiveWorkspaceLabel(ctx); ok {
+			if fromEffectiveWorkspaceLabel, ok := from.GetEffectiveWorkspaceLabel(ctx); ok {
+				toEffectiveWorkspaceLabel.SyncFieldsDuringRead(ctx, fromEffectiveWorkspaceLabel)
+				to.SetEffectiveWorkspaceLabel(ctx, toEffectiveWorkspaceLabel)
+			}
+		}
+	}
 	if !from.IntegerVal.IsNull() && !from.IntegerVal.IsUnknown() {
 		if toIntegerVal, ok := to.GetIntegerVal(ctx); ok {
 			if fromIntegerVal, ok := from.GetIntegerVal(ctx); ok {
@@ -2493,6 +2525,14 @@ func (to *Setting_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Setting_
 			}
 		}
 	}
+	if !from.WorkspaceLabel.IsNull() && !from.WorkspaceLabel.IsUnknown() {
+		if toWorkspaceLabel, ok := to.GetWorkspaceLabel(ctx); ok {
+			if fromWorkspaceLabel, ok := from.GetWorkspaceLabel(ctx); ok {
+				toWorkspaceLabel.SyncFieldsDuringRead(ctx, fromWorkspaceLabel)
+				to.SetWorkspaceLabel(ctx, toWorkspaceLabel)
+			}
+		}
+	}
 }
 
 func (m Setting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2530,6 +2570,8 @@ func (m Setting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["effective_restrict_workspace_admins"] = attrs["effective_restrict_workspace_admins"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["effective_string_val"] = attrs["effective_string_val"].SetComputed()
 	attrs["effective_string_val"] = attrs["effective_string_val"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["effective_workspace_label"] = attrs["effective_workspace_label"].SetOptional()
+	attrs["effective_workspace_label"] = attrs["effective_workspace_label"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["integer_val"] = attrs["integer_val"].SetOptional()
 	attrs["integer_val"] = attrs["integer_val"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
@@ -2541,6 +2583,8 @@ func (m Setting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["restrict_workspace_admins"] = attrs["restrict_workspace_admins"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["string_val"] = attrs["string_val"].SetOptional()
 	attrs["string_val"] = attrs["string_val"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["workspace_label"] = attrs["workspace_label"].SetOptional()
+	attrs["workspace_label"] = attrs["workspace_label"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -2571,11 +2615,13 @@ func (m Setting_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]refl
 		"effective_personal_compute":                          reflect.TypeOf(PersonalComputeMessage_SdkV2{}),
 		"effective_restrict_workspace_admins":                 reflect.TypeOf(RestrictWorkspaceAdminsMessage_SdkV2{}),
 		"effective_string_val":                                reflect.TypeOf(StringMessage_SdkV2{}),
+		"effective_workspace_label":                           reflect.TypeOf(WorkspaceLabelMessage_SdkV2{}),
 		"integer_val":                                         reflect.TypeOf(IntegerMessage_SdkV2{}),
 		"operational_email_custom_recipient":                  reflect.TypeOf(OperationalEmailCustomRecipientMessage_SdkV2{}),
 		"personal_compute":                                    reflect.TypeOf(PersonalComputeMessage_SdkV2{}),
 		"restrict_workspace_admins":                           reflect.TypeOf(RestrictWorkspaceAdminsMessage_SdkV2{}),
 		"string_val":                                          reflect.TypeOf(StringMessage_SdkV2{}),
+		"workspace_label":                                     reflect.TypeOf(WorkspaceLabelMessage_SdkV2{}),
 	}
 }
 
@@ -2603,12 +2649,14 @@ func (m Setting_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"effective_personal_compute":                          m.EffectivePersonalCompute,
 			"effective_restrict_workspace_admins":                 m.EffectiveRestrictWorkspaceAdmins,
 			"effective_string_val":                                m.EffectiveStringVal,
+			"effective_workspace_label":                           m.EffectiveWorkspaceLabel,
 			"integer_val":                                         m.IntegerVal,
 			"name":                                                m.Name,
 			"operational_email_custom_recipient":                  m.OperationalEmailCustomRecipient,
 			"personal_compute":                                    m.PersonalCompute,
 			"restrict_workspace_admins":                           m.RestrictWorkspaceAdmins,
 			"string_val":                                          m.StringVal,
+			"workspace_label":                                     m.WorkspaceLabel,
 		})
 }
 
@@ -2667,6 +2715,9 @@ func (m Setting_SdkV2) Type(ctx context.Context) attr.Type {
 			"effective_string_val": basetypes.ListType{
 				ElemType: StringMessage_SdkV2{}.Type(ctx),
 			},
+			"effective_workspace_label": basetypes.ListType{
+				ElemType: WorkspaceLabelMessage_SdkV2{}.Type(ctx),
+			},
 			"integer_val": basetypes.ListType{
 				ElemType: IntegerMessage_SdkV2{}.Type(ctx),
 			},
@@ -2682,6 +2733,9 @@ func (m Setting_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"string_val": basetypes.ListType{
 				ElemType: StringMessage_SdkV2{}.Type(ctx),
+			},
+			"workspace_label": basetypes.ListType{
+				ElemType: WorkspaceLabelMessage_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3129,6 +3183,32 @@ func (m *Setting_SdkV2) SetEffectiveStringVal(ctx context.Context, v StringMessa
 	m.EffectiveStringVal = types.ListValueMust(t, vs)
 }
 
+// GetEffectiveWorkspaceLabel returns the value of the EffectiveWorkspaceLabel field in Setting_SdkV2 as
+// a WorkspaceLabelMessage_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Setting_SdkV2) GetEffectiveWorkspaceLabel(ctx context.Context) (WorkspaceLabelMessage_SdkV2, bool) {
+	var e WorkspaceLabelMessage_SdkV2
+	if m.EffectiveWorkspaceLabel.IsNull() || m.EffectiveWorkspaceLabel.IsUnknown() {
+		return e, false
+	}
+	var v []WorkspaceLabelMessage_SdkV2
+	d := m.EffectiveWorkspaceLabel.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEffectiveWorkspaceLabel sets the value of the EffectiveWorkspaceLabel field in Setting_SdkV2.
+func (m *Setting_SdkV2) SetEffectiveWorkspaceLabel(ctx context.Context, v WorkspaceLabelMessage_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_workspace_label"]
+	m.EffectiveWorkspaceLabel = types.ListValueMust(t, vs)
+}
+
 // GetIntegerVal returns the value of the IntegerVal field in Setting_SdkV2 as
 // a IntegerMessage_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -3257,6 +3337,32 @@ func (m *Setting_SdkV2) SetStringVal(ctx context.Context, v StringMessage_SdkV2)
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["string_val"]
 	m.StringVal = types.ListValueMust(t, vs)
+}
+
+// GetWorkspaceLabel returns the value of the WorkspaceLabel field in Setting_SdkV2 as
+// a WorkspaceLabelMessage_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Setting_SdkV2) GetWorkspaceLabel(ctx context.Context) (WorkspaceLabelMessage_SdkV2, bool) {
+	var e WorkspaceLabelMessage_SdkV2
+	if m.WorkspaceLabel.IsNull() || m.WorkspaceLabel.IsUnknown() {
+		return e, false
+	}
+	var v []WorkspaceLabelMessage_SdkV2
+	d := m.WorkspaceLabel.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWorkspaceLabel sets the value of the WorkspaceLabel field in Setting_SdkV2.
+func (m *Setting_SdkV2) SetWorkspaceLabel(ctx context.Context, v WorkspaceLabelMessage_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace_label"]
+	m.WorkspaceLabel = types.ListValueMust(t, vs)
 }
 
 type SettingsMetadata_SdkV2 struct {
@@ -3646,4 +3752,57 @@ func (m *UserPreference_SdkV2) SetStringVal(ctx context.Context, v StringMessage
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["string_val"]
 	m.StringVal = types.ListValueMust(t, vs)
+}
+
+// Workspace label and color for display (e.g. in account console).
+type WorkspaceLabelMessage_SdkV2 struct {
+	Color types.String `tfsdk:"color"`
+
+	Label types.String `tfsdk:"label"`
+}
+
+func (to *WorkspaceLabelMessage_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WorkspaceLabelMessage_SdkV2) {
+}
+
+func (to *WorkspaceLabelMessage_SdkV2) SyncFieldsDuringRead(ctx context.Context, from WorkspaceLabelMessage_SdkV2) {
+}
+
+func (m WorkspaceLabelMessage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["color"] = attrs["color"].SetOptional()
+	attrs["label"] = attrs["label"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in WorkspaceLabelMessage.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m WorkspaceLabelMessage_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, WorkspaceLabelMessage_SdkV2
+// only implements ToObjectValue() and Type().
+func (m WorkspaceLabelMessage_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"color": m.Color,
+			"label": m.Label,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m WorkspaceLabelMessage_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"color": types.StringType,
+			"label": types.StringType,
+		},
+	}
 }

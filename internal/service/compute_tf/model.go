@@ -1356,7 +1356,7 @@ type ClusterAttributes struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 	// If set, what the total initial volume size (in GB) of the remote disks
-	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	// should be. Supported for GCP.
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
@@ -2402,7 +2402,7 @@ type ClusterDetails struct {
 	// when the cluster is in a `TERMINATING` or `TERMINATED` state.
 	TerminationReason types.Object `tfsdk:"termination_reason"`
 	// If set, what the total initial volume size (in GB) of the remote disks
-	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	// should be. Supported for GCP.
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
@@ -5250,7 +5250,7 @@ type ClusterSpec struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 	// If set, what the total initial volume size (in GB) of the remote disks
-	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	// should be. Supported for GCP.
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
@@ -6520,7 +6520,7 @@ type CreateCluster struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 	// If set, what the total initial volume size (in GB) of the remote disks
-	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	// should be. Supported for GCP.
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
@@ -9382,7 +9382,7 @@ type EditCluster struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 	// If set, what the total initial volume size (in GB) of the remote disks
-	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	// should be. Supported for GCP.
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
@@ -10945,7 +10945,7 @@ type EnforcePolicyComplianceForClusterResponseClusterSettings struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 	// If set, what the total initial volume size (in GB) of the remote disks
-	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	// should be. Supported for GCP.
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
@@ -11719,6 +11719,9 @@ type Environment struct {
 	// List of java dependencies. Each dependency is a string representing a
 	// java library path. For example: `/Volumes/path/to/test.jar`.
 	JavaDependencies types.List `tfsdk:"java_dependencies"`
+	// File path of pyproject.toml file that defines the project-scoped
+	// environment.
+	ProjectEnvironment types.String `tfsdk:"project_environment"`
 }
 
 func (to *Environment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Environment) {
@@ -11757,6 +11760,7 @@ func (m Environment) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["dependencies"] = attrs["dependencies"].SetOptional()
 	attrs["environment_version"] = attrs["environment_version"].SetOptional()
 	attrs["java_dependencies"] = attrs["java_dependencies"].SetOptional()
+	attrs["project_environment"] = attrs["project_environment"].SetOptional()
 
 	return attrs
 }
@@ -11787,6 +11791,7 @@ func (m Environment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"dependencies":        m.Dependencies,
 			"environment_version": m.EnvironmentVersion,
 			"java_dependencies":   m.JavaDependencies,
+			"project_environment": m.ProjectEnvironment,
 		})
 }
 
@@ -11803,6 +11808,7 @@ func (m Environment) Type(ctx context.Context) attr.Type {
 			"java_dependencies": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"project_environment": types.StringType,
 		},
 	}
 }
@@ -16938,7 +16944,13 @@ func (m *InstancePoolAndStats) SetStatus(ctx context.Context, v InstancePoolStat
 // Attributes set during instance pool creation which are related to Amazon Web
 // Services.
 type InstancePoolAwsAttributes struct {
-	// Availability type used for the spot nodes.
+	// Availability type used for the instances in the pool. Supports on-demand,
+	// spot, and spot-with-fallback (the pool acquires spot instances first, and
+	// falls back to on-demand instances when spot capacity is unavailable).
+	//
+	// You can change this value on an existing pool. New clusters use the
+	// updated availability, and existing clusters keep the availability they
+	// launched with.
 	Availability types.String `tfsdk:"availability"`
 	// All AWS instances belonging to the instance pool will have this instance
 	// profile. If omitted, instances will initially be launched with the
@@ -16961,6 +16973,10 @@ type InstancePoolAwsAttributes struct {
 	// instances whose bid price percentage matches this field will be
 	// considered. Note that, for safety, we enforce this field to be no more
 	// than 10000.
+	//
+	// You can change this value on an existing pool. New clusters use the
+	// updated bid price, and existing clusters keep the bid price they launched
+	// with.
 	SpotBidPricePercent types.Int64 `tfsdk:"spot_bid_price_percent"`
 	// Identifier for the availability zone/datacenter in which the cluster
 	// resides. This string will be of a form like "us-west-2a". The provided
@@ -16970,6 +16986,16 @@ type InstancePoolAwsAttributes struct {
 	// optional field at cluster creation, and if not specified, a default zone
 	// will be used. The list of available zones as well as the default value
 	// can be found by using the `List Zones` method.
+	//
+	// Set this field to "auto" to enable Auto-AZ, in which case Databricks
+	// selects the availability zone for each cluster independently when the
+	// cluster launches, and retries another zone if the cluster can't be
+	// fulfilled because of insufficient capacity or quota. All nodes in a
+	// cluster land in the same zone, and different clusters backed by the pool
+	// can run in different zones.
+	//
+	// You can change the zone on an existing pool. New clusters use the updated
+	// zone, and existing clusters keep the zone they launched with.
 	ZoneId types.String `tfsdk:"zone_id"`
 }
 
@@ -17027,7 +17053,13 @@ func (m InstancePoolAwsAttributes) Type(ctx context.Context) attr.Type {
 
 // Attributes set during instance pool creation which are related to Azure.
 type InstancePoolAzureAttributes struct {
-	// Availability type used for the spot nodes.
+	// Availability type used for the instances in the pool. Supports on-demand,
+	// spot, and spot-with-fallback (the pool acquires spot instances first, and
+	// falls back to on-demand instances when spot capacity is unavailable).
+	//
+	// You can change this value on an existing pool. New clusters use the
+	// updated availability, and existing clusters keep the availability they
+	// launched with.
 	Availability types.String `tfsdk:"availability"`
 	// The Azure capacity reservation group resource ID to use for launching VMs
 	// in this pool. When specified, VMs will be launched using the provided
@@ -17054,6 +17086,10 @@ type InstancePoolAzureAttributes struct {
 	// price. The price for the VM will be the current price for spot or the
 	// price for a standard VM, which ever is less, as long as there is capacity
 	// and quota available.
+	//
+	// You can change this value on an existing pool. New clusters use the
+	// updated max price, and existing clusters keep the max price they launched
+	// with.
 	SpotBidMaxPrice types.Float64 `tfsdk:"spot_bid_max_price"`
 }
 
@@ -17108,6 +17144,13 @@ func (m InstancePoolAzureAttributes) Type(ctx context.Context) attr.Type {
 
 // Attributes set during instance pool creation which are related to GCP.
 type InstancePoolGcpAttributes struct {
+	// Availability type for the instances in the pool. One of:
+	//
+	// - `ON_DEMAND_GCP`: the pool uses on-demand instances only. -
+	// `PREEMPTIBLE_GCP`: the pool uses preemptible instances only. -
+	// `PREEMPTIBLE_WITH_FALLBACK_GCP`: the pool acquires preemptible instances
+	// first, and falls back to on-demand instances when preemptible capacity is
+	// unavailable.
 	GcpAvailability types.String `tfsdk:"gcp_availability"`
 	// If provided, each node in the instance pool will have this number of
 	// local SSDs attached. Each local SSD is 375GB in size. Refer to [GCP
@@ -17126,12 +17169,20 @@ type InstancePoolGcpAttributes struct {
 	//
 	// This field can be one of the following: - "HA" => High availability,
 	// spread nodes across availability zones for a Databricks deployment region
-	// - A GCP availability zone => Pick One of the available zones for (machine
-	// type + region) from https://cloud.google.com/compute/docs/regions-zones
-	// (e.g. "us-west1-a").
+	// - "auto" => Auto-AZ. Databricks selects the availability zone for each
+	// cluster independently when the cluster launches, and retries another zone
+	// if the cluster can't be fulfilled because of insufficient capacity or
+	// quota. All nodes in a cluster land in the same zone, and different
+	// clusters backed by the pool can run in different zones. - A GCP
+	// availability zone => Pick One of the available zones for (machine type +
+	// region) from https://cloud.google.com/compute/docs/regions-zones (e.g.
+	// "us-west1-a").
 	//
 	// If empty, Databricks picks an availability zone to schedule the cluster
 	// on.
+	//
+	// You can change the zone on an existing pool. New clusters use the updated
+	// zone, and existing clusters keep the zone they launched with.
 	ZoneId types.String `tfsdk:"zone_id"`
 }
 
@@ -20718,6 +20769,9 @@ type NodeTypeFlexibility struct {
 	// A list of node type IDs to use as fallbacks when the primary node type is
 	// unavailable.
 	AlternateNodeTypeIds types.List `tfsdk:"alternate_node_type_ids"`
+	// The AWS Context ID for EC2 Fleet. When set (non-empty), the value is
+	// passed to AWS CreateFleet API to create the EC2 Fleet.
+	AwsContextId types.String `tfsdk:"aws_context_id"`
 }
 
 func (to *NodeTypeFlexibility) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from NodeTypeFlexibility) {
@@ -20740,6 +20794,7 @@ func (to *NodeTypeFlexibility) SyncFieldsDuringRead(ctx context.Context, from No
 
 func (m NodeTypeFlexibility) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alternate_node_type_ids"] = attrs["alternate_node_type_ids"].SetOptional()
+	attrs["aws_context_id"] = attrs["aws_context_id"].SetOptional()
 
 	return attrs
 }
@@ -20765,6 +20820,7 @@ func (m NodeTypeFlexibility) ToObjectValue(ctx context.Context) basetypes.Object
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"alternate_node_type_ids": m.AlternateNodeTypeIds,
+			"aws_context_id":          m.AwsContextId,
 		})
 }
 
@@ -20775,6 +20831,7 @@ func (m NodeTypeFlexibility) Type(ctx context.Context) attr.Type {
 			"alternate_node_type_ids": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"aws_context_id": types.StringType,
 		},
 	}
 }
@@ -23157,7 +23214,7 @@ type UpdateClusterResource struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 	// If set, what the total initial volume size (in GB) of the remote disks
-	// should be. Currently only supported for GCP HYPERDISK_BALANCED disks.
+	// should be. Supported for GCP.
 	TotalInitialRemoteDiskSize types.Int64 `tfsdk:"total_initial_remote_disk_size"`
 	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//

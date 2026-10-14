@@ -37,13 +37,31 @@ var (
 	secretPathRegex                  = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
 	secretScopePathRegex             = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/[^}]+\}\}$`)
 	sqlParentRegexp                  = regexp.MustCompile(`^folders/(\d+)$`)
-	requirementsFileRegexp           = regexp.MustCompile(`-r\s+(/.*)$`)
+	requirementsFileRegexp           = regexp.MustCompile(`-r\s+["']?(/[^"']+)["']?\s*$`)
 	dltDefaultStorageRegex           = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 	ignoreIdeFolderRegex             = regexp.MustCompile(`^/Users/[^/]+/\.ide/.*$`)
 	servedEntityFieldExtractionRegex = regexp.MustCompile(`^config\.[0-9]+\.served_entities\.([0-9]+)\.(.*)$`)
 	uc3LevelIdRegex                  = regexp.MustCompile(`^([^.]+\.[^.]+\.[^.]+)$`)
-	globIncludeDirectoryRegex        = regexp.MustCompile(`^(/.+)/\*\*$`)
-	fileExtensionLanguageMapping     = map[string]string{
+	policyInstancePoolIdRegex        = regexp.MustCompile(`"instance_pool_id":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
+	policyDriverInstancePoolIdRegex  = regexp.MustCompile(`"driver_instance_pool_id":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
+	policyInstanceProfileArnRegex    = regexp.MustCompile(`"aws_attributes\.instance_profile_arn":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
+	// policySecretRegex captures a whole `{{secrets/scope/key}}` token so it matches
+	// the computed `config_reference` attribute of a databricks_secret. Used with
+	// MultiMatch to substitute every secret reference embedded in a policy definition.
+	policySecretRegex = regexp.MustCompile(`(\{\{secrets/[^/]+/[^}]+\}\})`)
+	// policySecretScopeRegex captures just the scope of an embedded `{{secrets/scope/key}}`
+	// token. It's the fallback used when the specific secret can't be resolved to a
+	// databricks_secret resource (e.g. Azure Key Vault backed scopes, where individual
+	// secrets aren't managed by Databricks) - only the scope is substituted.
+	policySecretScopeRegex         = regexp.MustCompile(`\{\{secrets/([^/]+)/[^}]+\}\}`)
+	policyInitScriptDbfsRegex      = regexp.MustCompile(`"init_scripts\.\d+\.dbfs\.destination":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
+	policyInitScriptWorkspaceRegex = regexp.MustCompile(`"init_scripts\.\d+\.workspace\.destination":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
+	policyInitScriptVolumesRegex   = regexp.MustCompile(`"init_scripts\.\d+\.volumes\.destination":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
+	globIncludeDirectoryRegex      = regexp.MustCompile(`^(/.+)/\*\*$`)
+	// dataClassificationParentRegex captures the catalog name from the `parent`
+	// field of databricks_data_classification_catalog_config (format `catalogs/{name}`).
+	dataClassificationParentRegex = regexp.MustCompile(`^catalogs/([^/]+)$`)
+	fileExtensionLanguageMapping  = map[string]string{
 		"SCALA":  ".scala",
 		"PYTHON": ".py",
 		"SQL":    ".sql",
@@ -223,24 +241,41 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
 		},
-		Depends: []reference{
-			{Path: "libraries.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
-			{Path: "libraries.jar", Resource: "databricks_file"},
-			{Path: "libraries.jar", Resource: "databricks_workspace_file", Match: "workspace_path"},
-			{Path: "libraries.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
-			{Path: "libraries.whl", Resource: "databricks_file"},
-			{Path: "libraries.whl", Resource: "databricks_workspace_file", Match: "workspace_path"},
-			{Path: "libraries.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
-			{Path: "libraries.egg", Resource: "databricks_workspace_file", Match: "workspace_path"},
-			{Path: "libraries.whl", Resource: "databricks_repo", Match: "workspace_path",
-				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "libraries.egg", Resource: "databricks_repo", Match: "workspace_path",
-				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "libraries.jar", Resource: "databricks_repo", Match: "workspace_path",
-				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-		},
+		Depends: clusterPolicyReferences(),
 		// TODO: implement a custom Body that will write with special formatting, where
 		// JSON is written line by line so that we're able to do the references
+	},
+	"databricks_environments_workspace_base_environment": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "compute",
+		NameUnified:     makeNamePlusIdFuncUnified("display_name"),
+		List:            listWorkspaceBaseEnvironments,
+		Import:          importWorkspaceBaseEnvironment,
+		Depends: []reference{
+			{Path: "filepath", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "filepath", Resource: "databricks_workspace_file", Match: "path"},
+			{Path: "filepath", Resource: "databricks_file"},
+			{Path: "spec.dependencies", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "spec.dependencies", Resource: "databricks_workspace_file", Match: "path"},
+			{Path: "spec.dependencies", Resource: "databricks_file"},
+			{Path: "spec.dependencies", Resource: "databricks_workspace_file", Match: "workspace_path",
+				MatchType: MatchRegexp, Regexp: requirementsFileRegexp},
+			{Path: "spec.dependencies", Resource: "databricks_file", MatchType: MatchRegexp,
+				Regexp: requirementsFileRegexp},
+		},
+	},
+	"databricks_environments_default_workspace_base_environment": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "compute",
+		List:            listDefaultWorkspaceBaseEnvironment,
+		Import:          importDefaultWorkspaceBaseEnvironment,
+		Ignore:          ignoreDefaultWorkspaceBaseEnvironment,
+		Depends: []reference{
+			{Path: "cpu_workspace_base_environment", Resource: "databricks_environments_workspace_base_environment", Match: "name"},
+			{Path: "gpu_workspace_base_environment", Resource: "databricks_environments_workspace_base_environment", Match: "name"},
+		},
 	},
 	"databricks_group": {
 		Service:        "groups",
@@ -369,6 +404,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "vector_search_endpoint_id", Resource: "databricks_vector_search_endpoint", Match: "endpoint_id"},
 			{Path: "serving_endpoint_id", Resource: "databricks_model_serving", Match: "serving_endpoint_id"},
 			{Path: "database_instance_name", Resource: "databricks_database_instance", Match: "name"},
+			{Path: "database_project_name", Resource: "databricks_postgres_project", Match: "project_id"},
 			{Path: "app_name", Resource: "databricks_app", Match: "name"},
 			// TODO: can we fill _path component for it, and then match on user/SP home instead?
 			{Path: "directory_id", Resource: "databricks_directory", Match: "object_id"},
@@ -780,6 +816,25 @@ var resourcesMap map[string]importable = map[string]importable{
 			return pathString == "enable_serverless_compute"
 		},
 	},
+	"databricks_warehouses_default_warehouse_override": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "sql-endpoints",
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			// The resource name is `default-warehouse-overrides/{default_warehouse_override_id}`,
+			// where the ID component is the user ID the override applies to.
+			if id := defaultWarehouseOverrideId(wrapper.Id()); id != "" {
+				return "default_warehouse_override_" + id
+			}
+			return generateUniqueID(wrapper.Id())
+		},
+		List:   listWarehouseDefaultOverrides,
+		Import: importWarehouseDefaultOverride,
+		Depends: []reference{
+			{Path: "default_warehouse_override_id", Resource: "databricks_user"},
+			{Path: "warehouse_id", Resource: "databricks_sql_endpoint"},
+		},
+	},
 	"databricks_sql_global_config": {
 		WorkspaceLevel: true,
 		Service:        "wsconf",
@@ -988,7 +1043,15 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "resources.secret.scope", Resource: "databricks_secret_scope"},
 			{Path: "resources.secret.key", Resource: "databricks_secret", Match: "key",
 				IsValidApproximation: createIsMatchingScopeAndKey("scope", "key")},
-			{Path: "resources.uc_securable.securable_full_name", Resource: "databricks_volume"},
+			{Path: "resources.uc_securable.securable_full_name", Resource: "databricks_connection", Match: "name",
+				IsValidApproximation: createIsAppUcSecurableType("CONNECTION")},
+			{Path: "resources.uc_securable.securable_full_name", Resource: "databricks_sql_table",
+				IsValidApproximation: createIsAppUcSecurableType("TABLE")},
+			{Path: "resources.uc_securable.securable_full_name", Resource: "databricks_volume",
+				IsValidApproximation: createIsAppUcSecurableType("VOLUME")},
+			{Path: "telemetry_export_destinations.unity_catalog.logs_table", Resource: "databricks_sql_table"},
+			{Path: "telemetry_export_destinations.unity_catalog.metrics_table", Resource: "databricks_sql_table"},
+			{Path: "telemetry_export_destinations.unity_catalog.traces_table", Resource: "databricks_sql_table"},
 			{Path: "resources.database.instance_name", Resource: "databricks_database_instance", Match: "name"},
 			{Path: "budget_policy_id", Resource: "databricks_budget_policy", Match: "policy_id"},
 		},
@@ -1036,6 +1099,27 @@ var resourcesMap map[string]importable = map[string]importable{
 			return numLibraries == 0
 		},
 		Depends: []reference{
+			{Path: "budget_policy_id", Resource: "databricks_budget_policy", Match: "policy_id"},
+			{Path: "gateway_definition.connection_name", Resource: "databricks_connection", Match: "name"},
+			{Path: "gateway_definition.gateway_storage_catalog", Resource: "databricks_catalog"},
+			{Path: "gateway_definition.gateway_storage_schema", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: createIsMatchingCatalogAndSchema("gateway_definition.0.gateway_storage_catalog", "gateway_definition.0.gateway_storage_schema")},
+			{Path: "ingestion_definition.connection_name", Resource: "databricks_connection", Match: "name"},
+			{Path: "ingestion_definition.ingestion_gateway_id", Resource: "databricks_pipeline"},
+			{Path: "ingestion_definition.netsuite_jar_path", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "ingestion_definition.netsuite_jar_path", Resource: "databricks_file"},
+			{Path: "ingestion_definition.objects.schema.destination_catalog", Resource: "databricks_catalog"},
+			{Path: "ingestion_definition.objects.schema.destination_schema", Resource: "databricks_schema", Match: "name"},
+			{Path: "ingestion_definition.objects.table.destination_catalog", Resource: "databricks_catalog"},
+			{Path: "ingestion_definition.objects.table.destination_schema", Resource: "databricks_schema", Match: "name"},
+			{Path: "ingestion_definition.objects.report.destination_catalog", Resource: "databricks_catalog"},
+			{Path: "ingestion_definition.objects.report.destination_schema", Resource: "databricks_schema", Match: "name"},
+			{Path: "ingestion_definition.objects.schema.fanout_options.transforms.avro_options.schema_file_path", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "ingestion_definition.objects.schema.fanout_options.transforms.avro_options.schema_file_path", Resource: "databricks_file"},
+			{Path: "ingestion_definition.objects.schema.fanout_options.transforms.avro_options.schema_registry.connection_name", Resource: "databricks_connection", Match: "name"},
+			{Path: "ingestion_definition.objects.schema.fanout_options.transforms.protobuf_options.desc_file_path", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "ingestion_definition.objects.schema.fanout_options.transforms.protobuf_options.desc_file_path", Resource: "databricks_file"},
+			{Path: "ingestion_definition.objects.schema.fanout_options.transforms.protobuf_options.schema_registry.connection_name", Resource: "databricks_connection", Match: "name"},
 			{Path: "catalog", Resource: "databricks_catalog"},
 			{Path: "target", Resource: "databricks_schema", Match: "name",
 				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog", "target"),
@@ -1193,6 +1277,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			s := ic.Resources["databricks_model_serving"].Schema
 			var mse serving.CreateServingEndpoint
 			common.DataToStructPointer(r.Data, s, &mse)
+			if mse.BudgetPolicyId != "" {
+				ic.Emit(&resource{Resource: "databricks_budget_policy", ID: mse.BudgetPolicyId})
+			}
 			if mse.Config != nil {
 				for _, se := range mse.Config.ServedEntities {
 					if se.EntityName != "" {
@@ -1227,6 +1314,12 @@ var resourcesMap map[string]importable = map[string]importable{
 						if se.ExternalModel.AmazonBedrockConfig != nil {
 							ic.emitSecretsFromSecretPathString(se.ExternalModel.AmazonBedrockConfig.AwsAccessKeyId)
 							ic.emitSecretsFromSecretPathString(se.ExternalModel.AmazonBedrockConfig.AwsSecretAccessKey)
+							if se.ExternalModel.AmazonBedrockConfig.InstanceProfileArn != "" {
+								ic.Emit(&resource{Resource: "databricks_instance_profile", ID: se.ExternalModel.AmazonBedrockConfig.InstanceProfileArn})
+							}
+							if se.ExternalModel.AmazonBedrockConfig.UcServiceCredentialName != "" {
+								ic.Emit(&resource{Resource: "databricks_credential", ID: se.ExternalModel.AmazonBedrockConfig.UcServiceCredentialName})
+							}
 						}
 						if se.ExternalModel.CohereConfig != nil {
 							ic.emitSecretsFromSecretPathString(se.ExternalModel.CohereConfig.CohereApiKey)
@@ -1343,9 +1436,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			return pathString == "config.0.auto_capture_config.0.enabled" || pathString == "ai_gateway.0.inference_table_config.0.enabled"
 		},
 		Depends: []reference{
+			{Path: "budget_policy_id", Resource: "databricks_budget_policy", Match: "policy_id"},
 			{Path: "config.served_entities.entity_name", Resource: "databricks_registered_model"},
 			{Path: "config.served_entities.instance_profile_arn", Resource: "databricks_instance_profile",
 				Match: "instance_profile_arn"},
+			{Path: "config.served_entities.external_model.amazon_bedrock_config.instance_profile_arn",
+				Resource: "databricks_instance_profile", Match: "instance_profile_arn"},
+			{Path: "config.served_entities.external_model.amazon_bedrock_config.uc_service_credential_name",
+				Resource: "databricks_credential", Match: "name"},
 			{Path: "config.auto_capture_config.catalog_name", Resource: "databricks_catalog"},
 			{Path: "config.served_entities.external_model.databricks_model_serving_config.databricks_api_token",
 				Resource: "databricks_secret", Match: "config_reference"},
@@ -1421,6 +1519,106 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import:                 importDatabaseInstance,
 		ShouldOmitFieldUnified: shouldOmitWithEffectiveFields,
 		Ignore:                 generateIgnoreObjectWithEmptyAttributeValue("databricks_database_instance", "name"),
+	},
+	"databricks_postgres_project": {
+		WorkspaceLevel:         true,
+		PluginFramework:        true,
+		Service:                "lakebase",
+		NameUnified:            postgresProjectNameUnified,
+		List:                   listPostgresProjects,
+		Import:                 importPostgresProject,
+		ShouldOmitFieldUnified: shouldOmitPostgresField,
+	},
+	"databricks_postgres_branch": {
+		WorkspaceLevel:         true,
+		PluginFramework:        true,
+		Service:                "lakebase",
+		NameUnified:            postgresBranchNameUnified,
+		Import:                 importPostgresBranch,
+		ShouldOmitFieldUnified: shouldOmitPostgresField,
+		Depends: []reference{
+			{Path: "parent", Resource: "databricks_postgres_project", Match: "name"},
+		},
+	},
+	"databricks_postgres_catalog": {
+		WorkspaceLevel:         true,
+		PluginFramework:        true,
+		Service:                "lakebase",
+		NameUnified:            postgresCatalogNameUnified,
+		List:                   listPostgresCatalogs,
+		Import:                 importPostgresCatalog,
+		ShouldOmitFieldUnified: shouldOmitPostgresField,
+		Depends: []reference{
+			{Path: "spec.branch", Resource: "databricks_postgres_branch", Match: "name"},
+		},
+	},
+	"databricks_postgres_cdf_config": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "lakebase",
+		NameUnified:     postgresCdfConfigNameUnified,
+		Import:          importPostgresCdfConfig,
+		Depends: []reference{
+			{Path: "parent", Resource: "databricks_postgres_database", Match: "name"},
+		},
+	},
+	"databricks_postgres_data_api": {
+		WorkspaceLevel:         true,
+		PluginFramework:        true,
+		Service:                "lakebase",
+		NameUnified:            postgresDataApiNameUnified,
+		Import:                 importPostgresDataApi,
+		ShouldOmitFieldUnified: shouldOmitPostgresField,
+		Depends: []reference{
+			{Path: "parent", Resource: "databricks_postgres_database", Match: "name"},
+		},
+	},
+	"databricks_postgres_database": {
+		WorkspaceLevel:         true,
+		PluginFramework:        true,
+		Service:                "lakebase",
+		NameUnified:            postgresDatabaseNameUnified,
+		Import:                 importPostgresDatabase,
+		ShouldOmitFieldUnified: shouldOmitPostgresField,
+		Depends: []reference{
+			{Path: "parent", Resource: "databricks_postgres_branch", Match: "name"},
+			{Path: "spec.role", Resource: "databricks_postgres_role", Match: "name"},
+		},
+	},
+	"databricks_postgres_role": {
+		WorkspaceLevel:         true,
+		PluginFramework:        true,
+		Service:                "lakebase",
+		NameUnified:            postgresRoleNameUnified,
+		Import:                 importPostgresRole,
+		ShouldOmitFieldUnified: shouldOmitPostgresField,
+		Depends: []reference{
+			{Path: "parent", Resource: "databricks_postgres_branch", Match: "name"},
+		},
+	},
+	"databricks_postgres_synced_table": {
+		WorkspaceLevel:         true,
+		PluginFramework:        true,
+		Service:                "lakebase",
+		NameUnified:            postgresSyncedTableNameUnified,
+		Import:                 importPostgresSyncedTable,
+		ShouldOmitFieldUnified: shouldOmitPostgresField,
+		Depends: []reference{
+			{Path: "spec.branch", Resource: "databricks_postgres_branch", Match: "name"},
+			{Path: "spec.source_table_full_name", Resource: "databricks_sql_table", Match: "name"},
+			{Path: "spec.existing_pipeline_id", Resource: "databricks_pipeline", Match: "id"},
+		},
+	},
+	"databricks_postgres_endpoint": {
+		WorkspaceLevel:         true,
+		PluginFramework:        true,
+		Service:                "lakebase",
+		NameUnified:            postgresEndpointNameUnified,
+		Import:                 importPostgresEndpoint,
+		ShouldOmitFieldUnified: shouldOmitPostgresField,
+		Depends: []reference{
+			{Path: "parent", Resource: "databricks_postgres_branch", Match: "name"},
+		},
 	},
 	"databricks_mlflow_webhook": {
 		WorkspaceLevel: true,
@@ -1512,6 +1710,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "grant_rules.principals", Resource: "databricks_user", Match: "acl_principal_id"},
 			{Path: "grant_rules.principals", Resource: "databricks_group", Match: "acl_principal_id"},
 			{Path: "grant_rules.principals", Resource: "databricks_service_principal", Match: "acl_principal_id"},
+			// Substitute the account ID with the shared variable. ContinueMatch lets
+			// the more-specific references below also apply, so both the account ID and
+			// a referenced resource are substituted within the same `name`.
+			{Path: "name", MatchType: MatchRegexp, Regexp: regexp.MustCompile(`^accounts/([^/]+)/.*$`),
+				Variable: true, VariableName: accountIdVariableName, ContinueMatch: true},
 			{Path: "name", Resource: "databricks_service_principal", Match: "application_id", MatchType: MatchRegexp,
 				Regexp: regexp.MustCompile("^accounts/[^/]+/servicePrincipals/([^/]+)/ruleSets/default$")},
 			{Path: "name", Resource: "databricks_group", MatchType: MatchRegexp,
@@ -1598,6 +1801,25 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "owner", Resource: "databricks_service_principal", Match: "application_id"},
 			{Path: "owner", Resource: "databricks_group", Match: "display_name"},
 			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+		},
+	},
+	"databricks_secret_uc": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "uc-secrets",
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			// The ID is the three-level full name `catalog.schema.secret`.
+			return nameNormalizationRegex.ReplaceAllString(wrapper.Id(), "_")
+		},
+		// No List function - this resource is emitted as a dependency from the Import
+		// function of databricks_schema when the `uc-secrets` service is in the listing.
+		Import: importUcSecret,
+		Depends: []reference{
+			{Path: "value", Variable: true},
+			{Path: "catalog_name", Resource: "databricks_catalog"},
+			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog_name", "schema_name"),
+				SkipDirectLookup:     true},
 		},
 	},
 	"databricks_volume": {
@@ -1827,6 +2049,26 @@ var resourcesMap map[string]importable = map[string]importable{
 			// Notification destination IDs - EMAIL destinations may reference users' emails
 			{Path: "destinations.destination_id", Resource: "databricks_user", Match: "user_name",
 				MatchType: MatchCaseInsensitive},
+		},
+	},
+	"databricks_data_classification_catalog_config": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "uc-data-classification",
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			// The resource name is in the format `catalogs/{catalog_name}/config`,
+			// so we generate a Terraform name from the catalog name.
+			if catalogName := dataClassificationCatalogName(wrapper.Id()); catalogName != "" {
+				return catalogName
+			}
+			return generateUniqueID(wrapper.Id())
+		},
+		Import: importDataClassificationCatalogConfig,
+		// No List function - this resource is emitted as a dependency from the Import
+		// function of databricks_catalog when a data classification config exists.
+		Depends: []reference{
+			{Path: "parent", Resource: "databricks_catalog", MatchType: MatchRegexp,
+				Regexp: dataClassificationParentRegex},
 		},
 	},
 	"databricks_storage_credential": {
@@ -2168,20 +2410,22 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 	},
 	"databricks_workspace_setting_v2": {
-		WorkspaceLevel:         true,
-		Service:                "settings",
-		PluginFramework:        true,
-		List:                   listWorkspaceSettingsV2,
-		Import:                 importWorkspaceSettingV2,
-		ShouldOmitFieldUnified: shouldOmitWithEffectiveFields,
+		WorkspaceLevel:             true,
+		Service:                    "settings",
+		PluginFramework:            true,
+		List:                       listWorkspaceSettingsV2,
+		Import:                     importWorkspaceSettingV2,
+		ShouldOmitFieldUnified:     shouldOmitWithEffectiveFields,
+		ShouldGenerateFieldUnified: shouldGenerateForSettingV2,
 	},
 	"databricks_account_setting_v2": {
-		AccountLevel:           true,
-		Service:                "settings",
-		PluginFramework:        true,
-		List:                   listAccountSettingsV2,
-		Import:                 importAccountSettingV2,
-		ShouldOmitFieldUnified: shouldOmitWithEffectiveFields,
+		AccountLevel:               true,
+		Service:                    "settings",
+		PluginFramework:            true,
+		List:                       listAccountSettingsV2,
+		Import:                     importAccountSettingV2,
+		ShouldOmitFieldUnified:     shouldOmitWithEffectiveFields,
+		ShouldGenerateFieldUnified: shouldGenerateForSettingV2,
 	},
 	"databricks_online_table": {
 		WorkspaceLevel: true,
@@ -2343,11 +2587,36 @@ var resourcesMap map[string]importable = map[string]importable{
 		AccountLevel: true,
 		Service:      "mws",
 		List:         listMwsCredentials,
+		Depends: []reference{
+			{Path: "account_id", Variable: true, VariableName: accountIdVariableName},
+		},
 	},
 	"databricks_mws_storage_configurations": {
 		AccountLevel: true,
 		Service:      "mws",
 		List:         listMwsStorageConfigurations,
+		Depends: []reference{
+			{Path: "account_id", Variable: true, VariableName: accountIdVariableName},
+		},
+	},
+	"databricks_endpoint": {
+		AccountLevel:    true,
+		PluginFramework: true,
+		Service:         "mws",
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			if v, ok := wrapper.GetOk("display_name"); ok {
+				if name, ok := v.(string); ok && name != "" {
+					return name
+				}
+			}
+			return wrapper.Id()
+		},
+		List:   listEndpoints,
+		Import: importEndpoint,
+		Depends: []reference{
+			{Path: "parent", MatchType: MatchRegexp, Regexp: regexp.MustCompile(`^accounts/([^/]+)$`),
+				Variable: true, VariableName: accountIdVariableName},
+		},
 	},
 	"databricks_mws_vpc_endpoint": {
 		AccountLevel: true,
@@ -2356,6 +2625,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Get("vpc_endpoint_name").(string)
 		},
 		List: listMwsVpcEndpoints,
+		Depends: []reference{
+			{Path: "account_id", Variable: true, VariableName: accountIdVariableName},
+		},
 	},
 	"databricks_mws_private_access_settings": {
 		AccountLevel: true,
@@ -2364,12 +2636,16 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import:       importMwsPrivateAccessSettings,
 		Depends: []reference{
 			{Path: "allowed_vpc_endpoint_ids", Resource: "databricks_mws_vpc_endpoint", Match: "vpc_endpoint_id"},
+			{Path: "account_id", Variable: true, VariableName: accountIdVariableName},
 		},
 	},
 	"databricks_mws_customer_managed_keys": {
 		AccountLevel: true,
 		Service:      "mws",
 		List:         listMwsCustomerManagedKeys,
+		Depends: []reference{
+			{Path: "account_id", Variable: true, VariableName: accountIdVariableName},
+		},
 	},
 	"databricks_mws_networks": {
 		AccountLevel: true,
@@ -2385,6 +2661,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "vpc_endpoints.dataplane_relay", Resource: "databricks_mws_vpc_endpoint", Match: "vpc_endpoint_id"},
 			{Path: "vpc_endpoints.rest_api", Resource: "databricks_mws_vpc_endpoint", Match: "vpc_endpoint_id"},
+			{Path: "account_id", Variable: true, VariableName: accountIdVariableName},
 		},
 	},
 	"databricks_mws_workspaces": {
@@ -2399,16 +2676,24 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "storage_customer_managed_key_id", Resource: "databricks_mws_customer_managed_keys", Match: "customer_managed_key_id"},
 			{Path: "managed_services_customer_managed_key_id", Resource: "databricks_mws_customer_managed_keys", Match: "customer_managed_key_id"},
 			{Path: "credentials_id", Resource: "databricks_mws_credentials", Match: "credentials_id"},
+			{Path: "account_id", Variable: true, VariableName: accountIdVariableName},
 		},
 	},
 	"databricks_budget_policy": {
 		AccountLevel:    true,
 		PluginFramework: true,
 		Service:         "billing",
-		Name:            func(ic *importContext, d *schema.ResourceData) string { return d.Id() },
-		List:            listBudgetPolicies,
-		Import:          importBudgetPolicy,
-		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_budget_policy", "policy_id"),
+		NameUnified: func(ic *importContext, wrapper ResourceDataWrapper) string {
+			if v, ok := wrapper.GetOk("policy_name"); ok {
+				if name, ok := v.(string); ok && name != "" {
+					return name
+				}
+			}
+			return wrapper.Id()
+		},
+		List:   listBudgetPolicies,
+		Import: importBudgetPolicy,
+		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_budget_policy", "policy_id"),
 		Depends: []reference{
 			{Path: "binding_workspace_ids", Resource: "databricks_mws_workspaces", Match: "workspace_id"},
 		},

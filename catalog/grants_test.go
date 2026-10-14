@@ -135,6 +135,21 @@ resource "databricks_grants" "some" {
 		principal  = "%s"
 		privileges = ["ALL_PRIVILEGES"]
 	}
+}
+
+resource "databricks_secret_uc" "this" {
+	catalog_name = databricks_catalog.sandbox.id
+	schema_name  = databricks_schema.things.name
+	name         = "secret-{var.STICKY_RANDOM}"
+	value        = "sensitive-value"
+}
+
+resource "databricks_grants" "secret" {
+	secret = databricks_secret_uc.this.full_name
+	grant {
+		principal  = "%s"
+		privileges = ["READ_SECRET"]
+	}
 }`
 
 func TestUcAccGrants(t *testing.T) {
@@ -211,5 +226,97 @@ func TestUcAccGrantsForIdChange(t *testing.T) {
 	}, acceptance.Step{
 		Template:    grantsTemplateForNamePermissionChange("-fail", "abc"),
 		ExpectError: regexp.MustCompile(`Error: cannot create grants: Privilege ABC is not applicable to this entity`),
+	})
+}
+
+// secretGrantsTemplate is a minimal-dependency variant that exercises only the secret securable
+// and READ_SECRET via the authoritative databricks_grants resource. It creates no storage
+// credential or external location, so it needs no TEST_METASTORE_DATA_ACCESS_ARN / TEST_BUCKET /
+// TEST_METASTORE_ID, and grants to the built-in "account users" group so no test group env var is
+// required.
+var secretGrantsTemplate = `
+resource "databricks_catalog" "sandbox" {
+	name    = "sandbox{var.STICKY_RANDOM}"
+	comment = "this catalog is managed by terraform"
+}
+
+resource "databricks_schema" "things" {
+	catalog_name = databricks_catalog.sandbox.id
+	name         = "things{var.STICKY_RANDOM}"
+	comment      = "this database is managed by terraform"
+}
+
+resource "databricks_secret_uc" "this" {
+	catalog_name = databricks_catalog.sandbox.id
+	schema_name  = databricks_schema.things.name
+	name         = "secret-{var.STICKY_RANDOM}"
+	value        = "sensitive-value"
+}
+
+resource "databricks_grants" "secret" {
+	secret = databricks_secret_uc.this.full_name
+	grant {
+		principal  = "account users"
+		privileges = ["READ_SECRET"]
+	}
+}`
+
+func TestUcAccSecretGrants(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: secretGrantsTemplate,
+	})
+}
+
+// grantsAiGatewayModelProviderServiceTemplate references the securable by the resource's `name`
+// attribute, which is the prefixed resource name
+// (model-provider-services/{catalog}.{schema}.{name}). The grants/permissions API addresses these
+// securables by their bare full name, so the provider must strip the prefix; otherwise apply fails
+// with "No API found ... /model_provider_service/model-provider-services/...". A dummy Bedrock
+// credential is enough to create the service (the credential is not validated at create time).
+var grantsAiGatewayModelProviderServiceTemplate = `
+resource "databricks_catalog" "sandbox" {
+	name    = "sandbox{var.STICKY_RANDOM}"
+	comment = "this catalog is managed by terraform"
+}
+
+resource "databricks_schema" "things" {
+	catalog_name = databricks_catalog.sandbox.id
+	name         = "things{var.STICKY_RANDOM}"
+}
+
+resource "databricks_ai_gateway_model_provider_service" "this" {
+	parent                    = "schemas/${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
+	model_provider_service_id = "mps{var.STICKY_RANDOM}"
+	config = {
+		allow_all_targets = true
+		provider_type     = "EXTERNAL_MODEL_PROVIDER_TYPE_AMAZON_BEDROCK"
+		amazon_bedrock = {
+			direct = {
+				region = "us-east-1"
+				aws_access_key = {
+					access_key_id     = "dummy-access-key-id"
+					secret_access_key = { plaintext = "dummy-secret" }
+				}
+			}
+		}
+	}
+}
+
+resource "databricks_grants" "this" {
+	model_provider_service = databricks_ai_gateway_model_provider_service.this.name
+	grant {
+		principal  = "{env.TEST_DATA_ENG_GROUP}"
+		privileges = ["EXECUTE"]
+	}
+}
+`
+
+// TestUcAccGrantsAiGatewayModelProviderServiceByName is the regression for the grants path on AI
+// Gateway securables. A clean apply plus the framework's default empty follow-up plan proves both
+// that the prefixed `.name` reaches the permissions API as the bare full name and that referencing
+// it does not force a perpetual replace (the securable fields are ForceNew).
+func TestUcAccGrantsAiGatewayModelProviderServiceByName(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: grantsAiGatewayModelProviderServiceTemplate,
 	})
 }

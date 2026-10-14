@@ -38,6 +38,10 @@ func listWorkspaceNetworkOptions(ic *importContext) error {
 
 	count := 0
 	for _, workspace := range workspaces {
+		if workspace.WorkspaceStatus != "RUNNING" {
+			log.Printf("[DEBUG] skipping workspace '%s' that is not running", workspace.WorkspaceName)
+			continue
+		}
 		if !ic.MatchesName(workspace.WorkspaceName) {
 			log.Printf("[INFO] Skipping workspace_network_option for workspace %s because it doesn't match %s",
 				workspace.WorkspaceName, ic.match)
@@ -93,6 +97,10 @@ func listMwsWorkspaceNccBindings(ic *importContext) error {
 		return err
 	}
 	for _, workspace := range workspaces {
+		if workspace.WorkspaceStatus != "RUNNING" {
+			log.Printf("[DEBUG] skipping workspace '%s' that is not running", workspace.WorkspaceName)
+			continue
+		}
 		if workspace.NetworkConnectivityConfigId != "" {
 			ic.emitNccBindingAndNcc(workspace.WorkspaceId, workspace.NetworkConnectivityConfigId)
 			if !ic.accountClient.Config.IsAzure() {

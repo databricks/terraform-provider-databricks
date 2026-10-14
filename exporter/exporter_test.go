@@ -20,6 +20,7 @@ import (
 	sdk_compute "github.com/databricks/databricks-sdk-go/service/compute"
 	sdk_dashboards "github.com/databricks/databricks-sdk-go/service/dashboards"
 	"github.com/databricks/databricks-sdk-go/service/database"
+	"github.com/databricks/databricks-sdk-go/service/environments"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/knowledgeassistants"
@@ -274,6 +275,20 @@ var emptyClusterPolicies = qa.HTTPFixture{
 	Response:     sdk_compute.ListPoliciesResponse{},
 }
 
+var emptyWorkspaceBaseEnvironments = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/environments/v1/workspace-base-environments?",
+	Response:     environments.ListWorkspaceBaseEnvironmentsResponse{},
+}
+
+var emptyDefaultWorkspaceBaseEnvironment = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/environments/v1/default-workspace-base-environment?",
+	Response:     environments.DefaultWorkspaceBaseEnvironment{},
+}
+
 var emptyPolicyFamilies = qa.HTTPFixture{
 	Method:   "GET",
 	Resource: "/api/2.0/policy-families?",
@@ -469,6 +484,13 @@ var emptySqlEndpoints = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var emptyWarehouseDefaultOverrides = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/warehouses/v1/default-warehouse-overrides?",
+	Response:     sdk_sql.ListDefaultWarehouseOverridesResponse{},
+	ReuseRequest: true,
+}
+
 var emptyInstancePools = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/instance-pools/list",
@@ -635,6 +657,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyDataQualityMonitors,
 			emptyQualityMonitorsV2,
 			emptyDatabaseInstances,
+			emptyPostgresProjectsFixture,
+			emptyPostgresCatalogsFixture,
 			emptyConnections,
 			emptyTagPolicies,
 			emptyRecipients,
@@ -650,6 +674,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyMlflowWebhooks,
 			emptySqlDashboards,
 			emptySqlEndpoints,
+			emptyWarehouseDefaultOverrides,
 			emptySqlQueries,
 			emptySqlAlerts,
 			emptyAlertsV2,
@@ -658,6 +683,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySupervisorAgents,
 			emptyPipelines,
 			emptyClusterPolicies,
+			emptyWorkspaceBaseEnvironments,
+			emptyDefaultWorkspaceBaseEnvironment,
 			emptyPolicyFamilies,
 			emptyWorkspaceConf,
 			allKnownWorkspaceConfsNoData,
@@ -910,6 +937,8 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyDataQualityMonitors,
 			emptyQualityMonitorsV2,
 			emptyDatabaseInstances,
+			emptyPostgresProjectsFixture,
+			emptyPostgresCatalogsFixture,
 			emptyUsersList,
 			emptySpnsList,
 			noCurrentMetastoreAttached,
@@ -931,12 +960,15 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyWorkspaceConf,
 			emptyInstancePools,
 			emptyClusterPolicies,
+			emptyWorkspaceBaseEnvironments,
+			emptyDefaultWorkspaceBaseEnvironment,
 			allKnownWorkspaceConfsNoData,
 			qa.ListGroupsFixtures([]iam.Group{})[0],
 			emptyGitCredentials,
 			emptyIpAccessLIst,
 			emptyWorkspace,
 			emptySqlEndpoints,
+			emptyWarehouseDefaultOverrides,
 			emptyVectorSearch,
 			emptyKnowledgeAssistants,
 			emptySupervisorAgents,
@@ -1015,6 +1047,8 @@ func TestImportingClusters(t *testing.T) {
 				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: sdk_jobs.ListJobsResponse{},
 			},
+			emptyWorkspaceBaseEnvironments,
+			emptyDefaultWorkspaceBaseEnvironment,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
@@ -1166,10 +1200,22 @@ func TestImportingClusters(t *testing.T) {
 				Method:       "GET",
 				Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=1",
 				ReuseRequest: true,
-				Response: scim.UserList{
-					Resources: []scim.User{
-						{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
+				Response: iam.ListUsersResponse{
+					Resources: []iam.User{
+						{Id: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
 					},
+					TotalResults: 1,
+					StartIndex:   1,
+				},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=10000&startIndex=2",
+				ReuseRequest: true,
+				Response: iam.ListUsersResponse{
+					Resources:    []iam.User{},
+					TotalResults: 1,
+					StartIndex:   2,
 				},
 			},
 		},
@@ -1548,7 +1594,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 						JobClusters: []sdk_jobs.JobCluster{
 							{
 								JobClusterKey: "shared",
-								NewCluster: sdk_compute.ClusterSpec{
+								NewCluster: &sdk_compute.ClusterSpec{
 									InstancePoolId: "pool1",
 									NumWorkers:     2,
 									SparkVersion:   "6.4.x-scala2.11",
@@ -2056,6 +2102,12 @@ func TestImportingSqlObjects(t *testing.T) {
 				Response: getJSONObject("test-data/get-sql-endpoint.json"),
 			},
 			{
+				Method:       "GET",
+				Resource:     "/api/warehouses/v1/default-warehouse-overrides?",
+				Response:     sdk_sql.ListDefaultWarehouseOverridesResponse{},
+				ReuseRequest: true,
+			},
+			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/sql/data_sources",
 				Response: []sdk_sql.DataSource{
@@ -2483,6 +2535,7 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 				Resource: "/api/2.0/sql/warehouses?",
 				Response: sdk_sql.ListWarehousesResponse{},
 			},
+			emptyWarehouseDefaultOverrides,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/sql/config/warehouses",
@@ -3051,6 +3104,76 @@ resource "databricks_pipeline" "def" {
 			contentStr = string(content)
 			assert.True(t, strings.Contains(contentStr, `variable "var1"`))
 			assert.True(t, strings.Contains(contentStr, `variable "job_spec_webhook_def"`))
+		})
+}
+
+func TestImportingJobsDbtCloudTaskOmittedWhenPlatformPresent(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			noCurrentMetastoreAttached,
+			emptyRepos,
+			{
+				Method:   "GET",
+				Resource: "/api/2.2/jobs/list?limit=100",
+				Response: sdk_jobs.ListJobsResponse{
+					Jobs: []sdk_jobs.BaseJob{
+						{
+							JobId: 17,
+							Settings: &sdk_jobs.JobSettings{
+								Name: "dbtmigration",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.2/jobs/get?job_id=17",
+				Response: sdk_jobs.Job{
+					JobId: 17,
+					Settings: &sdk_jobs.JobSettings{
+						Name:   "dbtmigration",
+						Format: "MULTI_TASK",
+						Tasks: []sdk_jobs.Task{
+							{
+								TaskKey: "dbt",
+								// The Jobs API returns both the deprecated dbt_cloud_task and its
+								// replacement dbt_platform_task on migrated tasks.
+								DbtPlatformTask: &sdk_jobs.DbtPlatformTask{
+									ConnectionResourceName: "my_conn",
+									DbtPlatformJobId:       "123",
+								},
+								DbtCloudTask: &sdk_jobs.DbtCloudTask{
+									ConnectionResourceName: "my_conn",
+									DbtCloudJobId:          456,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.enableServices("jobs")
+			ic.enableListing("jobs")
+			ic.noFormat = true
+			ic.Directory = tmpDir
+
+			err := ic.Run()
+			assert.NoError(t, err)
+
+			content, err := os.ReadFile(tmpDir + "/jobs.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_job" "dbtmigration_17"`))
+			// only the replacement task must be generated, not the deprecated one
+			assert.True(t, strings.Contains(contentStr, "dbt_platform_task {"))
+			assert.False(t, strings.Contains(contentStr, "dbt_cloud_task {"))
 		})
 }
 

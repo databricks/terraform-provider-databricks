@@ -274,11 +274,11 @@ The following arguments are supported:
   for Read/Write endpoints)
 * `no_suspension` (boolean, optional) - When set to true, explicitly disables automatic suspension (never suspend).
   Should be set to true when provided.
-  Mutually exclusive with `suspend_timeout_duration`. When updating, use `spec.suspension` in the update_mask
+  Mutually exclusive with `suspend_timeout_duration`
 * `settings` (EndpointSettings, optional)
 * `suspend_timeout_duration` (string, optional) - Duration of inactivity after which the compute endpoint is automatically suspended.
   If specified should be between 60s and 604800s (1 minute to 1 week).
-  Mutually exclusive with `no_suspension`. When updating, use `spec.suspension` in the update_mask
+  Mutually exclusive with `no_suspension`
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

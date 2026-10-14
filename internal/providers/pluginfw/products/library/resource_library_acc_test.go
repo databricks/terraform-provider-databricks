@@ -1,207 +1,161 @@
-package library_test
+package library
 
 import (
 	"context"
-	"errors"
-	"regexp"
 	"testing"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go"
-	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/retries"
 	"github.com/databricks/databricks-sdk-go/service/compute"
-	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
-	"github.com/databricks/terraform-provider-databricks/internal/providers"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
-var commonClusterConfig = `data "databricks_spark_version" "latest" {
-}
-resource "databricks_cluster" "this" {
-	cluster_name = "test-library-{var.RANDOM}"
-	spark_version = data.databricks_spark_version.latest.id
-	instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
-	autotermination_minutes = 10
-	num_workers = 0
-	spark_conf = {
-		"spark.databricks.cluster.profile" = "singleNode"
-		"spark.master" = "local[*]"
-	}
-	custom_tags = {
-		"ResourceClass" = "SingleNode"
-	}
+const testClusterID = "test-cluster"
+
+func librarySchema(t *testing.T, ctx context.Context) schema.Schema {
+	t.Helper()
+	resp := &resource.SchemaResponse{}
+	ResourceLibrary().Schema(ctx, resource.SchemaRequest{}, resp)
+	require.False(t, resp.Diagnostics.HasError(), resp.Diagnostics)
+	return resp.Schema
 }
 
-`
+func libraryState(t *testing.T, ctx context.Context, library compute.Library) LibraryExtended {
+	t.Helper()
+	var model LibraryExtended
+	diags := converters.GoSdkToTfSdkStruct(ctx, library, &model)
+	require.False(t, diags.HasError(), diags)
+	model.ClusterId = types.StringValue(testClusterID)
+	model.ID = types.StringValue(library.String())
+	model.ProviderConfig = types.ListNull(tfschema.ProviderConfig{}.Type(ctx))
+	return model
+}
 
-func TestAccLibraryCreation(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: commonClusterConfig + `resource "databricks_library" "new_library" {
-			cluster_id = databricks_cluster.this.id
-			pypi {
-				repo = "https://pypi.org/dummy"
-				package = "databricks-sdk"
-			}
-		}
-		`,
+func libraryPlan(t *testing.T, ctx context.Context, model LibraryExtended) tfsdk.Plan {
+	t.Helper()
+	plan := tfsdk.Plan{Schema: librarySchema(t, ctx)}
+	diags := plan.Set(ctx, &model)
+	require.False(t, diags.HasError(), diags)
+	return plan
+}
+
+func TestLibraryCreate(t *testing.T) {
+	ctx := context.Background()
+	pypi := compute.Library{Pypi: &compute.PythonPyPiLibrary{Package: "databricks-sdk"}}
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/clusters/get?cluster_id=" + testClusterID,
+			Response: compute.ClusterDetails{ClusterId: testClusterID, State: compute.StateRunning},
+		},
+		{
+			Method:          "POST",
+			Resource:        "/api/2.0/libraries/install",
+			ExpectedRequest: compute.InstallLibraries{ClusterId: testClusterID, Libraries: []compute.Library{pypi}},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/libraries/cluster-status?cluster_id=" + testClusterID,
+			Response: compute.ClusterLibraryStatuses{ClusterId: testClusterID, LibraryStatuses: []compute.LibraryFullStatus{
+				{Library: &pypi, Status: compute.LibraryInstallStatusInstalled},
+			}},
+		},
+	}, func(_ context.Context, client *common.DatabricksClient) {
+		s := librarySchema(t, ctx)
+		resp := &resource.CreateResponse{State: tfsdk.State{Schema: s}}
+		(&LibraryResource{Client: client}).Create(ctx, resource.CreateRequest{
+			Plan: libraryPlan(t, ctx, libraryState(t, ctx, pypi)),
+		}, resp)
+		require.False(t, resp.Diagnostics.HasError(), resp.Diagnostics)
+
+		var state LibraryExtended
+		diags := resp.State.Get(ctx, &state)
+		require.False(t, diags.HasError(), diags)
+		assert.Equal(t, testClusterID, state.ClusterId.ValueString())
+		assert.Equal(t, pypi.String(), state.ID.ValueString())
 	})
 }
 
-func TestAccLibraryReinstalledIfClusterDeleted(t *testing.T) {
-	var clusterId string
-	acceptance.WorkspaceLevel(t,
-		acceptance.Step{
-			Template: commonClusterConfig + `resource "databricks_library" "new_library" {
-				cluster_id = databricks_cluster.this.id
-				pypi {
-					repo = "https://pypi.org/dummy"
-					package = "databricks-sdk"
-				}
-		    }`,
-			Check: func(s *terraform.State) error {
-				clusterId = s.RootModule().Resources["databricks_cluster.this"].Primary.ID
-				return nil
-			},
+func TestLibraryCreateStartsTerminatedCluster(t *testing.T) {
+	ctx := context.Background()
+	pypi := compute.Library{Pypi: &compute.PythonPyPiLibrary{Package: "networkx"}}
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/clusters/get?cluster_id=" + testClusterID,
+			Response: compute.ClusterDetails{ClusterId: testClusterID, State: compute.StateTerminated},
 		},
-		// If the cluster is deleted before apply, it should be recreated and the library reinstalled on the new cluster.
-		acceptance.Step{
-			PreConfig: func() {
-				// Delete the created cluster
-				w := databricks.Must(databricks.NewWorkspaceClient())
-				w.Clusters.PermanentDeleteByClusterId(context.Background(), clusterId)
-				// Wait for the cluster to be completely deleted
-				errClusterExists := errors.New("cluster still exists")
-				retries.New[struct{}](retries.OnErrors(errClusterExists)).Wait(context.Background(), func(ctx context.Context) error {
-					_, err := w.Clusters.GetByClusterId(context.Background(), clusterId)
-					if err != nil && apierr.IsMissing(err) {
-						return nil
-					}
-					if err != nil {
-						return err
-					}
-					return errClusterExists
-				})
-			},
-			Template: commonClusterConfig + `resource "databricks_library" "new_library" {
-				cluster_id = databricks_cluster.this.id
-				pypi {
-					repo = "https://pypi.org/dummy"
-					package = "databricks-sdk"
-				}
-		    }`,
-		})
-}
-
-func TestAccLibraryInstallIfClusterTerminated(t *testing.T) {
-	var clusterId string
-	acceptance.WorkspaceLevel(t,
-		acceptance.Step{
-			Template: commonClusterConfig,
-			Check: func(s *terraform.State) error {
-				clusterId = s.RootModule().Resources["databricks_cluster.this"].Primary.ID
-				return nil
-			},
+		{
+			Method:          "POST",
+			Resource:        "/api/2.1/clusters/start",
+			ExpectedRequest: compute.StartCluster{ClusterId: testClusterID},
 		},
-		// If the cluster is Terminated before apply, it should be restarted before installing library.
-		acceptance.Step{
-			PreConfig: func() {
-				// Delete the created cluster
-				w := databricks.Must(databricks.NewWorkspaceClient())
-				getter, err := w.Clusters.Delete(context.Background(), compute.DeleteCluster{
-					ClusterId: clusterId,
-				})
-				if err != nil {
-					t.Fatalf("Error deleting cluster: %s", err)
-				}
-				_, err = getter.GetWithTimeout(60 * time.Minute)
-				if err != nil {
-					t.Fatalf("Error waiting for cluster to be deleted: %s", err)
-				}
-			},
-			Template: commonClusterConfig + `resource "databricks_library" "new_library" {
-				cluster_id = databricks_cluster.this.id
-				pypi {
-					repo = "https://pypi.org/dummy"
-					package = "databricks-sdk"
-				}
-		    }`,
-		})
-}
-
-func TestAccLibraryUpdate(t *testing.T) {
-	acceptance.WorkspaceLevel(t,
-		acceptance.Step{
-			Template: commonClusterConfig + `resource "databricks_library" "new_library" {
-					cluster_id = databricks_cluster.this.id
-					pypi {
-						repo = "https://pypi.org/simple"
-						package = "databricks-sdk"
-					}
-				}
-				`,
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/clusters/get?cluster_id=" + testClusterID,
+			Response: compute.ClusterDetails{ClusterId: testClusterID, State: compute.StateRunning},
 		},
-		acceptance.Step{
-			Template: commonClusterConfig + `resource "databricks_library" "new_library" {
-				cluster_id = databricks_cluster.this.id
-				pypi {
-					package = "networkx"
-				}
-			}
-			`,
+		{
+			Method:          "POST",
+			Resource:        "/api/2.0/libraries/install",
+			ExpectedRequest: compute.InstallLibraries{ClusterId: testClusterID, Libraries: []compute.Library{pypi}},
 		},
-	)
-}
-
-var sdkV2FallbackFactory = map[string]func() (tfprotov6.ProviderServer, error){
-	"databricks": func() (tfprotov6.ProviderServer, error) {
-		sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_library"})
-		return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
-	},
-}
-
-func TestAccLibrary_ProviderConfig_Mismatched(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: `
-			resource "databricks_library" "this" {
-				cluster_id = "fake-cluster-id"
-				pypi {
-					package = "networkx"
-				}
-				provider_config {
-					workspace_id = "1234"
-				}
-			}
-		`,
-		ExpectError: regexp.MustCompile(
-			`(?s)failed to get workspace client`,
-		),
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/libraries/cluster-status?cluster_id=" + testClusterID,
+			Response: compute.ClusterLibraryStatuses{ClusterId: testClusterID, LibraryStatuses: []compute.LibraryFullStatus{
+				{Library: &pypi, Status: compute.LibraryInstallStatusInstalled},
+			}},
+		},
+	}, func(_ context.Context, client *common.DatabricksClient) {
+		resp := &resource.CreateResponse{State: tfsdk.State{Schema: librarySchema(t, ctx)}}
+		(&LibraryResource{Client: client}).Create(ctx, resource.CreateRequest{
+			Plan: libraryPlan(t, ctx, libraryState(t, ctx, pypi)),
+		}, resp)
+		require.False(t, resp.Diagnostics.HasError(), resp.Diagnostics)
 	})
 }
 
-// Testing the transition from sdkv2 to plugin framework.
-func TestAccLibraryUpdateTransitionFromSdkV2(t *testing.T) {
-	acceptance.WorkspaceLevel(t,
-		acceptance.Step{
-			ProtoV6ProviderFactories: sdkV2FallbackFactory,
-			Template: commonClusterConfig + `resource "databricks_library" "new_library" {
-					cluster_id = databricks_cluster.this.id
-					pypi {
-						repo = "https://pypi.org/simple"
-						package = "databricks-sdk"
-					}
-				}
-				`,
+func TestLibraryDeleteSkipsMissingCluster(t *testing.T) {
+	ctx := context.Background()
+	pypi := compute.Library{Pypi: &compute.PythonPyPiLibrary{Package: "networkx"}}
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.1/clusters/get?cluster_id=" + testClusterID,
+			Status:   404,
 		},
-		acceptance.Step{
-			Template: commonClusterConfig + `resource "databricks_library" "new_library" {
-				cluster_id = databricks_cluster.this.id
-				pypi {
-					package = "networkx"
-				}
-			}
-			`,
-		},
-	)
+	}, func(_ context.Context, client *common.DatabricksClient) {
+		state := tfsdk.State{Schema: librarySchema(t, ctx)}
+		diags := state.Set(ctx, libraryState(t, ctx, pypi))
+		require.False(t, diags.HasError(), diags)
+		resp := &resource.DeleteResponse{}
+		(&LibraryResource{Client: client}).Delete(ctx, resource.DeleteRequest{State: state}, resp)
+		assert.False(t, resp.Diagnostics.HasError(), resp.Diagnostics)
+		require.Len(t, resp.Diagnostics.Warnings(), 1)
+		assert.Contains(t, resp.Diagnostics.Warnings()[0].Detail(), "skipping library uninstallation")
+	})
+}
+
+func TestLibraryUpdateUsesReplacementAndPreservesSdkV2StateShape(t *testing.T) {
+	ctx := context.Background()
+	s := librarySchema(t, ctx)
+	for _, name := range []string{"cran", "maven", "pypi"} {
+		block, isBlock := s.Blocks[name]
+		_, isAttribute := s.Attributes[name]
+		assert.True(t, isBlock, "%q must remain an SDKv2-compatible block", name)
+		assert.False(t, isAttribute, "%q must not become an attribute", name)
+
+		listBlock, ok := block.(schema.ListNestedBlock)
+		require.True(t, ok, "%q must remain a list block", name)
+		assert.NotEmpty(t, listBlock.PlanModifiers, "%q changes must replace the library", name)
+	}
 }

@@ -134,6 +134,47 @@ func TestUcAccCreateShare(t *testing.T) {
 	})
 }
 
+// TestUcAccShareConvergesAfterApply guards against the perpetual-diff regression:
+// a refresh runs before every plan, and if it fails to restore the share's computed
+// fields the next plan never settles (it re-marks id, storage_location, effective_*,
+// etc. as "known after apply") and the share id reads back null, breaking downstream
+// references. This asserts that re-planning the identical config after apply is a
+// no-op and that id keeps mirroring name across the refresh.
+func TestUcAccShareConvergesAfterApply(t *testing.T) {
+	template := preTestTemplate + `
+	resource "databricks_share" "myshare" {
+		name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+		owner = "account users"
+		object {
+			name                        = databricks_sql_table.mytable.id
+			data_object_type            = "TABLE"
+			history_data_sharing_status = "ENABLED"
+		}
+		object {
+			name                        = databricks_sql_table.mytable_2.id
+			data_object_type            = "TABLE"
+			history_data_sharing_status = "ENABLED"
+		}
+	}`
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: template,
+		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttrPair("databricks_share.myshare", "id", "databricks_share.myshare", "name"),
+		),
+	}, acceptance.Step{
+		// Re-plan the identical config after a refresh: it must be a no-op.
+		Template: template,
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				plancheck.ExpectEmptyPlan(),
+			},
+		},
+		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttrPair("databricks_share.myshare", "id", "databricks_share.myshare", "name"),
+		),
+	})
+}
+
 func shareTemplateWithOwner(comment string, owner string) string {
 	return fmt.Sprintf(`
 		resource "databricks_share" "myshare" {
@@ -611,6 +652,69 @@ func TestUcAccUpdateShareOutsideTerraform(t *testing.T) {
 				data_object_type = "SCHEMA"
 			}
 		}`,
+	})
+}
+
+// TestUcAccShareCommentSetOutsideTerraform covers a share managed without a comment in
+// config when a comment is then set outside terraform: the value must be adopted into
+// state rather than failing the apply with "produced an unexpected new value".
+func TestUcAccShareCommentSetOutsideTerraform(t *testing.T) {
+	var shareName string
+	const outOfBandComment = "set outside terraform"
+	shareConfig := preTestTemplateSchema + `
+	resource "databricks_share" "myshare" {
+		name  = "{var.STICKY_RANDOM}-terraform-delta-share-comment-oob"
+		object {
+			name = databricks_schema.schema1.id
+			data_object_type = "SCHEMA"
+		}
+	}`
+
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: shareConfig, // no comment in config
+		Check: func(s *terraform.State) error {
+			share := s.RootModule().Resources["databricks_share.myshare"]
+			if share == nil {
+				return fmt.Errorf("expected databricks_share.myshare in state")
+			}
+			shareName = share.Primary.Attributes["name"]
+			assert.NotEmpty(t, shareName)
+			assert.Empty(t, share.Primary.Attributes["comment"])
+			return nil
+		},
+	}, acceptance.Step{
+		PreConfig: func() {
+			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
+			require.NoError(t, err)
+			// set a comment outside terraform, as a UI edit would
+			_, err = w.Shares.Update(context.Background(), sharing.UpdateShare{
+				Name:            shareName,
+				Comment:         outOfBandComment,
+				ForceSendFields: []string{"Comment"},
+			})
+			require.NoError(t, err)
+		},
+		Template: shareConfig, // still no comment in config
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+		},
+		Check: resource.ComposeAggregateTestCheckFunc(
+			resource.TestCheckResourceAttr("databricks_share.myshare", "comment", outOfBandComment),
+			// the comment must also survive on the server, not just in state
+			func(s *terraform.State) error {
+				w, err := databricks.NewWorkspaceClient(&databricks.Config{})
+				if err != nil {
+					return err
+				}
+				share, err := w.Shares.Get(context.Background(), sharing.GetShareRequest{Name: shareName})
+				if err != nil {
+					return err
+				}
+				assert.Equal(t, outOfBandComment, share.Comment,
+					"out-of-band comment must be preserved on the server")
+				return nil
+			},
+		),
 	})
 }
 

@@ -2545,7 +2545,8 @@ type QueryIndexRequest struct {
 	// JSON string describing query filters (e.g. `{"id >": 5}`).
 	FiltersJson types.String `tfsdk:"filters_json"`
 	// Maximum number of results to return (the legacy `num_results`). Defaults
-	// to 10.
+	// to 10. Prefer `page_size`; when both are set, `page_size` takes
+	// precedence.
 	MaxResults types.Int64 `tfsdk:"max_results"`
 	// Full resource name of the index to query. Format:
 	// `workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`

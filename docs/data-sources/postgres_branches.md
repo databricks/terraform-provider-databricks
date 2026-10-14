@@ -55,18 +55,23 @@ This data source exports a single attribute, `branches`. It is a list of resourc
 
 ### BranchSpec
 * `expire_time` (string) - Absolute expiration timestamp. When set, the branch will expire at this time.
-  Mutually exclusive with `ttl` and `no_expiry`. When updating, use `spec.expiration` in the update_mask
+  Mutually exclusive with `ttl` and `no_expiry`
 * `is_protected` (boolean) - When set to true, protects the branch from deletion and reset. Associated compute endpoints and the project cannot be deleted while the branch is protected
 * `no_expiry` (boolean) - Explicitly disable expiration. When set to true, the branch will not expire.
   If set to false, the request is invalid; provide either ttl or expire_time instead.
-  Mutually exclusive with `expire_time` and `ttl`. When updating, use `spec.expiration` in the update_mask
+  Mutually exclusive with `expire_time` and `ttl`
 * `source_branch` (string) - The name of the source branch from which this branch was created (data lineage for point-in-time recovery).
   If not specified, defaults to the project's default branch.
   Format: projects/{project_id}/branches/{branch_id}
 * `source_branch_lsn` (string) - The Log Sequence Number (LSN) on the source branch from which this branch was created
 * `source_branch_time` (string) - The point in time on the source branch from which this branch was created
+* `source_snapshot` (string) - The snapshot this branch was created from. When set, the branch's data
+  comes from the snapshot rather than a source branch, so source_branch,
+  source_branch_lsn, and source_branch_time must be empty. The snapshot must
+  be AVAILABLE and belong to this branch's project.
+  Format: projects/{project_id}/snapshots/{snapshot_id}
 * `ttl` (string) - Relative time-to-live duration. When set, the branch will expire at creation_time + ttl.
-  Mutually exclusive with `expire_time` and `no_expiry`. When updating, use `spec.expiration` in the update_mask
+  Mutually exclusive with `expire_time` and `no_expiry`
 
 ### BranchStatus
 * `branch_id` (string) - Part of the resource name
@@ -84,4 +89,7 @@ This data source exports a single attribute, `branches`. It is a list of resourc
   Format: projects/{project_id}/branches/{branch_id}
 * `source_branch_lsn` (string) - The Log Sequence Number (LSN) on the source branch from which this branch was created
 * `source_branch_time` (string) - The point in time on the source branch from which this branch was created
+* `source_snapshot` (string) - The snapshot this branch was restored from. Set only for branches created by
+  restoring a snapshot; unset for all other branches.
+  Format: projects/{project_id}/snapshots/{snapshot_id}
 * `state_change_time` (string) - A timestamp indicating when the `current_state` began

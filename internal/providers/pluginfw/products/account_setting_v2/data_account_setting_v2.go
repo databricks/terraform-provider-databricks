@@ -97,6 +97,9 @@ type SettingData struct {
 	// Effective setting value for string type setting. This is the final
 	// effective value of setting. To set a value use string_val.
 	EffectiveStringVal types.Object `tfsdk:"effective_string_val"`
+	// Effective setting value for workspace_label setting. This is the final
+	// effective value of setting. To set a value use workspace_label.
+	EffectiveWorkspaceLabel types.Object `tfsdk:"effective_workspace_label"`
 	// Setting value for integer type setting. This is the setting value set by
 	// consumers, check effective_integer_val for final setting value.
 	IntegerVal types.Object `tfsdk:"integer_val"`
@@ -116,6 +119,9 @@ type SettingData struct {
 	// Setting value for string type setting. This is the setting value set by
 	// consumers, check effective_string_val for final setting value.
 	StringVal types.Object `tfsdk:"string_val"`
+	// Setting value for workspace_label setting. This is the setting value set
+	// by consumers, check effective_workspace_label for final setting value.
+	WorkspaceLabel types.Object `tfsdk:"workspace_label"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -144,11 +150,13 @@ func (m SettingData) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 		"effective_personal_compute":                          reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
 		"effective_restrict_workspace_admins":                 reflect.TypeOf(settingsv2_tf.RestrictWorkspaceAdminsMessage{}),
 		"effective_string_val":                                reflect.TypeOf(settingsv2_tf.StringMessage{}),
+		"effective_workspace_label":                           reflect.TypeOf(settingsv2_tf.WorkspaceLabelMessage{}),
 		"integer_val":                                         reflect.TypeOf(settingsv2_tf.IntegerMessage{}),
 		"operational_email_custom_recipient":                  reflect.TypeOf(settingsv2_tf.OperationalEmailCustomRecipientMessage{}),
 		"personal_compute":                                    reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
 		"restrict_workspace_admins":                           reflect.TypeOf(settingsv2_tf.RestrictWorkspaceAdminsMessage{}),
 		"string_val":                                          reflect.TypeOf(settingsv2_tf.StringMessage{}),
+		"workspace_label":                                     reflect.TypeOf(settingsv2_tf.WorkspaceLabelMessage{}),
 	}
 }
 
@@ -179,12 +187,14 @@ func (m SettingData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"effective_personal_compute":                          m.EffectivePersonalCompute,
 			"effective_restrict_workspace_admins":                 m.EffectiveRestrictWorkspaceAdmins,
 			"effective_string_val":                                m.EffectiveStringVal,
+			"effective_workspace_label":                           m.EffectiveWorkspaceLabel,
 			"integer_val":                                         m.IntegerVal,
 			"name":                                                m.Name,
 			"operational_email_custom_recipient":                  m.OperationalEmailCustomRecipient,
 			"personal_compute":                                    m.PersonalCompute,
 			"restrict_workspace_admins":                           m.RestrictWorkspaceAdmins,
 			"string_val":                                          m.StringVal,
+			"workspace_label":                                     m.WorkspaceLabel,
 		},
 	)
 }
@@ -211,12 +221,14 @@ func (m SettingData) Type(ctx context.Context) attr.Type {
 			"effective_personal_compute":                          settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
 			"effective_restrict_workspace_admins":                 settingsv2_tf.RestrictWorkspaceAdminsMessage{}.Type(ctx),
 			"effective_string_val":                                settingsv2_tf.StringMessage{}.Type(ctx),
+			"effective_workspace_label":                           settingsv2_tf.WorkspaceLabelMessage{}.Type(ctx),
 			"integer_val":                                         settingsv2_tf.IntegerMessage{}.Type(ctx),
 			"name":                                                types.StringType,
 			"operational_email_custom_recipient":                  settingsv2_tf.OperationalEmailCustomRecipientMessage{}.Type(ctx),
 			"personal_compute":                                    settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
 			"restrict_workspace_admins":                           settingsv2_tf.RestrictWorkspaceAdminsMessage{}.Type(ctx),
 			"string_val":                                          settingsv2_tf.StringMessage{}.Type(ctx),
+			"workspace_label":                                     settingsv2_tf.WorkspaceLabelMessage{}.Type(ctx),
 		},
 	}
 }
@@ -239,12 +251,14 @@ func (m SettingData) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["effective_personal_compute"] = attrs["effective_personal_compute"].SetComputed()
 	attrs["effective_restrict_workspace_admins"] = attrs["effective_restrict_workspace_admins"].SetComputed()
 	attrs["effective_string_val"] = attrs["effective_string_val"].SetComputed()
+	attrs["effective_workspace_label"] = attrs["effective_workspace_label"].SetComputed()
 	attrs["integer_val"] = attrs["integer_val"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["operational_email_custom_recipient"] = attrs["operational_email_custom_recipient"].SetComputed()
 	attrs["personal_compute"] = attrs["personal_compute"].SetComputed()
 	attrs["restrict_workspace_admins"] = attrs["restrict_workspace_admins"].SetComputed()
 	attrs["string_val"] = attrs["string_val"].SetComputed()
+	attrs["workspace_label"] = attrs["workspace_label"].SetComputed()
 
 	return attrs
 }

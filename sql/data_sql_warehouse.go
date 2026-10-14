@@ -3,6 +3,7 @@ package sql
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/sql"
@@ -27,8 +28,10 @@ func DataSourceWarehouse() common.Resource {
 		var dataSourceId string
 
 		dataSources, err := w.DataSources.List(ctx)
-		if err != nil {
-			// DataSources.List failed; fall back to finding warehouse without DataSourceId
+		if err != nil || !slices.ContainsFunc(dataSources, func(source sql.DataSource) bool {
+			return (data.Name != "" && source.Name == data.Name) || (data.Id != "" && source.WarehouseId == data.Id)
+		}) {
+			// REALTIME warehouses may be absent from the legacy data-source API.
 			if data.Name != "" {
 				// Find warehouse by name using Warehouses.ListAll
 				list, err := w.Warehouses.ListAll(ctx, sql.ListWarehousesRequest{})

@@ -1,6 +1,8 @@
 package sql
 
 import (
+	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
@@ -102,6 +104,45 @@ func TestWarehouseDataByName_DataSourceListError(t *testing.T) {
 	assert.Equal(t, "", d.Get("data_source_id"))
 }
 
+func TestWarehouseDataRealtimeFallback(t *testing.T) {
+	for _, listErr := range []error{nil, qa.ErrImATeapot} {
+		for _, hcl := range []string{`id = "abc"`, `name = "abc"`} {
+			t.Run(fmt.Sprintf("%s/%v", hcl, listErr), func(t *testing.T) {
+				qa.ResourceFixture{
+					MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+						mockRealtimeWarehouseAPI(t, w, func(rw http.ResponseWriter, r *http.Request) {
+							rw.Write([]byte(`{"statement_timeout":120,"customer_version_label":"2026.10"}`))
+						})
+						w.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return(nil, listErr)
+						if hcl == `name = "abc"` {
+							w.GetMockWarehousesAPI().EXPECT().ListAll(mock.Anything, sql.ListWarehousesRequest{}).Return([]sql.EndpointInfo{{Id: "abc", Name: "abc"}}, nil)
+						}
+						w.GetMockWarehousesAPI().EXPECT().GetById(mock.Anything, "abc").Return(&sql.GetWarehouseResponse{
+							Id:            "abc",
+							Name:          "abc",
+							ClusterSize:   "Small",
+							State:         "STOPPED",
+							WarehouseType: "REYDEN",
+						}, nil)
+					},
+					Resource:    DataSourceWarehouse(),
+					Read:        true,
+					NonWritable: true,
+					HCL:         hcl,
+					ID:          "_",
+				}.ApplyAndExpectData(t, map[string]any{
+					"id":                     "abc",
+					"state":                  "STOPPED",
+					"warehouse_type":         "REALTIME",
+					"statement_timeout":      120,
+					"customer_version_label": "2026.10",
+					"data_source_id":         "",
+				})
+			})
+		}
+	}
+}
+
 func TestWarehouseDataByName_NotFoundError(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
@@ -117,6 +158,7 @@ func TestWarehouseDataByName_NotFoundError(t *testing.T) {
 					Name:        "abc2",
 				},
 			}, nil)
+			w.GetMockWarehousesAPI().EXPECT().ListAll(mock.Anything, sql.ListWarehousesRequest{}).Return(nil, nil)
 		},
 		Resource:    DataSourceWarehouse(),
 		Read:        true,

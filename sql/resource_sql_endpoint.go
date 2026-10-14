@@ -2,10 +2,13 @@ package sql
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,8 +22,15 @@ var (
 	ForceSendFields = []string{"enable_serverless_compute", "enable_photon", "auto_stop_mins"}
 )
 
+// The SDK models do not yet include statement_timeout or customer_version_label.
+type realtimeWarehouseFields struct {
+	StatementTimeout     int    `json:"statement_timeout" tf:"computed,optional"`
+	CustomerVersionLabel string `json:"customer_version_label" tf:"computed"`
+}
+
 type SqlWarehouse struct {
 	sql.GetWarehouseResponse
+	realtimeWarehouseFields
 
 	// The data source ID is not part of the endpoint API response.
 	// We manually resolve it by retrieving the list of data sources
@@ -36,6 +46,14 @@ func getSqlWarehouse(ctx context.Context, w *databricks.WorkspaceClient, id stri
 	}
 	warehouse := SqlWarehouse{
 		GetWarehouseResponse: *se,
+	}
+	switch warehouse.WarehouseType {
+	case "REALTIME", "REYDEN":
+		warehouse.WarehouseType = "REALTIME"
+		warehouse.StatementTimeout = 3600
+		if err := doRealtimeWarehouseRequest(ctx, w, http.MethodGet, "/api/2.0/sql/warehouses/"+id, nil, &warehouse.realtimeWarehouseFields); err != nil {
+			return nil, err
+		}
 	}
 	return &warehouse, nil
 }
@@ -58,7 +76,9 @@ func ResourceSqlEndpoint() common.Resource {
 	s := common.StructToSchema(SqlWarehouse{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["id"].Computed = true
-		common.SetDefault(m["auto_stop_mins"], 120)
+		m["auto_stop_mins"].Optional = true
+		m["auto_stop_mins"].Computed = true
+		m["statement_timeout"].ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
 		common.CustomizeSchemaPath(m, "channel").SetSuppressDiff()
 		common.MustSchemaPath(m, "channel", "name").Default = "CHANNEL_NAME_CURRENT"
 		common.SetRequired(m["cluster_size"])
@@ -84,7 +104,7 @@ func ResourceSqlEndpoint() common.Resource {
 		common.SetRequired(common.MustSchemaPath(m, "tags", "custom_tags", "value"))
 		common.CustomizeSchemaPath(m, "warehouse_type").
 			SetSuppressDiff().
-			SetValidateDiagFunc(validation.ToDiagFunc(validation.StringInSlice([]string{"PRO", "CLASSIC"}, false)))
+			SetValidateDiagFunc(validation.ToDiagFunc(validation.StringInSlice([]string{"PRO", "CLASSIC", "REALTIME"}, false)))
 
 		// Add no_wait field to schema
 		m["no_wait"] = &schema.Schema{
@@ -115,6 +135,16 @@ func ResourceSqlEndpoint() common.Resource {
 			var se sql.CreateWarehouseRequest
 			common.DataToStructPointer(d, s, &se)
 			common.SetForceSendFields(&se, d, ForceSendFields)
+			if se.WarehouseType == "REALTIME" {
+				var response sql.CreateWarehouseResponse
+				err := writeRealtimeWarehouse(ctx, w, "/api/2.0/sql/warehouses", se, d.Get("statement_timeout").(int), &response)
+				if err != nil {
+					return fmt.Errorf("failed creating warehouse: %w", err)
+				}
+				d.SetId(response.Id)
+				// REALTIME warehouses are created stopped.
+				return nil
+			}
 			wait, err := w.Warehouses.Create(ctx, se)
 			if err != nil {
 				return fmt.Errorf("failed creating warehouse: %w", err)
@@ -122,9 +152,7 @@ func ResourceSqlEndpoint() common.Resource {
 
 			d.SetId(wait.Id)
 
-			// Check if no_wait flag is set to true
-			noWait, ok := d.GetOk("no_wait")
-			if ok && noWait.(bool) {
+			if d.Get("no_wait").(bool) {
 				return nil
 			}
 
@@ -149,9 +177,11 @@ func ResourceSqlEndpoint() common.Resource {
 			if err != nil {
 				return err
 			}
-			warehouse.DataSourceId, err = resolveDataSourceID(ctx, w, d.Id())
-			if err != nil {
-				return err
+			if warehouse.WarehouseType != "REALTIME" {
+				warehouse.DataSourceId, err = resolveDataSourceID(ctx, w, d.Id())
+				if err != nil {
+					return err
+				}
 			}
 			return common.StructToData(warehouse, s, d)
 		},
@@ -164,6 +194,9 @@ func ResourceSqlEndpoint() common.Resource {
 			common.DataToStructPointer(d, s, &se)
 			common.SetForceSendFields(&se, d, ForceSendFields)
 			se.Id = d.Id()
+			if se.WarehouseType == "REALTIME" {
+				return writeRealtimeWarehouse(ctx, w, "/api/2.0/sql/warehouses/"+d.Id()+"/edit", se, d.Get("statement_timeout").(int), nil)
+			}
 			_, err = w.Warehouses.Edit(ctx, se)
 			if err != nil {
 				return err
@@ -182,7 +215,93 @@ func ResourceSqlEndpoint() common.Resource {
 			if err := common.NamespaceCustomizeDiff(ctx, d, c); err != nil {
 				return err
 			}
+			if err := customizeSqlWarehouseDiff(d); err != nil {
+				return err
+			}
 			return d.Clear("health")
 		},
 	}
+}
+
+func customizeSqlWarehouseDiff(d *schema.ResourceDiff) error {
+	config := d.GetRawConfig()
+	if config.IsNull() {
+		return nil
+	}
+	isRealtime := d.Get("warehouse_type") == "REALTIME"
+	if d.Id() != "" && d.NewValueKnown("warehouse_type") && d.HasChange("warehouse_type") {
+		oldType, _ := d.GetChange("warehouse_type")
+		if isRealtime || oldType == "REALTIME" {
+			return fmt.Errorf("changing warehouse_type to or from REALTIME is not supported")
+		}
+	}
+	if config.GetAttr("auto_stop_mins").IsNull() && !d.NewValueKnown("warehouse_type") {
+		return d.SetNewComputed("auto_stop_mins")
+	}
+	defaults := map[string]any{"auto_stop_mins": 120}
+	if isRealtime {
+		defaults["auto_stop_mins"] = 10
+		defaults["statement_timeout"] = 3600
+		defaults["enable_serverless_compute"] = true
+	} else if d.NewValueKnown("warehouse_type") && !config.GetAttr("statement_timeout").IsNull() {
+		return fmt.Errorf("statement_timeout is only supported for REALTIME warehouses")
+	}
+	for field, value := range defaults {
+		if config.GetAttr(field).IsNull() {
+			if err := d.SetNew(field, value); err != nil {
+				return err
+			}
+		}
+	}
+	if isRealtime {
+		return validateRealtimeWarehouse(d)
+	}
+	return nil
+}
+
+func validateRealtimeWarehouse(d *schema.ResourceDiff) error {
+	if mins := d.Get("auto_stop_mins").(int); d.NewValueKnown("auto_stop_mins") && mins != 0 && mins < 5 {
+		return fmt.Errorf("auto_stop_mins must be 0 or at least 5 for REALTIME warehouses")
+	}
+	for _, field := range []string{"min_num_clusters", "max_num_clusters"} {
+		if !d.GetRawConfig().GetAttr(field).IsNull() && d.NewValueKnown(field) && d.Get(field).(int) != 1 {
+			return fmt.Errorf("%s must be 1 for REALTIME warehouses", field)
+		}
+	}
+	for _, field := range []string{"enable_photon", "enable_serverless_compute"} {
+		if d.NewValueKnown(field) && !d.Get(field).(bool) {
+			return fmt.Errorf("%s must be true for REALTIME warehouses", field)
+		}
+	}
+	if d.NewValueKnown("spot_instance_policy") && d.Get("spot_instance_policy") != "COST_OPTIMIZED" {
+		return fmt.Errorf("spot_instance_policy cannot be configured for REALTIME warehouses")
+	}
+	return nil
+}
+
+func writeRealtimeWarehouse(ctx context.Context, w *databricks.WorkspaceClient, path string, request any, timeout int, response any) error {
+	encoded, err := json.Marshal(request)
+	if err != nil {
+		return err
+	}
+	var body map[string]any
+	if err := json.Unmarshal(encoded, &body); err != nil {
+		return err
+	}
+	body["min_num_clusters"], body["max_num_clusters"] = 1, 1
+	// Zero clears an existing override and must survive JSON serialization.
+	body["statement_timeout"] = timeout
+	return doRealtimeWarehouseRequest(ctx, w, http.MethodPost, path, body, response)
+}
+
+func doRealtimeWarehouseRequest(ctx context.Context, w *databricks.WorkspaceClient, method, path string, request, response any) error {
+	c, err := client.New(w.Config)
+	if err != nil {
+		return err
+	}
+	headers := map[string]string{"Accept": "application/json", "Content-Type": "application/json"}
+	if w.Config.WorkspaceID != "" {
+		headers["X-Databricks-Workspace-Id"] = w.Config.WorkspaceID
+	}
+	return c.Do(ctx, method, path, headers, nil, request, response)
 }

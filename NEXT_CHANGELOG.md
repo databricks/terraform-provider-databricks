@@ -8,6 +8,8 @@
 
 ### New Features and Improvements
 
+* Support fixed-size REALTIME warehouses, statement timeouts, and compute version labels in `databricks_sql_endpoint` and `databricks_sql_warehouse` ([#6068](https://github.com/databricks/terraform-provider-databricks/pull/6068)).
+
 ### Bug Fixes
 
 ### Documentation

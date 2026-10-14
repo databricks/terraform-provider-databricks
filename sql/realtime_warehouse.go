@@ -10,17 +10,9 @@ import (
 )
 
 // The SDK models do not yet include statement_timeout or customer_version_label.
-func readRealtimeWarehouseFields(ctx context.Context, w *databricks.WorkspaceClient, id string, warehouse *SqlWarehouse) error {
-	fields := struct {
-		StatementTimeout     int    `json:"statement_timeout"`
-		CustomerVersionLabel string `json:"customer_version_label"`
-	}{StatementTimeout: 3600}
-	if err := doRealtimeWarehouseRequest(ctx, w, http.MethodGet, "/api/2.0/sql/warehouses/"+id, nil, &fields); err != nil {
-		return err
-	}
-	warehouse.StatementTimeout = fields.StatementTimeout
-	warehouse.CustomerVersionLabel = fields.CustomerVersionLabel
-	return nil
+type realtimeWarehouseFields struct {
+	StatementTimeout     int    `json:"statement_timeout" tf:"computed,optional"`
+	CustomerVersionLabel string `json:"customer_version_label" tf:"computed"`
 }
 
 func writeRealtimeWarehouse(ctx context.Context, w *databricks.WorkspaceClient, path string, request any, timeout int, response any) error {
@@ -32,6 +24,7 @@ func writeRealtimeWarehouse(ctx context.Context, w *databricks.WorkspaceClient, 
 	if err := json.Unmarshal(encoded, &body); err != nil {
 		return err
 	}
+	body["min_num_clusters"], body["max_num_clusters"] = 1, 1
 	// Zero clears an existing override and must survive JSON serialization.
 	body["statement_timeout"] = timeout
 	return doRealtimeWarehouseRequest(ctx, w, http.MethodPost, path, body, response)

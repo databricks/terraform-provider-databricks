@@ -74,28 +74,53 @@ func TestWarehouseDataById_DataSourceListError(t *testing.T) {
 	assert.Equal(t, "", d.Get("data_source_id"))
 }
 
-func TestWarehouseDataFallback(t *testing.T) {
+func TestWarehouseDataByName_DataSourceListError(t *testing.T) {
+	// When DataSources.List fails, we fall back to Warehouses.ListAll and don't populate data_source_id
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return(nil, qa.ErrImATeapot)
+			w.GetMockWarehousesAPI().EXPECT().ListAll(mock.Anything, sql.ListWarehousesRequest{}).Return([]sql.EndpointInfo{
+				{
+					Id:   "abc",
+					Name: "abc",
+				},
+			}, nil)
+			w.GetMockWarehousesAPI().EXPECT().GetById(mock.Anything, "abc").Return(&sql.GetWarehouseResponse{
+				Name:        "abc",
+				ClusterSize: "Small",
+				Id:          "abc",
+				State:       "RUNNING",
+			}, nil)
+		},
+		Resource:    DataSourceWarehouse(),
+		Read:        true,
+		NonWritable: true,
+		HCL:         `name = "abc"`,
+		ID:          "_",
+	}.Apply(t)
+	require.NoError(t, err)
+	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, "RUNNING", d.Get("state"))
+	assert.Equal(t, "", d.Get("data_source_id"))
+}
+
+func TestWarehouseDataRealtimeFallback(t *testing.T) {
 	for _, listErr := range []error{nil, qa.ErrImATeapot} {
 		for _, hcl := range []string{`id = "abc"`, `name = "abc"`} {
 			t.Run(fmt.Sprintf("%s/%v", hcl, listErr), func(t *testing.T) {
-				d, err := qa.ResourceFixture{
+				qa.ResourceFixture{
 					MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 						mockRealtimeWarehouseAPI(t, w, func(rw http.ResponseWriter, r *http.Request) {
 							rw.Write([]byte(`{"statement_timeout":120,"customer_version_label":"2026.10"}`))
 						})
 						w.GetMockDataSourcesAPI().EXPECT().List(mock.Anything).Return(nil, listErr)
 						if hcl == `name = "abc"` {
-							w.GetMockWarehousesAPI().EXPECT().ListAll(mock.Anything, sql.ListWarehousesRequest{}).Return([]sql.EndpointInfo{
-								{
-									Id:   "abc",
-									Name: "abc",
-								},
-							}, nil)
+							w.GetMockWarehousesAPI().EXPECT().ListAll(mock.Anything, sql.ListWarehousesRequest{}).Return([]sql.EndpointInfo{{Id: "abc", Name: "abc"}}, nil)
 						}
 						w.GetMockWarehousesAPI().EXPECT().GetById(mock.Anything, "abc").Return(&sql.GetWarehouseResponse{
+							Id:            "abc",
 							Name:          "abc",
 							ClusterSize:   "Small",
-							Id:            "abc",
 							State:         "STOPPED",
 							WarehouseType: "REYDEN",
 						}, nil)
@@ -105,14 +130,14 @@ func TestWarehouseDataFallback(t *testing.T) {
 					NonWritable: true,
 					HCL:         hcl,
 					ID:          "_",
-				}.Apply(t)
-				require.NoError(t, err)
-				assert.Equal(t, "abc", d.Id())
-				assert.Equal(t, "STOPPED", d.Get("state"))
-				assert.Equal(t, "REALTIME", d.Get("warehouse_type"))
-				assert.Equal(t, 120, d.Get("statement_timeout"))
-				assert.Equal(t, "2026.10", d.Get("customer_version_label"))
-				assert.Equal(t, "", d.Get("data_source_id"))
+				}.ApplyAndExpectData(t, map[string]any{
+					"id":                     "abc",
+					"state":                  "STOPPED",
+					"warehouse_type":         "REALTIME",
+					"statement_timeout":      120,
+					"customer_version_label": "2026.10",
+					"data_source_id":         "",
+				})
 			})
 		}
 	}

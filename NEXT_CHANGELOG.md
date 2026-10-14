@@ -12,6 +12,8 @@
 
 ### Documentation
 
+* Fix the Azure Databricks US Gov account console host in the provider authentication docs to `https://accounts.usgov.databricks.azure.us`.
+
 ### Exporter
 
 ### Internal Changes

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestConsumerSQLAccessValidation(t *testing.T) {
+func TestConsumerAccessCombinedWithOtherAccessEntitlements(t *testing.T) {
 	tests := []struct {
 		name     string
 		schema   map[string]*schema.Schema
@@ -23,26 +23,44 @@ func TestConsumerSQLAccessValidation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			config := tt.identity
-			config["databricks_sql_access"] = true
-			config["workspace_consume"] = true
-			resource := &schema.Resource{Schema: tt.schema}
-			require.Empty(t, resource.Validate(terraform.NewResourceConfigRaw(config)))
+			combinations := []struct {
+				name   string
+				fields []string
+				values []string
+			}{
+				{"sql", []string{"databricks_sql_access"}, []string{"databricks-sql-access"}},
+				{"workspace", []string{"workspace_access"}, []string{"workspace-access"}},
+				{"sql_and_workspace", []string{"databricks_sql_access", "workspace_access"},
+					[]string{"databricks-sql-access", "workspace-access"}},
+			}
+			for _, c := range combinations {
+				t.Run(c.name, func(t *testing.T) {
+					config := map[string]any{"workspace_consume": true}
+					for k, v := range tt.identity {
+						config[k] = v
+					}
+					for _, field := range c.fields {
+						config[field] = true
+					}
+					resource := &schema.Resource{Schema: tt.schema}
+					require.Empty(t, resource.Validate(terraform.NewResourceConfigRaw(config)))
 
-			data := schema.TestResourceDataRaw(t, tt.schema, config)
-			entitlements := readEntitlementsFromData(data)
-			require.Equal(t, []ComplexValue{
-				{Value: "databricks-sql-access"},
-				{Value: "workspace-consume"},
-			}, []ComplexValue(entitlements))
-			readData := schema.TestResourceDataRaw(t, tt.schema, nil)
-			require.NoError(t, entitlements.readIntoData(readData))
-			require.True(t, readData.Get("databricks_sql_access").(bool))
-			require.True(t, readData.Get("workspace_consume").(bool))
+					expected := []ComplexValue{}
+					for _, value := range c.values {
+						expected = append(expected, ComplexValue{Value: value})
+					}
+					expected = append(expected, ComplexValue{Value: "workspace-consume"})
+					data := schema.TestResourceDataRaw(t, tt.schema, config)
+					entitlements := readEntitlementsFromData(data)
+					require.Equal(t, expected, []ComplexValue(entitlements))
 
-			config["workspace_access"] = true
-			require.True(t, resource.Validate(terraform.NewResourceConfigRaw(config)).HasError(),
-				"Consumer access must still conflict with Workspace access")
+					readData := schema.TestResourceDataRaw(t, tt.schema, nil)
+					require.NoError(t, entitlements.readIntoData(readData))
+					for _, field := range append(c.fields, "workspace_consume") {
+						require.True(t, readData.Get(field).(bool), field)
+					}
+				})
+			}
 		})
 	}
 }

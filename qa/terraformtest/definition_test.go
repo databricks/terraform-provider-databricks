@@ -200,13 +200,6 @@ func TestRejectDeferredFeatures(t *testing.T) {
 			require.ErrorContains(t, err, "field "+field+" not found")
 		})
 	}
-	for _, field := range []string{"plan", "plan_only"} {
-		t.Run(field, func(t *testing.T) {
-			input := strings.Replace(minimalDefinition, "    calls: []", "    "+field+": {}\n    calls: []", 1)
-			_, err := decodeDefinition(strings.NewReader(input))
-			require.ErrorContains(t, err, "field "+field+" not found")
-		})
-	}
 }
 
 func TestDecodeHTTPFixtureAndMetadata(t *testing.T) {

@@ -124,8 +124,7 @@ with no configurable final-state assertion.
 
 Tests use handwritten fixtures and start with empty Terraform state unless an
 initial checkpoint is supplied. YAML has strict field validation: recording/setup
-templates, plan assertions, plan-only steps, and strict
-attribute matching are not yet supported. Unsupported fields fail
+templates and strict attribute matching are not yet supported. Unsupported fields fail
 before any Terraform operations. The step/call/state layout is kept stable
 so these capabilities can be added independently.
 
@@ -200,3 +199,110 @@ Terraform/provider versions. Review the entire checkpoint, including provider
 private data, for secrets before committing it; prefer secret-free test scenarios.
 Post-step assertions continue to use Terraform's supported inspection APIs,
 not raw checkpoint comparisons.
+
+## Plan assertions
+
+Optional `plan` assertions inspect Terraform's supported plan API. For an apply
+step, checks run on the saved pre-apply plan; Terraform then applies that same
+plan. The normal post-apply empty-plan consistency checks remain enabled.
+Omitting `plan` adds no custom assertions. `plan: {}` adds no expectations.
+
+```yaml
+plan:
+  expect: non_empty
+  changes:
+    databricks_group.this:
+      actions: [update]
+      before:
+        - path: [display_name]
+          equals: Initial group
+      after:
+        - path: [display_name]
+          equals: Updated group
+  outputs:
+    group_id:
+      after:
+        - path: []
+          unknown: true
+```
+
+`expect` is optional for apply steps: `empty` requires no resource or output
+changes; `non_empty` requires at least one. Omission ignores whole-plan emptiness.
+`changes` maps full resource instance addresses, including modules, `count`, and
+`for_each`. Quote addresses containing string keys. `outputs` maps root output
+names. Nonempty maps select checks; unlisted addresses and attributes are allowed.
+An explicitly empty `changes: {}` requires no resource changes, but permits output
+changes. Likewise, `outputs: {}` requires no output changes. No-op entries do not
+count as changes. Omitted maps impose no checks of that kind.
+
+Optional `actions` lists use Terraform action names: `[no-op]`, `[create]`,
+`[read]`, `[update]`, `[delete]`, `[forget]`, `[delete, create]`, or
+`[create, delete]`. Replacement order matters. If omitted, an address need only
+exist in the plan; any selected values still must match.
+
+`before` and `after` are lists of path checks, using the same typed primitive/null
+`equals` syntax as state checks. Resource paths start at an attribute; output
+paths may use `[]` for the whole scalar output, or start with a map key/list index.
+`unknown: true` replaces `equals` for an after value not yet known. Unknown is
+not null, and missing is not null. Unknown ancestors also make selected children
+unknown. Collection equality and set-element selection are not supported.
+
+### Plan-only steps
+
+Set step-level `plan_only: true` to skip apply. A successful plan-only step must
+declare `plan.expect: empty` or `non_empty`, because HashiCorp's native harness
+requires an emptiness expectation:
+
+```yaml
+plan_only: true
+plan:
+  expect: empty
+  changes: {}
+```
+
+The harness runs a non-refresh plan followed by a refresh plan. Custom assertions
+inspect the latter; API reads still consume ordinary step fixtures. Repeated
+reads require repeated fixtures. With `expect: empty`, the harness also requires
+the preceding non-refresh plan to be empty. This restricts drift scenarios where
+the plan becomes empty only after refreshing; no hidden refresh/apply is added
+to bypass that native restriction.
+
+Optional plan-only `state` checks inspect the refreshed prior state exposed by
+the plan API, not planned values. A plan does not persist that refreshed state or
+apply proposed changes. Later steps continue from the last persisted state.
+Automatic destroy still runs, including for tests containing only plan-only
+steps or an initial checkpoint. After an apply, cleanup retains the last applied
+configuration rather than a later preview's configuration. With no apply, it uses
+the last successful preview configuration for provider routing.
+
+`expect_error` cannot be combined with `plan` or `plan_only`; this prevents a
+broad diagnostic pattern from accidentally accepting failed plan assertions or
+harness emptiness checks. Use a separate ordinary diagnostic step instead.
+
+Complete examples are in [testdata/plans](testdata/plans). They exercise
+checkpoint update/apply, empty and nonempty previews, multiple resource instances,
+known/unknown outputs, and automatic cleanup.
+
+## Constraints for future recording
+
+Recording is not implemented. These replay contracts must survive capture and
+refresh:
+
+- Keep every consumable exchange, including retries and repeated reads, in
+  request-dispatch order. Assign sequence numbers before sending requests;
+  response-completion order can differ under concurrency. Do not infer resource
+  ownership from HTTP calls. Identical concurrent signatures with different
+  responses remain ambiguous under FIFO replay and need explicit handling.
+- Preserve whole-step boundaries, including all native consistency plans and
+  destroy. Capture plan expectations at the same saved-plan hooks as replay:
+  pre-apply for apply steps, post-refresh for plan-only steps.
+- Preserve author-selected paths, omitted assertions, explicit empty maps, and
+  unknown versus null. Do not turn partial assertions into whole-state snapshots
+  or silently change `enforce_call_order` while refreshing fixtures.
+- Capture reusable host metadata separately from consumable calls. Keep setup
+  and background-environment cleanup outside the test transcript; initial-state
+  resources belong to test destroy. Generate matching checkpoints and calls
+  together without editing opaque checkpoint JSON or reusing stale live IDs.
+- Decide retries/polling, secret and volatile-value handling before enabling
+  live capture. Recording must be explicit, single-test, unavailable in CI, and
+  must never be activated by a replay failure.

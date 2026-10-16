@@ -194,7 +194,7 @@ steps:
 }
 
 func TestRejectDeferredFeatures(t *testing.T) {
-	for _, field := range []string{"initial_state", "recording", "environment_template", "initial_state_template", "force_order", "strict"} {
+	for _, field := range []string{"recording", "environment_template", "initial_state_template", "force_order", "strict"} {
 		t.Run(field, func(t *testing.T) {
 			_, err := decodeDefinition(strings.NewReader(minimalDefinition + field + ": {}\n"))
 			require.ErrorContains(t, err, "field "+field+" not found")

@@ -146,6 +146,13 @@ fixtures; no server-side setup or initial Terraform state is needed.
 
 ## Decide what to assert
 
+Leave HTTP ordering disabled for ordinary scenarios: Terraform may run
+independent resources concurrently. For a regression that specifically depends
+on call order, set `enforce_call_order: true` at the test root. It applies to
+every step and destroy, excluding reusable host metadata. Keep each observed
+call in a future recorded transcript even when enforcement is disabled;
+identical request signatures still consume responses FIFO.
+
 HashiCorp's [resource state-check guide](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests/state-checks/resource)
 focuses state checks on computed attributes. Follow that default: check IDs,
 provider-derived values, data-source outputs, and unconfigured optional/computed

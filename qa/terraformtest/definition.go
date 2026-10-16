@@ -15,12 +15,13 @@ import (
 )
 
 type testDefinition struct {
-	Version      int            `yaml:"version"`
-	HostMetadata map[string]any `yaml:"host_metadata,omitempty"`
-	InitialState *initialState  `yaml:"initial_state,omitempty"`
-	Steps        []step         `yaml:"steps"`
-	Destroy      destroy        `yaml:"destroy"`
-	checkpoint   []byte
+	Version          int            `yaml:"version"`
+	HostMetadata     map[string]any `yaml:"host_metadata,omitempty"`
+	InitialState     *initialState  `yaml:"initial_state,omitempty"`
+	EnforceCallOrder bool           `yaml:"enforce_call_order,omitempty"`
+	Steps            []step         `yaml:"steps"`
+	Destroy          destroy        `yaml:"destroy"`
+	checkpoint       []byte
 }
 
 type initialState struct {

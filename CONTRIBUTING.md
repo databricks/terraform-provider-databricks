@@ -20,6 +20,7 @@
     - [Code Conventions](#code-conventions)
   - [Debugging](#debugging)
   - [Adding a new resource](#adding-a-new-resource-1)
+  - [YAML Replay Testing](#yaml-replay-testing)
   - [Integration Testing](#integration-testing)
   - [Code conventions](#code-conventions-1)
   - [Linting](#linting)
@@ -467,7 +468,7 @@ func TestExampleResourceCreate(t *testing.T) {
 }
 ```
 
-*Write acceptance tests.* These are E2E tests which run terraform against the live cloud and Databricks APIs. For these, you can use the `Step` helpers defined in the `internal/acceptance` package. An example:
+*Write replay tests.* Use the [YAML replay testing guide](qa/terraformtest/AUTHORING.md) for new lifecycle coverage. The following example documents the existing `internal/acceptance` helpers:
 
 ```go
 func TestAccSecretAclResource(t *testing.T) {
@@ -516,6 +517,13 @@ Unit tests run in CI on every PR. PRs opened from forks cannot authenticate to t
 
 If your PR changes `go.mod` or `go.sum`, the `tests` check will fail until a maintainer re-warms the cache for your PR (Actions -> Warm Go Cache -> Run workflow -> pr_number). Once the warming run completes, re-run the failed check.
 
+## YAML Replay Testing
+
+Write new lifecycle tests as YAML replay tests. See
+[Writing YAML replay tests](qa/terraformtest/AUTHORING.md) for a complete example,
+folder discovery, fixture practices, and guidance on what to assert in state.
+The [format reference](qa/terraformtest/README.md) covers current engine support.
+
 ## Integration Testing
 
 Integration tests are run as part of every PR made to the Databricks Terraform provider. Tests are run against AWS, Azure, and GCP infrastructure, in workspaces and accounts, and in Unity Catalog and non-Unity Catalog environments.
@@ -527,7 +535,7 @@ There is a default filter for tests based on the test name:
 - Tests beginning with `TestMwsAcc` are run in non-UC account environments across all clouds.
 - Tests beginning with `TestUcAcc` are run in UC workspace and account enviroments across all clouds.
 
-In general, all PRs that affect the behavior of the provider should include at least an integration test to ensure that any assumptions made about the Databricks platform in the implementation of the feature are correct. Integration tests must be added in the same directory as the resource or data source being tested. The name of the file should be `<resource_name>_test.go` for resources or `data_<data_source_name>_test.go` for data sources.
+New provider-behavior coverage should use [YAML replay tests](qa/terraformtest/AUTHORING.md), kept with the resource or data source being tested. The environment details above describe the existing integration suite.
 
 ## Code conventions
 

@@ -9,6 +9,8 @@ This resource allows you to manage credentials for [Databricks Repos](https://do
 
 -> This resource can only be used with a workspace-level provider!
 
+-> **Note** Write-Only argument `personal_access_token_wo` is available to use in place of `personal_access_token`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/manage-sensitive-data/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ### Git credential that uses personal access token
@@ -20,6 +22,19 @@ resource "databricks_git_credential" "ado" {
   git_username          = "myuser"
   git_provider          = "azureDevOpsServices"
   personal_access_token = "sometoken"
+}
+```
+
+### Git credential that uses a write-only personal access token
+
+Use `personal_access_token_wo` to avoid storing the token in the Terraform state. The value can come from an ephemeral resource or a variable. Increment `personal_access_token_wo_version` whenever the token needs to be updated:
+
+```hcl
+resource "databricks_git_credential" "ado" {
+  git_username                     = "myuser"
+  git_provider                     = "azureDevOpsServices"
+  personal_access_token_wo         = var.ado_pat
+  personal_access_token_wo_version = 1
 }
 ```
 
@@ -50,7 +65,9 @@ resource "databricks_git_credential" "spn" {
 
 The following arguments are supported:
 
-* `personal_access_token` - (Optional, required for some Git providers) The personal access token used to authenticate to the corresponding Git provider. If value is not provided, it's sourced from the first environment variable of [`GITHUB_TOKEN`](https://registry.terraform.io/providers/integrations/github/latest/docs#oauth--personal-access-token), [`GITLAB_TOKEN`](https://registry.terraform.io/providers/gitlabhq/gitlab/latest/docs#required), or [`AZDO_PERSONAL_ACCESS_TOKEN`](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs#argument-reference), that has a non-empty value.
+* `personal_access_token` - (Optional, required for some Git providers) The personal access token used to authenticate to the corresponding Git provider. If value is not provided, it's sourced from the first environment variable of [`GITHUB_TOKEN`](https://registry.terraform.io/providers/integrations/github/latest/docs#oauth--personal-access-token), [`GITLAB_TOKEN`](https://registry.terraform.io/providers/gitlabhq/gitlab/latest/docs#required), or [`AZDO_PERSONAL_ACCESS_TOKEN`](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs#argument-reference), that has a non-empty value. Conflicts with `personal_access_token_wo`.
+* `personal_access_token_wo` - (Optional) Write-only alternative to `personal_access_token`: the token is sent to Databricks but never stored in the Terraform state. Requires Terraform 1.11.0 or later and must be used together with `personal_access_token_wo_version`. When set, `personal_access_token` is not sourced from environment variables.
+* `personal_access_token_wo_version` - (Optional) Use together with `personal_access_token_wo` to trigger an update. Increment this value when an update to `personal_access_token_wo` is required.
 * `git_username` - (Optional, required for some Git providers or when `git_email` is specified) user name at Git provider.  For most Git providers it is only used to set the Git committer & author names for commits, however it may be required for authentication depending on your Git provider / token requirements.
 * `git_email` - (Optional, required for some Git providers) The email associated with your Git provider user account. Used for authentication with the remote repository and also sets the author & committer identity for commits.
 * `git_provider` -  (Required) case insensitive name of the Git provider.  Following values are supported right now (could be a subject for a change, consult [Git Credentials API documentation](https://docs.databricks.com/dev-tools/api/latest/gitcredentials.html)): `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`, `awsCodeCommit`, `azureDevOpsServicesAad`.

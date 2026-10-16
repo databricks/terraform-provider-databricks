@@ -44,7 +44,9 @@ func (a StorageConfigurationsAPI) Read(mwsAcctID, storageConfigurationID string)
 // Delete deletes the configuration for the root s3 bucket
 func (a StorageConfigurationsAPI) Delete(mwsAcctID, storageConfigurationID string) error {
 	storageConfigurationAPIPath := fmt.Sprintf("/accounts/%s/storage-configurations/%s", mwsAcctID, storageConfigurationID)
-	return a.client.Delete(a.context, storageConfigurationAPIPath, nil)
+	return retryDeleteWhileAttached(a.context, func() error {
+		return a.client.Delete(a.context, storageConfigurationAPIPath, nil)
+	})
 }
 
 // List lists all the storage configurations for the root s3 buckets in the account ID provided to the client config

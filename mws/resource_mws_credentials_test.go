@@ -320,6 +320,32 @@ func TestResourceCredentialsDelete(t *testing.T) {
 	assert.Equal(t, "abc/cid", d.Id())
 }
 
+func TestResourceCredentialsDelete_RetriesWhileAttachedToWorkspace(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/accounts/abc/credentials/cid?",
+				Response: apierr.APIError{
+					ErrorCode: "MALFORMED_REQUEST",
+					Message:   "Cannot delete a Credential while it is attached to a workspace (7474653688444518)",
+				},
+				Status: 400,
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/accounts/abc/credentials/cid?",
+			},
+		},
+		Resource:  ResourceMwsCredentials(),
+		Delete:    true,
+		ID:        "abc/cid",
+		AccountID: "abc",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc/cid", d.Id())
+}
+
 func TestResourceCredentialsDelete_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

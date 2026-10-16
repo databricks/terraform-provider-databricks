@@ -43,7 +43,10 @@ func (a NetworksAPI) Read(mwsAcctID, networksID string) (Network, error) {
 // Delete deletes the network object given a network id
 func (a NetworksAPI) Delete(mwsAcctID, networksID string) error {
 	networksAPIPath := fmt.Sprintf("/accounts/%s/networks/%s", mwsAcctID, networksID)
-	if err := a.client.Delete(a.context, networksAPIPath, nil); err != nil {
+	err := retryDeleteWhileAttached(a.context, func() error {
+		return a.client.Delete(a.context, networksAPIPath, nil)
+	})
+	if err != nil {
 		return err
 	}
 	return resource.RetryContext(a.context, 60*time.Second, func() *resource.RetryError {

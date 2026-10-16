@@ -61,8 +61,10 @@ func (a CustomerManagedKeysAPI) Read(
 
 // Delete deletes the customer managed key object given a network id
 func (a CustomerManagedKeysAPI) Delete(accountID, customerManagedKeyID string) error {
-	return a.client.Delete(a.context, fmt.Sprintf("/accounts/%s/customer-managed-keys/%s",
-		accountID, customerManagedKeyID), nil)
+	return retryDeleteWhileAttached(a.context, func() error {
+		return a.client.Delete(a.context, fmt.Sprintf("/accounts/%s/customer-managed-keys/%s",
+			accountID, customerManagedKeyID), nil)
+	})
 }
 
 // List lists all the available customer managed key objects in the mws account

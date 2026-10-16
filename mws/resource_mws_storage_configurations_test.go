@@ -157,6 +157,31 @@ func TestResourceStorageConfigurationDelete(t *testing.T) {
 	assert.Equal(t, "abc/scid", d.Id())
 }
 
+func TestResourceStorageConfigurationDelete_RetriesWhileAttachedToWorkspace(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/accounts/abc/storage-configurations/scid",
+				Response: apierr.APIError{
+					ErrorCode: "MALFORMED_REQUEST",
+					Message:   "Cannot delete a StorageConfiguration while it is attached to a workspace (7474653688444518)",
+				},
+				Status: 400,
+			},
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/accounts/abc/storage-configurations/scid",
+			},
+		},
+		Resource: ResourceMwsStorageConfigurations(),
+		Delete:   true,
+		ID:       "abc/scid",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc/scid", d.Id())
+}
+
 func TestResourceStorageConfigurationDelete_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

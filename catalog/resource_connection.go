@@ -10,11 +10,12 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"golang.org/x/exp/slices"
+
+	"github.com/databricks/terraform-provider-databricks/common"
 )
 
 var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret",

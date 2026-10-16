@@ -3,14 +3,16 @@ package catalog
 import (
 	"fmt"
 	"net/http"
+	"reflect"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestConnectionsCornerCases(t *testing.T) {
@@ -721,44 +723,29 @@ func TestParseWriteOnlyOptions(t *testing.T) {
 	}
 }
 
+func expectConnectionOptions(name string, options map[string]string) func(catalog.CreateConnection) bool {
+	return func(req catalog.CreateConnection) bool {
+		return req.Name == name && reflect.DeepEqual(req.Options, options)
+	}
+}
+
 func TestConnectionsCreate_WriteOnlyOptions(t *testing.T) {
+	connInfo := &catalog.ConnectionInfo{
+		Name:           "testConnectionName",
+		ConnectionType: catalog.ConnectionType("testConnectionType"),
+		FullName:       "testConnectionName",
+		MetastoreId:    "abc",
+		Options:        map[string]string{"host": "test.com"},
+	}
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.1/unity-catalog/connections",
-				ExpectedRequest: catalog.CreateConnection{
-					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
-					Options: map[string]string{
-						"host":     "test.com",
-						"user":     "testUser",
-						"password": "testPassword",
-					},
-				},
-				Response: catalog.ConnectionInfo{
-					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
-					FullName:       "testConnectionName",
-					MetastoreId:    "abc",
-					Options: map[string]string{
-						"host": "test.com",
-					},
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
-				Response: catalog.ConnectionInfo{
-					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
-					FullName:       "testConnectionName",
-					MetastoreId:    "abc",
-					Options: map[string]string{
-						"host": "test.com",
-					},
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockConnectionsAPI().EXPECT()
+			e.Create(mock.Anything, mock.MatchedBy(expectConnectionOptions("testConnectionName", map[string]string{
+				"host":     "test.com",
+				"user":     "testUser",
+				"password": "testPassword",
+			}))).Return(connInfo, nil)
+			e.GetByName(mock.Anything, "testConnectionName").Return(connInfo, nil)
 		},
 		Resource: ResourceConnection(),
 		Create:   true,
@@ -778,38 +765,23 @@ func TestConnectionsCreate_WriteOnlyOptions(t *testing.T) {
 }
 
 func TestConnectionsUpdate_WriteOnlyOptionsVersionChange(t *testing.T) {
-	connInfo := catalog.ConnectionInfo{
+	connInfo := &catalog.ConnectionInfo{
 		Name:           "testConnectionName",
 		ConnectionType: catalog.ConnectionType("testConnectionType"),
+		FullName:       "testConnectionName",
 		MetastoreId:    "abc",
-		Options: map[string]string{
-			"host": "test.com",
-		},
+		Options:        map[string]string{"host": "test.com"},
 	}
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
-				Response: connInfo,
-			},
-			{
-				Method:   http.MethodPatch,
-				Resource: "/api/2.1/unity-catalog/connections/testConnectionName",
-				ExpectedRequest: catalog.UpdateConnection{
-					Name: "testConnectionName",
-					Options: map[string]string{
-						"host":     "test.com",
-						"password": "newPassword",
-					},
-				},
-				Response: connInfo,
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
-				Response: connInfo,
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockConnectionsAPI().EXPECT()
+			e.Update(mock.Anything, mock.MatchedBy(func(req catalog.UpdateConnection) bool {
+				return req.Name == "testConnectionName" && reflect.DeepEqual(req.Options, map[string]string{
+					"host":     "test.com",
+					"password": "newPassword",
+				})
+			})).Return(connInfo, nil)
+			e.GetByName(mock.Anything, "testConnectionName").Return(connInfo, nil)
 		},
 		Resource: ResourceConnection(),
 		Update:   true,
@@ -837,24 +809,20 @@ func TestConnectionsUpdate_WriteOnlyOptionsVersionChange(t *testing.T) {
 }
 
 func TestConnectionsRead_WriteOnlyOptionsNotStored(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
-				Response: catalog.ConnectionInfo{
-					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
-					FullName:       "testConnectionName",
-					MetastoreId:    "abc",
-					Options: map[string]string{
-						"host":                    "test.com",
-						"user":                    "testUser",
-						"client_certificate":      "-----BEGIN CERTIFICATE-----",
-						"access_token_expiration": "123",
-					},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockConnectionsAPI().EXPECT().GetByName(mock.Anything, "testConnectionName").Return(&catalog.ConnectionInfo{
+				Name:           "testConnectionName",
+				ConnectionType: catalog.ConnectionType("testConnectionType"),
+				FullName:       "testConnectionName",
+				MetastoreId:    "abc",
+				Options: map[string]string{
+					"host":                    "test.com",
+					"user":                    "testUser",
+					"client_certificate":      "-----BEGIN CERTIFICATE-----",
+					"access_token_expiration": "123",
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourceConnection(),
 		Read:     true,
@@ -867,27 +835,21 @@ func TestConnectionsRead_WriteOnlyOptionsNotStored(t *testing.T) {
 			},
 			"options_wo_version": 1,
 		},
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, map[string]interface{}{"host": "test.com", "access_token_expiration": "123"}, d.Get("options"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"options": map[string]any{"host": "test.com", "access_token_expiration": "123"},
+	})
 }
 
 func TestConnectionsRead_PreservesPemKeyPassphrase(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
-				Response: catalog.ConnectionInfo{
-					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
-					FullName:       "testConnectionName",
-					MetastoreId:    "abc",
-					Options: map[string]string{
-						"host": "sftp.test.com",
-					},
-				},
-			},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockConnectionsAPI().EXPECT().GetByName(mock.Anything, "testConnectionName").Return(&catalog.ConnectionInfo{
+				Name:           "testConnectionName",
+				ConnectionType: catalog.ConnectionType("testConnectionType"),
+				FullName:       "testConnectionName",
+				MetastoreId:    "abc",
+				Options:        map[string]string{"host": "sftp.test.com"},
+			}, nil)
 		},
 		Resource: ResourceConnection(),
 		Read:     true,
@@ -901,13 +863,13 @@ func TestConnectionsRead_PreservesPemKeyPassphrase(t *testing.T) {
 				"pem_key_passphrase": "passphrase",
 			},
 		},
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, map[string]interface{}{
-		"host":               "sftp.test.com",
-		"pem_private_key":    "key",
-		"pem_key_passphrase": "passphrase",
-	}, d.Get("options"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"options": map[string]any{
+			"host":               "sftp.test.com",
+			"pem_private_key":    "key",
+			"pem_key_passphrase": "passphrase",
+		},
+	})
 }
 
 func TestConnectionsCreate_WriteOnlyOptionsOverlap(t *testing.T) {

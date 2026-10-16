@@ -44,9 +44,10 @@ configured through process environment variables.
 
 ## Test definition
 
-Use `version: 1`, followed by `steps` and `destroy`. Each step has a human
-`name`, literal HCL under `config`, `calls`, and optional `state` expectations.
-State persists across steps. Destroy always runs using the last successful configuration;
+Use `version: 1`, optional `initial_state`, followed by `steps` and `destroy`.
+Each step has a human `name`, literal HCL under `config`, `calls`, and optional
+`state` expectations. State persists across steps. Destroy always runs using
+the last successful configuration;
 its HTTP exchanges belong under `destroy.calls`, and empty state is always
 checked. The testing framework also attempts cleanup after an interrupted test.
 
@@ -114,10 +115,10 @@ with no configurable final-state assertion.
 
 ## MVP scope
 
-Tests start with empty Terraform state and handwritten fixtures. YAML has
-strict field validation: initial checkpoints, recording/setup templates,
-plan assertions, plan-only steps, forced HTTP order,
-and strict attribute matching are not yet supported. Unsupported fields fail
+Tests use handwritten fixtures and start with empty Terraform state unless an
+initial checkpoint is supplied. YAML has strict field validation: recording/setup
+templates, plan assertions, plan-only steps, forced HTTP order, and strict
+attribute matching are not yet supported. Unsupported fields fail
 before any Terraform operations. The step/call/state layout is kept stable
 so these capabilities can be added independently.
 
@@ -156,3 +157,39 @@ are not available to that fallback cleanup configuration.
 State checks on expected-error steps are rejected: HashiCorp skips post-apply
 checks when an operation fails. Add a subsequent successful step to inspect
 state instead. Invalid or empty error patterns fail before Terraform runs.
+
+## Initial state
+
+Reference a real Terraform-generated checkpoint, relative to the YAML file:
+
+```yaml
+initial_state:
+  checkpoint: checkpoints/group.tfstate
+```
+
+The runner copies the original bytes into an isolated working directory using
+HashiCorp's `TestStep.ConfigDirectory` API. It does not construct, decode, rewrite,
+or merge internal state JSON. Terraform reads and upgrades state through the
+provider as usual. The checkpoint is restored only before the first step; later
+steps and automatic destroy use the resulting current state. The original file
+is never updated. Missing, unreadable, and empty checkpoints fail before replay.
+
+The checkpoint does not populate the HTTP server. Supply fixtures describing
+the already-existing remote resources, including refresh reads. The test owns
+the checkpoint's managed resources and must provide destroy fixtures for them,
+including when the first step expects an error. Replay runs no setup templates.
+
+Checkpoint tests use the default local backend and the provider address
+`registry.terraform.io/databricks/databricks`. Explicit `backend` and `cloud`
+blocks are rejected: an alternate state location could bypass the checkpoint
+or access remote infrastructure. Provider configuration blocks remain optional;
+if HCL includes a `terraform` block, it must include its own provider requirements,
+as in ordinary replay tests.
+
+Historical checkpoints work within the installed Terraform version's and current
+provider's state-upgrade support; the runner cannot restore a removed resource
+implementation. Keep historical fixtures unchanged and record their original
+Terraform/provider versions. Review the entire checkpoint, including provider
+private data, for secrets before committing it; prefer secret-free test scenarios.
+Post-step assertions continue to use Terraform's supported inspection APIs,
+not raw checkpoint comparisons.

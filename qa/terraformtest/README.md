@@ -1,5 +1,8 @@
 # YAML Terraform lifecycle tests
 
+For a complete example and advice on choosing scenarios, fixtures, and state
+assertions, see [Writing YAML replay tests](AUTHORING.md).
+
 Use one small Go wrapper per fixture folder:
 
 ```go

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"maps"
+	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -17,7 +18,17 @@ import (
 )
 
 var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret",
-	"pem_private_key", "OAuthPvtKey", "GoogleServiceAccountKeyJson", "bearer_token"}
+	"pem_private_key", "pem_key_passphrase", "OAuthPvtKey", "GoogleServiceAccountKeyJson", "bearer_token",
+	"userProvidedServerCertificate"}
+
+// writeOnlyOptionPattern matches option keys carrying credentials or key material (client
+// certificates, SSL keys, keystores, ...) that may be passed through `options_wo` in addition
+// to sensitiveOptions, so connection types with other key names are covered as well.
+var writeOnlyOptionPattern = regexp.MustCompile(`(?i)(password|passphrase|secret|token|private_?key|pvt_?key|certificate|keystore|truststore)`)
+
+func isWriteOnlyOption(key string) bool {
+	return slices.Contains(sensitiveOptions, key) || writeOnlyOptionPattern.MatchString(key)
+}
 
 var computedOptions = []string{"pem_private_key_expiration_epoch_sec", "access_token_expiration"}
 
@@ -56,17 +67,18 @@ func validateConnectionParent(i any, k string) (warnings []string, errors []erro
 }
 
 // parseWriteOnlyOptions decodes `options_wo`, a JSON-encoded map of sensitive options.
-// Only sensitive options are allowed, as the API doesn't return them, so they never end up in state.
-// Errors must not include option values.
+// Only credential options are allowed, so `options_wo` can't be used to hide regular settings,
+// and Read can keep them out of state. Errors must not include option values.
 func parseWriteOnlyOptions(v string) (map[string]string, error) {
 	var opts map[string]string
 	if err := json.Unmarshal([]byte(v), &opts); err != nil {
 		return nil, fmt.Errorf("`options_wo` must be a JSON-encoded object with string values, e.g. jsonencode({ password = ... })")
 	}
 	for key := range opts {
-		if !slices.Contains(sensitiveOptions, key) {
-			return nil, fmt.Errorf("option %q is not supported in `options_wo`, set it in `options` instead. Supported keys: %s",
-				key, strings.Join(sensitiveOptions, ", "))
+		if !isWriteOnlyOption(key) {
+			return nil, fmt.Errorf("option %q is not supported in `options_wo`, set it in `options` instead. "+
+				"Supported are credential options, such as %s, or keys containing password, passphrase, secret, "+
+				"token, private_key, certificate, keystore or truststore", key, strings.Join(sensitiveOptions, ", "))
 		}
 	}
 	return opts, nil
@@ -231,8 +243,8 @@ func ResourceConnection() common.Resource {
 			}
 			// Options supplied through `options_wo` must not be stored in state, even if the API echoes them back
 			if _, ok := d.GetOk("options_wo_version"); ok {
-				for _, key := range sensitiveOptions {
-					if _, inState := cOrig.Options[key]; !inState {
+				for key := range conn.Options {
+					if _, inState := cOrig.Options[key]; !inState && isWriteOnlyOption(key) && !slices.Contains(computedOptions, key) {
 						delete(conn.Options, key)
 					}
 				}

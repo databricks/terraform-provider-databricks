@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -704,12 +705,20 @@ func TestParseWriteOnlyOptions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]string{"user": "u", "password": "p"}, opts)
 
-	_, err = parseWriteOnlyOptions(`{"password":`)
+	_, err = parseWriteOnlyOptions(`{"password":"s3cr3t`)
 	assert.ErrorContains(t, err, "must be a JSON-encoded object with string values")
-	assert.NotContains(t, err.Error(), "password")
+	assert.NotContains(t, err.Error(), "s3cr3t")
 
-	_, err = parseWriteOnlyOptions(`{"host":"test.com"}`)
-	assert.ErrorContains(t, err, `option "host" is not supported in `+"`options_wo`")
+	for _, key := range []string{"pem_key_passphrase", "userProvidedServerCertificate", "client_private_key",
+		"client_certificate", "ssl_key", "kafka.ssl.keystore.password", "kafka.ssl.truststore.location"} {
+		_, err = parseWriteOnlyOptions(fmt.Sprintf(`{%q:"value"}`, key))
+		assert.NoError(t, err, key)
+	}
+
+	for _, key := range []string{"host", "port", "base_path"} {
+		_, err = parseWriteOnlyOptions(fmt.Sprintf(`{%q:"value"}`, key))
+		assert.ErrorContains(t, err, fmt.Sprintf(`option %q is not supported in `, key)+"`options_wo`")
+	}
 }
 
 func TestConnectionsCreate_WriteOnlyOptions(t *testing.T) {
@@ -839,8 +848,10 @@ func TestConnectionsRead_WriteOnlyOptionsNotStored(t *testing.T) {
 					FullName:       "testConnectionName",
 					MetastoreId:    "abc",
 					Options: map[string]string{
-						"host": "test.com",
-						"user": "testUser",
+						"host":                    "test.com",
+						"user":                    "testUser",
+						"client_certificate":      "-----BEGIN CERTIFICATE-----",
+						"access_token_expiration": "123",
 					},
 				},
 			},
@@ -858,7 +869,45 @@ func TestConnectionsRead_WriteOnlyOptionsNotStored(t *testing.T) {
 		},
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, map[string]interface{}{"host": "test.com"}, d.Get("options"))
+	assert.Equal(t, map[string]interface{}{"host": "test.com", "access_token_expiration": "123"}, d.Get("options"))
+}
+
+func TestConnectionsRead_PreservesPemKeyPassphrase(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
+				Response: catalog.ConnectionInfo{
+					Name:           "testConnectionName",
+					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					FullName:       "testConnectionName",
+					MetastoreId:    "abc",
+					Options: map[string]string{
+						"host": "sftp.test.com",
+					},
+				},
+			},
+		},
+		Resource: ResourceConnection(),
+		Read:     true,
+		ID:       "abc|testConnectionName",
+		State: map[string]any{
+			"name":            "testConnectionName",
+			"connection_type": "testConnectionType",
+			"options": map[string]any{
+				"host":               "sftp.test.com",
+				"pem_private_key":    "key",
+				"pem_key_passphrase": "passphrase",
+			},
+		},
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{
+		"host":               "sftp.test.com",
+		"pem_private_key":    "key",
+		"pem_key_passphrase": "passphrase",
+	}, d.Get("options"))
 }
 
 func TestConnectionsCreate_WriteOnlyOptionsOverlap(t *testing.T) {

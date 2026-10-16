@@ -205,10 +205,9 @@ the replayed cleanup flow, not the state of an independently simulated service.
 ## Current limits
 
 The [format reference](README.md#mvp-scope) lists unsupported features. Do not
-copy HashiCorp's import or plan-only examples into this YAML as
-if those modes were implemented. Initial state, recording, explicit plan
-assertions and forced ordering need further engine
-support. Extend this replay guide as those capabilities arrive; do not silently
+copy HashiCorp's import or plan-only examples into this YAML as if those modes
+were implemented. Recording, explicit plan assertions, and forced ordering need
+further engine support. Extend this replay guide as those capabilities arrive; do not silently
 skip an assertion or treat an unexpected failure as a passing test.
 
 ## Test expected failures
@@ -228,3 +227,29 @@ You can create a resource, exercise an invalid update, then let automatic destro
 clean it up using the last successful configuration. To check state after an
 expected failure, follow it with a successful step and place state checks there;
 state checks directly on the failing step are not supported.
+
+## Start from existing state
+
+Add [`initial_state.checkpoint`](README.md#initial-state) to reference a
+Terraform-generated state file next to the test. Keep it as an opaque artifact;
+do not hand-build state JSON or edit IDs, schema versions, or provider-private
+data. For migration regressions, capture the state with the older provider
+version under test and keep that artifact fixed. Record how it was generated.
+
+The server remains stateless: a checkpoint and HTTP fixtures describe different
+things. Supply the existing object's read responses, update calls, and destroy
+calls. You do not need a create step for a resource already in the checkpoint.
+The [update showcase](testdata/initial_state/group_update.yaml) restores a real
+group checkpoint, updates it, checks a subsequent unchanged step, and destroys
+it. The [expected-error showcase](testdata/initial_state/rejected_update.yaml)
+proves cleanup still runs after rejecting the first update.
+
+Review checkpoints for secrets, including encoded private data. Generate
+secret-free scenarios rather than editing a checkpoint to sanitize it. These
+tests are hermetic; fixture preparation here uses the real provider and Terraform
+against local HTTP fixtures, not a live integration test. A recorder will later
+handle environment and initial-state templates with separate cleanup ownership.
+
+The repository ignores `*.tfstate` by default to protect ordinary local state.
+After reviewing a fixture for secrets, add that exact checkpoint explicitly with
+`git add -f path/to/checkpoint.tfstate`; do not relax the global ignore rule.

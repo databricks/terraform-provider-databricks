@@ -205,8 +205,23 @@ the replayed cleanup flow, not the state of an independently simulated service.
 ## Current limits
 
 The [format reference](README.md#mvp-scope) lists unsupported features. Do not
-copy HashiCorp's import, expected-error, or plan-only examples into this YAML as
+copy HashiCorp's import or plan-only examples into this YAML as
 if those modes were implemented. Initial state, recording, explicit plan
-assertions, forced ordering, and expected client-side errors need further engine
+assertions and forced ordering need further engine
 support. Extend this replay guide as those capabilities arrive; do not silently
 skip an assertion or treat an unexpected failure as a passing test.
+
+## Test expected failures
+
+Use [`expect_error`](README.md#expected-errors) on an individual step for a
+specific Terraform/provider diagnostic. Local validation failures can use
+`calls: []`; server-side failures still need normal HTTP error responses.
+Keep the expression narrow so a different failure cannot accidentally pass.
+The engine verifies HTTP consumption independently of the error assertion.
+
+You can create a resource, exercise an invalid update, then let automatic destroy
+clean it up using the last successful configuration. To check state after an
+expected failure, follow it with a successful step and place state checks there;
+state checks directly on the failing step are not supported. See the runnable
+[validation lifecycle](testdata/expected_errors/group_validation.yaml) and
+[HTTP error example](testdata/expected_errors/api_error.yaml).

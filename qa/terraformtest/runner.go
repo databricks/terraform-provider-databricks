@@ -29,6 +29,7 @@ func run(t *testing.T, definition *testDefinition) {
 	t.Helper()
 	configureTerraform(t)
 	handler := httpfixture.NewHandler()
+	handler.SetEnforceCallOrder(definition.EnforceCallOrder)
 	if err := handler.SetReusableFixtures(definition.metadataCalls()); err != nil {
 		t.Fatal(err)
 	}

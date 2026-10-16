@@ -14,5 +14,10 @@ array order and values matter. An absent body differs from JSON `null`.
 
 Independent request signatures may interleave. Identical signatures consume
 responses FIFO. Requests and fixture consumption are protected by a mutex.
+`SetEnforceCallOrder(true)` optionally requires all consumable calls in their
+listed order within each step. Out-of-order requests fail without consuming
+their fixture. The setting survives step transitions; changing it does not
+clear consumption or failures. Reusable fallbacks remain outside ordering,
+but cannot bypass an out-of-order matching consumable call.
 Test-wide reusable exchanges are intended for invariant client initialization,
 such as host metadata; they are not required to be consumed.

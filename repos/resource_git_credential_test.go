@@ -602,7 +602,7 @@ func TestResourceGitCredential_WriteOnlyTokenConflictsWithToken(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.ErrorContains(t, err, "conflicts with personal_access_token")
+	assert.EqualError(t, err, "invalid config supplied. [personal_access_token_wo] Conflicting configuration arguments")
 }
 
 func TestResourceGitCredential_WriteOnlyTokenRequiresVersion(t *testing.T) {
@@ -614,7 +614,7 @@ func TestResourceGitCredential_WriteOnlyTokenRequiresVersion(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.ErrorContains(t, err, "must be specified")
+	assert.EqualError(t, err, "invalid config supplied. [personal_access_token_wo] Missing required argument")
 }
 
 func TestResourceGitCredential_WriteOnlyTokenSuppressesEnvDefault(t *testing.T) {

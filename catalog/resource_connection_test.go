@@ -835,6 +835,7 @@ func TestConnectionsRead_WriteOnlyOptionsNotStored(t *testing.T) {
 			"options": map[string]any{
 				"host": "test.com",
 			},
+			"options_wo":         `{"user":"testUser","client_certificate":"-----BEGIN CERTIFICATE-----"}`,
 			"options_wo_version": 1,
 		},
 	}.ApplyAndExpectData(t, map[string]any{

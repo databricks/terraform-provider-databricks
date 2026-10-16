@@ -16,6 +16,8 @@
 
 ### New Features and Improvements
 
+* Added `statement_timeout` support to `databricks_sql_endpoint` and `databricks_sql_warehouse`.
+
 ### Bug Fixes
 
 ### Documentation

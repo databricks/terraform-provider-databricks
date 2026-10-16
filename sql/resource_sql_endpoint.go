@@ -16,7 +16,7 @@ import (
 var (
 	ClusterSizes    = []string{"2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large", "5X-Large"}
 	MaxNumClusters  = 40
-	ForceSendFields = []string{"enable_serverless_compute", "enable_photon", "auto_stop_mins"}
+	ForceSendFields = []string{"enable_serverless_compute", "enable_photon", "auto_stop_mins", "statement_timeout"}
 )
 
 type SqlWarehouse struct {
@@ -58,6 +58,8 @@ func ResourceSqlEndpoint() common.Resource {
 	s := common.StructToSchema(SqlWarehouse{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["id"].Computed = true
+		m["statement_timeout"].Computed = true
+		m["statement_timeout"].Description = "Warehouse statement timeout in seconds."
 		common.SetDefault(m["auto_stop_mins"], 120)
 		common.CustomizeSchemaPath(m, "channel").SetSuppressDiff()
 		common.MustSchemaPath(m, "channel", "name").Default = "CHANNEL_NAME_CURRENT"

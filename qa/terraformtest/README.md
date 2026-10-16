@@ -24,6 +24,16 @@ files from running. Select a single file with normal Go filtering:
 go test ./qa/terraformtest -run '^TestTerraform$/^TestTerraformGroupLifecycle$'
 ```
 
+`TestTerraformGroupLifecycleWrongMocks.yaml` is an intentionally failing
+showcase. Creation succeeds, but the rename fixture expects `Wrong mocked name`
+while HCL sends `Renamed lifecycle group`. The failure reports the step and
+unexpected HTTP request; valid destroy fixtures allow cleanup to run. This
+sample makes the unfiltered suite fail. Run it alone with:
+
+```sh
+go test -v ./qa/terraformtest -run '^TestTerraform$/^TestTerraformGroupLifecycleWrongMocks$'
+```
+
 Only selected files are loaded and validated. `go test -list` lists the Go
 wrapper, not dynamically discovered subtests; `go test -v` shows each subtest.
 Tests run the actual muxed Databricks provider, supporting both SDKv2 and

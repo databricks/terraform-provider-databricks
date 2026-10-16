@@ -42,7 +42,7 @@ configured through process environment variables.
 ## Test definition
 
 Use `version: 1`, followed by `steps` and `destroy`. Each step has a human
-`name`, literal `terraform` HCL, and `calls`.
+`name`, literal HCL under `config`, and `calls`.
 State persists across steps. Destroy always runs using the last configuration;
 its HTTP exchanges belong under `destroy.calls`, and empty state is always
 checked. The testing framework also attempts cleanup after an interrupted test.

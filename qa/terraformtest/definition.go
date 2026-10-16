@@ -20,9 +20,9 @@ type testDefinition struct {
 }
 
 type step struct {
-	Name      string             `yaml:"name"`
-	Terraform string             `yaml:"terraform"`
-	Calls     []httpfixture.Call `yaml:"calls"`
+	Name   string             `yaml:"name"`
+	Config string             `yaml:"config"`
+	Calls  []httpfixture.Call `yaml:"calls"`
 }
 
 type destroy struct {
@@ -66,8 +66,8 @@ func (d *testDefinition) validate() error {
 	}
 	for i, s := range d.Steps {
 		label := stepLabel(i, s.Name)
-		if strings.TrimSpace(s.Name) == "" || strings.TrimSpace(s.Terraform) == "" {
-			return fmt.Errorf("%s: name and terraform configuration are required", label)
+		if strings.TrimSpace(s.Name) == "" || strings.TrimSpace(s.Config) == "" {
+			return fmt.Errorf("%s: name and config are required", label)
 		}
 	}
 	return d.validateCalls()

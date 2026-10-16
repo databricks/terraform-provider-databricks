@@ -81,11 +81,11 @@ func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Ha
 	steps := make([]resource.TestStep, 0, len(definition.Steps)+1)
 	for i, s := range definition.Steps {
 		label := stepLabel(i, s.Name)
-		steps = append(steps, terraformStep(t, handler, label, s.Terraform, s.Calls))
+		steps = append(steps, terraformStep(t, handler, label, s.Config, s.Calls))
 	}
 	last := definition.Steps[len(definition.Steps)-1]
 	label := stepLabel(len(definition.Steps), "destroy")
-	cleanup := terraformStep(t, handler, label, last.Terraform, definition.Destroy.Calls)
+	cleanup := terraformStep(t, handler, label, last.Config, definition.Destroy.Calls)
 	cleanup.Destroy = true
 	cleanup.ConfigStateChecks = []statecheck.StateCheck{emptyStateAssertion{label: label}}
 	steps = append(steps, cleanup)

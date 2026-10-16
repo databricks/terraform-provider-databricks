@@ -17,8 +17,8 @@ import (
 func TestStepsPreserveConfigurationAndAlwaysDestroy(t *testing.T) {
 	h := httpfixture.NewHandler()
 	definition := &testDefinition{Steps: []step{
-		{Name: "create", Terraform: "first"},
-		{Name: "rename", Terraform: "second"},
+		{Name: "create", Config: "first"},
+		{Name: "rename", Config: "second"},
 	}}
 	steps := testSteps(t, definition, h)
 	require.Len(t, steps, 3)

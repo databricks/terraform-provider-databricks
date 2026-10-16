@@ -10,7 +10,7 @@ import (
 const minimalDefinition = `version: 1
 steps:
   - name: create
-    terraform: |
+    config: |
       resource "databricks_group" "this" {
         display_name = "test"
       }
@@ -26,7 +26,7 @@ func TestDecodeDefinition(t *testing.T) {
 	require.Equal(t, `resource "databricks_group" "this" {
   display_name = "test"
 }
-`, d.Steps[0].Terraform)
+`, d.Steps[0].Config)
 	require.Empty(t, d.Destroy.Calls)
 }
 
@@ -36,18 +36,19 @@ func TestRejectInvalidDefinition(t *testing.T) {
 	}{
 		{"version", strings.Replace(minimalDefinition, "version: 1", "version: 2", 1), "unsupported version 2"},
 		{"no steps", "version: 1\nsteps: []", "at least one step"},
-		{"unnamed step", strings.Replace(minimalDefinition, "name: create", "name: ''", 1), "name and terraform"},
-		{"no HCL", "version: 1\nsteps: [{name: create}]", "name and terraform"},
+		{"unnamed step", strings.Replace(minimalDefinition, "name: create", "name: ''", 1), "name and config"},
+		{"no HCL", "version: 1\nsteps: [{name: create}]", "name and config"},
+		{"old HCL field", strings.Replace(minimalDefinition, "config:", "terraform:", 1), "field terraform not found"},
 		{"multiple documents", minimalDefinition + "---\nversion: 1\n", "single YAML document"},
 		{"destroy state override", minimalDefinition + "  state: {resources: {}}\n", "field state not found"},
 		{"nonempty destroy override", minimalDefinition + "  state: {resources: {databricks_group.this: {}}}\n", "field state not found"},
 		{"invalid second step", `version: 1
 steps:
   - name: create
-    terraform: |
+    config: |
       provider "databricks" {}
   - name: update
-    terraform: |
+    config: |
       provider "databricks" {}
     calls:
       - request: {method: GET, path: /groups}
@@ -83,7 +84,7 @@ func TestDecodeHTTPFixtureAndMetadata(t *testing.T) {
 host_metadata: {workspace_id: "12345"}
 steps:
   - name: read
-    terraform: |
+    config: |
       provider "databricks" {}
     calls:
       - request:
@@ -110,7 +111,7 @@ func TestMalformedFixtureFields(t *testing.T) {
 	d, err := decodeDefinition(strings.NewReader(`version: 1
 steps:
   - name: read
-    terraform: |
+    config: |
       provider "databricks" {}
 `))
 	require.NoError(t, err)
@@ -118,7 +119,7 @@ steps:
 	_, err = decodeDefinition(strings.NewReader(`version: 1
 steps:
   - name: read
-    terraform: |
+    config: |
       provider "databricks" {}
     calls:
       - request: {method: GET, path: /groups, typo: true}

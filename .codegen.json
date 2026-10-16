@@ -10,6 +10,9 @@
         "required": [
             "go"
         ],
+        "pre_setup": [
+            "grep ' linguist-generated=true$' .gitattributes | cut -d' ' -f1 | xargs rm -f"
+        ],
         "post_generate": [
             "make lint"
         ]

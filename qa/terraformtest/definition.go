@@ -34,6 +34,8 @@ type step struct {
 	Calls       []httpfixture.Call `yaml:"calls"`
 	State       *expectedState     `yaml:"state,omitempty"`
 	ExpectError *string            `yaml:"expect_error,omitempty"`
+	Plan        *expectedPlan      `yaml:"plan,omitempty"`
+	PlanOnly    bool               `yaml:"plan_only,omitempty"`
 }
 
 type destroy struct {
@@ -51,7 +53,7 @@ type expectedResource struct {
 type expectedAttribute struct {
 	Path []any `yaml:"path"`
 	// A node distinguishes explicit null from an accidentally omitted expectation.
-	Equals yaml.Node `yaml:"equals"`
+	Equals yaml.Node `yaml:"equals,omitempty"`
 }
 
 func loadDefinition(path string) (*testDefinition, error) {
@@ -115,6 +117,9 @@ func (d *testDefinition) validate() error {
 			return fmt.Errorf("%s: %w", label, err)
 		}
 		if err := s.validateExpectedError(); err != nil {
+			return fmt.Errorf("%s: %w", label, err)
+		}
+		if err := s.validatePlan(); err != nil {
 			return fmt.Errorf("%s: %w", label, err)
 		}
 	}

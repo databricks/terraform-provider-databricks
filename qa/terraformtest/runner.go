@@ -89,13 +89,16 @@ func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Ha
 	t.Helper()
 	steps := make([]resource.TestStep, 0, len(definition.Steps)+1)
 	cleanupConfig := `provider "databricks" {}`
+	hasApplyConfig := false
 	for i, s := range definition.Steps {
 		label := stepLabel(i, s.Name)
 		testStep := terraformStep(t, handler, label, s.Config, s.Calls, s.State)
+		configurePlan(&testStep, s, label)
 		if s.ExpectError != nil {
 			testStep.ExpectError = regexp.MustCompile(*s.ExpectError)
-		} else {
+		} else if !s.PlanOnly || !hasApplyConfig {
 			cleanupConfig = s.Config
+			hasApplyConfig = !s.PlanOnly
 		}
 		steps = append(steps, testStep)
 	}

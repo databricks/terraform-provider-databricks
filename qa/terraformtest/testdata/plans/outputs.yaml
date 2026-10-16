@@ -1,0 +1,51 @@
+version: 1
+steps:
+  - name: preview_outputs
+    plan_only: true
+    config: |
+      output "answer" {
+        value = 42
+      }
+    plan:
+      expect: non_empty
+      changes: {}
+      outputs:
+        answer:
+          actions: [create]
+          before:
+            - path: []
+              equals: null
+          after:
+            - path: []
+              equals: 42
+    calls: []
+  - name: apply_outputs
+    config: |
+      output "answer" {
+        value = 42
+      }
+    plan:
+      outputs:
+        answer:
+          actions: [create]
+          after:
+            - path: []
+              equals: 42
+    calls: []
+  - name: unchanged_outputs
+    plan_only: true
+    config: |
+      output "answer" {
+        value = 42
+      }
+    plan:
+      expect: empty
+      outputs:
+        answer:
+          actions: [no-op]
+          after:
+            - path: []
+              equals: 42
+    calls: []
+destroy:
+  calls: []

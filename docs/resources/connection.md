@@ -7,6 +7,8 @@ subcategory: "Unity Catalog"
 
 -> This resource can only be used with a workspace-level provider!
 
+-> **Note** Write-Only argument `options_wo` is available to supply sensitive options (such as `password` or `client_secret`) without storing them in the Terraform state. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/manage-sensitive-data/ephemeral#write-only-arguments).
+
 Lakehouse Federation is the query federation platform for Databricks. Databricks uses Unity Catalog to manage query federation. To make a dataset available for read-only querying using Lakehouse Federation, you create the following:
 
 - A connection, a securable object in Unity Catalog that specifies a path and credentials for accessing an external database system.
@@ -142,6 +144,24 @@ resource "databricks_connection" "schema_scoped" {
 }
 ```
 
+Create a connection to a MySQL database without storing credentials in the Terraform state
+
+```hcl
+resource "databricks_connection" "mysql" {
+  name            = "mysql_connection"
+  connection_type = "MYSQL"
+  options = {
+    host = "test.mysql.database.azure.com"
+    port = "3306"
+  }
+  options_wo = jsonencode({
+    user     = var.mysql_user
+    password = var.mysql_password
+  })
+  options_wo_version = 1
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -150,6 +170,8 @@ The following arguments are supported:
 - `parent` - (Optional) Parent schema of a schema-level connection, in the format `schemas/{catalog}.{schema}`. When set, the connection is created inside that schema and its `full_name` becomes `{catalog}.{schema}.{name}`; when omitted, the connection is metastore-level. Change forces creation of a new resource.
 - `connection_type` - (Required) The type of connection. Possible values are: `BIGQUERY`, `CONFLUENCE`, `DATABRICKS`, `GA4_RAW_DATA`, `GITHUB`, `GLUE`, `HIVE_METASTORE`, `HTTP`, `HUBSPOT`, `META_MARKETING`, `MYSQL`, `ORACLE`, `OUTLOOK`, `POSTGRESQL`, `POWER_BI`, `REDSHIFT`, `SALESFORCE`, `SALESFORCE_DATA_CLOUD`, `SERVICENOW`, `SMARTSHEET`, `SNOWFLAKE`, `SQLDW`, `SQLSERVER`, `TERADATA`, `WORKDAY_RAAS`, or `ZENDESK`. For an up-to-date list of connection types and required options, see the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources). Change forces creation of a new resource.
 - `options` - (Required) A map of key-value properties attached to the securable. The required keys depend on the connection type, e.g. `host`, `port`, `user`, `password`, `authorization_endpoint`, `client_id`, `client_secret`, or `GoogleServiceAccountKeyJson`. Please consult the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources) for the required options. This field is sensitive.
+- `options_wo` - (Optional) Write-only, JSON-encoded map of sensitive options (use `jsonencode()`) that are merged into `options` when the connection is created or updated, but never stored in the Terraform state. Only these keys are supported: `user`, `password`, `personalAccessToken`, `access_token`, `client_secret`, `pem_private_key`, `OAuthPvtKey`, `GoogleServiceAccountKeyJson`, `bearer_token`. A key can't be set in both `options` and `options_wo`. Requires Terraform 1.11.0 or later and must be used together with `options_wo_version`.
+- `options_wo_version` - (Optional) Use together with `options_wo` to trigger an update. Increment this value (starting at 1) when an update to `options_wo` is required.
 - `comment` - (Optional) User-provided free-form text description. Change forces creation of a new resource.
 - `environment_settings` - (Optional) Connection environment settings. This block consists of the following fields:
   - `environment_version` - Environment version.

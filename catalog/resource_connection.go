@@ -2,13 +2,17 @@ package catalog
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"maps"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"golang.org/x/exp/slices"
 )
 
@@ -51,6 +55,59 @@ func validateConnectionParent(i any, k string) (warnings []string, errors []erro
 	return
 }
 
+// parseWriteOnlyOptions decodes `options_wo`, a JSON-encoded map of sensitive options.
+// Only sensitive options are allowed, as the API doesn't return them, so they never end up in state.
+// Errors must not include option values.
+func parseWriteOnlyOptions(v string) (map[string]string, error) {
+	var opts map[string]string
+	if err := json.Unmarshal([]byte(v), &opts); err != nil {
+		return nil, fmt.Errorf("`options_wo` must be a JSON-encoded object with string values, e.g. jsonencode({ password = ... })")
+	}
+	for key := range opts {
+		if !slices.Contains(sensitiveOptions, key) {
+			return nil, fmt.Errorf("option %q is not supported in `options_wo`, set it in `options` instead. Supported keys: %s",
+				key, strings.Join(sensitiveOptions, ", "))
+		}
+	}
+	return opts, nil
+}
+
+func validateWriteOnlyOptions(i any, k string) (warnings []string, errors []error) {
+	v, ok := i.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected %q to be a string", k))
+		return
+	}
+	if _, err := parseWriteOnlyOptions(v); err != nil {
+		errors = append(errors, err)
+	}
+	return
+}
+
+// mergeWriteOnlyOptions returns options combined with `options_wo` from the raw config.
+// Write-only values are never persisted in state, so they must be read from the configuration.
+func mergeWriteOnlyOptions(d *schema.ResourceData, options map[string]string) (map[string]string, error) {
+	woValue, diags := d.GetRawConfigAt(cty.GetAttrPath("options_wo"))
+	if diags.HasError() || !woValue.Type().Equals(cty.String) || woValue.IsNull() || !woValue.IsKnown() {
+		return options, nil
+	}
+	woOptions, err := parseWriteOnlyOptions(woValue.AsString())
+	if err != nil {
+		return nil, err
+	}
+	merged := maps.Clone(options)
+	if merged == nil {
+		merged = map[string]string{}
+	}
+	for key, value := range woOptions {
+		if _, ok := merged[key]; ok {
+			return nil, fmt.Errorf("option %q is set in both `options` and `options_wo`", key)
+		}
+		merged[key] = value
+	}
+	return merged, nil
+}
+
 type ConnectionSchemaStruct struct {
 	catalog.ConnectionInfo
 	// Parent schema for a schema-level connection, in format "schemas/{catalog}.{schema}".
@@ -77,6 +134,20 @@ func ResourceConnection() common.Resource {
 			// Suppress case-only diffs (UC identifiers are case-insensitive) so a case difference
 			// does not trigger a spurious ForceNew recreate; validate the format at plan time.
 			common.CustomizeSchemaPath(m, "parent").SetCustomSuppressDiff(common.EqualFoldDiffSuppress).SetValidateFunc(validateConnectionParent)
+			m["options_wo"] = &schema.Schema{
+				Type:         schema.TypeString,
+				Optional:     true,
+				WriteOnly:    true,
+				Sensitive:    true,
+				ValidateFunc: validateWriteOnlyOptions,
+				RequiredWith: []string{"options_wo_version"},
+			}
+			m["options_wo_version"] = &schema.Schema{
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				RequiredWith: []string{"options_wo"},
+			}
 			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
@@ -98,6 +169,10 @@ func ResourceConnection() common.Resource {
 			}
 			var createConnectionRequest catalog.CreateConnection
 			common.DataToStructPointer(d, s, &createConnectionRequest)
+			createConnectionRequest.Options, err = mergeWriteOnlyOptions(d, createConnectionRequest.Options)
+			if err != nil {
+				return err
+			}
 			conn, err := w.Connections.Create(ctx, createConnectionRequest)
 			if err != nil {
 				return err
@@ -106,6 +181,10 @@ func ResourceConnection() common.Resource {
 			if d.Get("owner") != "" {
 				var updateConnectionRequest catalog.UpdateConnection
 				common.DataToStructPointer(d, s, &updateConnectionRequest)
+				updateConnectionRequest.Options, err = mergeWriteOnlyOptions(d, updateConnectionRequest.Options)
+				if err != nil {
+					return err
+				}
 				// Address the owner update by full_name so it resolves a schema-level connection.
 				updateConnectionRequest.Name = conn.FullName
 				conn, err = w.Connections.Update(ctx, updateConnectionRequest)
@@ -150,6 +229,14 @@ func ResourceConnection() common.Resource {
 					conn.Options[key] = element
 				}
 			}
+			// Options supplied through `options_wo` must not be stored in state, even if the API echoes them back
+			if _, ok := d.GetOk("options_wo_version"); ok {
+				for _, key := range sensitiveOptions {
+					if _, inState := cOrig.Options[key]; !inState {
+						delete(conn.Options, key)
+					}
+				}
+			}
 			if err := common.StructToData(conn, s, d); err != nil {
 				return err
 			}
@@ -187,6 +274,10 @@ func ResourceConnection() common.Resource {
 			updateConnectionRequest.Owner = ""
 			for _, option := range computedOptions {
 				delete(updateConnectionRequest.Options, option)
+			}
+			updateConnectionRequest.Options, err = mergeWriteOnlyOptions(d, updateConnectionRequest.Options)
+			if err != nil {
+				return err
 			}
 			_, err = w.Connections.Update(ctx, updateConnectionRequest)
 			if err != nil {

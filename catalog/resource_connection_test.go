@@ -698,3 +698,196 @@ func TestConnectionsRead_SchemaLevelReconstructsParent(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "schemas/main.default", d.Get("parent"), "parent must be reconstructed from full_name on read")
 }
+
+func TestParseWriteOnlyOptions(t *testing.T) {
+	opts, err := parseWriteOnlyOptions(`{"user":"u","password":"p"}`)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]string{"user": "u", "password": "p"}, opts)
+
+	_, err = parseWriteOnlyOptions(`{"password":`)
+	assert.ErrorContains(t, err, "must be a JSON-encoded object with string values")
+	assert.NotContains(t, err.Error(), "password")
+
+	_, err = parseWriteOnlyOptions(`{"host":"test.com"}`)
+	assert.ErrorContains(t, err, `option "host" is not supported in `+"`options_wo`")
+}
+
+func TestConnectionsCreate_WriteOnlyOptions(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.1/unity-catalog/connections",
+				ExpectedRequest: catalog.CreateConnection{
+					Name:           "testConnectionName",
+					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					Options: map[string]string{
+						"host":     "test.com",
+						"user":     "testUser",
+						"password": "testPassword",
+					},
+				},
+				Response: catalog.ConnectionInfo{
+					Name:           "testConnectionName",
+					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					FullName:       "testConnectionName",
+					MetastoreId:    "abc",
+					Options: map[string]string{
+						"host": "test.com",
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
+				Response: catalog.ConnectionInfo{
+					Name:           "testConnectionName",
+					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					FullName:       "testConnectionName",
+					MetastoreId:    "abc",
+					Options: map[string]string{
+						"host": "test.com",
+					},
+				},
+			},
+		},
+		Resource: ResourceConnection(),
+		Create:   true,
+		State: map[string]any{
+			"name":            "testConnectionName",
+			"connection_type": "testConnectionType",
+			"options": map[string]any{
+				"host": "test.com",
+			},
+			"options_wo":         `{"user":"testUser","password":"testPassword"}`,
+			"options_wo_version": 1,
+		},
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{"host": "test.com"}, d.Get("options"))
+	assert.Equal(t, 1, d.Get("options_wo_version"))
+}
+
+func TestConnectionsUpdate_WriteOnlyOptionsVersionChange(t *testing.T) {
+	connInfo := catalog.ConnectionInfo{
+		Name:           "testConnectionName",
+		ConnectionType: catalog.ConnectionType("testConnectionType"),
+		MetastoreId:    "abc",
+		Options: map[string]string{
+			"host": "test.com",
+		},
+	}
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
+				Response: connInfo,
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/connections/testConnectionName",
+				ExpectedRequest: catalog.UpdateConnection{
+					Name: "testConnectionName",
+					Options: map[string]string{
+						"host":     "test.com",
+						"password": "newPassword",
+					},
+				},
+				Response: connInfo,
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
+				Response: connInfo,
+			},
+		},
+		Resource: ResourceConnection(),
+		Update:   true,
+		ID:       "abc|testConnectionName",
+		InstanceState: map[string]string{
+			"name":               "testConnectionName",
+			"connection_type":    "testConnectionType",
+			"options.%":          "1",
+			"options.host":       "test.com",
+			"options_wo_version": "1",
+		},
+		State: map[string]any{
+			"name":            "testConnectionName",
+			"connection_type": "testConnectionType",
+			"options": map[string]any{
+				"host": "test.com",
+			},
+			"options_wo":         `{"password":"newPassword"}`,
+			"options_wo_version": 2,
+		},
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{"host": "test.com"}, d.Get("options"))
+	assert.Equal(t, 2, d.Get("options_wo_version"))
+}
+
+func TestConnectionsRead_WriteOnlyOptionsNotStored(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
+				Response: catalog.ConnectionInfo{
+					Name:           "testConnectionName",
+					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					FullName:       "testConnectionName",
+					MetastoreId:    "abc",
+					Options: map[string]string{
+						"host": "test.com",
+						"user": "testUser",
+					},
+				},
+			},
+		},
+		Resource: ResourceConnection(),
+		Read:     true,
+		ID:       "abc|testConnectionName",
+		State: map[string]any{
+			"name":            "testConnectionName",
+			"connection_type": "testConnectionType",
+			"options": map[string]any{
+				"host": "test.com",
+			},
+			"options_wo_version": 1,
+		},
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{"host": "test.com"}, d.Get("options"))
+}
+
+func TestConnectionsCreate_WriteOnlyOptionsOverlap(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource: ResourceConnection(),
+		Create:   true,
+		State: map[string]any{
+			"name":            "testConnectionName",
+			"connection_type": "testConnectionType",
+			"options": map[string]any{
+				"password": "a",
+			},
+			"options_wo":         `{"password":"b"}`,
+			"options_wo_version": 1,
+		},
+	}.Apply(t)
+	assert.ErrorContains(t, err, "option \"password\" is set in both `options` and `options_wo`")
+}
+
+func TestConnectionsCreate_WriteOnlyOptionsInvalidKey(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource: ResourceConnection(),
+		Create:   true,
+		State: map[string]any{
+			"name":               "testConnectionName",
+			"connection_type":    "testConnectionType",
+			"options_wo":         `{"host":"test.com"}`,
+			"options_wo_version": 1,
+		},
+	}.Apply(t)
+	assert.ErrorContains(t, err, "is not supported in `options_wo`")
+}

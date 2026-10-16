@@ -712,12 +712,14 @@ func TestParseWriteOnlyOptions(t *testing.T) {
 	assert.NotContains(t, err.Error(), "s3cr3t")
 
 	for _, key := range []string{"pem_key_passphrase", "userProvidedServerCertificate", "client_private_key",
-		"client_certificate", "ssl_key", "kafka.ssl.keystore.password", "kafka.ssl.truststore.location"} {
+		"client_certificate", "ssl_key", "kafka.ssl.keystore.password", "kafka.ssl.truststore.location",
+		"ssl_keystore_key", "ssl_key_password", "ssl_keystore_certificate_chain", "ssl_truststore_certificates",
+		"schema_registry_api_key", "schema_registry_api_secret"} {
 		_, err = parseWriteOnlyOptions(fmt.Sprintf(`{%q:"value"}`, key))
 		assert.NoError(t, err, key)
 	}
 
-	for _, key := range []string{"host", "port", "base_path"} {
+	for _, key := range []string{"host", "port", "base_path", "bootstrap_servers", "schema_registry_url"} {
 		_, err = parseWriteOnlyOptions(fmt.Sprintf(`{%q:"value"}`, key))
 		assert.ErrorContains(t, err, fmt.Sprintf(`option %q is not supported in `, key)+"`options_wo`")
 	}
@@ -861,6 +863,7 @@ func TestConnectionsRead_PreservesPemKeyPassphrase(t *testing.T) {
 				"host":               "sftp.test.com",
 				"pem_private_key":    "key",
 				"pem_key_passphrase": "passphrase",
+				"ssl_keystore_key":   "client-key",
 			},
 		},
 	}.ApplyAndExpectData(t, map[string]any{
@@ -868,6 +871,7 @@ func TestConnectionsRead_PreservesPemKeyPassphrase(t *testing.T) {
 			"host":               "sftp.test.com",
 			"pem_private_key":    "key",
 			"pem_key_passphrase": "passphrase",
+			"ssl_keystore_key":   "client-key",
 		},
 	})
 }

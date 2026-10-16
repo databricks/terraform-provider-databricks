@@ -20,12 +20,13 @@ import (
 
 var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret",
 	"pem_private_key", "pem_key_passphrase", "OAuthPvtKey", "GoogleServiceAccountKeyJson", "bearer_token",
-	"userProvidedServerCertificate"}
+	"userProvidedServerCertificate", "ssl_keystore_key", "ssl_key_password", "schema_registry_api_key",
+	"schema_registry_api_secret"}
 
 // writeOnlyOptionPattern matches option keys carrying credentials or key material (client
 // certificates, SSL keys, keystores, ...) that may be passed through `options_wo` in addition
 // to sensitiveOptions, so connection types with other key names are covered as well.
-var writeOnlyOptionPattern = regexp.MustCompile(`(?i)(password|passphrase|secret|token|private_?key|pvt_?key|certificate|keystore|truststore)`)
+var writeOnlyOptionPattern = regexp.MustCompile(`(?i)(password|passphrase|secret|token|api_?key|private_?key|pvt_?key|certificate|keystore|truststore)`)
 
 func isWriteOnlyOption(key string) bool {
 	return slices.Contains(sensitiveOptions, key) || writeOnlyOptionPattern.MatchString(key)
@@ -79,7 +80,7 @@ func parseWriteOnlyOptions(v string) (map[string]string, error) {
 		if !isWriteOnlyOption(key) {
 			return nil, fmt.Errorf("option %q is not supported in `options_wo`, set it in `options` instead. "+
 				"Supported are credential options, such as %s, or keys containing password, passphrase, secret, "+
-				"token, private_key, certificate, keystore or truststore", key, strings.Join(sensitiveOptions, ", "))
+				"token, api_key, private_key, certificate, keystore or truststore", key, strings.Join(sensitiveOptions, ", "))
 		}
 	}
 	return opts, nil

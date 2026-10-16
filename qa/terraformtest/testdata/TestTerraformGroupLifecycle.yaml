@@ -3,7 +3,7 @@ host_metadata:
   workspace_id: "12345"
 steps:
   - name: create
-    terraform: |
+    config: |
       resource "databricks_group" "this" {
         display_name = "Lifecycle group"
       }
@@ -56,7 +56,7 @@ steps:
             - path: [display_name]
               equals: Lifecycle group
   - name: rename
-    terraform: |
+    config: |
       resource "databricks_group" "this" {
         display_name = "Renamed lifecycle group"
       }

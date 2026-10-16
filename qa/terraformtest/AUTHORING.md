@@ -219,9 +219,12 @@ specific Terraform/provider diagnostic. Local validation failures can use
 Keep the expression narrow so a different failure cannot accidentally pass.
 The engine verifies HTTP consumption independently of the error assertion.
 
+The minimal [validation-error example](testdata/expected_errors/group_validation.yaml)
+has one failing configuration, its expected diagnostic, and no HTTP calls.
+The [HTTP error example](testdata/expected_errors/api_error.yaml) covers an API
+failure instead.
+
 You can create a resource, exercise an invalid update, then let automatic destroy
 clean it up using the last successful configuration. To check state after an
 expected failure, follow it with a successful step and place state checks there;
-state checks directly on the failing step are not supported. See the runnable
-[validation lifecycle](testdata/expected_errors/group_validation.yaml) and
-[HTTP error example](testdata/expected_errors/api_error.yaml).
+state checks directly on the failing step are not supported.

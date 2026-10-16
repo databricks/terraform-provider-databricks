@@ -971,6 +971,124 @@ func TestResourceClusterUpdate_ResizeAutoscale(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+// A cluster that was previously resized to a fixed size leaves a stale
+// autoscale block behind in the state (the API omits autoscale for fixed-size
+// clusters, and the read does not clear it). When the configuration then asks
+// for autoscaling, num_workers changes (state -> default 0) while autoscale
+// does not, and the provider must still resize to the configured autoscale
+// range instead of pinning the cluster to zero workers.
+func TestResourceClusterUpdate_ResizeAutoscaleWithStaleNumWorkersInState(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
+			{
+				Method:       "GET",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				ReuseRequest: true,
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             2,
+					ClusterName:            "Autoscaling Cluster",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/resize",
+				ExpectedRequest: compute.ResizeCluster{
+					ClusterId: "abc",
+					Autoscale: &compute.AutoScale{
+						MinWorkers: 2,
+						MaxWorkers: 4,
+					},
+				},
+			},
+		},
+		ID:       "abc",
+		Update:   true,
+		Resource: ResourceCluster(),
+		HCL: `
+		autotermination_minutes = 15,
+		cluster_name =            "Autoscaling Cluster"
+		spark_version =           "7.1-scala12"
+		node_type_id =            "i3.xlarge"
+		autoscale = {
+			min_workers = 2
+			max_workers = 4
+		}
+		`,
+		InstanceState: map[string]string{
+			"autotermination_minutes": "15",
+			"cluster_name":            "Autoscaling Cluster",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             "2",
+			"autoscale.#":             "1",
+			"autoscale.0.min_workers": "2",
+			"autoscale.0.max_workers": "4",
+		},
+	}.ApplyNoError(t)
+}
+
+// Removing the autoscale block while num_workers stays the same is still a
+// resize to a fixed size, and the request must carry num_workers.
+func TestResourceClusterUpdate_ResizeNumWorkersWithAutoscaleRemoved(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
+			{
+				Method:       "GET",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				ReuseRequest: true,
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+					Autoscale: &compute.AutoScale{
+						MinWorkers: 2,
+						MaxWorkers: 4,
+					},
+					ClusterName:            "Non Autoscaling Cluster",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/resize",
+				ExpectedRequest: compute.ResizeCluster{
+					ClusterId:       "abc",
+					NumWorkers:      5,
+					ForceSendFields: []string{"NumWorkers"},
+				},
+			},
+		},
+		ID:       "abc",
+		Update:   true,
+		Resource: ResourceCluster(),
+		HCL: `
+		autotermination_minutes = 15,
+		cluster_name =            "Non Autoscaling Cluster"
+		spark_version =           "7.1-scala12"
+		node_type_id =            "i3.xlarge"
+		num_workers = 5
+		`,
+		InstanceState: map[string]string{
+			"autotermination_minutes": "15",
+			"cluster_name":            "Non Autoscaling Cluster",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             "5",
+			"autoscale.#":             "1",
+			"autoscale.0.min_workers": "2",
+			"autoscale.0.max_workers": "4",
+		},
+	}.ApplyNoError(t)
+}
+
 func TestResourceClusterUpdate_ResizeNumWorkers(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -64,6 +64,8 @@ func ResourceGitCredential() common.Resource {
 			"GITLAB_TOKEN",               // https://registry.terraform.io/providers/gitlabhq/gitlab/latest/docs
 			"AZDO_PERSONAL_ACCESS_TOKEN", // https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs
 		}, nil)
+		// ConflictsWith is set only on the write-only attribute: on `personal_access_token` it would
+		// also trigger for a token sourced from the environment via DefaultFunc.
 		s["personal_access_token_wo"] = &schema.Schema{
 			Type:          schema.TypeString,
 			Optional:      true,

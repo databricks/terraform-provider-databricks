@@ -63,6 +63,13 @@ Every HTTP call needs a consumable fixture, including Terraform's plan
 refreshes and the testing framework's post-apply consistency reads.
 Unexpected calls and unused fixtures fail with the step's index and name.
 
+Optional test-level `enforce_call_order: true` requires consumable HTTP calls
+in their listed order within every step, including destroy. The default is
+`false`: Terraform may interleave independent resources. Ordering covers the
+whole step, not per-resource lanes; a matching later call fails immediately
+without consuming it. Reusable host metadata may occur between any calls.
+Recorded call order can be preserved in the file without enabling enforcement.
+
 Optional `host_metadata` supplies a reusable JSON response for
 `GET /.well-known/databricks-config` throughout the test, keeping repeated
 client initialization out of the consumable resource exchanges.
@@ -117,7 +124,7 @@ with no configurable final-state assertion.
 
 Tests use handwritten fixtures and start with empty Terraform state unless an
 initial checkpoint is supplied. YAML has strict field validation: recording/setup
-templates, plan assertions, plan-only steps, forced HTTP order, and strict
+templates, plan assertions, plan-only steps, and strict
 attribute matching are not yet supported. Unsupported fields fail
 before any Terraform operations. The step/call/state layout is kept stable
 so these capabilities can be added independently.

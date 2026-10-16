@@ -14,6 +14,10 @@ func TestExpectedErrorReplay(t *testing.T) {
 	Run(t, "testdata/expected_errors")
 }
 
+func TestExpectedErrorContinuationAndCleanup(t *testing.T) {
+	Run(t, "testdata/expected_errors/engine")
+}
+
 func TestDecodeExpectedErrors(t *testing.T) {
 	for _, tc := range []struct {
 		name, value, message string

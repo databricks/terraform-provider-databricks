@@ -18,6 +18,10 @@
 
 ### Bug Fixes
 
+* Require replacement of `databricks_budget` when its filter changes.
+
+  Replacement creates a new budget; accumulated usage and alert behavior should be reviewed before applying.
+
 ### Documentation
 
 ### Exporter

@@ -4,7 +4,8 @@
 state model. It was generated with Terraform 1.13.5 and this repository's provider
 (production resource implementation from commit
 `c98615591f4eaaf583836cae2c04c230b67cded1`), using the create configuration and
-HTTP fixtures in [group_validation.yaml](../../expected_errors/group_validation.yaml).
+HTTP fixtures in
+[continuation_and_cleanup.yaml](../../expected_errors/engine/continuation_and_cleanup.yaml).
 Only the successful `create` step was used to generate it.
 
 The create ran against a local fixture server with fixed fake IDs and no live

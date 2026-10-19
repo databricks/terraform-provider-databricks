@@ -13,6 +13,14 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
+func teamTagClause() billing.BudgetConfigurationFilterTagClause {
+	return billing.BudgetConfigurationFilterTagClause{
+		Key: "Team", Value: &billing.BudgetConfigurationFilterClause{
+			Operator: billing.BudgetConfigurationFilterOperatorIn, Values: []string{"FinOps"},
+		},
+	}
+}
+
 // Exercise SDKv2 planning against existing state without invoking CRUD or an API.
 func TestResourceBudgetDiff(t *testing.T) {
 	for _, tc := range []struct {
@@ -64,6 +72,11 @@ func TestResourceBudgetDiff(t *testing.T) {
 		}, wantNew: true, wantDiff: true},
 		{name: "remove workspace value", before: func(b *billing.BudgetConfiguration) {
 			b.Filter.WorkspaceId.Values = append(b.Filter.WorkspaceId.Values, 987654321)
+		}, wantNew: true, wantDiff: true},
+		{name: "tag order", before: func(b *billing.BudgetConfiguration) {
+			b.Filter.Tags = append(b.Filter.Tags, teamTagClause())
+		}, change: func(b *billing.BudgetConfiguration) {
+			b.Filter.Tags = []billing.BudgetConfigurationFilterTagClause{teamTagClause(), b.Filter.Tags[0]}
 		}, wantNew: true, wantDiff: true},
 		{name: "display name", change: func(b *billing.BudgetConfiguration) {
 			b.DisplayName = "renamed"

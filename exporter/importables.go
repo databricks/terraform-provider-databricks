@@ -814,7 +814,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
 		},
 		ShouldGenerateField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
-			// Omitting false or zero would restore defaults instead of preserving the warehouse settings.
+			// Keep zero values that differ from the defaults.
 			return pathString == "enable_serverless_compute" || pathString == "auto_stop_mins" || pathString == "statement_timeout"
 		},
 	},

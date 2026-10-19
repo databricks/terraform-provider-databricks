@@ -2,16 +2,13 @@ package sql
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
+	"maps"
 	"testing"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/qa/poll"
 	"github.com/databricks/databricks-sdk-go/service/sql"
@@ -472,58 +469,43 @@ func TestResourceSQLEndpointCreateNoWait(t *testing.T) {
 }
 
 func TestResourceSQLEndpointCreateRealtime(t *testing.T) {
-	for _, tc := range []struct{ timeout, maxDbu, autoStop int }{{-1, 0, -1}, {0, 1, 0}, {1, 1000, 5}} {
-		t.Run(fmt.Sprint(tc), func(t *testing.T) {
-			config := map[string]any{"name": "foo", "cluster_size": "Small", "warehouse_type": "REALTIME"}
-			expectedTimeout := 3600
-			if tc.timeout >= 0 {
-				config["statement_timeout"] = tc.timeout
-				expectedTimeout = tc.timeout
+	for _, tc := range []struct {
+		config                    string
+		timeout, maxDbu, autoStop int
+	}{
+		{"", 3600, 0, 10},
+		{"statement_timeout = 0\nmax_dbu = 1\nauto_stop_mins = 0", 0, 1, 0},
+		{"statement_timeout = 1\nmax_dbu = 1000\nauto_stop_mins = 5", 1, 1000, 5},
+	} {
+		t.Run(fmt.Sprint(tc.timeout, tc.maxDbu, tc.autoStop), func(t *testing.T) {
+			request := map[string]any{
+				"name": "foo", "cluster_size": "Small", "warehouse_type": "REALTIME",
+				"min_num_clusters": 1, "max_num_clusters": 1, "enable_photon": true,
+				"enable_serverless_compute": true, "spot_instance_policy": "COST_OPTIMIZED",
+				"auto_stop_mins": tc.autoStop, "statement_timeout": tc.timeout,
 			}
 			if tc.maxDbu != 0 {
-				config["max_dbu"] = tc.maxDbu
+				request["max_dbu"] = tc.maxDbu
 			}
-			expectedAutoStop := 10
-			if tc.autoStop >= 0 {
-				config["auto_stop_mins"] = tc.autoStop
-				expectedAutoStop = tc.autoStop
-			}
-			response := getResponse
-			response.WarehouseType, response.State = "REYDEN", "STOPPED"
-			response.AutoStopMins, response.EnableServerlessCompute = expectedAutoStop, true
+			response := maps.Clone(request)
+			response["id"], response["state"], response["warehouse_type"] = "abc", "STOPPED", "REYDEN"
+			response["customer_version_label"], response["max_dbu"] = "2026.10", tc.maxDbu
+			// HTTP fixtures cover fields missing from the generated SDK mocks.
 			qa.ResourceFixture{
-				MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-					mockRealtimeWarehouseAPI(t, w, func(rw http.ResponseWriter, r *http.Request) {
-						if r.Method == http.MethodPost {
-							var body map[string]any
-							require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
-							assert.Equal(t, float64(expectedTimeout), body["statement_timeout"])
-							assert.Equal(t, float64(1), body["min_num_clusters"])
-							assert.Equal(t, float64(1), body["max_num_clusters"])
-							assert.Equal(t, float64(expectedAutoStop), body["auto_stop_mins"])
-							assert.Equal(t, true, body["enable_serverless_compute"])
-							if tc.maxDbu == 0 {
-								assert.NotContains(t, body, "max_dbu")
-							} else {
-								assert.Equal(t, float64(tc.maxDbu), body["max_dbu"])
-							}
-						}
-						fmt.Fprintf(rw, `{"id":"abc","statement_timeout":%d,"customer_version_label":"2026.10","max_dbu":%d}`, expectedTimeout, tc.maxDbu)
-					})
-					w.GetMockWarehousesAPI().EXPECT().GetById(mock.Anything, "abc").Return(&response, nil)
+				Fixtures: []qa.HTTPFixture{
+					{Method: "POST", Resource: "/api/2.0/sql/warehouses", ExpectedRequest: request, Response: `{"id":"abc"}`},
+					{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc?", Response: response},
+					{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc", Response: response},
 				},
-				Resource: ResourceSqlEndpoint(),
-				Create:   true,
-				State:    config,
+				Resource: ResourceSqlEndpoint(), Create: true,
+				HCL: `name = "foo"
+cluster_size = "Small"
+warehouse_type = "REALTIME"
+` + tc.config,
 			}.ApplyAndExpectData(t, map[string]any{
-				"id":                        "abc",
-				"state":                     "STOPPED",
-				"warehouse_type":            "REALTIME",
-				"auto_stop_mins":            expectedAutoStop,
-				"enable_serverless_compute": true,
-				"statement_timeout":         expectedTimeout,
-				"customer_version_label":    "2026.10",
-				"max_dbu":                   tc.maxDbu,
+				"id": "abc", "state": "STOPPED", "warehouse_type": "REALTIME",
+				"auto_stop_mins": tc.autoStop, "enable_serverless_compute": true,
+				"statement_timeout": tc.timeout, "customer_version_label": "2026.10", "max_dbu": tc.maxDbu,
 			})
 		})
 	}
@@ -553,33 +535,30 @@ func TestResourceSQLEndpointRealtimeValidation(t *testing.T) {
 }
 
 func TestResourceSQLEndpointUpdateRealtimeMaxDbu(t *testing.T) {
-	for _, configured := range []bool{true, false} {
-		t.Run(fmt.Sprint(configured), func(t *testing.T) {
-			config := map[string]any{"name": "foo", "cluster_size": "Small", "warehouse_type": "REALTIME"}
-			expected := 96
-			if configured {
-				expected = 192
-				config["max_dbu"] = expected
+	for _, tc := range []struct {
+		config string
+		maxDbu int
+	}{{"max_dbu = 192", 192}, {"", 96}} {
+		t.Run(fmt.Sprint(tc.maxDbu), func(t *testing.T) {
+			request := map[string]any{
+				"name": "foo", "cluster_size": "Small", "warehouse_type": "REALTIME",
+				"min_num_clusters": 1, "max_num_clusters": 1, "enable_photon": true,
+				"enable_serverless_compute": true, "spot_instance_policy": "COST_OPTIMIZED",
+				"auto_stop_mins": 10, "statement_timeout": 3600, "max_dbu": tc.maxDbu,
 			}
-			response := getResponse
-			response.WarehouseType = "REALTIME"
 			qa.ResourceFixture{
-				MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-					mockRealtimeWarehouseAPI(t, w, func(rw http.ResponseWriter, r *http.Request) {
-						if r.Method == http.MethodPost {
-							assert.Equal(t, "/api/2.0/sql/warehouses/abc/edit", r.URL.Path)
-							var body map[string]any
-							require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
-							assert.Equal(t, float64(expected), body["max_dbu"])
-						}
-						fmt.Fprintf(rw, `{"max_dbu":%d}`, expected)
-					})
-					w.GetMockWarehousesAPI().EXPECT().GetById(mock.Anything, "abc").Return(&response, nil)
+				Fixtures: []qa.HTTPFixture{
+					{Method: "POST", Resource: "/api/2.0/sql/warehouses/abc/edit", ExpectedRequest: request},
+					{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc?", Response: request},
+					{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc", Response: request},
 				},
 				Resource: ResourceSqlEndpoint(), Update: true, ID: "abc",
-				State:         config,
+				HCL: `name = "foo"
+cluster_size = "Small"
+warehouse_type = "REALTIME"
+` + tc.config,
 				InstanceState: map[string]string{"warehouse_type": "REALTIME", "max_dbu": "96"},
-			}.ApplyAndExpectData(t, map[string]any{"max_dbu": expected})
+			}.ApplyAndExpectData(t, map[string]any{"max_dbu": tc.maxDbu})
 		})
 	}
 }
@@ -619,12 +598,4 @@ func TestResourceSQLEndpointRejectRealtimeTypeMigration(t *testing.T) {
 			})
 		})
 	}
-}
-
-// The generated SDK mocks cannot represent these fields yet; exercise its HTTP client.
-func mockRealtimeWarehouseAPI(t *testing.T, w *mocks.MockWorkspaceClient, handler http.HandlerFunc) {
-	t.Helper()
-	server := httptest.NewServer(handler)
-	t.Cleanup(server.Close)
-	w.WorkspaceClient.Config = &config.Config{Host: server.URL, Token: "test", AuthType: "pat"}
 }

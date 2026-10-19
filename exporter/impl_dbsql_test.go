@@ -33,8 +33,7 @@ func TestExportSqlEndpointSettings(t *testing.T) {
 					"customer_version_label": "2026.10",
 				},
 			})
-			f := hclwrite.NewEmptyFile()
-			body := f.Body().AppendNewBlock("resource", []string{r.Resource, r.Name}).Body()
+			body := hclwrite.NewEmptyFile().Body()
 			require.NoError(t, ic.unifiedDataToHcl(ic.Importables[r.Resource], nil, r, body))
 			expected := map[string]string{"auto_stop_mins": tc.autoStop}
 			if tc.warehouseType == "REALTIME" {
@@ -43,15 +42,13 @@ func TestExportSqlEndpointSettings(t *testing.T) {
 					expected["max_dbu"] = tc.maxDbu
 				}
 			}
+			actual := map[string]string{}
 			for _, field := range []string{"auto_stop_mins", "statement_timeout", "max_dbu", "customer_version_label"} {
-				attr := body.GetAttribute(field)
-				if value, ok := expected[field]; ok {
-					require.NotNil(t, attr, field)
-					assert.Equal(t, value, strings.TrimSpace(string(attr.Expr().BuildTokens(nil).Bytes())), field)
-				} else {
-					assert.Nil(t, attr, field)
+				if attr := body.GetAttribute(field); attr != nil {
+					actual[field] = strings.TrimSpace(string(attr.Expr().BuildTokens(nil).Bytes()))
 				}
 			}
+			assert.Equal(t, expected, actual)
 		})
 	}
 }

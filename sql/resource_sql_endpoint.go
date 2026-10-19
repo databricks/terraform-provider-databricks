@@ -161,8 +161,7 @@ func ResourceSqlEndpoint() common.Resource {
 			common.SetForceSendFields(&se, d, ForceSendFields)
 			if se.WarehouseType == "REALTIME" {
 				var response sql.CreateWarehouseResponse
-				err := writeRealtimeWarehouse(ctx, w, "/api/2.0/sql/warehouses", se, d, &response)
-				if err != nil {
+				if err := writeRealtimeWarehouse(ctx, w, "/api/2.0/sql/warehouses", se, d, &response); err != nil {
 					return fmt.Errorf("failed creating warehouse: %w", err)
 				}
 				d.SetId(response.Id)
@@ -176,7 +175,9 @@ func ResourceSqlEndpoint() common.Resource {
 
 			d.SetId(wait.Id)
 
-			if d.Get("no_wait").(bool) {
+			// Check if no_wait flag is set to true
+			noWait, ok := d.GetOk("no_wait")
+			if ok && noWait.(bool) {
 				return nil
 			}
 

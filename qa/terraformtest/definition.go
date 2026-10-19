@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -20,10 +21,11 @@ type testDefinition struct {
 }
 
 type step struct {
-	Name   string             `yaml:"name"`
-	Config string             `yaml:"config"`
-	Calls  []httpfixture.Call `yaml:"calls"`
-	State  *expectedState     `yaml:"state,omitempty"`
+	Name        string             `yaml:"name"`
+	Config      string             `yaml:"config"`
+	Calls       []httpfixture.Call `yaml:"calls"`
+	State       *expectedState     `yaml:"state,omitempty"`
+	ExpectError *string            `yaml:"expect_error,omitempty"`
 }
 
 type destroy struct {
@@ -87,8 +89,29 @@ func (d *testDefinition) validate() error {
 		if err := validateState(s.State); err != nil {
 			return fmt.Errorf("%s: %w", label, err)
 		}
+		if err := s.validateExpectedError(); err != nil {
+			return fmt.Errorf("%s: %w", label, err)
+		}
 	}
 	return d.validateCalls()
+}
+
+// validateExpectedError prevents broad empty patterns and assertions that the
+// testing framework would skip after an expected failure.
+func (s step) validateExpectedError() error {
+	if s.ExpectError == nil {
+		return nil
+	}
+	if strings.TrimSpace(*s.ExpectError) == "" {
+		return fmt.Errorf("expect_error must be a nonempty regular expression")
+	}
+	if _, err := regexp.Compile(*s.ExpectError); err != nil {
+		return fmt.Errorf("invalid expect_error regular expression: %w", err)
+	}
+	if s.State != nil {
+		return fmt.Errorf("state checks on expected-error steps are not supported; check state in a subsequent successful step")
+	}
+	return nil
 }
 
 func validateState(state *expectedState) error {

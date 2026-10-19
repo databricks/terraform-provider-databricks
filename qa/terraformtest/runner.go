@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"regexp"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/config"
@@ -74,18 +75,25 @@ func configureTerraform(t *testing.T) {
 	}
 }
 
-// testSteps appends a numbered destroy using the last HCL configuration.
+// testSteps appends a numbered destroy using the last successful configuration.
 // Cleanup always requires empty state, independently of optional step checks.
 func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Handler) []resource.TestStep {
 	t.Helper()
 	steps := make([]resource.TestStep, 0, len(definition.Steps)+1)
+	cleanupConfig := `provider "databricks" {}`
 	for i, s := range definition.Steps {
 		label := stepLabel(i, s.Name)
-		steps = append(steps, terraformStep(t, handler, label, s.Config, s.Calls, s.State))
+		testStep := terraformStep(t, handler, label, s.Config, s.Calls, s.State)
+		if s.ExpectError != nil {
+			testStep.ExpectError = regexp.MustCompile(*s.ExpectError)
+		} else {
+			cleanupConfig = s.Config
+		}
+		steps = append(steps, testStep)
 	}
-	last := definition.Steps[len(definition.Steps)-1]
 	label := stepLabel(len(definition.Steps), "destroy")
-	cleanup := terraformStep(t, handler, label, last.Config, definition.Destroy.Calls, nil)
+	// Invalid resource configuration must not prevent cleanup of earlier steps.
+	cleanup := terraformStep(t, handler, label, cleanupConfig, definition.Destroy.Calls, nil)
 	cleanup.Destroy = true
 	cleanup.ConfigStateChecks = []statecheck.StateCheck{emptyStateAssertion{label: label}}
 	steps = append(steps, cleanup)

@@ -1,5 +1,8 @@
 # YAML Terraform lifecycle tests
 
+For a complete example and advice on choosing scenarios, fixtures, and state
+assertions, see [Writing YAML replay tests](AUTHORING.md).
+
 Use one small Go wrapper per fixture folder:
 
 ```go
@@ -43,7 +46,7 @@ configured through process environment variables.
 
 Use `version: 1`, followed by `steps` and `destroy`. Each step has a human
 `name`, literal HCL under `config`, `calls`, and optional `state` expectations.
-State persists across steps. Destroy always runs using the last configuration;
+State persists across steps. Destroy always runs using the last successful configuration;
 its HTTP exchanges belong under `destroy.calls`, and empty state is always
 checked. The testing framework also attempts cleanup after an interrupted test.
 
@@ -113,7 +116,43 @@ with no configurable final-state assertion.
 
 Tests start with empty Terraform state and handwritten fixtures. YAML has
 strict field validation: initial checkpoints, recording/setup templates,
-plan assertions, plan-only steps, expected client errors, forced HTTP order,
+plan assertions, plan-only steps, forced HTTP order,
 and strict attribute matching are not yet supported. Unsupported fields fail
 before any Terraform operations. The step/call/state layout is kept stable
 so these capabilities can be added independently.
+
+## Expected errors
+
+An optional step-level `expect_error` is a nonempty Go regular expression
+matched against Terraform/provider diagnostics, using HashiCorp's
+`TestStep.ExpectError`. The step fails if the operation succeeds or its error
+does not match. Use a specific diagnostic rather than a broad pattern:
+
+```yaml
+steps:
+  - name: reject_reserved_name
+    config: |
+      resource "databricks_group" "this" {
+        display_name = "admins"
+      }
+    expect_error: 'expected display_name to not be any of'
+    calls: []
+destroy:
+  calls: []
+```
+
+Errors before HTTP calls need no resource exchanges. Errors returned by APIs
+still use ordinary HTTP fixtures. Unexpected calls and unused fixtures fail
+independently, even if their resulting diagnostic matches `expect_error`.
+Later steps still run after an expected failure.
+
+Automatic destroy remains mandatory and uses the last step without an expected
+error, so an invalid final configuration cannot prevent cleanup. If all steps
+expect errors, cleanup uses an empty default provider configuration. Tests that
+partially create resources before failing must still supply destroy fixtures.
+Provider aliases or routing that exist only in an expected-error configuration
+are not available to that fallback cleanup configuration.
+
+State checks on expected-error steps are rejected: HashiCorp skips post-apply
+checks when an operation fails. Add a subsequent successful step to inspect
+state instead. Invalid or empty error patterns fail before Terraform runs.

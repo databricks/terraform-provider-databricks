@@ -3,6 +3,8 @@ package sql
 import (
 	"context"
 	"errors"
+	"fmt"
+	"maps"
 	"testing"
 	"time"
 
@@ -12,6 +14,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/stretchr/testify/assert"
@@ -335,6 +338,9 @@ func TestResourceSQLEndpointUpdateHealthNoDiff(t *testing.T) {
 			"enable_serverless_compute": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"data_source_id":            {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"creator_name":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"customer_version_label":    {NewComputed: true},
+			"statement_timeout":         {NewComputed: true},
+			"max_dbu":                   {NewComputed: true},
 		},
 		HCL: `
 		name = "foo"
@@ -367,6 +373,9 @@ func TestResourceSQLEndpointUpdateNoAutoTermination(t *testing.T) {
 			"enable_serverless_compute": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"data_source_id":            {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"creator_name":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"customer_version_label":    {NewComputed: true},
+			"statement_timeout":         {NewComputed: true},
+			"max_dbu":                   {NewComputed: true},
 		},
 		HCL: `
 		name = "foo"
@@ -457,4 +466,147 @@ func TestResourceSQLEndpointCreateNoWait(t *testing.T) {
 		"state":          "STARTING",
 		"data_source_id": "d7c9d05c-7496-4c69-b089-48823edad40c",
 	})
+}
+
+func TestResourceSQLEndpointCreateRealtime(t *testing.T) {
+	for _, tc := range []struct {
+		config                    string
+		timeout, maxDbu, autoStop int
+	}{
+		{"", 3600, 0, 10},
+		{"statement_timeout = 0\nmax_dbu = 1\nauto_stop_mins = 0", 0, 1, 0},
+		{"statement_timeout = 1\nmax_dbu = 1000\nauto_stop_mins = 5", 1, 1000, 5},
+	} {
+		t.Run(fmt.Sprint(tc.timeout, tc.maxDbu, tc.autoStop), func(t *testing.T) {
+			request := map[string]any{
+				"name": "foo", "cluster_size": "Small", "warehouse_type": "REALTIME",
+				"min_num_clusters": 1, "max_num_clusters": 1, "enable_photon": true,
+				"enable_serverless_compute": true, "spot_instance_policy": "COST_OPTIMIZED",
+				"auto_stop_mins": tc.autoStop, "statement_timeout": tc.timeout,
+			}
+			if tc.maxDbu != 0 {
+				request["max_dbu"] = tc.maxDbu
+			}
+			response := maps.Clone(request)
+			response["id"], response["state"], response["warehouse_type"] = "abc", "STOPPED", "REYDEN"
+			response["customer_version_label"], response["max_dbu"] = "2026.10", tc.maxDbu
+			// HTTP fixtures cover fields missing from the generated SDK mocks.
+			qa.ResourceFixture{
+				Fixtures: []qa.HTTPFixture{
+					{Method: "POST", Resource: "/api/2.0/sql/warehouses", ExpectedRequest: request, Response: `{"id":"abc"}`},
+					{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc?", Response: response},
+					{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc", Response: response},
+				},
+				Resource: ResourceSqlEndpoint(), Create: true,
+				HCL: `name = "foo"
+cluster_size = "Small"
+warehouse_type = "REALTIME"
+` + tc.config,
+			}.ApplyAndExpectData(t, map[string]any{
+				"id": "abc", "state": "STOPPED", "warehouse_type": "REALTIME",
+				"auto_stop_mins": tc.autoStop, "enable_serverless_compute": true,
+				"statement_timeout": tc.timeout, "customer_version_label": "2026.10", "max_dbu": tc.maxDbu,
+			})
+		})
+	}
+}
+
+func TestResourceSQLEndpointReadRealtimeWithoutTimeout(t *testing.T) {
+	response := `{"id":"abc","name":"foo","cluster_size":"Small","warehouse_type":"REALTIME"}`
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc?", Response: response},
+			{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc", Response: response},
+		},
+		Resource: ResourceSqlEndpoint(), Read: true, ID: "abc",
+	}.ApplyAndExpectData(t, map[string]any{"statement_timeout": 0})
+}
+
+func TestResourceSQLEndpointRealtimeValidation(t *testing.T) {
+	for _, tc := range []struct {
+		field string
+		value any
+		error string
+	}{
+		{"auto_stop_mins", 4, "auto_stop_mins must be 0 or at least 5 for REALTIME warehouses"},
+		{"auto_stop_mins", -1, "auto_stop_mins must be 0 or at least 5 for REALTIME warehouses"},
+		{"statement_timeout", -1, "invalid config supplied. [statement_timeout] expected statement_timeout to be at least (0), got -1"},
+		{"min_num_clusters", 0, "min_num_clusters must be 1 for REALTIME warehouses"},
+		{"max_num_clusters", 2, "max_num_clusters must be 1 for REALTIME warehouses"},
+		{"enable_photon", false, "enable_photon must be true for REALTIME warehouses"},
+		{"enable_serverless_compute", false, "enable_serverless_compute must be true for REALTIME warehouses"},
+		{"spot_instance_policy", "RELIABILITY_OPTIMIZED", "spot_instance_policy cannot be configured for REALTIME warehouses"},
+	} {
+		t.Run(tc.field, func(t *testing.T) {
+			config := map[string]any{"name": "foo", "cluster_size": "Small", "warehouse_type": "REALTIME"}
+			config[tc.field] = tc.value
+			qa.ResourceFixture{Resource: ResourceSqlEndpoint(), Create: true, State: config}.ExpectError(t, tc.error)
+		})
+	}
+}
+
+func TestResourceSQLEndpointUpdateRealtimeMaxDbu(t *testing.T) {
+	for _, tc := range []struct {
+		config string
+		maxDbu int
+	}{{"max_dbu = 192", 192}, {"", 96}} {
+		t.Run(fmt.Sprint(tc.maxDbu), func(t *testing.T) {
+			request := map[string]any{
+				"name": "foo", "cluster_size": "Small", "warehouse_type": "REALTIME",
+				"min_num_clusters": 1, "max_num_clusters": 1, "enable_photon": true,
+				"enable_serverless_compute": true, "spot_instance_policy": "COST_OPTIMIZED",
+				"auto_stop_mins": 10, "statement_timeout": 3600, "max_dbu": tc.maxDbu,
+			}
+			qa.ResourceFixture{
+				Fixtures: []qa.HTTPFixture{
+					{Method: "POST", Resource: "/api/2.0/sql/warehouses/abc/edit", ExpectedRequest: request},
+					{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc?", Response: request},
+					{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc", Response: request},
+				},
+				Resource: ResourceSqlEndpoint(), Update: true, ID: "abc",
+				HCL: `name = "foo"
+cluster_size = "Small"
+warehouse_type = "REALTIME"
+` + tc.config,
+				InstanceState: map[string]string{"warehouse_type": "REALTIME", "max_dbu": "96"},
+			}.ApplyAndExpectData(t, map[string]any{"max_dbu": tc.maxDbu})
+		})
+	}
+}
+
+func TestResourceSQLEndpointRealtimeFieldValidation(t *testing.T) {
+	for _, value := range []any{-3, 0, 1.5} {
+		config := terraform.NewResourceConfigRaw(map[string]any{
+			"name": "foo", "cluster_size": "Small", "warehouse_type": "REALTIME", "max_dbu": value,
+		})
+		assert.True(t, ResourceSqlEndpoint().ToResource().Validate(config).HasError(), "max_dbu=%v", value)
+	}
+	for _, warehouseType := range []string{"PRO", "CLASSIC"} {
+		for _, field := range []string{"max_dbu", "statement_timeout"} {
+			qa.ResourceFixture{
+				Resource: ResourceSqlEndpoint(), Create: true,
+				State: map[string]any{"name": "foo", "cluster_size": "Small", "warehouse_type": warehouseType, field: 96},
+			}.ExpectError(t, field+" is only supported for REALTIME warehouses")
+		}
+	}
+}
+
+func TestResourceSQLEndpointRejectRealtimeTypeMigration(t *testing.T) {
+	for _, tc := range []struct{ from, to string }{
+		{"PRO", "REALTIME"}, {"CLASSIC", "REALTIME"}, {"REALTIME", "PRO"}, {"REALTIME", "CLASSIC"},
+	} {
+		t.Run(tc.from+"-to-"+tc.to, func(t *testing.T) {
+			r := ResourceSqlEndpoint().ToResource()
+			raw, err := r.CoreConfigSchema().CoerceValue(cty.ObjectVal(map[string]cty.Value{
+				"name": cty.StringVal("foo"), "cluster_size": cty.StringVal("Small"), "warehouse_type": cty.StringVal(tc.to),
+			}))
+			require.NoError(t, err)
+			// ResourceFixture does not supply the existing ID during planning.
+			state := &terraform.InstanceState{ID: "abc", Attributes: map[string]string{"warehouse_type": tc.from}, RawConfig: raw}
+			qa.MockWorkspaceApply(t, func(*mocks.MockWorkspaceClient) {}, func(ctx context.Context, client *common.DatabricksClient) {
+				_, err := r.Diff(ctx, state, terraform.NewResourceConfigShimmed(raw, r.CoreConfigSchema()), client)
+				assert.EqualError(t, err, "changing warehouse_type to or from REALTIME is not supported")
+			})
+		})
+	}
 }

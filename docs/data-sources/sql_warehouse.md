@@ -43,6 +43,7 @@ This data source exports the following attributes:
 * `cluster_size` - The size of the clusters allocated to the warehouse: "2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large", "5X-Large".
 * `min_num_clusters` - Minimum number of clusters available when a SQL warehouse is running.
 * `max_num_clusters` - Maximum number of clusters available when a SQL warehouse is running.
+* `max_dbu` - Configured maximum compute capacity in DBU per hour for a REALTIME warehouse. Returns `0` when the API omits the field.
 * `auto_stop_mins` - Time in minutes until an idle SQL warehouse terminates all clusters and stops.
 * `tags` - tags used for SQL warehouse resources.
 * `spot_instance_policy` - The spot policy to use for allocating instances to clusters: `COST_OPTIMIZED` or `RELIABILITY_OPTIMIZED`.

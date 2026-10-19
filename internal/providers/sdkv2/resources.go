@@ -178,7 +178,7 @@ func WorkspaceResources() map[string]*schema.Resource {
 		"databricks_secret_acl":                           secrets.ResourceSecretACL().ToResource(),
 		"databricks_share":                                sharing.ResourceShare().ToResource(),
 		"databricks_sql_dashboard":                        sql.ResourceSqlDashboard().ToResource(),
-		"databricks_sql_endpoint":                         sql.ResourceSqlEndpoint().ToResource(),
+		"databricks_sql_endpoint":                         sql.ResourceSqlEndpointWithWarnings(),
 		"databricks_sql_global_config":                    sql.ResourceSqlGlobalConfig().ToResource(),
 		"databricks_sql_permissions":                      access.ResourceSqlPermissions().ToResource(),
 		"databricks_sql_query":                            sql.ResourceSqlQuery().ToResource(),

@@ -17,6 +17,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/stretchr/testify/assert"
@@ -342,6 +343,7 @@ func TestResourceSQLEndpointUpdateHealthNoDiff(t *testing.T) {
 			"creator_name":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"customer_version_label":    {NewComputed: true},
 			"statement_timeout":         {NewComputed: true},
+			"max_dbu":                   {NewComputed: true},
 		},
 		HCL: `
 		name = "foo"
@@ -376,6 +378,7 @@ func TestResourceSQLEndpointUpdateNoAutoTermination(t *testing.T) {
 			"creator_name":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"customer_version_label":    {NewComputed: true},
 			"statement_timeout":         {NewComputed: true},
+			"max_dbu":                   {NewComputed: true},
 		},
 		HCL: `
 		name = "foo"
@@ -469,17 +472,25 @@ func TestResourceSQLEndpointCreateNoWait(t *testing.T) {
 }
 
 func TestResourceSQLEndpointCreateRealtime(t *testing.T) {
-	for _, timeout := range []int{-1, 0, 1} {
-		t.Run(fmt.Sprint(timeout), func(t *testing.T) {
+	for _, tc := range []struct{ timeout, maxDbu, autoStop int }{{-1, 0, -1}, {0, 1, 0}, {1, 1000, 5}} {
+		t.Run(fmt.Sprint(tc), func(t *testing.T) {
 			config := map[string]any{"name": "foo", "cluster_size": "Small", "warehouse_type": "REALTIME"}
 			expectedTimeout := 3600
-			if timeout >= 0 {
-				config["statement_timeout"] = timeout
-				expectedTimeout = timeout
+			if tc.timeout >= 0 {
+				config["statement_timeout"] = tc.timeout
+				expectedTimeout = tc.timeout
+			}
+			if tc.maxDbu != 0 {
+				config["max_dbu"] = tc.maxDbu
+			}
+			expectedAutoStop := 10
+			if tc.autoStop >= 0 {
+				config["auto_stop_mins"] = tc.autoStop
+				expectedAutoStop = tc.autoStop
 			}
 			response := getResponse
 			response.WarehouseType, response.State = "REYDEN", "STOPPED"
-			response.AutoStopMins, response.EnableServerlessCompute = 10, true
+			response.AutoStopMins, response.EnableServerlessCompute = expectedAutoStop, true
 			qa.ResourceFixture{
 				MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 					mockRealtimeWarehouseAPI(t, w, func(rw http.ResponseWriter, r *http.Request) {
@@ -488,10 +499,16 @@ func TestResourceSQLEndpointCreateRealtime(t *testing.T) {
 							require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
 							assert.Equal(t, float64(expectedTimeout), body["statement_timeout"])
 							assert.Equal(t, float64(1), body["min_num_clusters"])
-							assert.Equal(t, float64(10), body["auto_stop_mins"])
+							assert.Equal(t, float64(1), body["max_num_clusters"])
+							assert.Equal(t, float64(expectedAutoStop), body["auto_stop_mins"])
 							assert.Equal(t, true, body["enable_serverless_compute"])
+							if tc.maxDbu == 0 {
+								assert.NotContains(t, body, "max_dbu")
+							} else {
+								assert.Equal(t, float64(tc.maxDbu), body["max_dbu"])
+							}
 						}
-						fmt.Fprintf(rw, `{"id":"abc","statement_timeout":%d,"customer_version_label":"2026.10"}`, expectedTimeout)
+						fmt.Fprintf(rw, `{"id":"abc","statement_timeout":%d,"customer_version_label":"2026.10","max_dbu":%d}`, expectedTimeout, tc.maxDbu)
 					})
 					w.GetMockWarehousesAPI().EXPECT().GetById(mock.Anything, "abc").Return(&response, nil)
 				},
@@ -502,10 +519,11 @@ func TestResourceSQLEndpointCreateRealtime(t *testing.T) {
 				"id":                        "abc",
 				"state":                     "STOPPED",
 				"warehouse_type":            "REALTIME",
-				"auto_stop_mins":            10,
+				"auto_stop_mins":            expectedAutoStop,
 				"enable_serverless_compute": true,
 				"statement_timeout":         expectedTimeout,
 				"customer_version_label":    "2026.10",
+				"max_dbu":                   tc.maxDbu,
 			})
 		})
 	}
@@ -519,6 +537,7 @@ func TestResourceSQLEndpointRealtimeValidation(t *testing.T) {
 	}{
 		{"auto_stop_mins", 4, "auto_stop_mins must be 0 or at least 5 for REALTIME warehouses"},
 		{"auto_stop_mins", -1, "auto_stop_mins must be 0 or at least 5 for REALTIME warehouses"},
+		{"statement_timeout", -1, "invalid config supplied. [statement_timeout] expected statement_timeout to be at least (0), got -1"},
 		{"min_num_clusters", 0, "min_num_clusters must be 1 for REALTIME warehouses"},
 		{"max_num_clusters", 2, "max_num_clusters must be 1 for REALTIME warehouses"},
 		{"enable_photon", false, "enable_photon must be true for REALTIME warehouses"},
@@ -529,6 +548,75 @@ func TestResourceSQLEndpointRealtimeValidation(t *testing.T) {
 			config := map[string]any{"name": "foo", "cluster_size": "Small", "warehouse_type": "REALTIME"}
 			config[tc.field] = tc.value
 			qa.ResourceFixture{Resource: ResourceSqlEndpoint(), Create: true, State: config}.ExpectError(t, tc.error)
+		})
+	}
+}
+
+func TestResourceSQLEndpointUpdateRealtimeMaxDbu(t *testing.T) {
+	for _, configured := range []bool{true, false} {
+		t.Run(fmt.Sprint(configured), func(t *testing.T) {
+			config := map[string]any{"name": "foo", "cluster_size": "Small", "warehouse_type": "REALTIME"}
+			expected := 96
+			if configured {
+				expected = 192
+				config["max_dbu"] = expected
+			}
+			response := getResponse
+			response.WarehouseType = "REALTIME"
+			qa.ResourceFixture{
+				MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+					mockRealtimeWarehouseAPI(t, w, func(rw http.ResponseWriter, r *http.Request) {
+						if r.Method == http.MethodPost {
+							assert.Equal(t, "/api/2.0/sql/warehouses/abc/edit", r.URL.Path)
+							var body map[string]any
+							require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+							assert.Equal(t, float64(expected), body["max_dbu"])
+						}
+						fmt.Fprintf(rw, `{"max_dbu":%d}`, expected)
+					})
+					w.GetMockWarehousesAPI().EXPECT().GetById(mock.Anything, "abc").Return(&response, nil)
+				},
+				Resource: ResourceSqlEndpoint(), Update: true, ID: "abc",
+				State:         config,
+				InstanceState: map[string]string{"warehouse_type": "REALTIME", "max_dbu": "96"},
+			}.ApplyAndExpectData(t, map[string]any{"max_dbu": expected})
+		})
+	}
+}
+
+func TestResourceSQLEndpointRealtimeFieldValidation(t *testing.T) {
+	for _, value := range []any{-3, 0, 1.5} {
+		config := terraform.NewResourceConfigRaw(map[string]any{
+			"name": "foo", "cluster_size": "Small", "warehouse_type": "REALTIME", "max_dbu": value,
+		})
+		assert.True(t, ResourceSqlEndpoint().ToResource().Validate(config).HasError(), "max_dbu=%v", value)
+	}
+	for _, warehouseType := range []string{"PRO", "CLASSIC"} {
+		for _, field := range []string{"max_dbu", "statement_timeout"} {
+			qa.ResourceFixture{
+				Resource: ResourceSqlEndpoint(), Create: true,
+				State: map[string]any{"name": "foo", "cluster_size": "Small", "warehouse_type": warehouseType, field: 96},
+			}.ExpectError(t, field+" is only supported for REALTIME warehouses")
+		}
+	}
+}
+
+func TestResourceSQLEndpointRejectRealtimeTypeMigration(t *testing.T) {
+	for _, tc := range []struct{ from, to string }{
+		{"PRO", "REALTIME"}, {"CLASSIC", "REALTIME"}, {"REALTIME", "PRO"}, {"REALTIME", "CLASSIC"},
+	} {
+		t.Run(tc.from+"-to-"+tc.to, func(t *testing.T) {
+			r := ResourceSqlEndpoint().ToResource()
+			raw, err := r.CoreConfigSchema().CoerceValue(cty.ObjectVal(map[string]cty.Value{
+				"name": cty.StringVal("foo"), "cluster_size": cty.StringVal("Small"), "warehouse_type": cty.StringVal(tc.to),
+			}))
+			require.NoError(t, err)
+			// ResourceFixture does not supply the existing ID during planning.
+			state := &terraform.InstanceState{ID: "abc", Attributes: map[string]string{"warehouse_type": tc.from}, RawConfig: raw}
+			qa.MockWorkspaceApply(t, func(*mocks.MockWorkspaceClient) {}, func(ctx context.Context, client *common.DatabricksClient) {
+				_, err := r.Diff(ctx, state, terraform.NewResourceConfigShimmed(raw, r.CoreConfigSchema()), client)
+				assert.EqualError(t, err, "changing warehouse_type to or from REALTIME is not supported")
+			})
 		})
 	}
 }

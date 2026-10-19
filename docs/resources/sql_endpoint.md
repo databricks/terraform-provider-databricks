@@ -37,6 +37,7 @@ The following arguments are supported:
 * `cluster_size` - (Required) The size of the clusters allocated to the endpoint: "2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large", "5X-Large".
 * `min_num_clusters` - Minimum number of clusters available when a SQL warehouse is running. The default is `1`.
 * `max_num_clusters` - Maximum number of clusters available when a SQL warehouse is running. This field is required. If multi-cluster load balancing is not enabled, this is default to `1`.
+* `max_dbu` - (Optional, REALTIME only) Maximum compute capacity in DBU per hour. Must be a positive integer. Capacity limits are enforced by the server. Omitting this field preserves the server value; `0` is invalid and cannot clear it.
 * `auto_stop_mins` - Time in minutes until an idle SQL warehouse terminates all clusters and stops. This field is optional. The default is 120, set to 0 to disable the auto stop.
 * `tags` - Databricks tags all endpoint resources with these tags.
 * `spot_instance_policy` - The spot policy to use for allocating instances to clusters: `COST_OPTIMIZED` or `RELIABILITY_OPTIMIZED`. This field is optional. Default is `COST_OPTIMIZED`.
@@ -49,7 +50,7 @@ The following arguments are supported:
   * `name` - Name of the Databricks SQL release channel. Possible values are: `CHANNEL_NAME_PREVIEW` and `CHANNEL_NAME_CURRENT`. Default is `CHANNEL_NAME_CURRENT`.
 
 * `warehouse_type` - SQL warehouse type. See for [AWS](https://docs.databricks.com/sql/admin/sql-endpoints.html#switch-the-sql-warehouse-type-pro-classic-or-serverless) or [Azure](https://learn.microsoft.com/en-us/azure/databricks/sql/admin/create-sql-warehouse#--upgrade-a-pro-or-classic-sql-warehouse-to-a-serverless-sql-warehouse). Set to `PRO` or `CLASSIC`. If the field `enable_serverless_compute` has the value `true` either explicitly or through the default logic (see that field above for details), the default is `PRO`, which is required for serverless SQL warehouses. Otherwise, the default is `CLASSIC`.
-* `no_wait` - (Optional) Whether to skip waiting for the SQL warehouse to start after creation. Default is `false`. When set to `true`, Terraform will create the warehouse but won't wait for it to be in a running state before completing.
+* `no_wait` - (Optional) Whether to skip waiting for the SQL warehouse to start after creation. Default is `false`. When set to `true`, Terraform will create the warehouse but won't wait for it to be in a running state before completing. REALTIME warehouses are created stopped; explicitly setting `no_wait` to either value produces a warning after creation because it has no effect.
 * `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
   * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 

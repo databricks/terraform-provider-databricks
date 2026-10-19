@@ -35,21 +35,23 @@ The following arguments are supported:
 
 * `name` - (Required) Name of the SQL warehouse. Must be unique.
 * `cluster_size` - (Required) The size of the clusters allocated to the endpoint: "2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large", "5X-Large".
-* `min_num_clusters` - Minimum number of clusters available when a SQL warehouse is running. The default is `1`.
-* `max_num_clusters` - Maximum number of clusters available when a SQL warehouse is running. This field is required. If multi-cluster load balancing is not enabled, this is default to `1`.
+* `min_num_clusters` - Minimum number of clusters available when a SQL warehouse is running. The default is `1`. Must be `1` for REALTIME warehouses.
+* `max_num_clusters` - Maximum number of clusters available when a SQL warehouse is running. Defaults to `1`. Must be `1` for REALTIME warehouses.
 * `max_dbu` - (Optional, REALTIME only) Maximum compute capacity in DBU per hour. Must be a positive integer. Capacity limits are enforced by the server. Omitting this field preserves the server value; `0` is invalid and cannot clear it.
-* `auto_stop_mins` - Time in minutes until an idle SQL warehouse terminates all clusters and stops. This field is optional. The default is 120, set to 0 to disable the auto stop.
+* `auto_stop_mins` - Time in minutes until an idle SQL warehouse terminates all clusters and stops. Defaults to `120` for PRO/CLASSIC and `10` for REALTIME. Set to `0` to disable autostop. REALTIME accepts `0` or at least `5` minutes.
+* `statement_timeout` - (Optional, REALTIME only) Statement timeout in seconds. Defaults to `3600`; must be a nonnegative integer. Set to `0` to clear the warehouse override.
 * `tags` - Databricks tags all endpoint resources with these tags.
-* `spot_instance_policy` - The spot policy to use for allocating instances to clusters: `COST_OPTIMIZED` or `RELIABILITY_OPTIMIZED`. This field is optional. Default is `COST_OPTIMIZED`.
-* `enable_photon` - Whether to enable [Photon](https://databricks.com/product/delta-engine). This field is optional and is enabled by default.
+* `spot_instance_policy` - The spot policy to use for allocating instances to clusters: `COST_OPTIMIZED` or `RELIABILITY_OPTIMIZED`. Defaults to `COST_OPTIMIZED`, the only accepted value for REALTIME.
+* `enable_photon` - Whether to enable [Photon](https://databricks.com/product/delta-engine). Enabled by default. Must be `true` for REALTIME.
 * `enable_serverless_compute` - Whether this SQL warehouse is a serverless endpoint. See below for details about the default values. To avoid ambiguity, especially for organizations with many workspaces, Databricks recommends that you always set this field explicitly.
 
-  * If omitted, the default is `false` for most workspaces. However, if this workspace used the SQL Warehouses API to create a warehouse between September 1, 2022 and April 30, 2023 (between November 1, 2022 and May 19, 2023 for Azure), the default remains the previous behavior which is default to `true` if the workspace is enabled for serverless and fits the requirements for serverless SQL warehouses. If your account needs updated [terms of use](https://docs.databricks.com/sql/admin/serverless.html#accept-terms), workspace admins are prompted in the Databricks SQL UI. A workspace must meet the [requirements](https://docs.databricks.com/sql/admin/serverless.html#requirements).
+  * For REALTIME, defaults to `true` and cannot be set to `false`.
+  * For PRO/CLASSIC, if omitted, the default is `false` for most workspaces. However, if this workspace used the SQL Warehouses API to create a warehouse between September 1, 2022 and April 30, 2023 (between November 1, 2022 and May 19, 2023 for Azure), the default remains the previous behavior which is default to `true` if the workspace is enabled for serverless and fits the requirements for serverless SQL warehouses. If your account needs updated [terms of use](https://docs.databricks.com/sql/admin/serverless.html#accept-terms), workspace admins are prompted in the Databricks SQL UI. A workspace must meet the [requirements](https://docs.databricks.com/sql/admin/serverless.html#requirements).
 
 * `channel` block, consisting of following fields:
   * `name` - Name of the Databricks SQL release channel. Possible values are: `CHANNEL_NAME_PREVIEW` and `CHANNEL_NAME_CURRENT`. Default is `CHANNEL_NAME_CURRENT`.
 
-* `warehouse_type` - SQL warehouse type. See for [AWS](https://docs.databricks.com/sql/admin/sql-endpoints.html#switch-the-sql-warehouse-type-pro-classic-or-serverless) or [Azure](https://learn.microsoft.com/en-us/azure/databricks/sql/admin/create-sql-warehouse#--upgrade-a-pro-or-classic-sql-warehouse-to-a-serverless-sql-warehouse). Set to `PRO` or `CLASSIC`. If the field `enable_serverless_compute` has the value `true` either explicitly or through the default logic (see that field above for details), the default is `PRO`, which is required for serverless SQL warehouses. Otherwise, the default is `CLASSIC`.
+* `warehouse_type` - SQL warehouse type. See for [AWS](https://docs.databricks.com/sql/admin/sql-endpoints.html#switch-the-sql-warehouse-type-pro-classic-or-serverless) or [Azure](https://learn.microsoft.com/en-us/azure/databricks/sql/admin/create-sql-warehouse#--upgrade-a-pro-or-classic-sql-warehouse-to-a-serverless-sql-warehouse). Set to `PRO`, `CLASSIC`, or `REALTIME`. REALTIME must be selected explicitly; changing an existing warehouse to or from REALTIME is not supported. When omitted, defaults to `PRO` if `enable_serverless_compute` is `true`, otherwise `CLASSIC`. Serverless PRO/CLASSIC warehouses must use `PRO`.
 * `no_wait` - (Optional) Whether to skip waiting for the SQL warehouse to start after creation. Default is `false`. When set to `true`, Terraform will create the warehouse but won't wait for it to be in a running state before completing. REALTIME warehouses are created stopped; explicitly setting `no_wait` to either value produces a warning after creation because it has no effect.
 * `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
   * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
@@ -61,7 +63,8 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - the unique ID of the SQL warehouse.
 * `jdbc_url` - JDBC connection string.
 * `odbc_params` - ODBC connection params: `odbc_params.hostname`, `odbc_params.path`, `odbc_params.protocol`, and `odbc_params.port`.
-* `data_source_id` - (Deprecated, will be removed) ID of the data source for this endpoint. This is used to bind an Databricks SQL query to an endpoint.
+* `data_source_id` - (Deprecated, will be removed) ID of the data source for this endpoint. This is used to bind a Databricks SQL query to an endpoint. Empty for REALTIME resources.
+* `customer_version_label` - (Read-only, REALTIME only) Compute version label returned by the API. Empty when the server does not provide it.
 * `creator_name` - The username of the user who created the endpoint.
 * `num_active_sessions` - The current number of clusters used by the endpoint.
 * `num_clusters` - The current number of clusters used by the endpoint.
@@ -75,7 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-The `timeouts` block allows you to specify `create` timeouts. It usually takes 10-20 minutes to provision a Databricks SQL warehouse.
+The `timeouts` block allows you to specify `create` timeouts. PRO/CLASSIC provisioning usually takes 10-20 minutes. REALTIME creation completes with the warehouse stopped; it does not wait for query readiness.
 
 ```hcl
 timeouts {

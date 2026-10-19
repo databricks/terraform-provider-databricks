@@ -23,7 +23,9 @@ var (
 	ForceSendFields = []string{"enable_serverless_compute", "enable_photon", "auto_stop_mins"}
 )
 
-// These REALTIME fields are not yet available in the generated SDK models.
+// SDK v0.189.0 supports REALTIME and statement_timeout; the pinned v0.185.0 does not.
+// Neither version includes customer_version_label or max_dbu.
+// After upgrading to an SDK that includes these fields, use its model fields instead.
 type realtimeWarehouseFields struct {
 	StatementTimeout     int    `json:"statement_timeout" tf:"computed,optional"`
 	CustomerVersionLabel string `json:"customer_version_label" tf:"computed"`

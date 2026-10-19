@@ -45,12 +45,14 @@ This data source exports the following attributes:
 * `max_num_clusters` - Maximum number of clusters available when a SQL warehouse is running.
 * `max_dbu` - Configured maximum compute capacity in DBU per hour for a REALTIME warehouse. Returns `0` when the API omits the field.
 * `auto_stop_mins` - Time in minutes until an idle SQL warehouse terminates all clusters and stops.
+* `statement_timeout` - Statement timeout in seconds for a REALTIME warehouse; `0` means no warehouse override. Returns `3600` if the REALTIME response omits the field, and `0` for other warehouse types.
+* `customer_version_label` - Compute version label for a REALTIME warehouse. Empty when the server does not provide it.
 * `tags` - tags used for SQL warehouse resources.
 * `spot_instance_policy` - The spot policy to use for allocating instances to clusters: `COST_OPTIMIZED` or `RELIABILITY_OPTIMIZED`.
 * `enable_photon` - Whether [Photon](https://databricks.com/product/delta-engine) is enabled.
 * `enable_serverless_compute` - Whether this SQL warehouse is a serverless SQL warehouse.
 
-* `warehouse_type` - SQL warehouse type. See [documentation](https://docs.databricks.com/sql/index.html#warehouse-types).
+* `warehouse_type` - SQL warehouse type: `PRO`, `CLASSIC`, or `REALTIME`. See [documentation](https://docs.databricks.com/sql/index.html#warehouse-types).
 * `channel` block, consisting of following fields:
   * `name` - Name of the Databricks SQL release channel. Possible values are: `CHANNEL_NAME_PREVIEW` and `CHANNEL_NAME_CURRENT`. Default is `CHANNEL_NAME_CURRENT`.
 * `jdbc_url` - JDBC connection string.

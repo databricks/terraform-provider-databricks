@@ -798,8 +798,10 @@ var resourcesMap map[string]importable = map[string]importable{
 		Ignore:         generateIgnoreObjectWithEmptyAttributeValue("databricks_sql_endpoint", "name"),
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
 			switch pathString {
-			case "enable_serverless_compute":
+			case "enable_serverless_compute", "auto_stop_mins":
 				return false
+			case "statement_timeout", "max_dbu":
+				return d.Get("warehouse_type") != "REALTIME"
 			case "tags":
 				return d.Get("tags.0.custom_tags.#").(int) == 0
 			case "channel.0.name":
@@ -812,8 +814,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
 		},
 		ShouldGenerateField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
-			// We need to generate it even if it's false...
-			return pathString == "enable_serverless_compute"
+			// Omitting false or zero would restore defaults instead of preserving the warehouse settings.
+			return pathString == "enable_serverless_compute" || pathString == "auto_stop_mins" || pathString == "statement_timeout"
 		},
 	},
 	"databricks_warehouses_default_warehouse_override": {

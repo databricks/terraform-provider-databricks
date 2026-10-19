@@ -16,4 +16,6 @@
 
 ### Exporter
 
+* Preserve warehouse autostop settings and REALTIME statement timeouts and maximum DBU capacity ([#6068](https://github.com/databricks/terraform-provider-databricks/pull/6068)).
+
 ### Internal Changes

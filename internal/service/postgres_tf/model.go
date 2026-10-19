@@ -1283,7 +1283,8 @@ func (m *CreateCatalogRequest) SetCatalog(ctx context.Context, v Catalog) {
 
 type CreateCdfConfigRequest struct {
 	// The CdfConfig to create. The catalog, schema, and postgres_schema fields
-	// are required; all other fields are output only and ignored on input.
+	// are required; service_principal is optional. All other fields are output
+	// only and ignored on input.
 	CdfConfig types.Object `tfsdk:"cdf_config"`
 	// The user-specified id for the CdfConfig, forming the final segment of its
 	// resource name. Must match the pattern `[a-z][a-z0-9_]{0,62}`. Defaults to

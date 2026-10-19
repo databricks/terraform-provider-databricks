@@ -41,8 +41,14 @@ The following arguments are supported:
 ### ComputeSpec
 * `inactivity_timeout` (string, optional) - Idle duration after which the sandbox is automatically terminated
 
+### EnvironmentSpec
+* `image_uri` (string, optional) - A Unity Catalog container artifact (e.g. `catalog.schema.folder.image:tag`) to run as the
+  sandbox environment. When set, this image is used as the environment instead of resolving a
+  managed image from `environment_version`
+
 ### SandboxSpec
 * `compute` (ComputeSpec, optional) - Compute configuration (size, inactivity timeout) requested for the sandbox
+* `environment` (EnvironmentSpec, optional) - The execution environment to use for the sandbox
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

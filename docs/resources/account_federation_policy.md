@@ -28,7 +28,8 @@ resource "databricks_account_federation_policy" "this" {
 ## Arguments
 The following arguments are supported:
 * `description` (string, optional) - Description of the federation policy
-* `oidc_policy` (OidcFederationPolicy, optional)
+* `oidc_policy` (OidcFederationPolicy, optional) - audit_mode INCLUDE is required on both this message field and its leaf fields so the OIDC
+  policy configuration is captured in create/update audit logs (see go/auditlogs)
 
 ### OidcFederationPolicy
 * `audiences` (list of string, optional) - The allowed token audiences, as specified in the 'aud' claim of federated tokens.

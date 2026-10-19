@@ -557,7 +557,7 @@ func TestClusterPolicyNodeTypeConversionAllowlist(t *testing.T) {
 	// Values should be converted (exact values depend on mapping file)
 }
 
-func TestClusterPolicyRegexSkipped(t *testing.T) {
+func TestClusterPolicyRegexRemoved(t *testing.T) {
 	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
 	d.Set("name", "test-policy")
 	definition := map[string]map[string]any{
@@ -586,21 +586,111 @@ func TestClusterPolicyRegexSkipped(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	// Verify regex policy was not converted
+	// Verify an unportable regex policy was removed
 	newDefStr := d.Get("definition").(string)
 	var newDef map[string]map[string]any
 	err = json.Unmarshal([]byte(newDefStr), &newDef)
 	assert.NoError(t, err)
+	assert.NotContains(t, newDef, "aws_attributes.availability")
+	assert.NotContains(t, newDef, "azure_attributes.availability")
+}
 
-	// Original aws_attributes should still be there
-	awsAttr, hasAws := newDef["aws_attributes.availability"]
-	assert.True(t, hasAws, "AWS regex attribute should not be removed")
-	assert.Equal(t, "regex", awsAttr["type"])
-	assert.Equal(t, "^SPOT.*", awsAttr["pattern"])
+func TestClusterPolicyPortableAttributes(t *testing.T) {
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
+	d.Set("name", "test-policy")
+	definition := map[string]map[string]any{
+		"aws_attributes.first_on_demand": {
+			"type":  "fixed",
+			"value": 2,
+		},
+		"aws_attributes.zone_id": {
+			"type":         "unlimited",
+			"defaultValue": "auto",
+		},
+	}
+	policy, _ := json.Marshal(definition)
+	d.Set("definition", string(policy))
 
-	// Azure attribute should not be added
-	_, hasAzure := newDef["azure_attributes.availability"]
-	assert.False(t, hasAzure, "Azure attribute should not be added for regex")
+	ic := importContextForTest()
+	ic.Client = &common.DatabricksClient{DatabricksClient: &client.DatabricksClient{
+		Config: &config.Config{Host: "https://test.cloud.databricks.com"},
+	}}
+	ic.targetCloud = "gcp"
+	ic.enableServices("policies")
+
+	err := ic.Importables["databricks_cluster_policy"].Import(ic, &resource{ID: "test-policy-id", Data: d})
+	require.NoError(t, err)
+
+	var converted map[string]map[string]any
+	require.NoError(t, json.Unmarshal([]byte(d.Get("definition").(string)), &converted))
+	assert.NotContains(t, converted, "aws_attributes.first_on_demand")
+	assert.NotContains(t, converted, "aws_attributes.zone_id")
+	assert.Equal(t, float64(2), converted["gcp_attributes.first_on_demand"]["value"])
+	assert.Equal(t, "auto", converted["gcp_attributes.zone_id"]["defaultValue"])
+}
+
+func TestClusterPolicyRemovesUnportableAttributes(t *testing.T) {
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
+	d.Set("name", "test-policy")
+	definition := map[string]map[string]any{
+		"aws_attributes.instance_profile_arn": {
+			"type":  "fixed",
+			"value": "arn:aws:iam::123456789012:instance-profile/test",
+		},
+		"aws_attributes.zone_id": {
+			"type":   "allowlist",
+			"values": []interface{}{"auto", "us-west-2a"},
+		},
+	}
+	policy, _ := json.Marshal(definition)
+	d.Set("definition", string(policy))
+
+	ic := importContextForTest()
+	ic.Client = &common.DatabricksClient{DatabricksClient: &client.DatabricksClient{
+		Config: &config.Config{Host: "https://test.cloud.databricks.com"},
+	}}
+	ic.targetCloud = "gcp"
+	ic.enableServices("policies")
+
+	err := ic.Importables["databricks_cluster_policy"].Import(ic, &resource{ID: "test-policy-id", Data: d})
+	require.NoError(t, err)
+
+	var converted map[string]map[string]any
+	require.NoError(t, json.Unmarshal([]byte(d.Get("definition").(string)), &converted))
+	assert.Empty(t, converted)
+}
+
+func TestClusterPolicyVolumeCountConversion(t *testing.T) {
+	d := policies.ResourceClusterPolicy().ToResource().TestResourceData()
+	d.Set("name", "test-policy")
+	definition := map[string]map[string]any{
+		"aws_attributes.ebs_volume_count": {
+			"type":  "fixed",
+			"value": 2,
+		},
+		"aws_attributes.ebs_volume_type": {
+			"type":  "fixed",
+			"value": "GENERAL_PURPOSE_SSD",
+		},
+	}
+	policy, _ := json.Marshal(definition)
+	d.Set("definition", string(policy))
+
+	ic := importContextForTest()
+	ic.Client = &common.DatabricksClient{DatabricksClient: &client.DatabricksClient{
+		Config: &config.Config{Host: "https://test.cloud.databricks.com"},
+	}}
+	ic.targetCloud = "gcp"
+	ic.enableServices("policies")
+
+	err := ic.Importables["databricks_cluster_policy"].Import(ic, &resource{ID: "test-policy-id", Data: d})
+	require.NoError(t, err)
+
+	var converted map[string]map[string]any
+	require.NoError(t, json.Unmarshal([]byte(d.Get("definition").(string)), &converted))
+	assert.NotContains(t, converted, "aws_attributes.ebs_volume_count")
+	assert.NotContains(t, converted, "aws_attributes.ebs_volume_type")
+	assert.Equal(t, float64(2), converted["gcp_attributes.local_ssd_count"]["value"])
 }
 
 func TestClusterPolicyFamilyOverridesConversion(t *testing.T) {

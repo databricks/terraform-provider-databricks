@@ -38,8 +38,14 @@ This data source exports a single attribute, `sandboxes`. It is a list of resour
 ### ComputeSpec
 * `inactivity_timeout` (string) - Idle duration after which the sandbox is automatically terminated
 
+### EnvironmentSpec
+* `image_uri` (string) - A Unity Catalog container artifact (e.g. `catalog.schema.folder.image:tag`) to run as the
+  sandbox environment. When set, this image is used as the environment instead of resolving a
+  managed image from `environment_version`
+
 ### SandboxSpec
 * `compute` (ComputeSpec) - Compute configuration (size, inactivity timeout) requested for the sandbox
+* `environment` (EnvironmentSpec) - The execution environment to use for the sandbox
 
 ### SandboxStatus
 * `state` (string) - Lifecycle state of the sandbox. Possible values are: `SANDBOX_STATE_PENDING`, `SANDBOX_STATE_RUNNING`, `SANDBOX_STATE_STOPPED`, `SANDBOX_STATE_STOPPING`

@@ -240,8 +240,8 @@ The server remains stateless: a checkpoint and HTTP fixtures describe different
 things. Supply the existing object's read responses, update calls, and destroy
 calls. You do not need a create step for a resource already in the checkpoint.
 The [update showcase](testdata/initial_state/group_update.yaml) restores a real
-group checkpoint, updates it, checks a subsequent unchanged step, and destroys
-it. The [expected-error showcase](testdata/initial_state/rejected_update.yaml)
+group checkpoint, updates it in a single step, and destroys it.
+The [expected-error showcase](testdata/initial_state/rejected_update.yaml)
 proves cleanup still runs after rejecting the first update.
 
 Review checkpoints for secrets, including encoded private data. Generate

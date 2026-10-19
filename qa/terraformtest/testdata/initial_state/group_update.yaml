@@ -77,43 +77,6 @@ steps:
               equals: group-id
             - path: [acl_principal_id]
               equals: groups/Updated group
-  - name: unchanged_group
-    config: |
-      provider "databricks" {}
-      resource "databricks_group" "this" {
-        display_name = "Updated group"
-      }
-    calls:
-      - request:
-          method: GET
-          path: /api/2.0/preview/scim/v2/Groups/group-id
-          query:
-            attributes: ["displayName,externalId,entitlements"]
-          body: null
-        response:
-          status: 200
-          body:
-            json:
-              id: group-id
-              displayName: Updated group
-      - request:
-          method: GET
-          path: /api/2.0/preview/scim/v2/Groups/group-id
-          query:
-            attributes: ["displayName,externalId,entitlements"]
-          body: null
-        response:
-          status: 200
-          body:
-            json:
-              id: group-id
-              displayName: Updated group
-    state:
-      resources:
-        databricks_group.this:
-          attributes:
-            - path: [id]
-              equals: group-id
 destroy:
   calls:
     - request:

@@ -28,13 +28,11 @@ import (
 
 // A request to complete a Version.
 type CompleteVersionRequest struct {
-	// The reason for completing the version. Must be a terminal reason:
-	// VERSION_COMPLETE_SUCCESS, VERSION_COMPLETE_FAILURE, or
-	// VERSION_COMPLETE_FORCE_ABORT.
+	// The reason for completing the version. Must be VERSION_COMPLETE_SUCCESS
+	// or VERSION_COMPLETE_FAILURE.
 	CompletionReason types.String `tfsdk:"completion_reason"`
 	// If true, force-completes the version even if the caller is not the
-	// original creator. The completion_reason must be
-	// VERSION_COMPLETE_FORCE_ABORT when force is true.
+	// original creator.
 	Force types.Bool `tfsdk:"force"`
 	// The name of the version to complete. Format:
 	// deployments/{deployment_id}/versions/{version_id}

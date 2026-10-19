@@ -75,7 +75,7 @@ All arguments are optional, and they tune what code is being generated.
 * `-excludeRegex` - Exclude resource names matching a given regex. Applied during the listing operation and has higher priority than `-match` and `-matchRegex`.  Applicable to  to many (*but not all!*) resources selected for listing.  Could be used to exclude things like `databricks_automl` notebooks, etc.
 * `-filterDirectoriesDuringWorkspaceWalking` - if we should apply match logic to directory names when we're performing workspace tree walking.  *Note: be careful with it as it will be applied to all entries, so if you want to filter only specific users, then you will need to specify a condition for `/Users` as well, so the regex will be `^(/Users|/Users/[a-c].*)$`*.
 * `-mounts` - List DBFS mount points, an extremely slow operation that would not trigger unless explicitly specified.
-* `-generateProviderDeclaration` - the flag that toggles the generation of `databricks.tf` file with the declaration of the Databricks Terraform provider that is necessary for Terraform versions since Terraform 0.13 (disabled by default).
+* `-generateProviderDeclaration` - the flag that toggles the generation of `databricks.tf` file with the declaration of the Databricks Terraform provider that is necessary for Terraform versions since Terraform 0.13 (enabled by default).
 * `-prefix` - optional prefix that will be added to the name of all exported resources - that's useful for exporting resources from multiple workspaces for merging into a single one.
 * `-targetCloud` - Target cloud for generated code (`aws`, `azure`, `gcp`). If different from the source cloud, the exporter will convert cloud-specific attributes (`aws_attributes`, `azure_attributes`, `gcp_attributes`) to the target cloud format. Only compatible attributes are converted:
   * `availability` - Converted between cloud-specific formats (e.g., `SPOT` → `SPOT_AZURE` → `PREEMPTIBLE_GCP`)
@@ -87,6 +87,7 @@ All arguments are optional, and they tune what code is being generated.
     * When converting to GCP, `disk_type` is removed entirely (GCP only supports `disk_count`)
     * When converting from GCP, `disk_count` is preserved but `disk_type` cannot be added
   * Other attributes (e.g., `instance_profile_arn`) are not compatible and will be omitted
+  * Cluster policy definitions and policy family overrides follow the same portability rules. Portable policy keys are rewritten for the target cloud, while source-cloud keys that cannot be represented safely are omitted. A list policy is retained only when all its values are portable, and regular-expression policies on cloud-specific attributes are omitted because their patterns cannot be translated reliably.
 * `-nodeTypeMappingFile` - Path to JSON file containing node type mappings between clouds. Can only be used with `-targetCloud` flag. When specified, the exporter will convert `node_type_id` and `driver_node_type_id` fields to the target cloud's node types. The JSON file should have the following format:
 
   ```json
@@ -304,11 +305,11 @@ For security reasons, [databricks_secret](../resources/secret.md) and [databrick
 
 To speed up export, Terraform Exporter performs many operations, such as listing & actual data exporting, in parallel using Goroutines.  Built-in defaults control the parallelism, but it's also possible to tune some parameters using environment variables specific to the exporter:
 
-* `EXPORTER_WS_LIST_PARALLELISM` (default: `5`) controls how many Goroutines are used to perform parallel listing of Databricks Workspace objects (notebooks, directories, workspace files, ...).
+* `EXPORTER_WS_LIST_PARALLELISM` (default: `10`) controls how many Goroutines are used to perform parallel listing of Databricks Workspace objects (notebooks, directories, workspace files, ...).
 * `EXPORTER_DIRECTORIES_CHANNEL_SIZE` (default: `300000`) controls the channel's capacity when listing workspace objects. Please ensure that this value is big enough (greater than the number of directories in the workspace; the default value should be ok for most cases); otherwise, there is a chance of deadlock.
 * `EXPORTER_DEDICATED_RESOURCES_CHANNELS` - by default, only specific resources (`databricks_user`, `databricks_service_principal`, `databricks_group`) have dedicated channels - the rest are handled by the shared channel.  This is done to prevent throttling by specific APIs.  You can override this by providing a comma-separated list of resources in this environment variable.
 * `EXPORTER_PARALLELISM_NNN` - number of Goroutines used to process resources of a specific type (replace `NNN` with the exact resource name, for example, `EXPORTER_PARALLELISM_databricks_notebook=10` sets the number of Goroutines for `databricks_notebook` resource to `10`).  There is a shared channel (with name `default`) for handling resources for which there are no dedicated channels - use `EXPORTER_PARALLELISM_default` to increase its size (default size is `15`).   Defaults for some resources are defined by the `goroutinesNumber` map in `exporter/context.go` or equal to `2` if there is no value.  *Don't increase default values too much to avoid REST API throttling!*
-* `EXPORTER_DEFAULT_HANDLER_CHANNEL_SIZE` is the size of the shared channel (default: `200000`). You may need to increase it if you have a huge workspace.
+* `EXPORTER_DEFAULT_HANDLER_CHANNEL_SIZE` is the size of the shared channel (default: `300000`). You may need to increase it if you have a huge workspace.
 
 ## Support Matrix
 

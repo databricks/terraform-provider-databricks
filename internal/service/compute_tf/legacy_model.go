@@ -12016,6 +12016,9 @@ type Environment_SdkV2 struct {
 	// List of java dependencies. Each dependency is a string representing a
 	// java library path. For example: `/Volumes/path/to/test.jar`.
 	JavaDependencies types.List `tfsdk:"java_dependencies"`
+	// File path of pyproject.toml file that defines the project-scoped
+	// environment.
+	ProjectEnvironment types.String `tfsdk:"project_environment"`
 }
 
 func (to *Environment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Environment_SdkV2) {
@@ -12054,6 +12057,7 @@ func (m Environment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["dependencies"] = attrs["dependencies"].SetOptional()
 	attrs["environment_version"] = attrs["environment_version"].SetOptional()
 	attrs["java_dependencies"] = attrs["java_dependencies"].SetOptional()
+	attrs["project_environment"] = attrs["project_environment"].SetOptional()
 
 	return attrs
 }
@@ -12084,6 +12088,7 @@ func (m Environment_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"dependencies":        m.Dependencies,
 			"environment_version": m.EnvironmentVersion,
 			"java_dependencies":   m.JavaDependencies,
+			"project_environment": m.ProjectEnvironment,
 		})
 }
 
@@ -12100,6 +12105,7 @@ func (m Environment_SdkV2) Type(ctx context.Context) attr.Type {
 			"java_dependencies": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"project_environment": types.StringType,
 		},
 	}
 }
@@ -17379,7 +17385,13 @@ func (m *InstancePoolAndStats_SdkV2) SetStatus(ctx context.Context, v InstancePo
 // Attributes set during instance pool creation which are related to Amazon Web
 // Services.
 type InstancePoolAwsAttributes_SdkV2 struct {
-	// Availability type used for the spot nodes.
+	// Availability type used for the instances in the pool. Supports on-demand,
+	// spot, and spot-with-fallback (the pool acquires spot instances first, and
+	// falls back to on-demand instances when spot capacity is unavailable).
+	//
+	// You can change this value on an existing pool. New clusters use the
+	// updated availability, and existing clusters keep the availability they
+	// launched with.
 	Availability types.String `tfsdk:"availability"`
 	// All AWS instances belonging to the instance pool will have this instance
 	// profile. If omitted, instances will initially be launched with the
@@ -17402,6 +17414,10 @@ type InstancePoolAwsAttributes_SdkV2 struct {
 	// instances whose bid price percentage matches this field will be
 	// considered. Note that, for safety, we enforce this field to be no more
 	// than 10000.
+	//
+	// You can change this value on an existing pool. New clusters use the
+	// updated bid price, and existing clusters keep the bid price they launched
+	// with.
 	SpotBidPricePercent types.Int64 `tfsdk:"spot_bid_price_percent"`
 	// Identifier for the availability zone/datacenter in which the cluster
 	// resides. This string will be of a form like "us-west-2a". The provided
@@ -17411,6 +17427,16 @@ type InstancePoolAwsAttributes_SdkV2 struct {
 	// optional field at cluster creation, and if not specified, a default zone
 	// will be used. The list of available zones as well as the default value
 	// can be found by using the `List Zones` method.
+	//
+	// Set this field to "auto" to enable Auto-AZ, in which case Databricks
+	// selects the availability zone for each cluster independently when the
+	// cluster launches, and retries another zone if the cluster can't be
+	// fulfilled because of insufficient capacity or quota. All nodes in a
+	// cluster land in the same zone, and different clusters backed by the pool
+	// can run in different zones.
+	//
+	// You can change the zone on an existing pool. New clusters use the updated
+	// zone, and existing clusters keep the zone they launched with.
 	ZoneId types.String `tfsdk:"zone_id"`
 }
 
@@ -17468,7 +17494,13 @@ func (m InstancePoolAwsAttributes_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Attributes set during instance pool creation which are related to Azure.
 type InstancePoolAzureAttributes_SdkV2 struct {
-	// Availability type used for the spot nodes.
+	// Availability type used for the instances in the pool. Supports on-demand,
+	// spot, and spot-with-fallback (the pool acquires spot instances first, and
+	// falls back to on-demand instances when spot capacity is unavailable).
+	//
+	// You can change this value on an existing pool. New clusters use the
+	// updated availability, and existing clusters keep the availability they
+	// launched with.
 	Availability types.String `tfsdk:"availability"`
 	// The Azure capacity reservation group resource ID to use for launching VMs
 	// in this pool. When specified, VMs will be launched using the provided
@@ -17495,6 +17527,10 @@ type InstancePoolAzureAttributes_SdkV2 struct {
 	// price. The price for the VM will be the current price for spot or the
 	// price for a standard VM, which ever is less, as long as there is capacity
 	// and quota available.
+	//
+	// You can change this value on an existing pool. New clusters use the
+	// updated max price, and existing clusters keep the max price they launched
+	// with.
 	SpotBidMaxPrice types.Float64 `tfsdk:"spot_bid_max_price"`
 }
 
@@ -17549,6 +17585,13 @@ func (m InstancePoolAzureAttributes_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Attributes set during instance pool creation which are related to GCP.
 type InstancePoolGcpAttributes_SdkV2 struct {
+	// Availability type for the instances in the pool. One of:
+	//
+	// - `ON_DEMAND_GCP`: the pool uses on-demand instances only. -
+	// `PREEMPTIBLE_GCP`: the pool uses preemptible instances only. -
+	// `PREEMPTIBLE_WITH_FALLBACK_GCP`: the pool acquires preemptible instances
+	// first, and falls back to on-demand instances when preemptible capacity is
+	// unavailable.
 	GcpAvailability types.String `tfsdk:"gcp_availability"`
 	// If provided, each node in the instance pool will have this number of
 	// local SSDs attached. Each local SSD is 375GB in size. Refer to [GCP
@@ -17567,12 +17610,20 @@ type InstancePoolGcpAttributes_SdkV2 struct {
 	//
 	// This field can be one of the following: - "HA" => High availability,
 	// spread nodes across availability zones for a Databricks deployment region
-	// - A GCP availability zone => Pick One of the available zones for (machine
-	// type + region) from https://cloud.google.com/compute/docs/regions-zones
-	// (e.g. "us-west1-a").
+	// - "auto" => Auto-AZ. Databricks selects the availability zone for each
+	// cluster independently when the cluster launches, and retries another zone
+	// if the cluster can't be fulfilled because of insufficient capacity or
+	// quota. All nodes in a cluster land in the same zone, and different
+	// clusters backed by the pool can run in different zones. - A GCP
+	// availability zone => Pick One of the available zones for (machine type +
+	// region) from https://cloud.google.com/compute/docs/regions-zones (e.g.
+	// "us-west1-a").
 	//
 	// If empty, Databricks picks an availability zone to schedule the cluster
 	// on.
+	//
+	// You can change the zone on an existing pool. New clusters use the updated
+	// zone, and existing clusters keep the zone they launched with.
 	ZoneId types.String `tfsdk:"zone_id"`
 }
 

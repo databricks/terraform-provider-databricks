@@ -20,6 +20,18 @@ When an alert is triggered, notifications can be sent to:
 
 You can also configure alerts to notify subscribers when the alert returns to normal state and set a retrigger interval to control how frequently the alert can be triggered.
 
+### Custom Notification Templates
+`custom_summary` and `custom_description` override the default notification subject and body.
+`custom_template_format` selects how those templates are interpreted:
+
+- `HTML` treats both templates as HTML with Mustache `{{VARIABLE_NAME}}` placeholders.
+- `MARKDOWN` treats them as Markdown with allowlisted `@VARIABLE_NAME` placeholders and converts
+  them to the format each notification destination expects, so one template renders correctly in
+  email, Slack, and Microsoft Teams.
+
+When `custom_template_format` is unset, the API applies no default; responses omit it unless a
+format is stored, and a template with no format is rendered as HTML.
+
 ### Scheduling
 Alerts use Quartz cron syntax for scheduling. You can specify the timezone and pause status for the schedule.
 

@@ -10,6 +10,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -324,15 +325,10 @@ func TestGetWorkspaceIDDataSource(t *testing.T) {
 	}
 }
 
-// TestValidateWorkspaceID_ReadsFromRespPlan simulates the full ModifyPlan flow:
-// state has workspace_id "111", provider default changes to "999".
-// WorkspaceDriftDetection detects the drift and updates resp.Plan to "999".
-// ValidateWorkspaceID is now a no-op (plan-time reachability validation was
-// removed in favor of apply-time validation via GetWorkspaceClientForUnifiedProvider),
-// so it must not add diagnostics regardless of what is in the plan. This test
-// keeps exercising WorkspaceDriftDetection and asserts ValidateWorkspaceID stays
-// inert.
-func TestValidateWorkspaceID_ReadsFromRespPlan(t *testing.T) {
+// TestWorkspaceDriftDetection_ProviderDefaultChanged simulates a ModifyPlan
+// where state has workspace_id "111" and the provider default changes to "999".
+// WorkspaceDriftDetection must force replacement and set "999" in resp.Plan.
+func TestWorkspaceDriftDetection_ProviderDefaultChanged(t *testing.T) {
 	ctx := context.Background()
 
 	// Server simulates a workspace with ID 999.
@@ -426,9 +422,15 @@ func TestValidateWorkspaceID_ReadsFromRespPlan(t *testing.T) {
 	require.False(t, resp.Diagnostics.HasError(),
 		"WorkspaceDriftDetection failed: %v", resp.Diagnostics.Errors())
 
-	// ValidateWorkspaceID is a no-op: it performs no plan-time reachability
-	// validation and must never add diagnostics.
-	ValidateWorkspaceID(ctx, databricksClient, modifyReq, resp)
-	assert.False(t, resp.Diagnostics.HasError(),
-		"expected no error, got: %v", resp.Diagnostics.Errors())
+	wsIDPath := path.Root("provider_config").AtName("workspace_id")
+	if !resp.RequiresReplace.Contains(wsIDPath) {
+		t.Errorf("RequiresReplace = %v, want it to contain %v", resp.RequiresReplace, wsIDPath)
+	}
+	var gotWsID types.String
+	if diags := resp.Plan.GetAttribute(ctx, wsIDPath, &gotWsID); diags.HasError() {
+		t.Fatalf("reading planned workspace_id: %v", diags.Errors())
+	}
+	if gotWsID.ValueString() != "999" {
+		t.Errorf("planned workspace_id = %q, want %q", gotWsID.ValueString(), "999")
+	}
 }

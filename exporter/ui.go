@@ -12,15 +12,9 @@ var cliInput io.Reader = os.Stdin
 var cliOutput io.Writer = os.Stdout
 
 func askFor(prompt string) string {
-	var s string
-	r := bufio.NewReader(cliInput)
-	for {
-		fmt.Fprint(cliOutput, prompt+" ")
-		s, _ = r.ReadString('\n')
-		if s != "" {
-			break
-		}
-	}
+	fmt.Fprint(cliOutput, prompt+" ")
+	// ReadString returns an empty string only on error (e.g., EOF), so there is no need to retry
+	s, _ := bufio.NewReader(cliInput).ReadString('\n')
 	return strings.TrimSpace(s)
 }
 

@@ -125,11 +125,29 @@ resource "databricks_connection" "pbi" {
 }
 ```
 
+Create a schema-level connection inside a Unity Catalog schema by setting `parent`
+
+```hcl
+resource "databricks_connection" "schema_scoped" {
+  name            = "my_conn"
+  connection_type = "HTTP"
+  parent          = "schemas/main.default"
+  comment         = "This is a schema-level connection"
+  options = {
+    host         = "https://example.com"
+    port         = "8433"
+    base_path    = "/api/"
+    bearer_token = "bearer_token"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 - `name` - (Required) Name of the connection.
+- `parent` - (Optional) Parent schema of a schema-level connection, in the format `schemas/{catalog}.{schema}`. When set, the connection is created inside that schema and its `full_name` becomes `{catalog}.{schema}.{name}`; when omitted, the connection is metastore-level. Change forces creation of a new resource.
 - `connection_type` - (Required) The type of connection. Possible values are: `BIGQUERY`, `CONFLUENCE`, `DATABRICKS`, `GA4_RAW_DATA`, `GITHUB`, `GLUE`, `HIVE_METASTORE`, `HTTP`, `HUBSPOT`, `META_MARKETING`, `MYSQL`, `ORACLE`, `OUTLOOK`, `POSTGRESQL`, `POWER_BI`, `REDSHIFT`, `SALESFORCE`, `SALESFORCE_DATA_CLOUD`, `SERVICENOW`, `SMARTSHEET`, `SNOWFLAKE`, `SQLDW`, `SQLSERVER`, `TERADATA`, `WORKDAY_RAAS`, or `ZENDESK`. For an up-to-date list of connection types and required options, see the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources). Change forces creation of a new resource.
 - `options` - (Required) A map of key-value properties attached to the securable. The required keys depend on the connection type, e.g. `host`, `port`, `user`, `password`, `authorization_endpoint`, `client_id`, `client_secret`, or `GoogleServiceAccountKeyJson`. Please consult the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources) for the required options. This field is sensitive.
 - `comment` - (Optional) User-provided free-form text description. Change forces creation of a new resource.
@@ -146,7 +164,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-- `id` - ID of this connection in form of `<metastore_id>|<name>`.
+- `id` - ID of this connection, in the form `<metastore_id>|<full_name>`. For a metastore-level connection `full_name` is the connection `name`; for a schema-level connection (`parent` set) it is `<catalog>.<schema>.<name>`.
 - `connection_id` - Unique identifier of the Connection.
 - `created_at` - Time at which this connection was created, in epoch milliseconds.
 - `created_by` - Username of connection creator.
@@ -162,17 +180,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-This resource can be imported by `id`:
+This resource can be imported by `id`, which is `<metastore_id>|<full_name>`. For a metastore-level connection `full_name` is the connection name; for a schema-level connection it is `<catalog>.<schema>.<name>`:
 
 ```hcl
 import {
   to = databricks_connection.this
-  id = "<metastore_id>|<name>"
+  id = "<metastore_id>|<full_name>"
 }
 ```
 
 Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
-terraform import databricks_connection.this "<metastore_id>|<name>"
+terraform import databricks_connection.this "<metastore_id>|<full_name>"
 ```

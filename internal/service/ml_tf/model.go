@@ -1485,10 +1485,23 @@ func (m AvgFunction) Type(ctx context.Context) attr.Type {
 type BackfillFeaturesRequest struct {
 	// Output ranges to backfill.
 	BackfillRanges types.List `tfsdk:"backfill_ranges"`
+	// The budget policy ID, in UUID format, used to attribute the serverless
+	// compute cost of this backfill. If not specified, a default budget policy
+	// may be applied.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// Full names of the features to backfill.
 	FeatureFullNames types.List `tfsdk:"feature_full_names"`
 	// Idempotency token for the request.
 	RequestId types.String `tfsdk:"request_id"`
+	// Custom tags to associate with this backfill. They are applied to the
+	// backfill job and forwarded to the underlying compute as Databricks
+	// resource tags, so backfill cost can be attributed in the billing system
+	// tables. These tags apply only to the backfill compute; they are not
+	// applied to the Unity Catalog Feature resources themselves, whose tags are
+	// managed separately through the Unity Catalog tagging API. A maximum of 25
+	// tags is supported; keys and values are subject to the same limitations as
+	// Databricks resource tags.
+	Tags types.Map `tfsdk:"tags"`
 }
 
 func (to *BackfillFeaturesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BackfillFeaturesRequest) {
@@ -1524,8 +1537,10 @@ func (to *BackfillFeaturesRequest) SyncFieldsDuringRead(ctx context.Context, fro
 
 func (m BackfillFeaturesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["backfill_ranges"] = attrs["backfill_ranges"].SetRequired()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["feature_full_names"] = attrs["feature_full_names"].SetRequired()
 	attrs["request_id"] = attrs["request_id"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
 
 	return attrs
 }
@@ -1541,6 +1556,7 @@ func (m BackfillFeaturesRequest) GetComplexFieldTypes(ctx context.Context) map[s
 	return map[string]reflect.Type{
 		"backfill_ranges":    reflect.TypeOf(BackfillRange{}),
 		"feature_full_names": reflect.TypeOf(types.String{}),
+		"tags":               reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1552,8 +1568,10 @@ func (m BackfillFeaturesRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"backfill_ranges":    m.BackfillRanges,
+			"budget_policy_id":   m.BudgetPolicyId,
 			"feature_full_names": m.FeatureFullNames,
 			"request_id":         m.RequestId,
+			"tags":               m.Tags,
 		})
 }
 
@@ -1564,10 +1582,14 @@ func (m BackfillFeaturesRequest) Type(ctx context.Context) attr.Type {
 			"backfill_ranges": basetypes.ListType{
 				ElemType: BackfillRange{}.Type(ctx),
 			},
+			"budget_policy_id": types.StringType,
 			"feature_full_names": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"request_id": types.StringType,
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -1622,6 +1644,32 @@ func (m *BackfillFeaturesRequest) SetFeatureFullNames(ctx context.Context, v []t
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["feature_full_names"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.FeatureFullNames = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in BackfillFeaturesRequest as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *BackfillFeaturesRequest) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if m.Tags.IsNull() || m.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in BackfillFeaturesRequest.
+func (m *BackfillFeaturesRequest) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Tags = types.MapValueMust(t, vs)
 }
 
 // Result of a completed backfill.
@@ -19412,6 +19460,9 @@ type MaterializedFeature struct {
 	// True if this is an online materialized feature. False if it is an offline
 	// materialized feature.
 	IsOnline types.Bool `tfsdk:"is_online"`
+	// The ID of the job that materializes the feature. This is present for both
+	// batch and streaming features.
+	JobId types.Int64 `tfsdk:"job_id"`
 	// The timestamp when the pipeline last ran and updated the materialized
 	// feature values. If the pipeline has not run yet, this field will be null.
 	LastMaterializationTime types.String `tfsdk:"last_materialization_time"`
@@ -19424,6 +19475,9 @@ type MaterializedFeature struct {
 	OfflineStoreConfig types.Object `tfsdk:"offline_store_config"`
 	// Destination for writing feature values to an online Lakebase table.
 	OnlineStoreConfig types.Object `tfsdk:"online_store_config"`
+	// The ID of the pipeline that materializes this feature. This is only
+	// present for streaming features.
+	PipelineId types.String `tfsdk:"pipeline_id"`
 	// The schedule state of the materialization pipeline. Hidden from GraphQL:
 	// being deprecated, so not exposed to Catalog Explorer.
 	PipelineScheduleState types.String `tfsdk:"pipeline_schedule_state"`
@@ -19546,6 +19600,7 @@ func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["cron_schedule_trigger"] = attrs["cron_schedule_trigger"].SetOptional()
 	attrs["feature_name"] = attrs["feature_name"].SetRequired()
 	attrs["is_online"] = attrs["is_online"].SetComputed()
+	attrs["job_id"] = attrs["job_id"].SetComputed()
 	attrs["last_materialization_time"] = attrs["last_materialization_time"].SetComputed()
 	attrs["latest_backfill_operation"] = attrs["latest_backfill_operation"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetOptional()
@@ -19554,6 +19609,7 @@ func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["online_store_config"] = attrs["online_store_config"].SetOptional()
 	attrs["online_store_config"] = attrs["online_store_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetComputed()
 	attrs["pipeline_schedule_state"] = attrs["pipeline_schedule_state"].SetOptional()
 	attrs["streaming_mode"] = attrs["streaming_mode"].SetOptional()
 	attrs["table_name"] = attrs["table_name"].SetComputed()
@@ -19593,11 +19649,13 @@ func (m MaterializedFeature) ToObjectValue(ctx context.Context) basetypes.Object
 			"cron_schedule_trigger":     m.CronScheduleTrigger,
 			"feature_name":              m.FeatureName,
 			"is_online":                 m.IsOnline,
+			"job_id":                    m.JobId,
 			"last_materialization_time": m.LastMaterializationTime,
 			"latest_backfill_operation": m.LatestBackfillOperation,
 			"materialized_feature_id":   m.MaterializedFeatureId,
 			"offline_store_config":      m.OfflineStoreConfig,
 			"online_store_config":       m.OnlineStoreConfig,
+			"pipeline_id":               m.PipelineId,
 			"pipeline_schedule_state":   m.PipelineScheduleState,
 			"streaming_mode":            m.StreamingMode,
 			"table_name":                m.TableName,
@@ -19615,11 +19673,13 @@ func (m MaterializedFeature) Type(ctx context.Context) attr.Type {
 			"cron_schedule_trigger":     CronSchedule{}.Type(ctx),
 			"feature_name":              types.StringType,
 			"is_online":                 types.BoolType,
+			"job_id":                    types.Int64Type,
 			"last_materialization_time": types.StringType,
 			"latest_backfill_operation": types.StringType,
 			"materialized_feature_id":   types.StringType,
 			"offline_store_config":      OfflineStoreConfig{}.Type(ctx),
 			"online_store_config":       OnlineStoreConfig{}.Type(ctx),
+			"pipeline_id":               types.StringType,
 			"pipeline_schedule_state":   types.StringType,
 			"streaming_mode":            StreamingMode{}.Type(ctx),
 			"table_name":                types.StringType,
@@ -22166,6 +22226,10 @@ func (m *PurgeFeatureEntitiesMetadata) SetFeatures(ctx context.Context, v []type
 // Request to purge materialized feature values for entities listed in a Unity
 // Catalog Delta table.
 type PurgeFeatureEntitiesRequest struct {
+	// The budget policy ID, in UUID format, used to attribute the serverless
+	// compute cost of this purge. If not specified, a default budget policy may
+	// be applied.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// Fully qualified name of the Unity Catalog Delta table containing the
 	// entity keys to purge. The table may contain a subset of each feature's
 	// entity-key columns. A partial key match deletes all feature rows matching
@@ -22179,6 +22243,15 @@ type PurgeFeatureEntitiesRequest struct {
 	Features types.List `tfsdk:"features"`
 	// Optional UUID4 idempotency token for the request.
 	RequestId types.String `tfsdk:"request_id"`
+	// Custom tags to associate with this purge. They are applied to the purge
+	// job and forwarded to the underlying compute as Databricks resource tags,
+	// so purge cost can be attributed in the billing system tables. These tags
+	// apply only to the purge compute; they are not applied to the Unity
+	// Catalog Feature resources themselves, whose tags are managed separately
+	// through the Unity Catalog tagging API. A maximum of 25 tags is supported;
+	// keys and values are subject to the same limitations as Databricks
+	// resource tags.
+	Tags types.Map `tfsdk:"tags"`
 }
 
 func (to *PurgeFeatureEntitiesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PurgeFeatureEntitiesRequest) {
@@ -22188,9 +22261,11 @@ func (to *PurgeFeatureEntitiesRequest) SyncFieldsDuringRead(ctx context.Context,
 }
 
 func (m PurgeFeatureEntitiesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["entities_table"] = attrs["entities_table"].SetRequired()
 	attrs["features"] = attrs["features"].SetRequired()
 	attrs["request_id"] = attrs["request_id"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
 
 	return attrs
 }
@@ -22205,6 +22280,7 @@ func (m PurgeFeatureEntitiesRequest) ApplySchemaCustomizations(attrs map[string]
 func (m PurgeFeatureEntitiesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"features": reflect.TypeOf(types.String{}),
+		"tags":     reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -22215,9 +22291,11 @@ func (m PurgeFeatureEntitiesRequest) ToObjectValue(ctx context.Context) basetype
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"entities_table": m.EntitiesTable,
-			"features":       m.Features,
-			"request_id":     m.RequestId,
+			"budget_policy_id": m.BudgetPolicyId,
+			"entities_table":   m.EntitiesTable,
+			"features":         m.Features,
+			"request_id":       m.RequestId,
+			"tags":             m.Tags,
 		})
 }
 
@@ -22225,11 +22303,15 @@ func (m PurgeFeatureEntitiesRequest) ToObjectValue(ctx context.Context) basetype
 func (m PurgeFeatureEntitiesRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"entities_table": types.StringType,
+			"budget_policy_id": types.StringType,
+			"entities_table":   types.StringType,
 			"features": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"request_id": types.StringType,
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -22258,6 +22340,32 @@ func (m *PurgeFeatureEntitiesRequest) SetFeatures(ctx context.Context, v []types
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["features"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Features = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in PurgeFeatureEntitiesRequest as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PurgeFeatureEntitiesRequest) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if m.Tags.IsNull() || m.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in PurgeFeatureEntitiesRequest.
+func (m *PurgeFeatureEntitiesRequest) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Tags = types.MapValueMust(t, vs)
 }
 
 // Result of a completed feature entity purge.
@@ -23738,6 +23846,10 @@ func (m *RenameModelResponse) SetRegisteredModel(ctx context.Context, v Model) {
 // A request-time data source whose value is provided at inference time: offline
 // batch scoring or online serving endpoint
 type RequestSource struct {
+	// A schema containing scalar or nested fields, in Spark StructType JSON
+	// format (from df.schema.json()). This preserves field, array-element, and
+	// map-value nullability.
+	DataframeSchema types.String `tfsdk:"dataframe_schema"`
 	// A flat schema with scalar-typed fields only.
 	FlatSchema types.Object `tfsdk:"flat_schema"`
 }
@@ -23766,6 +23878,7 @@ func (to *RequestSource) SyncFieldsDuringRead(ctx context.Context, from RequestS
 }
 
 func (m RequestSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dataframe_schema"] = attrs["dataframe_schema"].SetOptional()
 	attrs["flat_schema"] = attrs["flat_schema"].SetOptional()
 
 	return attrs
@@ -23791,7 +23904,8 @@ func (m RequestSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"flat_schema": m.FlatSchema,
+			"dataframe_schema": m.DataframeSchema,
+			"flat_schema":      m.FlatSchema,
 		})
 }
 
@@ -23799,7 +23913,8 @@ func (m RequestSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m RequestSource) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"flat_schema": FlatSchema{}.Type(ctx),
+			"dataframe_schema": types.StringType,
+			"flat_schema":      FlatSchema{}.Type(ctx),
 		},
 	}
 }
@@ -25289,6 +25404,7 @@ func (m SchemaLocatorConfluentSchema) Type(ctx context.Context) attr.Type {
 // registry (e.g. Confluent).
 type SchemaRegistryConfig struct {
 	// Reference to the schema registry API secret in a Databricks secret scope.
+	// Set this only if required for authentication for the schema registry.
 	ApiSecretRef types.Object `tfsdk:"api_secret_ref"`
 	// Schema locator for the message key. Only used for Kafka streams. At least
 	// one of payload_schema_locator or key_schema_locator must be set.
@@ -25358,7 +25474,7 @@ func (to *SchemaRegistryConfig) SyncFieldsDuringRead(ctx context.Context, from S
 }
 
 func (m SchemaRegistryConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["api_secret_ref"] = attrs["api_secret_ref"].SetRequired()
+	attrs["api_secret_ref"] = attrs["api_secret_ref"].SetOptional()
 	attrs["key_schema_locator"] = attrs["key_schema_locator"].SetOptional()
 	attrs["payload_schema_locator"] = attrs["payload_schema_locator"].SetOptional()
 	attrs["uc_connection"] = attrs["uc_connection"].SetOptional()
@@ -30157,13 +30273,14 @@ func (m UpdateExperimentResponse) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateFeatureRequest struct {
-	// Feature to update.
+	// Feature whose full_name identifies the target. Only description is
+	// mutable.
 	Feature types.Object `tfsdk:"feature"`
 	// The full three-part name (catalog, schema, name) of the feature. This is
 	// the feature's resource identifier; the catalog_name, schema_name, and
 	// name fields below are OUTPUT_ONLY decomposed views of this value.
 	FullName types.String `tfsdk:"-"`
-	// The list of fields to update.
+	// Fields to update. The only supported path is description.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

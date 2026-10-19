@@ -573,7 +573,7 @@ func TestMwsAccWorkspaceIDTagPolicy_NoDefaultNoOverride(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: tagPolicyWithProviderBlock("", ""),
 		ExpectError: regexp.MustCompile(
-			`(?s)failed to get workspace client`,
+			`(?s)managing a workspace-level resource requires a workspace_id.*none\s+was\s+found`,
 		),
 	})
 }
@@ -631,7 +631,7 @@ func TestMwsAccWorkspaceIDTagPolicy_RemoveDefault(t *testing.T) {
 			Template: tagPolicyWithProviderBlock("", ""),
 			PlanOnly: true,
 			ExpectError: regexp.MustCompile(
-				`(?s)provider_config\.workspace_id = \d+ in state but no\s+workspace_id is configured`,
+				`(?s)managing a workspace-level resource requires a workspace_id.*previously\s+configured\s+workspace_id\s+was\s+removed`,
 			),
 		},
 	)
@@ -656,7 +656,7 @@ func TestMwsAccWorkspaceIDTagPolicy_RemoveOverrideNoFallback(t *testing.T) {
 			Template: tagPolicyWithProviderBlock("", ""),
 			PlanOnly: true,
 			ExpectError: regexp.MustCompile(
-				`(?s)provider_config\.workspace_id = \d+ in state but no\s+workspace_id is configured`,
+				`(?s)managing a workspace-level resource requires a workspace_id.*previously\s+configured\s+workspace_id\s+was\s+removed`,
 			),
 		},
 	)

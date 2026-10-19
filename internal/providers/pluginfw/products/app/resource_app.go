@@ -172,10 +172,6 @@ func (a *resourceApp) ModifyPlan(ctx context.Context, req resource.ModifyPlanReq
 		return
 	}
 	tfschema.WorkspaceDriftDetection(ctx, a.client, req, resp)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tfschema.ValidateWorkspaceID(ctx, a.client, req, resp)
 }
 
 // reconcileEmptyUserApiScopes preserves a user-configured empty user_api_scopes list

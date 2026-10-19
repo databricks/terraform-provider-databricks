@@ -511,6 +511,17 @@ warehouse_type = "REALTIME"
 	}
 }
 
+func TestResourceSQLEndpointReadRealtimeWithoutTimeout(t *testing.T) {
+	response := `{"id":"abc","name":"foo","cluster_size":"Small","warehouse_type":"REALTIME"}`
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc?", Response: response},
+			{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc", Response: response},
+		},
+		Resource: ResourceSqlEndpoint(), Read: true, ID: "abc",
+	}.ApplyAndExpectData(t, map[string]any{"statement_timeout": 0})
+}
+
 func TestResourceSQLEndpointRealtimeValidation(t *testing.T) {
 	for _, tc := range []struct {
 		field string

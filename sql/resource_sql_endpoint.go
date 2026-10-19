@@ -54,7 +54,6 @@ func getSqlWarehouse(ctx context.Context, w *databricks.WorkspaceClient, id stri
 	switch warehouse.WarehouseType {
 	case "REALTIME", "REYDEN":
 		warehouse.WarehouseType = "REALTIME"
-		warehouse.StatementTimeout = 3600
 		if err := doRealtimeWarehouseRequest(ctx, w, http.MethodGet, "/api/2.0/sql/warehouses/"+id, nil, &warehouse.realtimeWarehouseFields); err != nil {
 			return nil, err
 		}

@@ -30,7 +30,7 @@ func DataSourceMcpServices() datasource.DataSource {
 type McpServicesData struct {
 	AiGateway types.List `tfsdk:"mcp_services"`
 	// Maximum number of MCP services to return. Defaults to 100 when unset or
-	// 0; the maximum is 100. Use `page_token` to retrieve additional pages.
+	// 0; the maximum is 200. Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"page_size"`
 	// Parent schema to list within, in the form `schemas/{catalog}.{schema}`.
 	// Required. Each `{...}` component is capped at 255 characters

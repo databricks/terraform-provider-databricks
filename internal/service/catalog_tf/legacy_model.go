@@ -4284,6 +4284,10 @@ type ConnectionInfo_SdkV2 struct {
 	ProvisioningInfo types.List `tfsdk:"provisioning_info"`
 	// If the connection is read only.
 	ReadOnly types.Bool `tfsdk:"read_only"`
+	// A map of option names to UC Secret references. Keys are connection option
+	// names (same as in OptionsKVPairs) and values are UC Secret fully
+	// qualified names.
+	Secrets types.Map `tfsdk:"secrets"`
 
 	SecurableType types.String `tfsdk:"securable_type"`
 	// Time at which this connection was updated, in epoch milliseconds.
@@ -4352,6 +4356,7 @@ func (m ConnectionInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["provisioning_info"] = attrs["provisioning_info"].SetOptional()
 	attrs["provisioning_info"] = attrs["provisioning_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["read_only"] = attrs["read_only"].SetOptional()
+	attrs["secrets"] = attrs["secrets"].SetOptional()
 	attrs["securable_type"] = attrs["securable_type"].SetOptional()
 	attrs["updated_at"] = attrs["updated_at"].SetOptional()
 	attrs["updated_by"] = attrs["updated_by"].SetOptional()
@@ -4373,6 +4378,7 @@ func (m ConnectionInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 		"options":              reflect.TypeOf(types.String{}),
 		"properties":           reflect.TypeOf(types.String{}),
 		"provisioning_info":    reflect.TypeOf(ProvisioningInfo_SdkV2{}),
+		"secrets":              reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -4398,6 +4404,7 @@ func (m ConnectionInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 			"properties":           m.Properties,
 			"provisioning_info":    m.ProvisioningInfo,
 			"read_only":            m.ReadOnly,
+			"secrets":              m.Secrets,
 			"securable_type":       m.SecurableType,
 			"updated_at":           m.UpdatedAt,
 			"updated_by":           m.UpdatedBy,
@@ -4431,7 +4438,10 @@ func (m ConnectionInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"provisioning_info": basetypes.ListType{
 				ElemType: ProvisioningInfo_SdkV2{}.Type(ctx),
 			},
-			"read_only":      types.BoolType,
+			"read_only": types.BoolType,
+			"secrets": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 			"securable_type": types.StringType,
 			"updated_at":     types.Int64Type,
 			"updated_by":     types.StringType,
@@ -4542,6 +4552,32 @@ func (m *ConnectionInfo_SdkV2) SetProvisioningInfo(ctx context.Context, v Provis
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["provisioning_info"]
 	m.ProvisioningInfo = types.ListValueMust(t, vs)
+}
+
+// GetSecrets returns the value of the Secrets field in ConnectionInfo_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectionInfo_SdkV2) GetSecrets(ctx context.Context) (map[string]types.String, bool) {
+	if m.Secrets.IsNull() || m.Secrets.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Secrets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSecrets sets the value of the Secrets field in ConnectionInfo_SdkV2.
+func (m *ConnectionInfo_SdkV2) SetSecrets(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["secrets"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Secrets = types.MapValueMust(t, vs)
 }
 
 // Detailed status of an online table. Shown if the online table is in the
@@ -5611,6 +5647,10 @@ type CreateConnection_SdkV2 struct {
 	Properties types.Map `tfsdk:"properties"`
 	// If the connection is read only.
 	ReadOnly types.Bool `tfsdk:"read_only"`
+	// A map of option names to UC Secret references. Keys are connection option
+	// names (same as in OptionsKVPairs) and values are UC Secret fully
+	// qualified names.
+	Secrets types.Map `tfsdk:"secrets"`
 }
 
 func (to *CreateConnection_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateConnection_SdkV2) {
@@ -5646,6 +5686,7 @@ func (m CreateConnection_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["parent"] = attrs["parent"].SetOptional()
 	attrs["properties"] = attrs["properties"].SetOptional()
 	attrs["read_only"] = attrs["read_only"].SetOptional()
+	attrs["secrets"] = attrs["secrets"].SetOptional()
 
 	return attrs
 }
@@ -5662,6 +5703,7 @@ func (m CreateConnection_SdkV2) GetComplexFieldTypes(ctx context.Context) map[st
 		"environment_settings": reflect.TypeOf(EnvironmentSettings_SdkV2{}),
 		"options":              reflect.TypeOf(types.String{}),
 		"properties":           reflect.TypeOf(types.String{}),
+		"secrets":              reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -5680,6 +5722,7 @@ func (m CreateConnection_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 			"parent":               m.Parent,
 			"properties":           m.Properties,
 			"read_only":            m.ReadOnly,
+			"secrets":              m.Secrets,
 		})
 }
 
@@ -5701,6 +5744,9 @@ func (m CreateConnection_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"read_only": types.BoolType,
+			"secrets": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -5781,6 +5827,32 @@ func (m *CreateConnection_SdkV2) SetProperties(ctx context.Context, v map[string
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Properties = types.MapValueMust(t, vs)
+}
+
+// GetSecrets returns the value of the Secrets field in CreateConnection_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateConnection_SdkV2) GetSecrets(ctx context.Context) (map[string]types.String, bool) {
+	if m.Secrets.IsNull() || m.Secrets.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Secrets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSecrets sets the value of the Secrets field in CreateConnection_SdkV2.
+func (m *CreateConnection_SdkV2) SetSecrets(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["secrets"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Secrets = types.MapValueMust(t, vs)
 }
 
 type CreateCredentialRequest_SdkV2 struct {
@@ -21240,6 +21312,60 @@ func (m *GetWorkspaceBindingsResponse_SdkV2) SetBindings(ctx context.Context, v 
 	m.Bindings = types.ListValueMust(t, vs)
 }
 
+// A governed tag referenced by a policy condition.
+type GovernedTagReference_SdkV2 struct {
+	// The governed tag key.
+	TagKey types.String `tfsdk:"tag_key"`
+	// The governed tag value, when the policy references a specific value.
+	TagValue types.String `tfsdk:"tag_value"`
+}
+
+func (to *GovernedTagReference_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GovernedTagReference_SdkV2) {
+}
+
+func (to *GovernedTagReference_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GovernedTagReference_SdkV2) {
+}
+
+func (m GovernedTagReference_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+	attrs["tag_value"] = attrs["tag_value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GovernedTagReference.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GovernedTagReference_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GovernedTagReference_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GovernedTagReference_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"tag_key":   m.TagKey,
+			"tag_value": m.TagValue,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GovernedTagReference_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"tag_key":   types.StringType,
+			"tag_value": types.StringType,
+		},
+	}
+}
+
 type GrantOptions_SdkV2 struct {
 	// List of privileges to grant. When any of these privileges are requested,
 	// the policy will grant access if the principal and condition match.
@@ -23497,7 +23623,7 @@ func (m *ListFunctionsResponse_SdkV2) SetFunctions(ctx context.Context, v []Func
 
 type ListMcpServicesRequest_SdkV2 struct {
 	// Maximum number of MCP services to return. Defaults to 100 when unset or
-	// 0; the maximum is 100. Use `page_token` to retrieve additional pages.
+	// 0; the maximum is 200. Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from the previous response.
 	PageToken types.String `tfsdk:"-"`
@@ -23871,7 +23997,7 @@ func (m *ListMetastoresResponse_SdkV2) SetMetastores(ctx context.Context, v []Me
 
 type ListModelProviderServicesRequest_SdkV2 struct {
 	// Maximum number of provider services to return. Defaults to 100 when unset
-	// or 0; the maximum is 100. Use `page_token` to retrieve additional pages.
+	// or 0; the maximum is 200. Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from the previous response.
 	PageToken types.String `tfsdk:"-"`
@@ -24062,7 +24188,7 @@ func (m *ListModelProviderServicesResponse_SdkV2) SetModelProviderServices(ctx c
 
 type ListModelServicesRequest_SdkV2 struct {
 	// Maximum number of model services to return. Defaults to 100 when unset or
-	// 0; the maximum is 100. Use `page_token` to retrieve additional pages.
+	// 0; the maximum is 200. Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from the previous response.
 	PageToken types.String `tfsdk:"-"`
@@ -25659,7 +25785,7 @@ func (m *ListSecretsResponse_SdkV2) SetSecrets(ctx context.Context, v []Secret_S
 
 type ListSkillsRequest_SdkV2 struct {
 	// Maximum number of skills to return. Defaults to 100 when unset or 0; the
-	// maximum is 100. Use `page_token` to retrieve additional pages.
+	// maximum is 200. Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from a previous request.
 	PageToken types.String `tfsdk:"-"`
@@ -27961,6 +28087,8 @@ type ModelProviderServiceConfig_SdkV2 struct {
 
 	AzureOpenai types.List `tfsdk:"azure_openai"`
 
+	BedrockMantle types.List `tfsdk:"bedrock_mantle"`
+
 	Custom types.List `tfsdk:"custom"`
 	// Whether to forward incoming HTTP headers to the upstream provider.
 	// Defaults to false and is configured for the entire provider service, not
@@ -27975,7 +28103,9 @@ type ModelProviderServiceConfig_SdkV2 struct {
 	// provider-native API types. Defaults to false. When true, these paths are
 	// forwarded unchanged to the upstream provider. When false, only recognized
 	// API paths are served. Enabling this broadens the upstream API surface
-	// exposed through the provider service.
+	// exposed through the provider service. AI Gateway cannot evaluate Service
+	// Policies on opaque unmanaged requests, so unmanaged requests are rejected
+	// whenever Service Policies are attached to this securable.
 	ForwardUnmanagedPaths types.Bool `tfsdk:"forward_unmanaged_paths"`
 
 	GeminiEnterprise types.List `tfsdk:"gemini_enterprise"`
@@ -27987,6 +28117,9 @@ type ModelProviderServiceConfig_SdkV2 struct {
 	MicrosoftFoundry types.List `tfsdk:"microsoft_foundry"`
 
 	Openai types.List `tfsdk:"openai"`
+	// Pricing configuration for this provider service. An explicitly empty
+	// configuration is retained on Create and Update and applies no adjustment.
+	Pricing types.List `tfsdk:"pricing"`
 	// External model provider. Required on Create and immutable thereafter. Set
 	// the matching provider-specific configuration, such as `openai`,
 	// `azure_openai`, or `amazon_bedrock`.
@@ -28032,6 +28165,15 @@ func (to *ModelProviderServiceConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 			}
 		}
 	}
+	if !from.BedrockMantle.IsNull() && !from.BedrockMantle.IsUnknown() {
+		if toBedrockMantle, ok := to.GetBedrockMantle(ctx); ok {
+			if fromBedrockMantle, ok := from.GetBedrockMantle(ctx); ok {
+				// Recursively sync the fields of BedrockMantle
+				toBedrockMantle.SyncFieldsDuringCreateOrUpdate(ctx, fromBedrockMantle)
+				to.SetBedrockMantle(ctx, toBedrockMantle)
+			}
+		}
+	}
 	if !from.Custom.IsNull() && !from.Custom.IsUnknown() {
 		if toCustom, ok := to.GetCustom(ctx); ok {
 			if fromCustom, ok := from.GetCustom(ctx); ok {
@@ -28074,6 +28216,15 @@ func (to *ModelProviderServiceConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 				// Recursively sync the fields of Openai
 				toOpenai.SyncFieldsDuringCreateOrUpdate(ctx, fromOpenai)
 				to.SetOpenai(ctx, toOpenai)
+			}
+		}
+	}
+	if !from.Pricing.IsNull() && !from.Pricing.IsUnknown() {
+		if toPricing, ok := to.GetPricing(ctx); ok {
+			if fromPricing, ok := from.GetPricing(ctx); ok {
+				// Recursively sync the fields of Pricing
+				toPricing.SyncFieldsDuringCreateOrUpdate(ctx, fromPricing)
+				to.SetPricing(ctx, toPricing)
 			}
 		}
 	}
@@ -28142,6 +28293,14 @@ func (to *ModelProviderServiceConfig_SdkV2) SyncFieldsDuringRead(ctx context.Con
 			}
 		}
 	}
+	if !from.BedrockMantle.IsNull() && !from.BedrockMantle.IsUnknown() {
+		if toBedrockMantle, ok := to.GetBedrockMantle(ctx); ok {
+			if fromBedrockMantle, ok := from.GetBedrockMantle(ctx); ok {
+				toBedrockMantle.SyncFieldsDuringRead(ctx, fromBedrockMantle)
+				to.SetBedrockMantle(ctx, toBedrockMantle)
+			}
+		}
+	}
 	if !from.Custom.IsNull() && !from.Custom.IsUnknown() {
 		if toCustom, ok := to.GetCustom(ctx); ok {
 			if fromCustom, ok := from.GetCustom(ctx); ok {
@@ -28179,6 +28338,14 @@ func (to *ModelProviderServiceConfig_SdkV2) SyncFieldsDuringRead(ctx context.Con
 			if fromOpenai, ok := from.GetOpenai(ctx); ok {
 				toOpenai.SyncFieldsDuringRead(ctx, fromOpenai)
 				to.SetOpenai(ctx, toOpenai)
+			}
+		}
+	}
+	if !from.Pricing.IsNull() && !from.Pricing.IsUnknown() {
+		if toPricing, ok := to.GetPricing(ctx); ok {
+			if fromPricing, ok := from.GetPricing(ctx); ok {
+				toPricing.SyncFieldsDuringRead(ctx, fromPricing)
+				to.SetPricing(ctx, toPricing)
 			}
 		}
 	}
@@ -28228,6 +28395,8 @@ func (m ModelProviderServiceConfig_SdkV2) ApplySchemaCustomizations(attrs map[st
 	attrs["anthropic"] = attrs["anthropic"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["azure_openai"] = attrs["azure_openai"].SetOptional()
 	attrs["azure_openai"] = attrs["azure_openai"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["bedrock_mantle"] = attrs["bedrock_mantle"].SetOptional()
+	attrs["bedrock_mantle"] = attrs["bedrock_mantle"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["custom"] = attrs["custom"].SetOptional()
 	attrs["custom"] = attrs["custom"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["forward_headers"] = attrs["forward_headers"].SetOptional()
@@ -28241,6 +28410,8 @@ func (m ModelProviderServiceConfig_SdkV2) ApplySchemaCustomizations(attrs map[st
 	attrs["microsoft_foundry"] = attrs["microsoft_foundry"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["openai"] = attrs["openai"].SetOptional()
 	attrs["openai"] = attrs["openai"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["pricing"] = attrs["pricing"].SetOptional()
+	attrs["pricing"] = attrs["pricing"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["provider_type"] = attrs["provider_type"].SetOptional()
 	attrs["provider_type"] = attrs["provider_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
@@ -28261,11 +28432,13 @@ func (m ModelProviderServiceConfig_SdkV2) GetComplexFieldTypes(ctx context.Conte
 		"amazon_bedrock":    reflect.TypeOf(ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2{}),
 		"anthropic":         reflect.TypeOf(ModelProviderServiceConfigAnthropicProviderConfig_SdkV2{}),
 		"azure_openai":      reflect.TypeOf(ModelProviderServiceConfigAzureOpenAiProviderConfig_SdkV2{}),
+		"bedrock_mantle":    reflect.TypeOf(ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2{}),
 		"custom":            reflect.TypeOf(ModelProviderServiceConfigCustomProviderConfig_SdkV2{}),
 		"gemini_enterprise": reflect.TypeOf(ModelProviderServiceConfigGeminiEnterpriseProviderConfig_SdkV2{}),
 		"inference_table":   reflect.TypeOf(InferenceTableConfig_SdkV2{}),
 		"microsoft_foundry": reflect.TypeOf(ModelProviderServiceConfigMicrosoftFoundryProviderConfig_SdkV2{}),
 		"openai":            reflect.TypeOf(ModelProviderServiceConfigOpenAiProviderConfig_SdkV2{}),
+		"pricing":           reflect.TypeOf(ModelProviderServiceConfigProviderPricingConfig_SdkV2{}),
 		"rate_limits":       reflect.TypeOf(RateLimit_SdkV2{}),
 		"targets":           reflect.TypeOf(ModelProviderServiceConfigModelTargetConfig_SdkV2{}),
 	}
@@ -28282,6 +28455,7 @@ func (m ModelProviderServiceConfig_SdkV2) ToObjectValue(ctx context.Context) bas
 			"amazon_bedrock":           m.AmazonBedrock,
 			"anthropic":                m.Anthropic,
 			"azure_openai":             m.AzureOpenai,
+			"bedrock_mantle":           m.BedrockMantle,
 			"custom":                   m.Custom,
 			"forward_headers":          m.ForwardHeaders,
 			"forward_query_parameters": m.ForwardQueryParameters,
@@ -28290,6 +28464,7 @@ func (m ModelProviderServiceConfig_SdkV2) ToObjectValue(ctx context.Context) bas
 			"inference_table":          m.InferenceTable,
 			"microsoft_foundry":        m.MicrosoftFoundry,
 			"openai":                   m.Openai,
+			"pricing":                  m.Pricing,
 			"provider_type":            m.ProviderType,
 			"rate_limits":              m.RateLimits,
 			"targets":                  m.Targets,
@@ -28310,6 +28485,9 @@ func (m ModelProviderServiceConfig_SdkV2) Type(ctx context.Context) attr.Type {
 			"azure_openai": basetypes.ListType{
 				ElemType: ModelProviderServiceConfigAzureOpenAiProviderConfig_SdkV2{}.Type(ctx),
 			},
+			"bedrock_mantle": basetypes.ListType{
+				ElemType: ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2{}.Type(ctx),
+			},
 			"custom": basetypes.ListType{
 				ElemType: ModelProviderServiceConfigCustomProviderConfig_SdkV2{}.Type(ctx),
 			},
@@ -28327,6 +28505,9 @@ func (m ModelProviderServiceConfig_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"openai": basetypes.ListType{
 				ElemType: ModelProviderServiceConfigOpenAiProviderConfig_SdkV2{}.Type(ctx),
+			},
+			"pricing": basetypes.ListType{
+				ElemType: ModelProviderServiceConfigProviderPricingConfig_SdkV2{}.Type(ctx),
 			},
 			"provider_type": types.StringType,
 			"rate_limits": basetypes.ListType{
@@ -28415,6 +28596,32 @@ func (m *ModelProviderServiceConfig_SdkV2) SetAzureOpenai(ctx context.Context, v
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_openai"]
 	m.AzureOpenai = types.ListValueMust(t, vs)
+}
+
+// GetBedrockMantle returns the value of the BedrockMantle field in ModelProviderServiceConfig_SdkV2 as
+// a ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ModelProviderServiceConfig_SdkV2) GetBedrockMantle(ctx context.Context) (ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2, bool) {
+	var e ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2
+	if m.BedrockMantle.IsNull() || m.BedrockMantle.IsUnknown() {
+		return e, false
+	}
+	var v []ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2
+	d := m.BedrockMantle.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBedrockMantle sets the value of the BedrockMantle field in ModelProviderServiceConfig_SdkV2.
+func (m *ModelProviderServiceConfig_SdkV2) SetBedrockMantle(ctx context.Context, v ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["bedrock_mantle"]
+	m.BedrockMantle = types.ListValueMust(t, vs)
 }
 
 // GetCustom returns the value of the Custom field in ModelProviderServiceConfig_SdkV2 as
@@ -28545,6 +28752,32 @@ func (m *ModelProviderServiceConfig_SdkV2) SetOpenai(ctx context.Context, v Mode
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["openai"]
 	m.Openai = types.ListValueMust(t, vs)
+}
+
+// GetPricing returns the value of the Pricing field in ModelProviderServiceConfig_SdkV2 as
+// a ModelProviderServiceConfigProviderPricingConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ModelProviderServiceConfig_SdkV2) GetPricing(ctx context.Context) (ModelProviderServiceConfigProviderPricingConfig_SdkV2, bool) {
+	var e ModelProviderServiceConfigProviderPricingConfig_SdkV2
+	if m.Pricing.IsNull() || m.Pricing.IsUnknown() {
+		return e, false
+	}
+	var v []ModelProviderServiceConfigProviderPricingConfig_SdkV2
+	d := m.Pricing.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPricing sets the value of the Pricing field in ModelProviderServiceConfig_SdkV2.
+func (m *ModelProviderServiceConfig_SdkV2) SetPricing(ctx context.Context, v ModelProviderServiceConfigProviderPricingConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["pricing"]
+	m.Pricing = types.ListValueMust(t, vs)
 }
 
 // GetRateLimits returns the value of the RateLimits field in ModelProviderServiceConfig_SdkV2 as
@@ -30653,16 +30886,26 @@ func (m *ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig_SdkV2) S
 	m.ServiceCredential = types.ListValueMust(t, vs)
 }
 
-// Model target configuration for an external model destination.
+// Model target configuration shared by model provider service targets and
+// external model destinations on model services.
 type ModelProviderServiceConfigModelTargetConfig_SdkV2 struct {
+	// Relative path appended to a custom provider's `base_url` for this model,
+	// such as `serve/openai/chat`. Nonempty values are only supported for
+	// custom model provider service targets; other provider types reject them.
+	// Model service destinations do not support this field. Do not include URI
+	// templates, queries, or fragments. When empty, `base_url` is used
+	// unchanged.
+	EndpointRoute types.String `tfsdk:"endpoint_route"`
 	// Provider-side model identifier, such as `gpt-5` or `claude-opus-4-7`.
 	// This identifies a model at the upstream provider; it is not a Unity
 	// Catalog model resource.
 	Model types.String `tfsdk:"model"`
 	// Provider-native API types supported by this model, such as
-	// `openai/v1/chat/completions`. At least one value is required. AI Gateway
-	// uses these values to translate requests and responses. At most 64 entries
-	// of 256 characters each are allowed.
+	// `openai/v1/chat/completions`. A model provider service target requires at
+	// least one value. A model service destination may omit the list to use the
+	// matching provider service target's types when available. AI Gateway uses
+	// the selected types for translation. At most 64 entries of 256 characters
+	// each are allowed.
 	NativeApiTypes types.List `tfsdk:"native_api_types"`
 }
 
@@ -30685,6 +30928,7 @@ func (to *ModelProviderServiceConfigModelTargetConfig_SdkV2) SyncFieldsDuringRea
 }
 
 func (m ModelProviderServiceConfigModelTargetConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_route"] = attrs["endpoint_route"].SetOptional()
 	attrs["model"] = attrs["model"].SetRequired()
 	attrs["native_api_types"] = attrs["native_api_types"].SetOptional()
 
@@ -30711,6 +30955,7 @@ func (m ModelProviderServiceConfigModelTargetConfig_SdkV2) ToObjectValue(ctx con
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"endpoint_route":   m.EndpointRoute,
 			"model":            m.Model,
 			"native_api_types": m.NativeApiTypes,
 		})
@@ -30720,7 +30965,8 @@ func (m ModelProviderServiceConfigModelTargetConfig_SdkV2) ToObjectValue(ctx con
 func (m ModelProviderServiceConfigModelTargetConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"model": types.StringType,
+			"endpoint_route": types.StringType,
+			"model":          types.StringType,
 			"native_api_types": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -30959,6 +31205,59 @@ func (m *ModelProviderServiceConfigOpenAiProviderDirectConfig_SdkV2) SetApiKey(c
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["api_key"]
 	m.ApiKey = types.ListValueMust(t, vs)
+}
+
+// Pricing adjustments applied to this provider service's external-model spend
+// estimates.
+type ModelProviderServiceConfigProviderPricingConfig_SdkV2 struct {
+	// Provider-wide adjustment to external-model spend estimates in basis
+	// points: 2000 = 20% off; -2000 = a 20% markup. Negative values have no
+	// lower bound beyond the int32 range. Values cannot exceed 10000 (100%
+	// off). An omitted value or zero leaves the estimate unchanged.
+	DefaultDiscountBasisPoints types.Int64 `tfsdk:"default_discount_basis_points"`
+}
+
+func (to *ModelProviderServiceConfigProviderPricingConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigProviderPricingConfig_SdkV2) {
+}
+
+func (to *ModelProviderServiceConfigProviderPricingConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ModelProviderServiceConfigProviderPricingConfig_SdkV2) {
+}
+
+func (m ModelProviderServiceConfigProviderPricingConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["default_discount_basis_points"] = attrs["default_discount_basis_points"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelProviderServiceConfigProviderPricingConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ModelProviderServiceConfigProviderPricingConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelProviderServiceConfigProviderPricingConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ModelProviderServiceConfigProviderPricingConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"default_discount_basis_points": m.DefaultDiscountBasisPoints,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ModelProviderServiceConfigProviderPricingConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"default_discount_basis_points": types.Int64Type,
+		},
+	}
 }
 
 // A secret value supplied as part of an inline provider config. The caller
@@ -35360,6 +35659,9 @@ type PolicyInfo_SdkV2 struct {
 	// Type of securables that the policy should take effect on. Required on
 	// create and optional on update.
 	ForSecurableType types.String `tfsdk:"for_securable_type"`
+	// Governed tag keys and values referenced by this policy's conditions and
+	// function arguments. Output only.
+	GovernedTags types.List `tfsdk:"governed_tags"`
 	// Options for grant policies. Valid only if `policy_type` is
 	// `POLICY_TYPE_GRANT`. Required on create and optional on update. When
 	// specified on update, the new options will replace the existing options as
@@ -35425,6 +35727,25 @@ func (to *PolicyInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ExceptPrincipals = from.ExceptPrincipals
 	}
+	if !from.GovernedTags.IsNull() && !from.GovernedTags.IsUnknown() && to.GovernedTags.IsNull() && len(from.GovernedTags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for GovernedTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.GovernedTags = from.GovernedTags
+	}
+	if !from.GovernedTags.IsNull() && !from.GovernedTags.IsUnknown() {
+		if toGovernedTags, ok := to.GetGovernedTags(ctx); ok {
+			if fromGovernedTags, ok := from.GetGovernedTags(ctx); ok {
+				// Recursively sync the fields of each GovernedTags element by position.
+				for i := range toGovernedTags {
+					if i < len(fromGovernedTags) {
+						toGovernedTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromGovernedTags[i])
+					}
+				}
+				to.SetGovernedTags(ctx, toGovernedTags)
+			}
+		}
+	}
 	if !from.Grant.IsNull() && !from.Grant.IsUnknown() {
 		if toGrant, ok := to.GetGrant(ctx); ok {
 			if fromGrant, ok := from.GetGrant(ctx); ok {
@@ -35487,6 +35808,24 @@ func (to *PolicyInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Polic
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ExceptPrincipals = from.ExceptPrincipals
 	}
+	if !from.GovernedTags.IsNull() && !from.GovernedTags.IsUnknown() && to.GovernedTags.IsNull() && len(from.GovernedTags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for GovernedTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.GovernedTags = from.GovernedTags
+	}
+	if !from.GovernedTags.IsNull() && !from.GovernedTags.IsUnknown() {
+		if toGovernedTags, ok := to.GetGovernedTags(ctx); ok {
+			if fromGovernedTags, ok := from.GetGovernedTags(ctx); ok {
+				for i := range toGovernedTags {
+					if i < len(fromGovernedTags) {
+						toGovernedTags[i].SyncFieldsDuringRead(ctx, fromGovernedTags[i])
+					}
+				}
+				to.SetGovernedTags(ctx, toGovernedTags)
+			}
+		}
+	}
 	if !from.Grant.IsNull() && !from.Grant.IsUnknown() {
 		if toGrant, ok := to.GetGrant(ctx); ok {
 			if fromGrant, ok := from.GetGrant(ctx); ok {
@@ -35533,6 +35872,7 @@ func (m PolicyInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["deny"] = attrs["deny"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["except_principals"] = attrs["except_principals"].SetOptional()
 	attrs["for_securable_type"] = attrs["for_securable_type"].SetRequired()
+	attrs["governed_tags"] = attrs["governed_tags"].SetComputed()
 	attrs["grant"] = attrs["grant"].SetOptional()
 	attrs["grant"] = attrs["grant"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["id"] = attrs["id"].SetComputed()
@@ -35563,6 +35903,7 @@ func (m PolicyInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]r
 		"column_mask":       reflect.TypeOf(ColumnMaskOptions_SdkV2{}),
 		"deny":              reflect.TypeOf(DenyOptions_SdkV2{}),
 		"except_principals": reflect.TypeOf(types.String{}),
+		"governed_tags":     reflect.TypeOf(GovernedTagReference_SdkV2{}),
 		"grant":             reflect.TypeOf(GrantOptions_SdkV2{}),
 		"match_columns":     reflect.TypeOf(MatchColumn_SdkV2{}),
 		"row_filter":        reflect.TypeOf(RowFilterOptions_SdkV2{}),
@@ -35584,6 +35925,7 @@ func (m PolicyInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"deny":                  m.Deny,
 			"except_principals":     m.ExceptPrincipals,
 			"for_securable_type":    m.ForSecurableType,
+			"governed_tags":         m.GovernedTags,
 			"grant":                 m.Grant,
 			"id":                    m.Id,
 			"match_columns":         m.MatchColumns,
@@ -35616,6 +35958,9 @@ func (m PolicyInfo_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"for_securable_type": types.StringType,
+			"governed_tags": basetypes.ListType{
+				ElemType: GovernedTagReference_SdkV2{}.Type(ctx),
+			},
 			"grant": basetypes.ListType{
 				ElemType: GrantOptions_SdkV2{}.Type(ctx),
 			},
@@ -35716,6 +36061,32 @@ func (m *PolicyInfo_SdkV2) SetExceptPrincipals(ctx context.Context, v []types.St
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["except_principals"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.ExceptPrincipals = types.ListValueMust(t, vs)
+}
+
+// GetGovernedTags returns the value of the GovernedTags field in PolicyInfo_SdkV2 as
+// a slice of GovernedTagReference_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PolicyInfo_SdkV2) GetGovernedTags(ctx context.Context) ([]GovernedTagReference_SdkV2, bool) {
+	if m.GovernedTags.IsNull() || m.GovernedTags.IsUnknown() {
+		return nil, false
+	}
+	var v []GovernedTagReference_SdkV2
+	d := m.GovernedTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGovernedTags sets the value of the GovernedTags field in PolicyInfo_SdkV2.
+func (m *PolicyInfo_SdkV2) SetGovernedTags(ctx context.Context, v []GovernedTagReference_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["governed_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.GovernedTags = types.ListValueMust(t, vs)
 }
 
 // GetGrant returns the value of the Grant field in PolicyInfo_SdkV2 as
@@ -41492,6 +41863,10 @@ type UpdateConnection_SdkV2 struct {
 	Options types.Map `tfsdk:"options"`
 	// Username of current owner of the connection.
 	Owner types.String `tfsdk:"owner"`
+	// A map of option names to UC Secret references. Keys are connection option
+	// names (same as in OptionsKVPairs) and values are UC Secret fully
+	// qualified names.
+	Secrets types.Map `tfsdk:"secrets"`
 }
 
 func (to *UpdateConnection_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateConnection_SdkV2) {
@@ -41523,6 +41898,7 @@ func (m UpdateConnection_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["new_name"] = attrs["new_name"].SetOptional()
 	attrs["options"] = attrs["options"].SetRequired()
 	attrs["owner"] = attrs["owner"].SetOptional()
+	attrs["secrets"] = attrs["secrets"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
@@ -41539,6 +41915,7 @@ func (m UpdateConnection_SdkV2) GetComplexFieldTypes(ctx context.Context) map[st
 	return map[string]reflect.Type{
 		"environment_settings": reflect.TypeOf(EnvironmentSettings_SdkV2{}),
 		"options":              reflect.TypeOf(types.String{}),
+		"secrets":              reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -41554,6 +41931,7 @@ func (m UpdateConnection_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 			"new_name":             m.NewName,
 			"options":              m.Options,
 			"owner":                m.Owner,
+			"secrets":              m.Secrets,
 		})
 }
 
@@ -41570,6 +41948,9 @@ func (m UpdateConnection_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"owner": types.StringType,
+			"secrets": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -41624,6 +42005,32 @@ func (m *UpdateConnection_SdkV2) SetOptions(ctx context.Context, v map[string]ty
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Options = types.MapValueMust(t, vs)
+}
+
+// GetSecrets returns the value of the Secrets field in UpdateConnection_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateConnection_SdkV2) GetSecrets(ctx context.Context) (map[string]types.String, bool) {
+	if m.Secrets.IsNull() || m.Secrets.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Secrets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSecrets sets the value of the Secrets field in UpdateConnection_SdkV2.
+func (m *UpdateConnection_SdkV2) SetSecrets(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["secrets"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Secrets = types.MapValueMust(t, vs)
 }
 
 type UpdateCredentialRequest_SdkV2 struct {
@@ -42907,11 +43314,15 @@ type UpdateModelProviderServiceRequest_SdkV2 struct {
 	// provider-specific value (for example, `config.openai`; the mask path
 	// remains `config.provider`); `config.allow_all_targets`, `config.targets`,
 	// `config.forward_headers`, `config.forward_query_parameters`,
-	// `config.forward_unmanaged_paths`, `config.rate_limits`, or
-	// `config.inference_table`. The provider type is immutable. A `config` or
-	// `config.provider` replacement that carries no authentication material
-	// preserves the existing authentication binding; input-only plaintext does
-	// not need to be read back and re-sent.
+	// `config.forward_unmanaged_paths`, `config.rate_limits`,
+	// `config.pricing.default_discount_basis_points`, or
+	// `config.inference_table`. For a pricing update, an explicitly empty
+	// `pricing` object clears the discount but retains the object; omitting
+	// `pricing` clears it. `config.pricing` is not a supported mask path. The
+	// provider type is immutable. A `config` or `config.provider` replacement
+	// that carries no authentication material preserves the existing
+	// authentication binding; input-only plaintext does not need to be read
+	// back and re-sent.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

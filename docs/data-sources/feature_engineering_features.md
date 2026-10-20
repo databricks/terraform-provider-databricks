@@ -2,11 +2,26 @@
 subcategory: "Machine Learning"
 ---
 # databricks_feature_engineering_features Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/featureengineering)
+
+Lists the features registered in one Unity Catalog schema. Both `catalog_name` and `schema_name` are required, so a single query never spans schemas.
 
 
 ## Example Usage
+List every feature in a schema, then project their names.
+
+```hcl
+data "databricks_feature_engineering_features" "in_schema" {
+  catalog_name = "main"
+  schema_name  = "features"
+}
+
+output "feature_names" {
+  value = [for f in data.databricks_feature_engineering_features.in_schema.features : f.full_name]
+}
+```
 
 
 ## Arguments
@@ -26,11 +41,10 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `created_at` (string) - Time at which this feature was created
 * `created_by` (string) - Username of the feature creator
 * `description` (string) - The description of the feature
-* `entities` (list of EntityColumn) - The entity columns for the feature, used as aggregation keys and for query-time lookup
+* `entities` (list of EntityColumn) - The entity columns for the feature, used as aggregation keys and for query-time lookup.
+  Optional since entities are not set for RequestSource features or on-demand calculated features
 * `filter_condition` (string, deprecated)
-* `full_name` (string) - The full three-part name (catalog, schema, name) of the feature. This is the
-  feature's resource identifier; the catalog_name, schema_name, and name fields
-  below are OUTPUT_ONLY decomposed views of this value
+* `full_name` (string) - The full three-part name (catalog, schema, name) of the feature
 * `function` (Function) - The function by which the feature is computed
 * `inputs` (list of string, deprecated)
 * `lineage_context` (LineageContext) - Lineage context information for this feature.
@@ -42,7 +56,9 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `schema_name` (string) - Name of parent schema relative to its parent catalog
 * `source` (DataSource) - The data source of the feature
 * `time_window` (TimeWindow, deprecated)
-* `timeseries_column` (TimeseriesColumn) - Column recording time, used for point-in-time joins, backfills, and aggregations
+* `timeseries_column` (TimeseriesColumn) - Column recording time, used for point-in-time joins, backfills, and aggregations.
+  Optional since a timeseries column is not set for RequestSource features or on-demand
+  calculated features
 
 ### AggregationFunction
 * `approx_count_distinct` (ApproxCountDistinctFunction)

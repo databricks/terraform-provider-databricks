@@ -2,22 +2,106 @@
 subcategory: "Machine Learning"
 ---
 # databricks_feature_engineering_feature Resource
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/featureengineering)
+
+A feature is a reusable, governed definition of a model input registered in Unity Catalog. Each feature binds a data source to the function that computes its value, so model training and online serving read one definition instead of two implementations that drift apart.
+
+Registering a feature computes nothing on its own. To produce values, materialize the feature to an offline Delta table or an online Lakebase table using the Feature Engineering API.
+
+Only `description` can be changed in place. Changing any other field replaces the feature.
 
 
 ## Example Usage
+A feature needs a source and a function. A Delta table source also requires the entity columns that
+key the feature and a timeseries column; a request source takes neither, because the value arrives
+in the request.
+
+### Aggregation over a sliding window
+
+Count each customer's transactions over the trailing seven days, recomputed daily.
+
+```hcl
+resource "databricks_feature_engineering_feature" "transaction_count_7d" {
+  full_name   = "main.features.transaction_count_7d"
+  description = "Transactions per customer over the trailing seven days."
+
+  source = {
+    delta_table_source = {
+      full_name = "main.retail.transactions"
+    }
+  }
+
+  function = {
+    aggregation_function = {
+      count_function = {
+        input = "transaction_id"
+      }
+
+      time_window = {
+        sliding = {
+          window_duration = "604800s"
+          slide_duration  = "86400s"
+        }
+      }
+    }
+  }
+
+  entities = [
+    {
+      name = "customer_id"
+    },
+  ]
+
+  timeseries_column = {
+    name = "transaction_time"
+  }
+}
+```
+
+### Latest value of a column
+
+Read a column straight from the source with no aggregation, so no time window is needed. The
+timeseries column is still required, because it is what makes the lookup point-in-time correct.
+
+```hcl
+resource "databricks_feature_engineering_feature" "customer_tier" {
+  full_name = "main.features.customer_tier"
+
+  source = {
+    delta_table_source = {
+      full_name = "main.retail.customers"
+    }
+  }
+
+  function = {
+    column_selection = {
+      column = "tier"
+    }
+  }
+
+  entities = [
+    {
+      name = "customer_id"
+    },
+  ]
+
+  timeseries_column = {
+    name = "updated_at"
+  }
+}
+```
 
 
 ## Arguments
 The following arguments are supported:
-* `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature. This is the
-  feature's resource identifier; the catalog_name, schema_name, and name fields
-  below are OUTPUT_ONLY decomposed views of this value
+* `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature
 * `function` (Function, required) - The function by which the feature is computed
 * `source` (DataSource, required) - The data source of the feature
 * `description` (string, optional) - The description of the feature
-* `entities` (list of EntityColumn, optional) - The entity columns for the feature, used as aggregation keys and for query-time lookup
+* `entities` (list of EntityColumn, optional) - The entity columns for the feature, used as aggregation keys and for query-time lookup.
+  Optional since entities are not set for RequestSource features or on-demand calculated features
 * `filter_condition` (string, optional, deprecated)
 * `inputs` (list of string, optional, deprecated)
 * `lineage_context` (LineageContext, optional) - Lineage context information for this feature.
@@ -26,7 +110,9 @@ The following arguments are supported:
   Users should not manually set this field as incorrect values may lead to inaccurate lineage tracking or unexpected behavior.
   This field will be set by feature-engineering client and should be left unset by SDK and terraform users
 * `time_window` (TimeWindow, optional, deprecated)
-* `timeseries_column` (TimeseriesColumn, optional) - Column recording time, used for point-in-time joins, backfills, and aggregations
+* `timeseries_column` (TimeseriesColumn, optional) - Column recording time, used for point-in-time joins, backfills, and aggregations.
+  Optional since a timeseries column is not set for RequestSource features or on-demand
+  calculated features
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig

@@ -102,7 +102,7 @@ This data source exports a single attribute, `spaces`. It is a list of resources
 * `securable_full_name` (string)
 * `securable_kind` (string) - The securable kind from Unity Catalog.
   See https://docs.databricks.com/api/workspace/tables/get#securable_kind_manifest-securable_kind
-* `securable_type` (string) - Possible values are: `CONNECTION`, `FUNCTION`, `TABLE`, `VOLUME`
+* `securable_type` (string) - Possible values are: `CONNECTION`, `FUNCTION`, `MODEL_SERVICE`, `TABLE`, `VOLUME`
 
 ### SpaceStatus
 * `message` (string) - Message providing context about the current state

@@ -1044,6 +1044,9 @@ type AppDeployment_SdkV2 struct {
 	EnvVars types.List `tfsdk:"env_vars"`
 	// Git repository to use as the source for the app deployment.
 	GitSource types.List `tfsdk:"git_source"`
+	// Deploy-time health check for the app. Verifies the app is responding to
+	// HTTP requests before considering the deployment successful.
+	HealthCheck types.List `tfsdk:"health_check"`
 	// The mode of which the deployment will manage the source code.
 	Mode types.String `tfsdk:"mode"`
 	// The workspace file system path of the source code used to create the app
@@ -1104,6 +1107,15 @@ func (to *AppDeployment_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 			}
 		}
 	}
+	if !from.HealthCheck.IsNull() && !from.HealthCheck.IsUnknown() {
+		if toHealthCheck, ok := to.GetHealthCheck(ctx); ok {
+			if fromHealthCheck, ok := from.GetHealthCheck(ctx); ok {
+				// Recursively sync the fields of HealthCheck
+				toHealthCheck.SyncFieldsDuringCreateOrUpdate(ctx, fromHealthCheck)
+				to.SetHealthCheck(ctx, toHealthCheck)
+			}
+		}
+	}
 	if !from.Status.IsNull() && !from.Status.IsUnknown() {
 		if toStatus, ok := to.GetStatus(ctx); ok {
 			if fromStatus, ok := from.GetStatus(ctx); ok {
@@ -1156,6 +1168,14 @@ func (to *AppDeployment_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Ap
 			}
 		}
 	}
+	if !from.HealthCheck.IsNull() && !from.HealthCheck.IsUnknown() {
+		if toHealthCheck, ok := to.GetHealthCheck(ctx); ok {
+			if fromHealthCheck, ok := from.GetHealthCheck(ctx); ok {
+				toHealthCheck.SyncFieldsDuringRead(ctx, fromHealthCheck)
+				to.SetHealthCheck(ctx, toHealthCheck)
+			}
+		}
+	}
 	if !from.Status.IsNull() && !from.Status.IsUnknown() {
 		if toStatus, ok := to.GetStatus(ctx); ok {
 			if fromStatus, ok := from.GetStatus(ctx); ok {
@@ -1176,6 +1196,8 @@ func (m AppDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["env_vars"] = attrs["env_vars"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["health_check"] = attrs["health_check"].SetOptional()
+	attrs["health_check"] = attrs["health_check"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["mode"] = attrs["mode"].SetOptional()
 	attrs["source_code_path"] = attrs["source_code_path"].SetOptional()
 	attrs["status"] = attrs["status"].SetComputed()
@@ -1198,6 +1220,7 @@ func (m AppDeployment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[strin
 		"deployment_artifacts": reflect.TypeOf(AppDeploymentArtifacts_SdkV2{}),
 		"env_vars":             reflect.TypeOf(EnvVar_SdkV2{}),
 		"git_source":           reflect.TypeOf(GitSource_SdkV2{}),
+		"health_check":         reflect.TypeOf(AppHealthCheck_SdkV2{}),
 		"status":               reflect.TypeOf(AppDeploymentStatus_SdkV2{}),
 	}
 }
@@ -1216,6 +1239,7 @@ func (m AppDeployment_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 			"deployment_id":        m.DeploymentId,
 			"env_vars":             m.EnvVars,
 			"git_source":           m.GitSource,
+			"health_check":         m.HealthCheck,
 			"mode":                 m.Mode,
 			"source_code_path":     m.SourceCodePath,
 			"status":               m.Status,
@@ -1241,6 +1265,9 @@ func (m AppDeployment_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"git_source": basetypes.ListType{
 				ElemType: GitSource_SdkV2{}.Type(ctx),
+			},
+			"health_check": basetypes.ListType{
+				ElemType: AppHealthCheck_SdkV2{}.Type(ctx),
 			},
 			"mode":             types.StringType,
 			"source_code_path": types.StringType,
@@ -1354,6 +1381,32 @@ func (m *AppDeployment_SdkV2) SetGitSource(ctx context.Context, v GitSource_SdkV
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
 	m.GitSource = types.ListValueMust(t, vs)
+}
+
+// GetHealthCheck returns the value of the HealthCheck field in AppDeployment_SdkV2 as
+// a AppHealthCheck_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AppDeployment_SdkV2) GetHealthCheck(ctx context.Context) (AppHealthCheck_SdkV2, bool) {
+	var e AppHealthCheck_SdkV2
+	if m.HealthCheck.IsNull() || m.HealthCheck.IsUnknown() {
+		return e, false
+	}
+	var v []AppHealthCheck_SdkV2
+	d := m.HealthCheck.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHealthCheck sets the value of the HealthCheck field in AppDeployment_SdkV2.
+func (m *AppDeployment_SdkV2) SetHealthCheck(ctx context.Context, v AppHealthCheck_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["health_check"]
+	m.HealthCheck = types.ListValueMust(t, vs)
 }
 
 // GetStatus returns the value of the Status field in AppDeployment_SdkV2 as
@@ -1480,6 +1533,61 @@ func (m AppDeploymentStatus_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"message": types.StringType,
 			"state":   types.StringType,
+		},
+	}
+}
+
+// Deploy-time HTTP health check configuration for an app deployment.
+type AppHealthCheck_SdkV2 struct {
+	// HTTP path to probe, e.g. "/health" or "/api/status".
+	Path types.String `tfsdk:"path"`
+	// Timeout to wait for the health check to pass before failing the
+	// deployment. If not set, a default timeout is used.
+	Timeout timetypes.GoDuration `tfsdk:"timeout"`
+}
+
+func (to *AppHealthCheck_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppHealthCheck_SdkV2) {
+}
+
+func (to *AppHealthCheck_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppHealthCheck_SdkV2) {
+}
+
+func (m AppHealthCheck_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetOptional()
+	attrs["timeout"] = attrs["timeout"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppHealthCheck.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AppHealthCheck_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppHealthCheck_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AppHealthCheck_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"path":    m.Path,
+			"timeout": m.Timeout,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AppHealthCheck_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"path":    types.StringType,
+			"timeout": timetypes.GoDuration{}.Type(ctx),
 		},
 	}
 }

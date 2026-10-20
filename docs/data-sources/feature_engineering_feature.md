@@ -2,18 +2,26 @@
 subcategory: "Machine Learning"
 ---
 # databricks_feature_engineering_feature Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/featureengineering)
+
+Reads one registered feature by its three-part Unity Catalog name. Use it to reference a feature another team owns, or one created outside Terraform.
 
 
 ## Example Usage
+Look up a feature by its full name.
+
+```hcl
+data "databricks_feature_engineering_feature" "transaction_count_7d" {
+  full_name = "main.features.transaction_count_7d"
+}
+```
 
 
 ## Arguments
 The following arguments are supported:
-* `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature. This is the
-  feature's resource identifier; the catalog_name, schema_name, and name fields
-  below are OUTPUT_ONLY decomposed views of this value
+* `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -25,11 +33,10 @@ The following attributes are exported:
 * `created_at` (string) - Time at which this feature was created
 * `created_by` (string) - Username of the feature creator
 * `description` (string) - The description of the feature
-* `entities` (list of EntityColumn) - The entity columns for the feature, used as aggregation keys and for query-time lookup
+* `entities` (list of EntityColumn) - The entity columns for the feature, used as aggregation keys and for query-time lookup.
+  Optional since entities are not set for RequestSource features or on-demand calculated features
 * `filter_condition` (string, deprecated)
-* `full_name` (string) - The full three-part name (catalog, schema, name) of the feature. This is the
-  feature's resource identifier; the catalog_name, schema_name, and name fields
-  below are OUTPUT_ONLY decomposed views of this value
+* `full_name` (string) - The full three-part name (catalog, schema, name) of the feature
 * `function` (Function) - The function by which the feature is computed
 * `inputs` (list of string, deprecated)
 * `lineage_context` (LineageContext) - Lineage context information for this feature.
@@ -41,7 +48,9 @@ The following attributes are exported:
 * `schema_name` (string) - Name of parent schema relative to its parent catalog
 * `source` (DataSource) - The data source of the feature
 * `time_window` (TimeWindow, deprecated)
-* `timeseries_column` (TimeseriesColumn) - Column recording time, used for point-in-time joins, backfills, and aggregations
+* `timeseries_column` (TimeseriesColumn) - Column recording time, used for point-in-time joins, backfills, and aggregations.
+  Optional since a timeseries column is not set for RequestSource features or on-demand
+  calculated features
 
 ### AggregationFunction
 * `approx_count_distinct` (ApproxCountDistinctFunction)

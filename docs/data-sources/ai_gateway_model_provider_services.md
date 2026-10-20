@@ -26,7 +26,7 @@ output "model_provider_services" {
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional) - Maximum number of provider services to return. Defaults to 100 when unset or
-  0; the maximum is 100. Use `page_token` to retrieve additional pages
+  0; the maximum is 200. Use `page_token` to retrieve additional pages
 * `parent` (string, optional) - Parent schema to list within, in the form
   `schemas/{catalog}.{schema}`. Required. Each `{...}` component is capped at
   255 characters individually
@@ -84,6 +84,7 @@ This data source exports a single attribute, `model_provider_services`. It is a 
 * `amazon_bedrock` (ModelProviderServiceConfigAmazonBedrockProviderConfig)
 * `anthropic` (ModelProviderServiceConfigAnthropicProviderConfig)
 * `azure_openai` (ModelProviderServiceConfigAzureOpenAiProviderConfig)
+* `bedrock_mantle` (ModelProviderServiceConfigAmazonBedrockProviderConfig)
 * `custom` (ModelProviderServiceConfigCustomProviderConfig)
 * `forward_headers` (boolean) - Whether to forward incoming HTTP headers to the upstream provider. Defaults
   to false and is configured for the entire provider service, not per request.
@@ -96,16 +97,20 @@ This data source exports a single attribute, `model_provider_services`. It is a 
   provider-native API types. Defaults to false. When true, these paths are
   forwarded unchanged to the upstream provider. When false, only
   recognized API paths are served. Enabling this broadens the upstream API
-  surface exposed through the provider service
+  surface exposed through the provider service. AI Gateway cannot evaluate
+  Service Policies on opaque unmanaged requests, so unmanaged requests are
+  rejected whenever Service Policies are attached to this securable
 * `gemini_enterprise` (ModelProviderServiceConfigGeminiEnterpriseProviderConfig)
 * `inference_table` (InferenceTableConfig) - Payload logging configuration for requests sent directly to this provider
   service. Requests routed through a model service are captured by that model
   service's inference table instead
 * `microsoft_foundry` (ModelProviderServiceConfigMicrosoftFoundryProviderConfig)
 * `openai` (ModelProviderServiceConfigOpenAiProviderConfig)
+* `pricing` (ModelProviderServiceConfigProviderPricingConfig) - Pricing configuration for this provider service. An explicitly empty
+  configuration is retained on Create and Update and applies no adjustment
 * `provider_type` (string) - External model provider. Required on Create and immutable thereafter. Set
   the matching provider-specific configuration, such as `openai`,
-  `azure_openai`, or `amazon_bedrock`. Possible values are: `EXTERNAL_MODEL_PROVIDER_TYPE_AMAZON_BEDROCK`, `EXTERNAL_MODEL_PROVIDER_TYPE_ANTHROPIC`, `EXTERNAL_MODEL_PROVIDER_TYPE_AZURE_OPENAI`, `EXTERNAL_MODEL_PROVIDER_TYPE_CUSTOM`, `EXTERNAL_MODEL_PROVIDER_TYPE_GEMINI_ENTERPRISE`, `EXTERNAL_MODEL_PROVIDER_TYPE_MICROSOFT_FOUNDRY`, `EXTERNAL_MODEL_PROVIDER_TYPE_OPENAI`
+  `azure_openai`, or `amazon_bedrock`. Possible values are: `EXTERNAL_MODEL_PROVIDER_TYPE_AMAZON_BEDROCK`, `EXTERNAL_MODEL_PROVIDER_TYPE_ANTHROPIC`, `EXTERNAL_MODEL_PROVIDER_TYPE_AZURE_OPENAI`, `EXTERNAL_MODEL_PROVIDER_TYPE_BEDROCK_MANTLE`, `EXTERNAL_MODEL_PROVIDER_TYPE_CUSTOM`, `EXTERNAL_MODEL_PROVIDER_TYPE_GEMINI_ENTERPRISE`, `EXTERNAL_MODEL_PROVIDER_TYPE_MICROSOFT_FOUNDRY`, `EXTERNAL_MODEL_PROVIDER_TYPE_OPENAI`
 * `rate_limits` (list of RateLimit) - Rate limits for requests sent directly to this provider service. Requests
   routed through a model service use that model service's rate limits instead
 * `targets` (list of ModelProviderServiceConfigModelTargetConfig) - Models and provider-native API types exposed by this provider service. Each
@@ -231,13 +236,20 @@ This data source exports a single attribute, `model_provider_services`. It is a 
   is not carried here. Only supported on Azure-hosted workspaces
 
 ### ModelProviderServiceConfigModelTargetConfig
+* `endpoint_route` (string) - Relative path appended to a custom provider's `base_url` for this model,
+  such as `serve/openai/chat`. Nonempty values are only supported for
+  custom model provider service targets; other provider types reject them.
+  Model service destinations do not support this field. Do not include
+  URI templates, queries, or fragments. When empty, `base_url` is used unchanged
 * `model` (string) - Provider-side model identifier, such as `gpt-5` or `claude-opus-4-7`.
   This identifies a model at the upstream provider; it is not a Unity
   Catalog model resource
 * `native_api_types` (list of string) - Provider-native API types supported by this model, such as
-  `openai/v1/chat/completions`. At least one value is required. AI Gateway
-  uses these values to translate requests and responses. At most 64 entries
-  of 256 characters each are allowed
+  `openai/v1/chat/completions`. A model provider service target requires at
+  least one value. A model service destination may omit the list to use the
+  matching provider service target's types when available. AI Gateway uses
+  the selected types for translation. At most 64 entries of 256 characters
+  each are allowed
 
 ### ModelProviderServiceConfigOpenAiProviderConfig
 * `direct` (ModelProviderServiceConfigOpenAiProviderDirectConfig) - OpenAI configuration with an API key supplied in the request
@@ -249,6 +261,12 @@ This data source exports a single attribute, `model_provider_services`. It is a 
   OpenAI-API-compatible third-party endpoints or in-network proxies
 * `organization` (string) - Optional OpenAI organization ID. When set, the platform forwards it as
   the `OpenAI-Organization` header
+
+### ModelProviderServiceConfigProviderPricingConfig
+* `default_discount_basis_points` (integer) - Provider-wide adjustment to external-model spend estimates in basis points:
+  2000 = 20% off; -2000 = a 20% markup. Negative values have no lower bound
+  beyond the int32 range. Values cannot exceed 10000 (100% off). An omitted
+  value or zero leaves the estimate unchanged
 
 ### ModelProviderServiceConfigProviderSecret
 * `plaintext` (string) - Inline plaintext credential. INPUT_ONLY: the value never round-trips on

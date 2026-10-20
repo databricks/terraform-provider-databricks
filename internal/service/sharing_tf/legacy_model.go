@@ -389,19 +389,40 @@ type CreateShare_SdkV2 struct {
 	Comment types.String `tfsdk:"comment"`
 	// Name of the share.
 	Name types.String `tfsdk:"name"`
+	// Configuration for share replication.
+	ReplicationConfig types.List `tfsdk:"replication_config"`
 	// Storage root URL for the share.
 	StorageRoot types.String `tfsdk:"storage_root"`
 }
 
 func (to *CreateShare_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateShare_SdkV2) {
+	if !from.ReplicationConfig.IsNull() && !from.ReplicationConfig.IsUnknown() {
+		if toReplicationConfig, ok := to.GetReplicationConfig(ctx); ok {
+			if fromReplicationConfig, ok := from.GetReplicationConfig(ctx); ok {
+				// Recursively sync the fields of ReplicationConfig
+				toReplicationConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromReplicationConfig)
+				to.SetReplicationConfig(ctx, toReplicationConfig)
+			}
+		}
+	}
 }
 
 func (to *CreateShare_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateShare_SdkV2) {
+	if !from.ReplicationConfig.IsNull() && !from.ReplicationConfig.IsUnknown() {
+		if toReplicationConfig, ok := to.GetReplicationConfig(ctx); ok {
+			if fromReplicationConfig, ok := from.GetReplicationConfig(ctx); ok {
+				toReplicationConfig.SyncFieldsDuringRead(ctx, fromReplicationConfig)
+				to.SetReplicationConfig(ctx, toReplicationConfig)
+			}
+		}
+	}
 }
 
 func (m CreateShare_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["replication_config"] = attrs["replication_config"].SetOptional()
+	attrs["replication_config"] = attrs["replication_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["storage_root"] = attrs["storage_root"].SetOptional()
 
 	return attrs
@@ -415,7 +436,9 @@ func (m CreateShare_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m CreateShare_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"replication_config": reflect.TypeOf(ReplicationConfig_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -425,9 +448,10 @@ func (m CreateShare_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"comment":      m.Comment,
-			"name":         m.Name,
-			"storage_root": m.StorageRoot,
+			"comment":            m.Comment,
+			"name":               m.Name,
+			"replication_config": m.ReplicationConfig,
+			"storage_root":       m.StorageRoot,
 		})
 }
 
@@ -435,11 +459,40 @@ func (m CreateShare_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (m CreateShare_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment":      types.StringType,
-			"name":         types.StringType,
+			"comment": types.StringType,
+			"name":    types.StringType,
+			"replication_config": basetypes.ListType{
+				ElemType: ReplicationConfig_SdkV2{}.Type(ctx),
+			},
 			"storage_root": types.StringType,
 		},
 	}
+}
+
+// GetReplicationConfig returns the value of the ReplicationConfig field in CreateShare_SdkV2 as
+// a ReplicationConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateShare_SdkV2) GetReplicationConfig(ctx context.Context) (ReplicationConfig_SdkV2, bool) {
+	var e ReplicationConfig_SdkV2
+	if m.ReplicationConfig.IsNull() || m.ReplicationConfig.IsUnknown() {
+		return e, false
+	}
+	var v []ReplicationConfig_SdkV2
+	d := m.ReplicationConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetReplicationConfig sets the value of the ReplicationConfig field in CreateShare_SdkV2.
+func (m *CreateShare_SdkV2) SetReplicationConfig(ctx context.Context, v ReplicationConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["replication_config"]
+	m.ReplicationConfig = types.ListValueMust(t, vs)
 }
 
 type DeleteFederationPolicyRequest_SdkV2 struct {
@@ -5061,6 +5114,57 @@ func (m RegisteredModelAlias_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Configuration for Delta Sharing replication on a share. When enabled, the
+// share's data is copied into each recipient's region so recipients can query
+// the share locally.
+type ReplicationConfig_SdkV2 struct {
+	// Whether replication is enabled for the share.
+	Enabled types.Bool `tfsdk:"enabled"`
+}
+
+func (to *ReplicationConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ReplicationConfig_SdkV2) {
+}
+
+func (to *ReplicationConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ReplicationConfig_SdkV2) {
+}
+
+func (m ReplicationConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enabled"] = attrs["enabled"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ReplicationConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ReplicationConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ReplicationConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ReplicationConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"enabled": m.Enabled,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ReplicationConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"enabled": types.BoolType,
+		},
+	}
+}
+
 type RetrieveTokenRequest_SdkV2 struct {
 	// The one time activation url. It also accepts activation token.
 	ActivationUrl types.String `tfsdk:"-"`
@@ -5374,6 +5478,8 @@ type ShareInfo_SdkV2 struct {
 	// Username of current owner of share.
 	Owner          types.String `tfsdk:"owner"`
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
+	// Configuration for share replication.
+	ReplicationConfig types.List `tfsdk:"replication_config"`
 	// Storage Location URL (full path) for the share.
 	StorageLocation types.String `tfsdk:"storage_location"`
 	// Storage root URL for the share.
@@ -5406,6 +5512,15 @@ func (to *ShareInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 	}
 	to.EffectiveOwner = to.Owner
 	to.Owner = from.Owner
+	if !from.ReplicationConfig.IsNull() && !from.ReplicationConfig.IsUnknown() {
+		if toReplicationConfig, ok := to.GetReplicationConfig(ctx); ok {
+			if fromReplicationConfig, ok := from.GetReplicationConfig(ctx); ok {
+				// Recursively sync the fields of ReplicationConfig
+				toReplicationConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromReplicationConfig)
+				to.SetReplicationConfig(ctx, toReplicationConfig)
+			}
+		}
+	}
 }
 
 func (to *ShareInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ShareInfo_SdkV2) {
@@ -5431,6 +5546,14 @@ func (to *ShareInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ShareI
 	if from.EffectiveOwner.ValueString() == to.Owner.ValueString() {
 		to.Owner = from.Owner
 	}
+	if !from.ReplicationConfig.IsNull() && !from.ReplicationConfig.IsUnknown() {
+		if toReplicationConfig, ok := to.GetReplicationConfig(ctx); ok {
+			if fromReplicationConfig, ok := from.GetReplicationConfig(ctx); ok {
+				toReplicationConfig.SyncFieldsDuringRead(ctx, fromReplicationConfig)
+				to.SetReplicationConfig(ctx, toReplicationConfig)
+			}
+		}
+	}
 }
 
 func (m ShareInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -5441,6 +5564,8 @@ func (m ShareInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["object"] = attrs["object"].SetOptional()
 	attrs["effective_owner"] = attrs["effective_owner"].SetComputed()
 	attrs["owner"] = attrs["owner"].SetOptional()
+	attrs["replication_config"] = attrs["replication_config"].SetOptional()
+	attrs["replication_config"] = attrs["replication_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["storage_location"] = attrs["storage_location"].SetComputed()
 	attrs["storage_root"] = attrs["storage_root"].SetOptional()
 	attrs["updated_at"] = attrs["updated_at"].SetComputed()
@@ -5458,7 +5583,8 @@ func (m ShareInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // SDK values.
 func (m ShareInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"object": reflect.TypeOf(SharedDataObject_SdkV2{}),
+		"object":             reflect.TypeOf(SharedDataObject_SdkV2{}),
+		"replication_config": reflect.TypeOf(ReplicationConfig_SdkV2{}),
 	}
 }
 
@@ -5475,10 +5601,11 @@ func (m ShareInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"name":       m.Name,
 			"object":     m.Objects,
 			"owner":      m.Owner, "effective_owner": m.EffectiveOwner,
-			"storage_location": m.StorageLocation,
-			"storage_root":     m.StorageRoot,
-			"updated_at":       m.UpdatedAt,
-			"updated_by":       m.UpdatedBy,
+			"replication_config": m.ReplicationConfig,
+			"storage_location":   m.StorageLocation,
+			"storage_root":       m.StorageRoot,
+			"updated_at":         m.UpdatedAt,
+			"updated_by":         m.UpdatedBy,
 		})
 }
 
@@ -5493,8 +5620,11 @@ func (m ShareInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"object": basetypes.ListType{
 				ElemType: SharedDataObject_SdkV2{}.Type(ctx),
 			},
-			"owner":            types.StringType,
-			"effective_owner":  types.StringType,
+			"owner":           types.StringType,
+			"effective_owner": types.StringType,
+			"replication_config": basetypes.ListType{
+				ElemType: ReplicationConfig_SdkV2{}.Type(ctx),
+			},
 			"storage_location": types.StringType,
 			"storage_root":     types.StringType,
 			"updated_at":       types.Int64Type,
@@ -5527,6 +5657,32 @@ func (m *ShareInfo_SdkV2) SetObjects(ctx context.Context, v []SharedDataObject_S
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["object"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Objects = types.ListValueMust(t, vs)
+}
+
+// GetReplicationConfig returns the value of the ReplicationConfig field in ShareInfo_SdkV2 as
+// a ReplicationConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ShareInfo_SdkV2) GetReplicationConfig(ctx context.Context) (ReplicationConfig_SdkV2, bool) {
+	var e ReplicationConfig_SdkV2
+	if m.ReplicationConfig.IsNull() || m.ReplicationConfig.IsUnknown() {
+		return e, false
+	}
+	var v []ReplicationConfig_SdkV2
+	d := m.ReplicationConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetReplicationConfig sets the value of the ReplicationConfig field in ShareInfo_SdkV2.
+func (m *ShareInfo_SdkV2) SetReplicationConfig(ctx context.Context, v ReplicationConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["replication_config"]
+	m.ReplicationConfig = types.ListValueMust(t, vs)
 }
 
 type SharePermissionsRequest_SdkV2 struct {

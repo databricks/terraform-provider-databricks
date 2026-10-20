@@ -834,6 +834,13 @@ type BaseRun struct {
 	DeploymentId types.String `tfsdk:"deployment_id"`
 	// Description of the run
 	Description types.String `tfsdk:"description"`
+	// The window the run aims to finish within, in hours, for a Cost-optimized
+	// serverless run. Required only when `performance_target` is
+	// `COST_OPTIMIZED`. Must be one of the supported values: `NO_FLEXIBILITY`,
+	// `4h`, `12h`, `24h`, `72h`. `NO_FLEXIBILITY` means the run uses the
+	// default cost-optimized performance level without additional cost-saving
+	// optimizations.
+	DurationTarget types.String `tfsdk:"duration_target"`
 	// The actual performance target used by the serverless run during
 	// execution. This can differ from the client-set performance target on the
 	// request depending on whether the performance mode is supported by the job
@@ -1292,6 +1299,7 @@ func (m BaseRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["deployment_id"] = attrs["deployment_id"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["duration_target"] = attrs["duration_target"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
 	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
@@ -1365,6 +1373,7 @@ func (m BaseRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"creator_user_name":            m.CreatorUserName,
 			"deployment_id":                m.DeploymentId,
 			"description":                  m.Description,
+			"duration_target":              m.DurationTarget,
 			"effective_performance_target": m.EffectivePerformanceTarget,
 			"effective_usage_policy_id":    m.EffectiveUsagePolicyId,
 			"end_time":                     m.EndTime,
@@ -1409,6 +1418,7 @@ func (m BaseRun) Type(ctx context.Context) attr.Type {
 			"creator_user_name":            types.StringType,
 			"deployment_id":                types.StringType,
 			"description":                  types.StringType,
+			"duration_target":              types.StringType,
 			"effective_performance_target": types.StringType,
 			"effective_usage_policy_id":    types.StringType,
 			"end_time":                     types.Int64Type,
@@ -3000,6 +3010,13 @@ type CreateJob struct {
 	// An optional description for the job. The maximum length is 27700
 	// characters in UTF-8 encoding.
 	Description types.String `tfsdk:"description"`
+	// The window the run aims to finish within, in hours, for a Cost-optimized
+	// serverless run. Required only when `performance_target` is
+	// `COST_OPTIMIZED`. Must be one of the supported values: `NO_FLEXIBILITY`,
+	// `4h`, `12h`, `24h`, `72h`. `NO_FLEXIBILITY` means the run uses the
+	// default cost-optimized performance level without additional cost-saving
+	// optimizations.
+	DurationTarget types.String `tfsdk:"duration_target"`
 	// Edit mode of the job.
 	//
 	// * `UI_LOCKED`: The job is in a locked UI state and cannot be modified. *
@@ -3584,6 +3601,7 @@ func (m CreateJob) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["continuous"] = attrs["continuous"].SetOptional()
 	attrs["deployment"] = attrs["deployment"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["duration_target"] = attrs["duration_target"].SetOptional()
 	attrs["edit_mode"] = attrs["edit_mode"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["environment_variables"] = attrs["environment_variables"].SetOptional()
@@ -3655,6 +3673,7 @@ func (m CreateJob) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"continuous":            m.Continuous,
 			"deployment":            m.Deployment,
 			"description":           m.Description,
+			"duration_target":       m.DurationTarget,
 			"edit_mode":             m.EditMode,
 			"email_notifications":   m.EmailNotifications,
 			"environment_variables": m.EnvironmentVariables,
@@ -3693,6 +3712,7 @@ func (m CreateJob) Type(ctx context.Context) attr.Type {
 			"continuous":          Continuous{}.Type(ctx),
 			"deployment":          JobDeployment{}.Type(ctx),
 			"description":         types.StringType,
+			"duration_target":     types.StringType,
 			"edit_mode":           types.StringType,
 			"email_notifications": JobEmailNotifications{}.Type(ctx),
 			"environment_variables": basetypes.ListType{
@@ -9833,6 +9853,13 @@ type JobSettings struct {
 	// An optional description for the job. The maximum length is 27700
 	// characters in UTF-8 encoding.
 	Description types.String `tfsdk:"description"`
+	// The window the run aims to finish within, in hours, for a Cost-optimized
+	// serverless run. Required only when `performance_target` is
+	// `COST_OPTIMIZED`. Must be one of the supported values: `NO_FLEXIBILITY`,
+	// `4h`, `12h`, `24h`, `72h`. `NO_FLEXIBILITY` means the run uses the
+	// default cost-optimized performance level without additional cost-saving
+	// optimizations.
+	DurationTarget types.String `tfsdk:"duration_target"`
 	// Edit mode of the job.
 	//
 	// * `UI_LOCKED`: The job is in a locked UI state and cannot be modified. *
@@ -10379,6 +10406,7 @@ func (m JobSettings) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["continuous"] = attrs["continuous"].SetOptional()
 	attrs["deployment"] = attrs["deployment"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["duration_target"] = attrs["duration_target"].SetOptional()
 	attrs["edit_mode"] = attrs["edit_mode"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["environment_variables"] = attrs["environment_variables"].SetOptional()
@@ -10448,6 +10476,7 @@ func (m JobSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"continuous":            m.Continuous,
 			"deployment":            m.Deployment,
 			"description":           m.Description,
+			"duration_target":       m.DurationTarget,
 			"edit_mode":             m.EditMode,
 			"email_notifications":   m.EmailNotifications,
 			"environment_variables": m.EnvironmentVariables,
@@ -10483,6 +10512,7 @@ func (m JobSettings) Type(ctx context.Context) attr.Type {
 			"continuous":          Continuous{}.Type(ctx),
 			"deployment":          JobDeployment{}.Type(ctx),
 			"description":         types.StringType,
+			"duration_target":     types.StringType,
 			"edit_mode":           types.StringType,
 			"email_notifications": JobEmailNotifications{}.Type(ctx),
 			"environment_variables": basetypes.ListType{
@@ -14292,6 +14322,13 @@ type RepairRun struct {
 	//
 	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	DbtCommands types.List `tfsdk:"dbt_commands"`
+	// The window the run aims to finish within, in hours, for a Cost-optimized
+	// serverless run. Required only when `performance_target` is
+	// `COST_OPTIMIZED`. Must be one of the supported values: `NO_FLEXIBILITY`,
+	// `4h`, `12h`, `24h`, `72h`. `NO_FLEXIBILITY` means the run uses the
+	// default cost-optimized performance level without additional cost-saving
+	// optimizations.
+	DurationTarget types.String `tfsdk:"duration_target"`
 	// A list of parameters for jobs with Spark JAR tasks, for example
 	// `"jar_params": ["john doe", "35"]`. The parameters are used to invoke the
 	// main function of the main class specified in the Spark JAR task. If not
@@ -14491,6 +14528,7 @@ func (to *RepairRun) SyncFieldsDuringRead(ctx context.Context, from RepairRun) {
 
 func (m RepairRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
+	attrs["duration_target"] = attrs["duration_target"].SetOptional()
 	attrs["jar_params"] = attrs["jar_params"].SetOptional()
 	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
 	attrs["latest_repair_id"] = attrs["latest_repair_id"].SetOptional()
@@ -14539,6 +14577,7 @@ func (m RepairRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"dbt_commands":           m.DbtCommands,
+			"duration_target":        m.DurationTarget,
 			"jar_params":             m.JarParams,
 			"job_parameters":         m.JobParameters,
 			"latest_repair_id":       m.LatestRepairId,
@@ -14563,6 +14602,7 @@ func (m RepairRun) Type(ctx context.Context) attr.Type {
 			"dbt_commands": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"duration_target": types.StringType,
 			"jar_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -16401,6 +16441,13 @@ type Run struct {
 	DeploymentId types.String `tfsdk:"deployment_id"`
 	// Description of the run
 	Description types.String `tfsdk:"description"`
+	// The window the run aims to finish within, in hours, for a Cost-optimized
+	// serverless run. Required only when `performance_target` is
+	// `COST_OPTIMIZED`. Must be one of the supported values: `NO_FLEXIBILITY`,
+	// `4h`, `12h`, `24h`, `72h`. `NO_FLEXIBILITY` means the run uses the
+	// default cost-optimized performance level without additional cost-saving
+	// optimizations.
+	DurationTarget types.String `tfsdk:"duration_target"`
 	// The actual performance target used by the serverless run during
 	// execution. This can differ from the client-set performance target on the
 	// request depending on whether the performance mode is supported by the job
@@ -16901,6 +16948,7 @@ func (m Run) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilde
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["deployment_id"] = attrs["deployment_id"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["duration_target"] = attrs["duration_target"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
 	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
@@ -16977,6 +17025,7 @@ func (m Run) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"creator_user_name":            m.CreatorUserName,
 			"deployment_id":                m.DeploymentId,
 			"description":                  m.Description,
+			"duration_target":              m.DurationTarget,
 			"effective_performance_target": m.EffectivePerformanceTarget,
 			"effective_usage_policy_id":    m.EffectiveUsagePolicyId,
 			"end_time":                     m.EndTime,
@@ -17023,6 +17072,7 @@ func (m Run) Type(ctx context.Context) attr.Type {
 			"creator_user_name":            types.StringType,
 			"deployment_id":                types.StringType,
 			"description":                  types.StringType,
+			"duration_target":              types.StringType,
 			"effective_performance_target": types.StringType,
 			"effective_usage_policy_id":    types.StringType,
 			"end_time":                     types.Int64Type,
@@ -18207,6 +18257,13 @@ type RunNow struct {
 	//
 	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	DbtCommands types.List `tfsdk:"dbt_commands"`
+	// The window the run aims to finish within, in hours, for a Cost-optimized
+	// serverless run. Required only when `performance_target` is
+	// `COST_OPTIMIZED`. Must be one of the supported values: `NO_FLEXIBILITY`,
+	// `4h`, `12h`, `24h`, `72h`. `NO_FLEXIBILITY` means the run uses the
+	// default cost-optimized performance level without additional cost-saving
+	// optimizations.
+	DurationTarget types.String `tfsdk:"duration_target"`
 	// An optional token to guarantee the idempotency of job run requests. If a
 	// run with the provided token already exists, the request does not create a
 	// new run but returns the ID of the existing run instead. If a run with the
@@ -18432,6 +18489,7 @@ func (to *RunNow) SyncFieldsDuringRead(ctx context.Context, from RunNow) {
 
 func (m RunNow) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
+	attrs["duration_target"] = attrs["duration_target"].SetOptional()
 	attrs["idempotency_token"] = attrs["idempotency_token"].SetOptional()
 	attrs["jar_params"] = attrs["jar_params"].SetOptional()
 	attrs["job_id"] = attrs["job_id"].SetRequired()
@@ -18480,6 +18538,7 @@ func (m RunNow) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"dbt_commands":        m.DbtCommands,
+			"duration_target":     m.DurationTarget,
 			"idempotency_token":   m.IdempotencyToken,
 			"jar_params":          m.JarParams,
 			"job_id":              m.JobId,
@@ -18503,6 +18562,7 @@ func (m RunNow) Type(ctx context.Context) attr.Type {
 			"dbt_commands": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"duration_target":   types.StringType,
 			"idempotency_token": types.StringType,
 			"jar_params": basetypes.ListType{
 				ElemType: types.StringType,
@@ -20242,10 +20302,6 @@ type RunTask struct {
 	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
 	// selected target duration time. Must provide a duration target.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
-	// The id of the serverless compute this task ran on, either explicitly
-	// configured on the task or the workspace default. Only set once the
-	// compute has been resolved at run trigger.
-	EffectiveServerlessComputeId types.String `tfsdk:"effective_serverless_compute_id"`
 	// An optional set of email addresses notified when the task run begins or
 	// completes. The default behavior is to not send any emails.
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
@@ -21006,7 +21062,6 @@ func (m RunTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["disable_auto_optimization"] = attrs["disable_auto_optimization"].SetOptional()
 	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetComputed()
-	attrs["effective_serverless_compute_id"] = attrs["effective_serverless_compute_id"].SetComputed()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
 	attrs["environment_key"] = attrs["environment_key"].SetOptional()
@@ -21101,63 +21156,62 @@ func (m RunTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"ai_runtime_task":                 m.AiRuntimeTask,
-			"alert_task":                      m.AlertTask,
-			"attempt_number":                  m.AttemptNumber,
-			"clean_rooms_notebook_task":       m.CleanRoomsNotebookTask,
-			"cleanup_duration":                m.CleanupDuration,
-			"cluster_instance":                m.ClusterInstance,
-			"compute":                         m.Compute,
-			"condition_task":                  m.ConditionTask,
-			"dashboard_task":                  m.DashboardTask,
-			"dbt_cloud_task":                  m.DbtCloudTask,
-			"dbt_platform_task":               m.DbtPlatformTask,
-			"dbt_task":                        m.DbtTask,
-			"depends_on":                      m.DependsOn,
-			"description":                     m.Description,
-			"disable_auto_optimization":       m.DisableAutoOptimization,
-			"disabled":                        m.Disabled,
-			"effective_performance_target":    m.EffectivePerformanceTarget,
-			"effective_serverless_compute_id": m.EffectiveServerlessComputeId,
-			"email_notifications":             m.EmailNotifications,
-			"end_time":                        m.EndTime,
-			"environment_key":                 m.EnvironmentKey,
-			"environment_variables_key":       m.EnvironmentVariablesKey,
-			"execution_duration":              m.ExecutionDuration,
-			"existing_cluster_id":             m.ExistingClusterId,
-			"for_each_task":                   m.ForEachTask,
-			"gen_ai_compute_task":             m.GenAiComputeTask,
-			"git_source":                      m.GitSource,
-			"job_cluster_key":                 m.JobClusterKey,
-			"library":                         m.Libraries,
-			"max_retries":                     m.MaxRetries,
-			"min_retry_interval_millis":       m.MinRetryIntervalMillis,
-			"new_cluster":                     m.NewCluster,
-			"notebook_task":                   m.NotebookTask,
-			"notification_settings":           m.NotificationSettings,
-			"pipeline_task":                   m.PipelineTask,
-			"power_bi_task":                   m.PowerBiTask,
-			"python_operator_task":            m.PythonOperatorTask,
-			"python_wheel_task":               m.PythonWheelTask,
-			"queue_duration":                  m.QueueDuration,
-			"resolved_values":                 m.ResolvedValues,
-			"retry_on_timeout":                m.RetryOnTimeout,
-			"run_duration":                    m.RunDuration,
-			"run_id":                          m.RunId,
-			"run_if":                          m.RunIf,
-			"run_job_task":                    m.RunJobTask,
-			"run_page_url":                    m.RunPageUrl,
-			"setup_duration":                  m.SetupDuration,
-			"spark_jar_task":                  m.SparkJarTask,
-			"spark_python_task":               m.SparkPythonTask,
-			"spark_submit_task":               m.SparkSubmitTask,
-			"sql_task":                        m.SqlTask,
-			"start_time":                      m.StartTime,
-			"state":                           m.State,
-			"status":                          m.Status,
-			"task_key":                        m.TaskKey,
-			"timeout_seconds":                 m.TimeoutSeconds,
-			"webhook_notifications":           m.WebhookNotifications,
+			"ai_runtime_task":              m.AiRuntimeTask,
+			"alert_task":                   m.AlertTask,
+			"attempt_number":               m.AttemptNumber,
+			"clean_rooms_notebook_task":    m.CleanRoomsNotebookTask,
+			"cleanup_duration":             m.CleanupDuration,
+			"cluster_instance":             m.ClusterInstance,
+			"compute":                      m.Compute,
+			"condition_task":               m.ConditionTask,
+			"dashboard_task":               m.DashboardTask,
+			"dbt_cloud_task":               m.DbtCloudTask,
+			"dbt_platform_task":            m.DbtPlatformTask,
+			"dbt_task":                     m.DbtTask,
+			"depends_on":                   m.DependsOn,
+			"description":                  m.Description,
+			"disable_auto_optimization":    m.DisableAutoOptimization,
+			"disabled":                     m.Disabled,
+			"effective_performance_target": m.EffectivePerformanceTarget,
+			"email_notifications":          m.EmailNotifications,
+			"end_time":                     m.EndTime,
+			"environment_key":              m.EnvironmentKey,
+			"environment_variables_key":    m.EnvironmentVariablesKey,
+			"execution_duration":           m.ExecutionDuration,
+			"existing_cluster_id":          m.ExistingClusterId,
+			"for_each_task":                m.ForEachTask,
+			"gen_ai_compute_task":          m.GenAiComputeTask,
+			"git_source":                   m.GitSource,
+			"job_cluster_key":              m.JobClusterKey,
+			"library":                      m.Libraries,
+			"max_retries":                  m.MaxRetries,
+			"min_retry_interval_millis":    m.MinRetryIntervalMillis,
+			"new_cluster":                  m.NewCluster,
+			"notebook_task":                m.NotebookTask,
+			"notification_settings":        m.NotificationSettings,
+			"pipeline_task":                m.PipelineTask,
+			"power_bi_task":                m.PowerBiTask,
+			"python_operator_task":         m.PythonOperatorTask,
+			"python_wheel_task":            m.PythonWheelTask,
+			"queue_duration":               m.QueueDuration,
+			"resolved_values":              m.ResolvedValues,
+			"retry_on_timeout":             m.RetryOnTimeout,
+			"run_duration":                 m.RunDuration,
+			"run_id":                       m.RunId,
+			"run_if":                       m.RunIf,
+			"run_job_task":                 m.RunJobTask,
+			"run_page_url":                 m.RunPageUrl,
+			"setup_duration":               m.SetupDuration,
+			"spark_jar_task":               m.SparkJarTask,
+			"spark_python_task":            m.SparkPythonTask,
+			"spark_submit_task":            m.SparkSubmitTask,
+			"sql_task":                     m.SqlTask,
+			"start_time":                   m.StartTime,
+			"state":                        m.State,
+			"status":                       m.Status,
+			"task_key":                     m.TaskKey,
+			"timeout_seconds":              m.TimeoutSeconds,
+			"webhook_notifications":        m.WebhookNotifications,
 		})
 }
 
@@ -21180,21 +21234,20 @@ func (m RunTask) Type(ctx context.Context) attr.Type {
 			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency{}.Type(ctx),
 			},
-			"description":                     types.StringType,
-			"disable_auto_optimization":       types.BoolType,
-			"disabled":                        types.BoolType,
-			"effective_performance_target":    types.StringType,
-			"effective_serverless_compute_id": types.StringType,
-			"email_notifications":             JobEmailNotifications{}.Type(ctx),
-			"end_time":                        types.Int64Type,
-			"environment_key":                 types.StringType,
-			"environment_variables_key":       types.StringType,
-			"execution_duration":              types.Int64Type,
-			"existing_cluster_id":             types.StringType,
-			"for_each_task":                   RunForEachTask{}.Type(ctx),
-			"gen_ai_compute_task":             GenAiComputeTask{}.Type(ctx),
-			"git_source":                      GitSource{}.Type(ctx),
-			"job_cluster_key":                 types.StringType,
+			"description":                  types.StringType,
+			"disable_auto_optimization":    types.BoolType,
+			"disabled":                     types.BoolType,
+			"effective_performance_target": types.StringType,
+			"email_notifications":          JobEmailNotifications{}.Type(ctx),
+			"end_time":                     types.Int64Type,
+			"environment_key":              types.StringType,
+			"environment_variables_key":    types.StringType,
+			"execution_duration":           types.Int64Type,
+			"existing_cluster_id":          types.StringType,
+			"for_each_task":                RunForEachTask{}.Type(ctx),
+			"gen_ai_compute_task":          GenAiComputeTask{}.Type(ctx),
+			"git_source":                   GitSource{}.Type(ctx),
+			"job_cluster_key":              types.StringType,
 			"library": basetypes.ListType{
 				ElemType: compute_tf.Library{}.Type(ctx),
 			},
@@ -24190,6 +24243,13 @@ type SubmitRun struct {
 	// The user specified id of the budget policy to use for this one-time run.
 	// If not specified, the run will be not be attributed to any budget policy.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+	// The window the run aims to finish within, in hours, for a Cost-optimized
+	// serverless run. Required only when `performance_target` is
+	// `COST_OPTIMIZED`. Must be one of the supported values: `NO_FLEXIBILITY`,
+	// `4h`, `12h`, `24h`, `72h`. `NO_FLEXIBILITY` means the run uses the
+	// default cost-optimized performance level without additional cost-saving
+	// optimizations.
+	DurationTarget types.String `tfsdk:"duration_target"`
 	// An optional set of email addresses notified when the run begins or
 	// completes.
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
@@ -24558,6 +24618,7 @@ func (m SubmitRun) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetComputed()
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["duration_target"] = attrs["duration_target"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["environment_variables"] = attrs["environment_variables"].SetOptional()
 	attrs["environments"] = attrs["environments"].SetOptional()
@@ -24611,6 +24672,7 @@ func (m SubmitRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"access_control_list":   m.AccessControlList,
 			"budget_policy_id":      m.BudgetPolicyId,
+			"duration_target":       m.DurationTarget,
 			"email_notifications":   m.EmailNotifications,
 			"environment_variables": m.EnvironmentVariables,
 			"environments":          m.Environments,
@@ -24637,6 +24699,7 @@ func (m SubmitRun) Type(ctx context.Context) attr.Type {
 				ElemType: JobAccessControlRequest{}.Type(ctx),
 			},
 			"budget_policy_id":    types.StringType,
+			"duration_target":     types.StringType,
 			"email_notifications": JobEmailNotifications{}.Type(ctx),
 			"environment_variables": basetypes.ListType{
 				ElemType: JobEnvironmentVariables{}.Type(ctx),
@@ -26548,6 +26611,12 @@ func (m *SubmitTask) SetWebhookNotifications(ctx context.Context, v WebhookNotif
 }
 
 type Subscription struct {
+	// Optional: The configuration for the files attached to the dashboard
+	// snapshot notification. It controls the underlying data of dashboard
+	// widgets that is attached as data files and which pages are included in
+	// the attached PDF. If not specified, the notification is sent with only
+	// the default snapshot.
+	Attachment types.Object `tfsdk:"attachment"`
 	// Optional: Allows users to specify a custom subject line on the email sent
 	// to subscribers.
 	CustomSubject types.String `tfsdk:"custom_subject"`
@@ -26558,6 +26627,15 @@ type Subscription struct {
 }
 
 func (to *Subscription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Subscription) {
+	if !from.Attachment.IsNull() && !from.Attachment.IsUnknown() {
+		if toAttachment, ok := to.GetAttachment(ctx); ok {
+			if fromAttachment, ok := from.GetAttachment(ctx); ok {
+				// Recursively sync the fields of Attachment
+				toAttachment.SyncFieldsDuringCreateOrUpdate(ctx, fromAttachment)
+				to.SetAttachment(ctx, toAttachment)
+			}
+		}
+	}
 	if !from.Subscribers.IsNull() && !from.Subscribers.IsUnknown() && to.Subscribers.IsNull() && len(from.Subscribers.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Subscribers, and the deserialized field value is Null,
@@ -26580,6 +26658,14 @@ func (to *Subscription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 }
 
 func (to *Subscription) SyncFieldsDuringRead(ctx context.Context, from Subscription) {
+	if !from.Attachment.IsNull() && !from.Attachment.IsUnknown() {
+		if toAttachment, ok := to.GetAttachment(ctx); ok {
+			if fromAttachment, ok := from.GetAttachment(ctx); ok {
+				toAttachment.SyncFieldsDuringRead(ctx, fromAttachment)
+				to.SetAttachment(ctx, toAttachment)
+			}
+		}
+	}
 	if !from.Subscribers.IsNull() && !from.Subscribers.IsUnknown() && to.Subscribers.IsNull() && len(from.Subscribers.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Subscribers, and the deserialized field value is Null,
@@ -26601,6 +26687,7 @@ func (to *Subscription) SyncFieldsDuringRead(ctx context.Context, from Subscript
 }
 
 func (m Subscription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["attachment"] = attrs["attachment"].SetOptional()
 	attrs["custom_subject"] = attrs["custom_subject"].SetOptional()
 	attrs["paused"] = attrs["paused"].SetOptional()
 	attrs["subscribers"] = attrs["subscribers"].SetOptional()
@@ -26617,6 +26704,7 @@ func (m Subscription) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // SDK values.
 func (m Subscription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"attachment":  reflect.TypeOf(SubscriptionAttachment{}),
 		"subscribers": reflect.TypeOf(SubscriptionSubscriber{}),
 	}
 }
@@ -26628,6 +26716,7 @@ func (m Subscription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"attachment":     m.Attachment,
 			"custom_subject": m.CustomSubject,
 			"paused":         m.Paused,
 			"subscribers":    m.Subscribers,
@@ -26638,6 +26727,7 @@ func (m Subscription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Subscription) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"attachment":     SubscriptionAttachment{}.Type(ctx),
 			"custom_subject": types.StringType,
 			"paused":         types.BoolType,
 			"subscribers": basetypes.ListType{
@@ -26645,6 +26735,31 @@ func (m Subscription) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAttachment returns the value of the Attachment field in Subscription as
+// a SubscriptionAttachment value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Subscription) GetAttachment(ctx context.Context) (SubscriptionAttachment, bool) {
+	var e SubscriptionAttachment
+	if m.Attachment.IsNull() || m.Attachment.IsUnknown() {
+		return e, false
+	}
+	var v SubscriptionAttachment
+	d := m.Attachment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAttachment sets the value of the Attachment field in Subscription.
+func (m *Subscription) SetAttachment(ctx context.Context, v SubscriptionAttachment) {
+	vs := v.ToObjectValue(ctx)
+	m.Attachment = vs
 }
 
 // GetSubscribers returns the value of the Subscribers field in Subscription as
@@ -26671,6 +26786,439 @@ func (m *Subscription) SetSubscribers(ctx context.Context, v []SubscriptionSubsc
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["subscribers"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Subscribers = types.ListValueMust(t, vs)
+}
+
+// The configuration for the files attached to the dashboard snapshot
+// notification sent to subscribers. `data_attachment` describes the underlying
+// data of dashboard widgets attached as data files, and `page_attachment`
+// describes which dashboard pages are included in the attached PDF.
+type SubscriptionAttachment struct {
+	// Optional: The configuration for the underlying data of dashboard widgets
+	// attached as tabular data files. If not specified, no tabular data is
+	// attached.
+	DataAttachment types.Object `tfsdk:"data_attachment"`
+	// Optional: The selection of dashboard pages included in the attached PDF.
+	// If not specified, only the first page is included.
+	PageAttachment types.Object `tfsdk:"page_attachment"`
+}
+
+func (to *SubscriptionAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SubscriptionAttachment) {
+	if !from.DataAttachment.IsNull() && !from.DataAttachment.IsUnknown() {
+		if toDataAttachment, ok := to.GetDataAttachment(ctx); ok {
+			if fromDataAttachment, ok := from.GetDataAttachment(ctx); ok {
+				// Recursively sync the fields of DataAttachment
+				toDataAttachment.SyncFieldsDuringCreateOrUpdate(ctx, fromDataAttachment)
+				to.SetDataAttachment(ctx, toDataAttachment)
+			}
+		}
+	}
+	if !from.PageAttachment.IsNull() && !from.PageAttachment.IsUnknown() {
+		if toPageAttachment, ok := to.GetPageAttachment(ctx); ok {
+			if fromPageAttachment, ok := from.GetPageAttachment(ctx); ok {
+				// Recursively sync the fields of PageAttachment
+				toPageAttachment.SyncFieldsDuringCreateOrUpdate(ctx, fromPageAttachment)
+				to.SetPageAttachment(ctx, toPageAttachment)
+			}
+		}
+	}
+}
+
+func (to *SubscriptionAttachment) SyncFieldsDuringRead(ctx context.Context, from SubscriptionAttachment) {
+	if !from.DataAttachment.IsNull() && !from.DataAttachment.IsUnknown() {
+		if toDataAttachment, ok := to.GetDataAttachment(ctx); ok {
+			if fromDataAttachment, ok := from.GetDataAttachment(ctx); ok {
+				toDataAttachment.SyncFieldsDuringRead(ctx, fromDataAttachment)
+				to.SetDataAttachment(ctx, toDataAttachment)
+			}
+		}
+	}
+	if !from.PageAttachment.IsNull() && !from.PageAttachment.IsUnknown() {
+		if toPageAttachment, ok := to.GetPageAttachment(ctx); ok {
+			if fromPageAttachment, ok := from.GetPageAttachment(ctx); ok {
+				toPageAttachment.SyncFieldsDuringRead(ctx, fromPageAttachment)
+				to.SetPageAttachment(ctx, toPageAttachment)
+			}
+		}
+	}
+}
+
+func (m SubscriptionAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_attachment"] = attrs["data_attachment"].SetOptional()
+	attrs["page_attachment"] = attrs["page_attachment"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SubscriptionAttachment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SubscriptionAttachment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"data_attachment": reflect.TypeOf(SubscriptionAttachmentDataAttachment{}),
+		"page_attachment": reflect.TypeOf(SubscriptionAttachmentPageAttachment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SubscriptionAttachment
+// only implements ToObjectValue() and Type().
+func (m SubscriptionAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"data_attachment": m.DataAttachment,
+			"page_attachment": m.PageAttachment,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SubscriptionAttachment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"data_attachment": SubscriptionAttachmentDataAttachment{}.Type(ctx),
+			"page_attachment": SubscriptionAttachmentPageAttachment{}.Type(ctx),
+		},
+	}
+}
+
+// GetDataAttachment returns the value of the DataAttachment field in SubscriptionAttachment as
+// a SubscriptionAttachmentDataAttachment value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SubscriptionAttachment) GetDataAttachment(ctx context.Context) (SubscriptionAttachmentDataAttachment, bool) {
+	var e SubscriptionAttachmentDataAttachment
+	if m.DataAttachment.IsNull() || m.DataAttachment.IsUnknown() {
+		return e, false
+	}
+	var v SubscriptionAttachmentDataAttachment
+	d := m.DataAttachment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDataAttachment sets the value of the DataAttachment field in SubscriptionAttachment.
+func (m *SubscriptionAttachment) SetDataAttachment(ctx context.Context, v SubscriptionAttachmentDataAttachment) {
+	vs := v.ToObjectValue(ctx)
+	m.DataAttachment = vs
+}
+
+// GetPageAttachment returns the value of the PageAttachment field in SubscriptionAttachment as
+// a SubscriptionAttachmentPageAttachment value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SubscriptionAttachment) GetPageAttachment(ctx context.Context) (SubscriptionAttachmentPageAttachment, bool) {
+	var e SubscriptionAttachmentPageAttachment
+	if m.PageAttachment.IsNull() || m.PageAttachment.IsUnknown() {
+		return e, false
+	}
+	var v SubscriptionAttachmentPageAttachment
+	d := m.PageAttachment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPageAttachment sets the value of the PageAttachment field in SubscriptionAttachment.
+func (m *SubscriptionAttachment) SetPageAttachment(ctx context.Context, v SubscriptionAttachmentPageAttachment) {
+	vs := v.ToObjectValue(ctx)
+	m.PageAttachment = vs
+}
+
+// The configuration for the tabular data files attached to the dashboard
+// snapshot. `widgets` lists the widgets whose data is exported and
+// `file_format` is the output format; each referenced widget's data is exported
+// as a separate file.
+type SubscriptionAttachmentDataAttachment struct {
+	// The file format of the exported tabular data files.
+	FileFormat types.String `tfsdk:"file_format"`
+	// When true, the dashboard's applied filter values are included alongside
+	// the tabular data as an additional attached file.
+	IncludeAppliedFilters types.Bool `tfsdk:"include_applied_filters"`
+	// The widgets whose underlying data is exported. At least one widget must
+	// be referenced.
+	Widgets types.List `tfsdk:"widgets"`
+}
+
+func (to *SubscriptionAttachmentDataAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SubscriptionAttachmentDataAttachment) {
+	if !from.Widgets.IsNull() && !from.Widgets.IsUnknown() {
+		if toWidgets, ok := to.GetWidgets(ctx); ok {
+			if fromWidgets, ok := from.GetWidgets(ctx); ok {
+				// Recursively sync the fields of each Widgets element by position.
+				for i := range toWidgets {
+					if i < len(fromWidgets) {
+						toWidgets[i].SyncFieldsDuringCreateOrUpdate(ctx, fromWidgets[i])
+					}
+				}
+				to.SetWidgets(ctx, toWidgets)
+			}
+		}
+	}
+}
+
+func (to *SubscriptionAttachmentDataAttachment) SyncFieldsDuringRead(ctx context.Context, from SubscriptionAttachmentDataAttachment) {
+	if !from.Widgets.IsNull() && !from.Widgets.IsUnknown() {
+		if toWidgets, ok := to.GetWidgets(ctx); ok {
+			if fromWidgets, ok := from.GetWidgets(ctx); ok {
+				for i := range toWidgets {
+					if i < len(fromWidgets) {
+						toWidgets[i].SyncFieldsDuringRead(ctx, fromWidgets[i])
+					}
+				}
+				to.SetWidgets(ctx, toWidgets)
+			}
+		}
+	}
+}
+
+func (m SubscriptionAttachmentDataAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_format"] = attrs["file_format"].SetRequired()
+	attrs["include_applied_filters"] = attrs["include_applied_filters"].SetOptional()
+	attrs["widgets"] = attrs["widgets"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SubscriptionAttachmentDataAttachment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SubscriptionAttachmentDataAttachment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"widgets": reflect.TypeOf(SubscriptionAttachmentDataAttachmentWidget{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SubscriptionAttachmentDataAttachment
+// only implements ToObjectValue() and Type().
+func (m SubscriptionAttachmentDataAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"file_format":             m.FileFormat,
+			"include_applied_filters": m.IncludeAppliedFilters,
+			"widgets":                 m.Widgets,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SubscriptionAttachmentDataAttachment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"file_format":             types.StringType,
+			"include_applied_filters": types.BoolType,
+			"widgets": basetypes.ListType{
+				ElemType: SubscriptionAttachmentDataAttachmentWidget{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetWidgets returns the value of the Widgets field in SubscriptionAttachmentDataAttachment as
+// a slice of SubscriptionAttachmentDataAttachmentWidget values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SubscriptionAttachmentDataAttachment) GetWidgets(ctx context.Context) ([]SubscriptionAttachmentDataAttachmentWidget, bool) {
+	if m.Widgets.IsNull() || m.Widgets.IsUnknown() {
+		return nil, false
+	}
+	var v []SubscriptionAttachmentDataAttachmentWidget
+	d := m.Widgets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWidgets sets the value of the Widgets field in SubscriptionAttachmentDataAttachment.
+func (m *SubscriptionAttachmentDataAttachment) SetWidgets(ctx context.Context, v []SubscriptionAttachmentDataAttachmentWidget) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["widgets"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Widgets = types.ListValueMust(t, vs)
+}
+
+// Identifies a dashboard widget whose data to attach. `page_id` and `widget_id`
+// are the URL identifiers from the dashboard's serialized definition returned
+// by the Get dashboard API (`serialized_dashboard`), and together they uniquely
+// identify the widget.
+type SubscriptionAttachmentDataAttachmentWidget struct {
+	// The URL identifier of the page containing the widget. This is the value
+	// of the `name` field of the corresponding entry under `pages` in the
+	// serialized dashboard definition. Format: alphanumeric, hyphen, and
+	// underscore characters allowed, max length 63.
+	PageId types.String `tfsdk:"page_id"`
+	// The URL identifier of the widget. This is the value of the `name` field
+	// of the corresponding widget under that page's `layout` in the serialized
+	// dashboard definition. Format: alphanumeric, hyphen, and underscore
+	// characters allowed, max length 63.
+	WidgetId types.String `tfsdk:"widget_id"`
+}
+
+func (to *SubscriptionAttachmentDataAttachmentWidget) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SubscriptionAttachmentDataAttachmentWidget) {
+}
+
+func (to *SubscriptionAttachmentDataAttachmentWidget) SyncFieldsDuringRead(ctx context.Context, from SubscriptionAttachmentDataAttachmentWidget) {
+}
+
+func (m SubscriptionAttachmentDataAttachmentWidget) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_id"] = attrs["page_id"].SetRequired()
+	attrs["widget_id"] = attrs["widget_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SubscriptionAttachmentDataAttachmentWidget.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SubscriptionAttachmentDataAttachmentWidget) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SubscriptionAttachmentDataAttachmentWidget
+// only implements ToObjectValue() and Type().
+func (m SubscriptionAttachmentDataAttachmentWidget) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_id":   m.PageId,
+			"widget_id": m.WidgetId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SubscriptionAttachmentDataAttachmentWidget) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_id":   types.StringType,
+			"widget_id": types.StringType,
+		},
+	}
+}
+
+// The selection of dashboard pages included in the attached PDF.
+// `page_selection` chooses between all pages, the first page only, or an
+// explicit subset listed in `page_ids`.
+type SubscriptionAttachmentPageAttachment struct {
+	// The identifiers of the pages to include in the PDF. Only specified when
+	// `page_selection` is `PAGE_SELECTION_SUBSET`. Each value is the identifier
+	// of a page in the dashboard's serialized definition returned by the Get
+	// dashboard API (`serialized_dashboard`): the value of the `name` field of
+	// an entry under `pages`. Format: alphanumeric, hyphen, and underscore
+	// characters allowed, max length 63.
+	PageIds types.List `tfsdk:"page_ids"`
+	// How the attached pages are selected. When set to `PAGE_SELECTION_SUBSET`,
+	// the pages to include are listed in `page_ids`.
+	PageSelection types.String `tfsdk:"page_selection"`
+}
+
+func (to *SubscriptionAttachmentPageAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SubscriptionAttachmentPageAttachment) {
+	if !from.PageIds.IsNull() && !from.PageIds.IsUnknown() && to.PageIds.IsNull() && len(from.PageIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PageIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PageIds = from.PageIds
+	}
+}
+
+func (to *SubscriptionAttachmentPageAttachment) SyncFieldsDuringRead(ctx context.Context, from SubscriptionAttachmentPageAttachment) {
+	if !from.PageIds.IsNull() && !from.PageIds.IsUnknown() && to.PageIds.IsNull() && len(from.PageIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PageIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PageIds = from.PageIds
+	}
+}
+
+func (m SubscriptionAttachmentPageAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_ids"] = attrs["page_ids"].SetOptional()
+	attrs["page_selection"] = attrs["page_selection"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SubscriptionAttachmentPageAttachment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SubscriptionAttachmentPageAttachment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"page_ids": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SubscriptionAttachmentPageAttachment
+// only implements ToObjectValue() and Type().
+func (m SubscriptionAttachmentPageAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_ids":       m.PageIds,
+			"page_selection": m.PageSelection,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SubscriptionAttachmentPageAttachment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"page_selection": types.StringType,
+		},
+	}
+}
+
+// GetPageIds returns the value of the PageIds field in SubscriptionAttachmentPageAttachment as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SubscriptionAttachmentPageAttachment) GetPageIds(ctx context.Context) ([]types.String, bool) {
+	if m.PageIds.IsNull() || m.PageIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.PageIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPageIds sets the value of the PageIds field in SubscriptionAttachmentPageAttachment.
+func (m *SubscriptionAttachmentPageAttachment) SetPageIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["page_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.PageIds = types.ListValueMust(t, vs)
 }
 
 type SubscriptionSubscriber struct {

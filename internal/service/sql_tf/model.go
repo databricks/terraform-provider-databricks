@@ -1061,6 +1061,18 @@ type AlertV2 struct {
 	CustomDescription types.String `tfsdk:"custom_description"`
 	// Custom summary for the alert. support mustache template.
 	CustomSummary types.String `tfsdk:"custom_summary"`
+	// The format used to interpret the `custom_summary` and
+	// `custom_description` templates.
+	//
+	// `HTML` treats both templates as HTML with Mustache `{{VARIABLE_NAME}}`
+	// placeholders. `MARKDOWN` treats them as Markdown with allowlisted
+	// `@VARIABLE_NAME` placeholders and converts them to the format each
+	// notification destination expects, so a single template renders correctly
+	// in email, Slack, and Microsoft Teams.
+	//
+	// When unset, the API applies no default. Responses omit the field unless a
+	// format is stored, and a template with no format is rendered as HTML.
+	CustomTemplateFormat types.String `tfsdk:"custom_template_format"`
 	// The display name of the alert.
 	DisplayName types.String `tfsdk:"display_name"`
 	// The actual identity that will be used to execute the alert. This is an
@@ -1210,6 +1222,7 @@ func (m AlertV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["custom_description"] = attrs["custom_description"].SetOptional()
 	attrs["custom_summary"] = attrs["custom_summary"].SetOptional()
+	attrs["custom_template_format"] = attrs["custom_template_format"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetRequired()
 	attrs["effective_run_as"] = attrs["effective_run_as"].SetComputed()
 	attrs["evaluation"] = attrs["evaluation"].SetRequired()
@@ -1252,23 +1265,24 @@ func (m AlertV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time":        m.CreateTime,
-			"custom_description": m.CustomDescription,
-			"custom_summary":     m.CustomSummary,
-			"display_name":       m.DisplayName,
-			"effective_run_as":   m.EffectiveRunAs,
-			"evaluation":         m.Evaluation,
-			"id":                 m.Id,
-			"lifecycle_state":    m.LifecycleState,
-			"owner_user_name":    m.OwnerUserName,
-			"parameters":         m.Parameters,
-			"parent_path":        m.ParentPath,
-			"query_text":         m.QueryText,
-			"run_as":             m.RunAs,
-			"run_as_user_name":   m.RunAsUserName,
-			"schedule":           m.Schedule,
-			"update_time":        m.UpdateTime,
-			"warehouse_id":       m.WarehouseId,
+			"create_time":            m.CreateTime,
+			"custom_description":     m.CustomDescription,
+			"custom_summary":         m.CustomSummary,
+			"custom_template_format": m.CustomTemplateFormat,
+			"display_name":           m.DisplayName,
+			"effective_run_as":       m.EffectiveRunAs,
+			"evaluation":             m.Evaluation,
+			"id":                     m.Id,
+			"lifecycle_state":        m.LifecycleState,
+			"owner_user_name":        m.OwnerUserName,
+			"parameters":             m.Parameters,
+			"parent_path":            m.ParentPath,
+			"query_text":             m.QueryText,
+			"run_as":                 m.RunAs,
+			"run_as_user_name":       m.RunAsUserName,
+			"schedule":               m.Schedule,
+			"update_time":            m.UpdateTime,
+			"warehouse_id":           m.WarehouseId,
 		})
 }
 
@@ -1276,15 +1290,16 @@ func (m AlertV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m AlertV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":        types.StringType,
-			"custom_description": types.StringType,
-			"custom_summary":     types.StringType,
-			"display_name":       types.StringType,
-			"effective_run_as":   AlertV2RunAs{}.Type(ctx),
-			"evaluation":         AlertV2Evaluation{}.Type(ctx),
-			"id":                 types.StringType,
-			"lifecycle_state":    types.StringType,
-			"owner_user_name":    types.StringType,
+			"create_time":            types.StringType,
+			"custom_description":     types.StringType,
+			"custom_summary":         types.StringType,
+			"custom_template_format": types.StringType,
+			"display_name":           types.StringType,
+			"effective_run_as":       AlertV2RunAs{}.Type(ctx),
+			"evaluation":             AlertV2Evaluation{}.Type(ctx),
+			"id":                     types.StringType,
+			"lifecycle_state":        types.StringType,
+			"owner_user_name":        types.StringType,
 			"parameters": basetypes.SetType{
 				ElemType: AlertStatementParameter{}.Type(ctx),
 			},
@@ -3646,6 +3661,8 @@ type CreateWarehouseRequest struct {
 	Name types.String `tfsdk:"name"`
 	// Configurations whether the endpoint should use spot instances.
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
+	// Warehouse statement timeout in seconds.
+	StatementTimeout types.Int64 `tfsdk:"statement_timeout"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
@@ -3709,6 +3726,7 @@ func (m CreateWarehouseRequest) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
+	attrs["statement_timeout"] = attrs["statement_timeout"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
 
@@ -3747,6 +3765,7 @@ func (m CreateWarehouseRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 			"min_num_clusters":          m.MinNumClusters,
 			"name":                      m.Name,
 			"spot_instance_policy":      m.SpotInstancePolicy,
+			"statement_timeout":         m.StatementTimeout,
 			"tags":                      m.Tags,
 			"warehouse_type":            m.WarehouseType,
 		})
@@ -3767,6 +3786,7 @@ func (m CreateWarehouseRequest) Type(ctx context.Context) attr.Type {
 			"min_num_clusters":          types.Int64Type,
 			"name":                      types.StringType,
 			"spot_instance_policy":      types.StringType,
+			"statement_timeout":         types.Int64Type,
 			"tags":                      EndpointTags{}.Type(ctx),
 			"warehouse_type":            types.StringType,
 		},
@@ -5558,6 +5578,8 @@ type EditWarehouseRequest struct {
 	Name types.String `tfsdk:"name"`
 	// Configurations whether the endpoint should use spot instances.
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
+	// Warehouse statement timeout in seconds.
+	StatementTimeout types.Int64 `tfsdk:"statement_timeout"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
@@ -5621,6 +5643,7 @@ func (m EditWarehouseRequest) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
+	attrs["statement_timeout"] = attrs["statement_timeout"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
 	attrs["id"] = attrs["id"].SetRequired()
@@ -5661,6 +5684,7 @@ func (m EditWarehouseRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 			"min_num_clusters":          m.MinNumClusters,
 			"name":                      m.Name,
 			"spot_instance_policy":      m.SpotInstancePolicy,
+			"statement_timeout":         m.StatementTimeout,
 			"tags":                      m.Tags,
 			"warehouse_type":            m.WarehouseType,
 		})
@@ -5682,6 +5706,7 @@ func (m EditWarehouseRequest) Type(ctx context.Context) attr.Type {
 			"min_num_clusters":          types.Int64Type,
 			"name":                      types.StringType,
 			"spot_instance_policy":      types.StringType,
+			"statement_timeout":         types.Int64Type,
 			"tags":                      EndpointTags{}.Type(ctx),
 			"warehouse_type":            types.StringType,
 		},
@@ -6054,6 +6079,8 @@ type EndpointInfo struct {
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
 	// state of the endpoint
 	State types.String `tfsdk:"state"`
+	// Warehouse statement timeout in seconds.
+	StatementTimeout types.Int64 `tfsdk:"statement_timeout"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
@@ -6159,6 +6186,7 @@ func (m EndpointInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["odbc_params"] = attrs["odbc_params"].SetOptional()
 	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["statement_timeout"] = attrs["statement_timeout"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
 
@@ -6206,6 +6234,7 @@ func (m EndpointInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"odbc_params":               m.OdbcParams,
 			"spot_instance_policy":      m.SpotInstancePolicy,
 			"state":                     m.State,
+			"statement_timeout":         m.StatementTimeout,
 			"tags":                      m.Tags,
 			"warehouse_type":            m.WarehouseType,
 		})
@@ -6233,6 +6262,7 @@ func (m EndpointInfo) Type(ctx context.Context) attr.Type {
 			"odbc_params":               OdbcParams{}.Type(ctx),
 			"spot_instance_policy":      types.StringType,
 			"state":                     types.StringType,
+			"statement_timeout":         types.Int64Type,
 			"tags":                      EndpointTags{}.Type(ctx),
 			"warehouse_type":            types.StringType,
 		},
@@ -8313,6 +8343,8 @@ type GetWarehouseResponse struct {
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
 	// state of the endpoint
 	State types.String `tfsdk:"state"`
+	// Warehouse statement timeout in seconds.
+	StatementTimeout types.Int64 `tfsdk:"statement_timeout"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
@@ -8418,6 +8450,7 @@ func (m GetWarehouseResponse) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["odbc_params"] = attrs["odbc_params"].SetOptional()
 	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["statement_timeout"] = attrs["statement_timeout"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
 
@@ -8465,6 +8498,7 @@ func (m GetWarehouseResponse) ToObjectValue(ctx context.Context) basetypes.Objec
 			"odbc_params":               m.OdbcParams,
 			"spot_instance_policy":      m.SpotInstancePolicy,
 			"state":                     m.State,
+			"statement_timeout":         m.StatementTimeout,
 			"tags":                      m.Tags,
 			"warehouse_type":            m.WarehouseType,
 		})
@@ -8492,6 +8526,7 @@ func (m GetWarehouseResponse) Type(ctx context.Context) attr.Type {
 			"odbc_params":               OdbcParams{}.Type(ctx),
 			"spot_instance_policy":      types.StringType,
 			"state":                     types.StringType,
+			"statement_timeout":         types.Int64Type,
 			"tags":                      EndpointTags{}.Type(ctx),
 			"warehouse_type":            types.StringType,
 		},

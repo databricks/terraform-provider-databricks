@@ -1277,11 +1277,6 @@ type ClusterAttributes_SdkV2 struct {
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
-	//
-	// This field, along with node_type_id, should not be set if
-	// virtual_cluster_size is set. If both driver_node_type_id, node_type_id,
-	// and virtual_cluster_size are specified, driver_node_type_id and
-	// node_type_id take precedence.
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
@@ -2316,11 +2311,6 @@ type ClusterDetails_SdkV2 struct {
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
-	//
-	// This field, along with node_type_id, should not be set if
-	// virtual_cluster_size is set. If both driver_node_type_id, node_type_id,
-	// and virtual_cluster_size are specified, driver_node_type_id and
-	// node_type_id take precedence.
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
@@ -5272,11 +5262,6 @@ type ClusterSpec_SdkV2 struct {
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
-	//
-	// This field, along with node_type_id, should not be set if
-	// virtual_cluster_size is set. If both driver_node_type_id, node_type_id,
-	// and virtual_cluster_size are specified, driver_node_type_id and
-	// node_type_id take precedence.
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
@@ -6582,11 +6567,6 @@ type CreateCluster_SdkV2 struct {
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
-	//
-	// This field, along with node_type_id, should not be set if
-	// virtual_cluster_size is set. If both driver_node_type_id, node_type_id,
-	// and virtual_cluster_size are specified, driver_node_type_id and
-	// node_type_id take precedence.
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
@@ -9512,11 +9492,6 @@ type EditCluster_SdkV2 struct {
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
-	//
-	// This field, along with node_type_id, should not be set if
-	// virtual_cluster_size is set. If both driver_node_type_id, node_type_id,
-	// and virtual_cluster_size are specified, driver_node_type_id and
-	// node_type_id take precedence.
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
@@ -11111,11 +11086,6 @@ type EnforcePolicyComplianceForClusterResponseClusterSettings_SdkV2 struct {
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
-	//
-	// This field, along with node_type_id, should not be set if
-	// virtual_cluster_size is set. If both driver_node_type_id, node_type_id,
-	// and virtual_cluster_size are specified, driver_node_type_id and
-	// node_type_id take precedence.
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
@@ -23608,11 +23578,6 @@ type UpdateClusterResource_SdkV2 struct {
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
-	//
-	// This field, along with node_type_id, should not be set if
-	// virtual_cluster_size is set. If both driver_node_type_id, node_type_id,
-	// and virtual_cluster_size are specified, driver_node_type_id and
-	// node_type_id take precedence.
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on

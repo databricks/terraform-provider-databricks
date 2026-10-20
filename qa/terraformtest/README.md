@@ -57,6 +57,37 @@ and `body`. Responses specify an explicit HTTP `status`, optional `headers`,
 and `body`. Use `body: null` for no HTTP body and `body: {json: null}` for JSON
 null. Other JSON values go under `body.json`; IDs are literal, without substitution.
 
+Optional `request.matchers` annotations allow selected volatile strings to
+vary without ignoring their presence or type. For example:
+
+```yaml
+request:
+  method: POST
+  path: /example
+  body:
+    json:
+      request_id: captured-id
+      name: fixed-name
+  matchers:
+    headers:
+      X-Request-ID: any_string
+    query:
+      trace_id: any_string
+    json:
+      - path: [request_id]
+        type: any_string
+```
+
+`any_string` accepts any present string, including empty, but not null or a
+missing field. Header names are case-insensitive; matched headers and query
+parameters must each have exactly one value. JSON paths use literal string
+keys/nonnegative integer indices and must select existing string/null samples
+in `body.json`. Other request values remain exact; unlisted headers are ignored
+as usual. No wildcard string has special meaning inside payloads. Responses
+remain literal, without capture/substitution. See the
+[HTTP matcher reference](../httpfixture/README.md#volatile-request-values) for
+root paths, sample overrides, validation, and overlapping signatures.
+
 Matching uses the complete request signature. Independent signatures are
 unordered; repeated identical signatures consume their responses FIFO.
 Every HTTP call needs a consumable fixture, including Terraform's plan

@@ -206,12 +206,20 @@ mandatory and needs no YAML state assertion.
 - Include every consumable request, including plan refreshes, post-apply reads,
   retries, and destroy. The two identical create-step GETs above are deliberate.
   Match JSON semantically, not byte-for-byte; whitespace and object-key order
-  do not matter, but extra fields and array order do. There are no wildcards.
+  do not matter, but extra fields and array order do.
+- Leave behavior-specific fields exact. For an incidental volatile value such
+  as a request ID, use explicit [`request.matchers`](README.md#test-definition)
+  with `any_string`. It requires a present string; missing values and JSON null
+  still fail. Do not mask names, IDs, or other values that the scenario should
+  verify, and do not use `"****"` as a wildcard (it is just a literal string).
 - For polling/retry scenarios, check meaningful requests and outcomes, not
   elapsed time or incidental scheduling.
 - Independent request signatures can interleave. Repeated identical signatures
   consume responses FIFO, so preserve their response order. Do not assume a
   global or per-resource request order is enforced.
+- Overlapping matcher signatures consume the first matching unconsumed fixture,
+  not the most specific one. Keep distinct behavior-specific fields exact so a
+  broad matcher does not consume the response intended for another request.
 - Diagnose failures before editing fixtures. An unexpected call may expose a
   provider regression; an unused call may mean an expected operation vanished.
   Do not automatically bless a changed transcript. Temporarily break the

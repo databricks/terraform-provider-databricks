@@ -8,8 +8,6 @@ import (
 	"io"
 	"math/big"
 	"net/http"
-	"net/url"
-	"reflect"
 	"strings"
 	"sync"
 )
@@ -21,11 +19,12 @@ type Body struct {
 
 // Request defines a complete signature; only listed headers are compared.
 type Request struct {
-	Method  string              `yaml:"method"`
-	Path    string              `yaml:"path"`
-	Query   map[string][]string `yaml:"query,omitempty"`
-	Headers map[string]string   `yaml:"headers,omitempty"`
-	Body    *Body               `yaml:"body"`
+	Method   string              `yaml:"method"`
+	Path     string              `yaml:"path"`
+	Query    map[string][]string `yaml:"query,omitempty"`
+	Headers  map[string]string   `yaml:"headers,omitempty"`
+	Body     *Body               `yaml:"body"`
+	Matchers Matchers            `yaml:"matchers,omitempty"`
 }
 
 // Response defines the HTTP reply, with an optional JSON body.
@@ -44,6 +43,7 @@ type Call struct {
 type exchange struct {
 	call         Call
 	expectedBody any
+	matchers     Matchers
 	responseBody []byte
 	used         bool
 }
@@ -123,6 +123,10 @@ func compileCalls(calls []Call) ([]exchange, error) {
 				return nil, fmt.Errorf("call %d request: %w", i+1, err)
 			}
 		}
+		e.matchers, e.expectedBody, err = compileMatchers(call.Request.Matchers, e.expectedBody, call.Request.Body != nil)
+		if err != nil {
+			return nil, fmt.Errorf("call %d request matchers: %w", i+1, err)
+		}
 		if call.Response.Body != nil {
 			e.responseBody, err = json.Marshal(call.Response.Body.JSON)
 			if err != nil {
@@ -182,18 +186,26 @@ func (e *exchange) matches(req *http.Request, body []byte, value any) bool {
 	if e.used || expected.Method != req.Method || expected.Path != req.URL.EscapedPath() {
 		return false
 	}
-	if url.Values(expected.Query).Encode() != req.URL.Query().Encode() {
+	if !matchesQuery(expected.Query, e.matchers.Query, req.URL.Query()) {
 		return false
 	}
 	for key, header := range expected.Headers {
+		if _, overridden := e.matchers.Headers[http.CanonicalHeaderKey(key)]; overridden {
+			continue
+		}
 		if req.Header.Get(key) != header {
+			return false
+		}
+	}
+	for key := range e.matchers.Headers {
+		if len(req.Header.Values(key)) != 1 {
 			return false
 		}
 	}
 	if expected.Body == nil {
 		return len(body) == 0
 	}
-	return len(body) > 0 && reflect.DeepEqual(e.expectedBody, value)
+	return len(body) > 0 && matchesJSON(e.expectedBody, value)
 }
 
 // ServeHTTP prefers consumable step fixtures over reusable fallbacks. Matching

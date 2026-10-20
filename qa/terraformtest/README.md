@@ -88,6 +88,10 @@ remain literal, without capture/substitution. See the
 [HTTP matcher reference](../httpfixture/README.md#volatile-request-values) for
 root paths, sample overrides, validation, and overlapping signatures.
 
+The runnable [group-name matcher example](testdata/matchers/group_create.yml)
+creates and destroys a group. Its fixed HCL name deliberately differs from the
+request sample, demonstrating that only the annotated `displayName` is relaxed.
+
 Matching uses the complete request signature. Independent signatures are
 unordered; repeated identical signatures consume their responses FIFO.
 Every HTTP call needs a consumable fixture, including Terraform's plan

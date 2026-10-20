@@ -34,6 +34,26 @@ const matcherCalls = `      - request:
             json: {request_id: any_string}
 `
 
+func TestRequestMatcherReplay(t *testing.T) {
+	Run(t, "testdata/matchers")
+}
+
+func TestRequestMatcherShowcaseRequiresMatcher(t *testing.T) {
+	contents, err := os.ReadFile("testdata/matchers/group_create.yml")
+	require.NoError(t, err)
+	fixture := strings.Replace(string(contents), `          matchers:
+            json:
+              - path: [displayName]
+                type: any_string
+`, "", 1)
+	require.NotEqual(t, string(contents), fixture)
+	directory := t.TempDir()
+	writeDiscoveryFile(t, directory, "group_create.yml", fixture)
+	output, err := discoverySubprocess(t, directory, "^TestDirectoryRunnerHelper$")
+	require.Error(t, err, output)
+	require.Contains(t, output, "step 1 (create): unexpected HTTP call: POST /api/2.0/preview/scim/v2/Groups")
+}
+
 func TestDecodeAndReplayRequestMatchers(t *testing.T) {
 	input := strings.Replace(minimalDefinition, "    calls: []\n", "    calls:\n"+matcherCalls, 1)
 	d, err := decodeDefinition(strings.NewReader(input))

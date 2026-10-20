@@ -57,7 +57,7 @@ func TestCallOrderIsOptionalAndIncludesDestroy(t *testing.T) {
 			require.Error(t, err, output)
 			require.Contains(t, output, "out-of-order HTTP call")
 			if tc.destroy {
-				require.Contains(t, output, "step 3 (destroy): out-of-order HTTP call")
+				require.Contains(t, output, "step 2 (destroy): out-of-order HTTP call")
 			}
 		})
 	}

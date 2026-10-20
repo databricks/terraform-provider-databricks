@@ -1,0 +1,35 @@
+version: 1
+host_metadata:
+  workspace_id: "12345"
+initial_state:
+  checkpoint: checkpoints/group.tfstate
+steps:
+  - name: reject_reserved_name
+    config: |
+      provider "databricks" {}
+      resource "databricks_group" "this" {
+        display_name = "admins"
+      }
+    expect_error: 'expected display_name to not be any of'
+    calls: []
+destroy:
+  calls:
+    - request:
+        method: GET
+        path: /api/2.0/preview/scim/v2/Groups/group-id
+        query:
+          attributes: ["displayName,externalId,entitlements"]
+        body: null
+      response:
+        status: 200
+        body:
+          json:
+            id: group-id
+            displayName: Example group
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Groups/group-id
+        body: null
+      response:
+        status: 204
+        body: null

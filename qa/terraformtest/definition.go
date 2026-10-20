@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -16,8 +17,14 @@ import (
 type testDefinition struct {
 	Version      int            `yaml:"version"`
 	HostMetadata map[string]any `yaml:"host_metadata,omitempty"`
+	InitialState *initialState  `yaml:"initial_state,omitempty"`
 	Steps        []step         `yaml:"steps"`
 	Destroy      destroy        `yaml:"destroy"`
+	checkpoint   []byte
+}
+
+type initialState struct {
+	Checkpoint string `yaml:"checkpoint"`
 }
 
 type step struct {
@@ -52,7 +59,19 @@ func loadDefinition(path string) (*testDefinition, error) {
 		return nil, err
 	}
 	defer file.Close()
-	return decodeDefinition(file)
+	definition, err := decodeDefinition(file)
+	if err != nil || definition.InitialState == nil {
+		return definition, err
+	}
+	path = filepath.Join(filepath.Dir(path), definition.InitialState.Checkpoint)
+	definition.checkpoint, err = os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("initial_state checkpoint %s: %w", path, err)
+	}
+	if len(strings.TrimSpace(string(definition.checkpoint))) == 0 {
+		return nil, fmt.Errorf("initial_state checkpoint %s must not be empty", path)
+	}
+	return definition, nil
 }
 
 // decodeDefinition rejects misspelled or unsupported fields before Terraform
@@ -80,6 +99,11 @@ func (d *testDefinition) validate() error {
 	}
 	if len(d.Steps) == 0 {
 		return fmt.Errorf("at least one step is required")
+	}
+	if d.InitialState != nil {
+		if strings.TrimSpace(d.InitialState.Checkpoint) == "" || filepath.IsAbs(d.InitialState.Checkpoint) {
+			return fmt.Errorf("initial_state.checkpoint must be a nonempty path relative to the YAML file")
+		}
 	}
 	for i, s := range d.Steps {
 		label := stepLabel(i, s.Name)

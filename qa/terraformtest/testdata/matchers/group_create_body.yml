@@ -1,4 +1,4 @@
-# Matcher showcase only: ordinary group tests should keep displayName exact.
+# JSON body matcher showcase: ordinary group tests should keep displayName exact.
 version: 1
 host_metadata:
   workspace_id: "12345"

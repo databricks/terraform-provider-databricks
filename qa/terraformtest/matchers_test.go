@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 
 	"github.com/databricks/terraform-provider-databricks/qa/httpfixture"
 )
@@ -39,19 +40,32 @@ func TestRequestMatcherReplay(t *testing.T) {
 }
 
 func TestRequestMatcherShowcaseRequiresMatcher(t *testing.T) {
-	contents, err := os.ReadFile("testdata/matchers/group_create.yml")
-	require.NoError(t, err)
-	fixture := strings.Replace(string(contents), `          matchers:
-            json:
-              - path: [displayName]
-                type: any_string
-`, "", 1)
-	require.NotEqual(t, string(contents), fixture)
-	directory := t.TempDir()
-	writeDiscoveryFile(t, directory, "group_create.yml", fixture)
-	output, err := discoverySubprocess(t, directory, "^TestDirectoryRunnerHelper$")
-	require.Error(t, err, output)
-	require.Contains(t, output, "step 1 (create): unexpected HTTP call: POST /api/2.0/preview/scim/v2/Groups")
+	for _, tc := range []struct {
+		name, signature string
+	}{
+		{"body", "POST /api/2.0/preview/scim/v2/Groups"},
+		{"header", "POST /api/2.0/preview/scim/v2/Groups"},
+		{"query", "GET /api/2.0/preview/scim/v2/Groups/group-id"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			d, err := loadDefinition("testdata/matchers/group_create_" + tc.name + ".yml")
+			require.NoError(t, err)
+			annotations := 0
+			for i := range d.Steps[0].Calls {
+				request := &d.Steps[0].Calls[i].Request
+				annotations += len(request.Matchers.Headers) + len(request.Matchers.Query) + len(request.Matchers.JSON)
+				request.Matchers = httpfixture.Matchers{}
+			}
+			require.Equal(t, 1, annotations, "each showcase exercises exactly one matcher")
+			fixture, err := yaml.Marshal(d)
+			require.NoError(t, err)
+			directory := t.TempDir()
+			writeDiscoveryFile(t, directory, "group_create.yml", string(fixture))
+			output, err := discoverySubprocess(t, directory, "^TestDirectoryRunnerHelper$")
+			require.Error(t, err, output)
+			require.Contains(t, output, "step 1 (create): unexpected HTTP call: "+tc.signature)
+		})
+	}
 }
 
 func TestDecodeAndReplayRequestMatchers(t *testing.T) {

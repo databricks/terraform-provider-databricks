@@ -88,9 +88,11 @@ remain literal, without capture/substitution. See the
 [HTTP matcher reference](../httpfixture/README.md#volatile-request-values) for
 root paths, sample overrides, validation, and overlapping signatures.
 
-The runnable [group-name matcher example](testdata/matchers/group_create.yml)
-creates and destroys a group. Its fixed HCL name deliberately differs from the
-request sample, demonstrating that only the annotated `displayName` is relaxed.
+Runnable examples demonstrate [JSON body](testdata/matchers/group_create_body.yml),
+[header](testdata/matchers/group_create_header.yml), and
+[query](testdata/matchers/group_create_query.yml) matchers separately. Each creates
+and destroys a group, with one request sample deliberately differing from the
+actual value to demonstrate that only the annotated field is relaxed.
 
 Matching uses the complete request signature. Independent signatures are
 unordered; repeated identical signatures consume their responses FIFO.

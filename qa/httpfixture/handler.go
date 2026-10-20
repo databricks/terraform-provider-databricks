@@ -51,16 +51,26 @@ type exchange struct {
 // Handler permits independent requests to interleave and consumes identical
 // request signatures FIFO. A mutex keeps matching and consumption atomic.
 type Handler struct {
-	mu       sync.Mutex
-	label    string
-	calls    []exchange
-	reusable []exchange
-	failures []error
+	mu               sync.Mutex
+	label            string
+	calls            []exchange
+	reusable         []exchange
+	failures         []error
+	enforceCallOrder bool
 }
 
 // NewHandler returns an empty handler; fixture sets are configured separately.
 func NewHandler() *Handler {
 	return &Handler{}
+}
+
+// SetEnforceCallOrder requires consumable calls in fixture order when enabled.
+// Reusable fallbacks remain unordered. Changing this setting preserves the
+// current step's consumption and failures.
+func (h *Handler) SetEnforceCallOrder(enabled bool) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.enforceCallOrder = enabled
 }
 
 // SetReusableFixtures replaces test-wide fallback exchanges, such as metadata.
@@ -200,8 +210,17 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		h.fail(w, fmt.Errorf("%s: %s %s: invalid request body: %w", h.label, req.Method, req.URL.RequestURI(), err))
 		return
 	}
+	next := -1
 	for i := range h.calls {
+		if next == -1 && !h.calls[i].used {
+			next = i
+		}
 		if h.calls[i].matches(req, body, value) {
+			if h.enforceCallOrder && i != next {
+				expected := h.calls[next].call.Request
+				h.fail(w, fmt.Errorf("%s: out-of-order HTTP call: %s %s body=%s matched call %d; next expected call %d: %s %s", h.label, req.Method, req.URL.RequestURI(), body, i+1, next+1, expected.Method, expected.Path))
+				return
+			}
 			h.calls[i].used = true
 			writeResponse(w, &h.calls[i])
 			return

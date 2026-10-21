@@ -1,0 +1,21 @@
+# Source: access/sql_permissions_provider_config_test.go#TestAccSqlPermissions_ProviderConfig_EmptyID
+# Generic provider_config validation; the resource is only a schema carrier.
+# Random names are fixed because replay has no shared server.
+# The original plan-only case fails in validation, before any apply or API call.
+version: 1
+# Inferred host metadata, not captured from a live workspace.
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: reject_empty_workspace_id
+    config: |
+      resource "databricks_sql_permissions" "this" {
+        database = "default"
+        provider_config {
+          workspace_id = ""
+        }
+      }
+    expect_error: 'expected "provider_config.0.workspace_id" to not be an empty string'
+    calls: []
+destroy:
+  calls: []

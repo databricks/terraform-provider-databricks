@@ -1,0 +1,21 @@
+# Source: catalog/metastore_provider_config_test.go#TestAccMetastore_ProviderConfig_Mismatched
+# Generic provider_config validation; the resource is only a schema carrier.
+# Random names are fixed because replay has no shared server.
+version: 1
+# Inferred host metadata, not captured from a live workspace.
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: reject_mismatched_workspace_id
+    config: |
+      resource "databricks_metastore" "this" {
+        name          = "tf-test-metastore-replay"
+        force_destroy = true
+        provider_config {
+          workspace_id = "123"
+        }
+      }
+    expect_error: 'workspace_id mismatch.*please check the workspace_id provided in provider_config'
+    calls: []
+destroy:
+  calls: []

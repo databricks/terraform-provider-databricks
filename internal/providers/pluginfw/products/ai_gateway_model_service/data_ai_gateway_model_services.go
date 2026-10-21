@@ -29,8 +29,8 @@ func DataSourceModelServices() datasource.DataSource {
 // ModelServicesData extends the main model with additional fields.
 type ModelServicesData struct {
 	AiGateway types.List `tfsdk:"model_services"`
-	// Maximum number of model services to return. Defaults to 100 when unset or
-	// 0; the maximum is 100. Use `page_token` to retrieve additional pages.
+	// Maximum number of model services to return. Defaults to 200 when unset or
+	// 0; the maximum is 200. Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"page_size"`
 	// Parent schema to list within, in the form `schemas/{catalog}.{schema}`.
 	// Required. Each `{...}` component is capped at 255 characters

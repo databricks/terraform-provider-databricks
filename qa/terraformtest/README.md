@@ -44,9 +44,10 @@ configured through process environment variables.
 
 ## Test definition
 
-Use `version: 1`, followed by `steps` and `destroy`. Each step has a human
-`name`, literal HCL under `config`, `calls`, and optional `state` expectations.
-State persists across steps. Destroy always runs using the last successful configuration;
+Use `version: 1`, optional `initial_state`, followed by `steps` and `destroy`.
+Each step has a human `name`, literal HCL under `config`, `calls`, and optional
+`state` expectations. State persists across steps. Destroy always runs using
+the last successful configuration;
 its HTTP exchanges belong under `destroy.calls`, and empty state is always
 checked. The testing framework also attempts cleanup after an interrupted test.
 
@@ -56,11 +57,55 @@ and `body`. Responses specify an explicit HTTP `status`, optional `headers`,
 and `body`. Use `body: null` for no HTTP body and `body: {json: null}` for JSON
 null. Other JSON values go under `body.json`; IDs are literal, without substitution.
 
+Optional `request.matchers` annotations allow selected volatile strings to
+vary without ignoring their presence or type. For example:
+
+```yaml
+request:
+  method: POST
+  path: /example
+  body:
+    json:
+      request_id: captured-id
+      name: fixed-name
+  matchers:
+    headers:
+      X-Request-ID: any_string
+    query:
+      trace_id: any_string
+    json:
+      - path: [request_id]
+        type: any_string
+```
+
+`any_string` accepts any present string, including empty, but not null or a
+missing field. Header names are case-insensitive; matched headers and query
+parameters must each have exactly one value. JSON paths use literal string
+keys/nonnegative integer indices and must select existing string/null samples
+in `body.json`. Other request values remain exact; unlisted headers are ignored
+as usual. No wildcard string has special meaning inside payloads. Responses
+remain literal, without capture/substitution. See the
+[HTTP matcher reference](../httpfixture/README.md#volatile-request-values) for
+root paths, sample overrides, validation, and overlapping signatures.
+
+Runnable examples demonstrate [JSON body](testdata/matchers/group_create_body.yml),
+[header](testdata/matchers/group_create_header.yml), and
+[query](testdata/matchers/group_create_query.yml) matchers separately. Each creates
+and destroys a group, with one request sample deliberately differing from the
+actual value to demonstrate that only the annotated field is relaxed.
+
 Matching uses the complete request signature. Independent signatures are
 unordered; repeated identical signatures consume their responses FIFO.
 Every HTTP call needs a consumable fixture, including Terraform's plan
 refreshes and the testing framework's post-apply consistency reads.
 Unexpected calls and unused fixtures fail with the step's index and name.
+
+Optional test-level `enforce_call_order: true` requires consumable HTTP calls
+in their listed order within every step, including destroy. The default is
+`false`: Terraform may interleave independent resources. Ordering covers the
+whole step, not per-resource lanes; a matching later call fails immediately
+without consuming it. Reusable host metadata may occur between any calls.
+Recorded call order can be preserved in the file without enabling enforcement.
 
 Optional `host_metadata` supplies a reusable JSON response for
 `GET /.well-known/databricks-config` throughout the test, keeping repeated
@@ -114,10 +159,9 @@ with no configurable final-state assertion.
 
 ## MVP scope
 
-Tests start with empty Terraform state and handwritten fixtures. YAML has
-strict field validation: initial checkpoints, recording/setup templates,
-plan assertions, plan-only steps, forced HTTP order,
-and strict attribute matching are not yet supported. Unsupported fields fail
+Tests use handwritten fixtures and start with empty Terraform state unless an
+initial checkpoint is supplied. YAML has strict field validation: recording/setup
+templates and strict attribute matching are not yet supported. Unsupported fields fail
 before any Terraform operations. The step/call/state layout is kept stable
 so these capabilities can be added independently.
 
@@ -156,3 +200,146 @@ are not available to that fallback cleanup configuration.
 State checks on expected-error steps are rejected: HashiCorp skips post-apply
 checks when an operation fails. Add a subsequent successful step to inspect
 state instead. Invalid or empty error patterns fail before Terraform runs.
+
+## Initial state
+
+Reference a real Terraform-generated checkpoint, relative to the YAML file:
+
+```yaml
+initial_state:
+  checkpoint: checkpoints/group.tfstate
+```
+
+The runner copies the original bytes into an isolated working directory using
+HashiCorp's `TestStep.ConfigDirectory` API. It does not construct, decode, rewrite,
+or merge internal state JSON. Terraform reads and upgrades state through the
+provider as usual. The checkpoint is restored only before the first step; later
+steps and automatic destroy use the resulting current state. The original file
+is never updated. Missing, unreadable, and empty checkpoints fail before replay.
+
+The checkpoint does not populate the HTTP server. Supply fixtures describing
+the already-existing remote resources, including refresh reads. The test owns
+the checkpoint's managed resources and must provide destroy fixtures for them,
+including when the first step expects an error. Replay runs no setup templates.
+
+Checkpoint tests use the default local backend and the provider address
+`registry.terraform.io/databricks/databricks`. Explicit `backend` and `cloud`
+blocks are rejected: an alternate state location could bypass the checkpoint
+or access remote infrastructure. Provider configuration blocks remain optional;
+if HCL includes a `terraform` block, it must include its own provider requirements,
+as in ordinary replay tests.
+
+Historical checkpoints work within the installed Terraform version's and current
+provider's state-upgrade support; the runner cannot restore a removed resource
+implementation. Keep historical fixtures unchanged and record their original
+Terraform/provider versions. Review the entire checkpoint, including provider
+private data, for secrets before committing it; prefer secret-free test scenarios.
+Post-step assertions continue to use Terraform's supported inspection APIs,
+not raw checkpoint comparisons.
+
+## Plan assertions
+
+Optional `plan` assertions inspect Terraform's supported plan API. For an apply
+step, checks run on the saved pre-apply plan; Terraform then applies that same
+plan. The normal post-apply empty-plan consistency checks remain enabled.
+Omitting `plan` adds no custom assertions. `plan: {}` adds no expectations.
+
+```yaml
+plan:
+  expect: non_empty
+  changes:
+    databricks_group.this:
+      actions: [update]
+      before:
+        - path: [display_name]
+          equals: Initial group
+      after:
+        - path: [display_name]
+          equals: Updated group
+  outputs:
+    group_id:
+      after:
+        - path: []
+          unknown: true
+```
+
+`expect` is optional for apply steps: `empty` requires no resource or output
+changes; `non_empty` requires at least one. Omission ignores whole-plan emptiness.
+`changes` maps full resource instance addresses, including modules, `count`, and
+`for_each`. Quote addresses containing string keys. `outputs` maps root output
+names. Nonempty maps select checks; unlisted addresses and attributes are allowed.
+An explicitly empty `changes: {}` requires no resource changes, but permits output
+changes. Likewise, `outputs: {}` requires no output changes. No-op entries do not
+count as changes. Omitted maps impose no checks of that kind.
+
+Optional `actions` lists use Terraform action names: `[no-op]`, `[create]`,
+`[read]`, `[update]`, `[delete]`, `[forget]`, `[delete, create]`, or
+`[create, delete]`. Replacement order matters. If omitted, an address need only
+exist in the plan; any selected values still must match.
+
+`before` and `after` are lists of path checks, using the same typed primitive/null
+`equals` syntax as state checks. Resource paths start at an attribute; output
+paths may use `[]` for the whole scalar output, or start with a map key/list index.
+`unknown: true` replaces `equals` for an after value not yet known. Unknown is
+not null, and missing is not null. Unknown ancestors also make selected children
+unknown. Collection equality and set-element selection are not supported.
+
+### Plan-only steps
+
+Set step-level `plan_only: true` to skip apply. A successful plan-only step must
+declare `plan.expect: empty` or `non_empty`, because HashiCorp's native harness
+requires an emptiness expectation:
+
+```yaml
+plan_only: true
+plan:
+  expect: empty
+  changes: {}
+```
+
+The harness runs a non-refresh plan followed by a refresh plan. Custom assertions
+inspect the latter; API reads still consume ordinary step fixtures. Repeated
+reads require repeated fixtures. With `expect: empty`, the harness also requires
+the preceding non-refresh plan to be empty. This restricts drift scenarios where
+the plan becomes empty only after refreshing; no hidden refresh/apply is added
+to bypass that native restriction.
+
+Optional plan-only `state` checks inspect the refreshed prior state exposed by
+the plan API, not planned values. A plan does not persist that refreshed state or
+apply proposed changes. Later steps continue from the last persisted state.
+Automatic destroy still runs, including for tests containing only plan-only
+steps or an initial checkpoint. After an apply, cleanup retains the last applied
+configuration rather than a later preview's configuration. With no apply, it uses
+the last successful preview configuration for provider routing.
+
+`expect_error` cannot be combined with `plan` or `plan_only`; this prevents a
+broad diagnostic pattern from accidentally accepting failed plan assertions or
+harness emptiness checks. Use a separate ordinary diagnostic step instead.
+
+Complete examples are in [testdata/plans](testdata/plans). They exercise
+checkpoint update/apply, empty and nonempty previews, multiple resource instances,
+known/unknown outputs, and automatic cleanup.
+
+## Constraints for future recording
+
+Recording is not implemented. These replay contracts must survive capture and
+refresh:
+
+- Keep every consumable exchange, including retries and repeated reads, in
+  request-dispatch order. Assign sequence numbers before sending requests;
+  response-completion order can differ under concurrency. Do not infer resource
+  ownership from HTTP calls. Identical concurrent signatures with different
+  responses remain ambiguous under FIFO replay and need explicit handling.
+- Preserve whole-step boundaries, including all native consistency plans and
+  destroy. Capture plan expectations at the same saved-plan hooks as replay:
+  pre-apply for apply steps, post-refresh for plan-only steps.
+- Preserve author-selected paths, omitted assertions, explicit empty maps, and
+  unknown versus null. Do not turn partial assertions into whole-state snapshots
+  or silently change `enforce_call_order` while refreshing fixtures.
+- Capture reusable host metadata separately from consumable calls. Keep setup
+  and background-environment cleanup outside the test transcript; initial-state
+  resources belong to test destroy. Generate matching checkpoints and calls
+  together without editing opaque checkpoint JSON or reusing stale live IDs.
+- Decide retries/polling, secret and volatile-value handling before enabling
+  live capture. Recording must be explicit, single-test, unavailable in CI, and
+  must never be activated by a replay failure.

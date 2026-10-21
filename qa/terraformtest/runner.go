@@ -29,6 +29,7 @@ func run(t *testing.T, definition *testDefinition) {
 	t.Helper()
 	configureTerraform(t)
 	handler := httpfixture.NewHandler()
+	handler.SetEnforceCallOrder(definition.EnforceCallOrder)
 	if err := handler.SetReusableFixtures(definition.metadataCalls()); err != nil {
 		t.Fatal(err)
 	}
@@ -40,7 +41,7 @@ func run(t *testing.T, definition *testDefinition) {
 		}
 	})
 	steps := testSteps(t, definition, handler)
-	resource.Test(t, resource.TestCase{
+	testCase := resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: providerFactories(server.URL),
 		Steps:                    steps,
@@ -49,7 +50,11 @@ func run(t *testing.T, definition *testDefinition) {
 			cleanupErr := handler.StartStep(stepLabel(len(definition.Steps), "destroy"), definition.Destroy.Calls)
 			return errors.Join(err, cleanupErr)
 		},
-	})
+	}
+	if definition.InitialState != nil {
+		seedInitialCheckpoint(t, definition, &testCase)
+	}
+	resource.Test(t, testCase)
 }
 
 // configureTerraform disables implicit CLI downloads and optional extra
@@ -68,6 +73,9 @@ func configureTerraform(t *testing.T) {
 	t.Setenv("TF_ACC_TERRAFORM_VERSION", "")
 	t.Setenv("CHECKPOINT_DISABLE", "1")
 	t.Setenv("TF_IN_AUTOMATION", "1")
+	// Checkpoints refer to the real provider address, not HashiCorp's test default.
+	t.Setenv("TF_ACC_PROVIDER_NAMESPACE", "databricks")
+	t.Setenv("TF_ACC_PROVIDER_HOST", "registry.terraform.io")
 	// Optional framework refresh modes would change the required HTTP transcript.
 	t.Setenv("TF_ACC_REFRESH_AFTER_APPLY", "")
 	if err := os.Unsetenv("TF_ACC_REFRESH_AFTER_APPLY"); err != nil {
@@ -81,13 +89,16 @@ func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Ha
 	t.Helper()
 	steps := make([]resource.TestStep, 0, len(definition.Steps)+1)
 	cleanupConfig := `provider "databricks" {}`
+	hasApplyConfig := false
 	for i, s := range definition.Steps {
 		label := stepLabel(i, s.Name)
 		testStep := terraformStep(t, handler, label, s.Config, s.Calls, s.State)
+		configurePlan(&testStep, s, label)
 		if s.ExpectError != nil {
 			testStep.ExpectError = regexp.MustCompile(*s.ExpectError)
-		} else {
+		} else if !s.PlanOnly || !hasApplyConfig {
 			cleanupConfig = s.Config
+			hasApplyConfig = !s.PlanOnly
 		}
 		steps = append(steps, testStep)
 	}

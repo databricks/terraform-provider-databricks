@@ -3671,6 +3671,114 @@ func (m CreateForecastingExperimentResponse_SdkV2) Type(ctx context.Context) att
 	}
 }
 
+type CreateIssueRequest_SdkV2 struct {
+	// Output-only fields are ignored.
+	Issue types.List `tfsdk:"issue"`
+	// Optional client-chosen ID: iss- followed by 32 lowercase hex digits. A
+	// retry with the same ID fails with ALREADY_EXISTS rather than making a
+	// duplicate. The server generates one if unset.
+	IssueId types.String `tfsdk:"-"`
+	// experiments/{experiment}
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *CreateIssueRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateIssueRequest_SdkV2) {
+	if !from.Issue.IsNull() && !from.Issue.IsUnknown() {
+		if toIssue, ok := to.GetIssue(ctx); ok {
+			if fromIssue, ok := from.GetIssue(ctx); ok {
+				// Recursively sync the fields of Issue
+				toIssue.SyncFieldsDuringCreateOrUpdate(ctx, fromIssue)
+				to.SetIssue(ctx, toIssue)
+			}
+		}
+	}
+}
+
+func (to *CreateIssueRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateIssueRequest_SdkV2) {
+	if !from.Issue.IsNull() && !from.Issue.IsUnknown() {
+		if toIssue, ok := to.GetIssue(ctx); ok {
+			if fromIssue, ok := from.GetIssue(ctx); ok {
+				toIssue.SyncFieldsDuringRead(ctx, fromIssue)
+				to.SetIssue(ctx, toIssue)
+			}
+		}
+	}
+}
+
+func (m CreateIssueRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["issue"] = attrs["issue"].SetRequired()
+	attrs["issue"] = attrs["issue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["issue_id"] = attrs["issue_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateIssueRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateIssueRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"issue": reflect.TypeOf(Issue_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateIssueRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CreateIssueRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"issue":    m.Issue,
+			"issue_id": m.IssueId,
+			"parent":   m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateIssueRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"issue": basetypes.ListType{
+				ElemType: Issue_SdkV2{}.Type(ctx),
+			},
+			"issue_id": types.StringType,
+			"parent":   types.StringType,
+		},
+	}
+}
+
+// GetIssue returns the value of the Issue field in CreateIssueRequest_SdkV2 as
+// a Issue_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateIssueRequest_SdkV2) GetIssue(ctx context.Context) (Issue_SdkV2, bool) {
+	var e Issue_SdkV2
+	if m.Issue.IsNull() || m.Issue.IsUnknown() {
+		return e, false
+	}
+	var v []Issue_SdkV2
+	d := m.Issue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetIssue sets the value of the Issue field in CreateIssueRequest_SdkV2.
+func (m *CreateIssueRequest_SdkV2) SetIssue(ctx context.Context, v Issue_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["issue"]
+	m.Issue = types.ListValueMust(t, vs)
+}
+
 type CreateKafkaConfigRequest_SdkV2 struct {
 	KafkaConfig types.List `tfsdk:"kafka_config"`
 }
@@ -5752,6 +5860,8 @@ type DataSource_SdkV2 struct {
 	Lateness types.List `tfsdk:"lateness"`
 	// A request-time data source.
 	RequestSource types.List `tfsdk:"request_source"`
+	// A Spark Declarative Pipeline data source.
+	SdpSource types.List `tfsdk:"sdp_source"`
 	// A Stream data source.
 	StreamSource types.List `tfsdk:"stream_source"`
 }
@@ -5799,6 +5909,15 @@ func (to *DataSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 				// Recursively sync the fields of RequestSource
 				toRequestSource.SyncFieldsDuringCreateOrUpdate(ctx, fromRequestSource)
 				to.SetRequestSource(ctx, toRequestSource)
+			}
+		}
+	}
+	if !from.SdpSource.IsNull() && !from.SdpSource.IsUnknown() {
+		if toSdpSource, ok := to.GetSdpSource(ctx); ok {
+			if fromSdpSource, ok := from.GetSdpSource(ctx); ok {
+				// Recursively sync the fields of SdpSource
+				toSdpSource.SyncFieldsDuringCreateOrUpdate(ctx, fromSdpSource)
+				to.SetSdpSource(ctx, toSdpSource)
 			}
 		}
 	}
@@ -5854,6 +5973,14 @@ func (to *DataSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DataS
 			}
 		}
 	}
+	if !from.SdpSource.IsNull() && !from.SdpSource.IsUnknown() {
+		if toSdpSource, ok := to.GetSdpSource(ctx); ok {
+			if fromSdpSource, ok := from.GetSdpSource(ctx); ok {
+				toSdpSource.SyncFieldsDuringRead(ctx, fromSdpSource)
+				to.SetSdpSource(ctx, toSdpSource)
+			}
+		}
+	}
 	if !from.StreamSource.IsNull() && !from.StreamSource.IsUnknown() {
 		if toStreamSource, ok := to.GetStreamSource(ctx); ok {
 			if fromStreamSource, ok := from.GetStreamSource(ctx); ok {
@@ -5875,6 +6002,8 @@ func (m DataSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["lateness"] = attrs["lateness"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["request_source"] = attrs["request_source"].SetOptional()
 	attrs["request_source"] = attrs["request_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["sdp_source"] = attrs["sdp_source"].SetOptional()
+	attrs["sdp_source"] = attrs["sdp_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["stream_source"] = attrs["stream_source"].SetOptional()
 	attrs["stream_source"] = attrs["stream_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -5895,6 +6024,7 @@ func (m DataSource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]r
 		"kafka_source":        reflect.TypeOf(KafkaSource_SdkV2{}),
 		"lateness":            reflect.TypeOf(SourceLateness_SdkV2{}),
 		"request_source":      reflect.TypeOf(RequestSource_SdkV2{}),
+		"sdp_source":          reflect.TypeOf(SdpSource_SdkV2{}),
 		"stream_source":       reflect.TypeOf(StreamSource_SdkV2{}),
 	}
 }
@@ -5911,6 +6041,7 @@ func (m DataSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"kafka_source":        m.KafkaSource,
 			"lateness":            m.Lateness,
 			"request_source":      m.RequestSource,
+			"sdp_source":          m.SdpSource,
 			"stream_source":       m.StreamSource,
 		})
 }
@@ -5933,6 +6064,9 @@ func (m DataSource_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"request_source": basetypes.ListType{
 				ElemType: RequestSource_SdkV2{}.Type(ctx),
+			},
+			"sdp_source": basetypes.ListType{
+				ElemType: SdpSource_SdkV2{}.Type(ctx),
 			},
 			"stream_source": basetypes.ListType{
 				ElemType: StreamSource_SdkV2{}.Type(ctx),
@@ -6069,6 +6203,32 @@ func (m *DataSource_SdkV2) SetRequestSource(ctx context.Context, v RequestSource
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["request_source"]
 	m.RequestSource = types.ListValueMust(t, vs)
+}
+
+// GetSdpSource returns the value of the SdpSource field in DataSource_SdkV2 as
+// a SdpSource_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataSource_SdkV2) GetSdpSource(ctx context.Context) (SdpSource_SdkV2, bool) {
+	var e SdpSource_SdkV2
+	if m.SdpSource.IsNull() || m.SdpSource.IsUnknown() {
+		return e, false
+	}
+	var v []SdpSource_SdkV2
+	d := m.SdpSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSdpSource sets the value of the SdpSource field in DataSource_SdkV2.
+func (m *DataSource_SdkV2) SetSdpSource(ctx context.Context, v SdpSource_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sdp_source"]
+	m.SdpSource = types.ListValueMust(t, vs)
 }
 
 // GetStreamSource returns the value of the StreamSource field in DataSource_SdkV2 as
@@ -8219,7 +8379,7 @@ func (m *DeltaTableSource_SdkV2) SetEntityColumns(ctx context.Context, v []types
 }
 
 // Direct connection configs for mTLS, as Kafka Connections do not support mTLS
-// yet . Temporarily used until UC Kafka Connections gain mTLS support.
+// yet.
 type DirectMtlsConfig_SdkV2 struct {
 	// A comma-separated list of host:port pairs for the Kafka bootstrap
 	// servers.
@@ -9486,13 +9646,12 @@ type Feature_SdkV2 struct {
 	// The description of the feature.
 	Description types.String `tfsdk:"description"`
 	// The entity columns for the feature, used as aggregation keys and for
-	// query-time lookup.
+	// query-time lookup. Optional since entities are not set for RequestSource
+	// features or on-demand calculated features.
 	Entities types.List `tfsdk:"entities"`
 
 	FilterCondition types.String `tfsdk:"filter_condition"`
-	// The full three-part name (catalog, schema, name) of the feature. This is
-	// the feature's resource identifier; the catalog_name, schema_name, and
-	// name fields below are OUTPUT_ONLY decomposed views of this value.
+	// The full three-part name (catalog, schema, name) of the feature.
 	FullName types.String `tfsdk:"full_name"`
 	// The function by which the feature is computed.
 	Function types.List `tfsdk:"function"`
@@ -9516,7 +9675,8 @@ type Feature_SdkV2 struct {
 
 	TimeWindow types.List `tfsdk:"time_window"`
 	// Column recording time, used for point-in-time joins, backfills, and
-	// aggregations.
+	// aggregations. Optional since a timeseries column is not set for
+	// RequestSource features or on-demand calculated features.
 	TimeseriesColumn types.List `tfsdk:"timeseries_column"`
 }
 
@@ -9554,6 +9714,10 @@ func (to *Feature_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 		// If a user specified a non-Null, empty list for Inputs, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Inputs = from.Inputs
+	}
+	if !from.LineageContext.IsUnknown() && !from.LineageContext.IsNull() {
+		// LineageContext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.LineageContext = from.LineageContext
 	}
 	if !from.LineageContext.IsNull() && !from.LineageContext.IsUnknown() {
 		if toLineageContext, ok := to.GetLineageContext(ctx); ok {
@@ -9626,6 +9790,10 @@ func (to *Feature_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Feature_
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Inputs = from.Inputs
 	}
+	if !from.LineageContext.IsUnknown() && !from.LineageContext.IsNull() {
+		// LineageContext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.LineageContext = from.LineageContext
+	}
 	if !from.LineageContext.IsNull() && !from.LineageContext.IsUnknown() {
 		if toLineageContext, ok := to.GetLineageContext(ctx); ok {
 			if fromLineageContext, ok := from.GetLineageContext(ctx); ok {
@@ -9666,14 +9834,20 @@ func (m Feature_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["entities"] = attrs["entities"].SetOptional()
+	attrs["entities"] = attrs["entities"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["filter_condition"] = attrs["filter_condition"].SetOptional()
+	attrs["filter_condition"] = attrs["filter_condition"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["full_name"] = attrs["full_name"].SetRequired()
 	attrs["full_name"] = attrs["full_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["function"] = attrs["function"].SetRequired()
 	attrs["function"] = attrs["function"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["function"] = attrs["function"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["inputs"] = attrs["inputs"].SetOptional()
+	attrs["inputs"] = attrs["inputs"].(tfschema.ListAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["lineage_context"] = attrs["lineage_context"].SetOptional()
+	attrs["lineage_context"] = attrs["lineage_context"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["lineage_context"] = attrs["lineage_context"].SetComputed()
+	attrs["lineage_context"] = attrs["lineage_context"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["lineage_context"] = attrs["lineage_context"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["schema_name"] = attrs["schema_name"].SetComputed()
@@ -9681,8 +9855,10 @@ func (m Feature_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["source"] = attrs["source"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["source"] = attrs["source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["time_window"] = attrs["time_window"].SetOptional()
+	attrs["time_window"] = attrs["time_window"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["time_window"] = attrs["time_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["timeseries_column"] = attrs["timeseries_column"].SetOptional()
+	attrs["timeseries_column"] = attrs["timeseries_column"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["timeseries_column"] = attrs["timeseries_column"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
@@ -12392,6 +12568,54 @@ func (m GetHistoryRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetIssueRequest_SdkV2 struct {
+	// experiments/{experiment}/issues/{issue}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetIssueRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetIssueRequest_SdkV2) {
+}
+
+func (to *GetIssueRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetIssueRequest_SdkV2) {
+}
+
+func (m GetIssueRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetIssueRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetIssueRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetIssueRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetIssueRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetIssueRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type GetKafkaConfigRequest_SdkV2 struct {
 	// Name of the Kafka config to get.
 	Name types.String `tfsdk:"-"`
@@ -14431,6 +14655,340 @@ func (m InputTag_SdkV2) Type(ctx context.Context) attr.Type {
 			"value": types.StringType,
 		},
 	}
+}
+
+// A quality or operational problem found in an experiment's traces.
+type Issue_SdkV2 struct {
+	// At most 10 values of at most 64 UTF-8 bytes each, unique
+	// case-insensitively. Leading and trailing whitespace is trimmed.
+	Categories types.List `tfsdk:"categories"`
+	// When the Issue was created.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// The email of the user whose request created the Issue. source_type tells
+	// whether issue detection created it.
+	CreatedBy types.String `tfsdk:"created_by"`
+	// Markdown, at most 32 KiB.
+	Description types.String `tfsdk:"description"`
+	// The last segment of `name`. Issue assessments on traces reference the
+	// Issue by this ID.
+	IssueId types.String `tfsdk:"issue_id"`
+	// The request time of the latest trace the Issue affects. Required, and
+	// can't be cleared, unless source_type is MANUAL. A MANUAL Issue without
+	// one returns its create_time.
+	LastSeenTime timetypes.RFC3339 `tfsdk:"last_seen_time"`
+	// The email of the user whose request last updated the Issue.
+	LastUpdatedBy types.String `tfsdk:"last_updated_by"`
+	// Additional details about the Issue, such as how issue detection observed
+	// it. Not a stable contract: keys and values can change without notice, so
+	// clients must tolerate unknown and missing keys. At most 20 entries, with
+	// keys of at most 64 UTF-8 bytes.
+	Metadata types.Map `tfsdk:"metadata"`
+	// experiments/{experiment}/issues/{issue}
+	Name types.String `tfsdk:"name"`
+	// Cannot be cleared: an Issue without a severity would match no severity
+	// filter.
+	Severity types.String `tfsdk:"severity"`
+	// Set once at create. For ADHOC_RUN and SCHEDULED_RUN, the ID of the issue
+	// detection run in the same experiment that created the Issue. Absent for
+	// MANUAL.
+	SourceId types.String `tfsdk:"source_id"`
+	// Set once at create. Defaults to MANUAL.
+	SourceType types.String `tfsdk:"source_type"`
+	// Defaults to PENDING on create, and can't be cleared.
+	Status types.String `tfsdk:"status"`
+	// Caller-owned; the server never writes system values here. At most 10
+	// entries. Keys match ^[A-Za-z0-9_.:/-]+$ and are at most 128 UTF-8 bytes;
+	// values are at most 256 UTF-8 bytes.
+	Tags types.Map `tfsdk:"tags"`
+	// Non-empty, at most 250 UTF-8 bytes.
+	Title types.String `tfsdk:"title"`
+	// When the Issue was last updated.
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
+}
+
+func (to *Issue_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Issue_SdkV2) {
+	if !from.Categories.IsNull() && !from.Categories.IsUnknown() && to.Categories.IsNull() && len(from.Categories.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Categories, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Categories = from.Categories
+	}
+}
+
+func (to *Issue_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Issue_SdkV2) {
+	if !from.Categories.IsNull() && !from.Categories.IsUnknown() && to.Categories.IsNull() && len(from.Categories.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Categories, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Categories = from.Categories
+	}
+}
+
+func (m Issue_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["categories"] = attrs["categories"].SetOptional()
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["issue_id"] = attrs["issue_id"].SetComputed()
+	attrs["last_seen_time"] = attrs["last_seen_time"].SetOptional()
+	attrs["last_updated_by"] = attrs["last_updated_by"].SetComputed()
+	attrs["metadata"] = attrs["metadata"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["severity"] = attrs["severity"].SetRequired()
+	attrs["source_id"] = attrs["source_id"].SetOptional()
+	attrs["source_type"] = attrs["source_type"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["title"] = attrs["title"].SetRequired()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Issue.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Issue_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"categories": reflect.TypeOf(types.String{}),
+		"metadata":   reflect.TypeOf(types.String{}),
+		"tags":       reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Issue_SdkV2
+// only implements ToObjectValue() and Type().
+func (m Issue_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"categories":      m.Categories,
+			"create_time":     m.CreateTime,
+			"created_by":      m.CreatedBy,
+			"description":     m.Description,
+			"issue_id":        m.IssueId,
+			"last_seen_time":  m.LastSeenTime,
+			"last_updated_by": m.LastUpdatedBy,
+			"metadata":        m.Metadata,
+			"name":            m.Name,
+			"severity":        m.Severity,
+			"source_id":       m.SourceId,
+			"source_type":     m.SourceType,
+			"status":          m.Status,
+			"tags":            m.Tags,
+			"title":           m.Title,
+			"update_time":     m.UpdateTime,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Issue_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"categories": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"create_time":     timetypes.RFC3339{}.Type(ctx),
+			"created_by":      types.StringType,
+			"description":     types.StringType,
+			"issue_id":        types.StringType,
+			"last_seen_time":  timetypes.RFC3339{}.Type(ctx),
+			"last_updated_by": types.StringType,
+			"metadata": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"name":        types.StringType,
+			"severity":    types.StringType,
+			"source_id":   types.StringType,
+			"source_type": types.StringType,
+			"status":      types.StringType,
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"title":       types.StringType,
+			"update_time": timetypes.RFC3339{}.Type(ctx),
+		},
+	}
+}
+
+// GetCategories returns the value of the Categories field in Issue_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Issue_SdkV2) GetCategories(ctx context.Context) ([]types.String, bool) {
+	if m.Categories.IsNull() || m.Categories.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Categories.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCategories sets the value of the Categories field in Issue_SdkV2.
+func (m *Issue_SdkV2) SetCategories(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["categories"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Categories = types.ListValueMust(t, vs)
+}
+
+// GetMetadata returns the value of the Metadata field in Issue_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Issue_SdkV2) GetMetadata(ctx context.Context) (map[string]types.String, bool) {
+	if m.Metadata.IsNull() || m.Metadata.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Metadata.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMetadata sets the value of the Metadata field in Issue_SdkV2.
+func (m *Issue_SdkV2) SetMetadata(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["metadata"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Metadata = types.MapValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in Issue_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Issue_SdkV2) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if m.Tags.IsNull() || m.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in Issue_SdkV2.
+func (m *Issue_SdkV2) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Tags = types.MapValueMust(t, vs)
+}
+
+// One predicate over Issue.tags.
+type IssueTagFilter_SdkV2 struct {
+	// Matched exactly.
+	Key types.String `tfsdk:"key"`
+	// Matched exactly, and ORed together. Empty matches any Issue carrying the
+	// key.
+	Values types.List `tfsdk:"values"`
+}
+
+func (to *IssueTagFilter_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from IssueTagFilter_SdkV2) {
+	if !from.Values.IsNull() && !from.Values.IsUnknown() && to.Values.IsNull() && len(from.Values.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Values, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Values = from.Values
+	}
+}
+
+func (to *IssueTagFilter_SdkV2) SyncFieldsDuringRead(ctx context.Context, from IssueTagFilter_SdkV2) {
+	if !from.Values.IsNull() && !from.Values.IsUnknown() && to.Values.IsNull() && len(from.Values.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Values, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Values = from.Values
+	}
+}
+
+func (m IssueTagFilter_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["values"] = attrs["values"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in IssueTagFilter.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m IssueTagFilter_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"values": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, IssueTagFilter_SdkV2
+// only implements ToObjectValue() and Type().
+func (m IssueTagFilter_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"key":    m.Key,
+			"values": m.Values,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m IssueTagFilter_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"key": types.StringType,
+			"values": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetValues returns the value of the Values field in IssueTagFilter_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *IssueTagFilter_SdkV2) GetValues(ctx context.Context) ([]types.String, bool) {
+	if m.Values.IsNull() || m.Values.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Values.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetValues sets the value of the Values field in IssueTagFilter_SdkV2.
+func (m *IssueTagFilter_SdkV2) SetValues(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Values = types.ListValueMust(t, vs)
 }
 
 type JobContext_SdkV2 struct {
@@ -19765,6 +20323,450 @@ func (m LoggedModelTag_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Recipients to notify when a materialization run fails.
+type MaterializationFailureNotification_SdkV2 struct {
+	// IDs of the notification destinations (for example Slack, Microsoft Teams,
+	// PagerDuty, or a generic webhook) to notify. Not supported for streaming
+	// materialized features.
+	DestinationIds types.List `tfsdk:"destination_ids"`
+	// Email addresses to notify.
+	EmailAddresses types.List `tfsdk:"email_addresses"`
+	// If true, notify only when the final attempt of a run fails. If false or
+	// unset, notify on every failed attempt, including attempts that will be
+	// retried.
+	//
+	// Batch materialization does not retry failures that need a fix on your
+	// side, such as missing permissions or invalid configuration, so the first
+	// attempt is the final one. Other batch failures are retried up to twice.
+	//
+	// Streaming materialization restarts a failed update indefinitely unless
+	// the error cannot be retried. With this set, a streaming materialized
+	// feature notifies only on errors that cannot be retried, and never on
+	// failures that are restarted.
+	FinalAttemptOnly types.Bool `tfsdk:"final_attempt_only"`
+}
+
+func (to *MaterializationFailureNotification_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MaterializationFailureNotification_SdkV2) {
+	if !from.DestinationIds.IsNull() && !from.DestinationIds.IsUnknown() && to.DestinationIds.IsNull() && len(from.DestinationIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DestinationIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DestinationIds = from.DestinationIds
+	}
+	if !from.EmailAddresses.IsNull() && !from.EmailAddresses.IsUnknown() && to.EmailAddresses.IsNull() && len(from.EmailAddresses.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EmailAddresses, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EmailAddresses = from.EmailAddresses
+	}
+}
+
+func (to *MaterializationFailureNotification_SdkV2) SyncFieldsDuringRead(ctx context.Context, from MaterializationFailureNotification_SdkV2) {
+	if !from.DestinationIds.IsNull() && !from.DestinationIds.IsUnknown() && to.DestinationIds.IsNull() && len(from.DestinationIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DestinationIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DestinationIds = from.DestinationIds
+	}
+	if !from.EmailAddresses.IsNull() && !from.EmailAddresses.IsUnknown() && to.EmailAddresses.IsNull() && len(from.EmailAddresses.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EmailAddresses, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EmailAddresses = from.EmailAddresses
+	}
+}
+
+func (m MaterializationFailureNotification_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_ids"] = attrs["destination_ids"].SetOptional()
+	attrs["email_addresses"] = attrs["email_addresses"].SetOptional()
+	attrs["final_attempt_only"] = attrs["final_attempt_only"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MaterializationFailureNotification.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m MaterializationFailureNotification_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"destination_ids": reflect.TypeOf(types.String{}),
+		"email_addresses": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MaterializationFailureNotification_SdkV2
+// only implements ToObjectValue() and Type().
+func (m MaterializationFailureNotification_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"destination_ids":    m.DestinationIds,
+			"email_addresses":    m.EmailAddresses,
+			"final_attempt_only": m.FinalAttemptOnly,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m MaterializationFailureNotification_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"destination_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"email_addresses": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"final_attempt_only": types.BoolType,
+		},
+	}
+}
+
+// GetDestinationIds returns the value of the DestinationIds field in MaterializationFailureNotification_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializationFailureNotification_SdkV2) GetDestinationIds(ctx context.Context) ([]types.String, bool) {
+	if m.DestinationIds.IsNull() || m.DestinationIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.DestinationIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDestinationIds sets the value of the DestinationIds field in MaterializationFailureNotification_SdkV2.
+func (m *MaterializationFailureNotification_SdkV2) SetDestinationIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["destination_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.DestinationIds = types.ListValueMust(t, vs)
+}
+
+// GetEmailAddresses returns the value of the EmailAddresses field in MaterializationFailureNotification_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializationFailureNotification_SdkV2) GetEmailAddresses(ctx context.Context) ([]types.String, bool) {
+	if m.EmailAddresses.IsNull() || m.EmailAddresses.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.EmailAddresses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEmailAddresses sets the value of the EmailAddresses field in MaterializationFailureNotification_SdkV2.
+func (m *MaterializationFailureNotification_SdkV2) SetEmailAddresses(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["email_addresses"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EmailAddresses = types.ListValueMust(t, vs)
+}
+
+// Notifications for the jobs and pipelines that materialize a feature, one
+// field per trigger.
+type MaterializationNotifications_SdkV2 struct {
+	// Who to notify when a run fails, and on which attempts.
+	OnFailure types.List `tfsdk:"on_failure"`
+	// Who to notify when a run succeeds.
+	OnSuccess types.List `tfsdk:"on_success"`
+}
+
+func (to *MaterializationNotifications_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MaterializationNotifications_SdkV2) {
+	if !from.OnFailure.IsNull() && !from.OnFailure.IsUnknown() {
+		if toOnFailure, ok := to.GetOnFailure(ctx); ok {
+			if fromOnFailure, ok := from.GetOnFailure(ctx); ok {
+				// Recursively sync the fields of OnFailure
+				toOnFailure.SyncFieldsDuringCreateOrUpdate(ctx, fromOnFailure)
+				to.SetOnFailure(ctx, toOnFailure)
+			}
+		}
+	}
+	if !from.OnSuccess.IsNull() && !from.OnSuccess.IsUnknown() {
+		if toOnSuccess, ok := to.GetOnSuccess(ctx); ok {
+			if fromOnSuccess, ok := from.GetOnSuccess(ctx); ok {
+				// Recursively sync the fields of OnSuccess
+				toOnSuccess.SyncFieldsDuringCreateOrUpdate(ctx, fromOnSuccess)
+				to.SetOnSuccess(ctx, toOnSuccess)
+			}
+		}
+	}
+}
+
+func (to *MaterializationNotifications_SdkV2) SyncFieldsDuringRead(ctx context.Context, from MaterializationNotifications_SdkV2) {
+	if !from.OnFailure.IsNull() && !from.OnFailure.IsUnknown() {
+		if toOnFailure, ok := to.GetOnFailure(ctx); ok {
+			if fromOnFailure, ok := from.GetOnFailure(ctx); ok {
+				toOnFailure.SyncFieldsDuringRead(ctx, fromOnFailure)
+				to.SetOnFailure(ctx, toOnFailure)
+			}
+		}
+	}
+	if !from.OnSuccess.IsNull() && !from.OnSuccess.IsUnknown() {
+		if toOnSuccess, ok := to.GetOnSuccess(ctx); ok {
+			if fromOnSuccess, ok := from.GetOnSuccess(ctx); ok {
+				toOnSuccess.SyncFieldsDuringRead(ctx, fromOnSuccess)
+				to.SetOnSuccess(ctx, toOnSuccess)
+			}
+		}
+	}
+}
+
+func (m MaterializationNotifications_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["on_failure"] = attrs["on_failure"].SetOptional()
+	attrs["on_failure"] = attrs["on_failure"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["on_success"] = attrs["on_success"].SetOptional()
+	attrs["on_success"] = attrs["on_success"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MaterializationNotifications.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m MaterializationNotifications_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"on_failure": reflect.TypeOf(MaterializationFailureNotification_SdkV2{}),
+		"on_success": reflect.TypeOf(MaterializationSuccessNotification_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MaterializationNotifications_SdkV2
+// only implements ToObjectValue() and Type().
+func (m MaterializationNotifications_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"on_failure": m.OnFailure,
+			"on_success": m.OnSuccess,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m MaterializationNotifications_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"on_failure": basetypes.ListType{
+				ElemType: MaterializationFailureNotification_SdkV2{}.Type(ctx),
+			},
+			"on_success": basetypes.ListType{
+				ElemType: MaterializationSuccessNotification_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetOnFailure returns the value of the OnFailure field in MaterializationNotifications_SdkV2 as
+// a MaterializationFailureNotification_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializationNotifications_SdkV2) GetOnFailure(ctx context.Context) (MaterializationFailureNotification_SdkV2, bool) {
+	var e MaterializationFailureNotification_SdkV2
+	if m.OnFailure.IsNull() || m.OnFailure.IsUnknown() {
+		return e, false
+	}
+	var v []MaterializationFailureNotification_SdkV2
+	d := m.OnFailure.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOnFailure sets the value of the OnFailure field in MaterializationNotifications_SdkV2.
+func (m *MaterializationNotifications_SdkV2) SetOnFailure(ctx context.Context, v MaterializationFailureNotification_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
+	m.OnFailure = types.ListValueMust(t, vs)
+}
+
+// GetOnSuccess returns the value of the OnSuccess field in MaterializationNotifications_SdkV2 as
+// a MaterializationSuccessNotification_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializationNotifications_SdkV2) GetOnSuccess(ctx context.Context) (MaterializationSuccessNotification_SdkV2, bool) {
+	var e MaterializationSuccessNotification_SdkV2
+	if m.OnSuccess.IsNull() || m.OnSuccess.IsUnknown() {
+		return e, false
+	}
+	var v []MaterializationSuccessNotification_SdkV2
+	d := m.OnSuccess.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOnSuccess sets the value of the OnSuccess field in MaterializationNotifications_SdkV2.
+func (m *MaterializationNotifications_SdkV2) SetOnSuccess(ctx context.Context, v MaterializationSuccessNotification_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
+	m.OnSuccess = types.ListValueMust(t, vs)
+}
+
+// Recipients to notify when a materialization run succeeds.
+type MaterializationSuccessNotification_SdkV2 struct {
+	// IDs of the notification destinations (for example Slack, Microsoft Teams,
+	// PagerDuty, or a generic webhook) to notify. Not supported for streaming
+	// materialized features.
+	DestinationIds types.List `tfsdk:"destination_ids"`
+	// Email addresses to notify.
+	EmailAddresses types.List `tfsdk:"email_addresses"`
+}
+
+func (to *MaterializationSuccessNotification_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MaterializationSuccessNotification_SdkV2) {
+	if !from.DestinationIds.IsNull() && !from.DestinationIds.IsUnknown() && to.DestinationIds.IsNull() && len(from.DestinationIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DestinationIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DestinationIds = from.DestinationIds
+	}
+	if !from.EmailAddresses.IsNull() && !from.EmailAddresses.IsUnknown() && to.EmailAddresses.IsNull() && len(from.EmailAddresses.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EmailAddresses, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EmailAddresses = from.EmailAddresses
+	}
+}
+
+func (to *MaterializationSuccessNotification_SdkV2) SyncFieldsDuringRead(ctx context.Context, from MaterializationSuccessNotification_SdkV2) {
+	if !from.DestinationIds.IsNull() && !from.DestinationIds.IsUnknown() && to.DestinationIds.IsNull() && len(from.DestinationIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DestinationIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DestinationIds = from.DestinationIds
+	}
+	if !from.EmailAddresses.IsNull() && !from.EmailAddresses.IsUnknown() && to.EmailAddresses.IsNull() && len(from.EmailAddresses.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EmailAddresses, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EmailAddresses = from.EmailAddresses
+	}
+}
+
+func (m MaterializationSuccessNotification_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_ids"] = attrs["destination_ids"].SetOptional()
+	attrs["email_addresses"] = attrs["email_addresses"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MaterializationSuccessNotification.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m MaterializationSuccessNotification_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"destination_ids": reflect.TypeOf(types.String{}),
+		"email_addresses": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MaterializationSuccessNotification_SdkV2
+// only implements ToObjectValue() and Type().
+func (m MaterializationSuccessNotification_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"destination_ids": m.DestinationIds,
+			"email_addresses": m.EmailAddresses,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m MaterializationSuccessNotification_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"destination_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"email_addresses": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetDestinationIds returns the value of the DestinationIds field in MaterializationSuccessNotification_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializationSuccessNotification_SdkV2) GetDestinationIds(ctx context.Context) ([]types.String, bool) {
+	if m.DestinationIds.IsNull() || m.DestinationIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.DestinationIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDestinationIds sets the value of the DestinationIds field in MaterializationSuccessNotification_SdkV2.
+func (m *MaterializationSuccessNotification_SdkV2) SetDestinationIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["destination_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.DestinationIds = types.ListValueMust(t, vs)
+}
+
+// GetEmailAddresses returns the value of the EmailAddresses field in MaterializationSuccessNotification_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializationSuccessNotification_SdkV2) GetEmailAddresses(ctx context.Context) ([]types.String, bool) {
+	if m.EmailAddresses.IsNull() || m.EmailAddresses.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.EmailAddresses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEmailAddresses sets the value of the EmailAddresses field in MaterializationSuccessNotification_SdkV2.
+func (m *MaterializationSuccessNotification_SdkV2) SetEmailAddresses(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["email_addresses"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EmailAddresses = types.ListValueMust(t, vs)
+}
+
 // A materialized feature represents a feature that is continuously computed and
 // stored.
 type MaterializedFeature_SdkV2 struct {
@@ -19792,9 +20794,16 @@ type MaterializedFeature_SdkV2 struct {
 	LatestBackfillOperation types.String `tfsdk:"latest_backfill_operation"`
 	// Server-assigned unique identifier for the materialized feature.
 	MaterializedFeatureId types.String `tfsdk:"materialized_feature_id"`
-	// Destination for writing feature values to an offline Delta table.
+	// Notification configuration around the materialization job or pipeline
+	// lifecycle. They are applied to every job and pipeline that materializes
+	// this feature. Features which are materialized in the same pipeline will
+	// share the same notification.
+	Notifications types.List `tfsdk:"notifications"`
+	// Destination for writing feature values to an offline Delta table. The
+	// resulting table is returned as `table_name`.
 	OfflineStoreConfig types.List `tfsdk:"offline_store_config"`
-	// Destination for writing feature values to an online Lakebase table.
+	// Destination for writing feature values to an online Lakebase table. The
+	// resulting table is returned as `table_name`.
 	OnlineStoreConfig types.List `tfsdk:"online_store_config"`
 	// The ID of the pipeline that materializes this feature. This is only
 	// present for streaming features.
@@ -19833,6 +20842,19 @@ func (to *MaterializedFeature_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.
 				to.SetCronScheduleTrigger(ctx, toCronScheduleTrigger)
 			}
 		}
+	}
+	if !from.Notifications.IsNull() && !from.Notifications.IsUnknown() {
+		if toNotifications, ok := to.GetNotifications(ctx); ok {
+			if fromNotifications, ok := from.GetNotifications(ctx); ok {
+				// Recursively sync the fields of Notifications
+				toNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromNotifications)
+				to.SetNotifications(ctx, toNotifications)
+			}
+		}
+	}
+	if !from.OfflineStoreConfig.IsUnknown() && !from.OfflineStoreConfig.IsNull() {
+		// OfflineStoreConfig is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.OfflineStoreConfig = from.OfflineStoreConfig
 	}
 	if !from.OfflineStoreConfig.IsNull() && !from.OfflineStoreConfig.IsUnknown() {
 		if toOfflineStoreConfig, ok := to.GetOfflineStoreConfig(ctx); ok {
@@ -19881,6 +20903,18 @@ func (to *MaterializedFeature_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 			}
 		}
 	}
+	if !from.Notifications.IsNull() && !from.Notifications.IsUnknown() {
+		if toNotifications, ok := to.GetNotifications(ctx); ok {
+			if fromNotifications, ok := from.GetNotifications(ctx); ok {
+				toNotifications.SyncFieldsDuringRead(ctx, fromNotifications)
+				to.SetNotifications(ctx, toNotifications)
+			}
+		}
+	}
+	if !from.OfflineStoreConfig.IsUnknown() && !from.OfflineStoreConfig.IsNull() {
+		// OfflineStoreConfig is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.OfflineStoreConfig = from.OfflineStoreConfig
+	}
 	if !from.OfflineStoreConfig.IsNull() && !from.OfflineStoreConfig.IsUnknown() {
 		if toOfflineStoreConfig, ok := to.GetOfflineStoreConfig(ctx); ok {
 			if fromOfflineStoreConfig, ok := from.GetOfflineStoreConfig(ctx); ok {
@@ -19927,8 +20961,12 @@ func (m MaterializedFeature_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["latest_backfill_operation"] = attrs["latest_backfill_operation"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetOptional()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["notifications"] = attrs["notifications"].SetOptional()
+	attrs["notifications"] = attrs["notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetOptional()
 	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["offline_store_config"] = attrs["offline_store_config"].SetComputed()
+	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["online_store_config"] = attrs["online_store_config"].SetOptional()
 	attrs["online_store_config"] = attrs["online_store_config"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
@@ -19955,6 +20993,7 @@ func (m MaterializedFeature_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 func (m MaterializedFeature_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"cron_schedule_trigger": reflect.TypeOf(CronSchedule_SdkV2{}),
+		"notifications":         reflect.TypeOf(MaterializationNotifications_SdkV2{}),
 		"offline_store_config":  reflect.TypeOf(OfflineStoreConfig_SdkV2{}),
 		"online_store_config":   reflect.TypeOf(OnlineStoreConfig_SdkV2{}),
 		"streaming_mode":        reflect.TypeOf(StreamingMode_SdkV2{}),
@@ -19979,6 +21018,7 @@ func (m MaterializedFeature_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 			"last_materialization_time": m.LastMaterializationTime,
 			"latest_backfill_operation": m.LatestBackfillOperation,
 			"materialized_feature_id":   m.MaterializedFeatureId,
+			"notifications":             m.Notifications,
 			"offline_store_config":      m.OfflineStoreConfig,
 			"online_store_config":       m.OnlineStoreConfig,
 			"pipeline_id":               m.PipelineId,
@@ -20005,6 +21045,9 @@ func (m MaterializedFeature_SdkV2) Type(ctx context.Context) attr.Type {
 			"last_materialization_time": types.StringType,
 			"latest_backfill_operation": types.StringType,
 			"materialized_feature_id":   types.StringType,
+			"notifications": basetypes.ListType{
+				ElemType: MaterializationNotifications_SdkV2{}.Type(ctx),
+			},
 			"offline_store_config": basetypes.ListType{
 				ElemType: OfflineStoreConfig_SdkV2{}.Type(ctx),
 			},
@@ -20051,6 +21094,32 @@ func (m *MaterializedFeature_SdkV2) SetCronScheduleTrigger(ctx context.Context, 
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["cron_schedule_trigger"]
 	m.CronScheduleTrigger = types.ListValueMust(t, vs)
+}
+
+// GetNotifications returns the value of the Notifications field in MaterializedFeature_SdkV2 as
+// a MaterializationNotifications_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializedFeature_SdkV2) GetNotifications(ctx context.Context) (MaterializationNotifications_SdkV2, bool) {
+	var e MaterializationNotifications_SdkV2
+	if m.Notifications.IsNull() || m.Notifications.IsUnknown() {
+		return e, false
+	}
+	var v []MaterializationNotifications_SdkV2
+	d := m.Notifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotifications sets the value of the Notifications field in MaterializedFeature_SdkV2.
+func (m *MaterializedFeature_SdkV2) SetNotifications(ctx context.Context, v MaterializationNotifications_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["notifications"]
+	m.Notifications = types.ListValueMust(t, vs)
 }
 
 // GetOfflineStoreConfig returns the value of the OfflineStoreConfig field in MaterializedFeature_SdkV2 as
@@ -21512,14 +22581,6 @@ func (m ModelVersionTag_SdkV2) Type(ctx context.Context) attr.Type {
 // live as JKS files on Unity Catalog volumes, with their passwords stored in
 // Databricks secret scopes. This matches the SSL setup pattern documented at
 // https://docs.databricks.com/en/connect/streaming/kafka/authentication#use-ssl-to-connect-databricks-to-kafka.
-//
-// At materialization time, the generated PySpark code passes the JKS file paths
-// and resolved passwords through to the Kafka SSL options
-// (kafka.ssl.keystore.location, kafka.ssl.keystore.password,
-// kafka.ssl.key.password, kafka.ssl.truststore.location,
-// kafka.ssl.truststore.password). Passwords are resolved on the Spark cluster
-// via dbutils.secrets.get; this message stores only references, never password
-// values.
 type MtlsConfig_SdkV2 struct {
 	// Set to true only when the broker certificate's SAN intentionally does not
 	// match the connection endpoint — for example when reaching the cluster
@@ -21911,9 +22972,33 @@ type OnlineStoreConfig_SdkV2 struct {
 }
 
 func (to *OnlineStoreConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from OnlineStoreConfig_SdkV2) {
+	if !from.CatalogName.IsUnknown() && !from.CatalogName.IsNull() {
+		// CatalogName is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.CatalogName = from.CatalogName
+	}
+	if !from.SchemaName.IsUnknown() && !from.SchemaName.IsNull() {
+		// SchemaName is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SchemaName = from.SchemaName
+	}
+	if !from.TableNamePrefix.IsUnknown() && !from.TableNamePrefix.IsNull() {
+		// TableNamePrefix is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.TableNamePrefix = from.TableNamePrefix
+	}
 }
 
 func (to *OnlineStoreConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from OnlineStoreConfig_SdkV2) {
+	if !from.CatalogName.IsUnknown() && !from.CatalogName.IsNull() {
+		// CatalogName is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.CatalogName = from.CatalogName
+	}
+	if !from.SchemaName.IsUnknown() && !from.SchemaName.IsNull() {
+		// SchemaName is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SchemaName = from.SchemaName
+	}
+	if !from.TableNamePrefix.IsUnknown() && !from.TableNamePrefix.IsNull() {
+		// TableNamePrefix is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.TableNamePrefix = from.TableNamePrefix
+	}
 }
 
 func (m OnlineStoreConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -26027,6 +27112,149 @@ func (m *SchemaRegistryConfig_SdkV2) SetPayloadSchemaLocator(ctx context.Context
 	m.PayloadSchemaLocator = types.ListValueMust(t, vs)
 }
 
+// A Spark Declarative Pipeline (SDP) data source.
+type SdpSource_SdkV2 struct {
+	// Schema of the resulting dataframe after transformations, in Spark
+	// StructType JSON format (from df.schema.json()). Required if
+	// transformation_sql is specified. Example:
+	// {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
+	DataframeSchema types.String `tfsdk:"dataframe_schema"`
+	// Single WHERE clause to filter the pipeline's output table before applying
+	// transformations. Will be row-wise evaluated, so should only include
+	// conditionals and projections.
+	FilterCondition types.String `tfsdk:"filter_condition"`
+	// The full three-part names of the tables the pipeline reads from. Required
+	// to materialize this feature with a TableTrigger, which starts a run when
+	// these tables update. Each table must exist when the feature is created.
+	// After the pipeline runs, Feature Store checks that it reads from these
+	// tables, and the run fails if it doesn't. At most 100 tables.
+	InputTables types.List `tfsdk:"input_tables"`
+	// The full three-part (catalog, schema, table) name of the pipeline's
+	// output table to read from. The table doesn't need to exist until the
+	// pipeline first runs. Required.
+	OutputTable types.String `tfsdk:"output_table"`
+	// The ID of the Spark Declarative Pipeline that Feature Store runs to
+	// produce this source, before each materialization or backfill. The
+	// pipeline must already exist when the feature is created, and you need
+	// CAN_RUN, CAN_MANAGE, or owner permission on it. It doesn't need to have
+	// run yet. Deleting the feature doesn't delete the pipeline. If the
+	// pipeline is deleted, this field reads back empty. Required.
+	PipelineId types.String `tfsdk:"pipeline_id"`
+	// State tracking pipeline execution and output table validation. PENDING
+	// until the pipeline has run at least once and created the output table;
+	// then RESOLVED on success, or ERROR on failure.
+	PipelineState types.String `tfsdk:"pipeline_state"`
+	// A single SQL SELECT expression applied after filter_condition. Should
+	// contain all the columns needed (eg. "SELECT *, col_a + col_b AS col_c
+	// FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a +
+	// col_b AS col_c") If transformation_sql is not provided, all columns of
+	// the pipeline's output table are present in the DataSource dataframe.
+	TransformationSql types.String `tfsdk:"transformation_sql"`
+}
+
+func (to *SdpSource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SdpSource_SdkV2) {
+	if !from.InputTables.IsNull() && !from.InputTables.IsUnknown() && to.InputTables.IsNull() && len(from.InputTables.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InputTables, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InputTables = from.InputTables
+	}
+}
+
+func (to *SdpSource_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SdpSource_SdkV2) {
+	if !from.InputTables.IsNull() && !from.InputTables.IsUnknown() && to.InputTables.IsNull() && len(from.InputTables.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for InputTables, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.InputTables = from.InputTables
+	}
+}
+
+func (m SdpSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dataframe_schema"] = attrs["dataframe_schema"].SetOptional()
+	attrs["filter_condition"] = attrs["filter_condition"].SetOptional()
+	attrs["input_tables"] = attrs["input_tables"].SetOptional()
+	attrs["output_table"] = attrs["output_table"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
+	attrs["pipeline_state"] = attrs["pipeline_state"].SetComputed()
+	attrs["transformation_sql"] = attrs["transformation_sql"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SdpSource.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SdpSource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"input_tables": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SdpSource_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SdpSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dataframe_schema":   m.DataframeSchema,
+			"filter_condition":   m.FilterCondition,
+			"input_tables":       m.InputTables,
+			"output_table":       m.OutputTable,
+			"pipeline_id":        m.PipelineId,
+			"pipeline_state":     m.PipelineState,
+			"transformation_sql": m.TransformationSql,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SdpSource_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dataframe_schema": types.StringType,
+			"filter_condition": types.StringType,
+			"input_tables": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"output_table":       types.StringType,
+			"pipeline_id":        types.StringType,
+			"pipeline_state":     types.StringType,
+			"transformation_sql": types.StringType,
+		},
+	}
+}
+
+// GetInputTables returns the value of the InputTables field in SdpSource_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SdpSource_SdkV2) GetInputTables(ctx context.Context) ([]types.String, bool) {
+	if m.InputTables.IsNull() || m.InputTables.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.InputTables.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInputTables sets the value of the InputTables field in SdpSource_SdkV2.
+func (m *SdpSource_SdkV2) SetInputTables(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["input_tables"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.InputTables = types.ListValueMust(t, vs)
+}
+
 type SearchExperiments_SdkV2 struct {
 	// String representing a SQL filter condition (e.g. "name ILIKE
 	// 'my-experiment%'")
@@ -26261,6 +27489,424 @@ func (m *SearchExperimentsResponse_SdkV2) SetExperiments(ctx context.Context, v 
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["experiments"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Experiments = types.ListValueMust(t, vs)
+}
+
+// Request for SearchIssues.
+type SearchIssuesRequest_SdkV2 struct {
+	// Matches Issues with any of these categories, case-insensitively.
+	Categories types.List `tfsdk:"categories"`
+	// Defaults to 20; values above 100 are clamped.
+	PageSize types.Int64 `tfsdk:"page_size"`
+	// Expires after 15 minutes. Every other argument except `view` must match
+	// the request that returned the token.
+	PageToken types.String `tfsdk:"page_token"`
+	// experiments/{experiment}
+	Parent types.String `tfsdk:"-"`
+	// Case-insensitive substring match on title.
+	Query types.String `tfsdk:"query"`
+	// Matches Issues with any of these severities.
+	Severities types.List `tfsdk:"severities"`
+	// Defaults to SEVERITY.
+	SortKey types.String `tfsdk:"sort_key"`
+	// Defaults to DESCENDING.
+	SortOrder types.String `tfsdk:"sort_order"`
+	// Matches Issues with any of these statuses. Different filters AND
+	// together, and an empty filter matches every Issue.
+	Statuses types.List `tfsdk:"statuses"`
+	// Matches Issues that satisfy every filter. At most 10 filters of 20 values
+	// each.
+	TagFilters types.List `tfsdk:"tag_filters"`
+	// Defaults to BASIC.
+	View types.String `tfsdk:"view"`
+}
+
+func (to *SearchIssuesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SearchIssuesRequest_SdkV2) {
+	if !from.Categories.IsNull() && !from.Categories.IsUnknown() && to.Categories.IsNull() && len(from.Categories.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Categories, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Categories = from.Categories
+	}
+	if !from.Severities.IsNull() && !from.Severities.IsUnknown() && to.Severities.IsNull() && len(from.Severities.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Severities, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Severities = from.Severities
+	}
+	if !from.Statuses.IsNull() && !from.Statuses.IsUnknown() && to.Statuses.IsNull() && len(from.Statuses.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Statuses, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Statuses = from.Statuses
+	}
+	if !from.TagFilters.IsNull() && !from.TagFilters.IsUnknown() && to.TagFilters.IsNull() && len(from.TagFilters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TagFilters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TagFilters = from.TagFilters
+	}
+	if !from.TagFilters.IsNull() && !from.TagFilters.IsUnknown() {
+		if toTagFilters, ok := to.GetTagFilters(ctx); ok {
+			if fromTagFilters, ok := from.GetTagFilters(ctx); ok {
+				// Recursively sync the fields of each TagFilters element by position.
+				for i := range toTagFilters {
+					if i < len(fromTagFilters) {
+						toTagFilters[i].SyncFieldsDuringCreateOrUpdate(ctx, fromTagFilters[i])
+					}
+				}
+				to.SetTagFilters(ctx, toTagFilters)
+			}
+		}
+	}
+}
+
+func (to *SearchIssuesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SearchIssuesRequest_SdkV2) {
+	if !from.Categories.IsNull() && !from.Categories.IsUnknown() && to.Categories.IsNull() && len(from.Categories.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Categories, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Categories = from.Categories
+	}
+	if !from.Severities.IsNull() && !from.Severities.IsUnknown() && to.Severities.IsNull() && len(from.Severities.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Severities, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Severities = from.Severities
+	}
+	if !from.Statuses.IsNull() && !from.Statuses.IsUnknown() && to.Statuses.IsNull() && len(from.Statuses.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Statuses, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Statuses = from.Statuses
+	}
+	if !from.TagFilters.IsNull() && !from.TagFilters.IsUnknown() && to.TagFilters.IsNull() && len(from.TagFilters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for TagFilters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.TagFilters = from.TagFilters
+	}
+	if !from.TagFilters.IsNull() && !from.TagFilters.IsUnknown() {
+		if toTagFilters, ok := to.GetTagFilters(ctx); ok {
+			if fromTagFilters, ok := from.GetTagFilters(ctx); ok {
+				for i := range toTagFilters {
+					if i < len(fromTagFilters) {
+						toTagFilters[i].SyncFieldsDuringRead(ctx, fromTagFilters[i])
+					}
+				}
+				to.SetTagFilters(ctx, toTagFilters)
+			}
+		}
+	}
+}
+
+func (m SearchIssuesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["categories"] = attrs["categories"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["severities"] = attrs["severities"].SetOptional()
+	attrs["sort_key"] = attrs["sort_key"].SetOptional()
+	attrs["sort_order"] = attrs["sort_order"].SetOptional()
+	attrs["statuses"] = attrs["statuses"].SetOptional()
+	attrs["tag_filters"] = attrs["tag_filters"].SetOptional()
+	attrs["view"] = attrs["view"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchIssuesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SearchIssuesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"categories":  reflect.TypeOf(types.String{}),
+		"severities":  reflect.TypeOf(types.String{}),
+		"statuses":    reflect.TypeOf(types.String{}),
+		"tag_filters": reflect.TypeOf(IssueTagFilter_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SearchIssuesRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SearchIssuesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"categories":  m.Categories,
+			"page_size":   m.PageSize,
+			"page_token":  m.PageToken,
+			"parent":      m.Parent,
+			"query":       m.Query,
+			"severities":  m.Severities,
+			"sort_key":    m.SortKey,
+			"sort_order":  m.SortOrder,
+			"statuses":    m.Statuses,
+			"tag_filters": m.TagFilters,
+			"view":        m.View,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SearchIssuesRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"categories": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+			"query":      types.StringType,
+			"severities": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"sort_key":   types.StringType,
+			"sort_order": types.StringType,
+			"statuses": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"tag_filters": basetypes.ListType{
+				ElemType: IssueTagFilter_SdkV2{}.Type(ctx),
+			},
+			"view": types.StringType,
+		},
+	}
+}
+
+// GetCategories returns the value of the Categories field in SearchIssuesRequest_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SearchIssuesRequest_SdkV2) GetCategories(ctx context.Context) ([]types.String, bool) {
+	if m.Categories.IsNull() || m.Categories.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Categories.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCategories sets the value of the Categories field in SearchIssuesRequest_SdkV2.
+func (m *SearchIssuesRequest_SdkV2) SetCategories(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["categories"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Categories = types.ListValueMust(t, vs)
+}
+
+// GetSeverities returns the value of the Severities field in SearchIssuesRequest_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SearchIssuesRequest_SdkV2) GetSeverities(ctx context.Context) ([]types.String, bool) {
+	if m.Severities.IsNull() || m.Severities.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Severities.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSeverities sets the value of the Severities field in SearchIssuesRequest_SdkV2.
+func (m *SearchIssuesRequest_SdkV2) SetSeverities(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["severities"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Severities = types.ListValueMust(t, vs)
+}
+
+// GetStatuses returns the value of the Statuses field in SearchIssuesRequest_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SearchIssuesRequest_SdkV2) GetStatuses(ctx context.Context) ([]types.String, bool) {
+	if m.Statuses.IsNull() || m.Statuses.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Statuses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStatuses sets the value of the Statuses field in SearchIssuesRequest_SdkV2.
+func (m *SearchIssuesRequest_SdkV2) SetStatuses(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["statuses"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Statuses = types.ListValueMust(t, vs)
+}
+
+// GetTagFilters returns the value of the TagFilters field in SearchIssuesRequest_SdkV2 as
+// a slice of IssueTagFilter_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SearchIssuesRequest_SdkV2) GetTagFilters(ctx context.Context) ([]IssueTagFilter_SdkV2, bool) {
+	if m.TagFilters.IsNull() || m.TagFilters.IsUnknown() {
+		return nil, false
+	}
+	var v []IssueTagFilter_SdkV2
+	d := m.TagFilters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTagFilters sets the value of the TagFilters field in SearchIssuesRequest_SdkV2.
+func (m *SearchIssuesRequest_SdkV2) SetTagFilters(ctx context.Context, v []IssueTagFilter_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tag_filters"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.TagFilters = types.ListValueMust(t, vs)
+}
+
+// One page of SearchIssues results.
+type SearchIssuesResponse_SdkV2 struct {
+	// The page's Issues, in the requested order.
+	Issues types.List `tfsdk:"issues"`
+	// Absent on the last page.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// Exact number of matching Issues.
+	TotalSize types.Int64 `tfsdk:"total_size"`
+}
+
+func (to *SearchIssuesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SearchIssuesResponse_SdkV2) {
+	if !from.Issues.IsNull() && !from.Issues.IsUnknown() && to.Issues.IsNull() && len(from.Issues.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Issues, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Issues = from.Issues
+	}
+	if !from.Issues.IsNull() && !from.Issues.IsUnknown() {
+		if toIssues, ok := to.GetIssues(ctx); ok {
+			if fromIssues, ok := from.GetIssues(ctx); ok {
+				// Recursively sync the fields of each Issues element by position.
+				for i := range toIssues {
+					if i < len(fromIssues) {
+						toIssues[i].SyncFieldsDuringCreateOrUpdate(ctx, fromIssues[i])
+					}
+				}
+				to.SetIssues(ctx, toIssues)
+			}
+		}
+	}
+}
+
+func (to *SearchIssuesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SearchIssuesResponse_SdkV2) {
+	if !from.Issues.IsNull() && !from.Issues.IsUnknown() && to.Issues.IsNull() && len(from.Issues.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Issues, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Issues = from.Issues
+	}
+	if !from.Issues.IsNull() && !from.Issues.IsUnknown() {
+		if toIssues, ok := to.GetIssues(ctx); ok {
+			if fromIssues, ok := from.GetIssues(ctx); ok {
+				for i := range toIssues {
+					if i < len(fromIssues) {
+						toIssues[i].SyncFieldsDuringRead(ctx, fromIssues[i])
+					}
+				}
+				to.SetIssues(ctx, toIssues)
+			}
+		}
+	}
+}
+
+func (m SearchIssuesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["issues"] = attrs["issues"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["total_size"] = attrs["total_size"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchIssuesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SearchIssuesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"issues": reflect.TypeOf(Issue_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SearchIssuesResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SearchIssuesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"issues":          m.Issues,
+			"next_page_token": m.NextPageToken,
+			"total_size":      m.TotalSize,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SearchIssuesResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"issues": basetypes.ListType{
+				ElemType: Issue_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+			"total_size":      types.Int64Type,
+		},
+	}
+}
+
+// GetIssues returns the value of the Issues field in SearchIssuesResponse_SdkV2 as
+// a slice of Issue_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SearchIssuesResponse_SdkV2) GetIssues(ctx context.Context) ([]Issue_SdkV2, bool) {
+	if m.Issues.IsNull() || m.Issues.IsUnknown() {
+		return nil, false
+	}
+	var v []Issue_SdkV2
+	d := m.Issues.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIssues sets the value of the Issues field in SearchIssuesResponse_SdkV2.
+func (m *SearchIssuesResponse_SdkV2) SetIssues(ctx context.Context, v []Issue_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["issues"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Issues = types.ListValueMust(t, vs)
 }
 
 type SearchLoggedModelsDataset_SdkV2 struct {
@@ -27514,9 +29160,7 @@ func (m *SearchRunsResponse_SdkV2) SetRuns(ctx context.Context, v []Run_SdkV2) {
 	m.Runs = types.ListValueMust(t, vs)
 }
 
-// Reference to an entry in a Databricks secret scope. The referenced value is
-// fetched on the Spark cluster at materialization time via
-// dbutils.secrets.get(scope, key).
+// Reference to an entry in a Databricks secret scope.
 type SecretScopeReference_SdkV2 struct {
 	// The key within the scope.
 	Key types.String `tfsdk:"key"`
@@ -28380,8 +30024,8 @@ func (m StddevSampFunction_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 // A Stream is a governed UC entity representing an external streaming data
-// source. The source_config oneof determines the streaming platform source
-// (e.g. Kafka, Kinesis, etc.).
+// source. The source_config field determines the streaming platform source
+// (e.g. Kafka, Kinesis).
 type Stream_SdkV2 struct {
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
@@ -28829,9 +30473,7 @@ func (m *StreamArnList_SdkV2) SetArns(ctx context.Context, v []types.String) {
 
 // Specifies how to connect and authenticate to the stream platform.
 type StreamConnectionConfig_SdkV2 struct {
-	// Direct mTLS configuration for stream platform access. This is only used
-	// in the short term until UC Kafka Connections support mTLS . Once UC Kafka
-	// Connections support mTLS, this will be deprecated.
+	// Direct mTLS configuration for stream platform access.
 	DirectMtlsConfig types.List `tfsdk:"direct_mtls_config"`
 	// Name of an existing UC Connection for stream platform access. Must be the
 	// correct type for the streaming platform (e.g. a Kafka Connection for a
@@ -29397,6 +31039,11 @@ type StreamingMode_SdkV2 struct {
 	FreshnessTarget types.String `tfsdk:"freshness_target"`
 	// The type of streaming mode used by the materialization pipeline.
 	Mode types.String `tfsdk:"mode"`
+	// Number of shuffle partitions for streaming materialization of this
+	// feature. Higher values process high-throughput features with more
+	// parallelism at higher compute cost. Materialized features which are
+	// computed together will use the largest value set among them.
+	ShufflePartitions types.Int64 `tfsdk:"shuffle_partitions"`
 }
 
 func (to *StreamingMode_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamingMode_SdkV2) {
@@ -29408,6 +31055,7 @@ func (to *StreamingMode_SdkV2) SyncFieldsDuringRead(ctx context.Context, from St
 func (m StreamingMode_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["freshness_target"] = attrs["freshness_target"].SetOptional()
 	attrs["mode"] = attrs["mode"].SetOptional()
+	attrs["shuffle_partitions"] = attrs["shuffle_partitions"].SetOptional()
 
 	return attrs
 }
@@ -29430,8 +31078,9 @@ func (m StreamingMode_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"freshness_target": m.FreshnessTarget,
-			"mode":             m.Mode,
+			"freshness_target":   m.FreshnessTarget,
+			"mode":               m.Mode,
+			"shuffle_partitions": m.ShufflePartitions,
 		})
 }
 
@@ -29439,8 +31088,9 @@ func (m StreamingMode_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 func (m StreamingMode_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"freshness_target": types.StringType,
-			"mode":             types.StringType,
+			"freshness_target":   types.StringType,
+			"mode":               types.StringType,
+			"shuffle_partitions": types.Int64Type,
 		},
 	}
 }
@@ -30769,9 +32419,7 @@ type UpdateFeatureRequest_SdkV2 struct {
 	// Feature whose full_name identifies the target. Only description is
 	// mutable.
 	Feature types.List `tfsdk:"feature"`
-	// The full three-part name (catalog, schema, name) of the feature. This is
-	// the feature's resource identifier; the catalog_name, schema_name, and
-	// name fields below are OUTPUT_ONLY decomposed views of this value.
+	// The full three-part name (catalog, schema, name) of the feature.
 	FullName types.String `tfsdk:"-"`
 	// Fields to update. The only supported path is description.
 	UpdateMask types.String `tfsdk:"-"`
@@ -30988,6 +32636,119 @@ func (m *UpdateFeatureTagRequest_SdkV2) SetFeatureTag(ctx context.Context, v Fea
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["feature_tag"]
 	m.FeatureTag = types.ListValueMust(t, vs)
+}
+
+type UpdateIssueRequest_SdkV2 struct {
+	// `issue.name` identifies the target.
+	Issue types.List `tfsdk:"issue"`
+	// experiments/{experiment}/issues/{issue}
+	Name types.String `tfsdk:"-"`
+	// Accepts title, description, status, severity, categories, tags,
+	// last_seen_time, and metadata.<key>. A path with an empty value clears the
+	// field, except that title, status, and severity can't be cleared, and
+	// last_seen_time can be cleared only when source_type is MANUAL. categories
+	// and tags are replaced whole. metadata is updated per key: a
+	// metadata.<key> path sets that key from issue.metadata, or removes it when
+	// issue.metadata lacks it, and leaves the other keys alone. A bare metadata
+	// path is rejected.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateIssueRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateIssueRequest_SdkV2) {
+	if !from.Issue.IsNull() && !from.Issue.IsUnknown() {
+		if toIssue, ok := to.GetIssue(ctx); ok {
+			if fromIssue, ok := from.GetIssue(ctx); ok {
+				// Recursively sync the fields of Issue
+				toIssue.SyncFieldsDuringCreateOrUpdate(ctx, fromIssue)
+				to.SetIssue(ctx, toIssue)
+			}
+		}
+	}
+}
+
+func (to *UpdateIssueRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateIssueRequest_SdkV2) {
+	if !from.Issue.IsNull() && !from.Issue.IsUnknown() {
+		if toIssue, ok := to.GetIssue(ctx); ok {
+			if fromIssue, ok := from.GetIssue(ctx); ok {
+				toIssue.SyncFieldsDuringRead(ctx, fromIssue)
+				to.SetIssue(ctx, toIssue)
+			}
+		}
+	}
+}
+
+func (m UpdateIssueRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["issue"] = attrs["issue"].SetRequired()
+	attrs["issue"] = attrs["issue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateIssueRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateIssueRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"issue": reflect.TypeOf(Issue_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateIssueRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UpdateIssueRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"issue":       m.Issue,
+			"name":        m.Name,
+			"update_mask": m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateIssueRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"issue": basetypes.ListType{
+				ElemType: Issue_SdkV2{}.Type(ctx),
+			},
+			"name":        types.StringType,
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetIssue returns the value of the Issue field in UpdateIssueRequest_SdkV2 as
+// a Issue_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateIssueRequest_SdkV2) GetIssue(ctx context.Context) (Issue_SdkV2, bool) {
+	var e Issue_SdkV2
+	if m.Issue.IsNull() || m.Issue.IsUnknown() {
+		return e, false
+	}
+	var v []Issue_SdkV2
+	d := m.Issue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetIssue sets the value of the Issue field in UpdateIssueRequest_SdkV2.
+func (m *UpdateIssueRequest_SdkV2) SetIssue(ctx context.Context, v Issue_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["issue"]
+	m.Issue = types.ListValueMust(t, vs)
 }
 
 type UpdateKafkaConfigRequest_SdkV2 struct {

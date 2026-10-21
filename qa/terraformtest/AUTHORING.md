@@ -146,6 +146,27 @@ fixtures; no server-side setup or initial Terraform state is needed.
 
 ## Decide what to assert
 
+Leave HTTP ordering disabled for ordinary scenarios: Terraform may run
+independent resources concurrently. For a regression that specifically depends
+on call order, set `enforce_call_order: true` at the test root. It applies to
+every step and destroy, excluding reusable host metadata. Keep each observed
+call in a future recorded transcript even when enforcement is disabled;
+identical request signatures still consume responses FIFO.
+
+Use `plan` when the behavior is the proposed diff: create versus update,
+replacement order, computed values still unknown, or an unchanged configuration.
+Use full instance addresses for multi-resource cases. Select only the relevant
+actions and before/after paths; do not copy every provider attribute into an
+expectation. The [plan format reference](README.md#plan-assertions) documents
+output checks and `plan_only`, including the harness's empty-plan restriction.
+Plan+apply assertions inspect the same saved plan that gets applied, without
+disabling Terraform's post-apply consistency checks.
+
+Plan-only HTTP reads belong in the step's ordinary `calls`. Plans do not create
+the proposed resources, but initial-state or earlier applied resources still
+require destroy fixtures. Plan-only state checks inspect the refreshed prior
+state, not the unapplied planned values.
+
 HashiCorp's [resource state-check guide](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests/state-checks/resource)
 focuses state checks on computed attributes. Follow that default: check IDs,
 provider-derived values, data-source outputs, and unconfigured optional/computed
@@ -185,12 +206,20 @@ mandatory and needs no YAML state assertion.
 - Include every consumable request, including plan refreshes, post-apply reads,
   retries, and destroy. The two identical create-step GETs above are deliberate.
   Match JSON semantically, not byte-for-byte; whitespace and object-key order
-  do not matter, but extra fields and array order do. There are no wildcards.
+  do not matter, but extra fields and array order do.
+- Leave behavior-specific fields exact. For an incidental volatile value such
+  as a request ID, use explicit [`request.matchers`](README.md#test-definition)
+  with `any_string`. It requires a present string; missing values and JSON null
+  still fail. Do not mask names, IDs, or other values that the scenario should
+  verify, and do not use `"****"` as a wildcard (it is just a literal string).
 - For polling/retry scenarios, check meaningful requests and outcomes, not
   elapsed time or incidental scheduling.
 - Independent request signatures can interleave. Repeated identical signatures
   consume responses FIFO, so preserve their response order. Do not assume a
   global or per-resource request order is enforced.
+- Overlapping matcher signatures consume the first matching unconsumed fixture,
+  not the most specific one. Keep distinct behavior-specific fields exact so a
+  broad matcher does not consume the response intended for another request.
 - Diagnose failures before editing fixtures. An unexpected call may expose a
   provider regression; an unused call may mean an expected operation vanished.
   Do not automatically bless a changed transcript. Temporarily break the
@@ -204,12 +233,10 @@ the replayed cleanup flow, not the state of an independently simulated service.
 
 ## Current limits
 
-The [format reference](README.md#mvp-scope) lists unsupported features. Do not
-copy HashiCorp's import or plan-only examples into this YAML as
-if those modes were implemented. Initial state, recording, explicit plan
-assertions and forced ordering need further engine
-support. Extend this replay guide as those capabilities arrive; do not silently
-skip an assertion or treat an unexpected failure as a passing test.
+The [format reference](README.md#mvp-scope) lists unsupported features. Recording,
+import steps, and strict attribute matching need further engine support. Use the
+documented YAML fields rather than copying arbitrary HashiCorp TestStep options.
+Do not silently skip an assertion or treat an unexpected failure as a passing test.
 
 ## Test expected failures
 
@@ -228,3 +255,29 @@ You can create a resource, exercise an invalid update, then let automatic destro
 clean it up using the last successful configuration. To check state after an
 expected failure, follow it with a successful step and place state checks there;
 state checks directly on the failing step are not supported.
+
+## Start from existing state
+
+Add [`initial_state.checkpoint`](README.md#initial-state) to reference a
+Terraform-generated state file next to the test. Keep it as an opaque artifact;
+do not hand-build state JSON or edit IDs, schema versions, or provider-private
+data. For migration regressions, capture the state with the older provider
+version under test and keep that artifact fixed. Record how it was generated.
+
+The server remains stateless: a checkpoint and HTTP fixtures describe different
+things. Supply the existing object's read responses, update calls, and destroy
+calls. You do not need a create step for a resource already in the checkpoint.
+The [update showcase](testdata/initial_state/group_update.yaml) restores a real
+group checkpoint, updates it in a single step, and destroys it.
+The [expected-error showcase](testdata/initial_state/rejected_update.yaml)
+proves cleanup still runs after rejecting the first update.
+
+Review checkpoints for secrets, including encoded private data. Generate
+secret-free scenarios rather than editing a checkpoint to sanitize it. These
+tests are hermetic; fixture preparation here uses the real provider and Terraform
+against local HTTP fixtures, not a live integration test. A recorder will later
+handle environment and initial-state templates with separate cleanup ownership.
+
+The repository ignores `*.tfstate` by default to protect ordinary local state.
+After reviewing a fixture for secrets, add that exact checkpoint explicitly with
+`git add -f path/to/checkpoint.tfstate`; do not relax the global ignore rule.

@@ -2,7 +2,7 @@
 subcategory: "Data Classification"
 ---
 # databricks_data_classification_catalog_config Data Source
-[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/dataclassification)
 
@@ -11,6 +11,8 @@ This data source can be used to fetch the Data Classification configuration for 
 To read the Data Classification configuration, you must have browse permissions on the catalog.
 
 -> **Note** This data source can only be used with a workspace-level provider.
+
+-> **Note** The `auto_tag_configs` attribute is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). All other attributes of this data source are generally available.
 
 
 ## Example Usage
@@ -26,8 +28,8 @@ data "databricks_data_classification_catalog_config" "prod_config" {
 }
 
 # Use the fetched configuration
-output "auto_tag_configs" {
-  value = data.databricks_data_classification_catalog_config.prod_config.auto_tag_configs
+output "included_schemas" {
+  value = data.databricks_data_classification_catalog_config.prod_config.included_schemas
 }
 ```
 

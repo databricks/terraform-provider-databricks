@@ -457,7 +457,8 @@ type ClonePipelineRequest_SdkV2 struct {
 	Channel types.String `tfsdk:"channel"`
 	// The type of clone to perform. Currently, only deep copies are supported
 	CloneMode types.String `tfsdk:"clone_mode"`
-	// Cluster settings for this pipeline deployment.
+	// Cluster settings for this pipeline deployment. Applies to classic
+	// (non-serverless) pipelines. Omit this field when `serverless` is `true`.
 	Clusters types.List `tfsdk:"clusters"`
 	// String-String configuration for this pipeline execution.
 	Configuration types.Map `tfsdk:"configuration"`
@@ -499,6 +500,10 @@ type ClonePipelineRequest_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// List of notification settings for this pipeline.
 	Notifications types.List `tfsdk:"notifications"`
+	// Path of the pipeline parent folder in workspace file tree.
+	//
+	// If absent, the pipeline doesn't have a workspace object.
+	ParentPath types.String `tfsdk:"parent_path"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon"`
 	// Source pipeline to clone from
@@ -511,7 +516,11 @@ type ClonePipelineRequest_SdkV2 struct {
 	RootPath types.String `tfsdk:"root_path"`
 	// The default schema (database) where tables are read from or published to.
 	Schema types.String `tfsdk:"schema"`
-	// Whether serverless compute is enabled for this pipeline.
+	// Whether serverless compute is enabled for this pipeline. Serverless is
+	// the recommended compute for new pipelines; set this to `true` to run the
+	// pipeline on serverless. For notebook/file pipelines, omitting this field
+	// uses classic compute configured through the `clusters` field. When
+	// `true`, omit `clusters`; Photon is always enabled.
 	Serverless types.Bool `tfsdk:"serverless"`
 	// Serverless compute ID specified by the user for serverless pipelines.
 	ServerlessComputeId types.String `tfsdk:"serverless_compute_id"`
@@ -813,6 +822,7 @@ func (m ClonePipelineRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["libraries"] = attrs["libraries"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["notifications"] = attrs["notifications"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["photon"] = attrs["photon"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -884,6 +894,7 @@ func (m ClonePipelineRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes
 			"libraries":              m.Libraries,
 			"name":                   m.Name,
 			"notifications":          m.Notifications,
+			"parent_path":            m.ParentPath,
 			"photon":                 m.Photon,
 			"pipeline_id":            m.PipelineId,
 			"restart_window":         m.RestartWindow,
@@ -944,6 +955,7 @@ func (m ClonePipelineRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"notifications": basetypes.ListType{
 				ElemType: Notifications_SdkV2{}.Type(ctx),
 			},
+			"parent_path": types.StringType,
 			"photon":      types.BoolType,
 			"pipeline_id": types.StringType,
 			"restart_window": basetypes.ListType{
@@ -2434,7 +2446,8 @@ type CreatePipeline_SdkV2 struct {
 	Catalog types.String `tfsdk:"catalog"`
 	// SDP Release Channel that specifies which version to use.
 	Channel types.String `tfsdk:"channel"`
-	// Cluster settings for this pipeline deployment.
+	// Cluster settings for this pipeline deployment. Applies to classic
+	// (non-serverless) pipelines. Omit this field when `serverless` is `true`.
 	Clusters types.List `tfsdk:"clusters"`
 	// String-String configuration for this pipeline execution.
 	Configuration types.Map `tfsdk:"configuration"`
@@ -2477,6 +2490,10 @@ type CreatePipeline_SdkV2 struct {
 	// Key/value map of default parameters to use for pipeline execution.
 	// Maximum total size: 10k characters (JSON format)
 	Parameters types.Map `tfsdk:"parameters"`
+	// Path of the pipeline parent folder in workspace file tree.
+	//
+	// If absent, the pipeline doesn't have a workspace object.
+	ParentPath types.String `tfsdk:"parent_path"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon"`
 	// Restart window of this pipeline.
@@ -2489,7 +2506,11 @@ type CreatePipeline_SdkV2 struct {
 	RunAs types.List `tfsdk:"run_as"`
 	// The default schema (database) where tables are read from or published to.
 	Schema types.String `tfsdk:"schema"`
-	// Whether serverless compute is enabled for this pipeline.
+	// Whether serverless compute is enabled for this pipeline. Serverless is
+	// the recommended compute for new pipelines; set this to `true` to run the
+	// pipeline on serverless. For notebook/file pipelines, omitting this field
+	// uses classic compute configured through the `clusters` field. When
+	// `true`, omit `clusters`; Photon is always enabled.
 	Serverless types.Bool `tfsdk:"serverless"`
 	// Serverless compute ID specified by the user for serverless pipelines.
 	ServerlessComputeId types.String `tfsdk:"serverless_compute_id"`
@@ -2808,6 +2829,7 @@ func (m CreatePipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["notifications"] = attrs["notifications"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["photon"] = attrs["photon"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -2882,6 +2904,7 @@ func (m CreatePipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 			"name":                  m.Name,
 			"notifications":         m.Notifications,
 			"parameters":            m.Parameters,
+			"parent_path":           m.ParentPath,
 			"photon":                m.Photon,
 			"restart_window":        m.RestartWindow,
 			"root_path":             m.RootPath,
@@ -2944,7 +2967,8 @@ func (m CreatePipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"photon": types.BoolType,
+			"parent_path": types.StringType,
+			"photon":      types.BoolType,
 			"restart_window": basetypes.ListType{
 				ElemType: RestartWindow_SdkV2{}.Type(ctx),
 			},
@@ -3747,7 +3771,8 @@ type EditPipeline_SdkV2 struct {
 	Catalog types.String `tfsdk:"catalog"`
 	// SDP Release Channel that specifies which version to use.
 	Channel types.String `tfsdk:"channel"`
-	// Cluster settings for this pipeline deployment.
+	// Cluster settings for this pipeline deployment. Applies to classic
+	// (non-serverless) pipelines. Omit this field when `serverless` is `true`.
 	Clusters types.List `tfsdk:"clusters"`
 	// String-String configuration for this pipeline execution.
 	Configuration types.Map `tfsdk:"configuration"`
@@ -3792,6 +3817,10 @@ type EditPipeline_SdkV2 struct {
 	// Key/value map of default parameters to use for pipeline execution.
 	// Maximum total size: 10k characters (JSON format)
 	Parameters types.Map `tfsdk:"parameters"`
+	// Path of the pipeline parent folder in workspace file tree.
+	//
+	// If absent, the pipeline doesn't have a workspace object.
+	ParentPath types.String `tfsdk:"parent_path"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon"`
 	// Unique identifier for this pipeline.
@@ -3806,7 +3835,11 @@ type EditPipeline_SdkV2 struct {
 	RunAs types.List `tfsdk:"run_as"`
 	// The default schema (database) where tables are read from or published to.
 	Schema types.String `tfsdk:"schema"`
-	// Whether serverless compute is enabled for this pipeline.
+	// Whether serverless compute is enabled for this pipeline. Serverless is
+	// the recommended compute for new pipelines; set this to `true` to run the
+	// pipeline on serverless. For notebook/file pipelines, omitting this field
+	// uses classic compute configured through the `clusters` field. When
+	// `true`, omit `clusters`; Photon is always enabled.
 	Serverless types.Bool `tfsdk:"serverless"`
 	// Serverless compute ID specified by the user for serverless pipelines.
 	ServerlessComputeId types.String `tfsdk:"serverless_compute_id"`
@@ -4125,6 +4158,7 @@ func (m EditPipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["notifications"] = attrs["notifications"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["photon"] = attrs["photon"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -4200,6 +4234,7 @@ func (m EditPipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"name":                   m.Name,
 			"notifications":          m.Notifications,
 			"parameters":             m.Parameters,
+			"parent_path":            m.ParentPath,
 			"photon":                 m.Photon,
 			"pipeline_id":            m.PipelineId,
 			"restart_window":         m.RestartWindow,
@@ -4263,6 +4298,7 @@ func (m EditPipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
+			"parent_path": types.StringType,
 			"photon":      types.BoolType,
 			"pipeline_id": types.StringType,
 			"restart_window": basetypes.ListType{
@@ -8700,8 +8736,8 @@ type ListPipelinesRequest_SdkV2 struct {
 	// 25. The maximum value is 100. An error is returned if the value of
 	// max_results is greater than 100.
 	MaxResults types.Int64 `tfsdk:"-"`
-	// A list of strings specifying the order of results. Supported order_by
-	// fields are id and name. The default is id asc. This field is optional.
+	// A list of strings specifying the order of results. The supported order_by
+	// field is id. The default is id asc. This field is optional.
 	OrderBy types.List `tfsdk:"-"`
 	// Page token returned by previous call
 	PageToken types.String `tfsdk:"-"`
@@ -12496,7 +12532,8 @@ type PipelineSpec_SdkV2 struct {
 	Catalog types.String `tfsdk:"catalog"`
 	// SDP Release Channel that specifies which version to use.
 	Channel types.String `tfsdk:"channel"`
-	// Cluster settings for this pipeline deployment.
+	// Cluster settings for this pipeline deployment. Applies to classic
+	// (non-serverless) pipelines. Omit this field when `serverless` is `true`.
 	Clusters types.List `tfsdk:"clusters"`
 	// String-String configuration for this pipeline execution.
 	Configuration types.Map `tfsdk:"configuration"`
@@ -12534,6 +12571,10 @@ type PipelineSpec_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// List of notification settings for this pipeline.
 	Notifications types.List `tfsdk:"notifications"`
+	// Path of the pipeline parent folder in workspace file tree.
+	//
+	// If absent, the pipeline doesn't have a workspace object.
+	ParentPath types.String `tfsdk:"parent_path"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon"`
 	// Restart window of this pipeline.
@@ -12544,7 +12585,11 @@ type PipelineSpec_SdkV2 struct {
 	RootPath types.String `tfsdk:"root_path"`
 	// The default schema (database) where tables are read from or published to.
 	Schema types.String `tfsdk:"schema"`
-	// Whether serverless compute is enabled for this pipeline.
+	// Whether serverless compute is enabled for this pipeline. Serverless is
+	// the recommended compute for new pipelines; set this to `true` to run the
+	// pipeline on serverless. For notebook/file pipelines, omitting this field
+	// uses classic compute configured through the `clusters` field. When
+	// `true`, omit `clusters`; Photon is always enabled.
 	Serverless types.Bool `tfsdk:"serverless"`
 	// Serverless compute ID specified by the user for serverless pipelines.
 	ServerlessComputeId types.String `tfsdk:"serverless_compute_id"`
@@ -12843,6 +12888,7 @@ func (m PipelineSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["libraries"] = attrs["libraries"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["notifications"] = attrs["notifications"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["photon"] = attrs["photon"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -12910,6 +12956,7 @@ func (m PipelineSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"libraries":             m.Libraries,
 			"name":                  m.Name,
 			"notifications":         m.Notifications,
+			"parent_path":           m.ParentPath,
 			"photon":                m.Photon,
 			"restart_window":        m.RestartWindow,
 			"root_path":             m.RootPath,
@@ -12966,7 +13013,8 @@ func (m PipelineSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"notifications": basetypes.ListType{
 				ElemType: Notifications_SdkV2{}.Type(ctx),
 			},
-			"photon": types.BoolType,
+			"parent_path": types.StringType,
+			"photon":      types.BoolType,
 			"restart_window": basetypes.ListType{
 				ElemType: RestartWindow_SdkV2{}.Type(ctx),
 			},

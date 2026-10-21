@@ -8671,6 +8671,106 @@ func (m RequestedResource) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Request to reveal the current password for a password-authenticated Postgres
+// role.
+type RevealRolePasswordRequest struct {
+	// The full resource path of the role whose password should be revealed.
+	// Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *RevealRolePasswordRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RevealRolePasswordRequest) {
+}
+
+func (to *RevealRolePasswordRequest) SyncFieldsDuringRead(ctx context.Context, from RevealRolePasswordRequest) {
+}
+
+func (m RevealRolePasswordRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RevealRolePasswordRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RevealRolePasswordRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RevealRolePasswordRequest
+// only implements ToObjectValue() and Type().
+func (m RevealRolePasswordRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RevealRolePasswordRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+// Response containing the password for a password-authenticated Postgres role.
+type RevealRolePasswordResponse struct {
+	// The current password for the Postgres role.
+	Password types.String `tfsdk:"password"`
+}
+
+func (to *RevealRolePasswordResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RevealRolePasswordResponse) {
+}
+
+func (to *RevealRolePasswordResponse) SyncFieldsDuringRead(ctx context.Context, from RevealRolePasswordResponse) {
+}
+
+func (m RevealRolePasswordResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["password"] = attrs["password"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RevealRolePasswordResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RevealRolePasswordResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RevealRolePasswordResponse
+// only implements ToObjectValue() and Type().
+func (m RevealRolePasswordResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"password": m.Password,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RevealRolePasswordResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"password": types.StringType,
+		},
+	}
+}
+
 // Role represents a Postgres role within a Branch.
 type Role struct {
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`

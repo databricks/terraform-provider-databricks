@@ -8,8 +8,6 @@ import (
 	"io"
 	"math/big"
 	"net/http"
-	"net/url"
-	"reflect"
 	"strings"
 	"sync"
 )
@@ -21,11 +19,12 @@ type Body struct {
 
 // Request defines a complete signature; only listed headers are compared.
 type Request struct {
-	Method  string              `yaml:"method"`
-	Path    string              `yaml:"path"`
-	Query   map[string][]string `yaml:"query,omitempty"`
-	Headers map[string]string   `yaml:"headers,omitempty"`
-	Body    *Body               `yaml:"body"`
+	Method   string              `yaml:"method"`
+	Path     string              `yaml:"path"`
+	Query    map[string][]string `yaml:"query,omitempty"`
+	Headers  map[string]string   `yaml:"headers,omitempty"`
+	Body     *Body               `yaml:"body"`
+	Matchers Matchers            `yaml:"matchers,omitempty"`
 }
 
 // Response defines the HTTP reply, with an optional JSON body.
@@ -44,6 +43,7 @@ type Call struct {
 type exchange struct {
 	call         Call
 	expectedBody any
+	matchers     Matchers
 	responseBody []byte
 	used         bool
 }
@@ -51,16 +51,26 @@ type exchange struct {
 // Handler permits independent requests to interleave and consumes identical
 // request signatures FIFO. A mutex keeps matching and consumption atomic.
 type Handler struct {
-	mu       sync.Mutex
-	label    string
-	calls    []exchange
-	reusable []exchange
-	failures []error
+	mu               sync.Mutex
+	label            string
+	calls            []exchange
+	reusable         []exchange
+	failures         []error
+	enforceCallOrder bool
 }
 
 // NewHandler returns an empty handler; fixture sets are configured separately.
 func NewHandler() *Handler {
 	return &Handler{}
+}
+
+// SetEnforceCallOrder requires consumable calls in fixture order when enabled.
+// Reusable fallbacks remain unordered. Changing this setting preserves the
+// current step's consumption and failures.
+func (h *Handler) SetEnforceCallOrder(enabled bool) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.enforceCallOrder = enabled
 }
 
 // SetReusableFixtures replaces test-wide fallback exchanges, such as metadata.
@@ -112,6 +122,10 @@ func compileCalls(calls []Call) ([]exchange, error) {
 			if err != nil {
 				return nil, fmt.Errorf("call %d request: %w", i+1, err)
 			}
+		}
+		e.matchers, e.expectedBody, err = compileMatchers(call.Request.Matchers, e.expectedBody, call.Request.Body != nil)
+		if err != nil {
+			return nil, fmt.Errorf("call %d request matchers: %w", i+1, err)
 		}
 		if call.Response.Body != nil {
 			e.responseBody, err = json.Marshal(call.Response.Body.JSON)
@@ -172,18 +186,26 @@ func (e *exchange) matches(req *http.Request, body []byte, value any) bool {
 	if e.used || expected.Method != req.Method || expected.Path != req.URL.EscapedPath() {
 		return false
 	}
-	if url.Values(expected.Query).Encode() != req.URL.Query().Encode() {
+	if !matchesQuery(expected.Query, e.matchers.Query, req.URL.Query()) {
 		return false
 	}
 	for key, header := range expected.Headers {
+		if _, overridden := e.matchers.Headers[http.CanonicalHeaderKey(key)]; overridden {
+			continue
+		}
 		if req.Header.Get(key) != header {
+			return false
+		}
+	}
+	for key := range e.matchers.Headers {
+		if len(req.Header.Values(key)) != 1 {
 			return false
 		}
 	}
 	if expected.Body == nil {
 		return len(body) == 0
 	}
-	return len(body) > 0 && reflect.DeepEqual(e.expectedBody, value)
+	return len(body) > 0 && matchesJSON(e.expectedBody, value)
 }
 
 // ServeHTTP prefers consumable step fixtures over reusable fallbacks. Matching
@@ -200,8 +222,17 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		h.fail(w, fmt.Errorf("%s: %s %s: invalid request body: %w", h.label, req.Method, req.URL.RequestURI(), err))
 		return
 	}
+	next := -1
 	for i := range h.calls {
+		if next == -1 && !h.calls[i].used {
+			next = i
+		}
 		if h.calls[i].matches(req, body, value) {
+			if h.enforceCallOrder && i != next {
+				expected := h.calls[next].call.Request
+				h.fail(w, fmt.Errorf("%s: out-of-order HTTP call: %s %s body=%s matched call %d; next expected call %d: %s %s", h.label, req.Method, req.URL.RequestURI(), body, i+1, next+1, expected.Method, expected.Path))
+				return
+			}
 			h.calls[i].used = true
 			writeResponse(w, &h.calls[i])
 			return

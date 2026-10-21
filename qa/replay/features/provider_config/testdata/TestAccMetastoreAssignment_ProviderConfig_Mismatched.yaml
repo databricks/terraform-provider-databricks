@@ -2,7 +2,7 @@
 # Generic provider_config validation; the resource is only a schema carrier.
 # Random names are fixed because replay has no shared server.
 version: 1
-# Inferred host metadata, not captured from a live workspace.
+# Dummy host metadata, not captured from a live workspace.
 host_metadata:
   workspace_id: "12345"
 steps:

@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**51 copied; 494 pending.** Counts refer to original Go test functions, not
+**56 copied; 489 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. A copy must preserve meaningful
 assertions; unsupported assertions remain pending rather than being omitted.
 Original files are unchanged.
@@ -153,7 +153,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [settings/disable_legacy_dbfs_setting_test.go](../../settings/disable_legacy_dbfs_setting_test.go) | 0 | 1 |
 | [settings/disable_legacy_features_test.go](../../settings/disable_legacy_features_test.go) | 0 | 1 |
 | [settings/notification_destination_provider_config_test.go](../../settings/notification_destination_provider_config_test.go) | 1 | 0 |
-| [settings/notification_destination_test.go](../../settings/notification_destination_test.go) | 0 | 5 |
+| [settings/notification_destination_test.go](../../settings/notification_destination_test.go) | 5 | 0 |
 | [settings/restrict_workspace_admins_test.go](../../settings/restrict_workspace_admins_test.go) | 0 | 1 |
 | [sharing/data_shares_acc_test.go](../../sharing/data_shares_acc_test.go) | 0 | 1 |
 | [sharing/provider_provider_config_test.go](../../sharing/provider_provider_config_test.go) | 1 | 0 |
@@ -194,6 +194,9 @@ the subject from the first HCL resource: it may be a prerequisite.
 
 ## Known adaptations and gaps
 
+- Notification-destination SDK checks of display name and type become
+  provider-read state checks. Inferred responses return `*_set` flags for
+  input-only fields, exercising preservation of the original configured values.
 - The group suite copies workspace/account display-name updates and external SCIM
   changes from `scim/group_test.go`. SDK name reads become provider-read state
   checks; external mutations become next-step refresh responses. The two explicit

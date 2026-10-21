@@ -28,7 +28,7 @@ Terraform state and a local server. Explain any adaptation beside the step.
 Every hand-authored transcript must say that its responses are **inferred, not
 recorded**. Build those responses from the source scenario and API response model:
 include realistic IDs, configured values, and fields needed for existing checks.
-Mark inferred host metadata too. Never run live acceptance tests to obtain them.
+Mark dummy host metadata too. Never run live acceptance tests to obtain them.
 A future recorder can replace these responses with sanitized recordings.
 
 Request fixtures assert what the provider sends. Response fixtures are inputs,
@@ -64,7 +64,8 @@ is required. Suites are also discovered by the existing repository-wide Go tests
 inventory. It distinguishes copied scenarios from pending ones; it is not a claim
 that every acceptance test is live or that the inventory is exhaustive.
 
-The provider-configuration suite currently copies all 42 negative cases in the
-dedicated `*_provider_config_test.go` files. The successful entitlements account
-routing regression in those files remains pending; it is not a negative case.
-Other provider-configuration and workspace-routing scenarios remain pending too.
+The provider-configuration suite copies all 43 cases in the dedicated
+`*_provider_config_test.go` files: 42 validation errors and the successful
+account-provider/workspace-entitlements regression. That success case uses
+step-local metadata fixtures for the account and derived workspace clients.
+Other provider-configuration and workspace-routing scenarios remain pending.

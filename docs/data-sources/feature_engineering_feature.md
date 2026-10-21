@@ -2,18 +2,26 @@
 subcategory: "Machine Learning"
 ---
 # databricks_feature_engineering_feature Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/featureengineering)
+
+Reads one registered feature by its three-part Unity Catalog name. Use it to reference a feature another team owns, or one created outside Terraform.
 
 
 ## Example Usage
+Look up a feature by its full name.
+
+```hcl
+data "databricks_feature_engineering_feature" "transaction_count_7d" {
+  full_name = "main.features.transaction_count_7d"
+}
+```
 
 
 ## Arguments
 The following arguments are supported:
-* `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature. This is the
-  feature's resource identifier; the catalog_name, schema_name, and name fields
-  below are OUTPUT_ONLY decomposed views of this value
+* `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -25,11 +33,10 @@ The following attributes are exported:
 * `created_at` (string) - Time at which this feature was created
 * `created_by` (string) - Username of the feature creator
 * `description` (string) - The description of the feature
-* `entities` (list of EntityColumn) - The entity columns for the feature, used as aggregation keys and for query-time lookup
+* `entities` (list of EntityColumn) - The entity columns for the feature, used as aggregation keys and for query-time lookup.
+  Optional since entities are not set for RequestSource features or on-demand calculated features
 * `filter_condition` (string, deprecated)
-* `full_name` (string) - The full three-part name (catalog, schema, name) of the feature. This is the
-  feature's resource identifier; the catalog_name, schema_name, and name fields
-  below are OUTPUT_ONLY decomposed views of this value
+* `full_name` (string) - The full three-part name (catalog, schema, name) of the feature
 * `function` (Function) - The function by which the feature is computed
 * `inputs` (list of string, deprecated)
 * `lineage_context` (LineageContext) - Lineage context information for this feature.
@@ -41,7 +48,9 @@ The following attributes are exported:
 * `schema_name` (string) - Name of parent schema relative to its parent catalog
 * `source` (DataSource) - The data source of the feature
 * `time_window` (TimeWindow, deprecated)
-* `timeseries_column` (TimeseriesColumn) - Column recording time, used for point-in-time joins, backfills, and aggregations
+* `timeseries_column` (TimeseriesColumn) - Column recording time, used for point-in-time joins, backfills, and aggregations.
+  Optional since a timeseries column is not set for RequestSource features or on-demand
+  calculated features
 
 ### AggregationFunction
 * `approx_count_distinct` (ApproxCountDistinctFunction)
@@ -106,6 +115,7 @@ The following attributes are exported:
 * `lateness` (SourceLateness) - Completeness timing for this Feature's use of the source. This configuration is part of the
   Feature definition; it does not modify the underlying table or stream
 * `request_source` (RequestSource) - A request-time data source
+* `sdp_source` (SdpSource) - A Spark Declarative Pipeline data source
 * `stream_source` (StreamSource) - A Stream data source
 
 ### DeltaTableSource
@@ -216,6 +226,28 @@ The following attributes are exported:
   the batch (N-1 day) and stale-path (N-2 day) partial aggregates are well defined. The duration
   need not be a whole number of days (e.g. 3 days 15 minutes is allowed). Absent means lifetime
   (aggregate over the entity's entire history)
+
+### SdpSource
+* `dataframe_schema` (string) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
+  Required if transformation_sql is specified.
+  Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
+* `filter_condition` (string) - Single WHERE clause to filter the pipeline's output table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections
+* `input_tables` (list of string) - The full three-part names of the tables the pipeline reads from. Required to materialize this
+  feature with a TableTrigger, which starts a run when these tables update. Each table must exist
+  when the feature is created. After the pipeline runs, Feature Store checks that it reads from
+  these tables, and the run fails if it doesn't. At most 100 tables
+* `output_table` (string) - The full three-part (catalog, schema, table) name of the pipeline's output table to read from.
+  The table doesn't need to exist until the pipeline first runs. Required
+* `pipeline_id` (string) - The ID of the Spark Declarative Pipeline that Feature Store runs to produce this source, before
+  each materialization or backfill. The pipeline must already exist when the feature is created,
+  and you need CAN_RUN, CAN_MANAGE, or owner permission on it. It doesn't need to have run yet.
+  Deleting the feature doesn't delete the pipeline. If the pipeline is deleted, this field reads
+  back empty. Required
+* `pipeline_state` (string) - State tracking pipeline execution and output table validation. PENDING until the pipeline
+  has run at least once and created the output table; then RESOLVED on success, or ERROR on failure. Possible values are: `ERROR`, `PENDING`, `RESOLVED`
+* `transformation_sql` (string) - A single SQL SELECT expression applied after filter_condition.
+  Should contain all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
+  If transformation_sql is not provided, all columns of the pipeline's output table are present in the DataSource dataframe
 
 ### SlidingWindow
 * `delay` (string) - Non-negative analytic lag that evaluates the window this far in the past. Use this for timing

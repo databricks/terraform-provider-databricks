@@ -53,6 +53,7 @@ This data source exports a single attribute, `policies`. It is a list of resourc
 * `except_principals` (list of string) - Optional list of user or group names that should be excluded from the policy
 * `for_securable_type` (string) - Type of securables that the policy should take effect on.
   Required on create and optional on update. Possible values are: `AGENT_SERVICE`, `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `MCP_SERVICE`, `METASTORE`, `MODEL`, `MODEL_PROVIDER_SERVICE`, `MODEL_SERVICE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `SKILL`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`
+* `governed_tags` (list of GovernedTagReference) - Governed tag keys and values referenced by this policy's conditions and function arguments. Output only
 * `grant` (GrantOptions) - Options for grant policies. Valid only if `policy_type` is `POLICY_TYPE_GRANT`.
   Required on create and optional on update. When specified on update,
   the new options will replace the existing options as a whole
@@ -107,6 +108,10 @@ This data source exports a single attribute, `policies`. It is a list of resourc
 * `function_arg_expression` (FunctionArgExpression) - An expression evaluated at query time. Wraps per-request expression variants
   (e.g., tag introspection) so new variants can be added without extending the
   FunctionArgument oneof
+
+### GovernedTagReference
+* `tag_key` (string) - The governed tag key
+* `tag_value` (string) - The governed tag value, when the policy references a specific value
 
 ### GrantOptions
 * `privileges` (list of string) - List of privileges to grant.

@@ -309,7 +309,17 @@ type BudgetConfiguration_SdkV2 struct {
 	// Databricks account ID.
 	AccountId types.String `tfsdk:"account_id"`
 	// Alerts to configure when this budget is in a triggered state. Budgets
-	// must have exactly one alert configuration.
+	// must have at least one alert configuration. A budget can have up to four
+	// shared alerts per time period, each with a unique `quantity_threshold`.
+	// Budgets with `resource_type` set to
+	// `BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY` can also use per-user alerts,
+	// with optional `principal_overrides`. These budgets can have at most one
+	// per-user alert per time period, and can use shared alerts, a per-user
+	// alert, or both. The `BLOCK_USAGE` action is only supported on budgets
+	// with `resource_type` set to `BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY`. At
+	// most one shared alert per time period can have a `BLOCK_USAGE` action,
+	// and it must be the shared alert with the highest threshold in that
+	// period.
 	AlertConfigurations types.List `tfsdk:"alert_configurations"`
 	// Databricks budget configuration ID.
 	BudgetConfigurationId types.String `tfsdk:"budget_configuration_id"`
@@ -1257,7 +1267,17 @@ type CreateBudgetConfigurationBudget_SdkV2 struct {
 	// Databricks account ID.
 	AccountId types.String `tfsdk:"account_id"`
 	// Alerts to configure when this budget is in a triggered state. Budgets
-	// must have exactly one alert configuration.
+	// must have at least one alert configuration. A budget can have up to four
+	// shared alerts per time period, each with a unique `quantity_threshold`.
+	// Budgets with `resource_type` set to
+	// `BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY` can also use per-user alerts,
+	// with optional `principal_overrides`. These budgets can have at most one
+	// per-user alert per time period, and can use shared alerts, a per-user
+	// alert, or both. The `BLOCK_USAGE` action is only supported on budgets
+	// with `resource_type` set to `BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY`. At
+	// most one shared alert per time period can have a `BLOCK_USAGE` action,
+	// and it must be the shared alert with the highest threshold in that
+	// period.
 	AlertConfigurations types.List `tfsdk:"alert_configurations"`
 	// Human-readable name of budget configuration. Max Length: 128
 	DisplayName types.String `tfsdk:"display_name"`
@@ -4007,7 +4027,17 @@ type UpdateBudgetConfigurationBudget_SdkV2 struct {
 	// Databricks account ID.
 	AccountId types.String `tfsdk:"account_id"`
 	// Alerts to configure when this budget is in a triggered state. Budgets
-	// must have exactly one alert configuration.
+	// must have at least one alert configuration. A budget can have up to four
+	// shared alerts per time period, each with a unique `quantity_threshold`.
+	// Budgets with `resource_type` set to
+	// `BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY` can also use per-user alerts,
+	// with optional `principal_overrides`. These budgets can have at most one
+	// per-user alert per time period, and can use shared alerts, a per-user
+	// alert, or both. The `BLOCK_USAGE` action is only supported on budgets
+	// with `resource_type` set to `BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY`. At
+	// most one shared alert per time period can have a `BLOCK_USAGE` action,
+	// and it must be the shared alert with the highest threshold in that
+	// period.
 	AlertConfigurations types.List `tfsdk:"alert_configurations"`
 	// Databricks budget configuration ID.
 	BudgetConfigurationId types.String `tfsdk:"budget_configuration_id"`

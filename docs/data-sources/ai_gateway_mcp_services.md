@@ -25,8 +25,8 @@ output "mcp_services" {
 
 ## Arguments
 The following arguments are supported:
-* `page_size` (integer, optional) - Maximum number of MCP services to return. Defaults to 100 when unset or 0;
-  the maximum is 100. Use `page_token` to retrieve additional pages
+* `page_size` (integer, optional) - Maximum number of MCP services to return. Defaults to 200 when unset or 0;
+  the maximum is 200. Use `page_token` to retrieve additional pages
 * `parent` (string, optional) - Parent schema to list within, in the form
   `schemas/{catalog}.{schema}`. Required. Each `{...}` component is capped at
   255 characters individually

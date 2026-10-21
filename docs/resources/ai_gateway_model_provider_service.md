@@ -76,6 +76,7 @@ The following arguments are supported:
 * `amazon_bedrock` (ModelProviderServiceConfigAmazonBedrockProviderConfig, optional)
 * `anthropic` (ModelProviderServiceConfigAnthropicProviderConfig, optional)
 * `azure_openai` (ModelProviderServiceConfigAzureOpenAiProviderConfig, optional)
+* `bedrock_mantle` (ModelProviderServiceConfigAmazonBedrockProviderConfig, optional)
 * `custom` (ModelProviderServiceConfigCustomProviderConfig, optional)
 * `forward_headers` (boolean, optional) - Whether to forward incoming HTTP headers to the upstream provider. Defaults
   to false and is configured for the entire provider service, not per request.
@@ -88,16 +89,20 @@ The following arguments are supported:
   provider-native API types. Defaults to false. When true, these paths are
   forwarded unchanged to the upstream provider. When false, only
   recognized API paths are served. Enabling this broadens the upstream API
-  surface exposed through the provider service
+  surface exposed through the provider service. AI Gateway cannot evaluate
+  Service Policies on opaque unmanaged requests, so unmanaged requests are
+  rejected whenever Service Policies are attached to this securable
 * `gemini_enterprise` (ModelProviderServiceConfigGeminiEnterpriseProviderConfig, optional)
 * `inference_table` (InferenceTableConfig, optional) - Payload logging configuration for requests sent directly to this provider
   service. Requests routed through a model service are captured by that model
   service's inference table instead
 * `microsoft_foundry` (ModelProviderServiceConfigMicrosoftFoundryProviderConfig, optional)
 * `openai` (ModelProviderServiceConfigOpenAiProviderConfig, optional)
+* `pricing` (ModelProviderServiceConfigProviderPricingConfig, optional) - Pricing configuration for this provider service. An explicitly empty
+  configuration is retained on Create and Update and applies no adjustment
 * `provider_type` (string, optional) - External model provider. Required on Create and immutable thereafter. Set
   the matching provider-specific configuration, such as `openai`,
-  `azure_openai`, or `amazon_bedrock`. Possible values are: `EXTERNAL_MODEL_PROVIDER_TYPE_AMAZON_BEDROCK`, `EXTERNAL_MODEL_PROVIDER_TYPE_ANTHROPIC`, `EXTERNAL_MODEL_PROVIDER_TYPE_AZURE_OPENAI`, `EXTERNAL_MODEL_PROVIDER_TYPE_CUSTOM`, `EXTERNAL_MODEL_PROVIDER_TYPE_GEMINI_ENTERPRISE`, `EXTERNAL_MODEL_PROVIDER_TYPE_MICROSOFT_FOUNDRY`, `EXTERNAL_MODEL_PROVIDER_TYPE_OPENAI`
+  `azure_openai`, or `amazon_bedrock`. Possible values are: `EXTERNAL_MODEL_PROVIDER_TYPE_AMAZON_BEDROCK`, `EXTERNAL_MODEL_PROVIDER_TYPE_ANTHROPIC`, `EXTERNAL_MODEL_PROVIDER_TYPE_AZURE_OPENAI`, `EXTERNAL_MODEL_PROVIDER_TYPE_BEDROCK_MANTLE`, `EXTERNAL_MODEL_PROVIDER_TYPE_CUSTOM`, `EXTERNAL_MODEL_PROVIDER_TYPE_GEMINI_ENTERPRISE`, `EXTERNAL_MODEL_PROVIDER_TYPE_MICROSOFT_FOUNDRY`, `EXTERNAL_MODEL_PROVIDER_TYPE_OPENAI`
 * `rate_limits` (list of RateLimit, optional) - Rate limits for requests sent directly to this provider service. Requests
   routed through a model service use that model service's rate limits instead
 * `targets` (list of ModelProviderServiceConfigModelTargetConfig, optional) - Models and provider-native API types exposed by this provider service. Each
@@ -224,10 +229,17 @@ The following arguments are supported:
 * `model` (string, required) - Provider-side model identifier, such as `gpt-5` or `claude-opus-4-7`.
   This identifies a model at the upstream provider; it is not a Unity
   Catalog model resource
+* `endpoint_route` (string, optional) - Relative path appended to a custom provider's `base_url` for this model,
+  such as `serve/openai/chat`. Nonempty values are only supported for
+  custom model provider service targets; other provider types reject them.
+  Model service destinations do not support this field. Do not include
+  URI templates, queries, or fragments. When empty, `base_url` is used unchanged
 * `native_api_types` (list of string, optional) - Provider-native API types supported by this model, such as
-  `openai/v1/chat/completions`. At least one value is required. AI Gateway
-  uses these values to translate requests and responses. At most 64 entries
-  of 256 characters each are allowed
+  `openai/v1/chat/completions`. A model provider service target requires at
+  least one value. A model service destination may omit the list to use the
+  matching provider service target's types when available. AI Gateway uses
+  the selected types for translation. At most 64 entries of 256 characters
+  each are allowed
 
 ### ModelProviderServiceConfigOpenAiProviderConfig
 * `direct` (ModelProviderServiceConfigOpenAiProviderDirectConfig, optional) - OpenAI configuration with an API key supplied in the request
@@ -239,6 +251,12 @@ The following arguments are supported:
   OpenAI-API-compatible third-party endpoints or in-network proxies
 * `organization` (string, optional) - Optional OpenAI organization ID. When set, the platform forwards it as
   the `OpenAI-Organization` header
+
+### ModelProviderServiceConfigProviderPricingConfig
+* `default_discount_basis_points` (integer, optional) - Provider-wide adjustment to external-model spend estimates in basis points:
+  2000 = 20% off; -2000 = a 20% markup. Negative values have no lower bound
+  beyond the int32 range. Values cannot exceed 10000 (100% off). An omitted
+  value or zero leaves the estimate unchanged
 
 ### ModelProviderServiceConfigProviderSecret
 * `plaintext` (string, optional) - Inline plaintext credential. INPUT_ONLY: the value never round-trips on

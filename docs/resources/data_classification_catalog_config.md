@@ -2,7 +2,7 @@
 subcategory: "Data Classification"
 ---
 # databricks_data_classification_catalog_config Resource
-[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/dataclassification)
 
@@ -16,6 +16,8 @@ To manage Data Classification configuration, you must either:
 
 -> **Note** This resource can only be used with a workspace-level provider.
 
+-> **Note** The `auto_tag_configs` attribute is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html). All other attributes of this resource are generally available.
+
 
 ## Example Usage
 ```hcl
@@ -26,6 +28,19 @@ resource "databricks_data_classification_catalog_config" "example" {
   included_schemas = {
     names = ["sales", "marketing", "customer_data"]
   }
+}
+
+# Enable Data Classification for the entire catalog (all current and future schemas)
+resource "databricks_data_classification_catalog_config" "all_schemas" {
+  parent = "catalogs/staging_catalog"
+}
+```
+
+To automatically tag columns detected with specific classes, set `auto_tag_configs`. This attribute is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
+
+```hcl
+resource "databricks_data_classification_catalog_config" "auto_tagging" {
+  parent = "catalogs/finance_catalog"
 
   auto_tag_configs = [
     {
@@ -37,11 +52,6 @@ resource "databricks_data_classification_catalog_config" "example" {
       auto_tagging_mode  = "AUTO_TAGGING_ENABLED"
     }
   ]
-}
-
-# Enable Data Classification for the entire catalog (all current and future schemas)
-resource "databricks_data_classification_catalog_config" "all_schemas" {
-  parent = "catalogs/staging_catalog"
 }
 ```
 

@@ -88,6 +88,15 @@ The following arguments are supported:
 * `warehouse_id` (string, required) - ID of the SQL warehouse attached to the alert
 * `custom_description` (string, optional) - Custom description for the alert. support mustache template
 * `custom_summary` (string, optional) - Custom summary for the alert. support mustache template
+* `custom_template_format` (string, optional) - The format used to interpret the `custom_summary` and `custom_description` templates.
+  
+  `HTML` treats both templates as HTML with Mustache `{{VARIABLE_NAME}}` placeholders.
+  `MARKDOWN` treats them as Markdown with allowlisted `@VARIABLE_NAME` placeholders and converts
+  them to the format each notification destination expects, so a single template renders
+  correctly in email, Slack, and Microsoft Teams.
+  
+  When unset, the API applies no default. Responses omit the field unless a format is stored,
+  and a template with no format is rendered as HTML. Possible values are: `HTML`, `MARKDOWN`
 * `parameters` (list of AlertStatementParameter, optional) - A list of parameters to pass into the alert SQL query statement containing parameter markers. Static values only.
   
   Reference a parameter in the query text as `:name`. Each parameter must have a unique, non-empty name.

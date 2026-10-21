@@ -56,9 +56,14 @@ type FailoverGroup struct {
 	// Client-provided identifier for the failover group. Used to construct the
 	// resource name as {parent}/failover-groups/{failover_group_id}.
 	FailoverGroupId types.String `tfsdk:"failover_group_id"`
+	// True if errors currently block the replication point.
+	HasReplicationPointBlockingErrors types.Bool `tfsdk:"has_replication_point_blocking_errors"`
 	// Initial primary region. Used only in Create requests to set the starting
 	// primary region. Not returned in responses.
 	InitialPrimaryRegion types.String `tfsdk:"initial_primary_region"`
+	// Initial replication progress of all in-scope assets. Set only when the
+	// FailoverGroup is in INITIAL_REPLICATION state.
+	InitialReplicationProgress types.Object `tfsdk:"initial_replication_progress"`
 	// Fully qualified resource name in the format
 	// accounts/{account_id}/failover-groups/{failover_group_id}.
 	Name types.String `tfsdk:"name"`
@@ -87,9 +92,10 @@ type FailoverGroup struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m FailoverGroup) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"regions":              reflect.TypeOf(types.String{}),
-		"unity_catalog_assets": reflect.TypeOf(disasterrecovery_tf.UcReplicationConfig{}),
-		"workspace_sets":       reflect.TypeOf(disasterrecovery_tf.WorkspaceSet{}),
+		"initial_replication_progress": reflect.TypeOf(disasterrecovery_tf.InitialReplicationProgress{}),
+		"regions":                      reflect.TypeOf(types.String{}),
+		"unity_catalog_assets":         reflect.TypeOf(disasterrecovery_tf.UcReplicationConfig{}),
+		"workspace_sets":               reflect.TypeOf(disasterrecovery_tf.WorkspaceSet{}),
 	}
 }
 
@@ -103,18 +109,20 @@ func (m FailoverGroup) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"create_time": m.CreateTime,
-			"effective_primary_region": m.EffectivePrimaryRegion,
-			"etag":                     m.Etag,
-			"failover_group_id":        m.FailoverGroupId,
-			"initial_primary_region":   m.InitialPrimaryRegion,
-			"name":                     m.Name,
-			"parent":                   m.Parent,
-			"regions":                  m.Regions,
-			"replication_point":        m.ReplicationPoint,
-			"state":                    m.State,
-			"unity_catalog_assets":     m.UnityCatalogAssets,
-			"update_time":              m.UpdateTime,
-			"workspace_sets":           m.WorkspaceSets,
+			"effective_primary_region":              m.EffectivePrimaryRegion,
+			"etag":                                  m.Etag,
+			"failover_group_id":                     m.FailoverGroupId,
+			"has_replication_point_blocking_errors": m.HasReplicationPointBlockingErrors,
+			"initial_primary_region":                m.InitialPrimaryRegion,
+			"initial_replication_progress":          m.InitialReplicationProgress,
+			"name":                                  m.Name,
+			"parent":                                m.Parent,
+			"regions":                               m.Regions,
+			"replication_point":                     m.ReplicationPoint,
+			"state":                                 m.State,
+			"unity_catalog_assets":                  m.UnityCatalogAssets,
+			"update_time":                           m.UpdateTime,
+			"workspace_sets":                        m.WorkspaceSets,
 		},
 	)
 }
@@ -124,12 +132,14 @@ func (m FailoverGroup) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m FailoverGroup) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"create_time": timetypes.RFC3339{}.Type(ctx),
-			"effective_primary_region": types.StringType,
-			"etag":                     types.StringType,
-			"failover_group_id":        types.StringType,
-			"initial_primary_region":   types.StringType,
-			"name":                     types.StringType,
-			"parent":                   types.StringType,
+			"effective_primary_region":              types.StringType,
+			"etag":                                  types.StringType,
+			"failover_group_id":                     types.StringType,
+			"has_replication_point_blocking_errors": types.BoolType,
+			"initial_primary_region":                types.StringType,
+			"initial_replication_progress":          disasterrecovery_tf.InitialReplicationProgress{}.Type(ctx),
+			"name":                                  types.StringType,
+			"parent":                                types.StringType,
 			"regions": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -154,6 +164,15 @@ func (to *FailoverGroup) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 	if !from.InitialPrimaryRegion.IsUnknown() && !from.InitialPrimaryRegion.IsNull() {
 		// InitialPrimaryRegion is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.InitialPrimaryRegion = from.InitialPrimaryRegion
+	}
+	if !from.InitialReplicationProgress.IsNull() && !from.InitialReplicationProgress.IsUnknown() {
+		if toInitialReplicationProgress, ok := to.GetInitialReplicationProgress(ctx); ok {
+			if fromInitialReplicationProgress, ok := from.GetInitialReplicationProgress(ctx); ok {
+				// Recursively sync the fields of InitialReplicationProgress
+				toInitialReplicationProgress.SyncFieldsDuringCreateOrUpdate(ctx, fromInitialReplicationProgress)
+				to.SetInitialReplicationProgress(ctx, toInitialReplicationProgress)
+			}
+		}
 	}
 	if !from.Parent.IsUnknown() {
 		to.Parent = from.Parent
@@ -193,6 +212,14 @@ func (to *FailoverGroup) SyncFieldsDuringRead(ctx context.Context, from Failover
 		// InitialPrimaryRegion is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.InitialPrimaryRegion = from.InitialPrimaryRegion
 	}
+	if !from.InitialReplicationProgress.IsNull() && !from.InitialReplicationProgress.IsUnknown() {
+		if toInitialReplicationProgress, ok := to.GetInitialReplicationProgress(ctx); ok {
+			if fromInitialReplicationProgress, ok := from.GetInitialReplicationProgress(ctx); ok {
+				toInitialReplicationProgress.SyncFieldsDuringRead(ctx, fromInitialReplicationProgress)
+				to.SetInitialReplicationProgress(ctx, toInitialReplicationProgress)
+			}
+		}
+	}
 	if !from.Parent.IsUnknown() {
 		to.Parent = from.Parent
 	}
@@ -222,8 +249,10 @@ func (m FailoverGroup) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["effective_primary_region"] = attrs["effective_primary_region"].SetComputed()
 	attrs["etag"] = attrs["etag"].SetComputed()
+	attrs["has_replication_point_blocking_errors"] = attrs["has_replication_point_blocking_errors"].SetComputed()
 	attrs["initial_primary_region"] = attrs["initial_primary_region"].SetRequired()
 	attrs["initial_primary_region"] = attrs["initial_primary_region"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["initial_replication_progress"] = attrs["initial_replication_progress"].SetComputed()
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["regions"] = attrs["regions"].SetRequired()
@@ -241,6 +270,31 @@ func (m FailoverGroup) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	return attrs
+}
+
+// GetInitialReplicationProgress returns the value of the InitialReplicationProgress field in FailoverGroup as
+// a disasterrecovery_tf.InitialReplicationProgress value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *FailoverGroup) GetInitialReplicationProgress(ctx context.Context) (disasterrecovery_tf.InitialReplicationProgress, bool) {
+	var e disasterrecovery_tf.InitialReplicationProgress
+	if m.InitialReplicationProgress.IsNull() || m.InitialReplicationProgress.IsUnknown() {
+		return e, false
+	}
+	var v disasterrecovery_tf.InitialReplicationProgress
+	d := m.InitialReplicationProgress.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInitialReplicationProgress sets the value of the InitialReplicationProgress field in FailoverGroup.
+func (m *FailoverGroup) SetInitialReplicationProgress(ctx context.Context, v disasterrecovery_tf.InitialReplicationProgress) {
+	vs := v.ToObjectValue(ctx)
+	m.InitialReplicationProgress = vs
 }
 
 // GetRegions returns the value of the Regions field in FailoverGroup as

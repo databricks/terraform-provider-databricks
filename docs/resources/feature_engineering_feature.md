@@ -2,22 +2,106 @@
 subcategory: "Machine Learning"
 ---
 # databricks_feature_engineering_feature Resource
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/featureengineering)
+
+A feature is a reusable, governed definition of a model input registered in Unity Catalog. Each feature binds a data source to the function that computes its value, so model training and online serving read one definition instead of two implementations that drift apart.
+
+Registering a feature computes nothing on its own. To produce values, materialize the feature to an offline Delta table or an online Lakebase table using the Feature Engineering API.
+
+Only `description` can be changed in place. Changing any other field replaces the feature.
 
 
 ## Example Usage
+A feature needs a source and a function. A Delta table source also requires the entity columns that
+key the feature and a timeseries column; a request source takes neither, because the value arrives
+in the request.
+
+### Aggregation over a sliding window
+
+Count each customer's transactions over the trailing seven days, recomputed daily.
+
+```hcl
+resource "databricks_feature_engineering_feature" "transaction_count_7d" {
+  full_name   = "main.features.transaction_count_7d"
+  description = "Transactions per customer over the trailing seven days."
+
+  source = {
+    delta_table_source = {
+      full_name = "main.retail.transactions"
+    }
+  }
+
+  function = {
+    aggregation_function = {
+      count_function = {
+        input = "transaction_id"
+      }
+
+      time_window = {
+        sliding = {
+          window_duration = "604800s"
+          slide_duration  = "86400s"
+        }
+      }
+    }
+  }
+
+  entities = [
+    {
+      name = "customer_id"
+    },
+  ]
+
+  timeseries_column = {
+    name = "transaction_time"
+  }
+}
+```
+
+### Latest value of a column
+
+Read a column straight from the source with no aggregation, so no time window is needed. The
+timeseries column is still required, because it is what makes the lookup point-in-time correct.
+
+```hcl
+resource "databricks_feature_engineering_feature" "customer_tier" {
+  full_name = "main.features.customer_tier"
+
+  source = {
+    delta_table_source = {
+      full_name = "main.retail.customers"
+    }
+  }
+
+  function = {
+    column_selection = {
+      column = "tier"
+    }
+  }
+
+  entities = [
+    {
+      name = "customer_id"
+    },
+  ]
+
+  timeseries_column = {
+    name = "updated_at"
+  }
+}
+```
 
 
 ## Arguments
 The following arguments are supported:
-* `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature. This is the
-  feature's resource identifier; the catalog_name, schema_name, and name fields
-  below are OUTPUT_ONLY decomposed views of this value
+* `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature
 * `function` (Function, required) - The function by which the feature is computed
 * `source` (DataSource, required) - The data source of the feature
 * `description` (string, optional) - The description of the feature
-* `entities` (list of EntityColumn, optional) - The entity columns for the feature, used as aggregation keys and for query-time lookup
+* `entities` (list of EntityColumn, optional) - The entity columns for the feature, used as aggregation keys and for query-time lookup.
+  Optional since entities are not set for RequestSource features or on-demand calculated features
 * `filter_condition` (string, optional, deprecated)
 * `inputs` (list of string, optional, deprecated)
 * `lineage_context` (LineageContext, optional) - Lineage context information for this feature.
@@ -26,7 +110,9 @@ The following arguments are supported:
   Users should not manually set this field as incorrect values may lead to inaccurate lineage tracking or unexpected behavior.
   This field will be set by feature-engineering client and should be left unset by SDK and terraform users
 * `time_window` (TimeWindow, optional, deprecated)
-* `timeseries_column` (TimeseriesColumn, optional) - Column recording time, used for point-in-time joins, backfills, and aggregations
+* `timeseries_column` (TimeseriesColumn, optional) - Column recording time, used for point-in-time joins, backfills, and aggregations.
+  Optional since a timeseries column is not set for RequestSource features or on-demand
+  calculated features
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -95,6 +181,7 @@ The following arguments are supported:
 * `lateness` (SourceLateness, optional) - Completeness timing for this Feature's use of the source. This configuration is part of the
   Feature definition; it does not modify the underlying table or stream
 * `request_source` (RequestSource, optional) - A request-time data source
+* `sdp_source` (SdpSource, optional) - A Spark Declarative Pipeline data source
 * `stream_source` (StreamSource, optional) - A Stream data source
 
 ### DeltaTableSource
@@ -206,6 +293,26 @@ The following arguments are supported:
   need not be a whole number of days (e.g. 3 days 15 minutes is allowed). Absent means lifetime
   (aggregate over the entity's entire history)
 
+### SdpSource
+* `dataframe_schema` (string, optional) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
+  Required if transformation_sql is specified.
+  Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
+* `filter_condition` (string, optional) - Single WHERE clause to filter the pipeline's output table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections
+* `input_tables` (list of string, optional) - The full three-part names of the tables the pipeline reads from. Required to materialize this
+  feature with a TableTrigger, which starts a run when these tables update. Each table must exist
+  when the feature is created. After the pipeline runs, Feature Store checks that it reads from
+  these tables, and the run fails if it doesn't. At most 100 tables
+* `output_table` (string, optional) - The full three-part (catalog, schema, table) name of the pipeline's output table to read from.
+  The table doesn't need to exist until the pipeline first runs. Required
+* `pipeline_id` (string, optional) - The ID of the Spark Declarative Pipeline that Feature Store runs to produce this source, before
+  each materialization or backfill. The pipeline must already exist when the feature is created,
+  and you need CAN_RUN, CAN_MANAGE, or owner permission on it. It doesn't need to have run yet.
+  Deleting the feature doesn't delete the pipeline. If the pipeline is deleted, this field reads
+  back empty. Required
+* `transformation_sql` (string, optional) - A single SQL SELECT expression applied after filter_condition.
+  Should contain all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
+  If transformation_sql is not provided, all columns of the pipeline's output table are present in the DataSource dataframe
+
 ### SlidingWindow
 * `slide_duration` (string, required) - The slide duration (interval by which windows advance, must be positive and less than duration)
 * `delay` (string, optional) - Non-negative analytic lag that evaluates the window this far in the past. Use this for timing
@@ -293,6 +400,10 @@ In addition to the above arguments, the following attributes are exported:
 * `created_by` (string) - Username of the feature creator
 * `name` (string) - Name of the feature, extracted from the full three-part name (catalog.schema.name)
 * `schema_name` (string) - Name of parent schema relative to its parent catalog
+
+### SdpSource
+* `pipeline_state` (string) - State tracking pipeline execution and output table validation. PENDING until the pipeline
+  has run at least once and created the output table; then RESOLVED on success, or ERROR on failure. Possible values are: `ERROR`, `PENDING`, `RESOLVED`
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

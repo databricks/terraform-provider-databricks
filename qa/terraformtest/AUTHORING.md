@@ -153,6 +153,20 @@ every step and destroy, excluding reusable host metadata. Keep each observed
 call in a future recorded transcript even when enforcement is disabled;
 identical request signatures still consume responses FIFO.
 
+Use `plan` when the behavior is the proposed diff: create versus update,
+replacement order, computed values still unknown, or an unchanged configuration.
+Use full instance addresses for multi-resource cases. Select only the relevant
+actions and before/after paths; do not copy every provider attribute into an
+expectation. The [plan format reference](README.md#plan-assertions) documents
+output checks and `plan_only`, including the harness's empty-plan restriction.
+Plan+apply assertions inspect the same saved plan that gets applied, without
+disabling Terraform's post-apply consistency checks.
+
+Plan-only HTTP reads belong in the step's ordinary `calls`. Plans do not create
+the proposed resources, but initial-state or earlier applied resources still
+require destroy fixtures. Plan-only state checks inspect the refreshed prior
+state, not the unapplied planned values.
+
 HashiCorp's [resource state-check guide](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests/state-checks/resource)
 focuses state checks on computed attributes. Follow that default: check IDs,
 provider-derived values, data-source outputs, and unconfigured optional/computed
@@ -211,11 +225,10 @@ the replayed cleanup flow, not the state of an independently simulated service.
 
 ## Current limits
 
-The [format reference](README.md#mvp-scope) lists unsupported features. Do not
-copy HashiCorp's import or plan-only examples into this YAML as if those modes
-were implemented. Recording, explicit plan assertions, and forced ordering need
-further engine support. Extend this replay guide as those capabilities arrive; do not silently
-skip an assertion or treat an unexpected failure as a passing test.
+The [format reference](README.md#mvp-scope) lists unsupported features. Recording,
+import steps, and strict attribute matching need further engine support. Use the
+documented YAML fields rather than copying arbitrary HashiCorp TestStep options.
+Do not silently skip an assertion or treat an unexpected failure as a passing test.
 
 ## Test expected failures
 

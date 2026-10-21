@@ -519,7 +519,7 @@ func (m Deployment) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["initial_parent_path"] = attrs["initial_parent_path"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["last_successful_version_id"] = attrs["last_successful_version_id"].SetComputed()
 	attrs["last_version_id"] = attrs["last_version_id"].SetComputed()
-	attrs["name"] = attrs["name"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["target_name"] = attrs["target_name"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -1006,6 +1006,11 @@ type ListDeploymentsRequest struct {
 	// A page token, received from a previous `ListDeployments` call. Provide
 	// this to retrieve the subsequent page.
 	PageToken types.String `tfsdk:"-"`
+	// Whether to include soft-deleted deployments in the response. Defaults to
+	// false. When true, returns both live and soft-deleted deployments visible
+	// to the caller, subject to the filter. Soft-deleted deployments have
+	// status `DEPLOYMENT_STATUS_DELETED`.
+	ShowDeleted types.Bool `tfsdk:"-"`
 }
 
 func (to *ListDeploymentsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListDeploymentsRequest) {
@@ -1017,6 +1022,7 @@ func (to *ListDeploymentsRequest) SyncFieldsDuringRead(ctx context.Context, from
 func (m ListDeploymentsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["show_deleted"] = attrs["show_deleted"].SetOptional()
 
 	return attrs
 }
@@ -1039,8 +1045,9 @@ func (m ListDeploymentsRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_size":  m.PageSize,
-			"page_token": m.PageToken,
+			"page_size":    m.PageSize,
+			"page_token":   m.PageToken,
+			"show_deleted": m.ShowDeleted,
 		})
 }
 
@@ -1048,8 +1055,9 @@ func (m ListDeploymentsRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m ListDeploymentsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"page_size":  types.Int64Type,
-			"page_token": types.StringType,
+			"page_size":    types.Int64Type,
+			"page_token":   types.StringType,
+			"show_deleted": types.BoolType,
 		},
 	}
 }
@@ -1783,22 +1791,22 @@ type Operation struct {
 	// re-read and retry.
 	SequenceId types.Int64 `tfsdk:"sequence_id"`
 	// Serialized local config state after the operation. Its presence records
-	// whether the resource still exists, so an operation that records no state
-	// removes its resource from the deployment. It may be unset only for an
-	// operation that left no resource behind: a `DELETE` that succeeded, or a
-	// `CREATE` or `RECREATE` that failed. It is required otherwise, including
-	// for a failed `DELETE`, whose resource survives.
+	// whether the resource is still tracked by the deployment. Explicitly
+	// clearing state removes the resource from the deployment; omitting it from
+	// the update mask leaves resource state unchanged. State is stored only on
+	// Resources. UpdateOperation accepts state but omits it from its response,
+	// as do subsequent GetOperation and ListOperations.
 	//
 	// Mutable: may be updated after creation via UpdateOperation. When
 	// updating, the caller must echo the last-observed `sequence_id` as a
 	// concurrency precondition.
 	//
-	// Opaque to this service: the string is stored and returned unchanged. This
-	// is deliberately not google.protobuf.Value, whose only numeric case is
-	// `double number_value`, so parsing the client's JSON into it rewrites
-	// every integer as a double - `1` reads back as `1.0`, which no longer
-	// deserializes into an integer field - and silently loses precision above
-	// 2^53, which is within range for IDs the client records.
+	// The string is not parsed; it is projected onto the corresponding
+	// Resource's state. It is deliberately not google.protobuf.Value, whose
+	// only numeric case is `double number_value`, so parsing the client's JSON
+	// into it rewrites every integer as a double - `1` reads back as `1.0`,
+	// which no longer deserializes into an integer field - and silently loses
+	// precision above 2^53, which is within range for IDs the client records.
 	//
 	// A string rather than bytes: the payload is always UTF-8 JSON, and proto3
 	// JSON maps bytes to base64, which inflates every request and response by a
@@ -1809,8 +1817,7 @@ type Operation struct {
 	// Status of the operation. Starts as OPERATION_STATUS_PENDING when the
 	// version is created and moves to a terminal status once the resource is
 	// applied. Mutable: updated via UpdateOperation, e.g. when an operation
-	// recorded as failed is retried and eventually succeeds. A succeeded
-	// operation cannot carry an `error_message`.
+	// recorded as failed is retried and eventually succeeds.
 	Status types.String `tfsdk:"status"`
 	// When the operation was last updated. Set to `create_time` when the
 	// operation is created and to the server timestamp on each successful
@@ -1847,7 +1854,7 @@ func (m Operation) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["dashboard_metadata"] = attrs["dashboard_metadata"].SetOptional()
 	attrs["error_message"] = attrs["error_message"].SetOptional()
-	attrs["name"] = attrs["name"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
 	attrs["resource_id"] = attrs["resource_id"].SetOptional()
 	attrs["resource_key"] = attrs["resource_key"].SetOptional()
 	attrs["resource_key"] = attrs["resource_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
@@ -1997,7 +2004,7 @@ func (m Resource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["dashboard_metadata"] = attrs["dashboard_metadata"].SetComputed()
 	attrs["last_action_type"] = attrs["last_action_type"].SetComputed()
 	attrs["last_version_id"] = attrs["last_version_id"].SetComputed()
-	attrs["name"] = attrs["name"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
 	attrs["resource_id"] = attrs["resource_id"].SetOptional()
 	attrs["resource_key"] = attrs["resource_key"].SetOptional()
 	attrs["resource_key"] = attrs["resource_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
@@ -2180,7 +2187,7 @@ func (to *UpdateDeploymentRequest) SyncFieldsDuringRead(ctx context.Context, fro
 
 func (m UpdateDeploymentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["deployment"] = attrs["deployment"].SetRequired()
-	attrs["name"] = attrs["name"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
 	return attrs
@@ -2288,7 +2295,7 @@ func (to *UpdateOperationRequest) SyncFieldsDuringRead(ctx context.Context, from
 
 func (m UpdateOperationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["operation"] = attrs["operation"].SetRequired()
-	attrs["name"] = attrs["name"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
 	return attrs
@@ -2518,7 +2525,7 @@ func (m Version) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["display_name"] = attrs["display_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["git_info"] = attrs["git_info"].SetOptional()
 	attrs["git_info"] = attrs["git_info"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["name"] = attrs["name"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
 	attrs["operations"] = attrs["operations"].SetOptional()
 	attrs["operations"] = attrs["operations"].SetComputed()
 	attrs["operations"] = attrs["operations"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)

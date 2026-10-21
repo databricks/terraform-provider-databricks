@@ -19,6 +19,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -402,6 +403,112 @@ func (m *CreateGroupRequest) GetGroup(ctx context.Context) (Group, bool) {
 func (m *CreateGroupRequest) SetGroup(ctx context.Context, v Group) {
 	vs := v.ToObjectValue(ctx)
 	m.Group = vs
+}
+
+type CreateIdentityVisibilityFilterRequest struct {
+	// Required. The filter to create. Set `principal_type` to `GROUP` and
+	// specify exactly one of `exact` or `prefix`. The server assigns the
+	// resource name; any supplied `name` is ignored.
+	IdentityVisibilityFilter types.Object `tfsdk:"identity_visibility_filter"`
+	// Optional. The ID to use for the filter, which becomes the final component
+	// of its resource name. If not specified or empty, the server generates
+	// one. Must not contain `/`.
+	IdentityVisibilityFilterId types.String `tfsdk:"-"`
+	// Required. The parent account. Format: accounts/{account_id}
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *CreateIdentityVisibilityFilterRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateIdentityVisibilityFilterRequest) {
+	if !from.IdentityVisibilityFilter.IsNull() && !from.IdentityVisibilityFilter.IsUnknown() {
+		if toIdentityVisibilityFilter, ok := to.GetIdentityVisibilityFilter(ctx); ok {
+			if fromIdentityVisibilityFilter, ok := from.GetIdentityVisibilityFilter(ctx); ok {
+				// Recursively sync the fields of IdentityVisibilityFilter
+				toIdentityVisibilityFilter.SyncFieldsDuringCreateOrUpdate(ctx, fromIdentityVisibilityFilter)
+				to.SetIdentityVisibilityFilter(ctx, toIdentityVisibilityFilter)
+			}
+		}
+	}
+}
+
+func (to *CreateIdentityVisibilityFilterRequest) SyncFieldsDuringRead(ctx context.Context, from CreateIdentityVisibilityFilterRequest) {
+	if !from.IdentityVisibilityFilter.IsNull() && !from.IdentityVisibilityFilter.IsUnknown() {
+		if toIdentityVisibilityFilter, ok := to.GetIdentityVisibilityFilter(ctx); ok {
+			if fromIdentityVisibilityFilter, ok := from.GetIdentityVisibilityFilter(ctx); ok {
+				toIdentityVisibilityFilter.SyncFieldsDuringRead(ctx, fromIdentityVisibilityFilter)
+				to.SetIdentityVisibilityFilter(ctx, toIdentityVisibilityFilter)
+			}
+		}
+	}
+}
+
+func (m CreateIdentityVisibilityFilterRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["identity_visibility_filter"] = attrs["identity_visibility_filter"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["identity_visibility_filter_id"] = attrs["identity_visibility_filter_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateIdentityVisibilityFilterRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateIdentityVisibilityFilterRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"identity_visibility_filter": reflect.TypeOf(IdentityVisibilityFilter{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateIdentityVisibilityFilterRequest
+// only implements ToObjectValue() and Type().
+func (m CreateIdentityVisibilityFilterRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"identity_visibility_filter":    m.IdentityVisibilityFilter,
+			"identity_visibility_filter_id": m.IdentityVisibilityFilterId,
+			"parent":                        m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateIdentityVisibilityFilterRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"identity_visibility_filter":    IdentityVisibilityFilter{}.Type(ctx),
+			"identity_visibility_filter_id": types.StringType,
+			"parent":                        types.StringType,
+		},
+	}
+}
+
+// GetIdentityVisibilityFilter returns the value of the IdentityVisibilityFilter field in CreateIdentityVisibilityFilterRequest as
+// a IdentityVisibilityFilter value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateIdentityVisibilityFilterRequest) GetIdentityVisibilityFilter(ctx context.Context) (IdentityVisibilityFilter, bool) {
+	var e IdentityVisibilityFilter
+	if m.IdentityVisibilityFilter.IsNull() || m.IdentityVisibilityFilter.IsUnknown() {
+		return e, false
+	}
+	var v IdentityVisibilityFilter
+	d := m.IdentityVisibilityFilter.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIdentityVisibilityFilter sets the value of the IdentityVisibilityFilter field in CreateIdentityVisibilityFilterRequest.
+func (m *CreateIdentityVisibilityFilterRequest) SetIdentityVisibilityFilter(ctx context.Context, v IdentityVisibilityFilter) {
+	vs := v.ToObjectValue(ctx)
+	m.IdentityVisibilityFilter = vs
 }
 
 type CreateServicePrincipalProxyRequest struct {
@@ -1360,6 +1467,55 @@ func (m DeleteGroupRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type DeleteIdentityVisibilityFilterRequest struct {
+	// Required. The resource name of the filter. Format:
+	// accounts/{account_id}/identity-visibility-filters/{identity_visibility_filter_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteIdentityVisibilityFilterRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteIdentityVisibilityFilterRequest) {
+}
+
+func (to *DeleteIdentityVisibilityFilterRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteIdentityVisibilityFilterRequest) {
+}
+
+func (m DeleteIdentityVisibilityFilterRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteIdentityVisibilityFilterRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteIdentityVisibilityFilterRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteIdentityVisibilityFilterRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteIdentityVisibilityFilterRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteIdentityVisibilityFilterRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type DeleteServicePrincipalProxyRequest struct {
 	// Required. Internal ID of the service principal in Databricks.
 	ServicePrincipalId types.String `tfsdk:"-"`
@@ -1834,6 +1990,59 @@ func (m DirectGroupMember) Type(ctx context.Context) attr.Type {
 			"membership_source": types.StringType,
 			"principal_id":      types.Int64Type,
 			"principal_type":    types.StringType,
+		},
+	}
+}
+
+// An exact-match rule that matches a group's external ID from the identity
+// provider.
+type ExactMatchRule struct {
+	// The identity provider's external ID for the group to match. This is not
+	// the Databricks group ID. The value must be non-empty and is matched
+	// exactly, including case.
+	ExternalId types.String `tfsdk:"external_id"`
+}
+
+func (to *ExactMatchRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExactMatchRule) {
+}
+
+func (to *ExactMatchRule) SyncFieldsDuringRead(ctx context.Context, from ExactMatchRule) {
+}
+
+func (m ExactMatchRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["external_id"] = attrs["external_id"].SetRequired()
+	attrs["external_id"] = attrs["external_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExactMatchRule.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ExactMatchRule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExactMatchRule
+// only implements ToObjectValue() and Type().
+func (m ExactMatchRule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"external_id": m.ExternalId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ExactMatchRule) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"external_id": types.StringType,
 		},
 	}
 }
@@ -2689,6 +2898,55 @@ func (m GetGroupRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetIdentityVisibilityFilterRequest struct {
+	// Required. The resource name of the filter. Format:
+	// accounts/{account_id}/identity-visibility-filters/{identity_visibility_filter_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetIdentityVisibilityFilterRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetIdentityVisibilityFilterRequest) {
+}
+
+func (to *GetIdentityVisibilityFilterRequest) SyncFieldsDuringRead(ctx context.Context, from GetIdentityVisibilityFilterRequest) {
+}
+
+func (m GetIdentityVisibilityFilterRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetIdentityVisibilityFilterRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetIdentityVisibilityFilterRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetIdentityVisibilityFilterRequest
+// only implements ToObjectValue() and Type().
+func (m GetIdentityVisibilityFilterRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetIdentityVisibilityFilterRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type GetServicePrincipalProxyRequest struct {
 	// Required. Internal ID of the service principal in Databricks.
 	ServicePrincipalId types.String `tfsdk:"-"`
@@ -3320,6 +3578,174 @@ func (m Group) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// An account-level rule that controls which identity provider groups are
+// discoverable in directory search and group pickers when automatic identity
+// management is enabled. Filters apply across all workspaces in the account.
+//
+// If no group filters are configured, all groups are visible. Otherwise, a
+// group is visible if it or any of its transitive parent groups matches at
+// least one rule. A group is also visible if it or any transitive parent group
+// is already provisioned in the account. Local Databricks groups remain visible
+// regardless of the filters.
+//
+// Only group filters can be created. Filters do not change provisioning or
+// sign-in for users and service principals. Filters are immutable: to change a
+// rule, delete it and create a new one.
+type IdentityVisibilityFilter struct {
+	// Exact match on the group's external ID from the identity provider.
+	Exact types.Object `tfsdk:"exact"`
+	// The resource name of the identity-visibility filter. Format:
+	// accounts/{account_id}/identity-visibility-filters/{identity_visibility_filter_id}
+	Name types.String `tfsdk:"name"`
+	// Case-sensitive starts-with match on the group's display name.
+	Prefix types.Object `tfsdk:"prefix"`
+	// The type of principal this rule applies to. Set to `GROUP` when creating
+	// a filter. Other principal types are not supported for creation.
+	PrincipalType types.String `tfsdk:"principal_type"`
+}
+
+func (to *IdentityVisibilityFilter) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from IdentityVisibilityFilter) {
+	if !from.Exact.IsNull() && !from.Exact.IsUnknown() {
+		if toExact, ok := to.GetExact(ctx); ok {
+			if fromExact, ok := from.GetExact(ctx); ok {
+				// Recursively sync the fields of Exact
+				toExact.SyncFieldsDuringCreateOrUpdate(ctx, fromExact)
+				to.SetExact(ctx, toExact)
+			}
+		}
+	}
+	if !from.Prefix.IsNull() && !from.Prefix.IsUnknown() {
+		if toPrefix, ok := to.GetPrefix(ctx); ok {
+			if fromPrefix, ok := from.GetPrefix(ctx); ok {
+				// Recursively sync the fields of Prefix
+				toPrefix.SyncFieldsDuringCreateOrUpdate(ctx, fromPrefix)
+				to.SetPrefix(ctx, toPrefix)
+			}
+		}
+	}
+}
+
+func (to *IdentityVisibilityFilter) SyncFieldsDuringRead(ctx context.Context, from IdentityVisibilityFilter) {
+	if !from.Exact.IsNull() && !from.Exact.IsUnknown() {
+		if toExact, ok := to.GetExact(ctx); ok {
+			if fromExact, ok := from.GetExact(ctx); ok {
+				toExact.SyncFieldsDuringRead(ctx, fromExact)
+				to.SetExact(ctx, toExact)
+			}
+		}
+	}
+	if !from.Prefix.IsNull() && !from.Prefix.IsUnknown() {
+		if toPrefix, ok := to.GetPrefix(ctx); ok {
+			if fromPrefix, ok := from.GetPrefix(ctx); ok {
+				toPrefix.SyncFieldsDuringRead(ctx, fromPrefix)
+				to.SetPrefix(ctx, toPrefix)
+			}
+		}
+	}
+}
+
+func (m IdentityVisibilityFilter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exact"] = attrs["exact"].SetOptional()
+	attrs["exact"] = attrs["exact"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["prefix"] = attrs["prefix"].SetOptional()
+	attrs["prefix"] = attrs["prefix"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["principal_type"] = attrs["principal_type"].SetRequired()
+	attrs["principal_type"] = attrs["principal_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in IdentityVisibilityFilter.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m IdentityVisibilityFilter) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"exact":  reflect.TypeOf(ExactMatchRule{}),
+		"prefix": reflect.TypeOf(PrefixMatchRule{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, IdentityVisibilityFilter
+// only implements ToObjectValue() and Type().
+func (m IdentityVisibilityFilter) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"exact":          m.Exact,
+			"name":           m.Name,
+			"prefix":         m.Prefix,
+			"principal_type": m.PrincipalType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m IdentityVisibilityFilter) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"exact":          ExactMatchRule{}.Type(ctx),
+			"name":           types.StringType,
+			"prefix":         PrefixMatchRule{}.Type(ctx),
+			"principal_type": types.StringType,
+		},
+	}
+}
+
+// GetExact returns the value of the Exact field in IdentityVisibilityFilter as
+// a ExactMatchRule value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *IdentityVisibilityFilter) GetExact(ctx context.Context) (ExactMatchRule, bool) {
+	var e ExactMatchRule
+	if m.Exact.IsNull() || m.Exact.IsUnknown() {
+		return e, false
+	}
+	var v ExactMatchRule
+	d := m.Exact.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExact sets the value of the Exact field in IdentityVisibilityFilter.
+func (m *IdentityVisibilityFilter) SetExact(ctx context.Context, v ExactMatchRule) {
+	vs := v.ToObjectValue(ctx)
+	m.Exact = vs
+}
+
+// GetPrefix returns the value of the Prefix field in IdentityVisibilityFilter as
+// a PrefixMatchRule value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *IdentityVisibilityFilter) GetPrefix(ctx context.Context) (PrefixMatchRule, bool) {
+	var e PrefixMatchRule
+	if m.Prefix.IsNull() || m.Prefix.IsUnknown() {
+		return e, false
+	}
+	var v PrefixMatchRule
+	d := m.Prefix.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrefix sets the value of the Prefix field in IdentityVisibilityFilter.
+func (m *IdentityVisibilityFilter) SetPrefix(ctx context.Context, v PrefixMatchRule) {
+	vs := v.ToObjectValue(ctx)
+	m.Prefix = vs
+}
+
 type ListDirectGroupMembersProxyRequest struct {
 	// Required. Internal ID of the group in Databricks whose direct members are
 	// being listed.
@@ -3809,6 +4235,191 @@ func (m *ListGroupsResponse) SetGroups(ctx context.Context, v []Group) {
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Groups = types.ListValueMust(t, vs)
+}
+
+type ListIdentityVisibilityFiltersRequest struct {
+	// The maximum number of filters to return. The service may return fewer
+	// than this value. If omitted or non-positive, defaults to 100. Values
+	// above 1000 are reduced to 1000.
+	PageSize types.Int64 `tfsdk:"-"`
+	// A page token, received from a previous ListIdentityVisibilityFilters
+	// call. Provide this to retrieve the subsequent page.
+	PageToken types.String `tfsdk:"-"`
+	// Required. The parent account. Format: accounts/{account_id}
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *ListIdentityVisibilityFiltersRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListIdentityVisibilityFiltersRequest) {
+}
+
+func (to *ListIdentityVisibilityFiltersRequest) SyncFieldsDuringRead(ctx context.Context, from ListIdentityVisibilityFiltersRequest) {
+}
+
+func (m ListIdentityVisibilityFiltersRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListIdentityVisibilityFiltersRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListIdentityVisibilityFiltersRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListIdentityVisibilityFiltersRequest
+// only implements ToObjectValue() and Type().
+func (m ListIdentityVisibilityFiltersRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListIdentityVisibilityFiltersRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+		},
+	}
+}
+
+// Response message containing a page of identity-visibility filters in the
+// account.
+type ListIdentityVisibilityFiltersResponse struct {
+	// The filters in this page. These are filter rules, not the groups matched
+	// by the rules.
+	IdentityVisibilityFilters types.List `tfsdk:"identity_visibility_filters"`
+	// A token, which can be sent as page_token to retrieve the next page. If
+	// omitted, there are no subsequent pages.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListIdentityVisibilityFiltersResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListIdentityVisibilityFiltersResponse) {
+	if !from.IdentityVisibilityFilters.IsNull() && !from.IdentityVisibilityFilters.IsUnknown() && to.IdentityVisibilityFilters.IsNull() && len(from.IdentityVisibilityFilters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for IdentityVisibilityFilters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.IdentityVisibilityFilters = from.IdentityVisibilityFilters
+	}
+	if !from.IdentityVisibilityFilters.IsNull() && !from.IdentityVisibilityFilters.IsUnknown() {
+		if toIdentityVisibilityFilters, ok := to.GetIdentityVisibilityFilters(ctx); ok {
+			if fromIdentityVisibilityFilters, ok := from.GetIdentityVisibilityFilters(ctx); ok {
+				// Recursively sync the fields of each IdentityVisibilityFilters element by position.
+				for i := range toIdentityVisibilityFilters {
+					if i < len(fromIdentityVisibilityFilters) {
+						toIdentityVisibilityFilters[i].SyncFieldsDuringCreateOrUpdate(ctx, fromIdentityVisibilityFilters[i])
+					}
+				}
+				to.SetIdentityVisibilityFilters(ctx, toIdentityVisibilityFilters)
+			}
+		}
+	}
+}
+
+func (to *ListIdentityVisibilityFiltersResponse) SyncFieldsDuringRead(ctx context.Context, from ListIdentityVisibilityFiltersResponse) {
+	if !from.IdentityVisibilityFilters.IsNull() && !from.IdentityVisibilityFilters.IsUnknown() && to.IdentityVisibilityFilters.IsNull() && len(from.IdentityVisibilityFilters.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for IdentityVisibilityFilters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.IdentityVisibilityFilters = from.IdentityVisibilityFilters
+	}
+	if !from.IdentityVisibilityFilters.IsNull() && !from.IdentityVisibilityFilters.IsUnknown() {
+		if toIdentityVisibilityFilters, ok := to.GetIdentityVisibilityFilters(ctx); ok {
+			if fromIdentityVisibilityFilters, ok := from.GetIdentityVisibilityFilters(ctx); ok {
+				for i := range toIdentityVisibilityFilters {
+					if i < len(fromIdentityVisibilityFilters) {
+						toIdentityVisibilityFilters[i].SyncFieldsDuringRead(ctx, fromIdentityVisibilityFilters[i])
+					}
+				}
+				to.SetIdentityVisibilityFilters(ctx, toIdentityVisibilityFilters)
+			}
+		}
+	}
+}
+
+func (m ListIdentityVisibilityFiltersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["identity_visibility_filters"] = attrs["identity_visibility_filters"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListIdentityVisibilityFiltersResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListIdentityVisibilityFiltersResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"identity_visibility_filters": reflect.TypeOf(IdentityVisibilityFilter{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListIdentityVisibilityFiltersResponse
+// only implements ToObjectValue() and Type().
+func (m ListIdentityVisibilityFiltersResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"identity_visibility_filters": m.IdentityVisibilityFilters,
+			"next_page_token":             m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListIdentityVisibilityFiltersResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"identity_visibility_filters": basetypes.ListType{
+				ElemType: IdentityVisibilityFilter{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetIdentityVisibilityFilters returns the value of the IdentityVisibilityFilters field in ListIdentityVisibilityFiltersResponse as
+// a slice of IdentityVisibilityFilter values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListIdentityVisibilityFiltersResponse) GetIdentityVisibilityFilters(ctx context.Context) ([]IdentityVisibilityFilter, bool) {
+	if m.IdentityVisibilityFilters.IsNull() || m.IdentityVisibilityFilters.IsUnknown() {
+		return nil, false
+	}
+	var v []IdentityVisibilityFilter
+	d := m.IdentityVisibilityFilters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIdentityVisibilityFilters sets the value of the IdentityVisibilityFilters field in ListIdentityVisibilityFiltersResponse.
+func (m *ListIdentityVisibilityFiltersResponse) SetIdentityVisibilityFilters(ctx context.Context, v []IdentityVisibilityFilter) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["identity_visibility_filters"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.IdentityVisibilityFilters = types.ListValueMust(t, vs)
 }
 
 type ListServicePrincipalsProxyRequest struct {
@@ -5036,6 +5647,60 @@ func (m *ListWorkspaceAssignmentsResponse) SetWorkspaceAssignments(ctx context.C
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace_assignments"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.WorkspaceAssignments = types.ListValueMust(t, vs)
+}
+
+// A starts-with rule that matches groups whose display name begins with a
+// specified prefix. Matching is case-sensitive. For example, the prefix `data-`
+// matches `data-platform`.
+type PrefixMatchRule struct {
+	// The display-name prefix to match. Must contain at least one
+	// non-whitespace character. Leading and trailing whitespace are preserved,
+	// and matching is case-sensitive.
+	DisplayNamePrefix types.String `tfsdk:"display_name_prefix"`
+}
+
+func (to *PrefixMatchRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PrefixMatchRule) {
+}
+
+func (to *PrefixMatchRule) SyncFieldsDuringRead(ctx context.Context, from PrefixMatchRule) {
+}
+
+func (m PrefixMatchRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["display_name_prefix"] = attrs["display_name_prefix"].SetRequired()
+	attrs["display_name_prefix"] = attrs["display_name_prefix"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PrefixMatchRule.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m PrefixMatchRule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PrefixMatchRule
+// only implements ToObjectValue() and Type().
+func (m PrefixMatchRule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"display_name_prefix": m.DisplayNamePrefix,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m PrefixMatchRule) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"display_name_prefix": types.StringType,
+		},
+	}
 }
 
 // Request message for resolving a group with the given external ID from the

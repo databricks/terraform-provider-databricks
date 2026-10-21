@@ -1061,6 +1061,18 @@ type AlertV2 struct {
 	CustomDescription types.String `tfsdk:"custom_description"`
 	// Custom summary for the alert. support mustache template.
 	CustomSummary types.String `tfsdk:"custom_summary"`
+	// The format used to interpret the `custom_summary` and
+	// `custom_description` templates.
+	//
+	// `HTML` treats both templates as HTML with Mustache `{{VARIABLE_NAME}}`
+	// placeholders. `MARKDOWN` treats them as Markdown with allowlisted
+	// `@VARIABLE_NAME` placeholders and converts them to the format each
+	// notification destination expects, so a single template renders correctly
+	// in email, Slack, and Microsoft Teams.
+	//
+	// When unset, the API applies no default. Responses omit the field unless a
+	// format is stored, and a template with no format is rendered as HTML.
+	CustomTemplateFormat types.String `tfsdk:"custom_template_format"`
 	// The display name of the alert.
 	DisplayName types.String `tfsdk:"display_name"`
 	// The actual identity that will be used to execute the alert. This is an
@@ -1210,6 +1222,7 @@ func (m AlertV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["custom_description"] = attrs["custom_description"].SetOptional()
 	attrs["custom_summary"] = attrs["custom_summary"].SetOptional()
+	attrs["custom_template_format"] = attrs["custom_template_format"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetRequired()
 	attrs["effective_run_as"] = attrs["effective_run_as"].SetComputed()
 	attrs["evaluation"] = attrs["evaluation"].SetRequired()
@@ -1252,23 +1265,24 @@ func (m AlertV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time":        m.CreateTime,
-			"custom_description": m.CustomDescription,
-			"custom_summary":     m.CustomSummary,
-			"display_name":       m.DisplayName,
-			"effective_run_as":   m.EffectiveRunAs,
-			"evaluation":         m.Evaluation,
-			"id":                 m.Id,
-			"lifecycle_state":    m.LifecycleState,
-			"owner_user_name":    m.OwnerUserName,
-			"parameters":         m.Parameters,
-			"parent_path":        m.ParentPath,
-			"query_text":         m.QueryText,
-			"run_as":             m.RunAs,
-			"run_as_user_name":   m.RunAsUserName,
-			"schedule":           m.Schedule,
-			"update_time":        m.UpdateTime,
-			"warehouse_id":       m.WarehouseId,
+			"create_time":            m.CreateTime,
+			"custom_description":     m.CustomDescription,
+			"custom_summary":         m.CustomSummary,
+			"custom_template_format": m.CustomTemplateFormat,
+			"display_name":           m.DisplayName,
+			"effective_run_as":       m.EffectiveRunAs,
+			"evaluation":             m.Evaluation,
+			"id":                     m.Id,
+			"lifecycle_state":        m.LifecycleState,
+			"owner_user_name":        m.OwnerUserName,
+			"parameters":             m.Parameters,
+			"parent_path":            m.ParentPath,
+			"query_text":             m.QueryText,
+			"run_as":                 m.RunAs,
+			"run_as_user_name":       m.RunAsUserName,
+			"schedule":               m.Schedule,
+			"update_time":            m.UpdateTime,
+			"warehouse_id":           m.WarehouseId,
 		})
 }
 
@@ -1276,15 +1290,16 @@ func (m AlertV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m AlertV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":        types.StringType,
-			"custom_description": types.StringType,
-			"custom_summary":     types.StringType,
-			"display_name":       types.StringType,
-			"effective_run_as":   AlertV2RunAs{}.Type(ctx),
-			"evaluation":         AlertV2Evaluation{}.Type(ctx),
-			"id":                 types.StringType,
-			"lifecycle_state":    types.StringType,
-			"owner_user_name":    types.StringType,
+			"create_time":            types.StringType,
+			"custom_description":     types.StringType,
+			"custom_summary":         types.StringType,
+			"custom_template_format": types.StringType,
+			"display_name":           types.StringType,
+			"effective_run_as":       AlertV2RunAs{}.Type(ctx),
+			"evaluation":             AlertV2Evaluation{}.Type(ctx),
+			"id":                     types.StringType,
+			"lifecycle_state":        types.StringType,
+			"owner_user_name":        types.StringType,
 			"parameters": basetypes.SetType{
 				ElemType: AlertStatementParameter{}.Type(ctx),
 			},
@@ -3614,6 +3629,9 @@ type CreateWarehouseRequest struct {
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
+	// Compute version label for a REALTIME warehouse. This field is output
+	// only.
+	CustomerVersionLabel types.String `tfsdk:"customer_version_label"`
 	// Configures whether the warehouse should use Photon optimized clusters.
 	//
 	// Defaults to true.
@@ -3622,6 +3640,10 @@ type CreateWarehouseRequest struct {
 	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute"`
 	// Deprecated. Instance profile used to pass IAM role to the cluster
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
+	// Must be a multiple of 3 between 3 and 960. The effective maximum cannot
+	// be lower than the warehouse's minimum capacity.
+	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
 	//
@@ -3644,8 +3666,19 @@ type CreateWarehouseRequest struct {
 	// Supported values: - Must be unique within an org. - Must be less than 100
 	// characters.
 	Name types.String `tfsdk:"name"`
+	// Cluster size multiplier for Reyden warehouses. Scales the effective
+	// compute capacity relative to the nominal virtual cluster size. Only
+	// meaningful when the warehouse is of Reyden type.
+	//
+	// Accepted range: 1.0 to the workspace-configured maximum (decimals
+	// allowed). The default maximum is 100.0. - Values below 1.0 are normalized
+	// to 1.0. - Values above the configured maximum are capped at that maximum.
+	// - When absent, the warehouse is treated as having a multiplier of 1.0.
+	ReydenClusterSizeMultiplier types.Float64 `tfsdk:"reyden_cluster_size_multiplier"`
 	// Configurations whether the endpoint should use spot instances.
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
+	// Warehouse statement timeout in seconds.
+	StatementTimeout types.Int64 `tfsdk:"statement_timeout"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
@@ -3702,13 +3735,17 @@ func (m CreateWarehouseRequest) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["channel"] = attrs["channel"].SetOptional()
 	attrs["cluster_size"] = attrs["cluster_size"].SetOptional()
 	attrs["creator_name"] = attrs["creator_name"].SetOptional()
+	attrs["customer_version_label"] = attrs["customer_version_label"].SetComputed()
 	attrs["enable_photon"] = attrs["enable_photon"].SetOptional()
 	attrs["enable_serverless_compute"] = attrs["enable_serverless_compute"].SetOptional()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_dbu"] = attrs["max_dbu"].SetOptional()
 	attrs["max_num_clusters"] = attrs["max_num_clusters"].SetOptional()
 	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["reyden_cluster_size_multiplier"] = attrs["reyden_cluster_size_multiplier"].SetOptional()
 	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
+	attrs["statement_timeout"] = attrs["statement_timeout"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
 
@@ -3736,19 +3773,23 @@ func (m CreateWarehouseRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"auto_stop_mins":            m.AutoStopMins,
-			"channel":                   m.Channel,
-			"cluster_size":              m.ClusterSize,
-			"creator_name":              m.CreatorName,
-			"enable_photon":             m.EnablePhoton,
-			"enable_serverless_compute": m.EnableServerlessCompute,
-			"instance_profile_arn":      m.InstanceProfileArn,
-			"max_num_clusters":          m.MaxNumClusters,
-			"min_num_clusters":          m.MinNumClusters,
-			"name":                      m.Name,
-			"spot_instance_policy":      m.SpotInstancePolicy,
-			"tags":                      m.Tags,
-			"warehouse_type":            m.WarehouseType,
+			"auto_stop_mins":                 m.AutoStopMins,
+			"channel":                        m.Channel,
+			"cluster_size":                   m.ClusterSize,
+			"creator_name":                   m.CreatorName,
+			"customer_version_label":         m.CustomerVersionLabel,
+			"enable_photon":                  m.EnablePhoton,
+			"enable_serverless_compute":      m.EnableServerlessCompute,
+			"instance_profile_arn":           m.InstanceProfileArn,
+			"max_dbu":                        m.MaxDbu,
+			"max_num_clusters":               m.MaxNumClusters,
+			"min_num_clusters":               m.MinNumClusters,
+			"name":                           m.Name,
+			"reyden_cluster_size_multiplier": m.ReydenClusterSizeMultiplier,
+			"spot_instance_policy":           m.SpotInstancePolicy,
+			"statement_timeout":              m.StatementTimeout,
+			"tags":                           m.Tags,
+			"warehouse_type":                 m.WarehouseType,
 		})
 }
 
@@ -3756,19 +3797,23 @@ func (m CreateWarehouseRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (m CreateWarehouseRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"auto_stop_mins":            types.Int64Type,
-			"channel":                   Channel{}.Type(ctx),
-			"cluster_size":              types.StringType,
-			"creator_name":              types.StringType,
-			"enable_photon":             types.BoolType,
-			"enable_serverless_compute": types.BoolType,
-			"instance_profile_arn":      types.StringType,
-			"max_num_clusters":          types.Int64Type,
-			"min_num_clusters":          types.Int64Type,
-			"name":                      types.StringType,
-			"spot_instance_policy":      types.StringType,
-			"tags":                      EndpointTags{}.Type(ctx),
-			"warehouse_type":            types.StringType,
+			"auto_stop_mins":                 types.Int64Type,
+			"channel":                        Channel{}.Type(ctx),
+			"cluster_size":                   types.StringType,
+			"creator_name":                   types.StringType,
+			"customer_version_label":         types.StringType,
+			"enable_photon":                  types.BoolType,
+			"enable_serverless_compute":      types.BoolType,
+			"instance_profile_arn":           types.StringType,
+			"max_dbu":                        types.Int64Type,
+			"max_num_clusters":               types.Int64Type,
+			"min_num_clusters":               types.Int64Type,
+			"name":                           types.StringType,
+			"reyden_cluster_size_multiplier": types.Float64Type,
+			"spot_instance_policy":           types.StringType,
+			"statement_timeout":              types.Int64Type,
+			"tags":                           EndpointTags{}.Type(ctx),
+			"warehouse_type":                 types.StringType,
 		},
 	}
 }
@@ -5524,6 +5569,9 @@ type EditWarehouseRequest struct {
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
+	// Compute version label for a REALTIME warehouse. This field is output
+	// only.
+	CustomerVersionLabel types.String `tfsdk:"customer_version_label"`
 	// Configures whether the warehouse should use Photon optimized clusters.
 	//
 	// Defaults to true.
@@ -5534,6 +5582,10 @@ type EditWarehouseRequest struct {
 	Id types.String `tfsdk:"-"`
 	// Deprecated. Instance profile used to pass IAM role to the cluster
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
+	// Must be a multiple of 3 between 3 and 960. The effective maximum cannot
+	// be lower than the warehouse's minimum capacity.
+	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
 	//
@@ -5556,8 +5608,19 @@ type EditWarehouseRequest struct {
 	// Supported values: - Must be unique within an org. - Must be less than 100
 	// characters.
 	Name types.String `tfsdk:"name"`
+	// Cluster size multiplier for Reyden warehouses. Scales the effective
+	// compute capacity relative to the nominal virtual cluster size. Only
+	// meaningful when the warehouse is of Reyden type.
+	//
+	// Accepted range: 1.0 to the workspace-configured maximum (decimals
+	// allowed). The default maximum is 100.0. - Values below 1.0 are normalized
+	// to 1.0. - Values above the configured maximum are capped at that maximum.
+	// - When absent, the warehouse is treated as having a multiplier of 1.0.
+	ReydenClusterSizeMultiplier types.Float64 `tfsdk:"reyden_cluster_size_multiplier"`
 	// Configurations whether the endpoint should use spot instances.
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
+	// Warehouse statement timeout in seconds.
+	StatementTimeout types.Int64 `tfsdk:"statement_timeout"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
@@ -5614,13 +5677,17 @@ func (m EditWarehouseRequest) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["channel"] = attrs["channel"].SetOptional()
 	attrs["cluster_size"] = attrs["cluster_size"].SetOptional()
 	attrs["creator_name"] = attrs["creator_name"].SetOptional()
+	attrs["customer_version_label"] = attrs["customer_version_label"].SetComputed()
 	attrs["enable_photon"] = attrs["enable_photon"].SetOptional()
 	attrs["enable_serverless_compute"] = attrs["enable_serverless_compute"].SetOptional()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_dbu"] = attrs["max_dbu"].SetOptional()
 	attrs["max_num_clusters"] = attrs["max_num_clusters"].SetOptional()
 	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["reyden_cluster_size_multiplier"] = attrs["reyden_cluster_size_multiplier"].SetOptional()
 	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
+	attrs["statement_timeout"] = attrs["statement_timeout"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
 	attrs["id"] = attrs["id"].SetRequired()
@@ -5649,20 +5716,24 @@ func (m EditWarehouseRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"auto_stop_mins":            m.AutoStopMins,
-			"channel":                   m.Channel,
-			"cluster_size":              m.ClusterSize,
-			"creator_name":              m.CreatorName,
-			"enable_photon":             m.EnablePhoton,
-			"enable_serverless_compute": m.EnableServerlessCompute,
-			"id":                        m.Id,
-			"instance_profile_arn":      m.InstanceProfileArn,
-			"max_num_clusters":          m.MaxNumClusters,
-			"min_num_clusters":          m.MinNumClusters,
-			"name":                      m.Name,
-			"spot_instance_policy":      m.SpotInstancePolicy,
-			"tags":                      m.Tags,
-			"warehouse_type":            m.WarehouseType,
+			"auto_stop_mins":                 m.AutoStopMins,
+			"channel":                        m.Channel,
+			"cluster_size":                   m.ClusterSize,
+			"creator_name":                   m.CreatorName,
+			"customer_version_label":         m.CustomerVersionLabel,
+			"enable_photon":                  m.EnablePhoton,
+			"enable_serverless_compute":      m.EnableServerlessCompute,
+			"id":                             m.Id,
+			"instance_profile_arn":           m.InstanceProfileArn,
+			"max_dbu":                        m.MaxDbu,
+			"max_num_clusters":               m.MaxNumClusters,
+			"min_num_clusters":               m.MinNumClusters,
+			"name":                           m.Name,
+			"reyden_cluster_size_multiplier": m.ReydenClusterSizeMultiplier,
+			"spot_instance_policy":           m.SpotInstancePolicy,
+			"statement_timeout":              m.StatementTimeout,
+			"tags":                           m.Tags,
+			"warehouse_type":                 m.WarehouseType,
 		})
 }
 
@@ -5670,20 +5741,24 @@ func (m EditWarehouseRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m EditWarehouseRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"auto_stop_mins":            types.Int64Type,
-			"channel":                   Channel{}.Type(ctx),
-			"cluster_size":              types.StringType,
-			"creator_name":              types.StringType,
-			"enable_photon":             types.BoolType,
-			"enable_serverless_compute": types.BoolType,
-			"id":                        types.StringType,
-			"instance_profile_arn":      types.StringType,
-			"max_num_clusters":          types.Int64Type,
-			"min_num_clusters":          types.Int64Type,
-			"name":                      types.StringType,
-			"spot_instance_policy":      types.StringType,
-			"tags":                      EndpointTags{}.Type(ctx),
-			"warehouse_type":            types.StringType,
+			"auto_stop_mins":                 types.Int64Type,
+			"channel":                        Channel{}.Type(ctx),
+			"cluster_size":                   types.StringType,
+			"creator_name":                   types.StringType,
+			"customer_version_label":         types.StringType,
+			"enable_photon":                  types.BoolType,
+			"enable_serverless_compute":      types.BoolType,
+			"id":                             types.StringType,
+			"instance_profile_arn":           types.StringType,
+			"max_dbu":                        types.Int64Type,
+			"max_num_clusters":               types.Int64Type,
+			"min_num_clusters":               types.Int64Type,
+			"name":                           types.StringType,
+			"reyden_cluster_size_multiplier": types.Float64Type,
+			"spot_instance_policy":           types.StringType,
+			"statement_timeout":              types.Int64Type,
+			"tags":                           EndpointTags{}.Type(ctx),
+			"warehouse_type":                 types.StringType,
 		},
 	}
 }
@@ -6007,6 +6082,9 @@ type EndpointInfo struct {
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
+	// Compute version label for a REALTIME warehouse. This field is output
+	// only.
+	CustomerVersionLabel types.String `tfsdk:"customer_version_label"`
 	// Configures whether the warehouse should use Photon optimized clusters.
 	//
 	// Defaults to true.
@@ -6022,6 +6100,10 @@ type EndpointInfo struct {
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// the jdbc connection string for this warehouse
 	JdbcUrl types.String `tfsdk:"jdbc_url"`
+	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
+	// Must be a multiple of 3 between 3 and 960. The effective maximum cannot
+	// be lower than the warehouse's minimum capacity.
+	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
 	//
@@ -6050,10 +6132,21 @@ type EndpointInfo struct {
 	NumClusters types.Int64 `tfsdk:"num_clusters"`
 	// ODBC parameters for the SQL warehouse
 	OdbcParams types.Object `tfsdk:"odbc_params"`
+	// Cluster size multiplier for Reyden warehouses. Scales the effective
+	// compute capacity relative to the nominal virtual cluster size. Only
+	// meaningful when the warehouse is of Reyden type.
+	//
+	// Accepted range: 1.0 to the workspace-configured maximum (decimals
+	// allowed). The default maximum is 100.0. - Values below 1.0 are normalized
+	// to 1.0. - Values above the configured maximum are capped at that maximum.
+	// - When absent, the warehouse is treated as having a multiplier of 1.0.
+	ReydenClusterSizeMultiplier types.Float64 `tfsdk:"reyden_cluster_size_multiplier"`
 	// Configurations whether the endpoint should use spot instances.
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
 	// state of the endpoint
 	State types.String `tfsdk:"state"`
+	// Warehouse statement timeout in seconds.
+	StatementTimeout types.Int64 `tfsdk:"statement_timeout"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
@@ -6144,6 +6237,7 @@ func (m EndpointInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["channel"] = attrs["channel"].SetOptional()
 	attrs["cluster_size"] = attrs["cluster_size"].SetOptional()
 	attrs["creator_name"] = attrs["creator_name"].SetOptional()
+	attrs["customer_version_label"] = attrs["customer_version_label"].SetComputed()
 	attrs["enable_photon"] = attrs["enable_photon"].SetOptional()
 	attrs["enable_serverless_compute"] = attrs["enable_serverless_compute"].SetOptional()
 	attrs["health"] = attrs["health"].SetComputed()
@@ -6151,14 +6245,17 @@ func (m EndpointInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["id"] = attrs["id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
 	attrs["jdbc_url"] = attrs["jdbc_url"].SetOptional()
+	attrs["max_dbu"] = attrs["max_dbu"].SetOptional()
 	attrs["max_num_clusters"] = attrs["max_num_clusters"].SetOptional()
 	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["num_active_sessions"] = attrs["num_active_sessions"].SetOptional()
 	attrs["num_clusters"] = attrs["num_clusters"].SetOptional()
 	attrs["odbc_params"] = attrs["odbc_params"].SetOptional()
+	attrs["reyden_cluster_size_multiplier"] = attrs["reyden_cluster_size_multiplier"].SetOptional()
 	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["statement_timeout"] = attrs["statement_timeout"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
 
@@ -6188,26 +6285,30 @@ func (m EndpointInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"auto_stop_mins":            m.AutoStopMins,
-			"channel":                   m.Channel,
-			"cluster_size":              m.ClusterSize,
-			"creator_name":              m.CreatorName,
-			"enable_photon":             m.EnablePhoton,
-			"enable_serverless_compute": m.EnableServerlessCompute,
-			"health":                    m.Health,
-			"id":                        m.Id,
-			"instance_profile_arn":      m.InstanceProfileArn,
-			"jdbc_url":                  m.JdbcUrl,
-			"max_num_clusters":          m.MaxNumClusters,
-			"min_num_clusters":          m.MinNumClusters,
-			"name":                      m.Name,
-			"num_active_sessions":       m.NumActiveSessions,
-			"num_clusters":              m.NumClusters,
-			"odbc_params":               m.OdbcParams,
-			"spot_instance_policy":      m.SpotInstancePolicy,
-			"state":                     m.State,
-			"tags":                      m.Tags,
-			"warehouse_type":            m.WarehouseType,
+			"auto_stop_mins":                 m.AutoStopMins,
+			"channel":                        m.Channel,
+			"cluster_size":                   m.ClusterSize,
+			"creator_name":                   m.CreatorName,
+			"customer_version_label":         m.CustomerVersionLabel,
+			"enable_photon":                  m.EnablePhoton,
+			"enable_serverless_compute":      m.EnableServerlessCompute,
+			"health":                         m.Health,
+			"id":                             m.Id,
+			"instance_profile_arn":           m.InstanceProfileArn,
+			"jdbc_url":                       m.JdbcUrl,
+			"max_dbu":                        m.MaxDbu,
+			"max_num_clusters":               m.MaxNumClusters,
+			"min_num_clusters":               m.MinNumClusters,
+			"name":                           m.Name,
+			"num_active_sessions":            m.NumActiveSessions,
+			"num_clusters":                   m.NumClusters,
+			"odbc_params":                    m.OdbcParams,
+			"reyden_cluster_size_multiplier": m.ReydenClusterSizeMultiplier,
+			"spot_instance_policy":           m.SpotInstancePolicy,
+			"state":                          m.State,
+			"statement_timeout":              m.StatementTimeout,
+			"tags":                           m.Tags,
+			"warehouse_type":                 m.WarehouseType,
 		})
 }
 
@@ -6215,26 +6316,30 @@ func (m EndpointInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m EndpointInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"auto_stop_mins":            types.Int64Type,
-			"channel":                   Channel{}.Type(ctx),
-			"cluster_size":              types.StringType,
-			"creator_name":              types.StringType,
-			"enable_photon":             types.BoolType,
-			"enable_serverless_compute": types.BoolType,
-			"health":                    EndpointHealth{}.Type(ctx),
-			"id":                        types.StringType,
-			"instance_profile_arn":      types.StringType,
-			"jdbc_url":                  types.StringType,
-			"max_num_clusters":          types.Int64Type,
-			"min_num_clusters":          types.Int64Type,
-			"name":                      types.StringType,
-			"num_active_sessions":       types.Int64Type,
-			"num_clusters":              types.Int64Type,
-			"odbc_params":               OdbcParams{}.Type(ctx),
-			"spot_instance_policy":      types.StringType,
-			"state":                     types.StringType,
-			"tags":                      EndpointTags{}.Type(ctx),
-			"warehouse_type":            types.StringType,
+			"auto_stop_mins":                 types.Int64Type,
+			"channel":                        Channel{}.Type(ctx),
+			"cluster_size":                   types.StringType,
+			"creator_name":                   types.StringType,
+			"customer_version_label":         types.StringType,
+			"enable_photon":                  types.BoolType,
+			"enable_serverless_compute":      types.BoolType,
+			"health":                         EndpointHealth{}.Type(ctx),
+			"id":                             types.StringType,
+			"instance_profile_arn":           types.StringType,
+			"jdbc_url":                       types.StringType,
+			"max_dbu":                        types.Int64Type,
+			"max_num_clusters":               types.Int64Type,
+			"min_num_clusters":               types.Int64Type,
+			"name":                           types.StringType,
+			"num_active_sessions":            types.Int64Type,
+			"num_clusters":                   types.Int64Type,
+			"odbc_params":                    OdbcParams{}.Type(ctx),
+			"reyden_cluster_size_multiplier": types.Float64Type,
+			"spot_instance_policy":           types.StringType,
+			"state":                          types.StringType,
+			"statement_timeout":              types.Int64Type,
+			"tags":                           EndpointTags{}.Type(ctx),
+			"warehouse_type":                 types.StringType,
 		},
 	}
 }
@@ -8266,6 +8371,9 @@ type GetWarehouseResponse struct {
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
+	// Compute version label for a REALTIME warehouse. This field is output
+	// only.
+	CustomerVersionLabel types.String `tfsdk:"customer_version_label"`
 	// Configures whether the warehouse should use Photon optimized clusters.
 	//
 	// Defaults to true.
@@ -8281,6 +8389,10 @@ type GetWarehouseResponse struct {
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// the jdbc connection string for this warehouse
 	JdbcUrl types.String `tfsdk:"jdbc_url"`
+	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
+	// Must be a multiple of 3 between 3 and 960. The effective maximum cannot
+	// be lower than the warehouse's minimum capacity.
+	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
 	//
@@ -8309,10 +8421,21 @@ type GetWarehouseResponse struct {
 	NumClusters types.Int64 `tfsdk:"num_clusters"`
 	// ODBC parameters for the SQL warehouse
 	OdbcParams types.Object `tfsdk:"odbc_params"`
+	// Cluster size multiplier for Reyden warehouses. Scales the effective
+	// compute capacity relative to the nominal virtual cluster size. Only
+	// meaningful when the warehouse is of Reyden type.
+	//
+	// Accepted range: 1.0 to the workspace-configured maximum (decimals
+	// allowed). The default maximum is 100.0. - Values below 1.0 are normalized
+	// to 1.0. - Values above the configured maximum are capped at that maximum.
+	// - When absent, the warehouse is treated as having a multiplier of 1.0.
+	ReydenClusterSizeMultiplier types.Float64 `tfsdk:"reyden_cluster_size_multiplier"`
 	// Configurations whether the endpoint should use spot instances.
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
 	// state of the endpoint
 	State types.String `tfsdk:"state"`
+	// Warehouse statement timeout in seconds.
+	StatementTimeout types.Int64 `tfsdk:"statement_timeout"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
@@ -8403,6 +8526,7 @@ func (m GetWarehouseResponse) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["channel"] = attrs["channel"].SetOptional()
 	attrs["cluster_size"] = attrs["cluster_size"].SetOptional()
 	attrs["creator_name"] = attrs["creator_name"].SetOptional()
+	attrs["customer_version_label"] = attrs["customer_version_label"].SetComputed()
 	attrs["enable_photon"] = attrs["enable_photon"].SetOptional()
 	attrs["enable_serverless_compute"] = attrs["enable_serverless_compute"].SetOptional()
 	attrs["health"] = attrs["health"].SetComputed()
@@ -8410,14 +8534,17 @@ func (m GetWarehouseResponse) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["id"] = attrs["id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
 	attrs["jdbc_url"] = attrs["jdbc_url"].SetOptional()
+	attrs["max_dbu"] = attrs["max_dbu"].SetOptional()
 	attrs["max_num_clusters"] = attrs["max_num_clusters"].SetOptional()
 	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["num_active_sessions"] = attrs["num_active_sessions"].SetOptional()
 	attrs["num_clusters"] = attrs["num_clusters"].SetOptional()
 	attrs["odbc_params"] = attrs["odbc_params"].SetOptional()
+	attrs["reyden_cluster_size_multiplier"] = attrs["reyden_cluster_size_multiplier"].SetOptional()
 	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["statement_timeout"] = attrs["statement_timeout"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
 
@@ -8447,26 +8574,30 @@ func (m GetWarehouseResponse) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"auto_stop_mins":            m.AutoStopMins,
-			"channel":                   m.Channel,
-			"cluster_size":              m.ClusterSize,
-			"creator_name":              m.CreatorName,
-			"enable_photon":             m.EnablePhoton,
-			"enable_serverless_compute": m.EnableServerlessCompute,
-			"health":                    m.Health,
-			"id":                        m.Id,
-			"instance_profile_arn":      m.InstanceProfileArn,
-			"jdbc_url":                  m.JdbcUrl,
-			"max_num_clusters":          m.MaxNumClusters,
-			"min_num_clusters":          m.MinNumClusters,
-			"name":                      m.Name,
-			"num_active_sessions":       m.NumActiveSessions,
-			"num_clusters":              m.NumClusters,
-			"odbc_params":               m.OdbcParams,
-			"spot_instance_policy":      m.SpotInstancePolicy,
-			"state":                     m.State,
-			"tags":                      m.Tags,
-			"warehouse_type":            m.WarehouseType,
+			"auto_stop_mins":                 m.AutoStopMins,
+			"channel":                        m.Channel,
+			"cluster_size":                   m.ClusterSize,
+			"creator_name":                   m.CreatorName,
+			"customer_version_label":         m.CustomerVersionLabel,
+			"enable_photon":                  m.EnablePhoton,
+			"enable_serverless_compute":      m.EnableServerlessCompute,
+			"health":                         m.Health,
+			"id":                             m.Id,
+			"instance_profile_arn":           m.InstanceProfileArn,
+			"jdbc_url":                       m.JdbcUrl,
+			"max_dbu":                        m.MaxDbu,
+			"max_num_clusters":               m.MaxNumClusters,
+			"min_num_clusters":               m.MinNumClusters,
+			"name":                           m.Name,
+			"num_active_sessions":            m.NumActiveSessions,
+			"num_clusters":                   m.NumClusters,
+			"odbc_params":                    m.OdbcParams,
+			"reyden_cluster_size_multiplier": m.ReydenClusterSizeMultiplier,
+			"spot_instance_policy":           m.SpotInstancePolicy,
+			"state":                          m.State,
+			"statement_timeout":              m.StatementTimeout,
+			"tags":                           m.Tags,
+			"warehouse_type":                 m.WarehouseType,
 		})
 }
 
@@ -8474,26 +8605,30 @@ func (m GetWarehouseResponse) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m GetWarehouseResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"auto_stop_mins":            types.Int64Type,
-			"channel":                   Channel{}.Type(ctx),
-			"cluster_size":              types.StringType,
-			"creator_name":              types.StringType,
-			"enable_photon":             types.BoolType,
-			"enable_serverless_compute": types.BoolType,
-			"health":                    EndpointHealth{}.Type(ctx),
-			"id":                        types.StringType,
-			"instance_profile_arn":      types.StringType,
-			"jdbc_url":                  types.StringType,
-			"max_num_clusters":          types.Int64Type,
-			"min_num_clusters":          types.Int64Type,
-			"name":                      types.StringType,
-			"num_active_sessions":       types.Int64Type,
-			"num_clusters":              types.Int64Type,
-			"odbc_params":               OdbcParams{}.Type(ctx),
-			"spot_instance_policy":      types.StringType,
-			"state":                     types.StringType,
-			"tags":                      EndpointTags{}.Type(ctx),
-			"warehouse_type":            types.StringType,
+			"auto_stop_mins":                 types.Int64Type,
+			"channel":                        Channel{}.Type(ctx),
+			"cluster_size":                   types.StringType,
+			"creator_name":                   types.StringType,
+			"customer_version_label":         types.StringType,
+			"enable_photon":                  types.BoolType,
+			"enable_serverless_compute":      types.BoolType,
+			"health":                         EndpointHealth{}.Type(ctx),
+			"id":                             types.StringType,
+			"instance_profile_arn":           types.StringType,
+			"jdbc_url":                       types.StringType,
+			"max_dbu":                        types.Int64Type,
+			"max_num_clusters":               types.Int64Type,
+			"min_num_clusters":               types.Int64Type,
+			"name":                           types.StringType,
+			"num_active_sessions":            types.Int64Type,
+			"num_clusters":                   types.Int64Type,
+			"odbc_params":                    OdbcParams{}.Type(ctx),
+			"reyden_cluster_size_multiplier": types.Float64Type,
+			"spot_instance_policy":           types.StringType,
+			"state":                          types.StringType,
+			"statement_timeout":              types.Int64Type,
+			"tags":                           EndpointTags{}.Type(ctx),
+			"warehouse_type":                 types.StringType,
 		},
 	}
 }

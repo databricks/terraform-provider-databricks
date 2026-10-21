@@ -38,6 +38,15 @@ The following attributes are exported:
 * `create_time` (string) - The timestamp indicating when the alert was created
 * `custom_description` (string) - Custom description for the alert. support mustache template
 * `custom_summary` (string) - Custom summary for the alert. support mustache template
+* `custom_template_format` (string) - The format used to interpret the `custom_summary` and `custom_description` templates.
+  
+  `HTML` treats both templates as HTML with Mustache `{{VARIABLE_NAME}}` placeholders.
+  `MARKDOWN` treats them as Markdown with allowlisted `@VARIABLE_NAME` placeholders and converts
+  them to the format each notification destination expects, so a single template renders
+  correctly in email, Slack, and Microsoft Teams.
+  
+  When unset, the API applies no default. Responses omit the field unless a format is stored,
+  and a template with no format is rendered as HTML. Possible values are: `HTML`, `MARKDOWN`
 * `display_name` (string) - The display name of the alert
 * `effective_run_as` (AlertV2RunAs) - The actual identity that will be used to execute the alert.
   This is an output-only field that shows the resolved run-as identity after applying

@@ -179,6 +179,8 @@ The following arguments are available:
 
 ### alert_configurations Configuration Block (Required)
 
+Alerts, their actions, and their principal overrides are matched by content, so their order in the configuration doesn't matter. Changing a field that the Budgets API can't update, such as `scope_type` of an alert or `action_type` of an action, replaces that alert or action.
+
 * `time_period` - (Required, String Enum) The time window of usage data for the budget. (Enum: `MONTH`)
 * `trigger_type` - (Required, String Enum) The evaluation method to determine when this budget alert is in a triggered state. (Enum: `CUMULATIVE_SPENDING_EXCEEDED`)
 * `quantity_type` - (Required, String Enum) The way to calculate cost for this budget alert. This is what quantity_threshold is measured in. (Enum: `LIST_PRICE_DOLLARS_USD`)

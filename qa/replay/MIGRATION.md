@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**42 copied; 503 pending.** Counts refer to original Go test functions, not
+**43 copied; 502 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. A copy must preserve meaningful
 assertions; unsupported assertions remain pending rather than being omitted.
 Original files are unchanged.
@@ -132,7 +132,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [scim/data_service_principal_acc_test.go](../../scim/data_service_principal_acc_test.go) | 0 | 5 |
 | [scim/data_service_principals_acc_test.go](../../scim/data_service_principals_acc_test.go) | 0 | 5 |
 | [scim/data_user_acc_test.go](../../scim/data_user_acc_test.go) | 0 | 4 |
-| [scim/entitlement_provider_config_test.go](../../scim/entitlement_provider_config_test.go) | 1 | 1 |
+| [scim/entitlement_provider_config_test.go](../../scim/entitlement_provider_config_test.go) | 2 | 0 |
 | [scim/group_member_provider_config_test.go](../../scim/group_member_provider_config_test.go) | 1 | 0 |
 | [scim/group_member_test.go](../../scim/group_member_test.go) | 0 | 3 |
 | [scim/group_provider_config_test.go](../../scim/group_provider_config_test.go) | 1 | 0 |
@@ -197,8 +197,6 @@ the subject from the first HCL resource: it may be a prerequisite.
 - Negative provider-config plan-only cases fail before apply or any API call.
   They use `expect_error` without `plan_only` because the replay runner rejects
   that combination. The original HCL and error patterns are preserved.
-- `scim/entitlement_provider_config_test.go` has a successful account-to-workspace
-  routing regression requiring several resources. It remains pending.
 - `secrets/secret_scope_test.go` includes SDK-only ACL and current-user checks.
   Copying just its resource lifecycle would lose those assertions.
 - `internal/acceptance/tf_provider_test.go` needs an additional noop provider

@@ -5,11 +5,14 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestConnectionsCornerCases(t *testing.T) {
@@ -697,4 +700,150 @@ func TestConnectionsRead_SchemaLevelReconstructsParent(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "schemas/main.default", d.Get("parent"), "parent must be reconstructed from full_name on read")
+}
+
+// connectionSecretsPlan plans a config whose password secret is configRef against state that
+// holds the lowercased reference returned by the server.
+func connectionSecretsPlan(configRef string, expected map[string]*terraform.ResourceAttrDiff) qa.ResourceFixture {
+	return qa.ResourceFixture{
+		Resource: ResourceConnection(),
+		ID:       "abc|my_conn",
+		InstanceState: map[string]string{
+			"name":                "my_conn",
+			"connection_type":     "MYSQL",
+			"metastore_id":        "abc",
+			"full_name":           "my_conn",
+			"owner":               "me",
+			"read_only":           "false",
+			"url":                 "",
+			"credential_type":     "USERNAME_PASSWORD",
+			"connection_id":       "id",
+			"created_at":          "1",
+			"created_by":          "me",
+			"updated_at":          "1",
+			"updated_by":          "me",
+			"securable_type":      "CONNECTION",
+			"provisioning_info.#": "0",
+			"provider_config.#":   "0",
+			"options.%":           "1",
+			"options.host":        "test.com",
+			"secrets.%":           "1",
+			"secrets.password":    "main.default.mysql_pw",
+		},
+		State: map[string]any{
+			"name":            "my_conn",
+			"connection_type": "MYSQL",
+			"options":         map[string]any{"host": "test.com"},
+			"secrets":         map[string]any{"password": configRef},
+		},
+		ExpectedDiff: expected,
+	}
+}
+
+// unknownValue is how the plugin SDK represents a value that is unknown until apply.
+const unknownValue = "74D93920-ED26-11E3-AC10-0800200C9A66"
+
+// A reference that is unknown until apply must stay unknown in the plan.
+func TestConnectionSecretsUnknownReferenceStaysComputed(t *testing.T) {
+	connectionSecretsPlan(unknownValue, map[string]*terraform.ResourceAttrDiff{
+		"secrets.%":        {NewComputed: true},
+		"secrets.password": {Old: "main.default.mysql_pw", NewRemoved: true},
+	}).ApplyNoError(t)
+}
+
+func TestConnectionSecretsSameReferencePlansNoChanges(t *testing.T) {
+	connectionSecretsPlan("main.default.mysql_pw", map[string]*terraform.ResourceAttrDiff{}).ApplyNoError(t)
+}
+
+func TestConnectionSecretsCaseOnlyDifferenceIsSuppressed(t *testing.T) {
+	connectionSecretsPlan("Main.Default.MYSQL_PW", map[string]*terraform.ResourceAttrDiff{}).ApplyNoError(t)
+}
+
+func TestConnectionSecretsRepointPlansInPlaceUpdate(t *testing.T) {
+	connectionSecretsPlan("main.default.mysql_pw2", map[string]*terraform.ResourceAttrDiff{
+		"secrets.password": {Old: "main.default.mysql_pw", New: "main.default.mysql_pw2"},
+	}).ApplyNoError(t)
+}
+
+func mysqlConnectionWithSecret(secretRef string) *catalog.ConnectionInfo {
+	return &catalog.ConnectionInfo{
+		Name:           "my_conn",
+		FullName:       "my_conn",
+		ConnectionType: catalog.ConnectionTypeMysql,
+		MetastoreId:    "abc",
+		Options:        map[string]string{"host": "test.com", "port": "3306"},
+		Secrets:        map[string]string{"password": secretRef},
+	}
+}
+
+func TestConnectionsCreate_WithSecrets(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockConnectionsAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateConnection{
+				Name:           "my_conn",
+				ConnectionType: catalog.ConnectionTypeMysql,
+				Options:        map[string]string{"host": "test.com", "port": "3306"},
+				Secrets:        map[string]string{"password": "main.default.mysql_pw"},
+			}).Return(mysqlConnectionWithSecret("main.default.mysql_pw"), nil)
+			e.GetByName(mock.Anything, "my_conn").Return(mysqlConnectionWithSecret("main.default.mysql_pw"), nil)
+		},
+		Resource: ResourceConnection(),
+		Create:   true,
+		HCL: `
+		name = "my_conn"
+		connection_type = "MYSQL"
+		options = {
+			host = "test.com"
+			port = "3306"
+		}
+		secrets = {
+			password = "main.default.mysql_pw"
+		}
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":               "abc|my_conn",
+		"secrets.%":        "1",
+		"secrets.password": "main.default.mysql_pw",
+	})
+}
+
+func TestConnectionsUpdate_RepointSecret(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockConnectionsAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateConnection{
+				Name:    "my_conn",
+				Options: map[string]string{"host": "test.com", "port": "3306"},
+				Secrets: map[string]string{"password": "main.default.mysql_pw2"},
+			}).Return(mysqlConnectionWithSecret("main.default.mysql_pw2"), nil)
+			e.GetByName(mock.Anything, "my_conn").Return(mysqlConnectionWithSecret("main.default.mysql_pw2"), nil)
+		},
+		Resource: ResourceConnection(),
+		Update:   true,
+		ID:       "abc|my_conn",
+		InstanceState: map[string]string{
+			"name":             "my_conn",
+			"connection_type":  "MYSQL",
+			"metastore_id":     "abc",
+			"options.%":        "2",
+			"options.host":     "test.com",
+			"options.port":     "3306",
+			"secrets.%":        "1",
+			"secrets.password": "main.default.mysql_pw",
+		},
+		HCL: `
+		name = "my_conn"
+		connection_type = "MYSQL"
+		options = {
+			host = "test.com"
+			port = "3306"
+		}
+		secrets = {
+			password = "main.default.mysql_pw2"
+		}
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"secrets.password": "main.default.mysql_pw2",
+	})
 }

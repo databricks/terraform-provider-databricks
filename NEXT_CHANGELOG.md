@@ -7,6 +7,7 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+* `databricks_connection` now supports referencing Unity Catalog secrets through the `secrets` argument.
 
 ### Bug Fixes
 

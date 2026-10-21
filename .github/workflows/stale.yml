@@ -18,8 +18,8 @@ permissions:
 jobs:
   stale:
     runs-on:
-      group: databricks-deco-testing-runner-group
-      labels: ubuntu-latest-deco
+      group: databricks-ghec-public-repos-runner-group-small
+      labels: linux-ubuntu-latest-public-2core-8gb
 
     steps:
       - uses: actions/stale@eb5cf3af3ac0a1aa4c9c45633dd1ae542a27a899 # v10.3.0

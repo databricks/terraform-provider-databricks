@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**49 copied; 496 pending.** Counts refer to original Go test functions, not
+**51 copied; 494 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. A copy must preserve meaningful
 assertions; unsupported assertions remain pending rather than being omitted.
 Original files are unchanged.
@@ -15,7 +15,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 
 | Original source file | Copied | Pending |
 | --- | ---: | ---: |
-| [access/ip_access_list_test.go](../../access/ip_access_list_test.go) | 0 | 1 |
+| [access/ip_access_list_test.go](../../access/ip_access_list_test.go) | 1 | 0 |
 | [access/sql_permissions_provider_config_test.go](../../access/sql_permissions_provider_config_test.go) | 2 | 0 |
 | [apps/custom_app_integration_test.go](../../apps/custom_app_integration_test.go) | 0 | 2 |
 | [aws/data_aws_crossaccount_policy_acc_test.go](../../aws/data_aws_crossaccount_policy_acc_test.go) | 0 | 1 |
@@ -185,7 +185,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [tokens/token_test.go](../../tokens/token_test.go) | 0 | 1 |
 | [vectorsearch/vector_search_test.go](../../vectorsearch/vector_search_test.go) | 0 | 1 |
 | [workspace/data_notebook_acc_test.go](../../workspace/data_notebook_acc_test.go) | 0 | 3 |
-| [workspace/directory_test.go](../../workspace/directory_test.go) | 0 | 1 |
+| [workspace/directory_test.go](../../workspace/directory_test.go) | 1 | 0 |
 | [workspace/global_init_script_test.go](../../workspace/global_init_script_test.go) | 0 | 1 |
 | [workspace/notebook_test.go](../../workspace/notebook_test.go) | 0 | 9 |
 | [workspace/workspace_conf_provider_config_test.go](../../workspace/workspace_conf_provider_config_test.go) | 1 | 0 |

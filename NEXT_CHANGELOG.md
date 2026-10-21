@@ -7,6 +7,7 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+* Add `if_not_exists` to `databricks_sql_table` to reuse existing tables and views during creation ([#6104](https://github.com/databricks/terraform-provider-databricks/pull/6104)).
 * [Breaking] Remove resource and data sources for `databricks_mason_managed_memory_store`.
 * [Breaking] Remove resource and data sources for `databricks_mason_managed_memory_entry`.
 * [Breaking] Remove resource and data sources for `databricks_mason_session_store`.

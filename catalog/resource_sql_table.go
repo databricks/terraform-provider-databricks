@@ -47,6 +47,7 @@ const IdentityColumnDefault IdentityColumn = "default"
 
 type SqlTableInfo struct {
 	Name                  string            `json:"name"`
+	IfNotExists           bool              `json:"if_not_exists,omitempty"`
 	CatalogName           string            `json:"catalog_name" tf:"force_new"`
 	SchemaName            string            `json:"schema_name" tf:"force_new"`
 	TableType             string            `json:"table_type" tf:"force_new"`
@@ -291,8 +292,10 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 
 	createType := ti.getTableTypeString()
 
-	// Use CREATE OR REPLACE for managed Delta tables
-	if ti.DataSourceFormat == "DELTA" && ti.TableType == "MANAGED" {
+	if ti.IfNotExists {
+		statements = append(statements, fmt.Sprintf("CREATE %s IF NOT EXISTS %s", createType, ti.SQLFullName()))
+	} else if ti.DataSourceFormat == "DELTA" && ti.TableType == "MANAGED" {
+		// Use CREATE OR REPLACE for managed Delta tables
 		statements = append(statements, fmt.Sprintf("CREATE OR REPLACE %s %s", createType, ti.SQLFullName()))
 	} else {
 		statements = append(statements, fmt.Sprintf("CREATE %s %s", createType, ti.SQLFullName()))
@@ -742,6 +745,8 @@ func ResourceSqlTable() common.Resource {
 			}
 
 			d.Set("partitions", partitions)
+			// This creation option is not returned by the Tables API.
+			ti.IfNotExists = d.Get("if_not_exists").(bool)
 			return common.StructToData(ti, tableSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

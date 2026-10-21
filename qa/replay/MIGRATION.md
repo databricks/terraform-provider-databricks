@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**43 copied; 502 pending.** Counts refer to original Go test functions, not
+**49 copied; 496 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. A copy must preserve meaningful
 assertions; unsupported assertions remain pending rather than being omitted.
 Original files are unchanged.
@@ -138,7 +138,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [scim/group_provider_config_test.go](../../scim/group_provider_config_test.go) | 1 | 0 |
 | [scim/group_role_provider_config_test.go](../../scim/group_role_provider_config_test.go) | 1 | 0 |
 | [scim/group_role_test.go](../../scim/group_role_test.go) | 0 | 2 |
-| [scim/group_test.go](../../scim/group_test.go) | 0 | 6 |
+| [scim/group_test.go](../../scim/group_test.go) | 6 | 0 |
 | [scim/service_principal_provider_config_test.go](../../scim/service_principal_provider_config_test.go) | 1 | 0 |
 | [scim/service_principal_test.go](../../scim/service_principal_test.go) | 0 | 8 |
 | [scim/user_provider_config_test.go](../../scim/user_provider_config_test.go) | 1 | 0 |
@@ -194,6 +194,10 @@ the subject from the first HCL resource: it may be a prerequisite.
 
 ## Known adaptations and gaps
 
+- The group suite copies workspace/account display-name updates and external SCIM
+  changes from `scim/group_test.go`. SDK name reads become provider-read state
+  checks; external mutations become next-step refresh responses. The two explicit
+  API-selection cases are copied into the separate `features/api_selection` suite.
 - Negative provider-config plan-only cases fail before apply or any API call.
   They use `expect_error` without `plan_only` because the replay runner rejects
   that combination. The original HCL and error patterns are preserved.

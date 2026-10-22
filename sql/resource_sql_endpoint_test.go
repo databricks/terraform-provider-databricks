@@ -473,7 +473,7 @@ func TestResourceSQLEndpointCreateRealtime(t *testing.T) {
 		config                    string
 		timeout, maxDbu, autoStop int
 	}{
-		{"", 3600, 0, 10},
+		{"", 0, 0, 10},
 		{"statement_timeout = 0\nmax_dbu = 1\nauto_stop_mins = 0", 0, 1, 0},
 		{"statement_timeout = 1\nmax_dbu = 1000\nauto_stop_mins = 5", 1, 1000, 5},
 	} {
@@ -482,20 +482,19 @@ func TestResourceSQLEndpointCreateRealtime(t *testing.T) {
 				"name": "foo", "cluster_size": "Small", "warehouse_type": "REALTIME",
 				"min_num_clusters": 1, "max_num_clusters": 1, "enable_photon": true,
 				"enable_serverless_compute": true, "spot_instance_policy": "COST_OPTIMIZED",
-				"auto_stop_mins": tc.autoStop, "statement_timeout": tc.timeout,
+				"auto_stop_mins": tc.autoStop,
 			}
-			if tc.maxDbu != 0 {
-				request["max_dbu"] = tc.maxDbu
+			if tc.config != "" {
+				request["statement_timeout"], request["max_dbu"] = tc.timeout, tc.maxDbu
 			}
 			response := maps.Clone(request)
 			response["id"], response["state"], response["warehouse_type"] = "abc", "STOPPED", "REYDEN"
-			response["customer_version_label"], response["max_dbu"] = "2026.10", tc.maxDbu
-			// HTTP fixtures cover fields missing from the generated SDK mocks.
+			response["customer_version_label"] = "2026.10"
+			// HTTP fixtures verify zero-value serialization and omitted fields.
 			qa.ResourceFixture{
 				Fixtures: []qa.HTTPFixture{
 					{Method: "POST", Resource: "/api/2.0/sql/warehouses", ExpectedRequest: request, Response: `{"id":"abc"}`},
 					{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc?", Response: response},
-					{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc", Response: response},
 				},
 				Resource: ResourceSqlEndpoint(), Create: true,
 				HCL: `name = "foo"
@@ -516,7 +515,6 @@ func TestResourceSQLEndpointReadRealtimeWithoutTimeout(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc?", Response: response},
-			{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc", Response: response},
 		},
 		Resource: ResourceSqlEndpoint(), Read: true, ID: "abc",
 	}.ApplyAndExpectData(t, map[string]any{"statement_timeout": 0})
@@ -545,31 +543,65 @@ func TestResourceSQLEndpointRealtimeValidation(t *testing.T) {
 	}
 }
 
-func TestResourceSQLEndpointUpdateRealtimeMaxDbu(t *testing.T) {
+func TestResourceSQLEndpointUpdateRealtime(t *testing.T) {
+	assert.NotContains(t, ResourceSqlEndpoint().Schema, "reyden_cluster_size_multiplier")
 	for _, tc := range []struct {
-		config string
-		maxDbu int
-	}{{"max_dbu = 192", 192}, {"", 96}} {
-		t.Run(fmt.Sprint(tc.maxDbu), func(t *testing.T) {
+		config          string
+		maxDbu, timeout int
+	}{{"max_dbu = 192", 192, 3600}, {"", 96, 3600}, {"statement_timeout = 0", 96, 0}, {"statement_timeout = 600", 96, 600}} {
+		t.Run(fmt.Sprint(tc.maxDbu, tc.timeout), func(t *testing.T) {
 			request := map[string]any{
 				"name": "foo", "cluster_size": "Small", "warehouse_type": "REALTIME",
 				"min_num_clusters": 1, "max_num_clusters": 1, "enable_photon": true,
 				"enable_serverless_compute": true, "spot_instance_policy": "COST_OPTIMIZED",
-				"auto_stop_mins": 10, "statement_timeout": 3600, "max_dbu": tc.maxDbu,
+				"auto_stop_mins": 10,
 			}
+			if tc.maxDbu == 192 {
+				request["max_dbu"] = tc.maxDbu
+			}
+			if tc.timeout != 3600 {
+				request["statement_timeout"] = tc.timeout
+			}
+			response := maps.Clone(request)
+			response["max_dbu"], response["statement_timeout"] = tc.maxDbu, tc.timeout
+			response["reyden_cluster_size_multiplier"], response["customer_version_label"] = 2, "2026.10"
 			qa.ResourceFixture{
 				Fixtures: []qa.HTTPFixture{
 					{Method: "POST", Resource: "/api/2.0/sql/warehouses/abc/edit", ExpectedRequest: request},
-					{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc?", Response: request},
-					{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc", Response: request},
+					{Method: "GET", Resource: "/api/2.0/sql/warehouses/abc?", Response: response},
 				},
 				Resource: ResourceSqlEndpoint(), Update: true, ID: "abc",
 				HCL: `name = "foo"
 cluster_size = "Small"
 warehouse_type = "REALTIME"
 ` + tc.config,
-				InstanceState: map[string]string{"warehouse_type": "REALTIME", "max_dbu": "96"},
-			}.ApplyAndExpectData(t, map[string]any{"max_dbu": tc.maxDbu})
+				InstanceState: map[string]string{"name": "old", "warehouse_type": "REALTIME", "max_dbu": "96", "statement_timeout": "3600", "customer_version_label": "2026.10"},
+			}.ApplyAndExpectData(t, map[string]any{"max_dbu": tc.maxDbu, "statement_timeout": tc.timeout, "customer_version_label": "2026.10"})
+		})
+	}
+}
+
+func TestResourceSQLEndpointRealtimeOmittedFieldsNoDiff(t *testing.T) {
+	for _, tc := range []struct{ timeout, maxDbu string }{{"0", "0"}, {"3600", "96"}} {
+		t.Run(tc.timeout, func(t *testing.T) {
+			qa.ResourceFixture{
+				Resource: ResourceSqlEndpoint(),
+				HCL: `name = "foo"
+cluster_size = "Small"
+warehouse_type = "REALTIME"`,
+				InstanceState: map[string]string{
+					"name": "foo", "cluster_size": "Small", "warehouse_type": "REALTIME",
+					"auto_stop_mins": "10", "min_num_clusters": "1", "max_num_clusters": "1",
+					"enable_photon": "true", "enable_serverless_compute": "true",
+					"spot_instance_policy": "COST_OPTIMIZED", "no_wait": "false",
+					"statement_timeout": tc.timeout, "max_dbu": tc.maxDbu,
+					"id": "abc", "state": "STOPPED", "creator_name": "owner",
+					"customer_version_label": "2026.10", "data_source_id": "", "jdbc_url": "",
+					"num_active_sessions": "0", "num_clusters": "0",
+					"odbc_params.#": "0", "provider_config.#": "0",
+				},
+				ExpectedDiff: map[string]*terraform.ResourceAttrDiff{},
+			}.ApplyNoError(t)
 		})
 	}
 }

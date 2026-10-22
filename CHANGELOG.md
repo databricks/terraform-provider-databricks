@@ -1,5 +1,20 @@
 # Version changelog
 
+## Release v1.139.0 (2026-10-22)
+
+### New Features and Improvements
+* [Breaking] Remove resource and data sources for `databricks_mason_managed_memory_store`.
+* [Breaking] Remove resource and data sources for `databricks_mason_managed_memory_entry`.
+* [Breaking] Remove resource and data sources for `databricks_mason_session_store`.
+* [Breaking] Remove resource and data sources for `databricks_mason_session`.
+* Add resource and data sources for `databricks_agent_kit_managed_memory_store`.
+* Add resource and data sources for `databricks_agent_kit_managed_memory_entry`.
+* Add resource and data sources for `databricks_agent_kit_session_store`.
+* Add resource and data sources for `databricks_agent_kit_session`.
+* [Breaking] Remove resource and data sources for `databricks_feature_engineering_materialized_feature`.
+* [Breaking] Remove resource and data sources for `databricks_feature_engineering_kafka_config`.
+
+
 ## Release v1.138.0 (2026-10-19)
 
 ### Breaking Changes

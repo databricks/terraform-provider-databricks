@@ -14,8 +14,10 @@ import (
 
 // TokenRequest asks for a token
 type TokenRequest struct {
-	LifetimeSeconds int32  `json:"lifetime_seconds,omitempty"`
-	Comment         string `json:"comment,omitempty"`
+	LifetimeSeconds  int32    `json:"lifetime_seconds,omitempty"`
+	Comment          string   `json:"comment,omitempty"`
+	Scopes           []string `json:"scopes,omitempty"`
+	AutoscopeEnabled *bool    `json:"autoscope_enabled,omitempty"`
 }
 
 // TokenResponse is a struct that contains information about token that is created from the create tokens api
@@ -26,10 +28,11 @@ type TokenResponse struct {
 
 // TokenInfo is a struct that contains metadata about a given token
 type TokenInfo struct {
-	TokenID      string `json:"token_id,omitempty"`
-	CreationTime int64  `json:"creation_time,omitempty"`
-	ExpiryTime   int64  `json:"expiry_time,omitempty"`
-	Comment      string `json:"comment,omitempty"`
+	TokenID      string   `json:"token_id,omitempty"`
+	CreationTime int64    `json:"creation_time,omitempty"`
+	ExpiryTime   int64    `json:"expiry_time,omitempty"`
+	Comment      string   `json:"comment,omitempty"`
+	Scopes       []string `json:"scopes,omitempty"`
 }
 
 // TokenList ...
@@ -58,7 +61,11 @@ func (a TokensAPI) Create(tokenLifetime time.Duration, comment string) (r TokenR
 	if comment != "" {
 		request.Comment = comment
 	}
+	return a.CreateWithRequest(request)
+}
 
+// CreateWithRequest creates an api token from a full token request
+func (a TokensAPI) CreateWithRequest(request TokenRequest) (r TokenResponse, err error) {
 	err = a.client.Post(a.context, "/token/create", request, &r, a.client.AddWorkspaceIdHeader)
 	return
 }
@@ -110,6 +117,18 @@ func ResourceToken() common.Resource {
 			Optional: true,
 			ForceNew: true,
 		},
+		"scopes": {
+			Type:     schema.TypeSet,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+			Optional: true,
+			Computed: true,
+			ForceNew: true,
+		},
+		"autoscope_enabled": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			ForceNew: true,
+		},
 		"token_value": {
 			Type:      schema.TypeString,
 			Computed:  true,
@@ -143,10 +162,20 @@ func ResourceToken() common.Resource {
 			if err != nil {
 				return err
 			}
-			comment := d.Get("comment").(string)
-			lifeTimeSeconds := d.Get("lifetime_seconds").(int)
-			tokenDuration := time.Duration(lifeTimeSeconds) * time.Second
-			tokenResp, err := NewTokensAPI(ctx, newClient).Create(tokenDuration, comment)
+			request := TokenRequest{
+				LifetimeSeconds: int32(d.Get("lifetime_seconds").(int)),
+				Comment:         d.Get("comment").(string),
+			}
+			if v, ok := d.GetOk("scopes"); ok {
+				for _, scope := range v.(*schema.Set).List() {
+					request.Scopes = append(request.Scopes, scope.(string))
+				}
+			}
+			if v, ok := d.GetOkExists("autoscope_enabled"); ok {
+				autoscopeEnabled := v.(bool)
+				request.AutoscopeEnabled = &autoscopeEnabled
+			}
+			tokenResp, err := NewTokensAPI(ctx, newClient).CreateWithRequest(request)
 			if err != nil {
 				return err
 			}

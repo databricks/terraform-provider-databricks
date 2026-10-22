@@ -18,6 +18,8 @@
 * [Breaking] Remove resource and data sources for `databricks_feature_engineering_materialized_feature`.
 * [Breaking] Remove resource and data sources for `databricks_feature_engineering_kafka_config`.
 
+* Add `scopes` and `autoscope_enabled` arguments to `databricks_obo_token` and `databricks_token` resources ([#6046](https://github.com/databricks/terraform-provider-databricks/issues/6046)).
+
 ### Bug Fixes
 
 ### Documentation

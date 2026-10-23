@@ -48,7 +48,7 @@ func Create(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	err = waitForState(w, ctx, id, timeout, pipelines.PipelineStateRunning)
 	if err != nil {
 		log.Printf("[INFO] Pipeline creation failed, attempting to clean up pipeline %s", id)
-		err2 := Delete(w, ctx, id, timeout)
+		err2 := Delete(w, ctx, id, d.Get("cascade_on_destroy").(bool), timeout)
 		if err2 != nil {
 			log.Printf("[WARN] Unable to delete pipeline %s; this resource needs to be manually cleaned up", id)
 			return fmt.Errorf("multiple errors occurred when creating pipeline. Error while waiting for creation: \"%v\"; error while attempting to clean up failed pipeline: \"%v\"", err, err2)
@@ -78,11 +78,13 @@ func Update(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	return waitForState(w, ctx, d.Id(), timeout, pipelines.PipelineStateRunning)
 }
 
-func Delete(w *databricks.WorkspaceClient, ctx context.Context, id string, timeout time.Duration) error {
-	err := w.Pipelines.Delete(ctx, pipelines.DeletePipelineRequest{
-		PipelineId: id,
-	})
-	if err != nil {
+func Delete(w *databricks.WorkspaceClient, ctx context.Context, id string, cascade bool, timeout time.Duration) error {
+	req := pipelines.DeletePipelineRequest{PipelineId: id}
+	if !cascade {
+		req.Cascade = false
+		req.ForceSendFields = append(req.ForceSendFields, "Cascade")
+	}
+	if err := w.Pipelines.Delete(ctx, req); err != nil {
 		return err
 	}
 	return retry.RetryContext(ctx, timeout,
@@ -251,6 +253,16 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("cluster", "gcp_attributes").RemoveField("use_preemptible_executors")
 	s.SchemaPath("cluster", "gcp_attributes").RemoveField("boot_disk_size")
 
+	// Delete-time only field. Not part of the pipeline spec, so it is added to the
+	// schema directly and read from state during deletion.
+	s.AddNewField("cascade_on_destroy", &schema.Schema{
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  true,
+		Description: "Whether destroying a pipeline also deletes its datasets. Defaults to `true`. " +
+			"Set to `false` to keep datasets when the pipeline is destroyed. Only affects the delete operation.",
+	})
+
 	// Default values
 	s.SchemaPath("edition").SetDefault("ADVANCED")
 	s.SchemaPath("channel").SetDefault("CURRENT")
@@ -335,7 +347,7 @@ func ResourcePipeline() common.Resource {
 			if err != nil {
 				return err
 			}
-			return Delete(w, ctx, d.Id(), d.Timeout(schema.TimeoutDelete))
+			return Delete(w, ctx, d.Id(), d.Get("cascade_on_destroy").(bool), d.Timeout(schema.TimeoutDelete))
 
 		},
 		Timeouts: &schema.ResourceTimeout{

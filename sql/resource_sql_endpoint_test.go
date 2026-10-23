@@ -335,6 +335,7 @@ func TestResourceSQLEndpointUpdateHealthNoDiff(t *testing.T) {
 			"enable_serverless_compute": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"data_source_id":            {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"creator_name":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"statement_timeout":         {Old: "", New: "", NewComputed: true},
 		},
 		HCL: `
 		name = "foo"
@@ -367,6 +368,7 @@ func TestResourceSQLEndpointUpdateNoAutoTermination(t *testing.T) {
 			"enable_serverless_compute": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"data_source_id":            {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"creator_name":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"statement_timeout":         {Old: "", New: "", NewComputed: true},
 		},
 		HCL: `
 		name = "foo"

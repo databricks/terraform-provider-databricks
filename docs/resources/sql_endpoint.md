@@ -38,6 +38,7 @@ The following arguments are supported:
 * `min_num_clusters` - Minimum number of clusters available when a SQL warehouse is running. The default is `1`.
 * `max_num_clusters` - Maximum number of clusters available when a SQL warehouse is running. This field is required. If multi-cluster load balancing is not enabled, this is default to `1`.
 * `auto_stop_mins` - Time in minutes until an idle SQL warehouse terminates all clusters and stops. This field is optional. The default is 120, set to 0 to disable the auto stop.
+* `statement_timeout` - (Optional) Warehouse statement timeout in seconds. When omitted, Terraform uses the value returned by the warehouse API, so removing this argument does not reset a previously configured timeout. Set it to `0` to clear the warehouse override and use the workspace timeout.
 * `tags` - Databricks tags all endpoint resources with these tags.
 * `spot_instance_policy` - The spot policy to use for allocating instances to clusters: `COST_OPTIMIZED` or `RELIABILITY_OPTIMIZED`. This field is optional. Default is `COST_OPTIMIZED`.
 * `enable_photon` - Whether to enable [Photon](https://databricks.com/product/delta-engine). This field is optional and is enabled by default.

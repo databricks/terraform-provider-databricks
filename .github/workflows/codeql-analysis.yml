@@ -17,6 +17,11 @@ jobs:
       group: databricks-deco-testing-runner-group
       labels: ubuntu-latest-deco
 
+    permissions:
+      contents: read
+      id-token: write
+      security-events: write
+
     strategy:
       fail-fast: false
       matrix:
@@ -26,10 +31,46 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-    - name: Setup Go
-      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+    - name: Detect Go module proxy access
+      id: proxy-check
+      shell: bash
+      run: |
+        if [ -n "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+          echo "use_cache=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "use_cache=true" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Setup Go build environment
+      uses: ./.github/actions/setup-go-build-environment
       with:
         go-version-file: go.mod
+        use-cache: ${{ steps.proxy-check.outputs.use_cache }}
+
+    # CodeQL autobuild tolerates missing dependencies. Resolve them explicitly
+    # so failures also prevent setup-go's success-only post step saving a cache.
+    - name: Pull external libraries
+      shell: bash
+      env:
+        USE_CACHE: ${{ steps.proxy-check.outputs.use_cache }}
+      run: |
+        if [ "$USE_CACHE" = "true" ]; then
+          go mod vendor
+        else
+          jf go mod vendor
+        fi
+
+        echo "GOPROXY=file://$(go env GOMODCACHE)/cache/download" >> "$GITHUB_ENV"
+        echo "GONOSUMCHECK=*" >> "$GITHUB_ENV"
+        echo "GONOSUMDB=*" >> "$GITHUB_ENV"
+
+    - name: Verify Go package dependencies
+      shell: bash
+      run: go list -deps -test ./... > /dev/null
+
+    - name: Build Go packages
+      shell: bash
+      run: go build -v ./...
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@ebcb5b36ded6beda4ceefea6a8bc4cc885255bb3 # v3.34.1
@@ -41,3 +82,31 @@ jobs:
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@ebcb5b36ded6beda4ceefea6a8bc4cc885255bb3 # v3.34.1
+
+  slack-notify:
+    needs: [analyze]
+    if: >-
+      failure() && !cancelled() &&
+      github.repository == 'databricks/terraform-provider-databricks' &&
+      github.ref == 'refs/heads/main' &&
+      github.event_name != 'pull_request' && github.run_attempt == 1
+    runs-on:
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
+    permissions: {}
+    steps:
+    - name: Notify Slack of CodeQL failure
+      shell: bash
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_CHANNEL: eng-dev-ecosystem-team
+      run: |
+        : "${SLACK_WEBHOOK:?Configure SLACK_WEBHOOK for CodeQL failure notifications}"
+        jq -n \
+          --arg run_url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+          '{text: (":failed: *CodeQL* failed (<" + $run_url + "|run>)"),
+            username: "eng-dev-ecosystem-bot", icon_emoji: ":robot_face:",
+            channel: env.SLACK_CHANNEL, unfurl_links: false}' | \
+          curl --fail --silent --show-error --connect-timeout 10 --max-time 30 \
+            --header 'Content-Type: application/json' --data-binary @- \
+            --output /dev/null "$SLACK_WEBHOOK"

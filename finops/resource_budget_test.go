@@ -6,8 +6,11 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/billing"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -155,7 +158,13 @@ func TestResourceBudgetRead_UnpackError(t *testing.T) {
 }
 
 func TestResourceBudgetUpdate(t *testing.T) {
+	resource := ResourceBudget()
+	state := schema.TestResourceDataRaw(t, resource.Schema, nil)
+	state.MarkNewResource()
+	require.NoError(t, common.StructToData(getTestBudget(), resource.Schema, state))
+	state.SetId("account_id|budget_configuration_id")
 	qa.ResourceFixture{
+		InstanceState: state.State().Attributes,
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			api := a.GetMockBudgetsAPI().EXPECT()
 			api.Update(mock.Anything, billing.UpdateBudgetConfigurationRequest{
@@ -169,7 +178,7 @@ func TestResourceBudgetUpdate(t *testing.T) {
 									Target:     getTestBudget().AlertConfigurations[0].ActionConfigurations[0].Target,
 								},
 							},
-							QuantityThreshold: "840.84",
+							QuantityThreshold: getTestBudget().AlertConfigurations[0].QuantityThreshold,
 							QuantityType:      getTestBudget().AlertConfigurations[0].QuantityType,
 							TimePeriod:        getTestBudget().AlertConfigurations[0].TimePeriod,
 							TriggerType:       getTestBudget().AlertConfigurations[0].TriggerType,
@@ -191,7 +200,7 @@ func TestResourceBudgetUpdate(t *testing.T) {
 				}}, nil,
 			)
 		},
-		Resource: ResourceBudget(),
+		Resource: resource,
 		Update:   true,
 		HCL: `
 		display_name = "budget_name_update"

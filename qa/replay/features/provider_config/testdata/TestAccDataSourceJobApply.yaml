@@ -1,0 +1,492 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "read_created_job"
+    config: |
+      data "databricks_current_user" "me" {}
+      data "databricks_spark_version" "latest" {}
+      data "databricks_node_type" "smallest" {
+        local_disk = true
+      }
+
+      resource "databricks_notebook" "this" {
+        path     = "${data.databricks_current_user.me.home}/Terraformreplay1"
+        language = "PYTHON"
+        content_base64 = base64encode(<<-EOT
+          # created from ${abspath(path.module)}
+          display(spark.range(10))
+          EOT
+        )
+      }
+
+      resource "databricks_job" "this" {
+        name = "job-datasource-acceptance-test-replay1"
+
+        job_cluster {
+          job_cluster_key = "j"
+          new_cluster {
+            num_workers   = 20
+            spark_version = data.databricks_spark_version.latest.id
+            node_type_id  = data.databricks_node_type.smallest.id
+          }
+        }
+
+        task {
+          task_key = "a"
+
+          new_cluster {
+            num_workers   = 1
+            spark_version = data.databricks_spark_version.latest.id
+            node_type_id  = data.databricks_node_type.smallest.id
+          }
+
+          notebook_task {
+            notebook_path = databricks_notebook.this.path
+          }
+        }
+
+      }
+
+      data "databricks_job" "this" {
+        job_name = databricks_job.this.name
+      }
+    calls:
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Me"
+          body: null
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          headers:
+            "X-Databricks-Org-Id": "12345"
+          body:
+            json:
+              displayName: "Replay tester"
+              id: "100"
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              userName: "tester@example.com"
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.1/clusters/spark-versions"
+          body: null
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              versions:
+                - key: "17.3.x-scala2.13"
+                  name: "17.3 LTS (includes Apache Spark 4.0.0, Scala 2.13)"
+      - &get_3
+        request:
+          method: "GET"
+          path: "/api/2.1/clusters/list-node-types"
+          body: null
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              node_types:
+                - memory_mb: 30500
+                  node_instance_type:
+                    instance_type_id: "i3.xlarge"
+                    local_disk_size_gb: 950
+                    local_disks: 1
+                  node_type_id: "i3.xlarge"
+                  num_cores: 4
+      - request:
+          method: "POST"
+          path: "/api/2.0/workspace/import"
+          body:
+            json:
+              content: "sample"
+              format: "SOURCE"
+              language: "PYTHON"
+              overwrite: true
+              path: "/Users/tester@example.com/Terraformreplay1"
+          matchers:
+            json:
+              # The notebook embeds abspath(path.module), which changes with Terraform's working directory.
+              - path: ["content"]
+                type: "any_string"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 200
+      - request:
+          method: "POST"
+          path: "/api/2.2/jobs/create"
+          body:
+            json:
+              job_clusters:
+                - job_cluster_key: "j"
+                  new_cluster:
+                    node_type_id: "i3.xlarge"
+                    num_workers: 20
+                    spark_version: "17.3.x-scala2.13"
+              max_concurrent_runs: 1
+              name: "job-datasource-acceptance-test-replay1"
+              queue:
+                enabled: false
+              tasks:
+                - new_cluster:
+                    node_type_id: "i3.xlarge"
+                    num_workers: 1
+                    spark_version: "17.3.x-scala2.13"
+                  notebook_task:
+                    notebook_path: "/Users/tester@example.com/Terraformreplay1"
+                  task_key: "a"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              job_id: 101
+      - &get_4
+        request:
+          method: "GET"
+          path: "/api/2.2/jobs/get"
+          query:
+            job_id: ["101"]
+          body: null
+        response: &response_4 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              creator_user_name: "tester@example.com"
+              job_id: 101
+              settings:
+                format: "MULTI_TASK"
+                job_clusters:
+                  - job_cluster_key: "j"
+                    new_cluster:
+                      node_type_id: "i3.xlarge"
+                      num_workers: 20
+                      spark_version: "17.3.x-scala2.13"
+                max_concurrent_runs: 1
+                name: "job-datasource-acceptance-test-replay1"
+                queue:
+                  enabled: false
+                tasks:
+                  - new_cluster:
+                      node_type_id: "i3.xlarge"
+                      num_workers: 1
+                      spark_version: "17.3.x-scala2.13"
+                    notebook_task:
+                      notebook_path: "/Users/tester@example.com/Terraformreplay1"
+                    task_key: "a"
+      - &get_5
+        request:
+          method: "GET"
+          path: "/api/2.1/jobs/list"
+          query:
+            expand_tasks: ["true"]
+            limit: ["25"]
+            name: ["job-datasource-acceptance-test-replay1"]
+          body: null
+        response: &response_5 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              jobs:
+                - creator_user_name: "tester@example.com"
+                  job_id: 101
+                  settings:
+                    format: "MULTI_TASK"
+                    job_clusters:
+                      - job_cluster_key: "j"
+                        new_cluster:
+                          node_type_id: "i3.xlarge"
+                          num_workers: 20
+                          spark_version: "17.3.x-scala2.13"
+                    max_concurrent_runs: 1
+                    name: "job-datasource-acceptance-test-replay1"
+                    queue:
+                      enabled: false
+                    tasks:
+                      - new_cluster:
+                          node_type_id: "i3.xlarge"
+                          num_workers: 1
+                          spark_version: "17.3.x-scala2.13"
+                        notebook_task:
+                          notebook_path: "/Users/tester@example.com/Terraformreplay1"
+                        task_key: "a"
+      - *get_1
+      - *get_2
+      - *get_3
+      - *get_5
+      - *get_1
+      - *get_3
+      - *get_2
+      - &get_6
+        request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Me"
+          query:
+            excludedAttributes: ["entitlements"]
+          body: null
+        response: *response_1
+      - &get_7
+        request:
+          method: "GET"
+          path: "/api/2.0/workspace/get-status"
+          query:
+            path: ["/Users/tester@example.com/Terraformreplay1"]
+          body: null
+        response: &response_6 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              language: "PYTHON"
+              object_id: 200
+              object_type: "NOTEBOOK"
+              path: "/Users/tester@example.com/Terraformreplay1"
+      - *get_4
+      - *get_5
+  - name: "add_workspace_id"
+    config: |
+      data "databricks_current_user" "me" {}
+      data "databricks_spark_version" "latest" {}
+      data "databricks_node_type" "smallest" {
+        local_disk = true
+      }
+
+      resource "databricks_notebook" "this" {
+        path     = "${data.databricks_current_user.me.home}/Terraformreplay2"
+        language = "PYTHON"
+        content_base64 = base64encode(<<-EOT
+          # created from ${abspath(path.module)}
+          display(spark.range(10))
+          EOT
+        )
+      }
+
+      resource "databricks_job" "this" {
+        name = "job-datasource-acceptance-test-replay2"
+
+        job_cluster {
+          job_cluster_key = "j"
+          new_cluster {
+            num_workers   = 20
+            spark_version = data.databricks_spark_version.latest.id
+            node_type_id  = data.databricks_node_type.smallest.id
+          }
+        }
+
+        task {
+          task_key = "a"
+
+          new_cluster {
+            num_workers   = 1
+            spark_version = data.databricks_spark_version.latest.id
+            node_type_id  = data.databricks_node_type.smallest.id
+          }
+
+          notebook_task {
+            notebook_path = databricks_notebook.this.path
+          }
+        }
+
+      }
+
+      data "databricks_job" "this" {
+        job_name = databricks_job.this.name
+        provider_config { workspace_id = "12345" }
+      }
+    calls:
+      - *get_1
+      - *get_2
+      - *get_3
+      - *get_6
+      - *get_7
+      - *get_4
+      - request:
+          method: "POST"
+          path: "/api/2.0/workspace/delete"
+          body:
+            json:
+              path: "/Users/tester@example.com/Terraformreplay1"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: "POST"
+          path: "/api/2.0/workspace/import"
+          body:
+            json:
+              content: "sample"
+              format: "SOURCE"
+              language: "PYTHON"
+              overwrite: true
+              path: "/Users/tester@example.com/Terraformreplay2"
+          matchers:
+            json:
+              # The notebook embeds abspath(path.module), which changes with Terraform's working directory.
+              - path: ["content"]
+                type: "any_string"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 200
+      - request:
+          method: "POST"
+          path: "/api/2.2/jobs/reset"
+          body:
+            json:
+              job_id: 101
+              new_settings:
+                format: "MULTI_TASK"
+                job_clusters:
+                  - job_cluster_key: "j"
+                    new_cluster:
+                      node_type_id: "i3.xlarge"
+                      num_workers: 20
+                      spark_version: "17.3.x-scala2.13"
+                max_concurrent_runs: 1
+                name: "job-datasource-acceptance-test-replay2"
+                queue:
+                  enabled: false
+                tasks:
+                  - new_cluster:
+                      node_type_id: "i3.xlarge"
+                      num_workers: 1
+                      spark_version: "17.3.x-scala2.13"
+                    notebook_task:
+                      notebook_path: "/Users/tester@example.com/Terraformreplay2"
+                    task_key: "a"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_8
+        request:
+          method: "GET"
+          path: "/api/2.2/jobs/get"
+          query:
+            job_id: ["101"]
+          body: null
+        response: &response_7 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              creator_user_name: "tester@example.com"
+              job_id: 101
+              settings:
+                format: "MULTI_TASK"
+                job_clusters:
+                  - job_cluster_key: "j"
+                    new_cluster:
+                      node_type_id: "i3.xlarge"
+                      num_workers: 20
+                      spark_version: "17.3.x-scala2.13"
+                max_concurrent_runs: 1
+                name: "job-datasource-acceptance-test-replay2"
+                queue:
+                  enabled: false
+                tasks:
+                  - new_cluster:
+                      node_type_id: "i3.xlarge"
+                      num_workers: 1
+                      spark_version: "17.3.x-scala2.13"
+                    notebook_task:
+                      notebook_path: "/Users/tester@example.com/Terraformreplay2"
+                    task_key: "a"
+      - &get_9
+        request:
+          method: "GET"
+          path: "/api/2.1/jobs/list"
+          query:
+            expand_tasks: ["true"]
+            limit: ["25"]
+            name: ["job-datasource-acceptance-test-replay2"]
+          body: null
+        response: &response_8 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              jobs:
+                - creator_user_name: "tester@example.com"
+                  job_id: 101
+                  settings:
+                    format: "MULTI_TASK"
+                    job_clusters:
+                      - job_cluster_key: "j"
+                        new_cluster:
+                          node_type_id: "i3.xlarge"
+                          num_workers: 20
+                          spark_version: "17.3.x-scala2.13"
+                    max_concurrent_runs: 1
+                    name: "job-datasource-acceptance-test-replay2"
+                    queue:
+                      enabled: false
+                    tasks:
+                      - new_cluster:
+                          node_type_id: "i3.xlarge"
+                          num_workers: 1
+                          spark_version: "17.3.x-scala2.13"
+                        notebook_task:
+                          notebook_path: "/Users/tester@example.com/Terraformreplay2"
+                        task_key: "a"
+      - *get_1
+      - *get_3
+      - *get_2
+      - *get_9
+      - *get_2
+      - *get_1
+      - *get_3
+      - *get_6
+      - &get_10
+        request:
+          method: "GET"
+          path: "/api/2.0/workspace/get-status"
+          query:
+            path: ["/Users/tester@example.com/Terraformreplay2"]
+          body: null
+        response: &response_9 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              language: "PYTHON"
+              object_id: 200
+              object_type: "NOTEBOOK"
+              path: "/Users/tester@example.com/Terraformreplay2"
+      - *get_8
+      - *get_9
+    state:
+      resources:
+        data.databricks_job.this:
+          attributes:
+            - path: ["provider_config",0,"workspace_id"]
+              equals: "12345"
+destroy:
+  calls:
+    - *get_1
+    - *get_2
+    - *get_3
+    - *get_6
+    - *get_10
+    - *get_8
+    - *get_9
+    - request:
+        method: "POST"
+        path: "/api/2.2/jobs/delete"
+        body:
+          json:
+            job_id: 101
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: "POST"
+        path: "/api/2.0/workspace/delete"
+        body:
+          json:
+            path: "/Users/tester@example.com/Terraformreplay2"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

@@ -1,0 +1,61 @@
+# Responses are inferred from the acceptance scenario and token API model, not recorded.
+version: 1
+# Dummy metadata, not captured from a live workspace.
+host_metadata:
+  host_type: workspace
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: |
+      resource "databricks_token" "this" {
+        lifetime_seconds = 6000
+        comment          = "Testing token"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/token/create
+          body:
+            json:
+              lifetime_seconds: 6000
+              comment: Testing token
+        response:
+          status: 200
+          body:
+            json:
+              token_value: replay-token-not-a-credential
+              token_info:
+                token_id: "00000000-0000-4000-8000-000000000001"
+                comment: Testing token
+                # Fixed future timestamps prevent expiry from aging this lifecycle fixture.
+                # The interval still matches the configured 6000-second lifetime.
+                creation_time: 4102444800000
+                expiry_time: 4102450800000
+      - &read_token
+        request:
+          method: GET
+          path: /api/2.0/token/list
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              token_infos:
+                - token_id: "00000000-0000-4000-8000-000000000001"
+                  comment: Testing token
+                  creation_time: 4102444800000
+                  expiry_time: 4102450800000
+      - *read_token
+destroy:
+  calls:
+    - *read_token
+    - request:
+        method: POST
+        path: /api/2.0/token/delete
+        body:
+          json:
+            token_id: "00000000-0000-4000-8000-000000000001"
+      response:
+        status: 200
+        body:
+          json: {}

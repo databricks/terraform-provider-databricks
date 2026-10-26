@@ -1,0 +1,208 @@
+# Source: access/ip_access_list_test.go#TestAccIPACLListsResourceFullLifecycle
+# All responses, including host metadata, are inferred, not recorded.
+# Values follow the source scenario and settings.IpAccessListInfo response model.
+# The source expands RANDOM independently per step, so both label and addresses change.
+# Like the source, Terraform's consistency checks validate the resulting state.
+version: 1
+host_metadata:
+  host_type: "workspace"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_ip_access_list" "this" {
+        label     = "tf-replay-initial"
+        list_type = "BLOCK"
+        ip_addresses = [
+          "10.0.10.25",
+          "10.0.10.0/24",
+        ]
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/ip-access-lists"
+          body:
+            json:
+              label: "tf-replay-initial"
+              list_type: "BLOCK"
+              ip_addresses:
+                - "10.0.10.25"
+                - "10.0.10.0/24"
+        response: # Inferred from the source scenario and IP access-list API model; not recorded.
+          status: 200
+          body:
+            json:
+              ip_access_list:
+                list_id: "ip-list-id"
+                label: "tf-replay-initial"
+                list_type: "BLOCK"
+                ip_addresses:
+                  - "10.0.10.25"
+                  - "10.0.10.0/24"
+                enabled: true
+                address_count: 2
+                created_at: 1704067200000
+                created_by: 1001
+                updated_at: 1704067200000
+                updated_by: 1001
+      - request:
+          method: "GET"
+          path: "/api/2.0/ip-access-lists/ip-list-id"
+          body: null
+        response: # Inferred from the source scenario and IP access-list API model; not recorded.
+          status: 200
+          body:
+            json:
+              ip_access_list:
+                list_id: "ip-list-id"
+                label: "tf-replay-initial"
+                list_type: "BLOCK"
+                ip_addresses:
+                  - "10.0.10.25"
+                  - "10.0.10.0/24"
+                enabled: true
+                address_count: 2
+                created_at: 1704067200000
+                created_by: 1001
+                updated_at: 1704067200000
+                updated_by: 1001
+      - request:
+          method: "GET"
+          path: "/api/2.0/ip-access-lists/ip-list-id"
+          body: null
+        response: # Inferred from the source scenario and IP access-list API model; not recorded.
+          status: 200
+          body:
+            json:
+              ip_access_list:
+                list_id: "ip-list-id"
+                label: "tf-replay-initial"
+                list_type: "BLOCK"
+                ip_addresses:
+                  - "10.0.10.25"
+                  - "10.0.10.0/24"
+                enabled: true
+                address_count: 2
+                created_at: 1704067200000
+                created_by: 1001
+                updated_at: 1704067200000
+                updated_by: 1001
+  - name: "update"
+    config: |
+      resource "databricks_ip_access_list" "this" {
+        label     = "tf-replay-updated"
+        list_type = "BLOCK"
+        ip_addresses = [
+          "10.0.11.25",
+          "10.0.11.0/24",
+        ]
+      }
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/ip-access-lists/ip-list-id"
+          body: null
+        response: # Inferred from the source scenario and IP access-list API model; not recorded.
+          status: 200
+          body:
+            json:
+              ip_access_list:
+                list_id: "ip-list-id"
+                label: "tf-replay-initial"
+                list_type: "BLOCK"
+                ip_addresses:
+                  - "10.0.10.25"
+                  - "10.0.10.0/24"
+                enabled: true
+                address_count: 2
+                created_at: 1704067200000
+                created_by: 1001
+                updated_at: 1704067200000
+                updated_by: 1001
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/ip-access-lists/ip-list-id"
+          body:
+            json:
+              label: "tf-replay-updated"
+              list_type: "BLOCK"
+              ip_addresses:
+                - "10.0.11.25"
+                - "10.0.11.0/24"
+              enabled: true
+        response: # Inferred from the source scenario and IP access-list API model; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: "GET"
+          path: "/api/2.0/ip-access-lists/ip-list-id"
+          body: null
+        response: # Inferred from the source scenario and IP access-list API model; not recorded.
+          status: 200
+          body:
+            json:
+              ip_access_list:
+                list_id: "ip-list-id"
+                label: "tf-replay-updated"
+                list_type: "BLOCK"
+                ip_addresses:
+                  - "10.0.11.25"
+                  - "10.0.11.0/24"
+                enabled: true
+                address_count: 2
+                created_at: 1704067200000
+                created_by: 1001
+                updated_at: 1704067260000
+                updated_by: 1001
+      - request:
+          method: "GET"
+          path: "/api/2.0/ip-access-lists/ip-list-id"
+          body: null
+        response: # Inferred from the source scenario and IP access-list API model; not recorded.
+          status: 200
+          body:
+            json:
+              ip_access_list:
+                list_id: "ip-list-id"
+                label: "tf-replay-updated"
+                list_type: "BLOCK"
+                ip_addresses:
+                  - "10.0.11.25"
+                  - "10.0.11.0/24"
+                enabled: true
+                address_count: 2
+                created_at: 1704067200000
+                created_by: 1001
+                updated_at: 1704067260000
+                updated_by: 1001
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.0/ip-access-lists/ip-list-id"
+        body: null
+      response: # Inferred from the source scenario and IP access-list API model; not recorded.
+        status: 200
+        body:
+          json:
+            ip_access_list:
+              list_id: "ip-list-id"
+              label: "tf-replay-updated"
+              list_type: "BLOCK"
+              ip_addresses:
+                - "10.0.11.25"
+                - "10.0.11.0/24"
+              enabled: true
+              address_count: 2
+              created_at: 1704067200000
+              created_by: 1001
+              updated_at: 1704067260000
+              updated_by: 1001
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/ip-access-lists/ip-list-id"
+        body: null
+      response: # Inferred from the source scenario and IP access-list API model; not recorded.
+        status: 200
+        body: null

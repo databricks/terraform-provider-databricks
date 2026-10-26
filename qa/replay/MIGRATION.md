@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**56 copied; 489 pending.** Counts refer to original Go test functions, not
+**57 copied; 488 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. A copy must preserve meaningful
 assertions; unsupported assertions remain pending rather than being omitted.
 Original files are unchanged.
@@ -182,7 +182,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [tokens/obo_token_test.go](../../tokens/obo_token_test.go) | 0 | 1 |
 | [tokens/service_principal_secret_provider_config_test.go](../../tokens/service_principal_secret_provider_config_test.go) | 1 | 0 |
 | [tokens/token_provider_config_test.go](../../tokens/token_provider_config_test.go) | 1 | 0 |
-| [tokens/token_test.go](../../tokens/token_test.go) | 0 | 1 |
+| [tokens/token_test.go](../../tokens/token_test.go) | 1 | 0 |
 | [vectorsearch/vector_search_test.go](../../vectorsearch/vector_search_test.go) | 0 | 1 |
 | [workspace/data_notebook_acc_test.go](../../workspace/data_notebook_acc_test.go) | 0 | 3 |
 | [workspace/directory_test.go](../../workspace/directory_test.go) | 1 | 0 |
@@ -194,6 +194,8 @@ the subject from the first HCL resource: it may be a prerequisite.
 
 ## Known adaptations and gaps
 
+- Token timestamps use a fixed future window with the original lifetime, so
+  wall-clock expiry does not invalidate its otherwise static lifecycle transcript.
 - Notification-destination SDK checks of display name and type become
   provider-read state checks. Inferred responses return `*_set` flags for
   input-only fields, exercising preservation of the original configured values.

@@ -96,7 +96,7 @@ steps:
               owner: "replay-admin"
               properties:
                 kind: "various"
-              schema_id: "22222222-2222-2222-2222-222222222222"
+              schema_id: "22222222-2222-4222-8222-000000000001"
       - request:
           method: "POST"
           path: "/api/2.1/unity-catalog/schemas"
@@ -120,7 +120,7 @@ steps:
               owner: "replay-admin"
               properties:
                 kind: "various"
-              schema_id: "22222222-2222-2222-2222-222222222222"
+              schema_id: "22222222-2222-4222-8222-000000000002"
       - &get_2
         request: {method: "GET", path: "/api/2.1/unity-catalog/schemas/sandboxreplay1.things", body: null}
         response: *response_2
@@ -135,8 +135,8 @@ steps:
             json:
               schemas:
                 - catalog_name: "sandboxreplay1"
-                  full_name: "sandboxreplay1.default"
-                  name: "default"
+                  full_name: "sandboxreplay1.information_schema"
+                  name: "information_schema"
                 - catalog_name: "sandboxreplay1"
                   comment: "this database is managed by terraform"
                   enable_predictive_optimization: "INHERIT"
@@ -146,7 +146,7 @@ steps:
                   owner: "replay-admin"
                   properties:
                     kind: "various"
-                  schema_id: "22222222-2222-2222-2222-222222222222"
+                  schema_id: "22222222-2222-4222-8222-000000000001"
                 - catalog_name: "sandboxreplay1"
                   comment: "this database is managed by terraform"
                   enable_predictive_optimization: "INHERIT"
@@ -156,7 +156,7 @@ steps:
                   owner: "replay-admin"
                   properties:
                     kind: "various"
-                  schema_id: "22222222-2222-2222-2222-222222222222"
+                  schema_id: "22222222-2222-4222-8222-000000000002"
       - *get_4
       - *get_1
       - *get_3

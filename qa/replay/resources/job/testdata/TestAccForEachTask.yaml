@@ -107,7 +107,7 @@ steps:
               language: "PYTHON"
               overwrite: true
               path: "/Users/tester@example.com/Terraformreplay1"
-          # Notebook content embeds Terraform\'s temporary module path.
+          # Notebook content embeds Terraform's temporary module path.
           matchers:
             json:
               - path: ["content"]

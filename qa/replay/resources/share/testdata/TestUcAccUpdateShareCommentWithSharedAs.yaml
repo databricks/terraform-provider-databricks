@@ -141,7 +141,7 @@ steps:
               owner: "replay-admin"
               properties:
                 kind: "various"
-              schema_id: "22222222-2222-2222-2222-222222222222"
+              schema_id: "22222222-2222-4222-8222-000000000001"
       - &get_2
         request: {method: "GET", path: "/api/2.1/unity-catalog/schemas/sandboxreplay.thingsreplay", body: null}
         response: *response_2

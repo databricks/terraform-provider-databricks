@@ -1,4 +1,5 @@
 # API responses are inferred from the scenarios and API models, not recorded.
+# The SDK comment read is checked through provider-read state below.
 version: 1
 host_metadata: # Dummy host metadata.
   host_type: "workspace"
@@ -102,7 +103,7 @@ steps:
               owner: "replay-admin"
               properties:
                 kind: "various"
-              schema_id: "22222222-2222-2222-2222-222222222222"
+              schema_id: "22222222-2222-4222-8222-000000000001"
       - request:
           method: "POST"
           path: "/api/2.1/unity-catalog/schemas"
@@ -126,7 +127,7 @@ steps:
               owner: "replay-admin"
               properties:
                 kind: "various"
-              schema_id: "22222222-2222-2222-2222-222222222222"
+              schema_id: "22222222-2222-4222-8222-000000000002"
       - request:
           method: "POST"
           path: "/api/2.1/unity-catalog/schemas"
@@ -150,7 +151,7 @@ steps:
               owner: "replay-admin"
               properties:
                 kind: "various"
-              schema_id: "22222222-2222-2222-2222-222222222222"
+              schema_id: "22222222-2222-4222-8222-000000000003"
       - &get_2
         request: {method: "GET", path: "/api/2.1/unity-catalog/schemas/sandboxreplay.schema1replay", body: null}
         response: *response_2

@@ -1,0 +1,55 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_provider" "this" {
+        name = "terraform-test-provider-replay"
+        comment = "made by terraform"
+        authentication_type = "TOKEN"
+        recipient_profile_str = jsonencode({"shareCredentialsVersion":1,"bearerToken":"dummy-replay-token","endpoint":"https://sharing.delta.io/delta-sharing/"})
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/unity-catalog/providers"
+          body:
+            json:
+              authentication_type: "TOKEN"
+              comment: "made by terraform"
+              name: "terraform-test-provider-replay"
+              recipient_profile_str: "{\"bearerToken\":\"dummy-replay-token\",\"endpoint\":\"https://sharing.delta.io/delta-sharing/\",\"shareCredentialsVersion\":1}"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              authentication_type: "TOKEN"
+              comment: "made by terraform"
+              name: "terraform-test-provider-replay"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/unity-catalog/providers/terraform-test-provider-replay"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              authentication_type: "TOKEN"
+              comment: "made by terraform"
+              name: "terraform-test-provider-replay"
+      - *get_1
+destroy:
+  calls:
+    - *get_1
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/unity-catalog/providers/terraform-test-provider-replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

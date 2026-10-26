@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**162 copied; 383 pending.** Counts refer to original Go test functions, not
+**246 copied; 299 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. A copy must preserve meaningful
 assertions; unsupported assertions remain pending rather than being omitted.
 Original files are unchanged.
@@ -25,40 +25,40 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [aws/service_principal_role_provider_config_test.go](../../aws/service_principal_role_provider_config_test.go) | 1 | 0 |
 | [aws/user_role_provider_config_test.go](../../aws/user_role_provider_config_test.go) | 1 | 0 |
 | [aws/user_role_test.go](../../aws/user_role_test.go) | 0 | 2 |
-| [catalog/artifact_allowlist_test.go](../../catalog/artifact_allowlist_test.go) | 0 | 1 |
-| [catalog/catalog_test.go](../../catalog/catalog_test.go) | 0 | 10 |
-| [catalog/connection_test.go](../../catalog/connection_test.go) | 0 | 3 |
+| [catalog/artifact_allowlist_test.go](../../catalog/artifact_allowlist_test.go) | 1 | 0 |
+| [catalog/catalog_test.go](../../catalog/catalog_test.go) | 7 | 3 |
+| [catalog/connection_test.go](../../catalog/connection_test.go) | 1 | 2 |
 | [catalog/credential_provider_config_test.go](../../catalog/credential_provider_config_test.go) | 2 | 0 |
-| [catalog/credential_test.go](../../catalog/credential_test.go) | 0 | 2 |
-| [catalog/data_catalog_acc_test.go](../../catalog/data_catalog_acc_test.go) | 0 | 1 |
-| [catalog/data_current_metastore_acc_test.go](../../catalog/data_current_metastore_acc_test.go) | 0 | 1 |
-| [catalog/data_external_locations_acc_test.go](../../catalog/data_external_locations_acc_test.go) | 0 | 1 |
-| [catalog/data_metastore_acc_test.go](../../catalog/data_metastore_acc_test.go) | 0 | 1 |
-| [catalog/data_metastores_acc_test.go](../../catalog/data_metastores_acc_test.go) | 0 | 1 |
-| [catalog/data_schema_acc_test.go](../../catalog/data_schema_acc_test.go) | 0 | 1 |
+| [catalog/credential_test.go](../../catalog/credential_test.go) | 1 | 1 |
+| [catalog/data_catalog_acc_test.go](../../catalog/data_catalog_acc_test.go) | 1 | 0 |
+| [catalog/data_current_metastore_acc_test.go](../../catalog/data_current_metastore_acc_test.go) | 1 | 0 |
+| [catalog/data_external_locations_acc_test.go](../../catalog/data_external_locations_acc_test.go) | 1 | 0 |
+| [catalog/data_metastore_acc_test.go](../../catalog/data_metastore_acc_test.go) | 1 | 0 |
+| [catalog/data_metastores_acc_test.go](../../catalog/data_metastores_acc_test.go) | 1 | 0 |
+| [catalog/data_schema_acc_test.go](../../catalog/data_schema_acc_test.go) | 1 | 0 |
 | [catalog/data_schemas_acc_test.go](../../catalog/data_schemas_acc_test.go) | 0 | 1 |
-| [catalog/data_storage_credential_acc_test.go](../../catalog/data_storage_credential_acc_test.go) | 0 | 1 |
-| [catalog/data_storage_credentials_acc_test.go](../../catalog/data_storage_credentials_acc_test.go) | 0 | 1 |
+| [catalog/data_storage_credential_acc_test.go](../../catalog/data_storage_credential_acc_test.go) | 1 | 0 |
+| [catalog/data_storage_credentials_acc_test.go](../../catalog/data_storage_credentials_acc_test.go) | 1 | 0 |
 | [catalog/data_table_acc_test.go](../../catalog/data_table_acc_test.go) | 0 | 1 |
 | [catalog/data_tables_acc_test.go](../../catalog/data_tables_acc_test.go) | 0 | 1 |
-| [catalog/data_volume_acc_test.go](../../catalog/data_volume_acc_test.go) | 0 | 1 |
-| [catalog/data_volumes_acc_test.go](../../catalog/data_volumes_acc_test.go) | 0 | 1 |
-| [catalog/external_location_test.go](../../catalog/external_location_test.go) | 0 | 3 |
-| [catalog/grant_test.go](../../catalog/grant_test.go) | 0 | 5 |
-| [catalog/grants_test.go](../../catalog/grants_test.go) | 0 | 6 |
+| [catalog/data_volume_acc_test.go](../../catalog/data_volume_acc_test.go) | 1 | 0 |
+| [catalog/data_volumes_acc_test.go](../../catalog/data_volumes_acc_test.go) | 1 | 0 |
+| [catalog/external_location_test.go](../../catalog/external_location_test.go) | 3 | 0 |
+| [catalog/grant_test.go](../../catalog/grant_test.go) | 2 | 3 |
+| [catalog/grants_test.go](../../catalog/grants_test.go) | 2 | 4 |
 | [catalog/metastore_assignment_provider_config_test.go](../../catalog/metastore_assignment_provider_config_test.go) | 2 | 0 |
-| [catalog/metastore_assignment_test.go](../../catalog/metastore_assignment_test.go) | 0 | 2 |
+| [catalog/metastore_assignment_test.go](../../catalog/metastore_assignment_test.go) | 2 | 0 |
 | [catalog/metastore_data_access_provider_config_test.go](../../catalog/metastore_data_access_provider_config_test.go) | 2 | 0 |
-| [catalog/metastore_data_access_test.go](../../catalog/metastore_data_access_test.go) | 0 | 2 |
+| [catalog/metastore_data_access_test.go](../../catalog/metastore_data_access_test.go) | 1 | 1 |
 | [catalog/metastore_provider_config_test.go](../../catalog/metastore_provider_config_test.go) | 2 | 0 |
-| [catalog/metastore_test.go](../../catalog/metastore_test.go) | 0 | 4 |
+| [catalog/metastore_test.go](../../catalog/metastore_test.go) | 3 | 1 |
 | [catalog/quality_monitor_test.go](../../catalog/quality_monitor_test.go) | 0 | 2 |
 | [catalog/registered_model_test.go](../../catalog/registered_model_test.go) | 0 | 1 |
 | [catalog/resource_sql_table_acc_test.go](../../catalog/resource_sql_table_acc_test.go) | 0 | 2 |
-| [catalog/schema_test.go](../../catalog/schema_test.go) | 0 | 2 |
+| [catalog/schema_test.go](../../catalog/schema_test.go) | 1 | 1 |
 | [catalog/storage_credential_provider_config_test.go](../../catalog/storage_credential_provider_config_test.go) | 2 | 0 |
 | [catalog/storage_credential_test.go](../../catalog/storage_credential_test.go) | 0 | 2 |
-| [catalog/system_schema_test.go](../../catalog/system_schema_test.go) | 0 | 1 |
+| [catalog/system_schema_test.go](../../catalog/system_schema_test.go) | 1 | 0 |
 | [catalog/table_provider_config_test.go](../../catalog/table_provider_config_test.go) | 1 | 0 |
 | [catalog/volume_test.go](../../catalog/volume_test.go) | 0 | 2 |
 | [catalog/workspace_binding_test.go](../../catalog/workspace_binding_test.go) | 0 | 1 |
@@ -76,7 +76,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [internal/acceptance/workspace_id_pf_app_acc_test.go](../../internal/acceptance/workspace_id_pf_app_acc_test.go) | 21 | 0 |
 | [internal/acceptance/workspace_id_pf_tag_policy_acc_test.go](../../internal/acceptance/workspace_id_pf_tag_policy_acc_test.go) | 21 | 0 |
 | [internal/acceptance/workspace_id_sdkv2_gosdk_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_gosdk_acc_test.go) | 21 | 0 |
-| [internal/acceptance/workspace_id_sdkv2_http_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_http_acc_test.go) | 0 | 21 |
+| [internal/acceptance/workspace_id_sdkv2_http_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_http_acc_test.go) | 19 | 2 |
 | [internal/providers/pluginfw/products/app/data_app_acc_test.go](../../internal/providers/pluginfw/products/app/data_app_acc_test.go) | 0 | 1 |
 | [internal/providers/pluginfw/products/app/data_apps_acc_test.go](../../internal/providers/pluginfw/products/app/data_apps_acc_test.go) | 0 | 1 |
 | [internal/providers/pluginfw/products/app/resource_app_acc_test.go](../../internal/providers/pluginfw/products/app/resource_app_acc_test.go) | 0 | 8 |
@@ -85,34 +85,34 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go](../../internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go) | 0 | 3 |
 | [internal/providers/pluginfw/products/notificationdestinations/data_notification_destinations_acc_test.go](../../internal/providers/pluginfw/products/notificationdestinations/data_notification_destinations_acc_test.go) | 0 | 2 |
 | [internal/providers/pluginfw/products/qualitymonitor/resource_quality_monitor_acc_test.go](../../internal/providers/pluginfw/products/qualitymonitor/resource_quality_monitor_acc_test.go) | 0 | 6 |
-| [internal/providers/pluginfw/products/sharing/data_recipients_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_recipients_acc_test.go) | 0 | 1 |
+| [internal/providers/pluginfw/products/sharing/data_recipients_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_recipients_acc_test.go) | 1 | 0 |
 | [internal/providers/pluginfw/products/sharing/data_share_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_share_acc_test.go) | 0 | 2 |
 | [internal/providers/pluginfw/products/sharing/data_shares_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_shares_acc_test.go) | 0 | 2 |
-| [internal/providers/pluginfw/products/sharing/resource_share_acc_test.go](../../internal/providers/pluginfw/products/sharing/resource_share_acc_test.go) | 0 | 25 |
+| [internal/providers/pluginfw/products/sharing/resource_share_acc_test.go](../../internal/providers/pluginfw/products/sharing/resource_share_acc_test.go) | 10 | 15 |
 | [internal/providers/pluginfw/products/user/data_users_acc_test.go](../../internal/providers/pluginfw/products/user/data_users_acc_test.go) | 0 | 8 |
-| [internal/providers/pluginfw/products/volume/data_volumes_acc_test.go](../../internal/providers/pluginfw/products/volume/data_volumes_acc_test.go) | 0 | 1 |
+| [internal/providers/pluginfw/products/volume/data_volumes_acc_test.go](../../internal/providers/pluginfw/products/volume/data_volumes_acc_test.go) | 1 | 0 |
 | [jobs/data_job_acc_test.go](../../jobs/data_job_acc_test.go) | 0 | 5 |
 | [jobs/data_jobs_acc_test.go](../../jobs/data_jobs_acc_test.go) | 0 | 4 |
 | [jobs/job_test.go](../../jobs/job_test.go) | 0 | 16 |
-| [mlflow/data_mlflow_experiment_acc_test.go](../../mlflow/data_mlflow_experiment_acc_test.go) | 0 | 1 |
-| [mlflow/data_mlflow_model_acc_test.go](../../mlflow/data_mlflow_model_acc_test.go) | 0 | 1 |
-| [mlflow/data_mlflow_models_acc_test.go](../../mlflow/data_mlflow_models_acc_test.go) | 0 | 1 |
-| [mlflow/mlflow_experiment_test.go](../../mlflow/mlflow_experiment_test.go) | 0 | 2 |
+| [mlflow/data_mlflow_experiment_acc_test.go](../../mlflow/data_mlflow_experiment_acc_test.go) | 1 | 0 |
+| [mlflow/data_mlflow_model_acc_test.go](../../mlflow/data_mlflow_model_acc_test.go) | 1 | 0 |
+| [mlflow/data_mlflow_models_acc_test.go](../../mlflow/data_mlflow_models_acc_test.go) | 1 | 0 |
+| [mlflow/mlflow_experiment_test.go](../../mlflow/mlflow_experiment_test.go) | 2 | 0 |
 | [mlflow/mlflow_model_test.go](../../mlflow/mlflow_model_test.go) | 0 | 1 |
 | [mws/data_current_config_acc_test.go](../../mws/data_current_config_acc_test.go) | 8 | 0 |
-| [mws/data_mws_credentials_acc_test.go](../../mws/data_mws_credentials_acc_test.go) | 0 | 1 |
+| [mws/data_mws_credentials_acc_test.go](../../mws/data_mws_credentials_acc_test.go) | 1 | 0 |
 | [mws/data_mws_network_connectivity_config_acc_test.go](../../mws/data_mws_network_connectivity_config_acc_test.go) | 0 | 1 |
 | [mws/data_mws_network_connectivity_configs_acc_test.go](../../mws/data_mws_network_connectivity_configs_acc_test.go) | 0 | 1 |
-| [mws/data_mws_workspaces_acc_test.go](../../mws/data_mws_workspaces_acc_test.go) | 0 | 1 |
-| [mws/mws_credentials_test.go](../../mws/mws_credentials_test.go) | 0 | 1 |
-| [mws/mws_customer_managed_keys_test.go](../../mws/mws_customer_managed_keys_test.go) | 0 | 2 |
+| [mws/data_mws_workspaces_acc_test.go](../../mws/data_mws_workspaces_acc_test.go) | 1 | 0 |
+| [mws/mws_credentials_test.go](../../mws/mws_credentials_test.go) | 1 | 0 |
+| [mws/mws_customer_managed_keys_test.go](../../mws/mws_customer_managed_keys_test.go) | 2 | 0 |
 | [mws/mws_log_delivery_test.go](../../mws/mws_log_delivery_test.go) | 0 | 1 |
 | [mws/mws_network_connectivity_config_test.go](../../mws/mws_network_connectivity_config_test.go) | 0 | 1 |
-| [mws/mws_networks_test.go](../../mws/mws_networks_test.go) | 0 | 2 |
+| [mws/mws_networks_test.go](../../mws/mws_networks_test.go) | 2 | 0 |
 | [mws/mws_permissionassignments_test.go](../../mws/mws_permissionassignments_test.go) | 0 | 2 |
 | [mws/mws_private_access_settings_test.go](../../mws/mws_private_access_settings_test.go) | 0 | 2 |
-| [mws/mws_storage_configurations_test.go](../../mws/mws_storage_configurations_test.go) | 0 | 1 |
-| [mws/mws_vpc_endpoint_test.go](../../mws/mws_vpc_endpoint_test.go) | 0 | 2 |
+| [mws/mws_storage_configurations_test.go](../../mws/mws_storage_configurations_test.go) | 1 | 0 |
+| [mws/mws_vpc_endpoint_test.go](../../mws/mws_vpc_endpoint_test.go) | 1 | 1 |
 | [mws/mws_workspaces_test.go](../../mws/mws_workspaces_test.go) | 0 | 9 |
 | [mws/resource_mws_ncc_private_endpoint_rule_acc_test.go](../../mws/resource_mws_ncc_private_endpoint_rule_acc_test.go) | 0 | 1 |
 | [permissions/access_control_rule_set_provider_config_test.go](../../permissions/access_control_rule_set_provider_config_test.go) | 1 | 0 |
@@ -157,8 +157,8 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [settings/restrict_workspace_admins_test.go](../../settings/restrict_workspace_admins_test.go) | 0 | 1 |
 | [sharing/data_shares_acc_test.go](../../sharing/data_shares_acc_test.go) | 0 | 1 |
 | [sharing/provider_provider_config_test.go](../../sharing/provider_provider_config_test.go) | 1 | 0 |
-| [sharing/provider_test.go](../../sharing/provider_test.go) | 0 | 1 |
-| [sharing/recipient_test.go](../../sharing/recipient_test.go) | 0 | 3 |
+| [sharing/provider_test.go](../../sharing/provider_test.go) | 1 | 0 |
+| [sharing/recipient_test.go](../../sharing/recipient_test.go) | 3 | 0 |
 | [sharing/share_test.go](../../sharing/share_test.go) | 0 | 2 |
 | [sql/alert_test.go](../../sql/alert_test.go) | 0 | 1 |
 | [sql/data_sql_warehouse_acc_test.go](../../sql/data_sql_warehouse_acc_test.go) | 0 | 1 |
@@ -197,14 +197,16 @@ the subject from the first HCL resource: it may be a prerequisite.
 See [FOLLOW_UPS.md](FOLLOW_UPS.md) for deferred problems and the scenarios they
 block. Keep new problems in that list as more source tests are reviewed.
 
-- Workspace routing copies the directory, app, and tag-policy matrices into
+- Workspace routing copies directory, app, tag-policy, and notebook cases into
   `features/workspace_routing/`, split by carrier. Preserve workspace-ID state
   checks, no-op/replacement plan actions, and diagnostic patterns. Routing headers
   distinguish requests for the old and new workspaces. Step-local dummy metadata
   models account/workspace clients and host transitions on the local server.
   YAML aliases repeat consumable fixtures; they do not make calls reusable.
   The provider-upgrade cases retain the originals' current-provider approximation.
-  Removed defaults/overrides use diagnostic steps that fail during planning.
+  Removed defaults/overrides retain diagnostic checks. The two notebook removal
+  cases remain pending because the provider attempts creation rather than
+  returning the expected planning diagnostic.
 - Current-config cloud branches use separate YAML files for AWS, Azure, and
   GCP but still count as one source function. Explicit API cases extend
   `features/api_selection`; inference and cloud overrides stay in the
@@ -251,3 +253,28 @@ block. Keep new problems in that list as more source tests are reviewed.
   already-hermetic tests without acceptance prefixes; it is outside these counts.
 - Import and arbitrary SDK/Go hooks need explicit engine support or a faithful
   equivalent before those scenarios can be counted as copied.
+- Account provisioning copies credentials, AWS/GCP networks and customer-managed
+  keys, storage configurations, the GCP VPC endpoint, and credential/workspace
+  listing data sources. The skipped AWS VPC-endpoint case stays pending.
+- Catalog and schema suites retain owner/comment changes, predictive optimization,
+  isolation transitions, external-location grants, and catalog replacement when
+  options change. The multi-schema/grants case stays pending because of P10.
+  Service-credential scenarios preserve AWS/GCP branches. Storage credentials
+  include the GCP branch; the complete source function stays pending because
+  its two independent AWS credentials reproduce P1. Metastore create scenarios
+  cover AWS, Azure, and GCP storage-root/region formats.
+- Sharing retains schema-object additions, updates, removal, reordering plans,
+  recipient ownership/comment changes, and external sharing profiles. Matching
+  or removing share provider configuration retains the original update-plan
+  checks, even when it produces no HTTP mutation.
+- MLflow cases preserve experiment path normalization, model tags, name/ID
+  lookups, and resource replacement where the original uses a new random name
+  on each step. Nonempty collection checks use a selected fixture-backed member.
+- The identical volume-list scenarios in `catalog/data_volumes_acc_test.go` and
+  `internal/providers/pluginfw/products/volume/data_volumes_acc_test.go` share
+  one replay file. Its selected volume ID proves the original minimum-one-volume
+  check; the original output expression is retained. Both source functions count
+  as copied; cloud permutations count only once.
+- Metastore renaming, changed notebook/share diagnostics, and share workspace
+  replacement remain pending. See P7-P9 in the follow-up list; their assertions
+  have not been weakened to make the copies pass.

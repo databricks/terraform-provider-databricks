@@ -75,6 +75,13 @@ The provider-configuration suite copies all 43 cases in the dedicated
 `*_provider_config_test.go` files: 42 validation errors and the successful
 account-provider/workspace-entitlements regression. That success case uses
 step-local metadata fixtures for the account and derived workspace clients.
-The workspace-routing suite copies the directory, app, and tag-policy matrices,
-including defaults, overrides, host transitions, and replacement plans. The
-notebook matrix remains pending because it needs local input files.
+The workspace-routing suite copies directory, app, tag-policy, and notebook
+cases, including defaults, overrides, host transitions, and replacement plans.
+The raw-HTTP notebook cases use inline base64 content. Two notebook removal
+scenarios remain pending because their expected diagnostics differ from current
+provider behavior; see P8 in the follow-up list.
+
+Account provisioning, Unity Catalog, sharing, and MLflow each have resource suites
+with related data-source cases. Resource-carried configuration checks stay in
+`features/provider_config/`. This suite includes the 43 dedicated configuration
+cases plus configuration cases found in individual resource test files.

@@ -1,0 +1,563 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_storage_credential" "external" {
+        name = "cred-replay"
+        comment = "Managed by TF"
+        owner = "account users"
+        isolation_mode = "ISOLATION_MODE_ISOLATED"
+        force_update = true
+        aws_iam_role {
+          role_arn = "arn:aws:iam::123456789012:role/replay-storage"
+        }
+      }
+      resource "databricks_external_location" "some" {
+        name = "external-replay"
+        url = "s3://replay-bucket/some-replay"
+        credential_name = databricks_storage_credential.external.id
+        comment = "Managed by TF"
+        owner = "account users"
+        isolation_mode = "ISOLATION_MODE_ISOLATED"
+      }
+      resource "databricks_grants" "some" {
+        external_location = databricks_external_location.some.id
+        grant {
+          principal = "data-engineers"
+          privileges = ["CREATE_EXTERNAL_TABLE","READ_FILES"]
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/storage-credentials"
+          body:
+            json:
+              aws_iam_role:
+                role_arn: "arn:aws:iam::123456789012:role/replay-storage"
+              comment: "Managed by TF"
+              name: "cred-replay"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              aws_iam_role:
+                external_id: "replay-external"
+                role_arn: "arn:aws:iam::123456789012:role/replay-storage"
+                unity_catalog_iam_arn: "arn:aws:iam::999999999999:role/unity-catalog"
+              comment: "Managed by TF"
+              id: "33333333-3333-3333-3333-333333333333"
+              isolation_mode: "ISOLATION_MODE_OPEN"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "cred-replay"
+              owner: "replay-admin"
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/storage-credentials/cred-replay"
+          body:
+            json:
+              aws_iam_role:
+                role_arn: "arn:aws:iam::123456789012:role/replay-storage"
+              comment: "Managed by TF"
+              isolation_mode: "ISOLATION_MODE_ISOLATED"
+              owner: "account users"
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              aws_iam_role:
+                external_id: "replay-external"
+                role_arn: "arn:aws:iam::123456789012:role/replay-storage"
+                unity_catalog_iam_arn: "arn:aws:iam::999999999999:role/unity-catalog"
+              comment: "Managed by TF"
+              id: "33333333-3333-3333-3333-333333333333"
+              isolation_mode: "ISOLATION_MODE_ISOLATED"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "cred-replay"
+              owner: "account users"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/current-metastore-assignment"
+          body: null
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              default_catalog_name: "main"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              workspace_id: 12345
+      - &patch_2
+        request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/bindings/storage_credential/cred-replay"
+          body:
+            json:
+              add:
+                - binding_type: "BINDING_TYPE_READ_WRITE"
+                  workspace_id: 12345
+        response: &response_4 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              bindings:
+                - binding_type: "BINDING_TYPE_READ_WRITE"
+                  workspace_id: 12345
+      - &get_3
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/storage-credentials/cred-replay"
+          body: null
+        response: *response_2
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/external-locations"
+          body:
+            json:
+              comment: "Managed by TF"
+              credential_name: "cred-replay"
+              name: "external-replay"
+              url: "s3://replay-bucket/some-replay"
+        response: &response_5 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              comment: "Managed by TF"
+              credential_name: "cred-replay"
+              isolation_mode: "ISOLATION_MODE_OPEN"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "external-replay"
+              owner: "replay-admin"
+              url: "s3://replay-bucket/some-replay"
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/external-locations/external-replay"
+          body:
+            json:
+              comment: "Managed by TF"
+              credential_name: "cred-replay"
+              isolation_mode: "ISOLATION_MODE_ISOLATED"
+              owner: "account users"
+              url: "s3://replay-bucket/some-replay"
+        response: &response_6 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              comment: "Managed by TF"
+              credential_name: "cred-replay"
+              isolation_mode: "ISOLATION_MODE_ISOLATED"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "external-replay"
+              owner: "account users"
+              url: "s3://replay-bucket/some-replay"
+      - *get_1
+      - &patch_4
+        request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/bindings/external_location/external-replay"
+          body:
+            json:
+              add:
+                - binding_type: "BINDING_TYPE_READ_WRITE"
+                  workspace_id: 12345
+        response: *response_4
+      - &get_5
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/external-locations/external-replay"
+          body: null
+        response: *response_6
+      - &get_6
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/permissions/external_location/external-replay"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              privilege_assignments: []
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/permissions/external_location/external-replay"
+          body:
+            json:
+              changes:
+                - add: ["READ_FILES","CREATE_EXTERNAL_TABLE"]
+                  principal: "data-engineers"
+        response: &response_7 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              privilege_assignments:
+                - principal: "data-engineers"
+                  privileges: ["CREATE_EXTERNAL_TABLE","READ_FILES"]
+      - &get_7
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/permissions/external_location/external-replay"
+          body: null
+        response: *response_7
+      - *get_7
+      - *get_3
+      - *get_5
+      - *get_7
+  - name: "comment"
+    config: |
+      resource "databricks_storage_credential" "external" {
+        name = "cred-replay"
+        comment = "Managed by TF -- Updated Comment"
+        owner = "account users"
+        isolation_mode = "ISOLATION_MODE_ISOLATED"
+        force_update = true
+        aws_iam_role {
+          role_arn = "arn:aws:iam::123456789012:role/replay-storage"
+        }
+      }
+      resource "databricks_external_location" "some" {
+        name = "external-replay"
+        url = "s3://replay-bucket/some-replay"
+        credential_name = databricks_storage_credential.external.id
+        comment = "Managed by TF -- Updated Comment"
+        owner = "account users"
+        isolation_mode = "ISOLATION_MODE_ISOLATED"
+      }
+      resource "databricks_grants" "some" {
+        external_location = databricks_external_location.some.id
+        grant {
+          principal = "data-engineers"
+          privileges = ["CREATE_EXTERNAL_TABLE","READ_FILES"]
+        }
+      }
+    calls:
+      - *get_3
+      - *get_5
+      - *get_7
+      - *get_1
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/storage-credentials/cred-replay"
+          body:
+            json:
+              aws_iam_role:
+                role_arn: "arn:aws:iam::123456789012:role/replay-storage"
+              comment: "Managed by TF -- Updated Comment"
+              force: true
+              isolation_mode: "ISOLATION_MODE_ISOLATED"
+        response: &response_8 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              aws_iam_role:
+                external_id: "replay-external"
+                role_arn: "arn:aws:iam::123456789012:role/replay-storage"
+                unity_catalog_iam_arn: "arn:aws:iam::999999999999:role/unity-catalog"
+              comment: "Managed by TF -- Updated Comment"
+              id: "33333333-3333-3333-3333-333333333333"
+              isolation_mode: "ISOLATION_MODE_ISOLATED"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "cred-replay"
+              owner: "account users"
+      - *get_1
+      - *patch_2
+      - &get_8
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/storage-credentials/cred-replay"
+          body: null
+        response: *response_8
+      - *get_1
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/external-locations/external-replay"
+          body:
+            json:
+              comment: "Managed by TF -- Updated Comment"
+              credential_name: "cred-replay"
+              isolation_mode: "ISOLATION_MODE_ISOLATED"
+              url: "s3://replay-bucket/some-replay"
+        response: &response_9 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              comment: "Managed by TF -- Updated Comment"
+              credential_name: "cred-replay"
+              isolation_mode: "ISOLATION_MODE_ISOLATED"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "external-replay"
+              owner: "account users"
+              url: "s3://replay-bucket/some-replay"
+      - *get_1
+      - *patch_4
+      - &get_9
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/external-locations/external-replay"
+          body: null
+        response: *response_9
+      - *get_8
+      - *get_9
+      - *get_7
+  - name: "owner"
+    config: |
+      resource "databricks_storage_credential" "external" {
+        name = "cred-replay"
+        comment = "Managed by TF -- Updated Comment"
+        owner = "data-engineers"
+        isolation_mode = "ISOLATION_MODE_ISOLATED"
+        force_update = true
+        aws_iam_role {
+          role_arn = "arn:aws:iam::123456789012:role/replay-storage"
+        }
+      }
+      resource "databricks_external_location" "some" {
+        name = "external-replay"
+        url = "s3://replay-bucket/some-replay"
+        credential_name = databricks_storage_credential.external.id
+        comment = "Managed by TF -- Updated Comment"
+        owner = "data-engineers"
+        isolation_mode = "ISOLATION_MODE_ISOLATED"
+      }
+      resource "databricks_grants" "some" {
+        external_location = databricks_external_location.some.id
+        grant {
+          principal = "data-engineers"
+          privileges = ["CREATE_EXTERNAL_TABLE","READ_FILES"]
+        }
+      }
+    calls:
+      - *get_8
+      - *get_9
+      - *get_7
+      - *get_1
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/storage-credentials/cred-replay"
+          body:
+            json:
+              owner: "data-engineers"
+        response: &response_10 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              aws_iam_role:
+                external_id: "replay-external"
+                role_arn: "arn:aws:iam::123456789012:role/replay-storage"
+                unity_catalog_iam_arn: "arn:aws:iam::999999999999:role/unity-catalog"
+              comment: "Managed by TF -- Updated Comment"
+              id: "33333333-3333-3333-3333-333333333333"
+              isolation_mode: "ISOLATION_MODE_ISOLATED"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "cred-replay"
+              owner: "data-engineers"
+      - &get_10
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/storage-credentials/cred-replay"
+          body: null
+        response: *response_10
+      - *get_1
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/external-locations/external-replay"
+          body:
+            json:
+              owner: "data-engineers"
+        response: &response_11 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              comment: "Managed by TF -- Updated Comment"
+              credential_name: "cred-replay"
+              isolation_mode: "ISOLATION_MODE_ISOLATED"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "external-replay"
+              owner: "data-engineers"
+              url: "s3://replay-bucket/some-replay"
+      - &get_11
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/external-locations/external-replay"
+          body: null
+        response: *response_11
+      - *get_10
+      - *get_11
+      - *get_7
+  - name: "comment_and_owner"
+    config: |
+      resource "databricks_storage_credential" "external" {
+        name = "cred-replay"
+        comment = "Managed by TF -- Updated Comment 2"
+        owner = "metastore-admins"
+        isolation_mode = "ISOLATION_MODE_ISOLATED"
+        force_update = true
+        aws_iam_role {
+          role_arn = "arn:aws:iam::123456789012:role/replay-storage"
+        }
+      }
+      resource "databricks_external_location" "some" {
+        name = "external-replay"
+        url = "s3://replay-bucket/some-replay"
+        credential_name = databricks_storage_credential.external.id
+        comment = "Managed by TF -- Updated Comment 2"
+        owner = "metastore-admins"
+        isolation_mode = "ISOLATION_MODE_ISOLATED"
+      }
+      resource "databricks_grants" "some" {
+        external_location = databricks_external_location.some.id
+        grant {
+          principal = "data-engineers"
+          privileges = ["CREATE_EXTERNAL_TABLE","READ_FILES"]
+        }
+      }
+    calls:
+      - *get_10
+      - *get_11
+      - *get_7
+      - *get_1
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/storage-credentials/cred-replay"
+          body:
+            json:
+              owner: "metastore-admins"
+        response: &response_12 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              aws_iam_role:
+                external_id: "replay-external"
+                role_arn: "arn:aws:iam::123456789012:role/replay-storage"
+                unity_catalog_iam_arn: "arn:aws:iam::999999999999:role/unity-catalog"
+              comment: "Managed by TF -- Updated Comment"
+              id: "33333333-3333-3333-3333-333333333333"
+              isolation_mode: "ISOLATION_MODE_ISOLATED"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "cred-replay"
+              owner: "metastore-admins"
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/storage-credentials/cred-replay"
+          body:
+            json:
+              aws_iam_role:
+                role_arn: "arn:aws:iam::123456789012:role/replay-storage"
+              comment: "Managed by TF -- Updated Comment 2"
+              force: true
+              isolation_mode: "ISOLATION_MODE_ISOLATED"
+        response: &response_13 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              aws_iam_role:
+                external_id: "replay-external"
+                role_arn: "arn:aws:iam::123456789012:role/replay-storage"
+                unity_catalog_iam_arn: "arn:aws:iam::999999999999:role/unity-catalog"
+              comment: "Managed by TF -- Updated Comment 2"
+              id: "33333333-3333-3333-3333-333333333333"
+              isolation_mode: "ISOLATION_MODE_ISOLATED"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "cred-replay"
+              owner: "metastore-admins"
+      - *get_1
+      - *patch_2
+      - &get_12
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/storage-credentials/cred-replay"
+          body: null
+        response: *response_13
+      - *get_1
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/external-locations/external-replay"
+          body:
+            json:
+              owner: "metastore-admins"
+        response: &response_14 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              comment: "Managed by TF -- Updated Comment"
+              credential_name: "cred-replay"
+              isolation_mode: "ISOLATION_MODE_ISOLATED"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "external-replay"
+              owner: "metastore-admins"
+              url: "s3://replay-bucket/some-replay"
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/external-locations/external-replay"
+          body:
+            json:
+              comment: "Managed by TF -- Updated Comment 2"
+              credential_name: "cred-replay"
+              isolation_mode: "ISOLATION_MODE_ISOLATED"
+              url: "s3://replay-bucket/some-replay"
+        response: &response_15 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              comment: "Managed by TF -- Updated Comment 2"
+              credential_name: "cred-replay"
+              isolation_mode: "ISOLATION_MODE_ISOLATED"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "external-replay"
+              owner: "metastore-admins"
+              url: "s3://replay-bucket/some-replay"
+      - *get_1
+      - *patch_4
+      - &get_13
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/external-locations/external-replay"
+          body: null
+        response: *response_15
+      - *get_12
+      - *get_13
+      - *get_7
+destroy:
+  calls:
+    - *get_12
+    - *get_13
+    - *get_7
+    - *get_7
+    - request:
+        method: "PATCH"
+        path: "/api/2.1/unity-catalog/permissions/external_location/external-replay"
+        body:
+          json:
+            changes:
+              - principal: "data-engineers"
+                remove: ["READ_FILES","CREATE_EXTERNAL_TABLE"]
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            privilege_assignments: []
+    - *get_6
+    - *get_1
+    - *get_1
+    - *patch_4
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/external-locations/external-replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - *get_1
+    - *get_1
+    - *patch_2
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/storage-credentials/cred-replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

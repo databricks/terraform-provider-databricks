@@ -1,0 +1,73 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+# With fixed version responses, checking the selected ID preserves the Scala 2.13 suffix assertion.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "select_default_version"
+    config: |
+      data "databricks_spark_version" "latest" {
+      }
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.1/clusters/spark-versions"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              versions:
+                - key: "17.3.x-scala2.13"
+                  name: "17.3 LTS (includes Apache Spark 4.0.0, Scala 2.13)"
+                - key: "16.4.x-scala2.13"
+                  name: "16.4 LTS (includes Apache Spark 3.5.2, Scala 2.13)"
+      - request:
+          method: "GET"
+          path: "/api/2.1/clusters/spark-versions"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              versions:
+                - key: "17.3.x-scala2.13"
+                  name: "17.3 LTS (includes Apache Spark 4.0.0, Scala 2.13)"
+                - key: "16.4.x-scala2.13"
+                  name: "16.4 LTS (includes Apache Spark 3.5.2, Scala 2.13)"
+      - request:
+          method: "GET"
+          path: "/api/2.1/clusters/spark-versions"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              versions:
+                - key: "17.3.x-scala2.13"
+                  name: "17.3 LTS (includes Apache Spark 4.0.0, Scala 2.13)"
+                - key: "16.4.x-scala2.13"
+                  name: "16.4 LTS (includes Apache Spark 3.5.2, Scala 2.13)"
+    state:
+      resources:
+        data.databricks_spark_version.latest:
+          attributes:
+            - path: ["id"]
+              equals: "17.3.x-scala2.13"
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.1/clusters/spark-versions"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            versions:
+              - key: "17.3.x-scala2.13"
+                name: "17.3 LTS (includes Apache Spark 4.0.0, Scala 2.13)"
+              - key: "16.4.x-scala2.13"
+                name: "16.4 LTS (includes Apache Spark 3.5.2, Scala 2.13)"

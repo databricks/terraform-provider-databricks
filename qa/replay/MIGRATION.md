@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**82 copied; 463 pending.** Counts refer to original Go test functions, not
+**99 copied; 446 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. A copy must preserve meaningful
 assertions; unsupported assertions remain pending rather than being omitted.
 Original files are unchanged.
@@ -19,7 +19,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [access/sql_permissions_provider_config_test.go](../../access/sql_permissions_provider_config_test.go) | 2 | 0 |
 | [apps/custom_app_integration_test.go](../../apps/custom_app_integration_test.go) | 0 | 2 |
 | [aws/data_aws_crossaccount_policy_acc_test.go](../../aws/data_aws_crossaccount_policy_acc_test.go) | 0 | 1 |
-| [aws/data_instance_profiles_acc_test.go](../../aws/data_instance_profiles_acc_test.go) | 0 | 1 |
+| [aws/data_instance_profiles_acc_test.go](../../aws/data_instance_profiles_acc_test.go) | 1 | 0 |
 | [aws/instance_profile_provider_config_test.go](../../aws/instance_profile_provider_config_test.go) | 1 | 0 |
 | [aws/instance_profile_test.go](../../aws/instance_profile_test.go) | 0 | 1 |
 | [aws/service_principal_role_provider_config_test.go](../../aws/service_principal_role_provider_config_test.go) | 1 | 0 |
@@ -62,10 +62,10 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [catalog/table_provider_config_test.go](../../catalog/table_provider_config_test.go) | 1 | 0 |
 | [catalog/volume_test.go](../../catalog/volume_test.go) | 0 | 2 |
 | [catalog/workspace_binding_test.go](../../catalog/workspace_binding_test.go) | 0 | 1 |
-| [clusters/cluster_policy_test.go](../../clusters/cluster_policy_test.go) | 0 | 3 |
-| [clusters/data_cluster_acc_test.go](../../clusters/data_cluster_acc_test.go) | 0 | 1 |
-| [clusters/data_clusters_acc_test.go](../../clusters/data_clusters_acc_test.go) | 0 | 3 |
-| [clusters/data_spark_version_acc_test.go](../../clusters/data_spark_version_acc_test.go) | 0 | 1 |
+| [clusters/cluster_policy_test.go](../../clusters/cluster_policy_test.go) | 3 | 0 |
+| [clusters/data_cluster_acc_test.go](../../clusters/data_cluster_acc_test.go) | 1 | 0 |
+| [clusters/data_clusters_acc_test.go](../../clusters/data_clusters_acc_test.go) | 2 | 1 |
+| [clusters/data_spark_version_acc_test.go](../../clusters/data_spark_version_acc_test.go) | 1 | 0 |
 | [clusters/node_type_test.go](../../clusters/node_type_test.go) | 0 | 6 |
 | [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | 0 | 8 |
 | [finops/budget_test.go](../../finops/budget_test.go) | 0 | 2 |
@@ -99,7 +99,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [mlflow/data_mlflow_models_acc_test.go](../../mlflow/data_mlflow_models_acc_test.go) | 0 | 1 |
 | [mlflow/mlflow_experiment_test.go](../../mlflow/mlflow_experiment_test.go) | 0 | 2 |
 | [mlflow/mlflow_model_test.go](../../mlflow/mlflow_model_test.go) | 0 | 1 |
-| [mws/data_current_config_acc_test.go](../../mws/data_current_config_acc_test.go) | 0 | 8 |
+| [mws/data_current_config_acc_test.go](../../mws/data_current_config_acc_test.go) | 8 | 0 |
 | [mws/data_mws_credentials_acc_test.go](../../mws/data_mws_credentials_acc_test.go) | 0 | 1 |
 | [mws/data_mws_network_connectivity_config_acc_test.go](../../mws/data_mws_network_connectivity_config_acc_test.go) | 0 | 1 |
 | [mws/data_mws_network_connectivity_configs_acc_test.go](../../mws/data_mws_network_connectivity_configs_acc_test.go) | 0 | 1 |
@@ -186,7 +186,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [vectorsearch/vector_search_test.go](../../vectorsearch/vector_search_test.go) | 0 | 1 |
 | [workspace/data_notebook_acc_test.go](../../workspace/data_notebook_acc_test.go) | 0 | 3 |
 | [workspace/directory_test.go](../../workspace/directory_test.go) | 1 | 0 |
-| [workspace/global_init_script_test.go](../../workspace/global_init_script_test.go) | 0 | 1 |
+| [workspace/global_init_script_test.go](../../workspace/global_init_script_test.go) | 1 | 0 |
 | [workspace/notebook_test.go](../../workspace/notebook_test.go) | 0 | 9 |
 | [workspace/workspace_conf_provider_config_test.go](../../workspace/workspace_conf_provider_config_test.go) | 1 | 0 |
 | [workspace/workspace_conf_test.go](../../workspace/workspace_conf_test.go) | 0 | 6 |
@@ -194,6 +194,23 @@ the subject from the first HCL resource: it may be a prerequisite.
 
 ## Known adaptations and gaps
 
+See [FOLLOW_UPS.md](FOLLOW_UPS.md) for deferred problems and the scenarios they
+block. Keep new problems in that list as more source tests are reviewed.
+
+- Current-config cloud branches use separate YAML files for AWS, Azure, and
+  GCP but still count as one source function. Explicit API cases extend
+  `features/api_selection`; inference and cloud overrides stay in the
+  `current_config` resource suite.
+- Compute cases copy cluster-policy rename/family overrides, cluster lookup
+  and name filtering, Spark-version selection, instance-profile listing, and
+  global-init-script creation. With fixed Spark-version responses, the selected
+  ID assertion includes the original Scala 2.13 suffix requirement.
+  Built-in policy cleanup resets its override instead of deleting the policy.
+- `TestAccDataSourceClusters_FilterBy` also checks SDK-only cluster fields;
+  copying only its Terraform data-source reads would lose those assertions.
+- Workspace-file uploads use multipart requests, while the current fixture
+  handler matches JSON bodies. Source-file scenarios also need a stable way
+  to provide local files to Terraform. Those cases remain pending.
 - Identity cases add user-name normalization, service-principal lifecycles,
   user/service-principal data sources, and group roles. Explicit `api` cases
   belong to `features/api_selection`; other cases stay with their resource.

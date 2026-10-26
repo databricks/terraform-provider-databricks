@@ -63,6 +63,8 @@ is required. Suites are also discovered by the existing repository-wide Go tests
 [MIGRATION.md](MIGRATION.md) tracks source files from the initial acceptance
 inventory. It distinguishes copied scenarios from pending ones; it is not a claim
 that every acceptance test is live or that the inventory is exhaustive.
+[FOLLOW_UPS.md](FOLLOW_UPS.md) tracks provider bugs and replay limitations found
+while porting tests. Their fixes are deferred until the migration batches finish.
 
 The provider-configuration suite copies all 43 cases in the dedicated
 `*_provider_config_test.go` files: 42 validation errors and the successful

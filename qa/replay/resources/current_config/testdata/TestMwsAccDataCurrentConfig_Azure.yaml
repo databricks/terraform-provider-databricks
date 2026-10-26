@@ -1,0 +1,26 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "Azure"
+  account_id: "replay-account"
+steps:
+  - name: "read_config"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      data "databricks_current_config" "this" {
+      }
+    calls: []
+    state:
+      resources:
+        data.databricks_current_config.this:
+          attributes:
+            - path: ["cloud_type"]
+              equals: "azure"
+            - path: ["is_account"]
+              equals: true
+destroy:
+  calls: []

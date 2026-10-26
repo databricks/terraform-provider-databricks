@@ -1,0 +1,97 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_user" "this" {
+        user_name = "tf-user@example.com"
+        api = "workspace"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/preview/scim/v2/Users"
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              userName: "tf-user@example.com"
+              active: true
+              entitlements:
+                - {}
+        response: # Inferred API response; not recorded.
+          status: 201
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              id: "101"
+              userName: "tf-user@example.com"
+              active: true
+              entitlements: []
+              displayName: "tf-user@example.com"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Users/101"
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              id: "101"
+              userName: "tf-user@example.com"
+              active: true
+              entitlements: []
+              displayName: "tf-user@example.com"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Users/101"
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              id: "101"
+              userName: "tf-user@example.com"
+              active: true
+              entitlements: []
+              displayName: "tf-user@example.com"
+    state:
+      resources:
+        databricks_user.this:
+          attributes:
+            - path: ["api"]
+              equals: "workspace"
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.0/preview/scim/v2/Users/101"
+        query:
+          attributes: ["userName,displayName,active,externalId,entitlements"]
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+            id: "101"
+            userName: "tf-user@example.com"
+            active: true
+            entitlements: []
+            displayName: "tf-user@example.com"
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/preview/scim/v2/Users/101"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 204
+        body: null

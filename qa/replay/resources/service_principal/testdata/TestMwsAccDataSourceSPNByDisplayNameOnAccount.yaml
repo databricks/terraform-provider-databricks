@@ -1,0 +1,184 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "AWS"
+  account_id: "replay-account"
+steps:
+  - name: "lookup"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN replay"
+        api = "account"
+      }
+
+      data "databricks_service_principal" "this" {
+        display_name = databricks_service_principal.this.display_name
+        api = "account"
+        depends_on = [databricks_service_principal.this]
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals"
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              displayName: "SPN replay"
+              active: true
+              entitlements:
+                - {}
+        response: # Inferred API response; not recorded.
+          status: 201
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN replay"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+      - request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201"
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN replay"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+      - request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals"
+          query:
+            excludedAttributes: ["roles"]
+            filter: ["displayName eq \"SPN replay\""]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              totalResults: 1
+              Resources:
+                - schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+                  id: "201"
+                  displayName: "SPN replay"
+                  active: true
+                  entitlements: []
+                  applicationId: "00000000-0000-4000-8000-000000000001"
+      - request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201"
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN replay"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+      - request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals"
+          query:
+            excludedAttributes: ["roles"]
+            filter: ["displayName eq \"SPN replay\""]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              totalResults: 1
+              Resources:
+                - schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+                  id: "201"
+                  displayName: "SPN replay"
+                  active: true
+                  entitlements: []
+                  applicationId: "00000000-0000-4000-8000-000000000001"
+      - request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals"
+          query:
+            excludedAttributes: ["roles"]
+            filter: ["displayName eq \"SPN replay\""]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              totalResults: 1
+              Resources:
+                - schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+                  id: "201"
+                  displayName: "SPN replay"
+                  active: true
+                  entitlements: []
+                  applicationId: "00000000-0000-4000-8000-000000000001"
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201"
+        query:
+          attributes: ["userName,displayName,active,externalId,entitlements"]
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+            id: "201"
+            displayName: "SPN replay"
+            active: true
+            entitlements: []
+            applicationId: "00000000-0000-4000-8000-000000000001"
+    - request:
+        method: "GET"
+        path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals"
+        query:
+          excludedAttributes: ["roles"]
+          filter: ["displayName eq \"SPN replay\""]
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            totalResults: 1
+            Resources:
+              - schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+                id: "201"
+                displayName: "SPN replay"
+                active: true
+                entitlements: []
+                applicationId: "00000000-0000-4000-8000-000000000001"
+    - request:
+        method: "PATCH"
+        path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201"
+        body:
+          json:
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"]
+            Operations:
+              - op: "replace"
+                path: "active"
+                value:
+                  - value: "false"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

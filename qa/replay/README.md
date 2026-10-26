@@ -12,8 +12,13 @@ See [authoring guidance](../terraformtest/AUTHORING.md) and the
 - `resources/<resource>/`: behavior specific to a resource or data source.
   Keep related data-source cases in that resource's suite.
 - Each suite has a tiny Go discovery wrapper and a `testdata/` folder.
-  Each YAML file identifies its original source function in a `# Source:` comment.
   Preserve the source function name as the filename for easy comparison.
+  Track migration sources in the inventory rather than comments in the YAML.
+
+Group multiple suites into each adoption PR, aiming for roughly 100 source test
+functions per batch. Suite boundaries organize review; they do not require
+separate PRs. Keep blocked cases in the follow-up list rather than reducing their
+assertions to fill a batch.
 
 A source function can contribute to more than one suite when it covers both
 generic and resource-specific behavior. Keep the assertions relevant to each
@@ -63,9 +68,13 @@ is required. Suites are also discovered by the existing repository-wide Go tests
 [MIGRATION.md](MIGRATION.md) tracks source files from the initial acceptance
 inventory. It distinguishes copied scenarios from pending ones; it is not a claim
 that every acceptance test is live or that the inventory is exhaustive.
+[FOLLOW_UPS.md](FOLLOW_UPS.md) tracks provider bugs and replay limitations found
+while porting tests. Their fixes are deferred until the migration batches finish.
 
 The provider-configuration suite copies all 43 cases in the dedicated
 `*_provider_config_test.go` files: 42 validation errors and the successful
 account-provider/workspace-entitlements regression. That success case uses
 step-local metadata fixtures for the account and derived workspace clients.
-Other provider-configuration and workspace-routing scenarios remain pending.
+The workspace-routing suite copies the directory, app, and tag-policy matrices,
+including defaults, overrides, host transitions, and replacement plans. The
+notebook matrix remains pending because it needs local input files.

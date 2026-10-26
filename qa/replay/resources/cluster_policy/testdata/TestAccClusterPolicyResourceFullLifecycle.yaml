@@ -1,0 +1,144 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+# The definition is an API string containing JSON; its escapes follow Terraform's jsonencode.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_cluster_policy" "external_metastore" {
+        name = "Terraform policy initial"
+        definition = jsonencode({
+          "spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL" = {
+            type = "fixed"
+            value = "jdbc:sqlserver://<jdbc-url>"
+          }
+        })
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/policies/clusters/create"
+          body:
+            json:
+              name: "Terraform policy initial"
+              definition: "{\"spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL\":{\"type\":\"fixed\",\"value\":\"jdbc:sqlserver://\\u003cjdbc-url\\u003e\"}}"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              policy_id: "policy-id"
+      - request:
+          method: "GET"
+          path: "/api/2.0/policies/clusters/get"
+          query:
+            policy_id: ["policy-id"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              policy_id: "policy-id"
+              name: "Terraform policy initial"
+              definition: "{\"spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL\":{\"type\":\"fixed\",\"value\":\"jdbc:sqlserver://\\u003cjdbc-url\\u003e\"}}"
+      - request:
+          method: "GET"
+          path: "/api/2.0/policies/clusters/get"
+          query:
+            policy_id: ["policy-id"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              policy_id: "policy-id"
+              name: "Terraform policy initial"
+              definition: "{\"spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL\":{\"type\":\"fixed\",\"value\":\"jdbc:sqlserver://\\u003cjdbc-url\\u003e\"}}"
+  - name: "rename"
+    config: |
+      resource "databricks_cluster_policy" "external_metastore" {
+        name = "Terraform policy renamed"
+        definition = jsonencode({
+          "spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL" = {
+            type = "fixed"
+            value = "jdbc:sqlserver://<jdbc-url>"
+          }
+        })
+      }
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/policies/clusters/get"
+          query:
+            policy_id: ["policy-id"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              policy_id: "policy-id"
+              name: "Terraform policy initial"
+              definition: "{\"spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL\":{\"type\":\"fixed\",\"value\":\"jdbc:sqlserver://\\u003cjdbc-url\\u003e\"}}"
+      - request:
+          method: "POST"
+          path: "/api/2.0/policies/clusters/edit"
+          body:
+            json:
+              policy_id: "policy-id"
+              name: "Terraform policy renamed"
+              definition: "{\"spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL\":{\"type\":\"fixed\",\"value\":\"jdbc:sqlserver://\\u003cjdbc-url\\u003e\"}}"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: "GET"
+          path: "/api/2.0/policies/clusters/get"
+          query:
+            policy_id: ["policy-id"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              policy_id: "policy-id"
+              name: "Terraform policy renamed"
+              definition: "{\"spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL\":{\"type\":\"fixed\",\"value\":\"jdbc:sqlserver://\\u003cjdbc-url\\u003e\"}}"
+      - request:
+          method: "GET"
+          path: "/api/2.0/policies/clusters/get"
+          query:
+            policy_id: ["policy-id"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              policy_id: "policy-id"
+              name: "Terraform policy renamed"
+              definition: "{\"spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL\":{\"type\":\"fixed\",\"value\":\"jdbc:sqlserver://\\u003cjdbc-url\\u003e\"}}"
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.0/policies/clusters/get"
+        query:
+          policy_id: ["policy-id"]
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            policy_id: "policy-id"
+            name: "Terraform policy renamed"
+            definition: "{\"spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL\":{\"type\":\"fixed\",\"value\":\"jdbc:sqlserver://\\u003cjdbc-url\\u003e\"}}"
+    - request:
+        method: "POST"
+        path: "/api/2.0/policies/clusters/delete"
+        body:
+          json:
+            policy_id: "policy-id"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

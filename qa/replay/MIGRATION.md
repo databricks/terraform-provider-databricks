@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**315 copied; 230 pending.** Counts refer to original Go test functions, not
+**341 copied; 204 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. A copy must preserve meaningful
 assertions; unsupported assertions remain pending rather than being omitted.
 Original files are unchanged.
@@ -27,7 +27,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [aws/user_role_test.go](../../aws/user_role_test.go) | 2 | 0 |
 | [catalog/artifact_allowlist_test.go](../../catalog/artifact_allowlist_test.go) | 1 | 0 |
 | [catalog/catalog_test.go](../../catalog/catalog_test.go) | 7 | 3 |
-| [catalog/connection_test.go](../../catalog/connection_test.go) | 1 | 2 |
+| [catalog/connection_test.go](../../catalog/connection_test.go) | 2 | 1 |
 | [catalog/credential_provider_config_test.go](../../catalog/credential_provider_config_test.go) | 2 | 0 |
 | [catalog/credential_test.go](../../catalog/credential_test.go) | 1 | 1 |
 | [catalog/data_catalog_acc_test.go](../../catalog/data_catalog_acc_test.go) | 1 | 0 |
@@ -36,10 +36,10 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [catalog/data_metastore_acc_test.go](../../catalog/data_metastore_acc_test.go) | 1 | 0 |
 | [catalog/data_metastores_acc_test.go](../../catalog/data_metastores_acc_test.go) | 1 | 0 |
 | [catalog/data_schema_acc_test.go](../../catalog/data_schema_acc_test.go) | 1 | 0 |
-| [catalog/data_schemas_acc_test.go](../../catalog/data_schemas_acc_test.go) | 0 | 1 |
+| [catalog/data_schemas_acc_test.go](../../catalog/data_schemas_acc_test.go) | 1 | 0 |
 | [catalog/data_storage_credential_acc_test.go](../../catalog/data_storage_credential_acc_test.go) | 1 | 0 |
 | [catalog/data_storage_credentials_acc_test.go](../../catalog/data_storage_credentials_acc_test.go) | 1 | 0 |
-| [catalog/data_table_acc_test.go](../../catalog/data_table_acc_test.go) | 0 | 1 |
+| [catalog/data_table_acc_test.go](../../catalog/data_table_acc_test.go) | 1 | 0 |
 | [catalog/data_tables_acc_test.go](../../catalog/data_tables_acc_test.go) | 0 | 1 |
 | [catalog/data_volume_acc_test.go](../../catalog/data_volume_acc_test.go) | 1 | 0 |
 | [catalog/data_volumes_acc_test.go](../../catalog/data_volumes_acc_test.go) | 1 | 0 |
@@ -49,18 +49,18 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [catalog/metastore_assignment_provider_config_test.go](../../catalog/metastore_assignment_provider_config_test.go) | 2 | 0 |
 | [catalog/metastore_assignment_test.go](../../catalog/metastore_assignment_test.go) | 2 | 0 |
 | [catalog/metastore_data_access_provider_config_test.go](../../catalog/metastore_data_access_provider_config_test.go) | 2 | 0 |
-| [catalog/metastore_data_access_test.go](../../catalog/metastore_data_access_test.go) | 1 | 1 |
+| [catalog/metastore_data_access_test.go](../../catalog/metastore_data_access_test.go) | 2 | 0 |
 | [catalog/metastore_provider_config_test.go](../../catalog/metastore_provider_config_test.go) | 2 | 0 |
 | [catalog/metastore_test.go](../../catalog/metastore_test.go) | 3 | 1 |
 | [catalog/quality_monitor_test.go](../../catalog/quality_monitor_test.go) | 0 | 2 |
-| [catalog/registered_model_test.go](../../catalog/registered_model_test.go) | 0 | 1 |
+| [catalog/registered_model_test.go](../../catalog/registered_model_test.go) | 1 | 0 |
 | [catalog/resource_sql_table_acc_test.go](../../catalog/resource_sql_table_acc_test.go) | 2 | 0 |
 | [catalog/schema_test.go](../../catalog/schema_test.go) | 1 | 1 |
 | [catalog/storage_credential_provider_config_test.go](../../catalog/storage_credential_provider_config_test.go) | 2 | 0 |
-| [catalog/storage_credential_test.go](../../catalog/storage_credential_test.go) | 0 | 2 |
+| [catalog/storage_credential_test.go](../../catalog/storage_credential_test.go) | 1 | 1 |
 | [catalog/system_schema_test.go](../../catalog/system_schema_test.go) | 1 | 0 |
 | [catalog/table_provider_config_test.go](../../catalog/table_provider_config_test.go) | 1 | 0 |
-| [catalog/volume_test.go](../../catalog/volume_test.go) | 0 | 2 |
+| [catalog/volume_test.go](../../catalog/volume_test.go) | 2 | 0 |
 | [catalog/workspace_binding_test.go](../../catalog/workspace_binding_test.go) | 0 | 1 |
 | [clusters/cluster_policy_test.go](../../clusters/cluster_policy_test.go) | 3 | 0 |
 | [clusters/data_cluster_acc_test.go](../../clusters/data_cluster_acc_test.go) | 1 | 0 |
@@ -69,7 +69,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [clusters/node_type_test.go](../../clusters/node_type_test.go) | 0 | 6 |
 | [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | 0 | 8 |
 | [finops/budget_test.go](../../finops/budget_test.go) | 2 | 0 |
-| [internal/acceptance/aibi_embedding_settings_test.go](../../internal/acceptance/aibi_embedding_settings_test.go) | 0 | 1 |
+| [internal/acceptance/aibi_embedding_settings_test.go](../../internal/acceptance/aibi_embedding_settings_test.go) | 1 | 0 |
 | [internal/acceptance/tf_provider_test.go](../../internal/acceptance/tf_provider_test.go) | 0 | 1 |
 | [internal/acceptance/uc_resources_workspace_id_acc_test.go](../../internal/acceptance/uc_resources_workspace_id_acc_test.go) | 0 | 6 |
 | [internal/acceptance/unified_host_acc_test.go](../../internal/acceptance/unified_host_acc_test.go) | 0 | 6 |
@@ -88,17 +88,17 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [internal/providers/pluginfw/products/sharing/data_recipients_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_recipients_acc_test.go) | 1 | 0 |
 | [internal/providers/pluginfw/products/sharing/data_share_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_share_acc_test.go) | 0 | 2 |
 | [internal/providers/pluginfw/products/sharing/data_shares_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_shares_acc_test.go) | 0 | 2 |
-| [internal/providers/pluginfw/products/sharing/resource_share_acc_test.go](../../internal/providers/pluginfw/products/sharing/resource_share_acc_test.go) | 10 | 15 |
+| [internal/providers/pluginfw/products/sharing/resource_share_acc_test.go](../../internal/providers/pluginfw/products/sharing/resource_share_acc_test.go) | 18 | 7 |
 | [internal/providers/pluginfw/products/user/data_users_acc_test.go](../../internal/providers/pluginfw/products/user/data_users_acc_test.go) | 2 | 6 |
 | [internal/providers/pluginfw/products/volume/data_volumes_acc_test.go](../../internal/providers/pluginfw/products/volume/data_volumes_acc_test.go) | 1 | 0 |
 | [jobs/data_job_acc_test.go](../../jobs/data_job_acc_test.go) | 5 | 0 |
 | [jobs/data_jobs_acc_test.go](../../jobs/data_jobs_acc_test.go) | 4 | 0 |
-| [jobs/job_test.go](../../jobs/job_test.go) | 10 | 6 |
+| [jobs/job_test.go](../../jobs/job_test.go) | 13 | 3 |
 | [mlflow/data_mlflow_experiment_acc_test.go](../../mlflow/data_mlflow_experiment_acc_test.go) | 1 | 0 |
 | [mlflow/data_mlflow_model_acc_test.go](../../mlflow/data_mlflow_model_acc_test.go) | 1 | 0 |
 | [mlflow/data_mlflow_models_acc_test.go](../../mlflow/data_mlflow_models_acc_test.go) | 1 | 0 |
 | [mlflow/mlflow_experiment_test.go](../../mlflow/mlflow_experiment_test.go) | 2 | 0 |
-| [mlflow/mlflow_model_test.go](../../mlflow/mlflow_model_test.go) | 0 | 1 |
+| [mlflow/mlflow_model_test.go](../../mlflow/mlflow_model_test.go) | 1 | 0 |
 | [mws/data_current_config_acc_test.go](../../mws/data_current_config_acc_test.go) | 8 | 0 |
 | [mws/data_mws_credentials_acc_test.go](../../mws/data_mws_credentials_acc_test.go) | 1 | 0 |
 | [mws/data_mws_network_connectivity_config_acc_test.go](../../mws/data_mws_network_connectivity_config_acc_test.go) | 1 | 0 |
@@ -110,10 +110,10 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [mws/mws_network_connectivity_config_test.go](../../mws/mws_network_connectivity_config_test.go) | 0 | 1 |
 | [mws/mws_networks_test.go](../../mws/mws_networks_test.go) | 2 | 0 |
 | [mws/mws_permissionassignments_test.go](../../mws/mws_permissionassignments_test.go) | 2 | 0 |
-| [mws/mws_private_access_settings_test.go](../../mws/mws_private_access_settings_test.go) | 1 | 1 |
+| [mws/mws_private_access_settings_test.go](../../mws/mws_private_access_settings_test.go) | 2 | 0 |
 | [mws/mws_storage_configurations_test.go](../../mws/mws_storage_configurations_test.go) | 1 | 0 |
 | [mws/mws_vpc_endpoint_test.go](../../mws/mws_vpc_endpoint_test.go) | 1 | 1 |
-| [mws/mws_workspaces_test.go](../../mws/mws_workspaces_test.go) | 0 | 9 |
+| [mws/mws_workspaces_test.go](../../mws/mws_workspaces_test.go) | 1 | 8 |
 | [mws/resource_mws_ncc_private_endpoint_rule_acc_test.go](../../mws/resource_mws_ncc_private_endpoint_rule_acc_test.go) | 0 | 1 |
 | [permissions/access_control_rule_set_provider_config_test.go](../../permissions/access_control_rule_set_provider_config_test.go) | 1 | 0 |
 | [permissions/account_rule_set_test.go](../../permissions/account_rule_set_test.go) | 0 | 2 |
@@ -125,7 +125,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [pipelines/pipeline_test.go](../../pipelines/pipeline_test.go) | 5 | 2 |
 | [policies/cluster_policy_provider_config_test.go](../../policies/cluster_policy_provider_config_test.go) | 1 | 0 |
 | [pools/instance_pool_provider_config_test.go](../../pools/instance_pool_provider_config_test.go) | 1 | 0 |
-| [pools/resource_instance_pool_acc_test.go](../../pools/resource_instance_pool_acc_test.go) | 0 | 1 |
+| [pools/resource_instance_pool_acc_test.go](../../pools/resource_instance_pool_acc_test.go) | 1 | 0 |
 | [repos/git_credential_test.go](../../repos/git_credential_test.go) | 0 | 1 |
 | [repos/repo_provider_config_test.go](../../repos/repo_provider_config_test.go) | 1 | 0 |
 | [scim/data_group_acc_test.go](../../scim/data_group_acc_test.go) | 0 | 2 |
@@ -171,7 +171,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [sql/sql_permissions_test.go](../../sql/sql_permissions_test.go) | 0 | 1 |
 | [sql/sql_query_provider_config_test.go](../../sql/sql_query_provider_config_test.go) | 1 | 0 |
 | [sql/sql_query_test.go](../../sql/sql_query_test.go) | 1 | 0 |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | 0 | 18 |
+| [sql/sql_table_test.go](../../sql/sql_table_test.go) | 1 | 17 |
 | [sql/sql_visualization_provider_config_test.go](../../sql/sql_visualization_provider_config_test.go) | 1 | 0 |
 | [sql/sql_widget_provider_config_test.go](../../sql/sql_widget_provider_config_test.go) | 1 | 0 |
 | [storage/dbfs_file_provider_config_test.go](../../storage/dbfs_file_provider_config_test.go) | 1 | 0 |
@@ -183,7 +183,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [tokens/service_principal_secret_provider_config_test.go](../../tokens/service_principal_secret_provider_config_test.go) | 1 | 0 |
 | [tokens/token_provider_config_test.go](../../tokens/token_provider_config_test.go) | 1 | 0 |
 | [tokens/token_test.go](../../tokens/token_test.go) | 1 | 0 |
-| [vectorsearch/vector_search_test.go](../../vectorsearch/vector_search_test.go) | 0 | 1 |
+| [vectorsearch/vector_search_test.go](../../vectorsearch/vector_search_test.go) | 1 | 0 |
 | [workspace/data_notebook_acc_test.go](../../workspace/data_notebook_acc_test.go) | 0 | 3 |
 | [workspace/directory_test.go](../../workspace/directory_test.go) | 1 | 0 |
 | [workspace/global_init_script_test.go](../../workspace/global_init_script_test.go) | 1 | 0 |
@@ -304,4 +304,23 @@ block. Keep new problems in that list as more source tests are reviewed.
   cluster/notification-destination lookups. Network-connectivity lookup covers AWS
   and Azure; the original function counts once. The AWS private-access-settings
   scenario was unconditionally skipped in the original and is now exercised by
-  replay; the separate GCP scenario remains pending.
+  replay; its separate GCP scenario also has a replay copy.
+- Table and schema lookups retain their resource-existence and ID checks. Schema
+  IDs are checked on both the created resources and the listing data source.
+- External-volume cases retain their storage-credential and location setup,
+  owner changes, comments, and renames. Account storage-credential ownership
+  uses the created service principal's application ID.
+- Registered models retain grant removal, comment updates, replacement, and
+  model/version data-source lookups. MLflow and vector-search endpoints retain
+  their associated permissions resources.
+- Share lifecycle cases retain table-object updates, shared aliases, replacement
+  ID checks, and the empty-plan convergence regression. External object additions
+  appear in the next refresh and must be removed by apply; external comments
+  must survive refresh with an empty plan. The SDK comment read is represented
+  by provider-read state checks, not an independent server-side assertion.
+- Embedding settings retain approved-domain updates and dependent policy setup.
+  Account cases add serverless workspace creation, GCP private-access settings,
+  and metastore data access.
+- The foreach-job and webhook-removal scenarios were skipped in their live
+  originals. Replay exercises their existing configurations without requiring
+  those live environment capabilities. Original skip statements are unchanged.

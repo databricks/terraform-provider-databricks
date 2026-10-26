@@ -1,5 +1,21 @@
 name: "CodeQL"
 
+# Resolves Go modules like the unit tests: through JFrog when the run can get
+# an OIDC token, otherwise offline from the cache pre-warmed by the
+# "Warm Go Cache" workflow (fork and Dependabot PRs). If such a PR adds a
+# dependency, a maintainer must run "Warm Go Cache" with its PR number, then
+# re-run the failed checks.
+#
+# Autobuild tolerates missing dependencies and still passes. The explicit
+# resolve, list and build steps below fail the job instead, so the analysis
+# is complete and setup-go (which saves its cache only on success) never
+# saves an incomplete cache.
+#
+# Failures on main (pushes and the weekly schedule) post to Slack on the first
+# attempt. Configure the SLACK_WEBHOOK repository or organization secret before
+# merge; notifications go to the channel configured for that webhook. A missing
+# secret or notification HTTP error fails the notification job.
+
 on:
   push:
     branches: [ main ]
@@ -99,14 +115,12 @@ jobs:
       shell: bash
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        SLACK_CHANNEL: eng-dev-ecosystem-team
       run: |
         : "${SLACK_WEBHOOK:?Configure SLACK_WEBHOOK for CodeQL failure notifications}"
         jq -n \
           --arg run_url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
           '{text: (":failed: *CodeQL* failed (<" + $run_url + "|run>)"),
-            username: "eng-dev-ecosystem-bot", icon_emoji: ":robot_face:",
-            channel: env.SLACK_CHANNEL, unfurl_links: false}' | \
+            unfurl_links: false}' | \
           curl --fail --silent --show-error --connect-timeout 10 --max-time 30 \
             --header 'Content-Type: application/json' --data-binary @- \
             --output /dev/null "$SLACK_WEBHOOK"

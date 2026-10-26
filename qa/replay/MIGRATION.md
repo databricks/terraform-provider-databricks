@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**57 copied; 488 pending.** Counts refer to original Go test functions, not
+**82 copied; 463 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. A copy must preserve meaningful
 assertions; unsupported assertions remain pending rather than being omitted.
 Original files are unchanged.
@@ -129,20 +129,20 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [repos/git_credential_test.go](../../repos/git_credential_test.go) | 0 | 1 |
 | [repos/repo_provider_config_test.go](../../repos/repo_provider_config_test.go) | 1 | 0 |
 | [scim/data_group_acc_test.go](../../scim/data_group_acc_test.go) | 0 | 2 |
-| [scim/data_service_principal_acc_test.go](../../scim/data_service_principal_acc_test.go) | 0 | 5 |
-| [scim/data_service_principals_acc_test.go](../../scim/data_service_principals_acc_test.go) | 0 | 5 |
-| [scim/data_user_acc_test.go](../../scim/data_user_acc_test.go) | 0 | 4 |
+| [scim/data_service_principal_acc_test.go](../../scim/data_service_principal_acc_test.go) | 5 | 0 |
+| [scim/data_service_principals_acc_test.go](../../scim/data_service_principals_acc_test.go) | 5 | 0 |
+| [scim/data_user_acc_test.go](../../scim/data_user_acc_test.go) | 4 | 0 |
 | [scim/entitlement_provider_config_test.go](../../scim/entitlement_provider_config_test.go) | 2 | 0 |
 | [scim/group_member_provider_config_test.go](../../scim/group_member_provider_config_test.go) | 1 | 0 |
 | [scim/group_member_test.go](../../scim/group_member_test.go) | 0 | 3 |
 | [scim/group_provider_config_test.go](../../scim/group_provider_config_test.go) | 1 | 0 |
 | [scim/group_role_provider_config_test.go](../../scim/group_role_provider_config_test.go) | 1 | 0 |
-| [scim/group_role_test.go](../../scim/group_role_test.go) | 0 | 2 |
+| [scim/group_role_test.go](../../scim/group_role_test.go) | 2 | 0 |
 | [scim/group_test.go](../../scim/group_test.go) | 6 | 0 |
 | [scim/service_principal_provider_config_test.go](../../scim/service_principal_provider_config_test.go) | 1 | 0 |
-| [scim/service_principal_test.go](../../scim/service_principal_test.go) | 0 | 8 |
+| [scim/service_principal_test.go](../../scim/service_principal_test.go) | 6 | 2 |
 | [scim/user_provider_config_test.go](../../scim/user_provider_config_test.go) | 1 | 0 |
-| [scim/user_test.go](../../scim/user_test.go) | 0 | 8 |
+| [scim/user_test.go](../../scim/user_test.go) | 3 | 5 |
 | [secrets/secret_acl_test.go](../../secrets/secret_acl_test.go) | 0 | 2 |
 | [secrets/secret_scope_provider_config_test.go](../../secrets/secret_scope_provider_config_test.go) | 1 | 0 |
 | [secrets/secret_scope_test.go](../../secrets/secret_scope_test.go) | 0 | 2 |
@@ -194,6 +194,18 @@ the subject from the first HCL resource: it may be a prerequisite.
 
 ## Known adaptations and gaps
 
+- Identity cases add user-name normalization, service-principal lifecycles,
+  user/service-principal data sources, and group roles. Explicit `api` cases
+  belong to `features/api_selection`; other cases stay with their resource.
+  User data-source/resource ID equality is checked against the same fixture ID.
+- Azure service-principal templates generate a new application ID for each
+  step, so their second steps replace the resource. AWS display-name changes
+  update it in place. Account destroy preserves the default disable operation.
+- The three independent users in `TestAccUserResource` expose an existing race
+  in `common/unified_provider.go`'s shared client cache under `-race`. That case
+  remains pending; no artificial resource dependencies or production fixes are
+  added to these ports. Home-directory cleanup and arbitrary SDK checks also
+  remain pending.
 - Token timestamps use a fixed future window with the original lifetime, so
   wall-clock expiry does not invalidate its otherwise static lifecycle transcript.
 - Notification-destination SDK checks of display name and type become

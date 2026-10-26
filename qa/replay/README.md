@@ -12,8 +12,8 @@ See [authoring guidance](../terraformtest/AUTHORING.md) and the
 - `resources/<resource>/`: behavior specific to a resource or data source.
   Keep related data-source cases in that resource's suite.
 - Each suite has a tiny Go discovery wrapper and a `testdata/` folder.
-  Each YAML file identifies its original source function in a `# Source:` comment.
   Preserve the source function name as the filename for easy comparison.
+  Track migration sources in the inventory rather than comments in the YAML.
 
 A source function can contribute to more than one suite when it covers both
 generic and resource-specific behavior. Keep the assertions relevant to each

@@ -369,6 +369,11 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 // This is used by resources and data sources that are developed
 // over SDKv2 and are not using Go SDK.
 func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Context, workspaceID string) (*DatabricksClient, error) {
+	// Readers and writers must share the lock, including the first map allocation.
+	// Lock ordering is muLegacy before mu, which guards SDK workspace clients.
+	c.muLegacy.Lock()
+	defer c.muLegacy.Unlock()
+
 	parsedID, err := parseWorkspaceID(workspaceID)
 	if err != nil {
 		return nil, err
@@ -389,6 +394,8 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 			commandFactory:       c.commandFactory,
 			httpTimeoutSetByUser: c.httpTimeoutSetByUser,
 		}
+		c.mu.Lock()
+		defer c.mu.Unlock()
 		if wc, ok := c.cachedWorkspaceClients[parsedID]; ok {
 			result.cachedWorkspaceClient = wc
 		}
@@ -413,12 +420,8 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 	return newDatabricksClient(c.cachedDatabricksClients[parsedID]), nil
 }
 
-// setCachedDatabricksClient sets the cached Databricks Client.
+// setCachedDatabricksClient requires muLegacy to be held by the caller.
 func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, workspaceID string) error {
-	// Acquire the lock to avoid race conditions.
-	c.muLegacy.Lock()
-	defer c.muLegacy.Unlock()
-
 	// Initialize the map if it's nil
 	if c.cachedDatabricksClients == nil {
 		c.cachedDatabricksClients = make(map[string]*client.DatabricksClient)
@@ -440,8 +443,6 @@ func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, worksp
 		return err
 	}
 
-	// Create a new Databricks Client with the same configuration
-	// as the workspace client
 	newClient, err := client.New(workspaceClient.Config)
 	if err != nil {
 		return err

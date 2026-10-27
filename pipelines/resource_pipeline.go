@@ -39,6 +39,12 @@ func Create(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	var createPipelineRequest createPipelineRequestStruct
 	common.DataToStructPointer(d, pipelineSchema, &createPipelineRequest)
 	adjustForceSendFields(&createPipelineRequest.Clusters)
+	// Ingestion pipelines use serverless compute by default. The API rejects
+	// edition and channel as incompatible cluster settings in that mode.
+	if createPipelineRequest.IngestionDefinition != nil {
+		createPipelineRequest.Edition = ""
+		createPipelineRequest.Channel = ""
+	}
 
 	createdPipeline, err := w.Pipelines.Create(ctx, createPipelineRequest.CreatePipeline)
 	if err != nil {
@@ -71,6 +77,10 @@ func Update(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	common.DataToStructPointer(d, pipelineSchema, &updatePipelineRequest)
 	updatePipelineRequest.EditPipeline.PipelineId = d.Id()
 	adjustForceSendFields(&updatePipelineRequest.Clusters)
+	if updatePipelineRequest.IngestionDefinition != nil {
+		updatePipelineRequest.Edition = ""
+		updatePipelineRequest.Channel = ""
+	}
 	err := w.Pipelines.Update(ctx, updatePipelineRequest.EditPipeline)
 	if err != nil {
 		return err

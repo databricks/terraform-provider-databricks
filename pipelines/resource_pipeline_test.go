@@ -809,6 +809,47 @@ func TestDefault(t *testing.T) {
 	assert.Equal(t, "abcd", d.Id())
 }
 
+// TestDefaultIngestionPipeline verifies that edition and channel are NOT sent
+// when creating an ingestion pipeline. The API rejects them as cluster settings
+// for serverless pipelines.
+func TestDefaultIngestionPipeline(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Create(mock.Anything, mock.MatchedBy(func(req pipelines.CreatePipeline) bool {
+				// edition and channel must be absent for ingestion pipelines
+				return req.Name == "test-ingestion-pipeline" &&
+					req.Edition == "" &&
+					req.Channel == "" &&
+					req.IngestionDefinition != nil
+			})).Return(&pipelines.CreatePipelineResponse{
+				PipelineId: "abcd",
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Name:       "test-ingestion-pipeline",
+				State:      pipelines.PipelineStateRunning,
+				Spec: &pipelines.PipelineSpec{
+					Id:   "abcd",
+					Name: "test-ingestion-pipeline",
+				},
+			}, nil)
+		},
+		Create:   true,
+		Resource: ResourcePipeline(),
+		HCL: `name = "test-ingestion-pipeline"
+		ingestion_definition {
+		  connection_name = "myconn"
+		  objects {}
+		}
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "abcd",
+	})
+}
+
 func TestUpdatePipelineCatalogInPlace(t *testing.T) {
 	state := pipelines.PipelineStateRunning
 	spec := pipelines.PipelineSpec{

@@ -1,7 +1,7 @@
 # Deferred migration problems
 
 Keep problems found while copying acceptance tests here. Defer provider and
-engine fixes until the migration batches finish.
+engine fixes in separate PRs from the replay conversions.
 The per-case [pending inventory](PENDING.md) maps the remaining baseline cases
 to these blockers. Reproduced failures and risks found by source inspection are
 distinguished below; not every affected sibling has been executed. Affected scenarios stay pending in
@@ -9,7 +9,7 @@ distinguished below; not every affected sibling has been executed. Affected scen
 
 | ID | Kind | Problem and affected cases | Follow-up |
 | --- | --- | --- | --- |
-| P1 | Provider bug | Concurrent cache reads in `common/unified_provider.go` are not protected by the mutex used for writes. A replay of `scim/user_test.go`'s `TestAccUserResource`, which creates three independent users, reports data races under `-race`. The AWS branch of `TestUcAccStorageCredential`, with independent IAM-role and Cloudflare credentials, also reports cache races and shared SDK configuration races during client initialization. | Protect shared client-cache access and client initialization, then port the affected complete scenarios and verify them with `-race`. Keep their independent resources; do not add dependencies to conceal the race. |
+| P1 | Provider bug | Concurrent cache reads in `common/unified_provider.go` are not protected by the mutex used for writes. A replay of `scim/user_test.go`'s `TestAccUserResource`, which creates three independent users, reports data races under `-race`. The AWS branch of `TestUcAccStorageCredential`, with independent IAM-role and Cloudflare credentials, also reports cache races and shared SDK configuration races during client initialization. | Cache locking is addressed separately in [PR 6120](https://github.com/databricks/terraform-provider-databricks/pull/6120). SDK configuration/authentication races remain tracked. Copy tests independently of the fix, retain ordinary parallelism, and report race-detector failures without suppressing them. |
 | P2 | HTTP fixture limitation | Workspace-file uploads use multipart bodies; volume-file uploads/downloads use raw bytes. The fixture handler currently accepts JSON bodies only, so even `TestAccWorkspaceFileBase64` cannot be copied faithfully. | Support matching the actual upload payload, including content and form fields, without depending on a random multipart boundary. |
 | P3 | Local input limitation | Source-file cases need files available at stable paths inside Terraform's isolated working directory. Examples include `TestAccDatabricksDBFSFile_CreateViaSource`, notebook DBC/IPYNB updates, and workspace-file source/empty/ZIP cases. | Define how replay supplies local input files. Preserve the `source` path and file-reading behavior instead of changing those cases to `content_base64`. `TestAccNotebook_ProviderConfig_Mismatched` and `TestAccNotebookData_ProviderConfig_EmptyID` also need their local input files: offline attempts fail on the missing source before reaching the expected diagnostic. |
 | P4 | Assertion limitation | Remaining SDK checks inspect secret-scope ACL inventories/current-user ownership, post-destroy settings resets and home-cleanup error handling, continuous-job run histories, or pipeline `ForceSendFields` for explicit zero workers. These values are not available through the existing YAML state/plan assertions or equivalent read-only data sources. | Retain equivalent Go/SDK checks before counting these scenarios as copied. Counts exposed by Terraform outputs, directory/cluster data-source reads, and the eleven helper-level Go replays are now copied; those are no longer blockers. Response fixtures alone do not preserve an SDK-only assertion. |
@@ -31,6 +31,8 @@ distinguished below; not every affected sibling has been executed. Affected scen
 | P19 | Input-state drift | `TestAccPipelineResourcLastModified` sends `expected_last_modified` on update, but Read resets it to zero. A strict replay with a realistic pipeline response fails the non-refresh post-apply empty-plan check. The API's GET response model has no `expected_last_modified` field. | Preserve this input-only value through Read, then copy the complete timestamp/precondition scenario. Do not fabricate a response field to avoid the drift. |
 | P20 | Derived-host routing | AWS workspace/token lifecycles derive a second HTTPS workspace host from the deployment name and use it for token creation/read/update. The replay transport permits only its own fixture-server URL. The token-update case also checks the token list through an SDK client for that derived host. | Define explicit local routing for derived hosts and preserve token-list assertions. Do not allow live network access or substitute an unrelated single-host lifecycle. This limitation was found by source inspection. |
 
+| P21 | Provider cache isolation | The process-global SCIM membership cache is keyed only by group ID. Repeating `TestAccGroupMemberResource`, `TestAccGroupDataSplitMembers`, or `TestAccAwsOboTokenResource` with `go test -count=3` reuses the cached fake group across fresh fixture servers and skips an expected GET. All three pass on their first run; the repeat runs fail with an unconsumed fixture. | Scope membership caching to the provider/client or give it an explicit lifecycle. Keep fixtures strict; do not make the missing reads optional or reset the cache from these YAML tests. Three newly copied functions reproduce it; account counterparts use the same cache. |
+
 Additional P1 reproductions from the later resource batch:
 
 - `jobs/job_test.go`: `TestAccJobRunAsUser`.
@@ -46,17 +48,17 @@ Additional P1 reproductions from the later resource batch:
   `TestAccPermissions_InstancePool`, `TestAccPermissions_RegisteredModel`, and
   `TestAccPermissions_SqlQuery`.
 
-These reproduce cache or SDK initialization races under `-race`. The remaining permission cases and multi-resource UC/identity cases listed in
-PENDING.md also stay pending where source inspection shows concurrent workspace
-client initialization. The shared setup uses independent resources; not every
+These reproduce cache or SDK initialization races under `-race`. The remaining permission cases and multi-resource UC/identity cases are listed
+in PENDING.md. Some also require local files, import steps or SDK-only checks;
+a race warning alone is not a reason to postpone conversion. The shared setup uses independent resources; not every
 sibling has a separate race reproduction. A passing run alone does
-not establish that setup is race-free. Keep their original independent resources
-when fixing P1; adding dependencies to serialize them would conceal the bug.
+not establish that setup is race-free. The new replay copies retain independent
+resources; adding dependencies to serialize them would conceal the bug.
 
 When a problem is resolved, link its fix and update the affected inventory counts.
 Keep the original integration tests throughout the migration.
 
 Group-member replay scenarios use distinct fake group IDs: the provider also
 has a process-global membership cache keyed only by group ID. Reusing IDs across
-independent fixture servers can skip reads and contaminate later tests. This is
-fixture isolation, not an artificial dependency between resources.
+independent fixture servers can skip reads and contaminate later tests. Distinct IDs isolate different scenarios, but repeating the same scenario in
+one Go process still reuses the ID and exposes P21.

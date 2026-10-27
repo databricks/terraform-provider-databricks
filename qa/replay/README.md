@@ -11,9 +11,14 @@ See [authoring guidance](../terraformtest/AUTHORING.md) and the
   for routing, configuration validation, or another generic feature.
 - `resources/<resource>/`: behavior specific to a resource or data source.
   Keep related data-source cases in that resource's suite.
-- Each suite has a tiny Go discovery wrapper and a `testdata/` folder.
+- Terraform suites have a tiny Go discovery wrapper and a `testdata/` folder.
   Preserve the source function name as the filename for easy comparison.
   Track migration sources in the inventory rather than comments in the YAML.
+
+Existing helper-only acceptance cases use Go replay tests and YAML HTTP
+transcripts through `clienttest.WorkspaceClient`. They exercise the original
+SDK/provider helpers without inventing Terraform steps. Keep their transcripts
+in a nested folder when sharing a suite with Terraform discovery.
 
 Group multiple suites into each adoption PR, aiming for roughly 100 source test
 functions per batch. Suite boundaries organize review; they do not require
@@ -68,6 +73,7 @@ is required. Suites are also discovered by the existing repository-wide Go tests
 [MIGRATION.md](MIGRATION.md) tracks source files from the initial acceptance
 inventory. It distinguishes copied scenarios from pending ones; it is not a claim
 that every acceptance test is live or that the inventory is exhaustive.
+[PENDING.md](PENDING.md) maps every remaining baseline case to a blocker.
 [FOLLOW_UPS.md](FOLLOW_UPS.md) tracks provider bugs and replay limitations found
 while porting tests. Their fixes are deferred until the migration batches finish.
 

@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**396 copied; 149 pending.** Counts refer to original Go test functions, not
+**420 copied; 125 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. A copy must preserve meaningful
 assertions; unsupported assertions remain pending rather than being omitted.
 Original files are unchanged.
@@ -64,10 +64,10 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [catalog/workspace_binding_test.go](../../catalog/workspace_binding_test.go) | 0 | 1 |
 | [clusters/cluster_policy_test.go](../../clusters/cluster_policy_test.go) | 3 | 0 |
 | [clusters/data_cluster_acc_test.go](../../clusters/data_cluster_acc_test.go) | 1 | 0 |
-| [clusters/data_clusters_acc_test.go](../../clusters/data_clusters_acc_test.go) | 2 | 1 |
+| [clusters/data_clusters_acc_test.go](../../clusters/data_clusters_acc_test.go) | 3 | 0 |
 | [clusters/data_spark_version_acc_test.go](../../clusters/data_spark_version_acc_test.go) | 1 | 0 |
-| [clusters/node_type_test.go](../../clusters/node_type_test.go) | 0 | 6 |
-| [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | 5 | 3 |
+| [clusters/node_type_test.go](../../clusters/node_type_test.go) | 6 | 0 |
+| [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | 6 | 2 |
 | [finops/budget_test.go](../../finops/budget_test.go) | 2 | 0 |
 | [internal/acceptance/aibi_embedding_settings_test.go](../../internal/acceptance/aibi_embedding_settings_test.go) | 1 | 0 |
 | [internal/acceptance/tf_provider_test.go](../../internal/acceptance/tf_provider_test.go) | 0 | 1 |
@@ -79,7 +79,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [internal/acceptance/workspace_id_sdkv2_http_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_http_acc_test.go) | 19 | 2 |
 | [internal/providers/pluginfw/products/app/data_app_acc_test.go](../../internal/providers/pluginfw/products/app/data_app_acc_test.go) | 1 | 0 |
 | [internal/providers/pluginfw/products/app/data_apps_acc_test.go](../../internal/providers/pluginfw/products/app/data_apps_acc_test.go) | 1 | 0 |
-| [internal/providers/pluginfw/products/app/resource_app_acc_test.go](../../internal/providers/pluginfw/products/app/resource_app_acc_test.go) | 6 | 2 |
+| [internal/providers/pluginfw/products/app/resource_app_acc_test.go](../../internal/providers/pluginfw/products/app/resource_app_acc_test.go) | 7 | 1 |
 | [internal/providers/pluginfw/products/cluster/data_cluster_acc_test.go](../../internal/providers/pluginfw/products/cluster/data_cluster_acc_test.go) | 2 | 0 |
 | [internal/providers/pluginfw/products/dashboards/data_dashboards_acc_test.go](../../internal/providers/pluginfw/products/dashboards/data_dashboards_acc_test.go) | 1 | 0 |
 | [internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go](../../internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go) | 0 | 3 |
@@ -89,7 +89,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [internal/providers/pluginfw/products/sharing/data_share_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_share_acc_test.go) | 2 | 0 |
 | [internal/providers/pluginfw/products/sharing/data_shares_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_shares_acc_test.go) | 2 | 0 |
 | [internal/providers/pluginfw/products/sharing/resource_share_acc_test.go](../../internal/providers/pluginfw/products/sharing/resource_share_acc_test.go) | 20 | 5 |
-| [internal/providers/pluginfw/products/user/data_users_acc_test.go](../../internal/providers/pluginfw/products/user/data_users_acc_test.go) | 4 | 4 |
+| [internal/providers/pluginfw/products/user/data_users_acc_test.go](../../internal/providers/pluginfw/products/user/data_users_acc_test.go) | 5 | 3 |
 | [internal/providers/pluginfw/products/volume/data_volumes_acc_test.go](../../internal/providers/pluginfw/products/volume/data_volumes_acc_test.go) | 1 | 0 |
 | [jobs/data_job_acc_test.go](../../jobs/data_job_acc_test.go) | 5 | 0 |
 | [jobs/data_jobs_acc_test.go](../../jobs/data_jobs_acc_test.go) | 4 | 0 |
@@ -116,7 +116,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [mws/mws_workspaces_test.go](../../mws/mws_workspaces_test.go) | 4 | 5 |
 | [mws/resource_mws_ncc_private_endpoint_rule_acc_test.go](../../mws/resource_mws_ncc_private_endpoint_rule_acc_test.go) | 0 | 1 |
 | [permissions/access_control_rule_set_provider_config_test.go](../../permissions/access_control_rule_set_provider_config_test.go) | 1 | 0 |
-| [permissions/account_rule_set_test.go](../../permissions/account_rule_set_test.go) | 0 | 2 |
+| [permissions/account_rule_set_test.go](../../permissions/account_rule_set_test.go) | 2 | 0 |
 | [permissions/permissions_provider_config_test.go](../../permissions/permissions_provider_config_test.go) | 1 | 0 |
 | [permissions/permissions_test.go](../../permissions/permissions_test.go) | 0 | 27 |
 | [permissions/resource_permissions_test.go](../../permissions/resource_permissions_test.go) | 0 | 1 |
@@ -128,21 +128,21 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [pools/resource_instance_pool_acc_test.go](../../pools/resource_instance_pool_acc_test.go) | 1 | 0 |
 | [repos/git_credential_test.go](../../repos/git_credential_test.go) | 1 | 0 |
 | [repos/repo_provider_config_test.go](../../repos/repo_provider_config_test.go) | 1 | 0 |
-| [scim/data_group_acc_test.go](../../scim/data_group_acc_test.go) | 0 | 2 |
+| [scim/data_group_acc_test.go](../../scim/data_group_acc_test.go) | 1 | 1 |
 | [scim/data_service_principal_acc_test.go](../../scim/data_service_principal_acc_test.go) | 5 | 0 |
 | [scim/data_service_principals_acc_test.go](../../scim/data_service_principals_acc_test.go) | 5 | 0 |
 | [scim/data_user_acc_test.go](../../scim/data_user_acc_test.go) | 4 | 0 |
 | [scim/entitlement_provider_config_test.go](../../scim/entitlement_provider_config_test.go) | 2 | 0 |
 | [scim/group_member_provider_config_test.go](../../scim/group_member_provider_config_test.go) | 1 | 0 |
-| [scim/group_member_test.go](../../scim/group_member_test.go) | 0 | 3 |
+| [scim/group_member_test.go](../../scim/group_member_test.go) | 2 | 1 |
 | [scim/group_provider_config_test.go](../../scim/group_provider_config_test.go) | 1 | 0 |
 | [scim/group_role_provider_config_test.go](../../scim/group_role_provider_config_test.go) | 1 | 0 |
 | [scim/group_role_test.go](../../scim/group_role_test.go) | 2 | 0 |
 | [scim/group_test.go](../../scim/group_test.go) | 6 | 0 |
 | [scim/service_principal_provider_config_test.go](../../scim/service_principal_provider_config_test.go) | 1 | 0 |
-| [scim/service_principal_test.go](../../scim/service_principal_test.go) | 6 | 2 |
+| [scim/service_principal_test.go](../../scim/service_principal_test.go) | 7 | 1 |
 | [scim/user_provider_config_test.go](../../scim/user_provider_config_test.go) | 1 | 0 |
-| [scim/user_test.go](../../scim/user_test.go) | 5 | 3 |
+| [scim/user_test.go](../../scim/user_test.go) | 6 | 2 |
 | [secrets/secret_acl_test.go](../../secrets/secret_acl_test.go) | 1 | 1 |
 | [secrets/secret_scope_provider_config_test.go](../../secrets/secret_scope_provider_config_test.go) | 1 | 0 |
 | [secrets/secret_scope_test.go](../../secrets/secret_scope_test.go) | 1 | 1 |
@@ -168,7 +168,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [sql/sql_endpoint_test.go](../../sql/sql_endpoint_test.go) | 1 | 0 |
 | [sql/sql_global_config_provider_config_test.go](../../sql/sql_global_config_provider_config_test.go) | 1 | 0 |
 | [sql/sql_global_config_test.go](../../sql/sql_global_config_test.go) | 4 | 0 |
-| [sql/sql_permissions_test.go](../../sql/sql_permissions_test.go) | 0 | 1 |
+| [sql/sql_permissions_test.go](../../sql/sql_permissions_test.go) | 1 | 0 |
 | [sql/sql_query_provider_config_test.go](../../sql/sql_query_provider_config_test.go) | 1 | 0 |
 | [sql/sql_query_test.go](../../sql/sql_query_test.go) | 1 | 0 |
 | [sql/sql_table_test.go](../../sql/sql_table_test.go) | 2 | 16 |
@@ -187,15 +187,15 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [workspace/data_notebook_acc_test.go](../../workspace/data_notebook_acc_test.go) | 0 | 3 |
 | [workspace/directory_test.go](../../workspace/directory_test.go) | 1 | 0 |
 | [workspace/global_init_script_test.go](../../workspace/global_init_script_test.go) | 1 | 0 |
-| [workspace/notebook_test.go](../../workspace/notebook_test.go) | 1 | 8 |
+| [workspace/notebook_test.go](../../workspace/notebook_test.go) | 2 | 7 |
 | [workspace/workspace_conf_provider_config_test.go](../../workspace/workspace_conf_provider_config_test.go) | 1 | 0 |
-| [workspace/workspace_conf_test.go](../../workspace/workspace_conf_test.go) | 1 | 5 |
+| [workspace/workspace_conf_test.go](../../workspace/workspace_conf_test.go) | 6 | 0 |
 | [workspace/workspace_file_test.go](../../workspace/workspace_file_test.go) | 0 | 5 |
 
 ## Known adaptations and gaps
 
-See [FOLLOW_UPS.md](FOLLOW_UPS.md) for deferred problems and the scenarios they
-block. Keep new problems in that list as more source tests are reviewed.
+See [PENDING.md](PENDING.md) for the remaining per-test blockers and
+[FOLLOW_UPS.md](FOLLOW_UPS.md) for details and reproduction status.
 
 - Workspace routing copies directory, app, tag-policy, and notebook cases into
   `features/workspace_routing/`, split by carrier. Preserve workspace-ID state
@@ -216,8 +216,9 @@ block. Keep new problems in that list as more source tests are reviewed.
   global-init-script creation. With fixed Spark-version responses, the selected
   ID assertion includes the original Scala 2.13 suffix requirement.
   Built-in policy cleanup resets its override instead of deleting the policy.
-- `TestAccDataSourceClusters_FilterBy` also checks SDK-only cluster fields;
-  copying only its Terraform data-source reads would lose those assertions.
+- `TestAccDataSourceClusters_FilterBy` adds a read-only cluster data source to
+  check the same source/state/policy fields as the SDK reads. The pinned-filter
+  step and exact filter requests remain intact.
 - Workspace-file uploads use multipart requests, while the current fixture
   handler matches JSON bodies. Source-file scenarios also need a stable way
   to provide local files to Terraform. Those cases remain pending.
@@ -231,8 +232,9 @@ block. Keep new problems in that list as more source tests are reviewed.
 - The three independent users in `TestAccUserResource` expose an existing race
   in `common/unified_provider.go`'s shared client cache under `-race`. That case
   remains pending; no artificial resource dependencies or production fixes are
-  added to these ports. Home-directory cleanup and arbitrary SDK checks also
-  remain pending.
+  added to these ports. Home preservation is copied through an explicit
+  identity-removal step and directory data-source read; forced home cleanup
+  and arbitrary SDK checks remain pending.
 - Token timestamps use a fixed future window with the original lifetime, so
   wall-clock expiry does not invalidate its otherwise static lifecycle transcript.
 - Notification-destination SDK checks of display name and type become
@@ -255,7 +257,7 @@ block. Keep new problems in that list as more source tests are reviewed.
   equivalent before those scenarios can be counted as copied.
 - Account provisioning copies credentials, AWS/GCP networks and customer-managed
   keys, storage configurations, the GCP VPC endpoint, and credential/workspace
-  listing data sources. The skipped AWS VPC-endpoint case stays pending.
+  listing data sources. The skipped AWS VPC-endpoint case is now copied too.
 - Catalog and schema suites retain owner/comment changes, predictive optimization,
   isolation transitions, external-location grants, and catalog replacement when
   options change. The multi-schema/grants case stays pending because of P10.
@@ -287,10 +289,12 @@ block. Keep new problems in that list as more source tests are reviewed.
 - Pipelines retain cluster settings, AWS cluster updates, run-as transitions and
   rejected removal, plus the nonempty data-source result check. Repeated whole
   calls and configurations use YAML anchors; calls remain consumable fixtures.
-  Zero-worker and last-modified checks remain pending under P4.
+  Zero-worker SDK checks remain pending under P4; last-modified replay
+  reproduces input-state drift (P19).
 - Apps retain no-compute state, Git input-only fields and reapply, external
   deletion/recreation, invalid resource configuration, and app/list lookups.
-  The known-empty-list regression and import lifecycle remain pending under P4/P5.
+  The known-empty-list regression uses a scalar output to distinguish null
+  from empty; the full import lifecycle remains pending under P5.
   Out-of-band deletion is represented by a missing-resource refresh response.
 - SQL suites cover current queries/alerts, legacy queries/alerts and visualization,
   warehouse creation/replacement and lookup, global configuration, and table/view
@@ -347,7 +351,7 @@ block. Keep new problems in that list as more source tests are reviewed.
 
 ## Additional lifecycles and concrete-value checks
 
-The remaining straightforward batch copies 16 source functions across 13 suites:
+The initial part of this batch copies 16 source functions across 13 suites:
 
 - Provider configuration: quality-monitor workspace mismatch, rejected before
   any prerequisite is applied.
@@ -386,3 +390,36 @@ The account log-delivery attempt remains pending: concurrent credential/storage
 reads reproduce the SDK configuration race in P1. Both AWS/Azure attempts of the
 NCC account-ID drift regression are blocked by the current schema (P15). Notebook
 configuration attempts still require their local source files (P3).
+
+## Additional supported cases
+
+This PR adds another **24 source functions**, bringing this batch to **40** and
+the cumulative inventory to **420 copied / 125 pending**. The new YAML cases
+include an additional Azure rule-set permutation, counted once by source.
+
+- Account group membership checks use a read-only group data source and scalar
+  outputs for exact child/member counts and member-type IDs. A no-op plan step
+  checks those outputs once Terraform has computed them. Explicit account API
+  selection remains in the generic API-selection suite.
+- Account rule sets retain manager-role configuration and exact rule counts;
+  service principals cover AWS and Azure application-ID behavior.
+- The account user list preserves both created IDs and its original filter.
+  The workspace equivalent reproduces P1; the two with-groups variants have a
+  contradictory equality filter and remain pending under P18.
+- Notebook/dashboard missing-parent cases retain the first failed create,
+  mkdirs and retry, then check parent existence through the directory data source.
+- Home-preservation cases remove the identity in an explicit step, then read the
+  prepared home directory through a data source. They retain automatic final
+  cleanup; SDK environment preparation is represented by inferred responses.
+- The app empty-scope regression keeps its two steps. An output maps null to -1
+  and an empty list to 0, preserving the distinction without a new YAML matcher.
+- Table ACLs retain the SQL-permissions configuration against a prepared table
+  and cluster, including exact grant/revoke commands. The live source is skipped;
+  its replay copy runs offline.
+- Six cloud-detection cases and five workspace-configuration helper cases were
+  SDK/helper calls without Terraform steps. Go tests now replay their HTTP calls
+  with the same strict handler and retain their Go assertions. They use their own
+  local client helper, not an invented Terraform lifecycle or new runner hooks.
+
+All fixtures remain manually inferred and clearly marked. No replay-engine or
+production code changes, race workarounds, or live calls are included.

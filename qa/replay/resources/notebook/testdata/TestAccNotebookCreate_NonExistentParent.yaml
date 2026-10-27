@@ -1,0 +1,153 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create_missing_parent
+    config: |
+      resource "databricks_notebook" "this" {
+        content_base64 = "IyBEYXRhYnJpY2tzIG5vdGVib29rIHNvdXJjZQpwcmludCgiaGVsbG8iKQ=="
+        language       = "PYTHON"
+        path           = "/Shared/provider-test/notebook-parent-replay/test.py"
+      }
+      # Read the automatically created parent through the provider.
+      data "databricks_directory" "parent" {
+        path       = "/Shared/provider-test/notebook-parent-replay"
+        depends_on = [databricks_notebook.this]
+      }
+    calls:
+      - request:
+          body:
+            json:
+              content: IyBEYXRhYnJpY2tzIG5vdGVib29rIHNvdXJjZQpwcmludCgiaGVsbG8iKQ==
+              format: SOURCE
+              language: PYTHON
+              overwrite: true
+              path: /Shared/provider-test/notebook-parent-replay/test.py
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: POST
+          path: /api/2.0/workspace/import
+        response: &response_1 # Inferred API response; not recorded.
+          body:
+            json:
+              error_code: RESOURCE_DOES_NOT_EXIST
+              message: Path does not exist
+          status: 404
+      - &call_2
+        request:
+          body: null
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          query:
+            excludedAttributes: [entitlements]
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              id: '100'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tester@example.com
+          headers:
+            X-Databricks-Org-Id: '12345'
+          status: 200
+      - request:
+          body: null
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/provider-test/notebook-parent-replay]
+        response: *response_1 # Inferred API response; not recorded.
+      - request:
+          body:
+            json:
+              path: /Shared/provider-test/notebook-parent-replay
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: POST
+          path: /api/2.0/workspace/mkdirs
+        response: &response_2 # Inferred API response; not recorded.
+          body: null
+          status: 200
+      - request:
+          body:
+            json:
+              content: IyBEYXRhYnJpY2tzIG5vdGVib29rIHNvdXJjZQpwcmludCgiaGVsbG8iKQ==
+              format: SOURCE
+              language: PYTHON
+              overwrite: true
+              path: /Shared/provider-test/notebook-parent-replay/test.py
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: POST
+          path: /api/2.0/workspace/import
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              object_id: 200
+          status: 200
+      - &call_1
+        request:
+          body: null
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/provider-test/notebook-parent-replay]
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              object_id: 199
+              object_type: DIRECTORY
+              path: /Shared/provider-test/notebook-parent-replay
+          status: 200
+      - *call_1
+      - *call_2
+      - &call_3
+        request:
+          body: null
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/provider-test/notebook-parent-replay/test.py]
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              language: PYTHON
+              object_id: 200
+              object_type: NOTEBOOK
+              path: /Shared/provider-test/notebook-parent-replay/test.py
+          status: 200
+      - *call_1
+    state:
+      resources:
+        databricks_notebook.this:
+          attributes:
+            - path: [path]
+              equals: /Shared/provider-test/notebook-parent-replay/test.py
+        data.databricks_directory.parent:
+          attributes:
+            - path: [path]
+              equals: /Shared/provider-test/notebook-parent-replay
+destroy:
+  calls:
+    - *call_2
+    - *call_3
+    - *call_1
+    - request:
+        body:
+          json:
+            path: /Shared/provider-test/notebook-parent-replay/test.py
+        headers:
+          X-Databricks-Workspace-Id: '12345'
+        method: POST
+        path: /api/2.0/workspace/delete
+      response: *response_2 # Inferred API response; not recorded.

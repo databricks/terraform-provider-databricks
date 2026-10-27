@@ -1,0 +1,19 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: Azure
+  workspace_id: '12345'
+calls:
+- request:
+    method: GET
+    path: /api/2.1/clusters/list-node-types
+    body: null
+  response:
+    status: 200
+    body:
+      json:
+        node_types:
+        - node_type_id: Standard_D4ds_v5
+          num_cores: 4
+          memory_mb: 16384
+          instance_type_id: Standard_D4ds_v5

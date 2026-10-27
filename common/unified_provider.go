@@ -395,7 +395,10 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 		c.cachedDatabricksClients[parsedID] = dc
 	}
 
-	// Reuse the resolved SDK workspace client without losing provider-only settings.
+	// Each workspace's client has its own host/auth. Its provider wrapper must
+	// also carry commandFactory for HTTP-path resources; the SDK client lacks it.
+	// Reuse the parent's resolved SDK workspace client so WorkspaceClient()
+	// returns it without recreating it.
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return &DatabricksClient{

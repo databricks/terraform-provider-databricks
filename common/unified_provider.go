@@ -395,10 +395,15 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 		c.cachedDatabricksClients[parsedID] = dc
 	}
 
-	// Each workspace's client has its own host/auth. Its provider wrapper must
-	// also carry commandFactory for HTTP-path resources; the SDK client lacks it.
-	// Reuse the parent's resolved SDK workspace client so WorkspaceClient()
-	// returns it without recreating it.
+	// Wrap the low-level client.DatabricksClient (Go SDK)
+	// into a common.DatabricksClient (provider-level wrapper). A new wrapper is
+	// needed per workspace because:
+	// 1. HTTP-path resources (non-Go-SDK) use common.DatabricksClient's
+	//    commandFactory, which is not part of the Go SDK client.
+	// 2. Each workspace has its own host/auth, so the underlying SDK client
+	//    differs per workspace ID.
+	// 3. We propagate any already-resolved workspace client from the parent's
+	//    cache so that WorkspaceClient() returns it without recreating.
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return &DatabricksClient{

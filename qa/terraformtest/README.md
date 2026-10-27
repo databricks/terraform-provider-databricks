@@ -377,6 +377,9 @@ refresh:
   and background-environment cleanup outside the test transcript; initial-state
   resources belong to test destroy. Generate matching checkpoints and calls
   together without editing opaque checkpoint JSON or reusing stale live IDs.
+- Capture multipart uploads as form parts, without matching the random boundary
+  in the top-level `Content-Type` header. Preserve exact content bytes using
+  text/base64 and keep local input files alongside their YAML definitions.
 - Decide retries/polling, secret and volatile-value handling before enabling
   live capture. Recording must be explicit, single-test, unavailable in CI, and
   must never be activated by a replay failure.

@@ -142,11 +142,13 @@ func ResourceConnection() common.Resource {
 				delete(conn.Options, "home_workspace_id")
 				delete(conn.Options, "database")
 			}
-			// We need to preserve original sensitive options as API doesn't return them
+			// Keep the configured value of sensitive options, and of any option the API
+			// leaves out of its response. Which options it omits depends on the
+			// connection type, for example `service_account_json` for `API_SOURCE`.
 			var cOrig catalog.CreateConnection
 			common.DataToStructPointer(d, s, &cOrig)
 			for key, element := range cOrig.Options {
-				if slices.Contains(sensitiveOptions, key) {
+				if _, returned := conn.Options[key]; !returned || slices.Contains(sensitiveOptions, key) {
 					conn.Options[key] = element
 				}
 			}

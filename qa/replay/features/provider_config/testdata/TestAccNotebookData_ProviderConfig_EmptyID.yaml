@@ -1,0 +1,24 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: reject_invalid_workspace
+    config: |
+      resource "databricks_notebook" "this" {
+        source = abspath("${path.module}/notebook.dbc")
+        path   = "/Shared/provider-test/jupiter_replay"
+      }
+      data "databricks_notebook" "this" {
+        provider_config { workspace_id = "" }
+        path   = databricks_notebook.this.path
+        format = "DBC"
+      }
+    calls: []
+    files:
+      notebook.dbc: ../../../testdata/files/notebook.dbc
+    expect_error: expected "provider_config.0.workspace_id" to not be an empty string
+destroy:
+  calls: []

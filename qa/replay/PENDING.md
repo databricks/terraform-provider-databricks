@@ -1,6 +1,6 @@
 # Pending acceptance scenarios
 
-**95 original functions remain pending** in the 545-function baseline. See
+**69 original functions remain pending** in the 545-function baseline. See
 [MIGRATION.md](MIGRATION.md) for counts and [FOLLOW_UPS.md](FOLLOW_UPS.md) for
 blocker details. Original tests remain unchanged.
 
@@ -18,8 +18,8 @@ does not require different replay fixtures or prevent writing the test.
 | [catalog/credential_test.go](../../catalog/credential_test.go) | `TestAccCredentialOwner` | P13 | Workspace credential configured without workspace routing. |
 | [catalog/metastore_test.go](../../catalog/metastore_test.go) | `TestUcAccMetastoreWithOwnerUpdates` | P7 | Metastore name is not sent by the account update model. |
 | [catalog/schema_test.go](../../catalog/schema_test.go) | `TestUcAccSchema` | P10 | Reproduced shared SDKv2 schema-slice mutation under -race. |
-| [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | `TestAccDashboardWithFilePath` | P3 | Original source/file_path needs a local file or PreConfig hook. |
-| [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | `TestAccDashboardTestAll` | P3 | Original source/file_path needs a local file or PreConfig hook. |
+| [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | `TestAccDashboardWithFilePath` | P4 | SDK check of returned serialized dashboard is not exposed in file-backed Terraform state. |
+| [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | `TestAccDashboardTestAll` | P4 | SDK checks of returned serialized dashboard and published embed-credentials are not exposed in state. |
 | [internal/acceptance/tf_provider_test.go](../../internal/acceptance/tf_provider_test.go) | `TestAccProviderPlanShouldSucceedWithIncompleteConfiguration` | P6 | Additional noop provider; already hermetic. |
 | [internal/acceptance/workspace_id_sdkv2_http_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_http_acc_test.go) | `TestMwsAccWorkspaceIDHttp_RemoveDefault` | P8 | Current diagnostic differs from the original expectation. |
 | [internal/acceptance/workspace_id_sdkv2_http_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_http_acc_test.go) | `TestMwsAccWorkspaceIDHttp_RemoveOverrideNoFallback` | P8 | Current diagnostic differs from the original expectation. |
@@ -48,11 +48,7 @@ does not require different replay fixtures or prevent writing the test.
 | [mws/resource_mws_ncc_private_endpoint_rule_acc_test.go](../../mws/resource_mws_ncc_private_endpoint_rule_acc_test.go) | `TestMwsAccNccPrivateEndpointRule_NoSpuriousAccountIdDrift` | P15 | Original account_id precondition rejected by current schema. |
 | [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_Job` | P1/P4 | Preserve the original SDK-only assertion after removing permissions; cache race is also tracked.
 | [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_Pipeline` | P1/P4 | Preserve the original SDK-only assertion after removing permissions; cache race is also tracked.
-| [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_Notebook_Path` | P1/P3 | Original notebook source needs a local file; shared client-cache race is also tracked.
-| [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_Notebook_Id` | P1/P3 | Original notebook source needs a local file; shared client-cache race is also tracked.
 | [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_Directory_RootDirectoryCorrectlyHandlesAdminUsers` | P1/P4 | Preserve the original SDK-only assertion after removing permissions; cache race is also tracked.
-| [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_WorkspaceFile_Path` | P1/P2/P3 | Original workspace-file source needs a local file and multipart upload support; cache race is also tracked.
-| [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_WorkspaceFile_Id` | P1/P2/P3 | Original workspace-file source needs a local file and multipart upload support; cache race is also tracked.
 | [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_Authorization_Tokens` | P1/P4 | Preserve the original SDK-only assertion after removing permissions; cache race is also tracked.
 | [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_SqlWarehouses` | P1/P4/P5 | Original lifecycle includes SDK owner checks and an import step; cache race is also tracked.
 | [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_RegisteredModel_Root` | P1/P4 | Preserve the original SDK-only assertion after removing permissions; cache race is also tracked.
@@ -84,26 +80,4 @@ does not require different replay fixtures or prevent writing the test.
 | [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_AddMultipleColumns` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
 | [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_AddColumnAndUpdateThrows` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
 | [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_DropColumnAndUpdateThrows` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [storage/dbfs_file_test.go](../../storage/dbfs_file_test.go) | `TestAccDatabricksDBFSFile_CreateViaSource` | P3 | Original source/file_path needs a local file or PreConfig hook. |
-| [storage/file_test.go](../../storage/file_test.go) | `TestUcAccFileDontUpdateIfNoChange` | P2/P3 | Raw file upload/download and local input files. |
-| [storage/file_test.go](../../storage/file_test.go) | `TestUcAccFileUpdateOnLocalContentChange` | P2/P3 | Raw file upload/download and local input files. |
-| [storage/file_test.go](../../storage/file_test.go) | `TestUcAccFileUpdateOnLocalFileChange` | P2/P3 | Raw file upload/download and local input files. |
-| [storage/file_test.go](../../storage/file_test.go) | `TestUcAccFileNoUpdateIfFileDoesNotChange` | P2/P3 | Raw file upload/download and local input files. |
-| [storage/file_test.go](../../storage/file_test.go) | `TestUcAccFileUpdateServerChange` | P2/P3 | Raw file upload/download and local input files. |
-| [storage/file_test.go](../../storage/file_test.go) | `TestUcAccFileFullLifeCycle` | P2/P3 | Raw file upload/download and local input files. |
-| [storage/file_test.go](../../storage/file_test.go) | `TestUcAccFileBase64FullLifeCycle` | P2/P3 | Raw file upload/download and local input files. |
-| [workspace/data_notebook_acc_test.go](../../workspace/data_notebook_acc_test.go) | `TestAccNotebookData_ProviderConfig_Mismatched` | P3 | Original source/file_path needs a local file or PreConfig hook. |
-| [workspace/data_notebook_acc_test.go](../../workspace/data_notebook_acc_test.go) | `TestAccNotebookData_ProviderConfig_EmptyID` | P3 | Original source/file_path needs a local file or PreConfig hook. |
-| [workspace/data_notebook_acc_test.go](../../workspace/data_notebook_acc_test.go) | `TestAccNotebookData_InState` | P3 | Original source/file_path needs a local file or PreConfig hook. |
-| [workspace/notebook_test.go](../../workspace/notebook_test.go) | `TestAccNotebookResourceScalability` | P3 | Original source/file_path needs a local file or PreConfig hook. |
-| [workspace/notebook_test.go](../../workspace/notebook_test.go) | `TestAccNotebookResourceDbcUpdate` | P3 | Original source/file_path needs a local file or PreConfig hook. |
-| [workspace/notebook_test.go](../../workspace/notebook_test.go) | `TestAccNotebookResourceJupiterUpdate` | P3 | Original source/file_path needs a local file or PreConfig hook. |
-| [workspace/notebook_test.go](../../workspace/notebook_test.go) | `TestAccNotebook_ProviderConfig_Mismatched` | P3 | Original source/file_path needs a local file or PreConfig hook. |
-| [workspace/notebook_test.go](../../workspace/notebook_test.go) | `TestAccNotebook_ProviderConfig_Match` | P3 | Original source/file_path needs a local file or PreConfig hook. |
-| [workspace/notebook_test.go](../../workspace/notebook_test.go) | `TestAccNotebook_ProviderConfig_Recreate` | P3 | Original source/file_path needs a local file or PreConfig hook. |
-| [workspace/notebook_test.go](../../workspace/notebook_test.go) | `TestAccNotebook_ProviderConfig_Remove` | P3 | Original source/file_path needs a local file or PreConfig hook. |
-| [workspace/workspace_file_test.go](../../workspace/workspace_file_test.go) | `TestAccWorkspaceFile` | P2/P3 | Multipart upload; source variants also need local files. |
-| [workspace/workspace_file_test.go](../../workspace/workspace_file_test.go) | `TestAccWorkspaceFileEmptyFile` | P2/P3 | Multipart upload; source variants also need local files. |
-| [workspace/workspace_file_test.go](../../workspace/workspace_file_test.go) | `TestAccWorkspaceFileZipFile` | P2/P3 | Multipart upload; source variants also need local files. |
-| [workspace/workspace_file_test.go](../../workspace/workspace_file_test.go) | `TestAccWorkspaceFileCreate_NonExistentParent` | P2/P3 | Multipart upload; source variants also need local files. |
-| [workspace/workspace_file_test.go](../../workspace/workspace_file_test.go) | `TestAccWorkspaceFileBase64` | P2/P3 | Multipart upload; source variants also need local files. |
+| [storage/file_test.go](../../storage/file_test.go) | `TestUcAccFileUpdateServerChange` | P4 | SDK file mutation during Check intentionally triggers post-apply drift; later SDK download checks the resulting bytes. |

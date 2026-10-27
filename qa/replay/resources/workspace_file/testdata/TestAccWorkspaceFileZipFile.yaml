@@ -1,0 +1,74 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create
+    config: |
+      resource "databricks_workspace_file" "zipfile" {
+        source = abspath("${path.module}/file.zip")
+        path   = "/Shared/provider-test/zipfile_replay.zip"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/workspace/import
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            multipart:
+              - name: path
+                body:
+                  text: /Shared/provider-test/zipfile_replay.zip
+              - name: content
+                filename: content
+                headers:
+                  Content-Type: application/octet-stream
+                body:
+                  base64: UEsDBBQAAAAIAAAAIVDd0nTWDAAAAAoAAAAJAAAAc2NyaXB0LnB5U1ZIzs/NTc0r4QIAUEsBAhQDFAAAAAgAAAAhUN3SdNYMAAAACgAAAAkAAAAAAAAAAAAAAIABAAAAAHNjcmlwdC5weVBLBQYAAAAAAQABADcAAAAzAAAAAAA=
+              - name: format
+                body:
+                  text: RAW
+              - name: overwrite
+                body:
+                  text: 'true'
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 200
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/provider-test/zipfile_replay.zip]
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 200
+              object_type: FILE
+              path: /Shared/provider-test/zipfile_replay.zip
+      - *call_1
+    files:
+      file.zip: ../../../testdata/files/file.zip
+destroy:
+  calls:
+    - *call_1
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        headers:
+          X-Databricks-Workspace-Id: '12345'
+        body:
+          json:
+            path: /Shared/provider-test/zipfile_replay.zip
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

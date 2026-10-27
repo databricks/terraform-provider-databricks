@@ -113,7 +113,7 @@ func TestCheckpointConfigKeepsExplicitProviderRequirements(t *testing.T) {
 		require.Equal(t, 1, strings.Count(hcl, "terraform {"))
 	}
 	_, err := checkpointConfig(`resource "databricks_group" {`)
-	require.ErrorContains(t, err, "initial_state step configuration")
+	require.ErrorContains(t, err, "directory step configuration")
 }
 
 func TestInitialCheckpointRejectsAlternateBackends(t *testing.T) {

@@ -36,12 +36,7 @@ func seedInitialCheckpoint(t *testing.T, definition *testDefinition, testCase *r
 	}
 	first.Config = ""
 	first.ConfigDirectory = config.StaticDirectory(directory)
-	// ConfigDirectory can contain provider blocks; HashiCorp requires provider
-	// factories at step level rather than case level when that is the case.
-	for i := range testCase.Steps {
-		testCase.Steps[i].ProtoV6ProviderFactories = testCase.ProtoV6ProviderFactories
-	}
-	testCase.ProtoV6ProviderFactories = nil
+	useStepProviderFactories(testCase)
 }
 
 // ConfigDirectory expects complete provider requirements, unlike Config where
@@ -50,7 +45,7 @@ func seedInitialCheckpoint(t *testing.T, definition *testDefinition, testCase *r
 func checkpointConfig(source string) (string, error) {
 	file, diagnostics := hclwrite.ParseConfig([]byte(source), "config.tf", hcl.InitialPos)
 	if diagnostics.HasErrors() {
-		return "", fmt.Errorf("initial_state step configuration: %s", diagnostics.Error())
+		return "", fmt.Errorf("directory step configuration: %s", diagnostics.Error())
 	}
 	hasTerraformBlock := false
 	for _, block := range file.Body().Blocks() {

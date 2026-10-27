@@ -56,6 +56,8 @@ Each exchange contains `request` and `response`. Requests specify `method`,
 and `body`. Responses specify an explicit HTTP `status`, optional `headers`,
 and `body`. Use `body: null` for no HTTP body and `body: {json: null}` for JSON
 null. Other JSON values go under `body.json`; IDs are literal, without substitution.
+Non-JSON payloads use `body.text`, `body.base64`, or request-only
+`body.multipart`; see the [payload reference](../httpfixture/README.md#files-and-non-json-bodies).
 
 Optional `request.matchers` annotations allow selected volatile strings to
 vary without ignoring their presence or type. For example:
@@ -164,6 +166,41 @@ initial checkpoint is supplied. YAML has strict field validation: recording/setu
 templates and strict attribute matching are not yet supported. Unsupported fields fail
 before any Terraform operations. The step/call/state layout is kept stable
 so these capabilities can be added independently.
+
+## Local input files
+
+A step's optional `files` map copies checked-in inputs into Terraform's isolated
+working directory. Map each destination filename to a source path relative to
+the YAML file:
+
+```yaml
+files:
+  script.py: assets/script.py
+config: |
+  resource "databricks_workspace_file" "this" {
+    source = abspath("${path.module}/script.py")
+    path   = "/Shared/script.py"
+  }
+```
+
+Use `abspath` for filenames passed to the provider: the provider runs in the Go
+test process, whose current directory differs from Terraform's. Terraform's
+own `file("${path.module}/script.py")` function can read relative paths normally.
+No path substitution is performed by the runner.
+
+Files persist through subsequent steps and destroy; mapping the same destination
+again replaces its contents before that step. Sources for every step are loaded
+before replay begins, so missing files fail before any apply. Original inputs
+are never modified. Initial-state checkpoints and local inputs can be combined.
+
+Destinations are top-level filenames because HashiCorp's `ConfigDirectory` API
+does not copy nested directories. Terraform configuration, variable, state, and
+framework filenames are reserved. Source paths may point into shared fixture
+folders. File permissions are not preserved; these inputs are data, not scripts
+executed by the runner. Keep them minimal, such as a comment-only Python file.
+
+The [workspace-file example](testdata/files/workspace_file.yaml) creates a file,
+changes its contents, and destroys it, with exact multipart upload expectations.
 
 ## Expected errors
 

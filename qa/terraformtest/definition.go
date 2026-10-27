@@ -29,13 +29,15 @@ type initialState struct {
 }
 
 type step struct {
-	Name        string             `yaml:"name"`
-	Config      string             `yaml:"config"`
-	Calls       []httpfixture.Call `yaml:"calls"`
-	State       *expectedState     `yaml:"state,omitempty"`
-	ExpectError *string            `yaml:"expect_error,omitempty"`
-	Plan        *expectedPlan      `yaml:"plan,omitempty"`
-	PlanOnly    bool               `yaml:"plan_only,omitempty"`
+	Name         string             `yaml:"name"`
+	Config       string             `yaml:"config"`
+	Files        map[string]string  `yaml:"files,omitempty"`
+	Calls        []httpfixture.Call `yaml:"calls"`
+	State        *expectedState     `yaml:"state,omitempty"`
+	ExpectError  *string            `yaml:"expect_error,omitempty"`
+	Plan         *expectedPlan      `yaml:"plan,omitempty"`
+	PlanOnly     bool               `yaml:"plan_only,omitempty"`
+	fileContents map[string][]byte
 }
 
 type destroy struct {
@@ -63,8 +65,14 @@ func loadDefinition(path string) (*testDefinition, error) {
 	}
 	defer file.Close()
 	definition, err := decodeDefinition(file)
-	if err != nil || definition.InitialState == nil {
-		return definition, err
+	if err != nil {
+		return nil, err
+	}
+	if err := definition.loadFiles(filepath.Dir(path)); err != nil {
+		return nil, err
+	}
+	if definition.InitialState == nil {
+		return definition, nil
 	}
 	path = filepath.Join(filepath.Dir(path), definition.InitialState.Checkpoint)
 	definition.checkpoint, err = os.ReadFile(path)
@@ -112,6 +120,9 @@ func (d *testDefinition) validate() error {
 		label := stepLabel(i, s.Name)
 		if strings.TrimSpace(s.Name) == "" || strings.TrimSpace(s.Config) == "" {
 			return fmt.Errorf("%s: name and config are required", label)
+		}
+		if err := validateFiles(s.Files); err != nil {
+			return fmt.Errorf("%s: %w", label, err)
 		}
 		if err := validateState(s.State); err != nil {
 			return fmt.Errorf("%s: %w", label, err)

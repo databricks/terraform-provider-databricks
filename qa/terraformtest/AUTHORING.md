@@ -231,6 +231,20 @@ after an interrupted apply can have a different transcript. Missing cleanup
 fixtures fail too. Empty Terraform state plus consumed DELETE fixtures verifies
 the replayed cleanup flow, not the state of an independently simulated service.
 
+## Test local files and uploads
+
+Keep tiny inputs next to the YAML, such as `assets/script.py` containing only
+`# comment`. Use the step's [`files` map](README.md#local-input-files) to stage
+it, and pass `abspath("${path.module}/script.py")` to a provider's `source` field.
+Change its mapping in a later step to test an update without changing the HCL.
+Omitted mappings keep their previous contents through destroy.
+
+Use `body.text` for exact text, `body.base64` for binary bytes, and
+[`body.multipart`](../httpfixture/README.md#files-and-non-json-bodies) for uploads.
+Keep content exact; multipart boundaries and part order are transport details
+and are ignored. The [workspace-file showcase](testdata/files/workspace_file.yaml)
+exercises staging, upload, replacement, and cleanup with comment-only inputs.
+
 ## Current limits
 
 The [format reference](README.md#mvp-scope) lists unsupported features. Recording,

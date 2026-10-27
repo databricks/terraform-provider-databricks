@@ -696,6 +696,19 @@ func allResourcePermissions() []resourcePermissions {
 			},
 		},
 		{
+			field:             "genie_space_id",
+			objectType:        "genie",
+			requestObjectType: "genie",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_READ":   {isManagementPermission: false},
+				"CAN_RUN":    {isManagementPermission: false},
+				"CAN_EDIT":   {isManagementPermission: false},
+				"CAN_MANAGE": {isManagementPermission: true},
+			},
+			updateAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
+			deleteAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
+		},
+		{
 			field:             "experiment_id",
 			objectType:        "mlflowExperiment",
 			requestObjectType: "experiments",

@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**420 copied; 125 pending.** Counts refer to original Go test functions, not
+**409 copied; 136 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. A copy must preserve meaningful
 assertions; unsupported assertions remain pending rather than being omitted.
 Original files are unchanged.
@@ -66,7 +66,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [clusters/data_cluster_acc_test.go](../../clusters/data_cluster_acc_test.go) | 1 | 0 |
 | [clusters/data_clusters_acc_test.go](../../clusters/data_clusters_acc_test.go) | 3 | 0 |
 | [clusters/data_spark_version_acc_test.go](../../clusters/data_spark_version_acc_test.go) | 1 | 0 |
-| [clusters/node_type_test.go](../../clusters/node_type_test.go) | 6 | 0 |
+| [clusters/node_type_test.go](../../clusters/node_type_test.go) | 0 | 6 |
 | [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | 6 | 2 |
 | [finops/budget_test.go](../../finops/budget_test.go) | 2 | 0 |
 | [internal/acceptance/aibi_embedding_settings_test.go](../../internal/acceptance/aibi_embedding_settings_test.go) | 1 | 0 |
@@ -189,7 +189,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [workspace/global_init_script_test.go](../../workspace/global_init_script_test.go) | 1 | 0 |
 | [workspace/notebook_test.go](../../workspace/notebook_test.go) | 2 | 7 |
 | [workspace/workspace_conf_provider_config_test.go](../../workspace/workspace_conf_provider_config_test.go) | 1 | 0 |
-| [workspace/workspace_conf_test.go](../../workspace/workspace_conf_test.go) | 6 | 0 |
+| [workspace/workspace_conf_test.go](../../workspace/workspace_conf_test.go) | 1 | 5 |
 | [workspace/workspace_file_test.go](../../workspace/workspace_file_test.go) | 0 | 5 |
 
 ## Known adaptations and gaps
@@ -393,8 +393,8 @@ configuration attempts still require their local source files (P3).
 
 ## Additional supported cases
 
-This PR adds another **24 source functions**, bringing this batch to **40** and
-the cumulative inventory to **420 copied / 125 pending**. The new YAML cases
+This PR adds another **13 source functions**, bringing this batch to **29** and
+the cumulative inventory to **409 copied / 136 pending**. The new YAML cases
 include an additional Azure rule-set permutation, counted once by source.
 
 - Account group membership checks use a read-only group data source and scalar
@@ -416,10 +416,9 @@ include an additional Azure rule-set permutation, counted once by source.
 - Table ACLs retain the SQL-permissions configuration against a prepared table
   and cluster, including exact grant/revoke commands. The live source is skipped;
   its replay copy runs offline.
-- Six cloud-detection cases and five workspace-configuration helper cases were
-  SDK/helper calls without Terraform steps. Go tests now replay their HTTP calls
-  with the same strict handler and retain their Go assertions. They use their own
-  local client helper, not an invented Terraform lifecycle or new runner hooks.
+- Six cloud-detection cases and five workspace-configuration helper cases need
+  Go-level replay support rather than Terraform steps. They remain pending under
+  P21 until the separate client-helper PR is included.
 
 All fixtures remain manually inferred and clearly marked. No replay-engine or
 production code changes, race workarounds, or live calls are included.

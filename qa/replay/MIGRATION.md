@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**380 copied; 165 pending.** Counts refer to original Go test functions, not
+**396 copied; 149 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. A copy must preserve meaningful
 assertions; unsupported assertions remain pending rather than being omitted.
 Original files are unchanged.
@@ -18,7 +18,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [access/ip_access_list_test.go](../../access/ip_access_list_test.go) | 1 | 0 |
 | [access/sql_permissions_provider_config_test.go](../../access/sql_permissions_provider_config_test.go) | 2 | 0 |
 | [apps/custom_app_integration_test.go](../../apps/custom_app_integration_test.go) | 2 | 0 |
-| [aws/data_aws_crossaccount_policy_acc_test.go](../../aws/data_aws_crossaccount_policy_acc_test.go) | 0 | 1 |
+| [aws/data_aws_crossaccount_policy_acc_test.go](../../aws/data_aws_crossaccount_policy_acc_test.go) | 1 | 0 |
 | [aws/data_instance_profiles_acc_test.go](../../aws/data_instance_profiles_acc_test.go) | 1 | 0 |
 | [aws/instance_profile_provider_config_test.go](../../aws/instance_profile_provider_config_test.go) | 1 | 0 |
 | [aws/instance_profile_test.go](../../aws/instance_profile_test.go) | 0 | 1 |
@@ -40,12 +40,12 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [catalog/data_storage_credential_acc_test.go](../../catalog/data_storage_credential_acc_test.go) | 1 | 0 |
 | [catalog/data_storage_credentials_acc_test.go](../../catalog/data_storage_credentials_acc_test.go) | 1 | 0 |
 | [catalog/data_table_acc_test.go](../../catalog/data_table_acc_test.go) | 1 | 0 |
-| [catalog/data_tables_acc_test.go](../../catalog/data_tables_acc_test.go) | 0 | 1 |
+| [catalog/data_tables_acc_test.go](../../catalog/data_tables_acc_test.go) | 1 | 0 |
 | [catalog/data_volume_acc_test.go](../../catalog/data_volume_acc_test.go) | 1 | 0 |
 | [catalog/data_volumes_acc_test.go](../../catalog/data_volumes_acc_test.go) | 1 | 0 |
 | [catalog/external_location_test.go](../../catalog/external_location_test.go) | 3 | 0 |
 | [catalog/grant_test.go](../../catalog/grant_test.go) | 4 | 1 |
-| [catalog/grants_test.go](../../catalog/grants_test.go) | 4 | 2 |
+| [catalog/grants_test.go](../../catalog/grants_test.go) | 5 | 1 |
 | [catalog/metastore_assignment_provider_config_test.go](../../catalog/metastore_assignment_provider_config_test.go) | 2 | 0 |
 | [catalog/metastore_assignment_test.go](../../catalog/metastore_assignment_test.go) | 2 | 0 |
 | [catalog/metastore_data_access_provider_config_test.go](../../catalog/metastore_data_access_provider_config_test.go) | 2 | 0 |
@@ -71,7 +71,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [finops/budget_test.go](../../finops/budget_test.go) | 2 | 0 |
 | [internal/acceptance/aibi_embedding_settings_test.go](../../internal/acceptance/aibi_embedding_settings_test.go) | 1 | 0 |
 | [internal/acceptance/tf_provider_test.go](../../internal/acceptance/tf_provider_test.go) | 0 | 1 |
-| [internal/acceptance/uc_resources_workspace_id_acc_test.go](../../internal/acceptance/uc_resources_workspace_id_acc_test.go) | 5 | 1 |
+| [internal/acceptance/uc_resources_workspace_id_acc_test.go](../../internal/acceptance/uc_resources_workspace_id_acc_test.go) | 6 | 0 |
 | [internal/acceptance/unified_host_acc_test.go](../../internal/acceptance/unified_host_acc_test.go) | 6 | 0 |
 | [internal/acceptance/workspace_id_pf_app_acc_test.go](../../internal/acceptance/workspace_id_pf_app_acc_test.go) | 21 | 0 |
 | [internal/acceptance/workspace_id_pf_tag_policy_acc_test.go](../../internal/acceptance/workspace_id_pf_tag_policy_acc_test.go) | 21 | 0 |
@@ -81,15 +81,15 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [internal/providers/pluginfw/products/app/data_apps_acc_test.go](../../internal/providers/pluginfw/products/app/data_apps_acc_test.go) | 1 | 0 |
 | [internal/providers/pluginfw/products/app/resource_app_acc_test.go](../../internal/providers/pluginfw/products/app/resource_app_acc_test.go) | 6 | 2 |
 | [internal/providers/pluginfw/products/cluster/data_cluster_acc_test.go](../../internal/providers/pluginfw/products/cluster/data_cluster_acc_test.go) | 2 | 0 |
-| [internal/providers/pluginfw/products/dashboards/data_dashboards_acc_test.go](../../internal/providers/pluginfw/products/dashboards/data_dashboards_acc_test.go) | 0 | 1 |
+| [internal/providers/pluginfw/products/dashboards/data_dashboards_acc_test.go](../../internal/providers/pluginfw/products/dashboards/data_dashboards_acc_test.go) | 1 | 0 |
 | [internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go](../../internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go) | 0 | 3 |
-| [internal/providers/pluginfw/products/notificationdestinations/data_notification_destinations_acc_test.go](../../internal/providers/pluginfw/products/notificationdestinations/data_notification_destinations_acc_test.go) | 1 | 1 |
-| [internal/providers/pluginfw/products/qualitymonitor/resource_quality_monitor_acc_test.go](../../internal/providers/pluginfw/products/qualitymonitor/resource_quality_monitor_acc_test.go) | 2 | 4 |
+| [internal/providers/pluginfw/products/notificationdestinations/data_notification_destinations_acc_test.go](../../internal/providers/pluginfw/products/notificationdestinations/data_notification_destinations_acc_test.go) | 2 | 0 |
+| [internal/providers/pluginfw/products/qualitymonitor/resource_quality_monitor_acc_test.go](../../internal/providers/pluginfw/products/qualitymonitor/resource_quality_monitor_acc_test.go) | 3 | 3 |
 | [internal/providers/pluginfw/products/sharing/data_recipients_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_recipients_acc_test.go) | 1 | 0 |
 | [internal/providers/pluginfw/products/sharing/data_share_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_share_acc_test.go) | 2 | 0 |
 | [internal/providers/pluginfw/products/sharing/data_shares_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_shares_acc_test.go) | 2 | 0 |
 | [internal/providers/pluginfw/products/sharing/resource_share_acc_test.go](../../internal/providers/pluginfw/products/sharing/resource_share_acc_test.go) | 20 | 5 |
-| [internal/providers/pluginfw/products/user/data_users_acc_test.go](../../internal/providers/pluginfw/products/user/data_users_acc_test.go) | 2 | 6 |
+| [internal/providers/pluginfw/products/user/data_users_acc_test.go](../../internal/providers/pluginfw/products/user/data_users_acc_test.go) | 4 | 4 |
 | [internal/providers/pluginfw/products/volume/data_volumes_acc_test.go](../../internal/providers/pluginfw/products/volume/data_volumes_acc_test.go) | 1 | 0 |
 | [jobs/data_job_acc_test.go](../../jobs/data_job_acc_test.go) | 5 | 0 |
 | [jobs/data_jobs_acc_test.go](../../jobs/data_jobs_acc_test.go) | 4 | 0 |
@@ -126,7 +126,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [policies/cluster_policy_provider_config_test.go](../../policies/cluster_policy_provider_config_test.go) | 1 | 0 |
 | [pools/instance_pool_provider_config_test.go](../../pools/instance_pool_provider_config_test.go) | 1 | 0 |
 | [pools/resource_instance_pool_acc_test.go](../../pools/resource_instance_pool_acc_test.go) | 1 | 0 |
-| [repos/git_credential_test.go](../../repos/git_credential_test.go) | 0 | 1 |
+| [repos/git_credential_test.go](../../repos/git_credential_test.go) | 1 | 0 |
 | [repos/repo_provider_config_test.go](../../repos/repo_provider_config_test.go) | 1 | 0 |
 | [scim/data_group_acc_test.go](../../scim/data_group_acc_test.go) | 0 | 2 |
 | [scim/data_service_principal_acc_test.go](../../scim/data_service_principal_acc_test.go) | 5 | 0 |
@@ -142,10 +142,10 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [scim/service_principal_provider_config_test.go](../../scim/service_principal_provider_config_test.go) | 1 | 0 |
 | [scim/service_principal_test.go](../../scim/service_principal_test.go) | 6 | 2 |
 | [scim/user_provider_config_test.go](../../scim/user_provider_config_test.go) | 1 | 0 |
-| [scim/user_test.go](../../scim/user_test.go) | 3 | 5 |
-| [secrets/secret_acl_test.go](../../secrets/secret_acl_test.go) | 0 | 2 |
+| [scim/user_test.go](../../scim/user_test.go) | 5 | 3 |
+| [secrets/secret_acl_test.go](../../secrets/secret_acl_test.go) | 1 | 1 |
 | [secrets/secret_scope_provider_config_test.go](../../secrets/secret_scope_provider_config_test.go) | 1 | 0 |
-| [secrets/secret_scope_test.go](../../secrets/secret_scope_test.go) | 0 | 2 |
+| [secrets/secret_scope_test.go](../../secrets/secret_scope_test.go) | 1 | 1 |
 | [secrets/secret_test.go](../../secrets/secret_test.go) | 1 | 0 |
 | [serving/model_serving_test.go](../../serving/model_serving_test.go) | 4 | 0 |
 | [settings/default_namespace_test.go](../../settings/default_namespace_test.go) | 3 | 1 |
@@ -171,7 +171,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [sql/sql_permissions_test.go](../../sql/sql_permissions_test.go) | 0 | 1 |
 | [sql/sql_query_provider_config_test.go](../../sql/sql_query_provider_config_test.go) | 1 | 0 |
 | [sql/sql_query_test.go](../../sql/sql_query_test.go) | 1 | 0 |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | 1 | 17 |
+| [sql/sql_table_test.go](../../sql/sql_table_test.go) | 2 | 16 |
 | [sql/sql_visualization_provider_config_test.go](../../sql/sql_visualization_provider_config_test.go) | 1 | 0 |
 | [sql/sql_widget_provider_config_test.go](../../sql/sql_widget_provider_config_test.go) | 1 | 0 |
 | [storage/dbfs_file_provider_config_test.go](../../storage/dbfs_file_provider_config_test.go) | 1 | 0 |
@@ -189,7 +189,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [workspace/global_init_script_test.go](../../workspace/global_init_script_test.go) | 1 | 0 |
 | [workspace/notebook_test.go](../../workspace/notebook_test.go) | 1 | 8 |
 | [workspace/workspace_conf_provider_config_test.go](../../workspace/workspace_conf_provider_config_test.go) | 1 | 0 |
-| [workspace/workspace_conf_test.go](../../workspace/workspace_conf_test.go) | 0 | 6 |
+| [workspace/workspace_conf_test.go](../../workspace/workspace_conf_test.go) | 1 | 5 |
 | [workspace/workspace_file_test.go](../../workspace/workspace_file_test.go) | 0 | 5 |
 
 ## Known adaptations and gaps
@@ -344,3 +344,45 @@ block. Keep new problems in that list as more source tests are reviewed.
 - Grant and grants suites retain UC secret READ_SECRET and credential replacement
   followed by an invalid-privilege error. Model serving retains its two-model
   traffic split, model removal, tag addition/change/removal, and permissions.
+
+## Additional lifecycles and concrete-value checks
+
+The remaining straightforward batch copies 16 source functions across 13 suites:
+
+- Provider configuration: quality-monitor workspace mismatch, rejected before
+  any prerequisite is applied.
+- Workspace routing: workspace-binding replacement when the provider's workspace
+  changes; cleanup still uses the last applied workspace.
+- Force import: create conflicts with a server-side user, then `force` adopts it.
+  The out-of-band SDK creation is represented by the conflict/list responses.
+- Users: account/workspace extra-attribute lookups retain the `active` check and
+  check the selected ID in place of a generic count. Account deletion retains
+  the home-cleanup flag and verifies the absence of workspace cleanup requests.
+- Dashboard and SQL table lists: fixed member IDs replace generic nonempty/count
+  checks. The SQL table IDs are checked on both resources and the data source;
+  the original table-count output is retained.
+- Git credentials and the default secret ACL: provider-read state checks retain
+  the username, principal, and permission checked by SDK reads. Collection counts
+  are replaced with these concrete values; they are not exact-cardinality checks.
+- Workspace configuration: state checks retain enable/disable values and the
+  rejected-key diagnostic. Reads before and after updates have separate responses.
+- Notification destinations and Azure Key Vault secret scopes: retain the
+  original create/read/destroy configurations and destination ID/type checks.
+- External SQL tables: retain storage credential/location setup, columns, owner,
+  and storage location. SQL statements are matched exactly.
+- AWS cross-account policy: retain the default-policy data source and decode its
+  JSON in an added output. A plan-output assertion checks the policy version in
+  place of the generic nonempty-string check, without pinning the full policy.
+- AI Gateway grants: retain prefixed service-name handling and convergence.
+  Response fixtures omit the input-only secret value, and cleanup removes the
+  grant before deleting its service and schema.
+
+All API responses are inferred inputs, not recordings or independent evidence of
+server behavior. Original acceptance tests remain unchanged. Collection checks
+use concrete members where practical, as agreed for replay; backend-only checks,
+imports, provider-factory switches, local files, and known races remain pending.
+
+The account log-delivery attempt remains pending: concurrent credential/storage
+reads reproduce the SDK configuration race in P1. Both AWS/Azure attempts of the
+NCC account-ID drift regression are blocked by the current schema (P15). Notebook
+configuration attempts still require their local source files (P3).

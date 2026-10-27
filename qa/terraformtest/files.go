@@ -48,8 +48,10 @@ func (d *testDefinition) loadFiles(directory string) error {
 	return nil
 }
 
-// configureStepFiles uses HashiCorp's supported directory-copy API. Recopying
-// cumulative inputs also restores JSON inputs removed by its config cleanup.
+// configureStepFiles stages inputs alongside HCL so HashiCorp's ConfigDirectory
+// API copies them into Terraform's isolated working directory. This lets resource
+// source paths refer to local files without modifying the checked-in fixtures.
+// Recopying cumulative inputs also restores JSON files removed by config cleanup.
 // A changed source overwrites the same destination; omitted inputs persist
 // through later steps and destroy, matching ordinary local-file workflows.
 func configureStepFiles(t *testing.T, definition *testDefinition, testCase *resource.TestCase) {
@@ -77,6 +79,9 @@ func configureStepFiles(t *testing.T, definition *testDefinition, testCase *reso
 	}
 }
 
+// stepFilesDirectory prepares a staging directory, not Terraform's execution
+// directory. Each step gets its own HCL and input snapshot, which HashiCorp later
+// copies into the lifecycle's shared working directory before running Terraform.
 func stepFilesDirectory(t *testing.T, s *resource.TestStep) string {
 	t.Helper()
 	if s.ConfigDirectory != nil {

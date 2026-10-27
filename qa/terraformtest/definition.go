@@ -29,8 +29,11 @@ type initialState struct {
 }
 
 type step struct {
-	Name         string             `yaml:"name"`
-	Config       string             `yaml:"config"`
+	Name   string `yaml:"name"`
+	Config string `yaml:"config"`
+	// Files maps Terraform working-directory filenames to sources relative to
+	// the YAML. HashiCorp runs Terraform in an isolated temporary directory,
+	// where files beside the YAML are not automatically available.
 	Files        map[string]string  `yaml:"files,omitempty"`
 	Calls        []httpfixture.Call `yaml:"calls"`
 	State        *expectedState     `yaml:"state,omitempty"`

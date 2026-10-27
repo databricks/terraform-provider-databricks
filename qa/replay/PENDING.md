@@ -1,6 +1,6 @@
 # Pending acceptance scenarios
 
-**136 original functions remain pending** in the 545-function baseline. See
+**125 original functions remain pending** in the 545-function baseline. See
 [MIGRATION.md](MIGRATION.md) for counts and [FOLLOW_UPS.md](FOLLOW_UPS.md) for
 blocker details. Original tests remain unchanged.
 
@@ -24,12 +24,6 @@ function stays pending because the AWS branch reproduces P1.
 | [catalog/schema_test.go](../../catalog/schema_test.go) | `TestUcAccSchema` | P10 | Reproduced shared SDKv2 schema-slice mutation under -race. |
 | [catalog/storage_credential_test.go](../../catalog/storage_credential_test.go) | `TestUcAccStorageCredential` | P1 | Concurrent workspace client initialization; reproduced or shares the same unsafe cache (see follow-ups). |
 | [catalog/workspace_binding_test.go](../../catalog/workspace_binding_test.go) | `TestUcAccWorkspaceBindingToOtherWorkspace` | P1 | Concurrent workspace client initialization; reproduced or shares the same unsafe cache (see follow-ups). |
-| [clusters/node_type_test.go](../../clusters/node_type_test.go) | `TestAccClusterAPI_ListNodeTypesAzureUcws` | P21 | Go helper replay is reviewed in the stacked client-helper PR. |
-| [clusters/node_type_test.go](../../clusters/node_type_test.go) | `TestAccClusterAPI_ListNodeTypesAzure` | P21 | Go helper replay is reviewed in the stacked client-helper PR. |
-| [clusters/node_type_test.go](../../clusters/node_type_test.go) | `TestAccClusterAPI_ListNodeTypesGcpUcws` | P21 | Go helper replay is reviewed in the stacked client-helper PR. |
-| [clusters/node_type_test.go](../../clusters/node_type_test.go) | `TestAccClusterAPI_ListNodeTypesGcp` | P21 | Go helper replay is reviewed in the stacked client-helper PR. |
-| [clusters/node_type_test.go](../../clusters/node_type_test.go) | `TestAccCluster_ListNodeTypesAWSUcws` | P21 | Go helper replay is reviewed in the stacked client-helper PR. |
-| [clusters/node_type_test.go](../../clusters/node_type_test.go) | `TestAccCluster_ListNodeTypesAWS` | P21 | Go helper replay is reviewed in the stacked client-helper PR. |
 | [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | `TestAccDashboardWithFilePath` | P3 | Original source/file_path needs a local file or PreConfig hook. |
 | [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | `TestAccDashboardTestAll` | P3 | Original source/file_path needs a local file or PreConfig hook. |
 | [internal/acceptance/tf_provider_test.go](../../internal/acceptance/tf_provider_test.go) | `TestAccProviderPlanShouldSucceedWithIncompleteConfiguration` | P6 | Additional noop provider; already hermetic. |
@@ -138,11 +132,6 @@ function stays pending because the AWS branch reproduces P1.
 | [workspace/notebook_test.go](../../workspace/notebook_test.go) | `TestAccNotebook_ProviderConfig_Match` | P3 | Original source/file_path needs a local file or PreConfig hook. |
 | [workspace/notebook_test.go](../../workspace/notebook_test.go) | `TestAccNotebook_ProviderConfig_Recreate` | P3 | Original source/file_path needs a local file or PreConfig hook. |
 | [workspace/notebook_test.go](../../workspace/notebook_test.go) | `TestAccNotebook_ProviderConfig_Remove` | P3 | Original source/file_path needs a local file or PreConfig hook. |
-| [workspace/workspace_conf_test.go](../../workspace/workspace_conf_test.go) | `TestAccWorkspaceConf_DeleteInvalidKey` | P21 | Go helper replay is reviewed in the stacked client-helper PR. |
-| [workspace/workspace_conf_test.go](../../workspace/workspace_conf_test.go) | `TestAccWorkspaceConf_GetInvalidKey` | P21 | Go helper replay is reviewed in the stacked client-helper PR. |
-| [workspace/workspace_conf_test.go](../../workspace/workspace_conf_test.go) | `TestAccWorkspaceConf_GetOnlyInvalidKeys` | P21 | Go helper replay is reviewed in the stacked client-helper PR. |
-| [workspace/workspace_conf_test.go](../../workspace/workspace_conf_test.go) | `TestAccWorkspaceConf_GetValidKey` | P21 | Go helper replay is reviewed in the stacked client-helper PR. |
-| [workspace/workspace_conf_test.go](../../workspace/workspace_conf_test.go) | `TestAccWorkspaceConf_SetInvalidKey` | P21 | Go helper replay is reviewed in the stacked client-helper PR. |
 | [workspace/workspace_file_test.go](../../workspace/workspace_file_test.go) | `TestAccWorkspaceFile` | P2/P3 | Multipart upload; source variants also need local files. |
 | [workspace/workspace_file_test.go](../../workspace/workspace_file_test.go) | `TestAccWorkspaceFileEmptyFile` | P2/P3 | Multipart upload; source variants also need local files. |
 | [workspace/workspace_file_test.go](../../workspace/workspace_file_test.go) | `TestAccWorkspaceFileZipFile` | P2/P3 | Multipart upload; source variants also need local files. |

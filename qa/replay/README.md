@@ -15,6 +15,11 @@ See [authoring guidance](../terraformtest/AUTHORING.md) and the
   Preserve the source function name as the filename for easy comparison.
   Track migration sources in the inventory rather than comments in the YAML.
 
+Existing helper-only acceptance cases use Go replay tests and YAML HTTP
+transcripts through `clienttest.WorkspaceClient`. They exercise the original
+SDK/provider helpers without inventing Terraform steps. Keep their transcripts
+in a nested folder when sharing a suite with Terraform discovery.
+
 Group multiple suites into each adoption PR, aiming for roughly 100 source test
 functions per batch. Suite boundaries organize review; they do not require
 separate PRs. Keep blocked cases in the follow-up list rather than reducing their

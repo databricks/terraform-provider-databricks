@@ -1,0 +1,77 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "GCP"
+  account_id: "replay-account"
+steps:
+  - name: "create"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_mws_workspaces" "this" {
+        account_id     = "replay-account"
+        workspace_name = "replay-replay1"
+        location       = "us-central1"
+
+        cloud_resource_container {
+          gcp {
+            project_id = "replay-project"
+          }
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/accounts/replay-account/workspaces"
+          body:
+            json:
+              account_id: "replay-account"
+              cloud: "gcp"
+              cloud_resource_container:
+                gcp:
+                  project_id: "replay-project"
+              location: "us-central1"
+              workspace_name: "replay-replay1"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              cloud: "gcp"
+              cloud_resource_container:
+                gcp:
+                  project_id: "replay-project"
+              deployment_name: "replay-workspace"
+              gcp_workspace_sa: "workspace@replay-project.iam.gserviceaccount.com"
+              location: "us-central1"
+              workspace_id: 12345
+              workspace_name: "replay-replay1"
+              workspace_status: "RUNNING"
+      - &lookup_workspace_12345
+        request: {method: "GET", path: "/api/2.0/accounts/replay-account/workspaces/12345", body: null}
+        response: *response_1
+      - *lookup_workspace_12345
+      - *lookup_workspace_12345
+      - *lookup_workspace_12345
+      - *lookup_workspace_12345
+destroy:
+  calls:
+    - *lookup_workspace_12345
+    - *lookup_workspace_12345
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/accounts/replay-account/workspaces/12345"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request: {method: "GET", path: "/api/2.0/accounts/replay-account/workspaces/12345", body: null}
+      response: &response_2 # Inferred API response; not recorded.
+        status: 404
+        body:
+          json:
+            error_code: "RESOURCE_DOES_NOT_EXIST"
+            message: "Deleted"

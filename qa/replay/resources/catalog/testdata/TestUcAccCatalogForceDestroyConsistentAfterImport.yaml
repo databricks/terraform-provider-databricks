@@ -1,0 +1,87 @@
+# Placeholder API responses inferred from API models; not recorded.
+version: 1
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create
+    config: |
+      resource "databricks_catalog" "test" {
+        name = "sandbox-replay"
+        comment = "test force_destroy import consistency"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/catalogs
+          body:
+            json:
+              comment: test force_destroy import consistency
+              name: sandbox-replay
+        response:
+          status: 200
+          body:
+            json:
+              catalog_type: MANAGED_CATALOG
+              comment: test force_destroy import consistency
+              enable_predictive_optimization: INHERIT
+              isolation_mode: OPEN
+              metastore_id: 11111111-1111-1111-1111-111111111111
+              name: sandbox-replay
+              owner: replay-admin
+      - request:
+          method: DELETE
+          path: /api/2.1/unity-catalog/schemas/sandbox-replay.default
+          body: null
+        response:
+          status: 200
+          body: null
+      - &read_catalog
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/catalogs/sandbox-replay
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              catalog_type: MANAGED_CATALOG
+              comment: test force_destroy import consistency
+              enable_predictive_optimization: INHERIT
+              isolation_mode: OPEN
+              metastore_id: 11111111-1111-1111-1111-111111111111
+              name: sandbox-replay
+              owner: replay-admin
+      - *read_catalog
+  - name: import
+    import:
+      resource: databricks_catalog.test
+      verify: true
+      ignore:
+        - updated_at
+        - updated_by
+    calls:
+      - *read_catalog
+      - *read_catalog
+destroy:
+  calls:
+    - *read_catalog
+    - request:
+        method: GET
+        path: /api/2.1/unity-catalog/current-metastore-assignment
+        body: null
+      response:
+        status: 200
+        body:
+          json:
+            default_catalog_name: main
+            metastore_id: 11111111-1111-1111-1111-111111111111
+            workspace_id: 12345
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/catalogs/sandbox-replay
+        body: null
+      response:
+        status: 200
+        body: null

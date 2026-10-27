@@ -13,7 +13,7 @@ distinguished below; not every affected sibling has been executed. Affected scen
 | P2 | HTTP fixture limitation | Workspace-file uploads use multipart bodies; volume-file uploads/downloads use raw bytes. These require matching the actual upload payload, including content and form fields, without depending on a random multipart boundary. | [PR 6122](https://github.com/databricks/terraform-provider-databricks/pull/6122) adds exact text/binary bodies and multipart matching. The same PR copies all 29 scenarios previously grouped under P2/P3. Request fixtures validate uploaded bytes and form fields. |
 | P3 | Local input limitation | Source-file cases need files available at stable paths inside Terraform's isolated working directory. Examples include `TestAccDatabricksDBFSFile_CreateViaSource`, notebook DBC/IPYNB updates, and workspace-file source/empty/ZIP cases. | [PR 6122](https://github.com/databricks/terraform-provider-databricks/pull/6122) adds per-step local input files. It copies all 29 source functions across the combined P2/P3 inventory, preserving `source` paths and file-reading behavior. Inputs are minimal but retain formats and content changes. Dashboard publish/content and external file-edit behavior are verified through exact provider requests; backend-only readback assertions are omitted. |
 | P4 | Conversion backlog | Source review found 16 scenarios convertible with existing replay features: five permission lifecycles, five settings, two home cleanups, two secret cases, a zero-worker pipeline, and continuous-job run control. SDK usage alone was not an engine limitation. | Write replay copies that verify exact provider requests and response conversion; omit backend-only readback assertions. The seventeenth reviewed case, SQL-warehouse permissions, remains under P5 for its import step. See the reassessment below. |
-| P5 | Test-step limitation | YAML cannot express Terraform import steps and import-state verification. For example, `TestUcAccCatalogForceDestroyConsistentAfterImport` checks consistency after import. | Add import-step support before counting these scenarios as copied. A create/read/destroy port would omit the behavior under test. |
+| P5 | Conversion backlog | Native import steps and optional state verification are implemented in YAML. The catalog force-destroy import regression is copied, retaining its audit-field exclusions. | Convert the four remaining cases using literal or default state IDs and native verification settings. These no longer need a new engine feature. For the connection, model the intended API response and expect no change for identical HCL, retaining an update plan for a changed host; do not add post-apply drift support for that backend behavior. |
 | P6 | Multiple-provider limitation | `internal/acceptance/tf_provider_test.go` tests deferred configuration with an additional noop provider. It is already hermetic, but the YAML runner currently registers only Databricks. | Decide how to retain this existing test in the migration inventory or support its additional provider. Do not replace it with a single-provider scenario. |
 | P7 | Provider/API mismatch | `TestUcAccMetastoreWithOwnerUpdates` changes the metastore name in its third step. The account update model sends owner and sharing settings but has no name field. With a response that preserves the unchanged server name, Terraform reports a nonempty post-apply plan on AWS, Azure, and GCP. | Resolve rename support before copying the full scenario. Do not return an unrequested new name in the response fixture. |
 | P8 | Diagnostic mismatch | `TestMwsAccWorkspaceIDHttp_RemoveDefault` and `TestMwsAccWorkspaceIDHttp_RemoveOverrideNoFallback` expect a missing-workspace diagnostic during planning. The current notebook path instead attempts another workspace import. `TestAccShare_ProviderConfig_Invalid` expects an integer-validator diagnostic, but the provider now reports a workspace-client validation error that also explains connection IDs. | Review the original expectations against current behavior, then preserve the agreed diagnostics in replay. Keep these cases pending rather than accepting any error. |
@@ -87,7 +87,10 @@ Reviewed the 17 pending source functions against their provider implementations.
 This is a source review, not a claim that new replay copies have passed. Sixteen
 need conversion, without a new engine feature; the SQL-warehouse permission
 lifecycle remains under P5 because its import/ID-alias step must be retained.
-The copied/pending totals stay **479/66** until conversions are verified.
+Import support is now implemented; that case awaits conversion alongside the
+other P5 cases listed in PENDING.md.
+At this review point, the copied/pending totals were **479/66**; current adoption
+totals are maintained in MIGRATION.md.
 
 | Scenarios | Count | Retain in replay | Omit |
 | --- | ---: | --- | --- |
@@ -109,3 +112,15 @@ The six permission functions still share the independently tracked P1 setup;
 that warning does not prevent conversion. Five are in this backlog and the
 SQL-warehouse case remains pending under P5. No provider or engine code was
 changed during this reassessment, and the original tests remain unchanged.
+
+## Additional observations from import engine tests
+
+The default SDKv2 importer in `common.Resource.ToResource` calls
+`diags[0].Validate()` after a failed Read. That validates the diagnostic's shape
+and can return nil for an error diagnostic, so the importer proceeds rather than
+propagating the read error. A group import with a single 400 response demonstrated
+an additional refresh GET instead of the first error being returned. This is
+separate from the replay engine's expected-error handling. No production fix or
+fixture relaxation is included. The Plugin Framework import-error regression
+checks expected errors and cleanup without this path. This is an extra engine
+scenario, not another pending function in the 545-case migration baseline.

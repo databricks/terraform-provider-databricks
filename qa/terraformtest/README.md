@@ -45,7 +45,7 @@ configured through process environment variables.
 ## Test definition
 
 Use `version: 1`, optional `initial_state`, followed by `steps` and `destroy`.
-Each step has a human `name`, literal HCL under `config`, `calls`, and optional
+Apply and plan steps have a human `name`, literal HCL under `config`, `calls`, and optional
 `state` expectations. State persists across steps. Destroy always runs using
 the last successful configuration;
 its HTTP exchanges belong under `destroy.calls`, and empty state is always
@@ -227,8 +227,7 @@ still use ordinary HTTP fixtures. Unexpected calls and unused fixtures fail
 independently, even if their resulting diagnostic matches `expect_error`.
 Later steps still run after an expected failure.
 
-Automatic destroy remains mandatory and uses the last step without an expected
-error, so an invalid final configuration cannot prevent cleanup. If all steps
+Automatic destroy remains mandatory and uses the last successful apply configuration, so an invalid final configuration cannot prevent cleanup. If all steps
 expect errors, cleanup uses an empty default provider configuration. Tests that
 partially create resources before failing must still supply destroy fixtures.
 Provider aliases or routing that exist only in an expected-error configuration
@@ -237,6 +236,55 @@ are not available to that fallback cleanup configuration.
 State checks on expected-error steps are rejected: HashiCorp skips post-apply
 checks when an operation fails. Add a subsequent successful step to inspect
 state instead. Invalid or empty error patterns fail before Terraform runs.
+
+## Import steps
+
+An `import` step runs `terraform import` through HashiCorp's test framework,
+using the step's ordinary HTTP fixtures. It requires a prior successful apply
+or an initial checkpoint. With a checkpoint, the first step must include `config`;
+later import steps may omit it to reuse the last applied configuration.
+
+```yaml
+- name: import_catalog
+  import:
+    resource: databricks_catalog.test
+    verify: true
+    ignore: [updated_at, updated_by]
+  calls:
+    # GET requests made by the importer and Terraform's import refresh.
+```
+
+`resource` is the existing Terraform instance address. Optional `id` is a literal
+import identifier; omission uses the resource's current state ID. For resources
+without an `id` attribute, supply `id` explicitly, for example an app's name or a
+quality monitor's table name. Composite IDs and alternate formats are literal
+strings, with no interpolation or state-editing expressions.
+
+`verify` defaults to `false`, checking import success and fixture consumption.
+Set it to `true` to compare imported attributes against the pre-import state
+using HashiCorp's strict import verification. Optional `ignore` lists attribute
+prefixes excluded from that comparison, using HashiCorp's flattened names such
+as `updated_at` or `options.bearer_token`. Use narrow prefixes: `name` also
+matches other attributes beginning with `name`. `identifier_attribute` chooses
+which attribute matches imported and prior instances; it defaults to `id`.
+Both `ignore` and `identifier_attribute` require `verify: true`.
+
+HashiCorp imports into a separate working directory and discards the imported
+state afterward. Later steps and automatic destroy continue with the original
+lifecycle state, including other managed resources. This tests the importer;
+it does not adopt a new resource into the lifecycle. Import-only HCL does not
+replace the last applied configuration used for cleanup. Local input files are
+available in the import directory too.
+
+An import step may use `expect_error` with verification disabled. It cannot use
+`plan`, `plan_only`, or `state`: those checks do not execute in HashiCorp's import
+flow. Use `import.verify` for import-state comparison and a later apply/plan step
+for the usual checks. Unexpected and unused HTTP calls still fail independently
+of expected errors. Plan-based import blocks and persisting imported state are
+not exposed yet.
+
+Runnable examples cover [SDKv2 groups](testdata/imports/group.yaml) and
+[Plugin Framework apps imported by name](testdata/imports/app_by_name.yaml).
 
 ## Initial state
 

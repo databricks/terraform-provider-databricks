@@ -93,13 +93,16 @@ func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Ha
 	hasApplyConfig := false
 	for i, s := range definition.Steps {
 		label := stepLabel(i, s.Name)
-		testStep := terraformStep(t, handler, label, s.Config, s.Calls, s.State)
-		configurePlan(&testStep, s, label)
-		if s.ExpectError != nil {
-			testStep.ExpectError = regexp.MustCompile(*s.ExpectError)
-		} else if !s.PlanOnly || !hasApplyConfig {
+		hcl := s.Config
+		if s.Import != nil && hcl == "" {
+			hcl = cleanupConfig
+		}
+		testStep := configuredStep(t, handler, label, hcl, s)
+		if s.ExpectError == nil && s.Import == nil && (!s.PlanOnly || !hasApplyConfig) {
 			cleanupConfig = s.Config
 			hasApplyConfig = !s.PlanOnly
+		} else if s.Import != nil && !hasApplyConfig && definition.InitialState != nil {
+			cleanupConfig = hcl
 		}
 		steps = append(steps, testStep)
 	}
@@ -110,6 +113,23 @@ func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Ha
 	cleanup.ConfigStateChecks = []statecheck.StateCheck{emptyStateAssertion{label: label}}
 	steps = append(steps, cleanup)
 	return steps
+}
+
+// configuredStep maps a YAML operation to native checks without changing the
+// configuration retained for later cleanup.
+func configuredStep(t *testing.T, handler *httpfixture.Handler, label, hcl string, s step) resource.TestStep {
+	t.Helper()
+	native := terraformStep(t, handler, label, hcl, s.Calls, s.State)
+	configurePlan(&native, s, label)
+	if s.Import != nil {
+		if err := configureImport(&native, *s.Import, handler); err != nil {
+			t.Fatalf("%s: %v", label, err)
+		}
+	}
+	if s.ExpectError != nil {
+		native.ExpectError = regexp.MustCompile(*s.ExpectError)
+	}
+	return native
 }
 
 // terraformStep treats plan, apply, and consistency reads as one fixture phase.

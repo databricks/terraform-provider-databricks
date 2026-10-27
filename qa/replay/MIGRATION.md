@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**479 copied; 66 pending.** Counts refer to original Go test functions, not
+**480 copied; 65 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. Copies preserve provider-owned behavior
 and meaningful assertions. Backend-only persistence checks are omitted; fixture
 requests verify what the provider sends. Unsupported provider behavior remains
@@ -27,7 +27,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [aws/user_role_provider_config_test.go](../../aws/user_role_provider_config_test.go) | 1 | 0 |
 | [aws/user_role_test.go](../../aws/user_role_test.go) | 2 | 0 |
 | [catalog/artifact_allowlist_test.go](../../catalog/artifact_allowlist_test.go) | 1 | 0 |
-| [catalog/catalog_test.go](../../catalog/catalog_test.go) | 8 | 2 |
+| [catalog/catalog_test.go](../../catalog/catalog_test.go) | 9 | 1 |
 | [catalog/connection_test.go](../../catalog/connection_test.go) | 2 | 1 |
 | [catalog/credential_provider_config_test.go](../../catalog/credential_provider_config_test.go) | 2 | 0 |
 | [catalog/credential_test.go](../../catalog/credential_test.go) | 1 | 1 |
@@ -497,3 +497,11 @@ All 29 cases previously grouped under file/payload blockers are copied. The
 volume-file SDK mutation is modeled by the next refresh response; its artificial
 check-hook refresh error and SDK download assertion are omitted. The replay
 verifies the provider reconciles the edit by uploading the configured bytes.
+
+- The catalog force-destroy import regression now uses HashiCorp's native import
+  verification, retaining its two ignored audit fields. Import runs against
+  isolated state; ordinary cleanup still destroys the original lifecycle.
+  The other four P5 cases await conversion, not an import-engine feature.
+  For the schema-level connection replay, model the intended response without
+  the backend's extra auth_scheme drift: identical HCL should plan no changes,
+  while a changed host should plan an update. The live test stays unchanged.

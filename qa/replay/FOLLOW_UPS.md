@@ -12,7 +12,7 @@ distinguished below; not every affected sibling has been executed. Affected scen
 | P1 | Provider bug | Concurrent cache reads in `common/unified_provider.go` are not protected by the mutex used for writes. A replay of `scim/user_test.go`'s `TestAccUserResource`, which creates three independent users, reports data races under `-race`. The AWS branch of `TestUcAccStorageCredential`, with independent IAM-role and Cloudflare credentials, also reports cache races and shared SDK configuration races during client initialization. | Cache locking is addressed separately in [PR 6120](https://github.com/databricks/terraform-provider-databricks/pull/6120). SDK configuration/authentication races remain tracked. Copy tests independently of the fix, retain ordinary parallelism, and report race-detector failures without suppressing them. |
 | P2 | HTTP fixture limitation | Workspace-file uploads use multipart bodies; volume-file uploads/downloads use raw bytes. These require matching the actual upload payload, including content and form fields, without depending on a random multipart boundary. | [PR 6122](https://github.com/databricks/terraform-provider-databricks/pull/6122) adds exact text/binary bodies and multipart matching. The same PR copies all 29 scenarios previously grouped under P2/P3. Request fixtures validate uploaded bytes and form fields. |
 | P3 | Local input limitation | Source-file cases need files available at stable paths inside Terraform's isolated working directory. Examples include `TestAccDatabricksDBFSFile_CreateViaSource`, notebook DBC/IPYNB updates, and workspace-file source/empty/ZIP cases. | [PR 6122](https://github.com/databricks/terraform-provider-databricks/pull/6122) adds per-step local input files. It copies all 29 source functions across the combined P2/P3 inventory, preserving `source` paths and file-reading behavior. Inputs are minimal but retain formats and content changes. Dashboard publish/content and external file-edit behavior are verified through exact provider requests; backend-only readback assertions are omitted. |
-| P4 | Scenario review | Remaining SDK-based scenarios inspect ACL inventories/current-user ownership, post-destroy settings/home cleanup, continuous-job runs, or explicit zero-valued API fields. Review each for provider-owned behavior. A check that merely confirms the backend persisted an earlier request is outside replay scope. | Preserve request construction, response conversion and meaningful provider assertions; omit backend-only readback checks. Determine whether any actual Go hook or engine capability remains necessary before treating a scenario as blocked. Dashboard/file cases are copied through exact requests and refresh responses. |
+| P4 | Conversion backlog | Source review found 16 scenarios convertible with existing replay features: five permission lifecycles, five settings, two home cleanups, two secret cases, a zero-worker pipeline, and continuous-job run control. SDK usage alone was not an engine limitation. | Write replay copies that verify exact provider requests and response conversion; omit backend-only readback assertions. The seventeenth reviewed case, SQL-warehouse permissions, remains under P5 for its import step. See the reassessment below. |
 | P5 | Test-step limitation | YAML cannot express Terraform import steps and import-state verification. For example, `TestUcAccCatalogForceDestroyConsistentAfterImport` checks consistency after import. | Add import-step support before counting these scenarios as copied. A create/read/destroy port would omit the behavior under test. |
 | P6 | Multiple-provider limitation | `internal/acceptance/tf_provider_test.go` tests deferred configuration with an additional noop provider. It is already hermetic, but the YAML runner currently registers only Databricks. | Decide how to retain this existing test in the migration inventory or support its additional provider. Do not replace it with a single-provider scenario. |
 | P7 | Provider/API mismatch | `TestUcAccMetastoreWithOwnerUpdates` changes the metastore name in its third step. The account update model sends owner and sharing settings but has no name field. With a response that preserves the unchanged server name, Terraform reports a nonempty post-apply plan on AWS, Azure, and GCP. | Resolve rename support before copying the full scenario. Do not return an unrequested new name in the response fixture. |
@@ -35,8 +35,8 @@ distinguished below; not every affected sibling has been executed. Affected scen
 
 Of the 42 source functions originally mapped to P1, 34 now have replay copies:
 30 in PR 6121 and four notebook/workspace-file permission cases in PR 6122.
-The remaining eight need SDK-only checks (six, including one import lifecycle)
-or derived-host routing (two). No scenario is
+The remaining eight are five permission scenarios ready for conversion (P4),
+one permission/import lifecycle (P5), and two derived-host cases (P20). No scenario is
 left pending solely because of the client-cache race.
 
 The repository-permissions copies replace the two SDK group-ACL reads with the
@@ -62,7 +62,7 @@ Additional P1 reproductions from the later resource batch:
   `TestAccPermissions_SqlQuery`.
 
 These reproduce cache or SDK initialization races under `-race`. The remaining permission cases and multi-resource UC/identity cases are listed
-in PENDING.md. Some also require local files, import steps or SDK-only checks;
+in PENDING.md. Remaining blockers include imports and derived-host routing;
 a race warning alone is not a reason to postpone conversion. The shared setup uses independent resources; not every
 sibling has a separate race reproduction. A passing run alone does
 not establish that setup is race-free. The new replay copies retain independent
@@ -80,3 +80,32 @@ Group-member replay scenarios use distinct fake group IDs: the provider also
 has a process-global membership cache keyed only by group ID. Reusing IDs across
 independent fixture servers can skip reads and contaminate later tests. Distinct IDs isolate different scenarios, but repeating the same scenario in
 one Go process still reuses the ID and exposes P21.
+
+## P4 reassessment
+
+Reviewed the 17 pending source functions against their provider implementations.
+This is a source review, not a claim that new replay copies have passed. Sixteen
+need conversion, without a new engine feature; the SQL-warehouse permission
+lifecycle remains under P5 because its import/ID-alias step must be retained.
+The copied/pending totals stay **479/66** until conversions are verified.
+
+| Scenarios | Count | Retain in replay | Omit |
+| --- | ---: | --- | --- |
+| Job, pipeline, root-directory, token-authorization and root-model permissions | 5 | Principal transitions, expected rejection and exact reset requests where the provider performs them. Keep both root-directory ID/path variants. | SDK ACL/owner readback after removing the resource. |
+| Default namespace, legacy access, legacy DBFS, account legacy features and restricted workspace admins | 5 | Setting values/field masks, computed etags, etag-bearing delete requests and normal provider reads. | SDK probes that fetch a post-destroy etag and verify backend reset/default behavior. |
+| User and service-principal forced home cleanup | 2 | SCIM deletion plus recursive workspace-delete requests for the correct username/application-ID path during automatic destroy. | Independent SDK directory-existence checks after destroy. |
+| Secret ACL and secret scope | 2 | Principal/permission requests and provider-read state. For the scope, return it missing in the next refresh and require recreation with the same HCL; keep name/backend checks. | Default-owner ACL inventory checks and the scope's SDK delete hook. The hook caused the old post-apply drift exception; moving deletion to the next refresh avoids needing that exception. |
+| Pipeline without workers | 1 | An explicit `num_workers: 0` in the actual create payload, no autoscale, and the normal resource lifecycle. | SDK inspection of the server response's `ForceSendFields`; exact JSON matching distinguishes zero from omission directly. |
+| Continuous-job run control | 1 | All four configurations: create, notebook change, pause, unpause. Match job updates, run-now calls and the paused run's list/cancel/status requests. Return a terminated run immediately to avoid poll delays. | SDK polling for backend-scheduled runs and wall-clock sleeps. |
+
+Pipeline permissions need care: `PermissionsAPI.Delete` explicitly returns
+without resetting ACLs for pipelines, to avoid changing ownership incorrectly.
+The original SDK check expects the creator to regain ownership. Do not fabricate
+an ACL reset request or response to satisfy that expectation. Replay should
+cover the provider's current no-op deletion alongside the retained update/error
+steps. The other permission cases exercise the provider's actual reset logic.
+
+The six permission functions still share the independently tracked P1 setup;
+that warning does not prevent conversion. Five are in this backlog and the
+SQL-warehouse case remains pending under P5. No provider or engine code was
+changed during this reassessment, and the original tests remain unchanged.

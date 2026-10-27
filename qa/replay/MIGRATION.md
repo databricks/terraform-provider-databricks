@@ -232,10 +232,10 @@ See [PENDING.md](PENDING.md) for the remaining per-test blockers and
   update it in place. Account destroy preserves the default disable operation.
 - The three independent users in `TestAccUserResource` expose an existing race
   in `common/unified_provider.go`'s shared client cache under `-race`. That case
-  remains pending; no artificial resource dependencies or production fixes are
-  added to these ports. Home preservation is copied through an explicit
+  is copied independently of the P1 fix; no artificial resource dependencies
+  are added. Home preservation is copied through an explicit
   identity-removal step and directory data-source read; forced home cleanup
-  and arbitrary SDK checks remain pending.
+  remains pending but needs no new engine feature after the P4 review.
 - Token timestamps use a fixed future window with the original lifetime, so
   wall-clock expiry does not invalidate its otherwise static lifecycle transcript.
 - Notification-destination SDK checks of display name and type become
@@ -248,8 +248,9 @@ See [PENDING.md](PENDING.md) for the remaining per-test blockers and
 - Negative provider-config plan-only cases fail before apply or any API call.
   They use `expect_error` without `plan_only` because the replay runner rejects
   that combination. The original HCL and error patterns are preserved.
-- `secrets/secret_scope_test.go` includes SDK-only ACL and current-user checks.
-  Copying just its resource lifecycle would lose those assertions.
+- `secrets/secret_scope_test.go` can retain name/backend checks and recreation
+  after external deletion using next-step refresh fixtures. Its backend-only
+  ACL/current-user checks can be omitted; the conversion is pending under P4.
 - `internal/acceptance/tf_provider_test.go` needs an additional noop provider
   for deferred configuration. It is already hermetic and remains pending.
 - `internal/acceptance/dual_resource_api_validation_test.go` contains additional
@@ -290,7 +291,8 @@ See [PENDING.md](PENDING.md) for the remaining per-test blockers and
 - Pipelines retain cluster settings, AWS cluster updates, run-as transitions and
   rejected removal, plus the nonempty data-source result check. Repeated whole
   calls and configurations use YAML anchors; calls remain consumable fixtures.
-  Zero-worker SDK checks remain pending under P4; last-modified replay
+  The zero-worker case is ready for conversion under P4 with an exact request
+  requiring explicit `num_workers: 0`; last-modified replay
   reproduces input-state drift (P19).
 - Apps retain no-compute state, Git input-only fields and reapply, external
   deletion/recreation, invalid resource configuration, and app/list lookups.

@@ -1,0 +1,234 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_model_serving_provisioned_throughput" "endpoint" {
+        name = "terraform-test-model-serving-pt-replay"
+        config {
+          served_entities {
+            name                    = "prod_model"
+            entity_name             = "system.ai.llama-4-maverick"
+            entity_version          = "1"
+            provisioned_model_units = 50
+          }
+          traffic_config {
+            routes {
+              served_model_name  = "prod_model"
+              traffic_percentage = 100
+            }
+          }
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/serving-endpoints/pt"
+          body:
+            json:
+              config:
+                served_entities:
+                  - entity_name: "system.ai.llama-4-maverick"
+                    entity_version: "1"
+                    name: "prod_model"
+                    provisioned_model_units: 50
+                traffic_config:
+                  routes:
+                    - served_model_name: "prod_model"
+                      traffic_percentage: 100
+              name: "terraform-test-model-serving-pt-replay"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              config:
+                served_entities:
+                  - entity_name: "system.ai.llama-4-maverick"
+                    entity_version: "1"
+                    name: "prod_model"
+                    provisioned_model_units: 50
+                traffic_config:
+                  routes:
+                    - served_model_name: "prod_model"
+                      traffic_percentage: 100
+              id: "endpoint-1"
+              name: "terraform-test-model-serving-pt-replay"
+              state:
+                config_update: "NOT_UPDATING"
+                ready: "READY"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/serving-endpoints/terraform-test-model-serving-pt-replay"
+          body: null
+        response: *response_1
+      - *get_1
+      - *get_1
+  - name: "update_1"
+    config: |
+      resource "databricks_model_serving_provisioned_throughput" "endpoint" {
+        name = "terraform-test-model-serving-pt-replay"
+        config {
+          served_entities {
+            name                    = "prod_model"
+            entity_name             = "system.ai.llama-4-maverick"
+            entity_version          = "1"
+            provisioned_model_units = 100
+          }
+          traffic_config {
+            routes {
+              served_model_name  = "prod_model"
+              traffic_percentage = 100
+            }
+          }
+        }
+      }
+    calls:
+      - *get_1
+      - request:
+          method: "PUT"
+          path: "/api/2.0/serving-endpoints/pt/terraform-test-model-serving-pt-replay/config"
+          body:
+            json:
+              config:
+                served_entities:
+                  - entity_name: "system.ai.llama-4-maverick"
+                    entity_version: "1"
+                    name: "prod_model"
+                    provisioned_model_units: 100
+                traffic_config:
+                  routes:
+                    - served_model_name: "prod_model"
+                      traffic_percentage: 100
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              config:
+                served_entities:
+                  - entity_name: "system.ai.llama-4-maverick"
+                    entity_version: "1"
+                    name: "prod_model"
+                    provisioned_model_units: 100
+                traffic_config:
+                  routes:
+                    - served_model_name: "prod_model"
+                      traffic_percentage: 100
+              id: "endpoint-1"
+              name: "terraform-test-model-serving-pt-replay"
+              state:
+                config_update: "NOT_UPDATING"
+                ready: "READY"
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.0/serving-endpoints/terraform-test-model-serving-pt-replay"
+          body: null
+        response: *response_2
+      - *get_2
+      - *get_2
+  - name: "update_2"
+    config: |
+      resource "databricks_model_serving_provisioned_throughput" "endpoint" {
+        name = "terraform-test-model-serving-pt-replay"
+        config {
+          served_entities {
+            name                    = "prod_model"
+            entity_name             = "system.ai.llama-4-maverick"
+            entity_version          = "1"
+            provisioned_model_units = 100
+          }
+          traffic_config {
+            routes {
+              served_model_name  = "prod_model"
+              traffic_percentage = 100
+            }
+          }
+        }
+        ai_gateway {
+          guardrails {
+            input {
+              safety = true
+            }
+          }
+        }
+        tags {
+          key   = "env"
+          value = "prod"
+        }
+      }
+    calls:
+      - *get_2
+      - *get_2
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/serving-endpoints/terraform-test-model-serving-pt-replay/tags"
+          body:
+            json:
+              add_tags:
+                - key: "env"
+                  value: "prod"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: "PUT"
+          path: "/api/2.0/serving-endpoints/terraform-test-model-serving-pt-replay/ai-gateway"
+          body:
+            json:
+              guardrails:
+                input:
+                  safety: true
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              guardrails:
+                input:
+                  safety: true
+      - &get_3
+        request:
+          method: "GET"
+          path: "/api/2.0/serving-endpoints/terraform-test-model-serving-pt-replay"
+          body: null
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              ai_gateway:
+                guardrails:
+                  input:
+                    safety: true
+              config:
+                served_entities:
+                  - entity_name: "system.ai.llama-4-maverick"
+                    entity_version: "1"
+                    name: "prod_model"
+                    provisioned_model_units: 100
+                traffic_config:
+                  routes:
+                    - served_model_name: "prod_model"
+                      traffic_percentage: 100
+              id: "endpoint-1"
+              name: "terraform-test-model-serving-pt-replay"
+              state:
+                config_update: "NOT_UPDATING"
+                ready: "READY"
+              tags:
+                - key: "env"
+                  value: "prod"
+      - *get_3
+destroy:
+  calls:
+    - *get_3
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/serving-endpoints/terraform-test-model-serving-pt-replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

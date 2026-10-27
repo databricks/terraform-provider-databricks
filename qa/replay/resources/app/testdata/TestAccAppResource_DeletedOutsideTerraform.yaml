@@ -1,0 +1,197 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_secret_scope" "this" {
+        name = "tf-replay"
+      }
+
+      resource "databricks_secret" "this" {
+        scope        = databricks_secret_scope.this.name
+        key          = "tf-replay"
+        string_value = "secret"
+      }
+
+      resource "databricks_app" "this" {
+        no_compute  = true
+        name        = "tf-replay"
+        description = "deleted outside terraform test"
+        resources = [{
+          name        = "secret"
+          description = "secret for app"
+          secret = {
+            scope      = databricks_secret_scope.this.name
+            key        = databricks_secret.this.key
+            permission = "MANAGE"
+          }
+        }]
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/secrets/scopes/create"
+          body:
+            json:
+              scope: "tf-replay"
+              scope_backend_type: "DATABRICKS"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/secrets/scopes/list"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              scopes:
+                - backend_type: "DATABRICKS"
+                  name: "tf-replay"
+      - request:
+          method: "POST"
+          path: "/api/2.0/secrets/put"
+          body:
+            json:
+              key: "tf-replay"
+              scope: "tf-replay"
+              string_value: "secret"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.0/secrets/list"
+          query:
+            scope: ["tf-replay"]
+          body: null
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              secrets:
+                - key: "tf-replay"
+                  last_updated_timestamp: 1700000000000
+      - &post_3
+        request:
+          method: "POST"
+          path: "/api/2.0/apps"
+          query:
+            no_compute: ["true"]
+          body:
+            json:
+              description: "deleted outside terraform test"
+              name: "tf-replay"
+              resources:
+                - description: "secret for app"
+                  name: "secret"
+                  secret:
+                    key: "tf-replay"
+                    permission: "MANAGE"
+                    scope: "tf-replay"
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              compute_status:
+                state: "STOPPED"
+              create_time: "2026-01-01T00:00:00Z"
+              description: "deleted outside terraform test"
+              name: "tf-replay"
+              resources:
+                - description: "secret for app"
+                  name: "secret"
+                  secret:
+                    key: "tf-replay"
+                    permission: "MANAGE"
+                    scope: "tf-replay"
+              update_time: "2026-01-01T00:00:00Z"
+      - &get_4
+        request:
+          method: "GET"
+          path: "/api/2.0/apps/tf-replay"
+          body: null
+        response: *response_2
+      - *get_1
+      - *get_2
+      - *get_4
+  - name: "recreate_after_external_delete"
+    config: |
+      resource "databricks_secret_scope" "this" {
+        name = "tf-replay"
+      }
+
+      resource "databricks_secret" "this" {
+        scope        = databricks_secret_scope.this.name
+        key          = "tf-replay"
+        string_value = "secret"
+      }
+
+      resource "databricks_app" "this" {
+        no_compute  = true
+        name        = "tf-replay"
+        description = "deleted outside terraform test"
+        resources = [{
+          name        = "secret"
+          description = "secret for app"
+          secret = {
+            scope      = databricks_secret_scope.this.name
+            key        = databricks_secret.this.key
+            permission = "MANAGE"
+          }
+        }]
+      }
+    calls:
+      - *get_1
+      - *get_2
+      - request:
+          method: "GET"
+          path: "/api/2.0/apps/tf-replay"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 404
+          body:
+            json:
+              error_code: "RESOURCE_DOES_NOT_EXIST"
+              message: "App not found"
+      - *post_3
+      - *get_4
+      - *get_1
+      - *get_2
+      - *get_4
+destroy:
+  calls:
+    - *get_1
+    - *get_2
+    - *get_4
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/apps/tf-replay"
+        body: null
+      response: *response_2
+    - request:
+        method: "POST"
+        path: "/api/2.0/secrets/delete"
+        body:
+          json:
+            key: "tf-replay"
+            scope: "tf-replay"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: "POST"
+        path: "/api/2.0/secrets/scopes/delete"
+        body:
+          json:
+            scope: "tf-replay"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

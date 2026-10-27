@@ -379,74 +379,29 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 		return nil, err
 	}
 
-	// newDatabricksClient wraps a low-level client.DatabricksClient (Go SDK)
-	// into a common.DatabricksClient (provider-level wrapper). A new wrapper is
-	// needed per workspace because:
-	// 1. HTTP-path resources (non-Go-SDK) use common.DatabricksClient's
-	//    commandFactory, which is not part of the Go SDK client.
-	// 2. Each workspace has its own host/auth, so the underlying SDK client
-	//    differs per workspace ID.
-	// 3. We propagate any already-resolved workspace client from the parent's
-	//    cache so that WorkspaceClient() returns it without recreating.
-	newDatabricksClient := func(dc *client.DatabricksClient) *DatabricksClient {
-		result := &DatabricksClient{
-			DatabricksClient:     dc,
-			commandFactory:       c.commandFactory,
-			httpTimeoutSetByUser: c.httpTimeoutSetByUser,
+	dc := c.cachedDatabricksClients[parsedID]
+	if dc == nil {
+		workspaceClient, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+		if err != nil {
+			return nil, err
 		}
-		c.mu.Lock()
-		defer c.mu.Unlock()
-		if wc, ok := c.cachedWorkspaceClients[parsedID]; ok {
-			result.cachedWorkspaceClient = wc
+		dc, err = client.New(workspaceClient.Config)
+		if err != nil {
+			return nil, err
 		}
-		return result
-	}
-
-	// If the Databricks Client is cached, we use it
-	if c.cachedDatabricksClients != nil {
-		if client, ok := c.cachedDatabricksClients[parsedID]; ok && client != nil {
-			return newDatabricksClient(client), nil
+		if c.cachedDatabricksClients == nil {
+			c.cachedDatabricksClients = make(map[string]*client.DatabricksClient)
 		}
+		c.cachedDatabricksClients[parsedID] = dc
 	}
 
-	// If the Databricks Client is not cached, we create a client
-	// and cache it.
-	err = c.setCachedDatabricksClient(ctx, workspaceID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Return the Databricks Client.
-	return newDatabricksClient(c.cachedDatabricksClients[parsedID]), nil
-}
-
-// setCachedDatabricksClient requires muLegacy to be held by the caller.
-func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, workspaceID string) error {
-	// Initialize the map if it's nil
-	if c.cachedDatabricksClients == nil {
-		c.cachedDatabricksClients = make(map[string]*client.DatabricksClient)
-	}
-
-	parsedID, err := parseWorkspaceID(workspaceID)
-	if err != nil {
-		return err
-	}
-
-	// Double checked locking
-	if existingClient, ok := c.cachedDatabricksClients[parsedID]; ok && existingClient != nil {
-		return nil
-	}
-
-	// Get the workspace client for the workspace ID
-	workspaceClient, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
-	if err != nil {
-		return err
-	}
-
-	newClient, err := client.New(workspaceClient.Config)
-	if err != nil {
-		return err
-	}
-	c.cachedDatabricksClients[parsedID] = newClient
-	return nil
+	// Reuse the resolved SDK workspace client without losing provider-only settings.
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return &DatabricksClient{
+		DatabricksClient:      dc,
+		commandFactory:        c.commandFactory,
+		httpTimeoutSetByUser:  c.httpTimeoutSetByUser,
+		cachedWorkspaceClient: c.cachedWorkspaceClients[parsedID],
+	}, nil
 }

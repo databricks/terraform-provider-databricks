@@ -33,6 +33,18 @@ distinguished below; not every affected sibling has been executed. Affected scen
 
 | P21 | Provider cache isolation | The process-global SCIM membership cache is keyed only by group ID. Repeating `TestAccGroupMemberResource`, `TestAccGroupDataSplitMembers`, or `TestAccAwsOboTokenResource` with `go test -count=3` reuses the cached fake group across fresh fixture servers and skips an expected GET. All three pass on their first run; the repeat runs fail with an unconsumed fixture. | Scope membership caching to the provider/client or give it an explicit lifecycle. Keep fixtures strict; do not make the missing reads optional or reset the cache from these YAML tests. Three newly copied functions reproduce it; account counterparts use the same cache. |
 
+Of the 42 source functions originally mapped to P1, 30 now have replay copies.
+The remaining 12 also need local files/uploads (four), SDK-only checks (six,
+including one import lifecycle), or derived-host routing (two). No scenario is
+left pending solely because of the client-cache race.
+
+The repository-permissions copies replace the two SDK group-ACL reads with the
+provider's Read and HashiCorp's post-apply empty-plan check: the refreshed ACLs
+must match both configured group/permission pairs. The original `object_type`
+state check remains explicit. Their strict HTTP fixtures assert outgoing
+permissions requests; the inferred responses are test inputs, not independent
+server-side verification.
+
 Additional P1 reproductions from the later resource batch:
 
 - `jobs/job_test.go`: `TestAccJobRunAsUser`.

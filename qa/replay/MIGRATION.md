@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**442 copied; 103 pending.** Counts refer to original Go test functions, not
+**450 copied; 95 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. A copy must preserve meaningful
 assertions; unsupported assertions remain pending rather than being omitted.
 Original files are unchanged.
@@ -21,12 +21,12 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [aws/data_aws_crossaccount_policy_acc_test.go](../../aws/data_aws_crossaccount_policy_acc_test.go) | 1 | 0 |
 | [aws/data_instance_profiles_acc_test.go](../../aws/data_instance_profiles_acc_test.go) | 1 | 0 |
 | [aws/instance_profile_provider_config_test.go](../../aws/instance_profile_provider_config_test.go) | 1 | 0 |
-| [aws/instance_profile_test.go](../../aws/instance_profile_test.go) | 0 | 1 |
+| [aws/instance_profile_test.go](../../aws/instance_profile_test.go) | 1 | 0 |
 | [aws/service_principal_role_provider_config_test.go](../../aws/service_principal_role_provider_config_test.go) | 1 | 0 |
 | [aws/user_role_provider_config_test.go](../../aws/user_role_provider_config_test.go) | 1 | 0 |
 | [aws/user_role_test.go](../../aws/user_role_test.go) | 2 | 0 |
 | [catalog/artifact_allowlist_test.go](../../catalog/artifact_allowlist_test.go) | 1 | 0 |
-| [catalog/catalog_test.go](../../catalog/catalog_test.go) | 7 | 3 |
+| [catalog/catalog_test.go](../../catalog/catalog_test.go) | 8 | 2 |
 | [catalog/connection_test.go](../../catalog/connection_test.go) | 2 | 1 |
 | [catalog/credential_provider_config_test.go](../../catalog/credential_provider_config_test.go) | 2 | 0 |
 | [catalog/credential_test.go](../../catalog/credential_test.go) | 1 | 1 |
@@ -44,8 +44,8 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [catalog/data_volume_acc_test.go](../../catalog/data_volume_acc_test.go) | 1 | 0 |
 | [catalog/data_volumes_acc_test.go](../../catalog/data_volumes_acc_test.go) | 1 | 0 |
 | [catalog/external_location_test.go](../../catalog/external_location_test.go) | 3 | 0 |
-| [catalog/grant_test.go](../../catalog/grant_test.go) | 4 | 1 |
-| [catalog/grants_test.go](../../catalog/grants_test.go) | 5 | 1 |
+| [catalog/grant_test.go](../../catalog/grant_test.go) | 5 | 0 |
+| [catalog/grants_test.go](../../catalog/grants_test.go) | 6 | 0 |
 | [catalog/metastore_assignment_provider_config_test.go](../../catalog/metastore_assignment_provider_config_test.go) | 2 | 0 |
 | [catalog/metastore_assignment_test.go](../../catalog/metastore_assignment_test.go) | 2 | 0 |
 | [catalog/metastore_data_access_provider_config_test.go](../../catalog/metastore_data_access_provider_config_test.go) | 2 | 0 |
@@ -61,7 +61,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [catalog/system_schema_test.go](../../catalog/system_schema_test.go) | 1 | 0 |
 | [catalog/table_provider_config_test.go](../../catalog/table_provider_config_test.go) | 1 | 0 |
 | [catalog/volume_test.go](../../catalog/volume_test.go) | 2 | 0 |
-| [catalog/workspace_binding_test.go](../../catalog/workspace_binding_test.go) | 0 | 1 |
+| [catalog/workspace_binding_test.go](../../catalog/workspace_binding_test.go) | 1 | 0 |
 | [clusters/cluster_policy_test.go](../../clusters/cluster_policy_test.go) | 3 | 0 |
 | [clusters/data_cluster_acc_test.go](../../clusters/data_cluster_acc_test.go) | 1 | 0 |
 | [clusters/data_clusters_acc_test.go](../../clusters/data_clusters_acc_test.go) | 3 | 0 |
@@ -118,7 +118,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [permissions/access_control_rule_set_provider_config_test.go](../../permissions/access_control_rule_set_provider_config_test.go) | 1 | 0 |
 | [permissions/account_rule_set_test.go](../../permissions/account_rule_set_test.go) | 2 | 0 |
 | [permissions/permissions_provider_config_test.go](../../permissions/permissions_provider_config_test.go) | 1 | 0 |
-| [permissions/permissions_test.go](../../permissions/permissions_test.go) | 14 | 13 |
+| [permissions/permissions_test.go](../../permissions/permissions_test.go) | 17 | 10 |
 | [permissions/resource_permissions_test.go](../../permissions/resource_permissions_test.go) | 0 | 1 |
 | [pipelines/data_pipelines_acc_test.go](../../pipelines/data_pipelines_acc_test.go) | 1 | 0 |
 | [pipelines/pipeline_provider_config_test.go](../../pipelines/pipeline_provider_config_test.go) | 1 | 0 |

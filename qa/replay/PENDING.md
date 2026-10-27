@@ -1,6 +1,6 @@
 # Pending acceptance scenarios
 
-**103 original functions remain pending** in the 545-function baseline. See
+**95 original functions remain pending** in the 545-function baseline. See
 [MIGRATION.md](MIGRATION.md) for counts and [FOLLOW_UPS.md](FOLLOW_UPS.md) for
 blocker details. Original tests remain unchanged.
 
@@ -12,17 +12,12 @@ does not require different replay fixtures or prevent writing the test.
 
 | Source | Original function | Blockers | Reason |
 | --- | --- | --- | --- |
-| [aws/instance_profile_test.go](../../aws/instance_profile_test.go) | `TestAccInstanceProfileIntegrationSuite` | P1 | Concurrent workspace client initialization; reproduced or shares the same unsafe cache (see follow-ups). |
 | [catalog/catalog_test.go](../../catalog/catalog_test.go) | `TestUcAccCatalogForceDestroyConsistentAfterImport` | P5 | Import or import-state verification is part of the scenario. |
-| [catalog/catalog_test.go](../../catalog/catalog_test.go) | `TestUcAccCatalogHmsConnectionUpdate` | P1 | Concurrent workspace client initialization; reproduced or shares the same unsafe cache (see follow-ups). |
 | [catalog/catalog_test.go](../../catalog/catalog_test.go) | `TestAccCatalog_ProviderConfig_Recreate` | P9 | Expected replacement conflicts with current workspace validation. |
 | [catalog/connection_test.go](../../catalog/connection_test.go) | `TestUcAccConnectionsSchemaLevelResourceFullLifecycle` | P5 | Import or import-state verification is part of the scenario. |
 | [catalog/credential_test.go](../../catalog/credential_test.go) | `TestAccCredentialOwner` | P13 | Workspace credential configured without workspace routing. |
-| [catalog/grant_test.go](../../catalog/grant_test.go) | `TestUcAccGrant` | P1 | Concurrent workspace client initialization; reproduced or shares the same unsafe cache (see follow-ups). |
-| [catalog/grants_test.go](../../catalog/grants_test.go) | `TestUcAccGrants` | P1 | Concurrent workspace client initialization; reproduced or shares the same unsafe cache (see follow-ups). |
 | [catalog/metastore_test.go](../../catalog/metastore_test.go) | `TestUcAccMetastoreWithOwnerUpdates` | P7 | Metastore name is not sent by the account update model. |
 | [catalog/schema_test.go](../../catalog/schema_test.go) | `TestUcAccSchema` | P10 | Reproduced shared SDKv2 schema-slice mutation under -race. |
-| [catalog/workspace_binding_test.go](../../catalog/workspace_binding_test.go) | `TestUcAccWorkspaceBindingToOtherWorkspace` | P1 | Concurrent workspace client initialization; reproduced or shares the same unsafe cache (see follow-ups). |
 | [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | `TestAccDashboardWithFilePath` | P3 | Original source/file_path needs a local file or PreConfig hook. |
 | [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | `TestAccDashboardTestAll` | P3 | Original source/file_path needs a local file or PreConfig hook. |
 | [internal/acceptance/tf_provider_test.go](../../internal/acceptance/tf_provider_test.go) | `TestAccProviderPlanShouldSucceedWithIncompleteConfiguration` | P6 | Additional noop provider; already hermetic. |
@@ -58,12 +53,9 @@ does not require different replay fixtures or prevent writing the test.
 | [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_Directory_RootDirectoryCorrectlyHandlesAdminUsers` | P1/P4 | Preserve the original SDK-only assertion after removing permissions; cache race is also tracked.
 | [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_WorkspaceFile_Path` | P1/P2/P3 | Original workspace-file source needs a local file and multipart upload support; cache race is also tracked.
 | [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_WorkspaceFile_Id` | P1/P2/P3 | Original workspace-file source needs a local file and multipart upload support; cache race is also tracked.
-| [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_Repo_Id` | P1 | Concurrent workspace client initialization; reproduced or shares the same unsafe cache (see follow-ups). |
-| [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_Repo_Path` | P1 | Concurrent workspace client initialization; reproduced or shares the same unsafe cache (see follow-ups). |
 | [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_Authorization_Tokens` | P1/P4 | Preserve the original SDK-only assertion after removing permissions; cache race is also tracked.
 | [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_SqlWarehouses` | P1/P4/P5 | Original lifecycle includes SDK owner checks and an import step; cache race is also tracked.
 | [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestAccPermissions_RegisteredModel_Root` | P1/P4 | Preserve the original SDK-only assertion after removing permissions; cache race is also tracked.
-| [permissions/permissions_test.go](../../permissions/permissions_test.go) | `TestUcAccPermissions_DatabaseProject` | P1 | Concurrent workspace client initialization; reproduced or shares the same unsafe cache (see follow-ups). |
 | [permissions/resource_permissions_test.go](../../permissions/resource_permissions_test.go) | `TestAccessControlHashFunction` | P17 | Already hermetic; inventory classification. |
 | [pipelines/pipeline_test.go](../../pipelines/pipeline_test.go) | `TestAccPipelineResource_CreatePipelineWithoutWorkers` | P4 | Retain SDK-only assertions/mutations unavailable to current YAML checks. |
 | [pipelines/pipeline_test.go](../../pipelines/pipeline_test.go) | `TestAccPipelineResourcLastModified` | P19 | Read clears the configured concurrency precondition. |

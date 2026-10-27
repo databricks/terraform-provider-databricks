@@ -18,6 +18,13 @@ logic, API response conversion, defaults, retries/polling, and cleanup. Use only
 the HCL fields needed to exercise it. Do not turn each test into an exhaustive
 resource schema or Terraform-internals test.
 
+Verify that the provider sends the correct data and handles representative API
+responses. Omit SDK readback assertions whose only purpose is to check that the
+backend persisted a preceding request. HTTP fixtures already check that request;
+reading a handwritten response back does not validate the service. Keep checks
+of provider-derived values and API-to-state conversion when those are the behavior
+under test. Model out-of-band changes with later refresh responses.
+
 ## Add a test
 
 Use a dedicated fixture folder in the resource's package, for example

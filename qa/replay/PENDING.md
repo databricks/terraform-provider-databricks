@@ -1,6 +1,6 @@
 # Pending acceptance scenarios
 
-**69 original functions remain pending** in the 545-function baseline. See
+**66 original functions remain pending** in the 545-function baseline. See
 [MIGRATION.md](MIGRATION.md) for counts and [FOLLOW_UPS.md](FOLLOW_UPS.md) for
 blocker details. Original tests remain unchanged.
 
@@ -18,8 +18,6 @@ does not require different replay fixtures or prevent writing the test.
 | [catalog/credential_test.go](../../catalog/credential_test.go) | `TestAccCredentialOwner` | P13 | Workspace credential configured without workspace routing. |
 | [catalog/metastore_test.go](../../catalog/metastore_test.go) | `TestUcAccMetastoreWithOwnerUpdates` | P7 | Metastore name is not sent by the account update model. |
 | [catalog/schema_test.go](../../catalog/schema_test.go) | `TestUcAccSchema` | P10 | Reproduced shared SDKv2 schema-slice mutation under -race. |
-| [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | `TestAccDashboardWithFilePath` | P4 | SDK check of returned serialized dashboard is not exposed in file-backed Terraform state. |
-| [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | `TestAccDashboardTestAll` | P4 | SDK checks of returned serialized dashboard and published embed-credentials are not exposed in state. |
 | [internal/acceptance/tf_provider_test.go](../../internal/acceptance/tf_provider_test.go) | `TestAccProviderPlanShouldSucceedWithIncompleteConfiguration` | P6 | Additional noop provider; already hermetic. |
 | [internal/acceptance/workspace_id_sdkv2_http_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_http_acc_test.go) | `TestMwsAccWorkspaceIDHttp_RemoveDefault` | P8 | Current diagnostic differs from the original expectation. |
 | [internal/acceptance/workspace_id_sdkv2_http_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_http_acc_test.go) | `TestMwsAccWorkspaceIDHttp_RemoveOverrideNoFallback` | P8 | Current diagnostic differs from the original expectation. |
@@ -80,4 +78,3 @@ does not require different replay fixtures or prevent writing the test.
 | [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_AddMultipleColumns` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
 | [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_AddColumnAndUpdateThrows` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
 | [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_DropColumnAndUpdateThrows` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [storage/file_test.go](../../storage/file_test.go) | `TestUcAccFileUpdateServerChange` | P4 | SDK file mutation during Check intentionally triggers post-apply drift; later SDK download checks the resulting bytes. |

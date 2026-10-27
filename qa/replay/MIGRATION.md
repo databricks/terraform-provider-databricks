@@ -5,10 +5,11 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**476 copied; 69 pending.** Counts refer to original Go test functions, not
-individual steps or cloud permutations. A copy must preserve meaningful
-assertions; unsupported assertions remain pending rather than being omitted.
-Original files are unchanged.
+**479 copied; 66 pending.** Counts refer to original Go test functions, not
+individual steps or cloud permutations. Copies preserve provider-owned behavior
+and meaningful assertions. Backend-only persistence checks are omitted; fixture
+requests verify what the provider sends. Unsupported provider behavior remains
+pending. Original files are unchanged.
 
 Suite assignment requires reading each scenario. In particular, do not infer
 the subject from the first HCL resource: it may be a prerequisite.
@@ -67,7 +68,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [clusters/data_clusters_acc_test.go](../../clusters/data_clusters_acc_test.go) | 3 | 0 |
 | [clusters/data_spark_version_acc_test.go](../../clusters/data_spark_version_acc_test.go) | 1 | 0 |
 | [clusters/node_type_test.go](../../clusters/node_type_test.go) | 6 | 0 |
-| [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | 6 | 2 |
+| [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | 8 | 0 |
 | [finops/budget_test.go](../../finops/budget_test.go) | 2 | 0 |
 | [internal/acceptance/aibi_embedding_settings_test.go](../../internal/acceptance/aibi_embedding_settings_test.go) | 1 | 0 |
 | [internal/acceptance/tf_provider_test.go](../../internal/acceptance/tf_provider_test.go) | 0 | 1 |
@@ -176,7 +177,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [sql/sql_widget_provider_config_test.go](../../sql/sql_widget_provider_config_test.go) | 1 | 0 |
 | [storage/dbfs_file_provider_config_test.go](../../storage/dbfs_file_provider_config_test.go) | 1 | 0 |
 | [storage/dbfs_file_test.go](../../storage/dbfs_file_test.go) | 2 | 0 |
-| [storage/file_test.go](../../storage/file_test.go) | 6 | 1 |
+| [storage/file_test.go](../../storage/file_test.go) | 7 | 0 |
 | [storage/mount_provider_config_test.go](../../storage/mount_provider_config_test.go) | 1 | 0 |
 | [tokens/obo_token_provider_config_test.go](../../tokens/obo_token_provider_config_test.go) | 1 | 0 |
 | [tokens/obo_token_test.go](../../tokens/obo_token_test.go) | 1 | 0 |
@@ -460,8 +461,8 @@ reset provider globals, relax fixture consumption or use dynamic IDs to hide it.
 
 ## Local-file and upload lifecycles
 
-This batch copies **26 source functions**, bringing the inventory to
-**476 copied / 69 pending**. Original acceptance tests remain unchanged.
+This batch copies **29 source functions**, bringing the inventory to
+**479 copied / 66 pending**. Original acceptance tests remain unchanged.
 
 - Notebooks retain path renames and DBC/IPYNB content updates. Dedicated
   provider-configuration cases retain matching, removed and rejected workspace
@@ -473,18 +474,24 @@ This batch copies **26 source functions**, bringing the inventory to
 - Volume files retain source/base64 lifecycles and changed/unchanged inputs.
   Fixed metadata timestamps preserve the original equality/inequality checks
   through provider-read state. Exact upload requests also reject unintended or
-  missing updates.
+  missing updates. External file edits appear in the next refresh's metadata;
+  unchanged HCL must cause the configured bytes to be uploaded again.
+- File-backed dashboards retain content updates, explicit false/true publish
+  flags, remote edits, and parent-path replacement. Exact create/update/publish
+  requests validate provider behavior; MD5 checks validate local file hashing.
+  SDK assertions that the backend persisted dashboard JSON or publish settings
+  are omitted.
 - Notebook and workspace-file permissions retain both path/ID variants, all
   principal transitions, and rejected management-permission removal. Their
   independent resources retain ordinary Terraform concurrency.
 
 Inputs are deliberately small: comment-only Python, an empty file, a tiny ZIP,
-and minimal DBC/IPYNB notebooks. Updated inputs still change the uploaded bytes.
+minimal DBC/IPYNB notebooks, and one-page dashboard JSON. Updated inputs still
+change the uploaded bytes.
 YAML anchors repeat consumed fixtures; they do not make calls optional. All API
 responses are inferred and marked; no live server or recorder was used.
 
-Of the 29 cases previously grouped under file/payload blockers, three still need
-additional checks and are now classified under P4: two dashboards inspect API
-fields omitted from file-backed state, and one volume-file case mutates the
-server during Check and validates downloaded bytes. Their assertions have not
-been dropped.
+All 29 cases previously grouped under file/payload blockers are copied. The
+volume-file SDK mutation is modeled by the next refresh response; its artificial
+check-hook refresh error and SDK download assertion are omitted. The replay
+verifies the provider reconciles the edit by uploading the configured bytes.

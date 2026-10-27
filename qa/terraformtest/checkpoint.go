@@ -37,7 +37,7 @@ func seedInitialCheckpoint(t *testing.T, definition *testDefinition, testCase *r
 	}
 	first.Config = ""
 	first.ConfigDirectory = config.StaticDirectory(directory)
-	if first.ImportState {
+	if first.ImportState && !first.ImportStatePersist {
 		excludeCheckpointFromImport(first, directory)
 	}
 	useStepProviderFactories(testCase)

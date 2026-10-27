@@ -57,6 +57,8 @@ steps:
   - name: import
     import:
       resource: databricks_catalog.test
+      # Verify the importer in separate state, then discard that state.
+      persist: false
       verify: true
       ignore:
         - updated_at

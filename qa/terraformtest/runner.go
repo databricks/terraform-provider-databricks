@@ -98,8 +98,8 @@ func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Ha
 			hcl = cleanupConfig
 		}
 		testStep := configuredStep(t, handler, label, hcl, s)
-		if s.ExpectError == nil && s.Import == nil && (!s.PlanOnly || !hasApplyConfig) {
-			cleanupConfig = s.Config
+		if s.ExpectError == nil && (s.Import == nil || *s.Import.Persist) && (!s.PlanOnly || !hasApplyConfig) {
+			cleanupConfig = hcl
 			hasApplyConfig = !s.PlanOnly
 		} else if s.Import != nil && !hasApplyConfig && definition.InitialState != nil {
 			cleanupConfig = hcl

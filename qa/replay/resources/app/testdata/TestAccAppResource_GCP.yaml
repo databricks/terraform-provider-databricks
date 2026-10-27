@@ -1,0 +1,549 @@
+# Placeholder API responses inferred from API models; not recorded.
+version: 1
+host_metadata:
+  host_type: workspace
+  cloud: GCP
+  workspace_id: '12345'
+steps:
+  - name: create
+    config: |
+      resource "databricks_secret_scope" "this" {
+        name = "tf-replay"
+      }
+
+      resource "databricks_secret" "this" {
+        scope        = databricks_secret_scope.this.name
+        key          = "tf-replay"
+        string_value = "secret"
+      }
+
+      resource "databricks_sql_endpoint" "this" {
+        name             = "tf-replay"
+        cluster_size     = "2X-Small"
+        max_num_clusters = 1
+
+        tags {
+          custom_tags {
+            key   = "Owner"
+            value = "eng-dev-ecosystem-team_at_databricks.com"
+          }
+        }
+      }
+
+      resource "databricks_job" "this" {
+        name = "tf-replay"
+      }
+
+      resource "databricks_app" "this" {
+        name        = "tf-replay"
+        description = "My app"
+        resources = [
+          {
+            name        = "secret"
+            description = "secret for app"
+            secret = {
+              scope      = databricks_secret_scope.this.name
+              key        = databricks_secret.this.key
+              permission = "MANAGE"
+            }
+          },
+          {
+            name        = "warehouse"
+            description = "warehouse for app"
+            job = {
+              id         = databricks_job.this.id
+              permission = "CAN_MANAGE"
+            }
+          },
+          {
+            name        = "sql warehouse"
+            description = "sql warehouse for app"
+            sql_warehouse = {
+              id         = databricks_sql_endpoint.this.id
+              permission = "CAN_MANAGE"
+            }
+          }
+        ]
+      }
+
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/secrets/scopes/create
+          body:
+            json:
+              scope: tf-replay
+              scope_backend_type: DATABRICKS
+        response:
+          status: 200
+          body: null
+      - &get_list_2
+        request:
+          method: GET
+          path: /api/2.0/secrets/scopes/list
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              scopes:
+                - backend_type: DATABRICKS
+                  name: tf-replay
+      - request:
+          method: POST
+          path: /api/2.0/secrets/put
+          body:
+            json:
+              key: tf-replay
+              scope: tf-replay
+              string_value: secret
+        response:
+          status: 200
+          body: null
+      - &get_list_3
+        request:
+          method: GET
+          path: /api/2.0/secrets/list
+          query:
+            scope:
+              - tf-replay
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              secrets:
+                - key: tf-replay
+                  last_updated_timestamp: 1700000000000
+      - request:
+          method: POST
+          path: /api/2.0/sql/warehouses
+          body:
+            json:
+              auto_stop_mins: 120
+              cluster_size: 2X-Small
+              enable_photon: true
+              max_num_clusters: 1
+              name: tf-replay
+              spot_instance_policy: COST_OPTIMIZED
+              tags:
+                custom_tags:
+                  - key: Owner
+                    value: eng-dev-ecosystem-team_at_databricks.com
+        response:
+          status: 200
+          body:
+            json:
+              id: warehouse-1
+      - &get_warehouse_1_1
+        request:
+          method: GET
+          path: /api/2.0/sql/warehouses/warehouse-1
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              auto_stop_mins: 120
+              cluster_size: 2X-Small
+              enable_photon: true
+              enable_serverless_compute: false
+              id: warehouse-1
+              max_num_clusters: 1
+              min_num_clusters: 1
+              name: tf-replay
+              odbc_params:
+                hostname: replay.cloud.databricks.com
+                path: /sql/1.0/warehouses/warehouse-1
+                port: 443
+                protocol: https
+              spot_instance_policy: COST_OPTIMIZED
+              state: RUNNING
+              tags:
+                custom_tags:
+                  - key: Owner
+                    value: eng-dev-ecosystem-team_at_databricks.com
+              creator_name: replay-admin
+      - *get_warehouse_1_1
+      - &get_data_sources_4
+        request:
+          method: GET
+          path: /api/2.0/preview/sql/data_sources
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              - id: datasource-1
+                warehouse_id: warehouse-1
+              - id: datasource-2
+                warehouse_id: warehouse-2
+      - request:
+          method: POST
+          path: /api/2.0/jobs/create
+          body:
+            json:
+              name: tf-replay
+              max_concurrent_runs: 1
+        response:
+          status: 200
+          body:
+            json:
+              job_id: 123
+      - &get_get_5
+        request:
+          method: GET
+          path: /api/2.0/jobs/get
+          body: null
+          query:
+            job_id:
+              - '123'
+        response:
+          status: 200
+          body:
+            json:
+              job_id: 123
+              settings:
+                name: tf-replay
+                max_concurrent_runs: 1
+      - request:
+          method: POST
+          path: /api/2.0/apps
+          body:
+            json:
+              name: tf-replay
+              description: My app
+              resources:
+                - name: secret
+                  description: secret for app
+                  secret:
+                    scope: tf-replay
+                    key: tf-replay
+                    permission: MANAGE
+                - name: warehouse
+                  description: warehouse for app
+                  job:
+                    id: '123'
+                    permission: CAN_MANAGE
+                - name: sql warehouse
+                  description: sql warehouse for app
+                  sql_warehouse:
+                    id: warehouse-1
+                    permission: CAN_MANAGE
+        response:
+          status: 200
+          body:
+            json:
+              name: tf-replay
+              description: My app
+              resources:
+                - name: secret
+                  description: secret for app
+                  secret:
+                    scope: tf-replay
+                    key: tf-replay
+                    permission: MANAGE
+                - name: warehouse
+                  description: warehouse for app
+                  job:
+                    id: '123'
+                    permission: CAN_MANAGE
+                - name: sql warehouse
+                  description: sql warehouse for app
+                  sql_warehouse:
+                    id: warehouse-1
+                    permission: CAN_MANAGE
+              compute_status:
+                state: ACTIVE
+              create_time: '2026-01-01T00:00:00Z'
+              update_time: '2026-01-01T00:00:00Z'
+      - &get_tf_replay_6
+        request:
+          method: GET
+          path: /api/2.0/apps/tf-replay
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              name: tf-replay
+              description: My app
+              resources:
+                - name: secret
+                  description: secret for app
+                  secret:
+                    scope: tf-replay
+                    key: tf-replay
+                    permission: MANAGE
+                - name: warehouse
+                  description: warehouse for app
+                  job:
+                    id: '123'
+                    permission: CAN_MANAGE
+                - name: sql warehouse
+                  description: sql warehouse for app
+                  sql_warehouse:
+                    id: warehouse-1
+                    permission: CAN_MANAGE
+              compute_status:
+                state: ACTIVE
+              create_time: '2026-01-01T00:00:00Z'
+              update_time: '2026-01-01T00:00:00Z'
+      - *get_list_2
+      - *get_list_3
+      - *get_warehouse_1_1
+      - *get_data_sources_4
+      - *get_get_5
+      - *get_tf_replay_6
+    state:
+      resources:
+        databricks_app.this:
+          attributes:
+            - path:
+                - update_time
+              equals: '2026-01-01T00:00:00Z'
+  - name: update
+    config: |
+      resource "databricks_secret_scope" "this" {
+        name = "tf-replay"
+      }
+
+      resource "databricks_secret" "this" {
+        scope        = databricks_secret_scope.this.name
+        key          = "tf-replay"
+        string_value = "secret"
+      }
+
+      resource "databricks_sql_endpoint" "this" {
+        name             = "tf-replay"
+        cluster_size     = "2X-Small"
+        max_num_clusters = 1
+
+        tags {
+          custom_tags {
+            key   = "Owner"
+            value = "eng-dev-ecosystem-team_at_databricks.com"
+          }
+        }
+      }
+
+      resource "databricks_job" "this" {
+        name = "tf-replay"
+      }
+
+      resource "databricks_app" "this" {
+        name        = "tf-replay"
+        description = "My new app"
+        resources = [
+          {
+            name        = "secret"
+            description = "secret for app"
+            secret = {
+              scope      = databricks_secret_scope.this.name
+              key        = databricks_secret.this.key
+              permission = "MANAGE"
+            }
+          },
+          {
+            name        = "warehouse"
+            description = "warehouse for app"
+            job = {
+              id         = databricks_job.this.id
+              permission = "CAN_MANAGE"
+            }
+          },
+          {
+            name        = "sql warehouse"
+            description = "sql warehouse for app"
+            sql_warehouse = {
+              id         = databricks_sql_endpoint.this.id
+              permission = "CAN_MANAGE"
+            }
+          }
+        ]
+      }
+
+    calls:
+      - *get_list_2
+      - *get_list_3
+      - *get_warehouse_1_1
+      - *get_data_sources_4
+      - *get_get_5
+      - *get_tf_replay_6
+      - request:
+          method: PATCH
+          path: /api/2.0/apps/tf-replay
+          body:
+            json:
+              name: tf-replay
+              description: My new app
+              resources:
+                - name: secret
+                  description: secret for app
+                  secret:
+                    scope: tf-replay
+                    key: tf-replay
+                    permission: MANAGE
+                - name: warehouse
+                  description: warehouse for app
+                  job:
+                    id: '123'
+                    permission: CAN_MANAGE
+                - name: sql warehouse
+                  description: sql warehouse for app
+                  sql_warehouse:
+                    id: warehouse-1
+                    permission: CAN_MANAGE
+              create_time: '2026-01-01T00:00:00Z'
+        response:
+          status: 200
+          body:
+            json:
+              name: tf-replay
+              description: My new app
+              resources:
+                - name: secret
+                  description: secret for app
+                  secret:
+                    scope: tf-replay
+                    key: tf-replay
+                    permission: MANAGE
+                - name: warehouse
+                  description: warehouse for app
+                  job:
+                    id: '123'
+                    permission: CAN_MANAGE
+                - name: sql warehouse
+                  description: sql warehouse for app
+                  sql_warehouse:
+                    id: warehouse-1
+                    permission: CAN_MANAGE
+              compute_status:
+                state: ACTIVE
+              create_time: '2026-01-01T00:00:00Z'
+              update_time: '2026-01-02T00:00:00Z'
+      - *get_list_2
+      - *get_list_3
+      - *get_warehouse_1_1
+      - *get_data_sources_4
+      - *get_get_5
+      - &get_tf_replay_7
+        request:
+          method: GET
+          path: /api/2.0/apps/tf-replay
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              name: tf-replay
+              description: My new app
+              resources:
+                - name: secret
+                  description: secret for app
+                  secret:
+                    scope: tf-replay
+                    key: tf-replay
+                    permission: MANAGE
+                - name: warehouse
+                  description: warehouse for app
+                  job:
+                    id: '123'
+                    permission: CAN_MANAGE
+                - name: sql warehouse
+                  description: sql warehouse for app
+                  sql_warehouse:
+                    id: warehouse-1
+                    permission: CAN_MANAGE
+              compute_status:
+                state: ACTIVE
+              create_time: '2026-01-01T00:00:00Z'
+              update_time: '2026-01-02T00:00:00Z'
+    state:
+      resources:
+        databricks_app.this:
+          attributes:
+            - path:
+                - update_time
+              equals: '2026-01-02T00:00:00Z'
+  - name: import_by_name
+    import:
+      resource: databricks_app.this
+      id: tf-replay
+      persist: false
+    calls:
+      - *get_tf_replay_7
+destroy:
+  calls:
+    - *get_list_2
+    - *get_list_3
+    - *get_warehouse_1_1
+    - *get_data_sources_4
+    - *get_get_5
+    - *get_tf_replay_7
+    - request:
+        method: DELETE
+        path: /api/2.0/apps/tf-replay
+        body: null
+      response:
+        status: 200
+        body:
+          json:
+            name: tf-replay
+            description: My new app
+            resources:
+              - name: secret
+                description: secret for app
+                secret:
+                  scope: tf-replay
+                  key: tf-replay
+                  permission: MANAGE
+              - name: warehouse
+                description: warehouse for app
+                job:
+                  id: '123'
+                  permission: CAN_MANAGE
+              - name: sql warehouse
+                description: sql warehouse for app
+                sql_warehouse:
+                  id: warehouse-1
+                  permission: CAN_MANAGE
+            compute_status:
+              state: ACTIVE
+            create_time: '2026-01-01T00:00:00Z'
+            update_time: '2026-01-02T00:00:00Z'
+    - request:
+        method: DELETE
+        path: /api/2.0/sql/warehouses/warehouse-1
+        body: null
+      response:
+        status: 200
+        body: null
+    - request:
+        method: POST
+        path: /api/2.2/jobs/delete
+        body:
+          json:
+            job_id: 123
+      response:
+        status: 200
+        body: null
+    - request:
+        method: POST
+        path: /api/2.0/secrets/delete
+        body:
+          json:
+            key: tf-replay
+            scope: tf-replay
+      response:
+        status: 200
+        body: null
+    - request:
+        method: POST
+        path: /api/2.0/secrets/scopes/delete
+        body:
+          json:
+            scope: tf-replay
+      response:
+        status: 200
+        body: null

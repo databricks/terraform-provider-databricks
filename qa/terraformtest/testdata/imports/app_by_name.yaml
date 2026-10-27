@@ -1,54 +1,60 @@
 # Placeholder API responses; not recorded.
 version: 1
-host_metadata: {workspace_id: "12345"}
+host_metadata:
+  workspace_id: '12345'
 steps:
-  - name: create
+  - name: import_by_name
     config: |
       resource "databricks_app" "this" {
         name = "replay-import-app"
         description = "Import example"
-        no_compute = true
       }
+    import:
+      resource: databricks_app.this
+      persist: true
+      id: replay-import-app
     calls:
-      - request:
-          method: POST
-          path: /api/2.0/apps
-          query: {no_compute: ["true"]}
-          body:
-            json:
-              name: replay-import-app
-              description: Import example
-        response: &app_response
+      - &id001
+        request:
+          method: GET
+          path: /api/2.0/apps/replay-import-app
+          body: null
+        response: &id002
           status: 200
           body:
             json:
               name: replay-import-app
               description: Import example
-              compute_status: {state: STOPPED}
-              create_time: "2026-01-01T00:00:00Z"
-              update_time: "2026-01-01T00:00:00Z"
-      - &read_app
-        request:
-          method: GET
-          path: /api/2.0/apps/replay-import-app
-          body: null
-        response: *app_response
-      - *read_app
-  - name: import_by_name
-    import:
-      resource: databricks_app.this
-      id: replay-import-app
-      verify: true
-      identifier_attribute: name
-      # This creation-only flag is not returned by the API during import.
-      ignore: [no_compute]
+              compute_status:
+                state: STOPPED
+              create_time: '2026-01-01T00:00:00Z'
+              update_time: '2026-01-01T00:00:00Z'
+  - name: check_imported_app
+    config: |
+      resource "databricks_app" "this" {
+        name = "replay-import-app"
+        description = "Import example"
+      }
+    plan_only: true
+    plan:
+      expect: empty
     calls:
-      - *read_app
+      - *id001
+    state:
+      resources:
+        databricks_app.this:
+          attributes:
+            - path:
+                - name
+              equals: replay-import-app
+            - path:
+                - description
+              equals: Import example
 destroy:
   calls:
-    - *read_app
+    - *id001
     - request:
         method: DELETE
         path: /api/2.0/apps/replay-import-app
         body: null
-      response: *app_response
+      response: *id002

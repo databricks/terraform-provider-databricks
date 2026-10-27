@@ -1,48 +1,130 @@
 # Placeholder API responses; not recorded.
 version: 1
-host_metadata: {workspace_id: "12345"}
+host_metadata:
+  workspace_id: '12345'
 steps:
-  - name: create
+  - name: import
     config: |
       resource "databricks_group" "this" {
         display_name = "Example group"
       }
+    import:
+      resource: databricks_group.this
+      persist: true
+      id: group-id
     calls:
-      - request:
-          method: POST
-          path: /api/2.0/preview/scim/v2/Groups
-          body:
-            json:
-              displayName: Example group
-              schemas: [urn:ietf:params:scim:schemas:core:2.0:Group]
-              entitlements: [{}]
-        response:
-          status: 201
-          body:
-            json: {id: group-id}
-      - &read_group
+      - &id001
         request:
           method: GET
           path: /api/2.0/preview/scim/v2/Groups/group-id
           query:
-            attributes: ["displayName,externalId,entitlements"]
+            attributes:
+              - displayName,externalId,entitlements
           body: null
         response:
           status: 200
           body:
-            json: {id: group-id, displayName: Example group, entitlements: []}
-      - *read_group
-  - name: import
-    # Defaults to the existing resource ID and the last applied configuration.
-    import:
-      resource: databricks_group.this
+            json:
+              id: group-id
+              displayName: Example group
+              entitlements: []
+      - *id001
+  - name: update_existing_group
+    config: |
+      resource "databricks_group" "this" {
+        display_name = "Updated group"
+      }
     calls:
-      # The SDKv2 importer reads once, then Terraform refreshes the imported state.
-      - *read_group
-      - *read_group
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/group-id
+          query:
+            attributes:
+              - displayName,externalId,entitlements
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              id: group-id
+              displayName: Example group
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/group-id
+          query:
+            attributes:
+              - displayName,entitlements,groups,members,externalId
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              id: group-id
+              displayName: Example group
+      - request:
+          method: PUT
+          path: /api/2.0/preview/scim/v2/Groups/group-id
+          body:
+            json:
+              schemas:
+                - urn:ietf:params:scim:schemas:core:2.0:Group
+              displayName: Updated group
+              entitlements:
+                - {}
+        response:
+          status: 200
+          body: null
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/group-id
+          query:
+            attributes:
+              - displayName,externalId,entitlements
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              id: group-id
+              displayName: Updated group
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/group-id
+          query:
+            attributes:
+              - displayName,externalId,entitlements
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              id: group-id
+              displayName: Updated group
+    state:
+      resources:
+        databricks_group.this:
+          attributes:
+            - path:
+                - id
+              equals: group-id
+            - path:
+                - acl_principal_id
+              equals: groups/Updated group
 destroy:
   calls:
-    - *read_group
+    - request:
+        method: GET
+        path: /api/2.0/preview/scim/v2/Groups/group-id
+        query:
+          attributes:
+            - displayName,externalId,entitlements
+        body: null
+      response:
+        status: 200
+        body:
+          json:
+            id: group-id
+            displayName: Updated group
     - request:
         method: DELETE
         path: /api/2.0/preview/scim/v2/Groups/group-id

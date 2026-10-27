@@ -240,51 +240,73 @@ state instead. Invalid or empty error patterns fail before Terraform runs.
 ## Import steps
 
 An `import` step runs `terraform import` through HashiCorp's test framework,
-using the step's ordinary HTTP fixtures. It requires a prior successful apply
-or an initial checkpoint. With a checkpoint, the first step must include `config`;
-later import steps may omit it to reuse the last applied configuration.
+using ordinary HTTP fixtures. Every import must explicitly set `persist`:
+
+- `persist: false` imports into separate, empty state and discards it afterward.
+  Later steps and destroy use the journey's original state. This exercises the
+  importer without adopting the resource into the journey.
+- `persist: true` imports into the journey's current state. Later steps can use
+  or update the resource, and automatic destroy cleans it up alongside existing
+  resources. Terraform rejects an address that is already managed.
 
 ```yaml
-- name: import_catalog
+- name: verify_catalog_import
   import:
     resource: databricks_catalog.test
+    persist: false
     verify: true
     ignore: [updated_at, updated_by]
   calls:
     # GET requests made by the importer and Terraform's import refresh.
 ```
 
-`resource` is the existing Terraform instance address. Optional `id` is a literal
-import identifier; omission uses the resource's current state ID. For resources
-without an `id` attribute, supply `id` explicitly, for example an app's name or a
-quality monitor's table name. Composite IDs and alternate formats are literal
-strings, with no interpolation or state-editing expressions.
+`resource` is the Terraform instance address. A persistent import requires a
+literal `id`. A nonpersistent import can omit `id` to use the resource's prior
+state ID; without prior state, it also requires an explicit ID. Composite IDs
+and alternate formats are literal strings, with no interpolation or state-editing
+expressions. The first import step requires `config`; subsequent imports may
+omit it to reuse the last successful lifecycle configuration.
 
-`verify` defaults to `false`, checking import success and fixture consumption.
-Set it to `true` to compare imported attributes against the pre-import state
-using HashiCorp's strict import verification. Optional `ignore` lists attribute
-prefixes excluded from that comparison, using HashiCorp's flattened names such
-as `updated_at` or `options.bearer_token`. Use narrow prefixes: `name` also
-matches other attributes beginning with `name`. `identifier_attribute` chooses
-which attribute matches imported and prior instances; it defaults to `id`.
-Both `ignore` and `identifier_attribute` require `verify: true`.
+For example, a resource already present remotely can be adopted as the first
+step without a create step or a checkpoint:
 
-HashiCorp imports into a separate working directory and discards the imported
-state afterward. Later steps and automatic destroy continue with the original
-lifecycle state, including other managed resources. This tests the importer;
-it does not adopt a new resource into the lifecycle. Import-only HCL does not
-replace the last applied configuration used for cleanup. Local input files are
-available in the import directory too.
+```yaml
+- name: import_existing_group
+  config: |
+    resource "databricks_group" "this" {
+      display_name = "Example group"
+    }
+  import:
+    resource: databricks_group.this
+    id: group-id
+    persist: true
+  calls:
+    # Supply the importer's GET responses for group-id.
+```
 
-An import step may use `expect_error` with verification disabled. It cannot use
-`plan`, `plan_only`, or `state`: those checks do not execute in HashiCorp's import
-flow. Use `import.verify` for import-state comparison and a later apply/plan step
-for the usual checks. Unexpected and unused HTTP calls still fail independently
-of expected errors. Plan-based import blocks and persisting imported state are
-not exposed yet.
+With `persist: false`, optional `verify: true` compares the imported attributes
+against prior state using HashiCorp's strict import verification. `verify`
+defaults to false. Verification requires prior state from an apply or checkpoint.
+Optional `ignore` lists excluded attribute prefixes in HashiCorp's flattened
+notation, such as `updated_at` or `options.bearer_token`. Use narrow prefixes:
+`name` also matches other attributes beginning with `name`.
+`identifier_attribute` selects the attribute used to match prior and imported
+instances; it defaults to `id`. Both fields require `verify: true`.
 
-Runnable examples cover [SDKv2 groups](testdata/imports/group.yaml) and
-[Plugin Framework apps imported by name](testdata/imports/app_by_name.yaml).
+Persistent imports use ordinary state or plan assertions in a following step;
+`import.verify` is reserved for the separate-state comparison. Native import
+skips ordinary `plan`, `plan_only`, and `state` checks, so those fields are rejected
+on import steps. `expect_error` is supported with verification disabled.
+Unexpected and unused HTTP calls fail independently of expected errors.
+
+A successful persistent import retains its configuration for subsequent imports
+and cleanup. A nonpersistent import leaves the lifecycle configuration unchanged.
+Local input files and initial checkpoints work with both modes. Plan-based import
+blocks are not exposed as a YAML operation.
+
+Examples cover [group import followed by update](testdata/imports/group.yaml),
+[app import by name](testdata/imports/app_by_name.yaml), and
+[separate-state verification](testdata/imports/app_verification.yaml).
 
 ## Initial state
 

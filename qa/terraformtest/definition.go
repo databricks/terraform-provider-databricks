@@ -130,9 +130,9 @@ func (d *testDefinition) validate() error {
 			return fmt.Errorf("%s: %w", label, err)
 		}
 		if i == 0 && s.Import != nil && strings.TrimSpace(s.Config) == "" {
-			return fmt.Errorf("%s: config is required when importing from initial_state", label)
+			return fmt.Errorf("%s: config is required for the first import step", label)
 		}
-		if s.Import == nil && !s.PlanOnly && s.ExpectError == nil {
+		if s.ExpectError == nil && !s.PlanOnly && (s.Import == nil || *s.Import.Persist) {
 			hasPriorState = true
 		}
 	}

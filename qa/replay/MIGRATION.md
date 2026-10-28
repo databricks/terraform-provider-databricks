@@ -526,8 +526,8 @@ updates, preservation of existing resources/checkpoints, and automatic destroy.
 
 ## Remaining supported YAML lifecycles
 
-This batch copies **25 original functions** as 29 YAML scenarios, including AWS,
-Azure and GCP permutations. The inventory is **509 copied / 36 pending**.
+This batch copies **23 original functions** as 27 YAML scenarios, including AWS,
+Azure and GCP permutations. The inventory is **507 copied / 38 pending**.
 
 - Permission suites retain principal transitions and rejected loss of management
   rights. Pipeline permission deletion is a provider no-op; its backend owner
@@ -550,17 +550,18 @@ Azure and GCP permutations. The inventory is **509 copied / 36 pending**.
   computed-only field and requires an empty plan.
 
 Responses are marked placeholders, inferred from API models rather than captured
-from a live service. No integration test is changed. Notebook removal cases use
-ordinary expected-error steps: planning refreshes the old workspace successfully,
-then rejects the missing workspace fallback before apply. Workspace and account
-SCIM /Me fixtures distinguish requests by their workspace-routing header.
+from a live service. No integration test is changed.
 
 ## Provider migration and native workspace-token replays
 
-This batch copies **11 original functions** in 14 replay scenarios: 11 YAML and
+This batch copies **13 original functions** in 16 replay scenarios: 13 YAML and
 three native Go, including both NCC cloud forms. The inventory is
 **520 copied / 25 pending**.
 
+- Notebook removal cases use ordinary expected-error steps: planning refreshes
+  the old workspace successfully, then rejects the missing workspace fallback
+  before apply. Workspace and account SCIM /Me fixtures distinguish requests by
+  their workspace-routing header.
 - Endpoint rules explicitly select Plugin Framework for opt-in/import and switch
   SDKv2/PF in both directions. Settled connection state, strict import verification,
   and no-op migration plans remain checked.

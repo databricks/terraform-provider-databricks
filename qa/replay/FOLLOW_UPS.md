@@ -132,8 +132,9 @@ resources remain independent; the test adds no serialization or race suppression
 
 ## Remaining YAML conversion results
 
-P4, P18 and P19 now have replay copies (24 source functions across the combined
-remaining YAML batch). P19 includes the input-only timestamp preservation fix.
+P4 and P18 now have replay copies (23 source functions across the combined
+remaining YAML batch). P19 remains pending; its provider fix and dependent replay
+scenario are excluded from this YAML migration PR.
 P7 retains the source's ForceNew storage-root changes, so its three steps replace
 the metastore; the independent in-place rename concern is not fixed. P10 remains
 a provider/SDK race to fix separately, while its ordinary replay is now copied.

@@ -979,18 +979,3 @@ func TestUpdatePipelineCatalogToStorageForceNew(t *testing.T) {
 		}`,
 	}.ApplyNoError(t)
 }
-
-func TestResourcePipelineReadPreservesExpectedLastModified(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockPipelinesAPI().EXPECT().Get(mock.Anything, pipelines.GetPipelineRequest{PipelineId: "abcd"}).Return(&pipelines.GetPipelineResponse{
-				PipelineId: "abcd", Spec: &basicPipelineSpec, LastModified: 123457,
-			}, nil)
-		},
-		Resource: ResourcePipeline(), Read: true, ID: "abcd",
-		HCL: `expected_last_modified = 123456`,
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, 123456, d.Get("expected_last_modified"))
-	assert.Equal(t, 123457, d.Get("last_modified"))
-}

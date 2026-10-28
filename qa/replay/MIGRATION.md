@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**508 copied; 37 pending.** Counts refer to original Go test functions, not
+**507 copied; 38 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. Copies preserve provider-owned behavior
 and meaningful assertions. Backend-only persistence checks are omitted; fixture
 requests verify what the provider sends. Unsupported provider behavior remains
@@ -123,7 +123,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [permissions/resource_permissions_test.go](../../permissions/resource_permissions_test.go) | 0 | 1 |
 | [pipelines/data_pipelines_acc_test.go](../../pipelines/data_pipelines_acc_test.go) | 1 | 0 |
 | [pipelines/pipeline_provider_config_test.go](../../pipelines/pipeline_provider_config_test.go) | 1 | 0 |
-| [pipelines/pipeline_test.go](../../pipelines/pipeline_test.go) | 7 | 0 |
+| [pipelines/pipeline_test.go](../../pipelines/pipeline_test.go) | 6 | 1 |
 | [policies/cluster_policy_provider_config_test.go](../../policies/cluster_policy_provider_config_test.go) | 1 | 0 |
 | [pools/instance_pool_provider_config_test.go](../../pools/instance_pool_provider_config_test.go) | 1 | 0 |
 | [pools/resource_instance_pool_acc_test.go](../../pools/resource_instance_pool_acc_test.go) | 1 | 0 |
@@ -527,8 +527,8 @@ updates, preservation of existing resources/checkpoints, and automatic destroy.
 
 ## Remaining supported YAML lifecycles
 
-This batch copies **24 original functions** as 28 YAML scenarios, including AWS,
-Azure and GCP permutations. The inventory is **508 copied / 37 pending**.
+This batch copies **23 original functions** as 27 YAML scenarios, including AWS,
+Azure and GCP permutations. The inventory is **507 copied / 38 pending**.
 
 - Permission suites retain principal transitions and rejected loss of management
   rights. Pipeline permission deletion is a provider no-op; its backend owner
@@ -539,9 +539,8 @@ Azure and GCP permutations. The inventory is **508 copied / 37 pending**.
 - Continuous jobs retain all four steps and the provider's run/cancel requests.
   Cluster-policy defaults use a convergent API response, retaining the policy
   inputs without requiring permanent backend drift.
-- Pipelines retain explicit zero workers and optimistic-concurrency timestamps.
-  Read now preserves the request-only `expected_last_modified` value; a focused
-  unit regression covers it without inventing a GET-response field.
+- Pipelines retain explicit zero workers. The optimistic-concurrency timestamp
+  case remains pending under P19 because it requires a separate provider fix.
 - Schema grants remain independent resources. Metastore owner/name scenarios
   retain their changing storage roots and replacement plans; they do not prove
   an in-place metastore rename. The separate rename/API concern stays tracked.

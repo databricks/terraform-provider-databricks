@@ -308,17 +308,15 @@ func ResourcePipeline() common.Resource {
 				return fmt.Errorf("pipeline spec is nil for '%v'", readPipeline.PipelineId)
 			}
 			p := Pipeline{
-				// The API does not return this request-only concurrency precondition.
-				ExpectedLastModified: int64(d.Get("expected_last_modified").(int)),
-				PipelineSpec:         *readPipeline.Spec,
-				Cause:                readPipeline.Cause,
-				ClusterId:            readPipeline.ClusterId,
-				CreatorUserName:      readPipeline.CreatorUserName,
-				Health:               readPipeline.Health,
-				LastModified:         readPipeline.LastModified,
-				LatestUpdates:        readPipeline.LatestUpdates,
-				RunAsUserName:        readPipeline.RunAsUserName,
-				State:                readPipeline.State,
+				PipelineSpec:    *readPipeline.Spec,
+				Cause:           readPipeline.Cause,
+				ClusterId:       readPipeline.ClusterId,
+				CreatorUserName: readPipeline.CreatorUserName,
+				Health:          readPipeline.Health,
+				LastModified:    readPipeline.LastModified,
+				LatestUpdates:   readPipeline.LatestUpdates,
+				RunAsUserName:   readPipeline.RunAsUserName,
+				State:           readPipeline.State,
 				// Provides the URL to the pipeline in the Databricks UI.
 				URL: c.FormatURL("#joblist/pipelines/", d.Id()),
 			}

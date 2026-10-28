@@ -1,0 +1,185 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create_users_with_distinct_entitlements
+    config: |
+      resource "databricks_user" "first" {
+        user_name    = "tf-eerste+replay@example.com"
+        display_name = "Eerste replay"
+      }
+
+      resource "databricks_user" "second" {
+        user_name            = "tf-tweede+replay@example.com"
+        display_name         = "Tweede replay"
+        allow_cluster_create = true
+      }
+
+      resource "databricks_user" "third" {
+        user_name                  = "tf-derde+replay@example.com"
+        display_name               = "Derde replay"
+        allow_instance_pool_create = true
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Users
+          body:
+            json:
+              active: true
+              displayName: Derde replay
+              entitlements:
+                - value: allow-instance-pool-create
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-derde+replay@example.com
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              displayName: Derde replay
+              entitlements:
+                - value: allow-instance-pool-create
+              id: '9403'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-derde+replay@example.com
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Users
+          body:
+            json:
+              active: true
+              displayName: Eerste replay
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-eerste+replay@example.com
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              displayName: Eerste replay
+              entitlements: []
+              id: '9401'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-eerste+replay@example.com
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Users
+          body:
+            json:
+              active: true
+              displayName: Tweede replay
+              entitlements:
+                - value: allow-cluster-create
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-tweede+replay@example.com
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              displayName: Tweede replay
+              entitlements:
+                - value: allow-cluster-create
+              id: '9402'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-tweede+replay@example.com
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Users/9403
+          body: null
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+        response: *response_1 # Inferred API response; not recorded.
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Users/9401
+          body: null
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+        response: *response_2 # Inferred API response; not recorded.
+      - &call_3
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Users/9402
+          body: null
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+        response: *response_3 # Inferred API response; not recorded.
+      - *call_1
+      - *call_2
+      - *call_3
+    state:
+      resources:
+        databricks_user.first:
+          attributes:
+            - path: [allow_cluster_create]
+              equals: false
+            - path: [allow_instance_pool_create]
+              equals: false
+        databricks_user.second:
+          attributes:
+            - path: [allow_cluster_create]
+              equals: true
+            - path: [allow_instance_pool_create]
+              equals: false
+        databricks_user.third:
+          attributes:
+            - path: [allow_cluster_create]
+              equals: false
+            - path: [allow_instance_pool_create]
+              equals: true
+  - name: reapply_users
+    config: |
+      resource "databricks_user" "first" {
+        user_name    = "tf-eerste+replay@example.com"
+        display_name = "Eerste replay"
+      }
+
+      resource "databricks_user" "second" {
+        user_name            = "tf-tweede+replay@example.com"
+        display_name         = "Tweede replay"
+        allow_cluster_create = true
+      }
+
+      resource "databricks_user" "third" {
+        user_name                  = "tf-derde+replay@example.com"
+        display_name               = "Derde replay"
+        allow_instance_pool_create = true
+      }
+    calls:
+      - *call_3
+      - *call_1
+      - *call_2
+      - *call_3
+      - *call_1
+      - *call_2
+destroy:
+  calls:
+    - *call_1
+    - *call_3
+    - *call_2
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Users/9401
+        body: null
+      response: &response_4 # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Users/9403
+        body: null
+      response: *response_4 # Inferred API response; not recorded.
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Users/9402
+        body: null
+      response: *response_4 # Inferred API response; not recorded.

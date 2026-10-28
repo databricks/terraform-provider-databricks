@@ -588,7 +588,7 @@ are marked placeholders. Original integration tests remain unchanged.
 ## SQL-table lifecycles
 
 This batch copies **16 original functions**, retaining all 33 HCL steps and
-expected errors. The inventory is **534 copied / 11 pending**.
+expected errors. The inventory is **536 copied / 9 pending**.
 
 - Managed and identity-column tables retain property/comment/owner updates.
   Partitioned and liquid tables retain options and clustering configuration.

@@ -559,7 +559,7 @@ SCIM /Me fixtures distinguish requests by their workspace-routing header.
 
 This batch copies **11 original functions** in 14 replay scenarios: 11 YAML and
 three native Go, including both NCC cloud forms. The inventory is
-**518 copied / 27 pending**.
+**520 copied / 25 pending**.
 
 - Endpoint rules explicitly select Plugin Framework for opt-in/import and switch
   SDKv2/PF in both directions. Settled connection state, strict import verification,

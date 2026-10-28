@@ -26,6 +26,23 @@ import (
 // run keeps the fixture server alive through the framework's deferred destroy,
 // then checks for requests or fixtures left over after cleanup.
 func run(t *testing.T, definition *testDefinition) {
+	runNative(t, definition, nil)
+}
+
+// RunNative runs one fixture file with native HashiCorp test customization.
+// It is intended for Go scenarios requiring per-step provider factories or Go
+// checks. The customizer supplies isolated authentication and the same strict
+// local HTTP boundary as YAML replay; retain the generated cleanup hooks.
+func RunNative(t *testing.T, path string, configure func(*resource.TestCase, func(*config.Config) error)) {
+	t.Helper()
+	definition, err := loadDefinition(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runNative(t, definition, configure)
+}
+
+func runNative(t *testing.T, definition *testDefinition, configure func(*resource.TestCase, func(*config.Config) error)) {
 	t.Helper()
 	configureTerraform(t)
 	handler := httpfixture.NewHandler()
@@ -55,6 +72,9 @@ func run(t *testing.T, definition *testDefinition) {
 		seedInitialCheckpoint(t, definition, &testCase)
 	}
 	configureStepFiles(t, definition, &testCase)
+	if configure != nil {
+		configure(&testCase, fixtureConfig(server.URL))
+	}
 	resource.Test(t, testCase)
 }
 

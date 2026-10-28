@@ -149,3 +149,13 @@ retain the original diagnostic and automatic destroy. P9 remains pending: a
 native catalog probe reports update rather than replacement, consistent with
 routing-only update support in PR 5662; the share probe reports a workspace
 mismatch. Neither replacement assertion was changed.
+
+## Native Go conversion results
+
+P16 and P20 now have replay copies. Native Go tests select per-step factories,
+retain shared Terraform state and verify imports/no-op plans. Workspace-token
+cases use an explicit local-only alias in their Go transport, without adding
+host substitution or multiple-host features to YAML. The previously skipped
+AWS identity-switch scenario also has a five-step replay; fixed test credentials
+exercise provider token handling without OAuth propagation waits. No provider
+bug fixes are included in this batch.

@@ -178,3 +178,154 @@ func TestNDDelete(t *testing.T) {
 		`,
 	}.ApplyNoError(t)
 }
+
+func TestNDCreateDatabricksAppSlack(t *testing.T) {
+	nd := &settings.NotificationDestination{
+		Id:              "xyz",
+		DisplayName:     "Notification Destination",
+		DestinationType: settings.DestinationTypeDatabricksAppSlack,
+		Config: &settings.Config{
+			DatabricksAppSlack: &settings.DatabricksAppSlackConfig{
+				ChannelIdSet: true,
+				TeamIdSet:    true,
+			},
+		},
+	}
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockNotificationDestinationsAPI().EXPECT()
+			e.Create(mock.Anything, settings.CreateNotificationDestinationRequest{
+				DisplayName: "Notification Destination",
+				Config: &settings.Config{
+					DatabricksAppSlack: &settings.DatabricksAppSlackConfig{
+						ChannelId: "C0123456789",
+						TeamId:    "T0123456789",
+					},
+				},
+			}).Return(nd, nil)
+			e.Get(mock.Anything, settings.GetNotificationDestinationRequest{Id: "xyz"}).Return(nd, nil)
+		},
+		Resource: ResourceNotificationDestination(),
+		Create:   true,
+		HCL: `
+			display_name = "Notification Destination"
+			config {
+				databricks_app_slack {
+					channel_id = "C0123456789"
+					team_id    = "T0123456789"
+				}
+			}
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":               "xyz",
+		"destination_type": "DATABRICKS_APP_SLACK",
+		"config.0.databricks_app_slack.0.channel_id":     "C0123456789",
+		"config.0.databricks_app_slack.0.team_id":        "T0123456789",
+		"config.0.databricks_app_slack.0.channel_id_set": true,
+		"config.0.databricks_app_slack.0.team_id_set":    true,
+	})
+}
+
+func TestNDCreateDatabricksAppTeams(t *testing.T) {
+	nd := &settings.NotificationDestination{
+		Id:              "xyz",
+		DisplayName:     "Notification Destination",
+		DestinationType: settings.DestinationTypeDatabricksAppTeams,
+		Config: &settings.Config{
+			DatabricksAppTeams: &settings.DatabricksAppTeamsConfig{
+				ChannelIdSet: true,
+				TeamIdSet:    true,
+				TenantIdSet:  true,
+			},
+		},
+	}
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockNotificationDestinationsAPI().EXPECT()
+			e.Create(mock.Anything, settings.CreateNotificationDestinationRequest{
+				DisplayName: "Notification Destination",
+				Config: &settings.Config{
+					DatabricksAppTeams: &settings.DatabricksAppTeamsConfig{
+						ChannelId: "19:abc@thread.tacv2",
+						TeamId:    "team-guid",
+						TenantId:  "tenant-guid",
+					},
+				},
+			}).Return(nd, nil)
+			e.Get(mock.Anything, settings.GetNotificationDestinationRequest{Id: "xyz"}).Return(nd, nil)
+		},
+		Resource: ResourceNotificationDestination(),
+		Create:   true,
+		HCL: `
+			display_name = "Notification Destination"
+			config {
+				databricks_app_teams {
+					channel_id = "19:abc@thread.tacv2"
+					team_id    = "team-guid"
+					tenant_id  = "tenant-guid"
+				}
+			}
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":               "xyz",
+		"destination_type": "DATABRICKS_APP_TEAMS",
+		"config.0.databricks_app_teams.0.channel_id":    "19:abc@thread.tacv2",
+		"config.0.databricks_app_teams.0.team_id":       "team-guid",
+		"config.0.databricks_app_teams.0.tenant_id":     "tenant-guid",
+		"config.0.databricks_app_teams.0.tenant_id_set": true,
+	})
+}
+
+func TestNDReadKeepsInputOnlyDatabricksAppFields(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockNotificationDestinationsAPI().EXPECT().Get(mock.Anything, settings.GetNotificationDestinationRequest{
+				Id: "xyz",
+			}).Return(&settings.NotificationDestination{
+				Id:              "xyz",
+				DisplayName:     "Notification Destination",
+				DestinationType: settings.DestinationTypeDatabricksAppSlack,
+				Config: &settings.Config{
+					DatabricksAppSlack: &settings.DatabricksAppSlackConfig{
+						ChannelIdSet: true,
+						TeamIdSet:    true,
+					},
+				},
+			}, nil)
+		},
+		Resource: ResourceNotificationDestination(),
+		Read:     true,
+		ID:       "xyz",
+		HCL: `
+			display_name = "Notification Destination"
+			config {
+				databricks_app_slack {
+					channel_id = "C0123456789"
+					team_id    = "T0123456789"
+				}
+			}
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"config.0.databricks_app_slack.0.channel_id": "C0123456789",
+		"config.0.databricks_app_slack.0.team_id":    "T0123456789",
+	})
+}
+
+func TestNDDatabricksAppRequiresExactlyOneConfig(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceNotificationDestination(),
+		Create:   true,
+		HCL: `
+			display_name = "Notification Destination"
+			config {
+				databricks_app_slack {
+					channel_id = "C0123456789"
+					team_id    = "T0123456789"
+				}
+				email {
+					addresses = ["abc@email.com"]
+				}
+			}
+		`,
+	}.ExpectError(t, "invalid config supplied. [config.#.slack] Invalid combination of arguments")
+}

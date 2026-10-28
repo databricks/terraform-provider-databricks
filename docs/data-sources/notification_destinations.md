@@ -46,6 +46,8 @@ The following arguments are supported:
 
 * `display_name_contains` - (Optional) A **case-insensitive** substring to filter Notification Destinations by their display name. 
 * `type` - (Optional) The type of the Notification Destination to filter by. Valid values are: 
+  * `DATABRICKS_APP_SLACK` - Filters Notification Destinations of type Databricks app in Slack.
+  * `DATABRICKS_APP_TEAMS` - Filters Notification Destinations of type Databricks app in Microsoft Teams.
   * `EMAIL` - Filters Notification Destinations of type Email. 
   * `MICROSOFT_TEAMS` - Filters Notification Destinations of type Microsoft Teams. 
   * `PAGERDUTY` - Filters Notification Destinations of type PagerDuty.
@@ -59,6 +61,6 @@ In addition to all arguments above, the following attributes are exported:
 * `notification_destinations` - A list of Notification Destinations matching the specified criteria. Each element contains the following attributes: 
     * `id` - The unique ID of the Notification Destination.
     * `display_name` - The display name of the Notification Destination.
-    * `destination_type` - The type of the notification destination. Possible values are `EMAIL`, `MICROSOFT_TEAMS`, `PAGERDUTY`, `SLACK`, or `WEBHOOK`.
+    * `destination_type` - The type of the notification destination. Possible values are `DATABRICKS_APP_SLACK`, `DATABRICKS_APP_TEAMS`, `EMAIL`, `MICROSOFT_TEAMS`, `PAGERDUTY`, `SLACK`, or `WEBHOOK`.
 
 If no matches are found, an empty list will be returned.

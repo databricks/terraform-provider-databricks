@@ -58,8 +58,8 @@ func ResourceSqlEndpoint() common.Resource {
 	s := common.StructToSchema(SqlWarehouse{}, func(
 		m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["id"].Computed = true
-		m["statement_timeout"].Computed = true
-		m["statement_timeout"].Description = "Warehouse statement timeout in seconds."
+		common.SetDefault(m["statement_timeout"], 0)
+		m["statement_timeout"].Description = "Warehouse statement timeout in seconds. Defaults to 0, which uses the workspace timeout."
 		common.SetDefault(m["auto_stop_mins"], 120)
 		common.CustomizeSchemaPath(m, "channel").SetSuppressDiff()
 		common.MustSchemaPath(m, "channel", "name").Default = "CHANNEL_NAME_CURRENT"
@@ -155,7 +155,10 @@ func ResourceSqlEndpoint() common.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(warehouse, s, d)
+			if err := common.StructToData(warehouse, s, d); err != nil {
+				return err
+			}
+			return d.Set("statement_timeout", warehouse.StatementTimeout)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)

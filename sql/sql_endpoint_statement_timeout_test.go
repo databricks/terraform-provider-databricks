@@ -13,6 +13,19 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
+func TestSqlEndpointStatementTimeoutSchema(t *testing.T) {
+	resource := ResourceSqlEndpoint()
+	timeout := resource.Schema["statement_timeout"]
+	require.True(t, timeout.Optional)
+	require.False(t, timeout.Computed)
+	require.Equal(t, 0, timeout.Default)
+
+	dataSource := DataSourceWarehouse()
+	timeout = dataSource.Schema["statement_timeout"]
+	require.True(t, timeout.Computed)
+	require.Nil(t, timeout.Default)
+}
+
 func TestSqlEndpointStatementTimeout(t *testing.T) {
 	for _, update := range []bool{false, true} {
 		operation := "create"
@@ -27,7 +40,7 @@ func TestSqlEndpointStatementTimeout(t *testing.T) {
 		}{
 			{name: "positive", hcl: "statement_timeout = 3600", timeout: 3600},
 			{name: "zero", hcl: "statement_timeout = 0", force: []string{"StatementTimeout"}},
-			{name: "omitted"},
+			{name: "omitted", force: []string{"StatementTimeout"}},
 		} {
 			t.Run(operation+"/"+tc.name, func(t *testing.T) {
 				id := ""
@@ -35,14 +48,11 @@ func TestSqlEndpointStatementTimeout(t *testing.T) {
 					id = "abc"
 				}
 				var instanceState map[string]string
-				if update && tc.name == "zero" {
+				if update && (tc.name == "zero" || tc.name == "omitted") {
 					instanceState = map[string]string{"statement_timeout": "3600"}
 				}
 				response := getResponse
 				response.StatementTimeout = tc.timeout
-				if tc.name == "omitted" {
-					response.StatementTimeout = 7200
-				}
 				qa.ResourceFixture{
 					MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 						api := w.GetMockWarehousesAPI()
@@ -104,29 +114,49 @@ func TestSqlEndpointStatementTimeoutRead(t *testing.T) {
 	}
 }
 
-func TestSqlEndpointStatementTimeoutOmittedNoDiff(t *testing.T) {
-	response := getResponse
-	response.AutoStopMins = 120
-	response.EnablePhoton = true
-	response.SpotInstancePolicy = "COST_OPTIMIZED"
-	response.StatementTimeout = 3600
-	d, err := qa.ResourceFixture{
-		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockWarehousesAPI().EXPECT().GetById(mock.Anything, "abc").Return(&response, nil)
-			addDataSourceListHttpFixture(w)
-		},
-		Resource: ResourceSqlEndpoint(), ID: "abc", Read: true,
-	}.Apply(t)
-	require.NoError(t, err)
-	state := d.State().Attributes
-	state["name"] = "foo"
-	state["cluster_size"] = "Small"
-	state["odbc_params.#"] = "0"
-	qa.ResourceFixture{
-		Resource: ResourceSqlEndpoint(), ID: "abc",
-		InstanceState: state,
-		ExpectedDiff:  map[string]*terraform.ResourceAttrDiff{},
-		HCL: `name = "foo"
-cluster_size = "Small"`,
-	}.ApplyNoError(t)
+func TestSqlEndpointStatementTimeoutPlan(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		timeout int
+		hcl     string
+		reset   bool
+	}{
+		{name: "omitted_after_reset"},
+		{name: "explicit_zero", hcl: "statement_timeout = 0"},
+		{name: "configured", timeout: 3600, hcl: "statement_timeout = 3600"},
+		{name: "removed", timeout: 3600, reset: true},
+		{name: "clear", timeout: 3600, hcl: "statement_timeout = 0", reset: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			response := getResponse
+			response.AutoStopMins = 120
+			response.EnablePhoton = true
+			response.SpotInstancePolicy = "COST_OPTIMIZED"
+			response.StatementTimeout = tc.timeout
+			data, err := qa.ResourceFixture{
+				MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+					w.GetMockWarehousesAPI().EXPECT().GetById(mock.Anything, "abc").Return(&response, nil)
+					addDataSourceListHttpFixture(w)
+				},
+				Resource: ResourceSqlEndpoint(), ID: "abc", Read: true,
+			}.Apply(t)
+			require.NoError(t, err)
+			state := data.State().Attributes
+			state["name"] = "foo"
+			state["cluster_size"] = "Small"
+			state["odbc_params.#"] = "0"
+			expectedDiff := map[string]*terraform.ResourceAttrDiff{}
+			if tc.reset {
+				expectedDiff["statement_timeout"] = &terraform.ResourceAttrDiff{Old: "3600", New: "0"}
+			}
+			qa.ResourceFixture{
+				Resource: ResourceSqlEndpoint(), ID: "abc",
+				InstanceState: state,
+				ExpectedDiff:  expectedDiff,
+				HCL: `name = "foo"
+cluster_size = "Small"
+` + tc.hcl,
+			}.ApplyNoError(t)
+		})
+	}
 }

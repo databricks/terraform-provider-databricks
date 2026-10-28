@@ -1,0 +1,114 @@
+name: Test suite
+
+on:
+  workflow_call:
+    inputs:
+      suite:
+        description: "lint, unit, or a replay shard name"
+        required: true
+        type: string
+      packages:
+        description: "Space-separated Go package paths for a replay shard"
+        required: false
+        default: ""
+        type: string
+    secrets:
+      CODECOV_TOKEN:
+        required: false
+
+jobs:
+  run:
+    runs-on:
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
+
+    permissions:
+      # Inert on fork/Dependabot PRs, which use the pre-warmed module cache.
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Detect Go module proxy access
+        id: proxy-check
+        shell: bash
+        run: |
+          if [ -n "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+            echo "use_cache=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "use_cache=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Go build environment
+        uses: ./.github/actions/setup-go-build-environment
+        with:
+          go-version-file: go.mod
+          use-cache: ${{ steps.proxy-check.outputs.use_cache }}
+
+      - name: Pull external libraries
+        shell: bash
+        env:
+          USE_CACHE: ${{ steps.proxy-check.outputs.use_cache }}
+        run: |
+          if [ "$USE_CACHE" = "true" ]; then
+            # Dependency changes on fork PRs require a maintainer to run
+            # "Warm Go Cache" with the PR number before re-running checks.
+            go mod vendor
+          else
+            jf go mod vendor
+          fi
+
+          echo "GOPROXY=file://$(go env GOMODCACHE)/cache/download" >> "$GITHUB_ENV"
+          echo "GONOSUMCHECK=*" >> "$GITHUB_ENV"
+          echo "GONOSUMDB=*" >> "$GITHUB_ENV"
+
+      - name: Run lint
+        if: inputs.suite == 'lint'
+        run: make lint
+
+      - name: Setup Terraform
+        if: inputs.suite != 'lint'
+        uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1 # v2.0.3
+        with:
+          terraform_version: 1.13.5
+          terraform_wrapper: false
+
+      - name: Run tests
+        if: inputs.suite != 'lint'
+        shell: bash
+        env:
+          TEST_SUITE: ${{ inputs.suite }}
+          TEST_PACKAGES: ${{ inputs.packages }}
+        run: |
+          # Ambient GitHub OIDC credentials interfere with provider auth tests.
+          unset ACTIONS_ID_TOKEN_REQUEST_URL
+          unset ACTIONS_ID_TOKEN_REQUEST_TOKEN
+
+          if [ "$TEST_SUITE" = "unit" ]; then
+            go list -f '{{.ImportPath}} {{.Dir}}' ./... > "$RUNNER_TEMP/go-packages.txt"
+            python3 .github/scripts/test_suites.py unit \
+              < "$RUNNER_TEMP/go-packages.txt" > "$RUNNER_TEMP/unit-packages.txt"
+            mapfile -t packages < "$RUNNER_TEMP/unit-packages.txt"
+          else
+            read -r -a packages <<< "$TEST_PACKAGES"
+            if [ "${#packages[@]}" -eq 0 ]; then
+              echo "No replay packages selected" >&2
+              exit 1
+            fi
+          fi
+
+          go tool gotestsum --format pkgname-and-test-fails --no-summary=skipped \
+            --raw-command go test -v -json -short -coverprofile=coverage.txt "${packages[@]}"
+
+      - name: Publish test coverage
+        # Codecov combines the reports from all suites for this commit.
+        # No CODECOV_TOKEN on fork/Dependabot runs; skip the upload.
+        if: inputs.suite != 'lint' && steps.proxy-check.outputs.use_cache != 'true'
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
+        with:
+          files: coverage.txt
+          name: ${{ inputs.suite }}
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

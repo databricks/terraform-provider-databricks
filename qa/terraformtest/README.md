@@ -33,8 +33,13 @@ Tests run the actual muxed Databricks provider, supporting both SDKv2 and
 Plugin Framework resources.
 
 Install Terraform on `PATH`, or set `TF_ACC_TERRAFORM_PATH` to its executable.
-The normal GitHub Actions tests job installs Terraform 1.13.5 with its wrapper
-disabled so the test runner can invoke the CLI directly.
+The GitHub Actions unit and replay jobs install Terraform 1.13.5 with its wrapper
+disabled so the test runner can invoke the CLI directly. The build workflow runs
+non-replay tests in one job and groups Go test packages under `qa/replay/` into
+eight parallel replay jobs. Groups are balanced by YAML scenario count, and new
+replay packages are included automatically. Lint runs once in a separate job;
+the required `tests` check passes only when discovery, lint, unit tests, and every
+replay suite succeed. Codecov combines the coverage uploads from each test job.
 These hermetic tests run in the normal Go test suite, including `-short`;
 they do not require `TF_ACC`, live credentials, or `CLOUD_ENV`. The runner
 does not download Terraform. Client configuration ignores ambient credential

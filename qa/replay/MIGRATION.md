@@ -5,10 +5,11 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**450 copied; 95 pending.** Counts refer to original Go test functions, not
-individual steps or cloud permutations. A copy must preserve meaningful
-assertions; unsupported assertions remain pending rather than being omitted.
-Original files are unchanged.
+**479 copied; 66 pending.** Counts refer to original Go test functions, not
+individual steps or cloud permutations. Copies preserve provider-owned behavior
+and meaningful assertions. Backend-only persistence checks are omitted; fixture
+requests verify what the provider sends. Unsupported provider behavior remains
+pending. Original files are unchanged.
 
 Suite assignment requires reading each scenario. In particular, do not infer
 the subject from the first HCL resource: it may be a prerequisite.
@@ -67,7 +68,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [clusters/data_clusters_acc_test.go](../../clusters/data_clusters_acc_test.go) | 3 | 0 |
 | [clusters/data_spark_version_acc_test.go](../../clusters/data_spark_version_acc_test.go) | 1 | 0 |
 | [clusters/node_type_test.go](../../clusters/node_type_test.go) | 6 | 0 |
-| [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | 6 | 2 |
+| [dashboards/dashboard_test.go](../../dashboards/dashboard_test.go) | 8 | 0 |
 | [finops/budget_test.go](../../finops/budget_test.go) | 2 | 0 |
 | [internal/acceptance/aibi_embedding_settings_test.go](../../internal/acceptance/aibi_embedding_settings_test.go) | 1 | 0 |
 | [internal/acceptance/tf_provider_test.go](../../internal/acceptance/tf_provider_test.go) | 0 | 1 |
@@ -118,7 +119,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [permissions/access_control_rule_set_provider_config_test.go](../../permissions/access_control_rule_set_provider_config_test.go) | 1 | 0 |
 | [permissions/account_rule_set_test.go](../../permissions/account_rule_set_test.go) | 2 | 0 |
 | [permissions/permissions_provider_config_test.go](../../permissions/permissions_provider_config_test.go) | 1 | 0 |
-| [permissions/permissions_test.go](../../permissions/permissions_test.go) | 17 | 10 |
+| [permissions/permissions_test.go](../../permissions/permissions_test.go) | 21 | 6 |
 | [permissions/resource_permissions_test.go](../../permissions/resource_permissions_test.go) | 0 | 1 |
 | [pipelines/data_pipelines_acc_test.go](../../pipelines/data_pipelines_acc_test.go) | 1 | 0 |
 | [pipelines/pipeline_provider_config_test.go](../../pipelines/pipeline_provider_config_test.go) | 1 | 0 |
@@ -175,8 +176,8 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [sql/sql_visualization_provider_config_test.go](../../sql/sql_visualization_provider_config_test.go) | 1 | 0 |
 | [sql/sql_widget_provider_config_test.go](../../sql/sql_widget_provider_config_test.go) | 1 | 0 |
 | [storage/dbfs_file_provider_config_test.go](../../storage/dbfs_file_provider_config_test.go) | 1 | 0 |
-| [storage/dbfs_file_test.go](../../storage/dbfs_file_test.go) | 1 | 1 |
-| [storage/file_test.go](../../storage/file_test.go) | 0 | 7 |
+| [storage/dbfs_file_test.go](../../storage/dbfs_file_test.go) | 2 | 0 |
+| [storage/file_test.go](../../storage/file_test.go) | 7 | 0 |
 | [storage/mount_provider_config_test.go](../../storage/mount_provider_config_test.go) | 1 | 0 |
 | [tokens/obo_token_provider_config_test.go](../../tokens/obo_token_provider_config_test.go) | 1 | 0 |
 | [tokens/obo_token_test.go](../../tokens/obo_token_test.go) | 1 | 0 |
@@ -184,13 +185,13 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [tokens/token_provider_config_test.go](../../tokens/token_provider_config_test.go) | 1 | 0 |
 | [tokens/token_test.go](../../tokens/token_test.go) | 1 | 0 |
 | [vectorsearch/vector_search_test.go](../../vectorsearch/vector_search_test.go) | 1 | 0 |
-| [workspace/data_notebook_acc_test.go](../../workspace/data_notebook_acc_test.go) | 0 | 3 |
+| [workspace/data_notebook_acc_test.go](../../workspace/data_notebook_acc_test.go) | 3 | 0 |
 | [workspace/directory_test.go](../../workspace/directory_test.go) | 1 | 0 |
 | [workspace/global_init_script_test.go](../../workspace/global_init_script_test.go) | 1 | 0 |
-| [workspace/notebook_test.go](../../workspace/notebook_test.go) | 2 | 7 |
+| [workspace/notebook_test.go](../../workspace/notebook_test.go) | 9 | 0 |
 | [workspace/workspace_conf_provider_config_test.go](../../workspace/workspace_conf_provider_config_test.go) | 1 | 0 |
 | [workspace/workspace_conf_test.go](../../workspace/workspace_conf_test.go) | 6 | 0 |
-| [workspace/workspace_file_test.go](../../workspace/workspace_file_test.go) | 0 | 5 |
+| [workspace/workspace_file_test.go](../../workspace/workspace_file_test.go) | 5 | 0 |
 
 ## Known adaptations and gaps
 
@@ -219,9 +220,9 @@ See [PENDING.md](PENDING.md) for the remaining per-test blockers and
 - `TestAccDataSourceClusters_FilterBy` adds a read-only cluster data source to
   check the same source/state/policy fields as the SDK reads. The pinned-filter
   step and exact filter requests remain intact.
-- Workspace-file uploads use multipart requests, while the current fixture
-  handler matches JSON bodies. Source-file scenarios also need a stable way
-  to provide local files to Terraform. Those cases remain pending.
+- Workspace-file and volume-file suites match multipart and raw upload bytes.
+  Source files are staged inside Terraform's isolated working directory; later
+  steps can replace their contents without changing the configured path.
 - Identity cases add user-name normalization, service-principal lifecycles,
   user/service-principal data sources, and group roles. Explicit `api` cases
   belong to `features/api_selection`; other cases stay with their resource.
@@ -231,10 +232,10 @@ See [PENDING.md](PENDING.md) for the remaining per-test blockers and
   update it in place. Account destroy preserves the default disable operation.
 - The three independent users in `TestAccUserResource` expose an existing race
   in `common/unified_provider.go`'s shared client cache under `-race`. That case
-  remains pending; no artificial resource dependencies or production fixes are
-  added to these ports. Home preservation is copied through an explicit
+  is copied independently of the P1 fix; no artificial resource dependencies
+  are added. Home preservation is copied through an explicit
   identity-removal step and directory data-source read; forced home cleanup
-  and arbitrary SDK checks remain pending.
+  remains pending but needs no new engine feature after the P4 review.
 - Token timestamps use a fixed future window with the original lifetime, so
   wall-clock expiry does not invalidate its otherwise static lifecycle transcript.
 - Notification-destination SDK checks of display name and type become
@@ -247,8 +248,9 @@ See [PENDING.md](PENDING.md) for the remaining per-test blockers and
 - Negative provider-config plan-only cases fail before apply or any API call.
   They use `expect_error` without `plan_only` because the replay runner rejects
   that combination. The original HCL and error patterns are preserved.
-- `secrets/secret_scope_test.go` includes SDK-only ACL and current-user checks.
-  Copying just its resource lifecycle would lose those assertions.
+- `secrets/secret_scope_test.go` can retain name/backend checks and recreation
+  after external deletion using next-step refresh fixtures. Its backend-only
+  ACL/current-user checks can be omitted; the conversion is pending under P4.
 - `internal/acceptance/tf_provider_test.go` needs an additional noop provider
   for deferred configuration. It is already hermetic and remains pending.
 - `internal/acceptance/dual_resource_api_validation_test.go` contains additional
@@ -289,7 +291,8 @@ See [PENDING.md](PENDING.md) for the remaining per-test blockers and
 - Pipelines retain cluster settings, AWS cluster updates, run-as transitions and
   rejected removal, plus the nonempty data-source result check. Repeated whole
   calls and configurations use YAML anchors; calls remain consumable fixtures.
-  Zero-worker SDK checks remain pending under P4; last-modified replay
+  The zero-worker case is ready for conversion under P4 with an exact request
+  requiring explicit `num_workers: 0`; last-modified replay
   reproduces input-state drift (P19).
 - Apps retain no-compute state, Git input-only fields and reapply, external
   deletion/recreation, invalid resource configuration, and app/list lookups.
@@ -457,3 +460,40 @@ The same-process repeat check also reproduces P21 in the workspace membership,
 mixed-member data-source and OBO-token scenarios. Their first runs pass,
 including with the separate cache-locking fix under `-race`. The YAML does not
 reset provider globals, relax fixture consumption or use dynamic IDs to hide it.
+
+## Local-file and upload lifecycles
+
+This batch copies **29 source functions**, bringing the inventory to
+**479 copied / 66 pending**. Original acceptance tests remain unchanged.
+
+- Notebooks retain path renames and DBC/IPYNB content updates. Dedicated
+  provider-configuration cases retain matching, removed and rejected workspace
+  IDs, no-op plans, and the notebook data-source workspace-ID state check.
+- Workspace files cover source/base64 uploads, empty and ZIP files, renaming,
+  and automatic parent creation after a failed upload. The parent check uses a
+  dependent directory data source. DBFS retains source-file reading and its
+  upload/close/read sequence.
+- Volume files retain source/base64 lifecycles and changed/unchanged inputs.
+  Fixed metadata timestamps preserve the original equality/inequality checks
+  through provider-read state. Exact upload requests also reject unintended or
+  missing updates. External file edits appear in the next refresh's metadata;
+  unchanged HCL must cause the configured bytes to be uploaded again.
+- File-backed dashboards retain content updates, explicit false/true publish
+  flags, remote edits, and parent-path replacement. Exact create/update/publish
+  requests validate provider behavior; MD5 checks validate local file hashing.
+  SDK assertions that the backend persisted dashboard JSON or publish settings
+  are omitted.
+- Notebook and workspace-file permissions retain both path/ID variants, all
+  principal transitions, and rejected management-permission removal. Their
+  independent resources retain ordinary Terraform concurrency.
+
+Inputs are deliberately small: comment-only Python, an empty file, a tiny ZIP,
+minimal DBC/IPYNB notebooks, and one-page dashboard JSON. Updated inputs still
+change the uploaded bytes.
+YAML anchors repeat consumed fixtures; they do not make calls optional. All API
+responses are inferred and marked; no live server or recorder was used.
+
+All 29 cases previously grouped under file/payload blockers are copied. The
+volume-file SDK mutation is modeled by the next refresh response; its artificial
+check-hook refresh error and SDK download assertion are omitted. The replay
+verifies the provider reconciles the edit by uploading the configured bytes.

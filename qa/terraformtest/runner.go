@@ -54,6 +54,7 @@ func run(t *testing.T, definition *testDefinition) {
 	if definition.InitialState != nil {
 		seedInitialCheckpoint(t, definition, &testCase)
 	}
+	configureStepFiles(t, definition, &testCase)
 	resource.Test(t, testCase)
 }
 

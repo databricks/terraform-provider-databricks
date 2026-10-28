@@ -1,0 +1,133 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create
+    config: |
+      resource "databricks_workspace_file" "this" {
+        source = abspath("${path.module}/script.py")
+        path   = "/Shared/provider-test/xx_replay"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/workspace/import
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            multipart:
+              - name: path
+                body:
+                  text: /Shared/provider-test/xx_replay
+              - name: content
+                filename: content
+                headers:
+                  Content-Type: application/octet-stream
+                body:
+                  text: |
+                    # comment
+              - name: format
+                body:
+                  text: RAW
+              - name: overwrite
+                body:
+                  text: 'true'
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 200
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/provider-test/xx_replay]
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 200
+              object_type: FILE
+              path: /Shared/provider-test/xx_replay
+      - *call_1
+    files:
+      script.py: ../../../testdata/files/script.py
+  - name: rename
+    config: |
+      resource "databricks_workspace_file" "this" {
+        source = abspath("${path.module}/script.py")
+        path   = "/Shared/provider-test/xx_replay_renamed"
+      }
+    calls:
+      - *call_1
+      - request:
+          method: POST
+          path: /api/2.0/workspace/delete
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              path: /Shared/provider-test/xx_replay
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: POST
+          path: /api/2.0/workspace/import
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            multipart:
+              - name: path
+                body:
+                  text: /Shared/provider-test/xx_replay_renamed
+              - name: content
+                filename: content
+                headers:
+                  Content-Type: application/octet-stream
+                body:
+                  text: |
+                    # comment
+              - name: format
+                body:
+                  text: RAW
+              - name: overwrite
+                body:
+                  text: 'true'
+        response: *response_1 # Inferred API response; not recorded.
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/provider-test/xx_replay_renamed]
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 200
+              object_type: FILE
+              path: /Shared/provider-test/xx_replay_renamed
+      - *call_2
+destroy:
+  calls:
+    - *call_2
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        headers:
+          X-Databricks-Workspace-Id: '12345'
+        body:
+          json:
+            path: /Shared/provider-test/xx_replay_renamed
+      response: *response_2 # Inferred API response; not recorded.

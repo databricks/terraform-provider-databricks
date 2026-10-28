@@ -1,0 +1,1134 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create_permissions
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/permissions_test/replay"
+      }
+      resource "databricks_workspace_file" "this" {
+        source = abspath("${path.module}/script.py")
+        path   = "${databricks_directory.this.path}/test_ws_file"
+      }
+      data "databricks_current_user" "me" {}
+      resource "databricks_group" "_0" { display_name = "permissions-replay-0" }
+      resource "databricks_permissions" "this" {
+        workspace_file_id = databricks_workspace_file.this.object_id
+        access_control {
+          group_name       = databricks_group._0.display_name
+          permission_level = "CAN_RUN"
+        }
+      }
+    calls:
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          headers:
+            X-Databricks-Org-Id: '12345'
+          body:
+            json:
+              active: true
+              displayName: Replay runner
+              groups:
+                - display: admins
+                  value: '901'
+              id: '900'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: 11111111-1111-4111-8111-000000000000
+      - request:
+          method: POST
+          path: /api/2.0/workspace/mkdirs
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              path: /permissions_test/replay
+        response: &response_16 # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &call_3
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/permissions_test/replay]
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 101
+              object_type: DIRECTORY
+              path: /permissions_test/replay
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              displayName: permissions-replay-0
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: permissions-replay-0
+              id: '1000'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+      - &call_4
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/1000
+          query:
+            attributes: ['displayName,externalId,entitlements']
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_1 # Inferred API response; not recorded.
+      - request:
+          method: POST
+          path: /api/2.0/workspace/import
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            multipart:
+              - name: path
+                body:
+                  text: /permissions_test/replay/test_ws_file
+              - name: content
+                filename: content
+                headers:
+                  Content-Type: application/octet-stream
+                body:
+                  text: |
+                    # comment
+              - name: format
+                body:
+                  text: RAW
+              - name: overwrite
+                body:
+                  text: 'true'
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 200
+      - &call_5
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/permissions_test/replay/test_ws_file]
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 200
+              object_type: FILE
+              path: /permissions_test/replay/test_ws_file
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          query:
+            excludedAttributes: [entitlements]
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_2 # Inferred API response; not recorded.
+      - request:
+          method: PUT
+          path: /api/2.0/permissions/files/200
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              access_control_list:
+                - group_name: permissions-replay-0
+                  permission_level: CAN_RUN
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              access_control_list:
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_RUN
+                  group_name: permissions-replay-0
+              object_id: /files/200
+              object_type: file
+      - *call_1
+      - &call_6
+        request:
+          method: GET
+          path: /api/2.0/permissions/files/200
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_3 # Inferred API response; not recorded.
+      - *call_2
+      - *call_2
+      - *call_3
+      - *call_4
+      - *call_5
+      - *call_1
+      - *call_6
+    files:
+      script.py: ../../../testdata/files/script.py
+  - name: update_principals_1
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/permissions_test/replay"
+      }
+      resource "databricks_workspace_file" "this" {
+        source = abspath("${path.module}/script.py")
+        path   = "${databricks_directory.this.path}/test_ws_file"
+      }
+      data "databricks_current_user" "me" {}
+      resource "databricks_service_principal" "_1" { display_name = "permissions-replay-1" }
+      resource "databricks_service_principal" "_2" { display_name = "permissions-replay-2" }
+      resource "databricks_service_principal" "_3" { display_name = "permissions-replay-3" }
+      resource "databricks_service_principal" "_4" { display_name = "permissions-replay-4" }
+      resource "databricks_group" "_0" { display_name = "permissions-replay-0" }
+      resource "databricks_group" "_1" { display_name = "permissions-replay-1" }
+      resource "databricks_group" "_2" { display_name = "permissions-replay-2" }
+      resource "databricks_group" "_3" { display_name = "permissions-replay-3" }
+      resource "databricks_user" "_0" { user_name = "permissions-replay-0@databricks.com" }
+      resource "databricks_user" "_1" { user_name = "permissions-replay-1@databricks.com" }
+      resource "databricks_user" "_2" { user_name = "permissions-replay-2@databricks.com" }
+      resource "databricks_user" "_3" { user_name = "permissions-replay-3@databricks.com" }
+      resource "databricks_permissions" "this" {
+        workspace_file_id = databricks_workspace_file.this.object_id
+        access_control {
+          service_principal_name = data.databricks_current_user.me.user_name
+          permission_level       = "CAN_MANAGE"
+        }
+        access_control {
+          service_principal_name = databricks_service_principal._1.application_id
+          permission_level       = "CAN_RUN"
+        }
+        access_control {
+          service_principal_name = databricks_service_principal._2.application_id
+          permission_level       = "CAN_READ"
+        }
+        access_control {
+          service_principal_name = databricks_service_principal._3.application_id
+          permission_level       = "CAN_EDIT"
+        }
+        access_control {
+          service_principal_name = databricks_service_principal._4.application_id
+          permission_level       = "CAN_MANAGE"
+        }
+        access_control {
+          group_name       = databricks_group._0.display_name
+          permission_level = "CAN_RUN"
+        }
+        access_control {
+          group_name       = databricks_group._1.display_name
+          permission_level = "CAN_READ"
+        }
+        access_control {
+          group_name       = databricks_group._2.display_name
+          permission_level = "CAN_EDIT"
+        }
+        access_control {
+          group_name       = databricks_group._3.display_name
+          permission_level = "CAN_MANAGE"
+        }
+        access_control {
+          user_name        = databricks_user._0.user_name
+          permission_level = "CAN_RUN"
+        }
+        access_control {
+          user_name        = databricks_user._1.user_name
+          permission_level = "CAN_READ"
+        }
+        access_control {
+          user_name        = databricks_user._2.user_name
+          permission_level = "CAN_EDIT"
+        }
+        access_control {
+          user_name        = databricks_user._3.user_name
+          permission_level = "CAN_MANAGE"
+        }
+      }
+    calls:
+      - *call_2
+      - *call_4
+      - *call_3
+      - *call_5
+      - *call_1
+      - *call_6
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              displayName: permissions-replay-1
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+        response: &response_4 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: permissions-replay-1
+              id: '1001'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              active: true
+              displayName: permissions-replay-3
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+        response: &response_5 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              applicationId: 11111111-1111-4111-8111-000000000004
+              displayName: permissions-replay-3
+              id: '3003'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+      - &call_12
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/1001
+          query:
+            attributes: ['displayName,externalId,entitlements']
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_4 # Inferred API response; not recorded.
+      - &call_11
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/3003
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_5 # Inferred API response; not recorded.
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              active: true
+              displayName: permissions-replay-4
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+        response: &response_6 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              applicationId: 11111111-1111-4111-8111-000000000005
+              displayName: permissions-replay-4
+              id: '3004'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Users
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              active: true
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: permissions-replay-1@databricks.com
+        response: &response_7 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              id: '2001'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: permissions-replay-1@databricks.com
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Users
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              active: true
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: permissions-replay-2@databricks.com
+        response: &response_8 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              id: '2002'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: permissions-replay-2@databricks.com
+      - &call_16
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/3004
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_6 # Inferred API response; not recorded.
+      - &call_17
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Users/2001
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_7 # Inferred API response; not recorded.
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              active: true
+              displayName: permissions-replay-2
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+        response: &response_9 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              applicationId: 11111111-1111-4111-8111-000000000003
+              displayName: permissions-replay-2
+              id: '3002'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              active: true
+              displayName: permissions-replay-1
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+        response: &response_10 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              applicationId: 11111111-1111-4111-8111-000000000002
+              displayName: permissions-replay-1
+              id: '3001'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              displayName: permissions-replay-2
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+        response: &response_12 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: permissions-replay-2
+              id: '1002'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+      - &call_8
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Users/2002
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_8 # Inferred API response; not recorded.
+      - &call_13
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/3002
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_9 # Inferred API response; not recorded.
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              displayName: permissions-replay-3
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+        response: &response_11 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: permissions-replay-3
+              id: '1003'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+      - &call_9
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/3001
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_10 # Inferred API response; not recorded.
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Users
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              active: true
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: permissions-replay-0@databricks.com
+        response: &response_13 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              id: '2000'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: permissions-replay-0@databricks.com
+      - &call_15
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/1003
+          query:
+            attributes: ['displayName,externalId,entitlements']
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_11 # Inferred API response; not recorded.
+      - &call_7
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/1002
+          query:
+            attributes: ['displayName,externalId,entitlements']
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_12 # Inferred API response; not recorded.
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Users
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              active: true
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: permissions-replay-3@databricks.com
+        response: &response_14 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              id: '2003'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: permissions-replay-3@databricks.com
+      - &call_10
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Users/2000
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_13 # Inferred API response; not recorded.
+      - &call_14
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Users/2003
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_14 # Inferred API response; not recorded.
+      - *call_1
+      - request:
+          method: PUT
+          path: /api/2.0/permissions/files/200
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              access_control_list:
+                - permission_level: CAN_MANAGE
+                  user_name: permissions-replay-3@databricks.com
+                - permission_level: CAN_EDIT
+                  user_name: permissions-replay-2@databricks.com
+                - group_name: permissions-replay-3
+                  permission_level: CAN_MANAGE
+                - group_name: permissions-replay-0
+                  permission_level: CAN_RUN
+                - permission_level: CAN_EDIT
+                  service_principal_name: 11111111-1111-4111-8111-000000000004
+                - permission_level: CAN_READ
+                  user_name: permissions-replay-1@databricks.com
+                - permission_level: CAN_READ
+                  service_principal_name: 11111111-1111-4111-8111-000000000003
+                - group_name: permissions-replay-2
+                  permission_level: CAN_EDIT
+                - group_name: permissions-replay-1
+                  permission_level: CAN_READ
+                - permission_level: CAN_MANAGE
+                  service_principal_name: 11111111-1111-4111-8111-000000000005
+                - permission_level: CAN_MANAGE
+                  service_principal_name: 11111111-1111-4111-8111-000000000000
+                - permission_level: CAN_RUN
+                  service_principal_name: 11111111-1111-4111-8111-000000000002
+                - permission_level: CAN_RUN
+                  user_name: permissions-replay-0@databricks.com
+        response: &response_15 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              access_control_list:
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_MANAGE
+                  user_name: permissions-replay-3@databricks.com
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_EDIT
+                  user_name: permissions-replay-2@databricks.com
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_MANAGE
+                  group_name: permissions-replay-3
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_RUN
+                  group_name: permissions-replay-0
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_EDIT
+                  service_principal_name: 11111111-1111-4111-8111-000000000004
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_READ
+                  user_name: permissions-replay-1@databricks.com
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_READ
+                  service_principal_name: 11111111-1111-4111-8111-000000000003
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_EDIT
+                  group_name: permissions-replay-2
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_READ
+                  group_name: permissions-replay-1
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_MANAGE
+                  service_principal_name: 11111111-1111-4111-8111-000000000005
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_MANAGE
+                  service_principal_name: 11111111-1111-4111-8111-000000000000
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_RUN
+                  service_principal_name: 11111111-1111-4111-8111-000000000002
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_RUN
+                  user_name: permissions-replay-0@databricks.com
+              object_id: /files/200
+              object_type: file
+      - *call_1
+      - &call_18
+        request:
+          method: GET
+          path: /api/2.0/permissions/files/200
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_15 # Inferred API response; not recorded.
+      - *call_2
+      - *call_7
+      - *call_3
+      - *call_8
+      - *call_9
+      - *call_2
+      - *call_10
+      - *call_11
+      - *call_12
+      - *call_13
+      - *call_4
+      - *call_5
+      - *call_14
+      - *call_15
+      - *call_16
+      - *call_17
+      - *call_1
+      - *call_18
+  - name: update_principals_2
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/permissions_test/replay"
+      }
+      resource "databricks_workspace_file" "this" {
+        source = abspath("${path.module}/script.py")
+        path   = "${databricks_directory.this.path}/test_ws_file"
+      }
+      data "databricks_current_user" "me" {}
+      resource "databricks_service_principal" "_0" { display_name = "permissions-replay-0" }
+      resource "databricks_service_principal" "_1" { display_name = "permissions-replay-1" }
+      resource "databricks_service_principal" "_2" { display_name = "permissions-replay-2" }
+      resource "databricks_service_principal" "_3" { display_name = "permissions-replay-3" }
+      resource "databricks_group" "_0" { display_name = "permissions-replay-0" }
+      resource "databricks_group" "_1" { display_name = "permissions-replay-1" }
+      resource "databricks_group" "_2" { display_name = "permissions-replay-2" }
+      resource "databricks_group" "_3" { display_name = "permissions-replay-3" }
+      resource "databricks_user" "_0" { user_name = "permissions-replay-0@databricks.com" }
+      resource "databricks_user" "_1" { user_name = "permissions-replay-1@databricks.com" }
+      resource "databricks_user" "_2" { user_name = "permissions-replay-2@databricks.com" }
+      resource "databricks_user" "_3" { user_name = "permissions-replay-3@databricks.com" }
+      resource "databricks_permissions" "this" {
+        workspace_file_id = databricks_workspace_file.this.object_id
+        access_control {
+          service_principal_name = databricks_service_principal._0.application_id
+          permission_level       = "CAN_RUN"
+        }
+        access_control {
+          service_principal_name = databricks_service_principal._1.application_id
+          permission_level       = "CAN_READ"
+        }
+        access_control {
+          service_principal_name = databricks_service_principal._2.application_id
+          permission_level       = "CAN_EDIT"
+        }
+        access_control {
+          service_principal_name = databricks_service_principal._3.application_id
+          permission_level       = "CAN_MANAGE"
+        }
+        access_control {
+          group_name       = databricks_group._0.display_name
+          permission_level = "CAN_RUN"
+        }
+        access_control {
+          group_name       = databricks_group._1.display_name
+          permission_level = "CAN_READ"
+        }
+        access_control {
+          group_name       = databricks_group._2.display_name
+          permission_level = "CAN_EDIT"
+        }
+        access_control {
+          group_name       = databricks_group._3.display_name
+          permission_level = "CAN_MANAGE"
+        }
+        access_control {
+          user_name        = databricks_user._0.user_name
+          permission_level = "CAN_RUN"
+        }
+        access_control {
+          user_name        = databricks_user._1.user_name
+          permission_level = "CAN_READ"
+        }
+        access_control {
+          user_name        = databricks_user._2.user_name
+          permission_level = "CAN_EDIT"
+        }
+        access_control {
+          user_name        = databricks_user._3.user_name
+          permission_level = "CAN_MANAGE"
+        }
+      }
+    calls:
+      - *call_12
+      - *call_13
+      - *call_16
+      - *call_3
+      - *call_9
+      - *call_17
+      - *call_10
+      - *call_14
+      - *call_7
+      - *call_2
+      - *call_4
+      - *call_15
+      - *call_11
+      - *call_8
+      - *call_5
+      - *call_1
+      - *call_18
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/3004
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_16 # Inferred API response; not recorded.
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              active: true
+              displayName: permissions-replay-0
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+        response: &response_17 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              applicationId: 11111111-1111-4111-8111-000000000001
+              displayName: permissions-replay-0
+              id: '3000'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+      - &call_19
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/3000
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_17 # Inferred API response; not recorded.
+      - *call_1
+      - request:
+          method: PUT
+          path: /api/2.0/permissions/files/200
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              access_control_list:
+                - permission_level: CAN_MANAGE
+                  user_name: permissions-replay-3@databricks.com
+                - permission_level: CAN_RUN
+                  service_principal_name: 11111111-1111-4111-8111-000000000001
+                - permission_level: CAN_EDIT
+                  user_name: permissions-replay-2@databricks.com
+                - permission_level: CAN_READ
+                  service_principal_name: 11111111-1111-4111-8111-000000000002
+                - group_name: permissions-replay-3
+                  permission_level: CAN_MANAGE
+                - group_name: permissions-replay-0
+                  permission_level: CAN_RUN
+                - permission_level: CAN_READ
+                  user_name: permissions-replay-1@databricks.com
+                - group_name: permissions-replay-2
+                  permission_level: CAN_EDIT
+                - group_name: permissions-replay-1
+                  permission_level: CAN_READ
+                - permission_level: CAN_EDIT
+                  service_principal_name: 11111111-1111-4111-8111-000000000003
+                - permission_level: CAN_MANAGE
+                  service_principal_name: 11111111-1111-4111-8111-000000000004
+                - permission_level: CAN_RUN
+                  user_name: permissions-replay-0@databricks.com
+        response: &response_18 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              access_control_list:
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_MANAGE
+                  user_name: permissions-replay-3@databricks.com
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_RUN
+                  service_principal_name: 11111111-1111-4111-8111-000000000001
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_EDIT
+                  user_name: permissions-replay-2@databricks.com
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_READ
+                  service_principal_name: 11111111-1111-4111-8111-000000000002
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_MANAGE
+                  group_name: permissions-replay-3
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_RUN
+                  group_name: permissions-replay-0
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_READ
+                  user_name: permissions-replay-1@databricks.com
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_EDIT
+                  group_name: permissions-replay-2
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_READ
+                  group_name: permissions-replay-1
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_EDIT
+                  service_principal_name: 11111111-1111-4111-8111-000000000003
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_MANAGE
+                  service_principal_name: 11111111-1111-4111-8111-000000000004
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_RUN
+                  user_name: permissions-replay-0@databricks.com
+              object_id: /files/200
+              object_type: file
+      - *call_1
+      - &call_20
+        request:
+          method: GET
+          path: /api/2.0/permissions/files/200
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_18 # Inferred API response; not recorded.
+      - *call_2
+      - *call_2
+      - *call_3
+      - *call_19
+      - *call_12
+      - *call_14
+      - *call_9
+      - *call_4
+      - *call_7
+      - *call_17
+      - *call_10
+      - *call_11
+      - *call_13
+      - *call_15
+      - *call_8
+      - *call_5
+      - *call_1
+      - *call_20
+  - name: reject_removing_management
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/permissions_test/replay"
+      }
+      resource "databricks_workspace_file" "this" {
+        source = abspath("${path.module}/script.py")
+        path   = "${databricks_directory.this.path}/test_ws_file"
+      }
+      data "databricks_current_user" "me" {}
+
+      resource "databricks_permissions" "this" {
+        workspace_file_id = databricks_workspace_file.this.object_id
+        access_control {
+          service_principal_name = data.databricks_current_user.me.user_name
+          permission_level       = "CAN_READ"
+        }
+      }
+    calls:
+      - *call_8
+      - *call_12
+      - *call_13
+      - *call_17
+      - *call_9
+      - *call_10
+      - *call_7
+      - *call_11
+      - *call_14
+      - *call_15
+      - *call_19
+      - *call_2
+      - *call_4
+      - *call_3
+      - *call_5
+      - *call_1
+      - *call_20
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/Groups/1000
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_16 # Inferred API response; not recorded.
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/3003
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_16 # Inferred API response; not recorded.
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/Users/2001
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_16 # Inferred API response; not recorded.
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/Groups/1002
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_16 # Inferred API response; not recorded.
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/3002
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_16 # Inferred API response; not recorded.
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/3000
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_16 # Inferred API response; not recorded.
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/Users/2003
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_16 # Inferred API response; not recorded.
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/3001
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_16 # Inferred API response; not recorded.
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/Users/2002
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_16 # Inferred API response; not recorded.
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/Groups/1001
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_16 # Inferred API response; not recorded.
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/Users/2000
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_16 # Inferred API response; not recorded.
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/Groups/1003
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_16 # Inferred API response; not recorded.
+      - *call_1
+    expect_error: (?s)cannot\s+remove\s+management\s+permissions\s+for\s+the\s+current\s+user\s+for\s+file,\s+allowed\s+levels:\s+CAN_MANAGE
+destroy:
+  calls:
+    - *call_2
+    - *call_3
+    - *call_5
+    - *call_1
+    - *call_20
+    - *call_20
+    - request:
+        method: PUT
+        path: /api/2.0/permissions/files/200
+        headers:
+          X-Databricks-Workspace-Id: '12345'
+        body:
+          json: {}
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            access_control_list: []
+            object_id: /files/200
+            object_type: file
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        headers:
+          X-Databricks-Workspace-Id: '12345'
+        body:
+          json:
+            path: /permissions_test/replay/test_ws_file
+      response: *response_16 # Inferred API response; not recorded.
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        headers:
+          X-Databricks-Workspace-Id: '12345'
+        body:
+          json:
+            path: /permissions_test/replay
+      response: *response_16 # Inferred API response; not recorded.

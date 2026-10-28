@@ -1,0 +1,80 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create_from_source
+    config: |
+      resource "databricks_dbfs_file" "file_1" {
+        source = abspath("${path.module}/script.py")
+        path   = "/tmp/tf-test/file-source-replay"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/dbfs/create
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              overwrite: true
+              path: /tmp/tf-test/file-source-replay
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              handle: 100
+      - request:
+          method: POST
+          path: /api/2.0/dbfs/add-block
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              data: IyBjb21tZW50Cg==
+              handle: 100
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: POST
+          path: /api/2.0/dbfs/close
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              handle: 100
+        response: *response_1 # Inferred API response; not recorded.
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/dbfs/get-status
+          query:
+            path: [/tmp/tf-test/file-source-replay]
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              file_size: 10
+              is_dir: false
+              path: /tmp/tf-test/file-source-replay
+      - *call_1
+    files:
+      script.py: ../../../testdata/files/script.py
+destroy:
+  calls:
+    - *call_1
+    - request:
+        method: POST
+        path: /api/2.0/dbfs/delete
+        headers:
+          X-Databricks-Workspace-Id: '12345'
+        body:
+          json:
+            path: /tmp/tf-test/file-source-replay
+      response: *response_1 # Inferred API response; not recorded.

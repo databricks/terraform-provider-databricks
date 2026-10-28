@@ -2,6 +2,7 @@
 package httpfixture
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,11 +12,6 @@ import (
 	"strings"
 	"sync"
 )
-
-// Body distinguishes an absent HTTP body from a JSON value, including JSON null.
-type Body struct {
-	JSON any `yaml:"json"`
-}
 
 // Request defines a complete signature; only listed headers are compared.
 type Request struct {
@@ -27,7 +23,7 @@ type Request struct {
 	Matchers Matchers            `yaml:"matchers,omitempty"`
 }
 
-// Response defines the HTTP reply, with an optional JSON body.
+// Response defines the HTTP reply, with an optional JSON, text, or binary body.
 type Response struct {
 	Status  int               `yaml:"status"`
 	Headers map[string]string `yaml:"headers,omitempty"`
@@ -45,6 +41,7 @@ type exchange struct {
 	expectedBody any
 	matchers     Matchers
 	responseBody []byte
+	bodyKind     string
 	used         bool
 }
 
@@ -118,17 +115,27 @@ func compileCalls(calls []Call) ([]exchange, error) {
 		e := exchange{call: call}
 		var err error
 		if call.Request.Body != nil {
-			e.expectedBody, err = normalizedValue(call.Request.Body.JSON)
+			e.bodyKind, err = call.Request.Body.kind()
+			if err == nil {
+				switch e.bodyKind {
+				case "json":
+					e.expectedBody, err = normalizedValue(call.Request.Body.JSON)
+				case "multipart":
+					err = compileMultipart(call.Request.Body.Multipart)
+				default:
+					e.expectedBody, err = call.Request.Body.literalBytes()
+				}
+			}
 			if err != nil {
 				return nil, fmt.Errorf("call %d request: %w", i+1, err)
 			}
 		}
-		e.matchers, e.expectedBody, err = compileMatchers(call.Request.Matchers, e.expectedBody, call.Request.Body != nil)
+		e.matchers, e.expectedBody, err = compileMatchers(call.Request.Matchers, e.expectedBody, e.bodyKind == "json")
 		if err != nil {
 			return nil, fmt.Errorf("call %d request matchers: %w", i+1, err)
 		}
 		if call.Response.Body != nil {
-			e.responseBody, err = json.Marshal(call.Response.Body.JSON)
+			e.responseBody, err = call.Response.Body.literalBytes()
 			if err != nil {
 				return nil, fmt.Errorf("call %d response: %w", i+1, err)
 			}
@@ -181,7 +188,7 @@ func normalizeNumbers(value any) any {
 }
 
 // matches checks the whole signature without consuming the exchange.
-func (e *exchange) matches(req *http.Request, body []byte, value any) bool {
+func (e *exchange) matches(req *http.Request, body requestBody) bool {
 	expected := e.call.Request
 	if e.used || expected.Method != req.Method || expected.Path != req.URL.EscapedPath() {
 		return false
@@ -203,19 +210,22 @@ func (e *exchange) matches(req *http.Request, body []byte, value any) bool {
 		}
 	}
 	if expected.Body == nil {
-		return len(body) == 0
+		return len(body.raw) == 0
 	}
-	return len(body) > 0 && matchesJSON(e.expectedBody, value)
+	switch e.bodyKind {
+	case "json":
+		return body.jsonValid && matchesJSON(e.expectedBody, body.json)
+	case "multipart":
+		return matchesMultipart(expected.Body.Multipart, body.parts)
+	default:
+		return bytes.Equal(e.expectedBody.([]byte), body.raw)
+	}
 }
 
 // ServeHTTP prefers consumable step fixtures over reusable fallbacks. Matching
 // and consumption share a lock so concurrent requests cannot consume a call twice.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	body, err := io.ReadAll(req.Body)
-	var value any
-	if err == nil && len(body) > 0 {
-		value, err = decodeJSON(body)
-	}
+	body, err := parseRequestBody(req)
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	if err != nil {
@@ -227,10 +237,10 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		if next == -1 && !h.calls[i].used {
 			next = i
 		}
-		if h.calls[i].matches(req, body, value) {
+		if h.calls[i].matches(req, body) {
 			if h.enforceCallOrder && i != next {
 				expected := h.calls[next].call.Request
-				h.fail(w, fmt.Errorf("%s: out-of-order HTTP call: %s %s body=%s matched call %d; next expected call %d: %s %s", h.label, req.Method, req.URL.RequestURI(), body, i+1, next+1, expected.Method, expected.Path))
+				h.fail(w, fmt.Errorf("%s: out-of-order HTTP call: %s %s body=%s matched call %d; next expected call %d: %s %s", h.label, req.Method, req.URL.RequestURI(), body.raw, i+1, next+1, expected.Method, expected.Path))
 				return
 			}
 			h.calls[i].used = true
@@ -239,12 +249,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 	for i := range h.reusable {
-		if h.reusable[i].matches(req, body, value) {
+		if h.reusable[i].matches(req, body) {
 			writeResponse(w, &h.reusable[i])
 			return
 		}
 	}
-	h.fail(w, fmt.Errorf("%s: unexpected HTTP call: %s %s body=%s", h.label, req.Method, req.URL.RequestURI(), body))
+	h.fail(w, fmt.Errorf("%s: unexpected HTTP call: %s %s body=%s", h.label, req.Method, req.URL.RequestURI(), body.raw))
 }
 
 func writeResponse(w http.ResponseWriter, e *exchange) {
@@ -252,7 +262,9 @@ func writeResponse(w http.ResponseWriter, e *exchange) {
 		w.Header().Set(key, value)
 	}
 	if e.call.Response.Body != nil && w.Header().Get("Content-Type") == "" {
-		w.Header().Set("Content-Type", "application/json")
+		kind, _ := e.call.Response.Body.kind()
+		contentType := map[string]string{"json": "application/json", "text": "text/plain; charset=utf-8", "base64": "application/octet-stream"}
+		w.Header().Set("Content-Type", contentType[kind])
 	}
 	w.WriteHeader(e.call.Response.Status)
 	_, _ = w.Write(e.responseBody)

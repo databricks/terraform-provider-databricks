@@ -1,6 +1,6 @@
 # Pending acceptance scenarios
 
-**38 original functions remain pending** in the 545-function baseline. See
+**36 original functions remain pending** in the 545-function baseline. See
 [MIGRATION.md](MIGRATION.md) for counts and [FOLLOW_UPS.md](FOLLOW_UPS.md) for
 blocker details. Original tests remain unchanged.
 
@@ -19,8 +19,6 @@ All five P5 import cases now have replay copies.
 | [catalog/catalog_test.go](../../catalog/catalog_test.go) | `TestAccCatalog_ProviderConfig_Recreate` | P9 | Expected replacement conflicts with current workspace validation. |
 | [catalog/credential_test.go](../../catalog/credential_test.go) | `TestAccCredentialOwner` | P13 | Workspace credential configured without workspace routing. |
 | [internal/acceptance/tf_provider_test.go](../../internal/acceptance/tf_provider_test.go) | `TestAccProviderPlanShouldSucceedWithIncompleteConfiguration` | P6 | Additional noop provider; already hermetic. |
-| [internal/acceptance/workspace_id_sdkv2_http_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_http_acc_test.go) | `TestMwsAccWorkspaceIDHttp_RemoveDefault` | P8 | Current diagnostic differs from the original expectation. |
-| [internal/acceptance/workspace_id_sdkv2_http_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_http_acc_test.go) | `TestMwsAccWorkspaceIDHttp_RemoveOverrideNoFallback` | P8 | Current diagnostic differs from the original expectation. |
 | [internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go](../../internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go) | `TestMwsAccPrivateEndpointRulePluginFrameworkOptIn` | P16 | Requires the original per-step provider factories. |
 | [internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go](../../internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go) | `TestMwsAccPrivateEndpointRuleMigrationFromSDKv2` | P16 | Requires the original per-step provider factories. |
 | [internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go](../../internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go) | `TestMwsAccPrivateEndpointRuleMigrationToSDKv2` | P16 | Requires the original per-step provider factories. |

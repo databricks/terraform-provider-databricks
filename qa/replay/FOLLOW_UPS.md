@@ -16,7 +16,7 @@ distinguished below; not every affected sibling has been executed. Affected scen
 | P5 | Resolved | YAML exposes native import with required `persist: true` or `false`, explicit IDs, and optional separate-state verification. | All five source functions have replay copies in [PR 6123](https://github.com/databricks/terraform-provider-databricks/pull/6123): catalog, schema-level connection, app, quality monitor and warehouse permissions. P1 remains tracked independently for concurrent setup. |
 | P6 | Multiple-provider limitation | `internal/acceptance/tf_provider_test.go` tests deferred configuration with an additional noop provider. It is already hermetic, but the YAML runner currently registers only Databricks. | Decide how to retain this existing test in the migration inventory or support its additional provider. Do not replace it with a single-provider scenario. |
 | P7 | Provider/API mismatch | `TestUcAccMetastoreWithOwnerUpdates` changes the metastore name in its third step. The account update model sends owner and sharing settings but has no name field. With a response that preserves the unchanged server name, Terraform reports a nonempty post-apply plan on AWS, Azure, and GCP. | Resolve rename support before copying the full scenario. Do not return an unrequested new name in the response fixture. |
-| P8 | Diagnostic mismatch | `TestMwsAccWorkspaceIDHttp_RemoveDefault` and `TestMwsAccWorkspaceIDHttp_RemoveOverrideNoFallback` expect a missing-workspace diagnostic during planning. The current notebook path instead attempts another workspace import. `TestAccShare_ProviderConfig_Invalid` expects an integer-validator diagnostic, but the provider now reports a workspace-client validation error that also explains connection IDs. | Review the original expectations against current behavior, then preserve the agreed diagnostics in replay. Keep these cases pending rather than accepting any error. |
+| P8 | Diagnostic mismatch | `TestAccShare_ProviderConfig_Invalid` expects an integer-validator diagnostic, but the provider now reports a workspace-client validation error that also explains connection IDs. | This share case remains skipped. Both notebook workspace-removal cases have replay copies preserving the original diagnostic; their earlier failures came from incomplete refresh fixtures. |
 | P9 | Routing/plan mismatch | `TestAccShare_ProviderConfig_Recreate` expects a replacement plan when changing to another workspace. Current planning rejects the workspace ID as mismatched first. The catalog counterpart has the same replacement expectation and also remains pending; it has not yet been replayed. | Resolve the intended routing and plan behavior before porting these scenarios. Preserve the original plan assertions until that decision is made. |
 | P10 | SDKv2 schema race | `TestUcAccSchema` creates multiple grants resources. Under `-race`, concurrent `ValidateResourceConfig` calls report writes to the same `AtLeastOneOf` backing slice inside `validateAtLeastOneAttribute` / `removeDuplicates` in the vendored Terraform Plugin SDK. `ResourceGrants` shares this slice across its securable attributes. | Resolve the shared schema slice mutation and replay the unchanged multi-resource scenario under `-race`. Keep its grants/resources independent and leave the source test pending. |
 | P11 | Request determinism risk | `catalog/resource_sql_table.go` serializes properties and options by iterating Go maps into SQL strings. Multiple entries can therefore change order inside the JSON statement value; semantic JSON matching does not normalize SQL. This risk was found by source inspection, without a failing replay reproduction. | Verify deterministic SQL generation or define narrow SQL matching before copying the multi-property/option scenarios. Do not wildcard the entire statement and lose request validation. |
@@ -142,10 +142,10 @@ P12 uses a convergent API response and does not assert permanent drift. P15 uses
 Terraform-generated checkpoints with server-populated account IDs instead of
 configuring computed-only attributes.
 
-P8's two notebook removal attempts remain pending. The workspace-only /Me error
-is handled as a missing resource during refresh, so Terraform attempts a notebook
-import before the expected missing-workspace planning diagnostic. The strict
-probe did not pass; no broad error matcher or fabricated success response was
-committed. P9 remains pending: a native catalog probe reports update rather than
-replacement, consistent with routing-only update support in PR 5662; the share
-probe reports a workspace mismatch. Neither replacement assertion was changed.
+P8's two notebook removal cases pass as ordinary expected-error steps. Workspace
+/Me succeeds during refresh using the old workspace's routing header; account
+/Me fails without that header when planning resolves the removed fallback. Both
+retain the original diagnostic and automatic destroy. P9 remains pending: a
+native catalog probe reports update rather than replacement, consistent with
+routing-only update support in PR 5662; the share probe reports a workspace
+mismatch. Neither replacement assertion was changed.

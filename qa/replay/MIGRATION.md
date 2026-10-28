@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**507 copied; 38 pending.** Counts refer to original Go test functions, not
+**509 copied; 36 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. Copies preserve provider-owned behavior
 and meaningful assertions. Backend-only persistence checks are omitted; fixture
 requests verify what the provider sends. Unsupported provider behavior remains
@@ -77,7 +77,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [internal/acceptance/workspace_id_pf_app_acc_test.go](../../internal/acceptance/workspace_id_pf_app_acc_test.go) | 21 | 0 |
 | [internal/acceptance/workspace_id_pf_tag_policy_acc_test.go](../../internal/acceptance/workspace_id_pf_tag_policy_acc_test.go) | 21 | 0 |
 | [internal/acceptance/workspace_id_sdkv2_gosdk_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_gosdk_acc_test.go) | 21 | 0 |
-| [internal/acceptance/workspace_id_sdkv2_http_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_http_acc_test.go) | 19 | 2 |
+| [internal/acceptance/workspace_id_sdkv2_http_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_http_acc_test.go) | 21 | 0 |
 | [internal/providers/pluginfw/products/app/data_app_acc_test.go](../../internal/providers/pluginfw/products/app/data_app_acc_test.go) | 1 | 0 |
 | [internal/providers/pluginfw/products/app/data_apps_acc_test.go](../../internal/providers/pluginfw/products/app/data_apps_acc_test.go) | 1 | 0 |
 | [internal/providers/pluginfw/products/app/resource_app_acc_test.go](../../internal/providers/pluginfw/products/app/resource_app_acc_test.go) | 8 | 0 |
@@ -205,9 +205,8 @@ See [PENDING.md](PENDING.md) for the remaining per-test blockers and
   models account/workspace clients and host transitions on the local server.
   YAML aliases repeat consumable fixtures; they do not make calls reusable.
   The provider-upgrade cases retain the originals' current-provider approximation.
-  Removed defaults/overrides retain diagnostic checks. The two notebook removal
-  cases remain pending because the provider attempts creation rather than
-  returning the expected planning diagnostic.
+  Removed defaults/overrides retain diagnostic checks. Notebook removal refreshes
+  the workspace saved in state before rejecting the missing workspace fallback.
 - Current-config cloud branches use separate YAML files for AWS, Azure, and
   GCP but still count as one source function. Explicit API cases extend
   `features/api_selection`; inference and cloud overrides stay in the
@@ -527,8 +526,8 @@ updates, preservation of existing resources/checkpoints, and automatic destroy.
 
 ## Remaining supported YAML lifecycles
 
-This batch copies **23 original functions** as 27 YAML scenarios, including AWS,
-Azure and GCP permutations. The inventory is **507 copied / 38 pending**.
+This batch copies **25 original functions** as 29 YAML scenarios, including AWS,
+Azure and GCP permutations. The inventory is **509 copied / 36 pending**.
 
 - Permission suites retain principal transitions and rejected loss of management
   rights. Pipeline permission deletion is a provider no-op; its backend owner
@@ -551,6 +550,7 @@ Azure and GCP permutations. The inventory is **507 copied / 38 pending**.
   computed-only field and requires an empty plan.
 
 Responses are marked placeholders, inferred from API models rather than captured
-from a live service. No integration test is changed. The two notebook removal
-cases remain pending: their routing failure currently leads to recreation before
-the expected plan diagnostic, so their assertions have not been relaxed.
+from a live service. No integration test is changed. Notebook removal cases use
+ordinary expected-error steps: planning refreshes the old workspace successfully,
+then rejects the missing workspace fallback before apply. Workspace and account
+SCIM /Me fixtures distinguish requests by their workspace-routing header.

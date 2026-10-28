@@ -8,6 +8,8 @@ subcategory: "Database Instances"
 
 This data source can be used to get a single Database Catalog.
 
+For new workloads, Databricks recommends the `databricks_postgres_catalog` data source.
+
 
 ## Example Usage
 Referring to a Database Catalog by name:

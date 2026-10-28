@@ -86,8 +86,8 @@ The following arguments are supported:
 * `query_text` (string, required) - Text of the query to be run
 * `schedule` (CronSchedule, required)
 * `warehouse_id` (string, required) - ID of the SQL warehouse attached to the alert
-* `custom_description` (string, optional) - Custom description for the alert. support mustache template
-* `custom_summary` (string, optional) - Custom summary for the alert. support mustache template
+* `custom_description` (string, optional) - Custom description for the alert. Interpreted according to `custom_template_format`
+* `custom_summary` (string, optional) - Custom summary for the alert. Interpreted according to `custom_template_format`
 * `custom_template_format` (string, optional) - The format used to interpret the `custom_summary` and `custom_description` templates.
   
   `HTML` treats both templates as HTML with Mustache `{{VARIABLE_NAME}}` placeholders.

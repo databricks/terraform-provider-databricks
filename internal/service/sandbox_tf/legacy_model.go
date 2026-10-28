@@ -539,10 +539,10 @@ func (m DeleteSandboxRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type EnvironmentSpec_SdkV2 struct {
-	// A Unity Catalog container artifact (e.g.
-	// `catalog.schema.folder.image:tag`) to run as the sandbox environment.
-	// When set, this image is used as the environment instead of resolving a
-	// managed image from `environment_version`.
+	// The Unity Catalog container image to use for the sandbox environment (for
+	// example, `catalog.schema.folder.image:tag`). See [Artifact Registry].
+	//
+	// [Artifact Registry]: https://docs.databricks.com/en/artifact-registry/
 	ImageUri types.String `tfsdk:"image_uri"`
 }
 
@@ -1658,6 +1658,8 @@ type Sandbox_SdkV2 struct {
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Human-readable display label for the sandbox. At most 256 characters.
 	DisplayName types.String `tfsdk:"display_name"`
+	// Metadata associated with the sandbox.
+	Metadata types.List `tfsdk:"metadata"`
 	// The sandbox resource name, in the form `sandboxes/{sandbox_id}`. Derived
 	// from `sandbox_id`; any value supplied in a create or update request body
 	// is ignored.
@@ -1672,6 +1674,15 @@ type Sandbox_SdkV2 struct {
 }
 
 func (to *Sandbox_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sandbox_SdkV2) {
+	if !from.Metadata.IsNull() && !from.Metadata.IsUnknown() {
+		if toMetadata, ok := to.GetMetadata(ctx); ok {
+			if fromMetadata, ok := from.GetMetadata(ctx); ok {
+				// Recursively sync the fields of Metadata
+				toMetadata.SyncFieldsDuringCreateOrUpdate(ctx, fromMetadata)
+				to.SetMetadata(ctx, toMetadata)
+			}
+		}
+	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -1693,6 +1704,14 @@ func (to *Sandbox_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 }
 
 func (to *Sandbox_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Sandbox_SdkV2) {
+	if !from.Metadata.IsNull() && !from.Metadata.IsUnknown() {
+		if toMetadata, ok := to.GetMetadata(ctx); ok {
+			if fromMetadata, ok := from.GetMetadata(ctx); ok {
+				toMetadata.SyncFieldsDuringRead(ctx, fromMetadata)
+				to.SetMetadata(ctx, toMetadata)
+			}
+		}
+	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -1714,6 +1733,8 @@ func (to *Sandbox_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Sandbox_
 func (m Sandbox_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["metadata"] = attrs["metadata"].SetOptional()
+	attrs["metadata"] = attrs["metadata"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -1733,8 +1754,9 @@ func (m Sandbox_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 // SDK values.
 func (m Sandbox_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"spec":   reflect.TypeOf(SandboxSpec_SdkV2{}),
-		"status": reflect.TypeOf(SandboxStatus_SdkV2{}),
+		"metadata": reflect.TypeOf(SandboxMetadata_SdkV2{}),
+		"spec":     reflect.TypeOf(SandboxSpec_SdkV2{}),
+		"status":   reflect.TypeOf(SandboxStatus_SdkV2{}),
 	}
 }
 
@@ -1747,6 +1769,7 @@ func (m Sandbox_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 		map[string]attr.Value{
 			"create_time":  m.CreateTime,
 			"display_name": m.DisplayName,
+			"metadata":     m.Metadata,
 			"name":         m.Name,
 			"spec":         m.Spec,
 			"status":       m.Status,
@@ -1760,7 +1783,10 @@ func (m Sandbox_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"create_time":  timetypes.RFC3339{}.Type(ctx),
 			"display_name": types.StringType,
-			"name":         types.StringType,
+			"metadata": basetypes.ListType{
+				ElemType: SandboxMetadata_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
 			"spec": basetypes.ListType{
 				ElemType: SandboxSpec_SdkV2{}.Type(ctx),
 			},
@@ -1770,6 +1796,32 @@ func (m Sandbox_SdkV2) Type(ctx context.Context) attr.Type {
 			"update_time": timetypes.RFC3339{}.Type(ctx),
 		},
 	}
+}
+
+// GetMetadata returns the value of the Metadata field in Sandbox_SdkV2 as
+// a SandboxMetadata_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Sandbox_SdkV2) GetMetadata(ctx context.Context) (SandboxMetadata_SdkV2, bool) {
+	var e SandboxMetadata_SdkV2
+	if m.Metadata.IsNull() || m.Metadata.IsUnknown() {
+		return e, false
+	}
+	var v []SandboxMetadata_SdkV2
+	d := m.Metadata.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMetadata sets the value of the Metadata field in Sandbox_SdkV2.
+func (m *Sandbox_SdkV2) SetMetadata(ctx context.Context, v SandboxMetadata_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["metadata"]
+	m.Metadata = types.ListValueMust(t, vs)
 }
 
 // GetSpec returns the value of the Spec field in Sandbox_SdkV2 as
@@ -1915,6 +1967,87 @@ func (m SandboxFileInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"symlink_target": types.StringType,
 		},
 	}
+}
+
+// Metadata associated with a sandbox.
+type SandboxMetadata_SdkV2 struct {
+	// Key-value tags associated with the sandbox. Supports up to 54 tags. Keys
+	// must be between 1 and 512 characters, and values must not exceed 256
+	// characters.
+	CustomTags types.Map `tfsdk:"custom_tags"`
+}
+
+func (to *SandboxMetadata_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SandboxMetadata_SdkV2) {
+}
+
+func (to *SandboxMetadata_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SandboxMetadata_SdkV2) {
+}
+
+func (m SandboxMetadata_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SandboxMetadata.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SandboxMetadata_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"custom_tags": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SandboxMetadata_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SandboxMetadata_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"custom_tags": m.CustomTags,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SandboxMetadata_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"custom_tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetCustomTags returns the value of the CustomTags field in SandboxMetadata_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SandboxMetadata_SdkV2) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if m.CustomTags.IsNull() || m.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in SandboxMetadata_SdkV2.
+func (m *SandboxMetadata_SdkV2) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.CustomTags = types.MapValueMust(t, vs)
 }
 
 type SandboxSpec_SdkV2 struct {

@@ -23661,6 +23661,8 @@ type SqlOutput_SdkV2 struct {
 	AlertOutput types.List `tfsdk:"alert_output"`
 	// The output of a SQL dashboard task, if available.
 	DashboardOutput types.List `tfsdk:"dashboard_output"`
+	// The output of a SQL file task, if available.
+	FileOutput types.List `tfsdk:"file_output"`
 	// The output of a SQL query task, if available.
 	QueryOutput types.List `tfsdk:"query_output"`
 }
@@ -23681,6 +23683,15 @@ func (to *SqlOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 				// Recursively sync the fields of DashboardOutput
 				toDashboardOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromDashboardOutput)
 				to.SetDashboardOutput(ctx, toDashboardOutput)
+			}
+		}
+	}
+	if !from.FileOutput.IsNull() && !from.FileOutput.IsUnknown() {
+		if toFileOutput, ok := to.GetFileOutput(ctx); ok {
+			if fromFileOutput, ok := from.GetFileOutput(ctx); ok {
+				// Recursively sync the fields of FileOutput
+				toFileOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromFileOutput)
+				to.SetFileOutput(ctx, toFileOutput)
 			}
 		}
 	}
@@ -23712,6 +23723,14 @@ func (to *SqlOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SqlOut
 			}
 		}
 	}
+	if !from.FileOutput.IsNull() && !from.FileOutput.IsUnknown() {
+		if toFileOutput, ok := to.GetFileOutput(ctx); ok {
+			if fromFileOutput, ok := from.GetFileOutput(ctx); ok {
+				toFileOutput.SyncFieldsDuringRead(ctx, fromFileOutput)
+				to.SetFileOutput(ctx, toFileOutput)
+			}
+		}
+	}
 	if !from.QueryOutput.IsNull() && !from.QueryOutput.IsUnknown() {
 		if toQueryOutput, ok := to.GetQueryOutput(ctx); ok {
 			if fromQueryOutput, ok := from.GetQueryOutput(ctx); ok {
@@ -23727,6 +23746,8 @@ func (m SqlOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["alert_output"] = attrs["alert_output"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dashboard_output"] = attrs["dashboard_output"].SetOptional()
 	attrs["dashboard_output"] = attrs["dashboard_output"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["file_output"] = attrs["file_output"].SetOptional()
+	attrs["file_output"] = attrs["file_output"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["query_output"] = attrs["query_output"].SetOptional()
 	attrs["query_output"] = attrs["query_output"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -23744,6 +23765,7 @@ func (m SqlOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{
 		"alert_output":     reflect.TypeOf(SqlAlertOutput_SdkV2{}),
 		"dashboard_output": reflect.TypeOf(SqlDashboardOutput_SdkV2{}),
+		"file_output":      reflect.TypeOf(SqlTaskSqlFileOutput_SdkV2{}),
 		"query_output":     reflect.TypeOf(SqlQueryOutput_SdkV2{}),
 	}
 }
@@ -23757,6 +23779,7 @@ func (m SqlOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 		map[string]attr.Value{
 			"alert_output":     m.AlertOutput,
 			"dashboard_output": m.DashboardOutput,
+			"file_output":      m.FileOutput,
 			"query_output":     m.QueryOutput,
 		})
 }
@@ -23770,6 +23793,9 @@ func (m SqlOutput_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"dashboard_output": basetypes.ListType{
 				ElemType: SqlDashboardOutput_SdkV2{}.Type(ctx),
+			},
+			"file_output": basetypes.ListType{
+				ElemType: SqlTaskSqlFileOutput_SdkV2{}.Type(ctx),
 			},
 			"query_output": basetypes.ListType{
 				ElemType: SqlQueryOutput_SdkV2{}.Type(ctx),
@@ -23828,6 +23854,32 @@ func (m *SqlOutput_SdkV2) SetDashboardOutput(ctx context.Context, v SqlDashboard
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard_output"]
 	m.DashboardOutput = types.ListValueMust(t, vs)
+}
+
+// GetFileOutput returns the value of the FileOutput field in SqlOutput_SdkV2 as
+// a SqlTaskSqlFileOutput_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SqlOutput_SdkV2) GetFileOutput(ctx context.Context) (SqlTaskSqlFileOutput_SdkV2, bool) {
+	var e SqlTaskSqlFileOutput_SdkV2
+	if m.FileOutput.IsNull() || m.FileOutput.IsUnknown() {
+		return e, false
+	}
+	var v []SqlTaskSqlFileOutput_SdkV2
+	d := m.FileOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFileOutput sets the value of the FileOutput field in SqlOutput_SdkV2.
+func (m *SqlOutput_SdkV2) SetFileOutput(ctx context.Context, v SqlTaskSqlFileOutput_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["file_output"]
+	m.FileOutput = types.ListValueMust(t, vs)
 }
 
 // GetQueryOutput returns the value of the QueryOutput field in SqlOutput_SdkV2 as
@@ -23906,7 +23958,8 @@ func (m SqlOutputError_SdkV2) Type(ctx context.Context) attr.Type {
 
 type SqlQueryOutput_SdkV2 struct {
 	EndpointId types.String `tfsdk:"endpoint_id"`
-	// The link to find the output results.
+	// Deprecated. The link to find the output results, which are only
+	// accessible from the UI.
 	OutputLink types.String `tfsdk:"output_link"`
 	// The text of the SQL query. Can Run permission of the SQL query is
 	// required to view this field.
@@ -24083,6 +24136,408 @@ func (m SqlStatementOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"lookup_key": types.StringType,
+		},
+	}
+}
+
+type SqlStatementQueryResult_SdkV2 struct {
+	// The metadata for each column in the result set.
+	Columns types.List `tfsdk:"columns"`
+	// The rows returned by the query.
+	Rows types.List `tfsdk:"rows"`
+	// Whether the result set was truncated.
+	Truncated types.Bool `tfsdk:"truncated"`
+}
+
+func (to *SqlStatementQueryResult_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlStatementQueryResult_SdkV2) {
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() && to.Columns.IsNull() && len(from.Columns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Columns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Columns = from.Columns
+	}
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() {
+		if toColumns, ok := to.GetColumns(ctx); ok {
+			if fromColumns, ok := from.GetColumns(ctx); ok {
+				// Recursively sync the fields of each Columns element by position.
+				for i := range toColumns {
+					if i < len(fromColumns) {
+						toColumns[i].SyncFieldsDuringCreateOrUpdate(ctx, fromColumns[i])
+					}
+				}
+				to.SetColumns(ctx, toColumns)
+			}
+		}
+	}
+	if !from.Rows.IsNull() && !from.Rows.IsUnknown() && to.Rows.IsNull() && len(from.Rows.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Rows, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Rows = from.Rows
+	}
+	if !from.Rows.IsNull() && !from.Rows.IsUnknown() {
+		if toRows, ok := to.GetRows(ctx); ok {
+			if fromRows, ok := from.GetRows(ctx); ok {
+				// Recursively sync the fields of each Rows element by position.
+				for i := range toRows {
+					if i < len(fromRows) {
+						toRows[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRows[i])
+					}
+				}
+				to.SetRows(ctx, toRows)
+			}
+		}
+	}
+}
+
+func (to *SqlStatementQueryResult_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SqlStatementQueryResult_SdkV2) {
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() && to.Columns.IsNull() && len(from.Columns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Columns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Columns = from.Columns
+	}
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() {
+		if toColumns, ok := to.GetColumns(ctx); ok {
+			if fromColumns, ok := from.GetColumns(ctx); ok {
+				for i := range toColumns {
+					if i < len(fromColumns) {
+						toColumns[i].SyncFieldsDuringRead(ctx, fromColumns[i])
+					}
+				}
+				to.SetColumns(ctx, toColumns)
+			}
+		}
+	}
+	if !from.Rows.IsNull() && !from.Rows.IsUnknown() && to.Rows.IsNull() && len(from.Rows.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Rows, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Rows = from.Rows
+	}
+	if !from.Rows.IsNull() && !from.Rows.IsUnknown() {
+		if toRows, ok := to.GetRows(ctx); ok {
+			if fromRows, ok := from.GetRows(ctx); ok {
+				for i := range toRows {
+					if i < len(fromRows) {
+						toRows[i].SyncFieldsDuringRead(ctx, fromRows[i])
+					}
+				}
+				to.SetRows(ctx, toRows)
+			}
+		}
+	}
+}
+
+func (m SqlStatementQueryResult_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns"] = attrs["columns"].SetOptional()
+	attrs["rows"] = attrs["rows"].SetOptional()
+	attrs["truncated"] = attrs["truncated"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlStatementQueryResult.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SqlStatementQueryResult_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"columns": reflect.TypeOf(SqlStatementQueryResultColumn_SdkV2{}),
+		"rows":    reflect.TypeOf(SqlStatementQueryResultRow_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlStatementQueryResult_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SqlStatementQueryResult_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"columns":   m.Columns,
+			"rows":      m.Rows,
+			"truncated": m.Truncated,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SqlStatementQueryResult_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"columns": basetypes.ListType{
+				ElemType: SqlStatementQueryResultColumn_SdkV2{}.Type(ctx),
+			},
+			"rows": basetypes.ListType{
+				ElemType: SqlStatementQueryResultRow_SdkV2{}.Type(ctx),
+			},
+			"truncated": types.BoolType,
+		},
+	}
+}
+
+// GetColumns returns the value of the Columns field in SqlStatementQueryResult_SdkV2 as
+// a slice of SqlStatementQueryResultColumn_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SqlStatementQueryResult_SdkV2) GetColumns(ctx context.Context) ([]SqlStatementQueryResultColumn_SdkV2, bool) {
+	if m.Columns.IsNull() || m.Columns.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlStatementQueryResultColumn_SdkV2
+	d := m.Columns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumns sets the value of the Columns field in SqlStatementQueryResult_SdkV2.
+func (m *SqlStatementQueryResult_SdkV2) SetColumns(ctx context.Context, v []SqlStatementQueryResultColumn_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Columns = types.ListValueMust(t, vs)
+}
+
+// GetRows returns the value of the Rows field in SqlStatementQueryResult_SdkV2 as
+// a slice of SqlStatementQueryResultRow_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SqlStatementQueryResult_SdkV2) GetRows(ctx context.Context) ([]SqlStatementQueryResultRow_SdkV2, bool) {
+	if m.Rows.IsNull() || m.Rows.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlStatementQueryResultRow_SdkV2
+	d := m.Rows.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRows sets the value of the Rows field in SqlStatementQueryResult_SdkV2.
+func (m *SqlStatementQueryResult_SdkV2) SetRows(ctx context.Context, v []SqlStatementQueryResultRow_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["rows"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Rows = types.ListValueMust(t, vs)
+}
+
+type SqlStatementQueryResultColumn_SdkV2 struct {
+	// The name of the column.
+	Name types.String `tfsdk:"name"`
+}
+
+func (to *SqlStatementQueryResultColumn_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlStatementQueryResultColumn_SdkV2) {
+}
+
+func (to *SqlStatementQueryResultColumn_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SqlStatementQueryResultColumn_SdkV2) {
+}
+
+func (m SqlStatementQueryResultColumn_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlStatementQueryResultColumn.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SqlStatementQueryResultColumn_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlStatementQueryResultColumn_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SqlStatementQueryResultColumn_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SqlStatementQueryResultColumn_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type SqlStatementQueryResultRow_SdkV2 struct {
+	// The values in the row, ordered to match the columns.
+	Values types.List `tfsdk:"values"`
+}
+
+func (to *SqlStatementQueryResultRow_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlStatementQueryResultRow_SdkV2) {
+	if !from.Values.IsNull() && !from.Values.IsUnknown() && to.Values.IsNull() && len(from.Values.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Values, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Values = from.Values
+	}
+	if !from.Values.IsNull() && !from.Values.IsUnknown() {
+		if toValues, ok := to.GetValues(ctx); ok {
+			if fromValues, ok := from.GetValues(ctx); ok {
+				// Recursively sync the fields of each Values element by position.
+				for i := range toValues {
+					if i < len(fromValues) {
+						toValues[i].SyncFieldsDuringCreateOrUpdate(ctx, fromValues[i])
+					}
+				}
+				to.SetValues(ctx, toValues)
+			}
+		}
+	}
+}
+
+func (to *SqlStatementQueryResultRow_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SqlStatementQueryResultRow_SdkV2) {
+	if !from.Values.IsNull() && !from.Values.IsUnknown() && to.Values.IsNull() && len(from.Values.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Values, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Values = from.Values
+	}
+	if !from.Values.IsNull() && !from.Values.IsUnknown() {
+		if toValues, ok := to.GetValues(ctx); ok {
+			if fromValues, ok := from.GetValues(ctx); ok {
+				for i := range toValues {
+					if i < len(fromValues) {
+						toValues[i].SyncFieldsDuringRead(ctx, fromValues[i])
+					}
+				}
+				to.SetValues(ctx, toValues)
+			}
+		}
+	}
+}
+
+func (m SqlStatementQueryResultRow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["values"] = attrs["values"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlStatementQueryResultRow.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SqlStatementQueryResultRow_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"values": reflect.TypeOf(SqlStatementQueryResultRowRowValue_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlStatementQueryResultRow_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SqlStatementQueryResultRow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"values": m.Values,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SqlStatementQueryResultRow_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"values": basetypes.ListType{
+				ElemType: SqlStatementQueryResultRowRowValue_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetValues returns the value of the Values field in SqlStatementQueryResultRow_SdkV2 as
+// a slice of SqlStatementQueryResultRowRowValue_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SqlStatementQueryResultRow_SdkV2) GetValues(ctx context.Context) ([]SqlStatementQueryResultRowRowValue_SdkV2, bool) {
+	if m.Values.IsNull() || m.Values.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlStatementQueryResultRowRowValue_SdkV2
+	d := m.Values.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetValues sets the value of the Values field in SqlStatementQueryResultRow_SdkV2.
+func (m *SqlStatementQueryResultRow_SdkV2) SetValues(ctx context.Context, v []SqlStatementQueryResultRowRowValue_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Values = types.ListValueMust(t, vs)
+}
+
+type SqlStatementQueryResultRowRowValue_SdkV2 struct {
+	// The value rendered as a string.
+	StringValue types.String `tfsdk:"string_value"`
+}
+
+func (to *SqlStatementQueryResultRowRowValue_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlStatementQueryResultRowRowValue_SdkV2) {
+}
+
+func (to *SqlStatementQueryResultRowRowValue_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SqlStatementQueryResultRowRowValue_SdkV2) {
+}
+
+func (m SqlStatementQueryResultRowRowValue_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["string_value"] = attrs["string_value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlStatementQueryResultRowRowValue.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SqlStatementQueryResultRowRowValue_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlStatementQueryResultRowRowValue_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SqlStatementQueryResultRowRowValue_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"string_value": m.StringValue,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SqlStatementQueryResultRowRowValue_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"string_value": types.StringType,
 		},
 	}
 }
@@ -24746,6 +25201,183 @@ func (m SqlTaskQuery_SdkV2) Type(ctx context.Context) attr.Type {
 			"query_id": types.StringType,
 		},
 	}
+}
+
+type SqlTaskSqlFileOutput_SdkV2 struct {
+	// The result of the executed SQL statement, if available.
+	QueryResult types.List `tfsdk:"query_result"`
+	// The text of the SQL query.
+	QueryText types.String `tfsdk:"query_text"`
+	// Information about SQL statements executed in the run.
+	SqlStatements types.List `tfsdk:"sql_statements"`
+	// The canonical identifier of the SQL warehouse.
+	WarehouseId types.String `tfsdk:"warehouse_id"`
+}
+
+func (to *SqlTaskSqlFileOutput_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlTaskSqlFileOutput_SdkV2) {
+	if !from.QueryResult.IsNull() && !from.QueryResult.IsUnknown() {
+		if toQueryResult, ok := to.GetQueryResult(ctx); ok {
+			if fromQueryResult, ok := from.GetQueryResult(ctx); ok {
+				// Recursively sync the fields of QueryResult
+				toQueryResult.SyncFieldsDuringCreateOrUpdate(ctx, fromQueryResult)
+				to.SetQueryResult(ctx, toQueryResult)
+			}
+		}
+	}
+	if !from.SqlStatements.IsNull() && !from.SqlStatements.IsUnknown() && to.SqlStatements.IsNull() && len(from.SqlStatements.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SqlStatements, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SqlStatements = from.SqlStatements
+	}
+	if !from.SqlStatements.IsNull() && !from.SqlStatements.IsUnknown() {
+		if toSqlStatements, ok := to.GetSqlStatements(ctx); ok {
+			if fromSqlStatements, ok := from.GetSqlStatements(ctx); ok {
+				// Recursively sync the fields of each SqlStatements element by position.
+				for i := range toSqlStatements {
+					if i < len(fromSqlStatements) {
+						toSqlStatements[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSqlStatements[i])
+					}
+				}
+				to.SetSqlStatements(ctx, toSqlStatements)
+			}
+		}
+	}
+}
+
+func (to *SqlTaskSqlFileOutput_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SqlTaskSqlFileOutput_SdkV2) {
+	if !from.QueryResult.IsNull() && !from.QueryResult.IsUnknown() {
+		if toQueryResult, ok := to.GetQueryResult(ctx); ok {
+			if fromQueryResult, ok := from.GetQueryResult(ctx); ok {
+				toQueryResult.SyncFieldsDuringRead(ctx, fromQueryResult)
+				to.SetQueryResult(ctx, toQueryResult)
+			}
+		}
+	}
+	if !from.SqlStatements.IsNull() && !from.SqlStatements.IsUnknown() && to.SqlStatements.IsNull() && len(from.SqlStatements.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SqlStatements, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SqlStatements = from.SqlStatements
+	}
+	if !from.SqlStatements.IsNull() && !from.SqlStatements.IsUnknown() {
+		if toSqlStatements, ok := to.GetSqlStatements(ctx); ok {
+			if fromSqlStatements, ok := from.GetSqlStatements(ctx); ok {
+				for i := range toSqlStatements {
+					if i < len(fromSqlStatements) {
+						toSqlStatements[i].SyncFieldsDuringRead(ctx, fromSqlStatements[i])
+					}
+				}
+				to.SetSqlStatements(ctx, toSqlStatements)
+			}
+		}
+	}
+}
+
+func (m SqlTaskSqlFileOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["query_result"] = attrs["query_result"].SetOptional()
+	attrs["query_result"] = attrs["query_result"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["query_text"] = attrs["query_text"].SetOptional()
+	attrs["sql_statements"] = attrs["sql_statements"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlTaskSqlFileOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SqlTaskSqlFileOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"query_result":   reflect.TypeOf(SqlStatementQueryResult_SdkV2{}),
+		"sql_statements": reflect.TypeOf(SqlStatementOutput_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlTaskSqlFileOutput_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SqlTaskSqlFileOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"query_result":   m.QueryResult,
+			"query_text":     m.QueryText,
+			"sql_statements": m.SqlStatements,
+			"warehouse_id":   m.WarehouseId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SqlTaskSqlFileOutput_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"query_result": basetypes.ListType{
+				ElemType: SqlStatementQueryResult_SdkV2{}.Type(ctx),
+			},
+			"query_text": types.StringType,
+			"sql_statements": basetypes.ListType{
+				ElemType: SqlStatementOutput_SdkV2{}.Type(ctx),
+			},
+			"warehouse_id": types.StringType,
+		},
+	}
+}
+
+// GetQueryResult returns the value of the QueryResult field in SqlTaskSqlFileOutput_SdkV2 as
+// a SqlStatementQueryResult_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SqlTaskSqlFileOutput_SdkV2) GetQueryResult(ctx context.Context) (SqlStatementQueryResult_SdkV2, bool) {
+	var e SqlStatementQueryResult_SdkV2
+	if m.QueryResult.IsNull() || m.QueryResult.IsUnknown() {
+		return e, false
+	}
+	var v []SqlStatementQueryResult_SdkV2
+	d := m.QueryResult.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueryResult sets the value of the QueryResult field in SqlTaskSqlFileOutput_SdkV2.
+func (m *SqlTaskSqlFileOutput_SdkV2) SetQueryResult(ctx context.Context, v SqlStatementQueryResult_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["query_result"]
+	m.QueryResult = types.ListValueMust(t, vs)
+}
+
+// GetSqlStatements returns the value of the SqlStatements field in SqlTaskSqlFileOutput_SdkV2 as
+// a slice of SqlStatementOutput_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SqlTaskSqlFileOutput_SdkV2) GetSqlStatements(ctx context.Context) ([]SqlStatementOutput_SdkV2, bool) {
+	if m.SqlStatements.IsNull() || m.SqlStatements.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlStatementOutput_SdkV2
+	d := m.SqlStatements.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSqlStatements sets the value of the SqlStatements field in SqlTaskSqlFileOutput_SdkV2.
+func (m *SqlTaskSqlFileOutput_SdkV2) SetSqlStatements(ctx context.Context, v []SqlStatementOutput_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_statements"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.SqlStatements = types.ListValueMust(t, vs)
 }
 
 type SqlTaskSubscription_SdkV2 struct {

@@ -82,12 +82,27 @@ This data source exports a single attribute, `features`. It is a list of resourc
 
 ### ApproxCountDistinctFunction
 * `input` (string) - The input column from which the approximate count of distinct values is computed
-* `relative_sd` (number) - The maximum relative standard deviation allowed (default defined by Spark)
+* `relative_error` (number) - The error the user accepts, as a fraction of the count, between 0.02 (by default) and 0.3.
+  This is one standard error of the estimate, the same meaning as Spark's relativeSD: 0.02 means
+  the result is within ±2% of the true count about 68% of the time (one standard deviation covers
+  68% of the region). Feature Store picks the sketch size that gives this relative error. If
+  neither relative_error nor relative_sd is set, 0.02 is default chosen at feature creation
+* `relative_sd` (number) - The maximum relative standard deviation allowed (default defined by Spark).
+  Deprecated: use relative_error. When relative_error is set, reads return the same value here
+  for clients that don't have relative_error, and a request may only send that value
 
 ### ApproxPercentileFunction
-* `accuracy` (integer) - The accuracy parameter (higher is more accurate but slower)
+* `accuracy` (integer) - The accuracy parameter (higher is more accurate but slower).
+  Deprecated: use relative_error. When relative_error is set, reads return ceil(1 /
+  relative_error) here for clients that don't have relative_error, and a request may only send
+  that value
 * `input` (string) - The input column from which the approximate percentile is computed
 * `percentile` (number) - The percentile value to compute (between 0 and 1)
+* `relative_error` (number) - The error the user accepts, as a fraction of rank, between 0.01 (by default) and 0.3. The
+  result is within this rank error with 99% confidence: at 0.01, the value returned for p95 is
+  between the true p94 and p96 at least 99% of the time. Feature Store picks the sketch size that
+  gives this error.
+  If neither relative_error nor accuracy is set, 0.01 is default chosen at feature creation
 
 ### AvgFunction
 * `input` (string) - The input column from which the average is computed. For Kafka sources, use dot-prefixed path
@@ -242,8 +257,8 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `filter_condition` (string) - Single WHERE clause to filter the pipeline's output table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections
 * `input_tables` (list of string) - The full three-part names of the tables the pipeline reads from. Required to materialize this
   feature with a TableTrigger, which starts a run when these tables update. Each table must exist
-  when the feature is created. After the pipeline runs, Feature Store checks that it reads from
-  these tables, and the run fails if it doesn't. At most 100 tables
+  when the feature is created. Feature Store doesn't confirm that the pipeline reads from these
+  tables. At most 100 tables
 * `output_table` (string) - The full three-part (catalog, schema, table) name of the pipeline's output table to read from.
   The table doesn't need to exist until the pipeline first runs. Required
 * `pipeline_id` (string) - The ID of the Spark Declarative Pipeline that Feature Store runs to produce this source, before

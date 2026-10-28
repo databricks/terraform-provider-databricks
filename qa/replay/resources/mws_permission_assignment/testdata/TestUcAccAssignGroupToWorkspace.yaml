@@ -1,0 +1,224 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "AWS"
+  account_id: "replay-account"
+steps:
+  - name: "assign"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_group" "this" {
+        display_name = "TF replay1"
+      }
+      resource "databricks_mws_permission_assignment" "this" {
+        workspace_id = 12345
+        principal_id = databricks_group.this.id
+        permissions  = ["USER"]
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/accounts/replay-account/scim/v2/Groups"
+          body:
+            json:
+              displayName: "TF replay1"
+              entitlements:
+                - {}
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"]
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: "TF replay1"
+              id: "201"
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"]
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/Groups/201"
+          query:
+            attributes: ["displayName,externalId,entitlements"]
+          body: null
+        response: *response_1
+      - &put_2
+        request:
+          method: "PUT"
+          path: "/api/2.0/accounts/replay-account/workspaces/12345/permissionassignments/principals/201"
+          body:
+            json:
+              permissions: ["USER"]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              permissions: ["USER"]
+      - &get_3
+        request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/workspaces/12345/permissionassignments"
+          body: null
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              permission_assignments:
+                - permissions: ["USER"]
+                  principal:
+                    principal_id: 201
+      - *get_1
+      - *get_3
+  - name: "change_permissions_1"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_group" "this" {
+        display_name = "TF replay2"
+      }
+      resource "databricks_mws_permission_assignment" "this" {
+        workspace_id = 12345
+        principal_id = databricks_group.this.id
+        permissions  = ["ADMIN"]
+      }
+    calls:
+      - *get_1
+      - *get_3
+      - &delete_4
+        request:
+          method: "DELETE"
+          path: "/api/2.0/accounts/replay-account/workspaces/12345/permissionassignments/principals/201"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/Groups/201"
+          query:
+            attributes: ["displayName,entitlements,groups,members,externalId"]
+          body: null
+        response: *response_1
+      - request:
+          method: "PUT"
+          path: "/api/2.0/accounts/replay-account/scim/v2/Groups/201"
+          body:
+            json:
+              displayName: "TF replay2"
+              entitlements:
+                - {}
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_5
+        request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/Groups/201"
+          query:
+            attributes: ["displayName,externalId,entitlements"]
+          body: null
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: "TF replay2"
+              id: "201"
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"]
+      - request:
+          method: "PUT"
+          path: "/api/2.0/accounts/replay-account/workspaces/12345/permissionassignments/principals/201"
+          body:
+            json:
+              permissions: ["ADMIN"]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              permissions: ["ADMIN"]
+      - &get_6
+        request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/workspaces/12345/permissionassignments"
+          body: null
+        response: &response_4 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              permission_assignments:
+                - permissions: ["ADMIN"]
+                  principal:
+                    principal_id: 201
+      - *get_5
+      - *get_6
+  - name: "change_permissions_2"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_group" "this" {
+        display_name = "TF replay3"
+      }
+      resource "databricks_mws_permission_assignment" "this" {
+        workspace_id = 12345
+        principal_id = databricks_group.this.id
+        permissions  = ["USER"]
+      }
+    calls:
+      - *get_5
+      - *get_6
+      - *delete_4
+      - request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/Groups/201"
+          query:
+            attributes: ["displayName,entitlements,groups,members,externalId"]
+          body: null
+        response: *response_3
+      - request:
+          method: "PUT"
+          path: "/api/2.0/accounts/replay-account/scim/v2/Groups/201"
+          body:
+            json:
+              displayName: "TF replay3"
+              entitlements:
+                - {}
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_7
+        request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/Groups/201"
+          query:
+            attributes: ["displayName,externalId,entitlements"]
+          body: null
+        response: &response_5 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: "TF replay3"
+              id: "201"
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"]
+      - *put_2
+      - *get_3
+      - *get_7
+      - *get_3
+destroy:
+  calls:
+    - *get_7
+    - *get_3
+    - *delete_4
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/accounts/replay-account/scim/v2/Groups/201"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

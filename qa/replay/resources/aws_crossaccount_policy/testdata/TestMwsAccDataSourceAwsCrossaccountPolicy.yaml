@@ -1,0 +1,29 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: managed_policy
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      data "databricks_aws_crossaccount_policy" "this" {
+      }
+
+      output "policy_version" {
+        value = jsondecode(data.databricks_aws_crossaccount_policy.this.json).Version
+      }
+    calls: []
+    # Decode one policy field instead of pinning the whole generated document.
+    plan:
+      outputs:
+        policy_version:
+          after:
+            - path: []
+              equals: '2012-10-17'
+destroy:
+  calls: []

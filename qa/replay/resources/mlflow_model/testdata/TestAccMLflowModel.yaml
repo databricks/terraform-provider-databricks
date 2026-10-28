@@ -1,0 +1,135 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create_model_and_grant_read"
+    config: |
+      resource "databricks_mlflow_model" "m1" {
+        name        = "tf-replay1"
+        description = "tf-replay1 description"
+
+        tags {
+          key   = "key-replay1"
+          value = "replay1"
+        }
+      }
+
+      resource "databricks_permissions" "mlflow_model_permissions" {
+        registered_model_id = databricks_mlflow_model.m1.registered_model_id
+        access_control {
+          group_name       = "users"
+          permission_level = "CAN_READ"
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/mlflow/registered-models/create"
+          body:
+            json:
+              description: "tf-replay1 description"
+              name: "tf-replay1"
+              tags:
+                - key: "key-replay1"
+                  value: "replay1"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              registered_model:
+                description: "tf-replay1 description"
+                id: "model-1"
+                name: "tf-replay1"
+                tags:
+                  - key: "key-replay1"
+                    value: "replay1"
+                user_id: "100"
+      - &get_1
+        request: {method: "GET", path: "/api/2.0/mlflow/databricks/registered-models/get", query: {"name": ["tf-replay1"]}, body: null}
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              registered_model_databricks:
+                description: "tf-replay1 description"
+                id: "model-1"
+                name: "tf-replay1"
+                tags:
+                  - key: "key-replay1"
+                    value: "replay1"
+                user_id: "100"
+      - &get_2
+        request: {method: "GET", path: "/api/2.0/preview/scim/v2/Me", query: {"excludedAttributes": ["entitlements"]}, body: null}
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          headers:
+            "X-Databricks-Org-Id": "12345"
+          body:
+            json:
+              displayName: "Replay tester"
+              id: "100"
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              userName: "tester@example.com"
+      - request:
+          method: "PUT"
+          path: "/api/2.0/permissions/registered-models/model-1"
+          body:
+            json:
+              access_control_list:
+                - group_name: "users"
+                  permission_level: "CAN_READ"
+                - permission_level: "CAN_MANAGE"
+                  user_name: "tester@example.com"
+        response: &response_4 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              access_control_list:
+                - all_permissions:
+                    - inherited: false
+                      permission_level: "CAN_READ"
+                  group_name: "users"
+                - all_permissions:
+                    - inherited: false
+                      permission_level: "CAN_MANAGE"
+                  user_name: "tester@example.com"
+              object_id: "/registered-models/model-1"
+              object_type: "registered-model"
+      - *get_2
+      - &get_3
+        request: {method: "GET", path: "/api/2.0/permissions/registered-models/model-1", body: null}
+        response: *response_4
+      - *get_1
+      - *get_2
+      - *get_3
+destroy:
+  calls:
+    - *get_1
+    - *get_2
+    - *get_3
+    - *get_3
+    - *get_2
+    - request:
+        method: "PUT"
+        path: "/api/2.0/permissions/registered-models/model-1"
+        body:
+          json:
+            access_control_list:
+              - permission_level: "CAN_MANAGE"
+                user_name: "tester@example.com"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json: {}
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/mlflow/registered-models/delete"
+        query:
+          name: ["tf-replay1"]
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

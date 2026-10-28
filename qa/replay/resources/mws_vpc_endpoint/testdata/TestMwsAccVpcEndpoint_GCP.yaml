@@ -1,0 +1,73 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "GCP"
+  account_id: "replay-account"
+steps:
+  - name: "create"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_mws_vpc_endpoint" "this" {
+        account_id = "replay-account"
+        vpc_endpoint_name = "vpce-replay"
+        gcp_vpc_endpoint_info {
+          project_id = "replay-project"
+          psc_endpoint_name = "replay-endpoint"
+          endpoint_region = "us-central1"
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/accounts/replay-account/vpc-endpoints"
+          body:
+            json:
+              account_id: "replay-account"
+              gcp_vpc_endpoint_info:
+                endpoint_region: "us-central1"
+                project_id: "replay-project"
+                psc_endpoint_name: "replay-endpoint"
+              vpc_endpoint_name: "vpce-replay"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              gcp_vpc_endpoint_info:
+                endpoint_region: "us-central1"
+                project_id: "replay-project"
+                psc_endpoint_name: "replay-endpoint"
+              vpc_endpoint_id: "vpce-123"
+              vpc_endpoint_name: "vpce-replay"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/vpc-endpoints/vpce-123"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              gcp_vpc_endpoint_info:
+                endpoint_region: "us-central1"
+                project_id: "replay-project"
+                psc_endpoint_name: "replay-endpoint"
+              vpc_endpoint_id: "vpce-123"
+              vpc_endpoint_name: "vpce-replay"
+      - *get_1
+      - *get_1
+destroy:
+  calls:
+    - *get_1
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/accounts/replay-account/vpc-endpoints/vpce-123"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

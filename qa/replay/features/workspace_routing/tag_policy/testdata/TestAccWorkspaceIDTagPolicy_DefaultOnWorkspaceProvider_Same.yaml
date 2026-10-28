@@ -1,0 +1,66 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  workspace_id: "1001"
+  cloud: "AWS"
+steps:
+  - name: "create"
+    config: |
+      provider "databricks" {
+        workspace_id = "1001"
+      }
+
+      resource "databricks_tag_policy" "test" {
+        tag_key = "dwsid-tp-replay"
+        description = "workspace_id acceptance test"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.1/tag-policies"
+          body:
+            json:
+              tag_key: "dwsid-tp-replay"
+              description: "workspace_id acceptance test"
+          headers:
+            "X-Databricks-Workspace-Id": "1001"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              tag_key: "dwsid-tp-replay"
+              description: "workspace_id acceptance test"
+              id: "tag-1001"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.1/tag-policies/dwsid-tp-replay"
+          body: null
+          headers:
+            "X-Databricks-Workspace-Id": "1001"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              tag_key: "dwsid-tp-replay"
+              description: "workspace_id acceptance test"
+              id: "tag-1001"
+    state:
+      resources:
+        databricks_tag_policy.test:
+          attributes:
+            - path: ["provider_config","workspace_id"]
+              equals: "1001"
+destroy:
+  calls:
+    - *get_1
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/tag-policies/dwsid-tp-replay"
+        body: null
+        headers:
+          "X-Databricks-Workspace-Id": "1001"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

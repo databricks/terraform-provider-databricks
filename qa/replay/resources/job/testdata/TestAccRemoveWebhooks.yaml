@@ -1,0 +1,89 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create_with_webhook"
+    config: |
+      resource "databricks_job" "test" {
+        webhook_notifications {
+          on_success {
+            id = "a90cc1be-a29e-4eb7-a7e9-e4b0d4a7e7ae"
+          }
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/jobs/create"
+          body:
+            json:
+              max_concurrent_runs: 1
+              name: "Untitled"
+              webhook_notifications:
+                on_success:
+                  - id: "a90cc1be-a29e-4eb7-a7e9-e4b0d4a7e7ae"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              job_id: 101
+      - &get_1
+        request: {method: "GET", path: "/api/2.0/jobs/get", query: {"job_id": ["101"]}, body: null}
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              creator_user_name: "tester@example.com"
+              job_id: 101
+              settings:
+                max_concurrent_runs: 1
+                name: "Untitled"
+                webhook_notifications:
+                  on_success:
+                    - id: "a90cc1be-a29e-4eb7-a7e9-e4b0d4a7e7ae"
+      - *get_1
+  - name: "remove_webhook"
+    config: |
+      resource "databricks_job" "test" {}
+    calls:
+      - *get_1
+      - request:
+          method: "POST"
+          path: "/api/2.0/jobs/reset"
+          body:
+            json:
+              job_id: 101
+              new_settings:
+                max_concurrent_runs: 1
+                name: "Untitled"
+                webhook_notifications: {}
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_2
+        request: {method: "GET", path: "/api/2.0/jobs/get", query: {"job_id": ["101"]}, body: null}
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              creator_user_name: "tester@example.com"
+              job_id: 101
+              settings:
+                max_concurrent_runs: 1
+                name: "Untitled"
+      - *get_2
+destroy:
+  calls:
+    - *get_2
+    - request:
+        method: "POST"
+        path: "/api/2.2/jobs/delete"
+        body:
+          json:
+            job_id: 101
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

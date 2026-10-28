@@ -1,0 +1,111 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+# Service-account key material is a non-secret placeholder.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_connection" "this" {
+        name            = "tf-test-connection-replay"
+        connection_type = "BIGQUERY"
+        comment         = "test"
+        options = {
+          GoogleServiceAccountKeyJson = <<-EOT
+            {
+              "type": "service_account",
+              "project_id": "PROJECT_ID",
+              "private_key_id": "KEY_ID",
+              "private_key": "placeholder-private-key",
+              "client_email": "SERVICE_ACCOUNT_EMAIL",
+              "client_id": "CLIENT_ID",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://accounts.google.com/o/oauth2/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/SERVICE_ACCOUNT_EMAIL",
+              "universe_domain": "googleapis.com"
+            }
+          EOT
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/connections"
+          body:
+            json:
+              comment: "test"
+              connection_type: "BIGQUERY"
+              name: "tf-test-connection-replay"
+              options:
+                GoogleServiceAccountKeyJson: |
+                  {
+                    "type": "service_account",
+                    "project_id": "PROJECT_ID",
+                    "private_key_id": "KEY_ID",
+                    "private_key": "placeholder-private-key",
+                    "client_email": "SERVICE_ACCOUNT_EMAIL",
+                    "client_id": "CLIENT_ID",
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://accounts.google.com/o/oauth2/token",
+                    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/SERVICE_ACCOUNT_EMAIL",
+                    "universe_domain": "googleapis.com"
+                  }
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              comment: "test"
+              connection_id: "connection-1"
+              connection_type: "BIGQUERY"
+              full_name: "tf-test-connection-replay"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "tf-test-connection-replay"
+              options: {}
+              owner: "replay-admin"
+              provisioning_info:
+                state: "ACTIVE"
+      - &get_1
+        request: {method: "GET", path: "/api/2.1/unity-catalog/connections/tf-test-connection-replay", body: null}
+        response: *response_1
+      - *get_1
+  - name: "reapply"
+    config: |
+      resource "databricks_connection" "this" {
+        name            = "tf-test-connection-replay"
+        connection_type = "BIGQUERY"
+        comment         = "test"
+        options = {
+          GoogleServiceAccountKeyJson = <<-EOT
+            {
+              "type": "service_account",
+              "project_id": "PROJECT_ID",
+              "private_key_id": "KEY_ID",
+              "private_key": "placeholder-private-key",
+              "client_email": "SERVICE_ACCOUNT_EMAIL",
+              "client_id": "CLIENT_ID",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://accounts.google.com/o/oauth2/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/SERVICE_ACCOUNT_EMAIL",
+              "universe_domain": "googleapis.com"
+            }
+          EOT
+        }
+      }
+    calls:
+      - *get_1
+      - *get_1
+destroy:
+  calls:
+    - *get_1
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/connections/tf-test-connection-replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

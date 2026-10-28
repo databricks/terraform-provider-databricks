@@ -1,0 +1,84 @@
+# API responses are placeholders based on the API models, not recorded.
+version: 1
+host_metadata:
+  cloud: AWS
+  host_type: workspace
+  workspace_id: '12345'
+steps:
+- name: configure_setting
+  config: |
+    resource "databricks_disable_legacy_access_setting" "this" {
+      disable_legacy_access {
+        value = true
+      }
+    }
+  calls:
+  - request:
+      method: PATCH
+      path: /api/2.0/settings/types/disable_legacy_access/names/default
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          allow_missing: true
+          field_mask: disable_legacy_access.value
+          setting:
+            disable_legacy_access:
+              value: true
+            setting_name: disable_legacy_access
+    response:
+      status: 200
+      body:
+        json:
+          disable_legacy_access:
+            value: true
+          etag: setting-v1
+          setting_name: disable_legacy_access
+  - &id001
+    request:
+      method: GET
+      path: /api/2.0/settings/types/disable_legacy_access/names/default
+      query:
+        etag:
+        - setting-v1
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          disable_legacy_access:
+            value: true
+          etag: setting-v1
+          setting_name: disable_legacy_access
+  - *id001
+  state:
+    resources:
+      databricks_disable_legacy_access_setting.this:
+        attributes:
+        - path:
+          - disable_legacy_access
+          - 0
+          - value
+          equals: true
+        - path:
+          - etag
+          equals: setting-v1
+destroy:
+  calls:
+  - *id001
+  - request:
+      method: DELETE
+      path: /api/2.0/settings/types/disable_legacy_access/names/default
+      query:
+        etag:
+        - setting-v1
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          etag: setting-v2

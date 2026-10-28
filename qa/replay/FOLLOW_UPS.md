@@ -129,3 +129,22 @@ The warehouse-permissions import lifecycle in PR 6123 also reproduces P1 in
 `getDatabricksClientForUnifiedProvider` and concurrent SDK initialization under
 `-race`. Its full replay passes without the race detector. All original principal
 resources remain independent; the test adds no serialization or race suppression.
+
+## Remaining YAML conversion results
+
+P4, P18 and P19 now have replay copies (24 source functions across the combined
+remaining YAML batch). P19 includes the input-only timestamp preservation fix.
+P7 retains the source's ForceNew storage-root changes, so its three steps replace
+the metastore; the independent in-place rename concern is not fixed. P10 remains
+a provider/SDK race to fix separately, while its ordinary replay is now copied.
+P12 uses a convergent API response and does not assert permanent drift. P15 uses
+Terraform-generated checkpoints with server-populated account IDs instead of
+configuring computed-only attributes.
+
+P8's two notebook removal attempts remain pending. The workspace-only /Me error
+is handled as a missing resource during refresh, so Terraform attempts a notebook
+import before the expected missing-workspace planning diagnostic. The strict
+probe did not pass; no broad error matcher or fabricated success response was
+committed. P9 remains pending: a native catalog probe reports update rather than
+replacement, consistent with routing-only update support in PR 5662; the share
+probe reports a workspace mismatch. Neither replacement assertion was changed.

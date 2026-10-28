@@ -1,6 +1,6 @@
 # Pending acceptance scenarios
 
-**25 original functions remain pending** in the 545-function baseline. See
+**9 original functions remain pending** in the 545-function baseline. See
 [MIGRATION.md](MIGRATION.md) for counts and [FOLLOW_UPS.md](FOLLOW_UPS.md) for
 blocker details. Original tests remain unchanged.
 
@@ -25,19 +25,3 @@ All five P5 import cases now have replay copies.
 | [mws/mws_workspaces_test.go](../../mws/mws_workspaces_test.go) | `TestMwsAccGcpWorkspacesUnsetExpectedState` | P14 | Provisioning Read loses the input-only expected status. |
 | [permissions/resource_permissions_test.go](../../permissions/resource_permissions_test.go) | `TestAccessControlHashFunction` | P17 | Already hermetic; inventory classification. |
 | [pipelines/pipeline_test.go](../../pipelines/pipeline_test.go) | `TestAccPipelineResourcLastModified` | P19 | Read clears the configured concurrency precondition. |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_Managed` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTableWithIdentityColumn_Managed` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_WarehousePartition` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_Liquid` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_RenameColumn` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_ColumnTypeSuppressDiff` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_AddColumnComment` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_DropColumnNullable` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_MultipleColumnUpdates` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_ChangeColumnTypeThrows` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_DropColumn` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_DropMultipleColumns` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_AddColumn` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_AddMultipleColumns` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_AddColumnAndUpdateThrows` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | `TestUcAccResourceSqlTable_DropColumnAndUpdateThrows` | P11 | Multi-property SQL, including the shared template, has map-order risk (inspection). |

@@ -1,0 +1,212 @@
+# API responses are placeholders based on the API models, not recorded.
+version: 1
+host_metadata:
+  cloud: AWS
+  host_type: workspace
+  workspace_id: '12345'
+steps:
+- name: create
+  config: |
+    resource "databricks_schema" "this" {
+      name         = "replay"
+      catalog_name = "main"
+    }
+
+    resource "databricks_sql_table" "this" {
+      name         = "replay"
+      catalog_name = "main"
+      schema_name  = databricks_schema.this.name
+      table_type   = "MANAGED"
+      warehouse_id = "warehouse-1"
+      properties = {
+        "this"                        = "that"
+        "something"                   = "else"
+        "delta.feature.columnMapping" = "supported"
+        "delta.feature.invariants"    = "supported"
+        "delta.minReaderVersion"      = 3
+        "delta.minWriterVersion"      = 7
+        "delta.columnMapping.mode"    = "name"
+      }
+
+
+      column {
+        name     = "name"
+        type     = "string"
+        nullable = true
+        comment  = "comment"
+      }
+
+      comment = "this table is managed by terraform"
+    }
+  calls:
+  - request:
+      method: POST
+      path: /api/2.1/unity-catalog/schemas
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          catalog_name: main
+          name: replay
+    response:
+      status: 200
+      body:
+        json:
+          catalog_name: main
+          enable_predictive_optimization: INHERIT
+          full_name: main.replay
+          name: replay
+          owner: replay-admin
+  - &id002
+    request:
+      method: GET
+      path: /api/2.1/unity-catalog/schemas/main.replay
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          catalog_name: main
+          enable_predictive_optimization: INHERIT
+          full_name: main.replay
+          name: replay
+          owner: replay-admin
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            CREATE TABLE `main`.`replay`.`replay` (`name` string COMMENT 'comment')
+            COMMENT 'this table is managed by terraform'
+            TBLPROPERTIES ('delta.columnMapping.mode'='name', 'delta.feature.columnMapping'='supported', 'delta.feature.invariants'='supported', 'delta.minReaderVersion'='3', 'delta.minWriterVersion'='7', 'something'='else', 'this'='that');
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - &id001
+    request:
+      method: GET
+      path: /api/2.1/unity-catalog/tables/main.replay.replay
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          catalog_name: main
+          cluster_keys: []
+          columns:
+          - comment: comment
+            name: name
+            nullable: true
+            type_text: string
+          comment: this table is managed by terraform
+          data_source_format: DELTA
+          full_name: main.replay.replay
+          name: replay
+          owner: replay-admin
+          properties:
+            delta.columnMapping.mode: name
+            delta.feature.columnMapping: supported
+            delta.feature.invariants: supported
+            delta.minReaderVersion: '3'
+            delta.minWriterVersion: '7'
+            something: else
+            this: that
+          schema_name: replay
+          table_id: table-replay
+          table_type: MANAGED
+  - *id001
+  - *id002
+  - *id001
+  - *id001
+- name: reject_update
+  config: |
+    resource "databricks_schema" "this" {
+      name         = "replay"
+      catalog_name = "main"
+    }
+
+    resource "databricks_sql_table" "this" {
+      name         = "replay"
+      catalog_name = "main"
+      schema_name  = databricks_schema.this.name
+      table_type   = "MANAGED"
+      warehouse_id = "warehouse-1"
+      properties = {
+        "this"                        = "that"
+        "something"                   = "else"
+        "delta.feature.columnMapping" = "supported"
+        "delta.feature.invariants"    = "supported"
+        "delta.minReaderVersion"      = 3
+        "delta.minWriterVersion"      = 7
+        "delta.columnMapping.mode"    = "name"
+      }
+
+
+      column {
+        name     = "name"
+        type     = "string"
+        nullable = false
+        comment  = "new comment"
+      }
+
+      column {
+        name     = "nametwo"
+        type     = "string"
+        nullable = true
+        comment  = "comment"
+      }
+
+      comment = "this table is managed by terraform"
+    }
+  calls:
+  - *id002
+  - *id001
+  - *id001
+  expect_error: (?s)detected\s+changes\s+in\s+both\s+number\s+of\s+columns\s+and\s+existing\s+column\s+field\s+values,\s+please\s+do\s+not\s+change\s+number\s+of\s+columns\s+and\s+update\s+column\s+values\s+at\s+the\s+same\s+time
+destroy:
+  calls:
+  - *id002
+  - *id001
+  - *id001
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            DROP TABLE `main`.`replay`.`replay`
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: DELETE
+      path: /api/2.1/unity-catalog/schemas/main.replay
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body: null

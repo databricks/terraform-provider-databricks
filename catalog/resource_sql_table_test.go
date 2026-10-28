@@ -189,8 +189,7 @@ func TestResourceSqlTableSerializeProperties(t *testing.T) {
 			"three": "four",
 		},
 	}
-	assert.Contains(t, ti.serializeProperties(), "'one'='two'")
-	assert.Contains(t, ti.serializeProperties(), "'three'='four'")
+	assert.Equal(t, "'one'='two', 'three'='four'", ti.serializeProperties())
 }
 
 func TestResourceSqlTableSerializeOptions(t *testing.T) {
@@ -200,8 +199,24 @@ func TestResourceSqlTableSerializeOptions(t *testing.T) {
 			"three": "four",
 		},
 	}
-	assert.Contains(t, ti.serializeOptions(), "'one'='two'")
-	assert.Contains(t, ti.serializeOptions(), "'three'='four'")
+	assert.Equal(t, "'one'='two', 'three'='four'", ti.serializeOptions())
+}
+
+func TestResourceSqlTableDiffPropertyOrder(t *testing.T) {
+	old := &SqlTableInfo{
+		Name: "bar", CatalogName: "main", SchemaName: "foo", TableType: "MANAGED",
+		Properties: map[string]string{"zeta": "old", "alpha": "old"},
+	}
+	next := &SqlTableInfo{
+		Name: "bar", CatalogName: "main", SchemaName: "foo", TableType: "MANAGED",
+		Properties: map[string]string{"third": "3", "first": "1"},
+	}
+	statements, err := next.diff(old)
+	assert.NoError(t, err)
+	assert.Equal(t, []string{
+		"ALTER TABLE `main`.`foo`.`bar` UNSET TBLPROPERTIES IF EXISTS (alpha,zeta)",
+		"ALTER TABLE `main`.`foo`.`bar` SET TBLPROPERTIES ('first'='1', 'third'='3')",
+	}, statements)
 }
 
 func TestResourceSqlTableCreateTable(t *testing.T) {
@@ -1440,9 +1455,7 @@ func TestResourceSqlTableUpdateTable_DropMultipleColumns(t *testing.T) {
 				},
 			},
 			allowedCommands: []string{
-				// Ordering might not be preserved.
 				"ALTER TABLE `main`.`foo`.`bar` DROP COLUMN IF EXISTS (`two`, `three`)",
-				"ALTER TABLE `main`.`foo`.`bar` DROP COLUMN IF EXISTS (`three`, `two`)",
 			},
 			expectedErrorMsg: "",
 		},

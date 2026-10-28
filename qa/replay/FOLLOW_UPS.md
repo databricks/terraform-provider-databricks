@@ -159,3 +159,10 @@ host substitution or multiple-host features to YAML. The previously skipped
 AWS identity-switch scenario also has a five-step replay; fixed test credentials
 exercise provider token handling without OAuth propagation waits. No provider
 bug fixes are included in this batch.
+
+## SQL request determinism
+
+P11 is addressed in the SQL-table migration batch. SQL rendering sorts property,
+option and removed-property keys; multi-column removals use source column order.
+All 16 formerly pending SQL-table functions now have strict replay copies with
+exact statement matching. The unit tests assert the ordering directly.

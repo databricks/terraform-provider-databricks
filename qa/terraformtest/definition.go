@@ -40,6 +40,7 @@ type step struct {
 	ExpectError  *string            `yaml:"expect_error,omitempty"`
 	Plan         *expectedPlan      `yaml:"plan,omitempty"`
 	PlanOnly     bool               `yaml:"plan_only,omitempty"`
+	Import       *importStep        `yaml:"import,omitempty"`
 	fileContents map[string][]byte
 }
 
@@ -119,25 +120,39 @@ func (d *testDefinition) validate() error {
 			return fmt.Errorf("initial_state.checkpoint must be a nonempty path relative to the YAML file")
 		}
 	}
+	hasPriorState := d.InitialState != nil
 	for i, s := range d.Steps {
 		label := stepLabel(i, s.Name)
-		if strings.TrimSpace(s.Name) == "" || strings.TrimSpace(s.Config) == "" {
-			return fmt.Errorf("%s: name and config are required", label)
-		}
-		if err := validateFiles(s.Files); err != nil {
+		if err := s.validateImport(hasPriorState); err != nil {
 			return fmt.Errorf("%s: %w", label, err)
 		}
-		if err := validateState(s.State); err != nil {
+		if err := s.validate(); err != nil {
 			return fmt.Errorf("%s: %w", label, err)
 		}
-		if err := s.validateExpectedError(); err != nil {
-			return fmt.Errorf("%s: %w", label, err)
+		if i == 0 && s.Import != nil && strings.TrimSpace(s.Config) == "" {
+			return fmt.Errorf("%s: config is required for the first import step", label)
 		}
-		if err := s.validatePlan(); err != nil {
-			return fmt.Errorf("%s: %w", label, err)
+		if s.ExpectError == nil && !s.PlanOnly && (s.Import == nil || *s.Import.Persist) {
+			hasPriorState = true
 		}
 	}
 	return d.validateCalls()
+}
+
+func (s step) validate() error {
+	if strings.TrimSpace(s.Name) == "" || (strings.TrimSpace(s.Config) == "" && s.Import == nil) {
+		return fmt.Errorf("name and config are required")
+	}
+	if err := validateFiles(s.Files); err != nil {
+		return err
+	}
+	if err := validateState(s.State); err != nil {
+		return err
+	}
+	if err := s.validateExpectedError(); err != nil {
+		return err
+	}
+	return s.validatePlan()
 }
 
 // validateExpectedError prevents broad empty patterns and assertions that the

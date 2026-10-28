@@ -174,6 +174,16 @@ the proposed resources, but initial-state or earlier applied resources still
 require destroy fixtures. Plan-only state checks inspect the refreshed prior
 state, not the unapplied planned values.
 
+Use an [import step](README.md#import-steps) to exercise the provider's importer.
+Always choose `import.persist` explicitly. Use `false` to verify import against a
+previously created resource in separate, discarded state; enable `import.verify`
+and ignore only attributes outside the comparison. Use `true` with an explicit
+ID to adopt a remote resource into the journey, then plan, update, and destroy it
+normally. No create step is needed when fixtures describe an existing resource.
+An initial-state snapshot alone does not exercise the importer. Examples show
+[group import and update](testdata/imports/group.yaml) and
+[separate-state app verification](testdata/imports/app_verification.yaml).
+
 HashiCorp's [resource state-check guide](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests/state-checks/resource)
 focuses state checks on computed attributes. Follow that default: check IDs,
 provider-derived values, data-source outputs, and unconfigured optional/computed

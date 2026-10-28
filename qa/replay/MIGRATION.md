@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**479 copied; 66 pending.** Counts refer to original Go test functions, not
+**484 copied; 61 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. Copies preserve provider-owned behavior
 and meaningful assertions. Backend-only persistence checks are omitted; fixture
 requests verify what the provider sends. Unsupported provider behavior remains
@@ -27,8 +27,8 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [aws/user_role_provider_config_test.go](../../aws/user_role_provider_config_test.go) | 1 | 0 |
 | [aws/user_role_test.go](../../aws/user_role_test.go) | 2 | 0 |
 | [catalog/artifact_allowlist_test.go](../../catalog/artifact_allowlist_test.go) | 1 | 0 |
-| [catalog/catalog_test.go](../../catalog/catalog_test.go) | 8 | 2 |
-| [catalog/connection_test.go](../../catalog/connection_test.go) | 2 | 1 |
+| [catalog/catalog_test.go](../../catalog/catalog_test.go) | 9 | 1 |
+| [catalog/connection_test.go](../../catalog/connection_test.go) | 3 | 0 |
 | [catalog/credential_provider_config_test.go](../../catalog/credential_provider_config_test.go) | 2 | 0 |
 | [catalog/credential_test.go](../../catalog/credential_test.go) | 1 | 1 |
 | [catalog/data_catalog_acc_test.go](../../catalog/data_catalog_acc_test.go) | 1 | 0 |
@@ -80,12 +80,12 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [internal/acceptance/workspace_id_sdkv2_http_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_http_acc_test.go) | 19 | 2 |
 | [internal/providers/pluginfw/products/app/data_app_acc_test.go](../../internal/providers/pluginfw/products/app/data_app_acc_test.go) | 1 | 0 |
 | [internal/providers/pluginfw/products/app/data_apps_acc_test.go](../../internal/providers/pluginfw/products/app/data_apps_acc_test.go) | 1 | 0 |
-| [internal/providers/pluginfw/products/app/resource_app_acc_test.go](../../internal/providers/pluginfw/products/app/resource_app_acc_test.go) | 7 | 1 |
+| [internal/providers/pluginfw/products/app/resource_app_acc_test.go](../../internal/providers/pluginfw/products/app/resource_app_acc_test.go) | 8 | 0 |
 | [internal/providers/pluginfw/products/cluster/data_cluster_acc_test.go](../../internal/providers/pluginfw/products/cluster/data_cluster_acc_test.go) | 2 | 0 |
 | [internal/providers/pluginfw/products/dashboards/data_dashboards_acc_test.go](../../internal/providers/pluginfw/products/dashboards/data_dashboards_acc_test.go) | 1 | 0 |
 | [internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go](../../internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go) | 0 | 3 |
 | [internal/providers/pluginfw/products/notificationdestinations/data_notification_destinations_acc_test.go](../../internal/providers/pluginfw/products/notificationdestinations/data_notification_destinations_acc_test.go) | 2 | 0 |
-| [internal/providers/pluginfw/products/qualitymonitor/resource_quality_monitor_acc_test.go](../../internal/providers/pluginfw/products/qualitymonitor/resource_quality_monitor_acc_test.go) | 3 | 3 |
+| [internal/providers/pluginfw/products/qualitymonitor/resource_quality_monitor_acc_test.go](../../internal/providers/pluginfw/products/qualitymonitor/resource_quality_monitor_acc_test.go) | 4 | 2 |
 | [internal/providers/pluginfw/products/sharing/data_recipients_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_recipients_acc_test.go) | 1 | 0 |
 | [internal/providers/pluginfw/products/sharing/data_share_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_share_acc_test.go) | 2 | 0 |
 | [internal/providers/pluginfw/products/sharing/data_shares_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_shares_acc_test.go) | 2 | 0 |
@@ -119,7 +119,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [permissions/access_control_rule_set_provider_config_test.go](../../permissions/access_control_rule_set_provider_config_test.go) | 1 | 0 |
 | [permissions/account_rule_set_test.go](../../permissions/account_rule_set_test.go) | 2 | 0 |
 | [permissions/permissions_provider_config_test.go](../../permissions/permissions_provider_config_test.go) | 1 | 0 |
-| [permissions/permissions_test.go](../../permissions/permissions_test.go) | 21 | 6 |
+| [permissions/permissions_test.go](../../permissions/permissions_test.go) | 22 | 5 |
 | [permissions/resource_permissions_test.go](../../permissions/resource_permissions_test.go) | 0 | 1 |
 | [pipelines/data_pipelines_acc_test.go](../../pipelines/data_pipelines_acc_test.go) | 1 | 0 |
 | [pipelines/pipeline_provider_config_test.go](../../pipelines/pipeline_provider_config_test.go) | 1 | 0 |
@@ -497,3 +497,30 @@ All 29 cases previously grouped under file/payload blockers are copied. The
 volume-file SDK mutation is modeled by the next refresh response; its artificial
 check-hook refresh error and SDK download assertion are omitted. The replay
 verifies the provider reconciles the edit by uploading the configured bytes.
+
+## Import lifecycles
+
+All five P5 source functions now have replay copies. The inventory is
+**484 copied / 61 pending**. Every import explicitly chooses whether to persist
+its state; the copied acceptance scenarios use `persist: false`, matching their
+native separate-state import checks. Original integration tests are unchanged.
+
+- Catalog force-destroy consistency retains strict native import verification
+  and the two ignored audit fields.
+- Schema-level connections retain catalog/schema setup, parent/full-name
+  stability, a host update and composite-ID import. The inferred API response
+  omits backend auth_scheme drift: identical HCL must plan no changes, while a
+  changed host must plan an update.
+- Apps retain all prerequisite resources, description updates and update-time
+  checks, plus import by name. AWS includes model serving; GCP omits it, as in
+  the source. Verification stays disabled, matching the original scenario.
+- Quality monitors retain inference-table setup, import by table name and strict
+  native verification with `table_name` as the matching identifier.
+- Warehouse permissions retain all principal types/levels, rejected management
+  removal, owner-reset requests, recreation, and the legacy `/warehouses/<ID>`
+  import alias. Backend-only SDK readback is omitted. Independent resources keep
+  their ordinary concurrency; P1 remains tracked separately.
+
+All HTTP responses are inferred inputs and are marked as such. Engine examples
+also exercise `persist: true`, including import without creation, subsequent
+updates, preservation of existing resources/checkpoints, and automatic destroy.

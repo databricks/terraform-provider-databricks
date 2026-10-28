@@ -23,7 +23,9 @@ jobs:
       labels: linux-ubuntu-latest
 
     permissions:
-      # Inert on fork/Dependabot PRs, which use the pre-warmed module cache.
+      # Required for JFrog OIDC auth on same-repo runs. GitHub never issues
+      # OIDC tokens to fork PR runs, so the permission is inert there; GitHub
+      # offers no way to condition job-level permissions on the event.
       id-token: write
       contents: read
 
@@ -31,6 +33,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
+      # The runner injects ACTIONS_ID_TOKEN_REQUEST_URL only when id-token:write
+      # is effectively granted, which GitHub denies to fork and Dependabot PRs.
+      # Without it a run can't authenticate to JFrog, so it resolves modules
+      # offline from the cache pre-warmed by the "Warm Go Cache" workflow.
       - name: Detect Go module proxy access
         id: proxy-check
         shell: bash
@@ -53,13 +59,17 @@ jobs:
           USE_CACHE: ${{ steps.proxy-check.outputs.use_cache }}
         run: |
           if [ "$USE_CACHE" = "true" ]; then
-            # Dependency changes on fork PRs require a maintainer to run
-            # "Warm Go Cache" with the PR number before re-running checks.
+            # Resolve modules offline from the pre-warmed cache. If this fails
+            # after a go.mod/go.sum change, a maintainer must run the
+            # "Warm Go Cache" workflow with this PR's number first.
             go mod vendor
           else
             jf go mod vendor
           fi
 
+          # Point native go commands at the local module cache instead of
+          # the network. go run pkg@version needs module lookups even when
+          # cached; file:// satisfies these from disk without network access.
           echo "GOPROXY=file://$(go env GOMODCACHE)/cache/download" >> "$GITHUB_ENV"
           echo "GONOSUMCHECK=*" >> "$GITHUB_ENV"
           echo "GONOSUMDB=*" >> "$GITHUB_ENV"
@@ -82,7 +92,9 @@ jobs:
           TEST_SUITE: ${{ inputs.suite }}
           TEST_PACKAGES: ${{ inputs.packages }}
         run: |
-          # Ambient GitHub OIDC credentials interfere with provider auth tests.
+          # Unset OIDC token env vars injected by the id-token: write permission.
+          # The Terraform provider detects these and attempts GitHub OIDC auth,
+          # which interferes with the test suite.
           unset ACTIONS_ID_TOKEN_REQUEST_URL
           unset ACTIONS_ID_TOKEN_REQUEST_TOKEN
 

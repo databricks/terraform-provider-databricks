@@ -1,0 +1,84 @@
+# API responses are placeholders based on the API models, not recorded.
+version: 1
+host_metadata:
+  cloud: AWS
+  host_type: workspace
+  workspace_id: '12345'
+steps:
+- name: configure_setting
+  config: |
+    resource "databricks_restrict_workspace_admins_setting" "this" {
+      restrict_workspace_admins {
+        status = "RESTRICT_TOKENS_AND_JOB_RUN_AS"
+      }
+    }
+  calls:
+  - request:
+      method: PATCH
+      path: /api/2.0/settings/types/restrict_workspace_admins/names/default
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          allow_missing: true
+          field_mask: restrict_workspace_admins.status
+          setting:
+            restrict_workspace_admins:
+              status: RESTRICT_TOKENS_AND_JOB_RUN_AS
+            setting_name: default
+    response:
+      status: 200
+      body:
+        json:
+          etag: setting-v1
+          restrict_workspace_admins:
+            status: RESTRICT_TOKENS_AND_JOB_RUN_AS
+          setting_name: default
+  - &id001
+    request:
+      method: GET
+      path: /api/2.0/settings/types/restrict_workspace_admins/names/default
+      query:
+        etag:
+        - setting-v1
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          etag: setting-v1
+          restrict_workspace_admins:
+            status: RESTRICT_TOKENS_AND_JOB_RUN_AS
+          setting_name: default
+  - *id001
+  state:
+    resources:
+      databricks_restrict_workspace_admins_setting.this:
+        attributes:
+        - path:
+          - restrict_workspace_admins
+          - 0
+          - status
+          equals: RESTRICT_TOKENS_AND_JOB_RUN_AS
+        - path:
+          - etag
+          equals: setting-v1
+destroy:
+  calls:
+  - *id001
+  - request:
+      method: DELETE
+      path: /api/2.0/settings/types/restrict_workspace_admins/names/default
+      query:
+        etag:
+        - setting-v1
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          etag: setting-v2

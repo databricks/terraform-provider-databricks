@@ -1,0 +1,2 @@
+# These checkpoints contain only offline replay fixture data.
+!*.tfstate

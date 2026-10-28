@@ -1,0 +1,248 @@
+# API responses are placeholders based on the API models, not recorded.
+version: 1
+host_metadata:
+  account_id: replay-account
+  cloud: AWS
+  host_type: account
+steps:
+- name: list_user_with_group
+  config: |
+    provider "databricks" {
+      account_id = "replay-account"
+    }
+    resource "databricks_group" "admins" {
+      display_name = "admins-replay"
+    }
+    resource "databricks_user" "user1" {
+      user_name = "tf-replay-1@databricks.com"
+    }
+    resource "databricks_group_member" "membership" {
+      group_id  = databricks_group.admins.id
+      member_id = databricks_user.user1.id
+    }
+    data "databricks_users" "this" {
+      filter           = "userName eq \"tf-replay-1@databricks.com\""
+      extra_attributes = "groups"
+      depends_on       = [databricks_group_member.membership]
+    }
+  calls:
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/scim/v2/Groups
+      body:
+        json:
+          displayName: admins-replay
+          entitlements:
+          - {}
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:Group
+    response:
+      status: 200
+      body:
+        json:
+          displayName: admins-replay
+          id: '84201'
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:Group
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/scim/v2/Users
+      body:
+        json:
+          active: true
+          entitlements:
+          - {}
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:User
+          userName: tf-replay-1@databricks.com
+    response:
+      status: 200
+      body:
+        json:
+          active: true
+          displayName: tf-replay-1@databricks.com
+          id: '84501'
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:User
+          userName: tf-replay-1@databricks.com
+  - &id003
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/scim/v2/Groups/84201
+      query:
+        attributes:
+        - displayName,externalId,entitlements
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          displayName: admins-replay
+          id: '84201'
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:Group
+  - &id004
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/scim/v2/Users/84501
+      query:
+        attributes:
+        - userName,displayName,active,externalId,entitlements
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          active: true
+          displayName: tf-replay-1@databricks.com
+          id: '84501'
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:User
+          userName: tf-replay-1@databricks.com
+  - request:
+      method: PATCH
+      path: /api/2.0/accounts/replay-account/scim/v2/Groups/84201
+      body:
+        json:
+          Operations:
+          - op: add
+            path: members
+            value:
+            - value: '84501'
+          schemas:
+          - urn:ietf:params:scim:api:messages:2.0:PatchOp
+    response:
+      status: 200
+      body: null
+  - request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/scim/v2/Groups/84201
+      query:
+        attributes:
+        - members
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          displayName: admins-replay
+          id: '84201'
+          members:
+          - value: '84501'
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:Group
+  - &id001
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/scim/v2/Users
+      query:
+        attributes:
+        - id,userName,displayName,externalId,groups
+        count:
+        - '10000'
+        filter:
+        - userName eq "tf-replay-1@databricks.com"
+        startIndex:
+        - '1'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          Resources:
+          - active: true
+            displayName: tf-replay-1@databricks.com
+            groups:
+            - display: admins-replay
+              value: '84201'
+            id: '84501'
+            schemas:
+            - urn:ietf:params:scim:schemas:core:2.0:User
+            userName: tf-replay-1@databricks.com
+          itemsPerPage: 1
+          startIndex: 1
+          totalResults: 1
+  - &id002
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/scim/v2/Users
+      query:
+        attributes:
+        - id,userName,displayName,externalId,groups
+        count:
+        - '10000'
+        filter:
+        - userName eq "tf-replay-1@databricks.com"
+        startIndex:
+        - '2'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          Resources: []
+          startIndex: 2
+          totalResults: 1
+  - *id001
+  - *id002
+  - *id003
+  - *id004
+  - *id001
+  - *id002
+  state:
+    resources:
+      data.databricks_users.this:
+        attributes:
+        - path:
+          - users
+          - 0
+          - id
+          equals: '84501'
+        - path:
+          - users
+          - 0
+          - groups
+          - 0
+          - value
+          equals: '84201'
+destroy:
+  calls:
+  - *id003
+  - *id004
+  - *id001
+  - *id002
+  - request:
+      method: PATCH
+      path: /api/2.0/accounts/replay-account/scim/v2/Groups/84201
+      body:
+        json:
+          Operations:
+          - op: remove
+            path: members[value eq "84501"]
+          schemas:
+          - urn:ietf:params:scim:api:messages:2.0:PatchOp
+    response:
+      status: 200
+      body: null
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/scim/v2/Groups/84201
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: PATCH
+      path: /api/2.0/accounts/replay-account/scim/v2/Users/84501
+      body:
+        json:
+          Operations:
+          - op: replace
+            path: active
+            value:
+            - value: 'false'
+          schemas:
+          - urn:ietf:params:scim:api:messages:2.0:PatchOp
+    response:
+      status: 200
+      body: null

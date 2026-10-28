@@ -1,0 +1,143 @@
+name: Provider schema comment
+
+# Companion to the "Provider schema" workflow (schema.yml).
+#
+# That workflow's `status` job posts the sticky breaking-change comment, but on
+# fork PRs the `pull_request` GITHUB_TOKEN is read-only, so its comment step
+# 403s (swallowed by continue-on-error) and no comment appears. This workflow
+# runs on `workflow_run`, which executes from the copy of this file on the
+# repo's DEFAULT BRANCH, in the base-repo context, with a read-write token even
+# for fork-originated runs — because it never checks out or runs the PR's code,
+# it only downloads the classifier artifact and calls the API. It posts the
+# sticky comment for fork PRs; same-repo PRs are still handled inline by the
+# status job (whose token can write), and the fork-only guard below prevents a
+# duplicate comment.
+#
+# NOTE: `workflow_run` only triggers from the default branch's copy of the
+# workflow, so this file does nothing until it is merged to the default branch.
+
+on:
+  workflow_run:
+    workflows: ["Provider schema"]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read # download the artifact from the triggering run
+  pull-requests: write # post/update/delete the sticky comment
+
+jobs:
+  comment:
+    # Fork PRs only (same-repo PRs are commented inline by the status job).
+    # Skip workflow_dispatch-triggered runs, which have no PR to comment on.
+    if: |
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name != github.repository
+    # Protected runner is IP-allowlisted for the GitHub API; ubuntu-latest is
+    # not, and gh CLI calls from there hit the databricks org's IP allow list.
+    runs-on:
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
+
+    steps:
+      - name: Download classifier artifact from the triggering run
+        id: download
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: classifier-output
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: /tmp
+
+      - name: Post or update the sticky breaking-change comment
+        # No artifact means classify was skipped (e.g. a non-body PR edit) —
+        # there is nothing to comment on.
+        if: steps.download.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          REPO: ${{ github.repository }}
+          MARKER: "<!-- SCHEMA_BREAKING_CHECK -->"
+        run: |
+          set -euo pipefail
+
+          PR_NUMBER=$(tr -d '\n' < /tmp/classifier-pr-number 2>/dev/null || true)
+          if [ -z "${PR_NUMBER}" ]; then
+            echo "No PR number in the artifact; nothing to comment on."
+            exit 0
+          fi
+
+          if [ -f /tmp/classifier-outcome.txt ]; then
+            CLASSIFY_OUTCOME=$(tr -d '\n' < /tmp/classifier-outcome.txt)
+          else
+            CLASSIFY_OUTCOME="unknown"
+          fi
+          if [ -f /tmp/classifier-generation-error ]; then
+            GENERATION_ERROR=true
+          else
+            GENERATION_ERROR=false
+          fi
+
+          # The workflow_run event carries no PR body, so read the bypass
+          # directive via the API. Line-anchored, matching the status job.
+          PR_BODY=$(gh pr view "${PR_NUMBER}" --json body --jq '.body' 2>/dev/null || true)
+          if printf '%s\n' "${PR_BODY}" | grep -qE '^[[:space:]]*ALLOW_SCHEMA_BREAKING_CHANGE=true[[:space:]]*$'; then
+            BYPASS_ALLOWED=true
+          else
+            BYPASS_ALLOWED=false
+          fi
+
+          prev=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --jq ".[] | select(.body | startswith(\"${MARKER}\")) | .id")
+
+          # success outcome = classifier exited 0 = no breaking changes -> remove
+          # any stale sticky and stop.
+          if [ "${CLASSIFY_OUTCOME}" = "success" ]; then
+            for id in ${prev}; do
+              gh api "repos/${REPO}/issues/comments/${id}" --method DELETE
+            done
+            exit 0
+          fi
+
+          body=$(mktemp)
+          {
+            echo "${MARKER}"
+            echo
+            if [ "${GENERATION_ERROR}" = "true" ]; then
+              # The report already carries its own generation-failure header.
+              cat /tmp/classifier-report.md
+            else
+              if [ "${BYPASS_ALLOWED}" = "true" ]; then
+                echo "## Breaking schema changes detected (bypass active)"
+                echo
+                echo "This PR carries \`ALLOW_SCHEMA_BREAKING_CHANGE=true\` on its own line in the description, so the breaking-schema check is **not blocking**. Please review the changes below carefully."
+              else
+                echo "## Breaking schema changes detected"
+              fi
+              echo
+              if [ -s /tmp/classifier-report.md ]; then
+                cat /tmp/classifier-report.md
+              else
+                echo "_(classifier report missing — see the classify job's log for details)_"
+              fi
+              if [ "${BYPASS_ALLOWED}" != "true" ]; then
+                echo
+                echo "<details><summary>How to bypass this check</summary>"
+                echo
+                echo "If the break is intentional, add \`ALLOW_SCHEMA_BREAKING_CHANGE=true\` on its own line in the PR description."
+                echo
+                echo "</details>"
+              fi
+            fi
+          } > "${body}"
+
+          if [ -z "${prev}" ]; then
+            gh pr comment "${PR_NUMBER}" --body-file "${body}"
+          else
+            first=$(echo "${prev}" | head -1)
+            gh api "repos/${REPO}/issues/comments/${first}" --method PATCH -F body=@"${body}"
+            for id in $(echo "${prev}" | tail -n +2); do
+              gh api "repos/${REPO}/issues/comments/${id}" --method DELETE
+            done
+          fi

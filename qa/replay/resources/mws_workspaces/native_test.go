@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/require"
 
-	"github.com/databricks/terraform-provider-databricks/qa/replay/providertest"
 	"github.com/databricks/terraform-provider-databricks/qa/terraformtest"
 )
 
@@ -28,7 +27,7 @@ func TestNativeWorkspaces(t *testing.T) {
 					if name == "TestMwsAccAwsChangeToServicePrincipal" && i >= 1 && i <= 3 {
 						selected = servicePrincipalConfig(local)
 					}
-					tc.Steps[i].ProtoV6ProviderFactories = providertest.Factories(selected, "", false)
+					tc.Steps[i].ProtoV6ProviderFactories = terraformtest.ProviderFactories(selected)
 					if name == "TestMwsAccWorkspacesTokenUpdate" && i < 2 {
 						tc.Steps[i].Check = checkTokenComment(t, local, []string{"test foo", "test bar"}[i])
 					} else if name == "TestMwsAccWorkspaces" && i == 0 {

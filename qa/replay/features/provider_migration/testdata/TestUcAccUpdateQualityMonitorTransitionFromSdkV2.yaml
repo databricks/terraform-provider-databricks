@@ -6,6 +6,8 @@ host_metadata:
   workspace_id: '12345'
 steps:
 - name: create_monitors
+  provider_implementations:
+    databricks_quality_monitor: sdkv2
   config: |
     resource "databricks_catalog" "sandbox" {
       name    = "sandboxreplay"
@@ -278,6 +280,8 @@ steps:
   - *id001
   - *id002
 - name: update_monitor
+  provider_implementations:
+    databricks_quality_monitor: plugin_framework
   config: |
     resource "databricks_catalog" "sandbox" {
       name    = "sandboxreplay"

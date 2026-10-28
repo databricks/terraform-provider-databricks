@@ -6,6 +6,8 @@ host_metadata:
   workspace_id: '12345'
 steps:
 - name: create_legacy_share
+  provider_implementations:
+    databricks_share: sdkv2
   config: |
     resource "databricks_catalog" "sandbox" {
       name    = "sandboxreplay"
@@ -405,6 +407,8 @@ steps:
   - *id002
   - *id007
 - name: adopt_framework_share
+  provider_implementations:
+    databricks_share: plugin_framework
   config: |
     resource "databricks_catalog" "sandbox" {
       name    = "sandboxreplay"

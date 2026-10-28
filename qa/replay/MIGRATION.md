@@ -555,10 +555,11 @@ ordinary expected-error steps: planning refreshes the old workspace successfully
 then rejects the missing workspace fallback before apply. Workspace and account
 SCIM /Me fixtures distinguish requests by their workspace-routing header.
 
-## Native provider migration and workspace-token replays
+## Provider migration and native workspace-token replays
 
-This batch copies **11 original functions** in 14 native Go replay scenarios,
-including both NCC cloud forms. The inventory is **518 copied / 27 pending**.
+This batch copies **11 original functions** in 14 replay scenarios: 11 YAML and
+three native Go, including both NCC cloud forms. The inventory is
+**518 copied / 27 pending**.
 
 - Endpoint rules explicitly select Plugin Framework for opt-in/import and switch
   SDKv2/PF in both directions. Settled connection state, strict import verification,
@@ -576,7 +577,9 @@ including both NCC cloud forms. The inventory is **518 copied / 27 pending**.
   distinguish identities. OAuth exchange and backend propagation polling are
   omitted; these are not provider behavior.
 
-`RunNative` allows Go tests to customize the generated native TestCase and use
-its isolated configuration for provider factories or SDK checks. YAML syntax
-and ordinary discovery are unchanged. Fixtures remain stateless and strict;
-responses are marked placeholders. Original integration tests remain unchanged.
+`provider_implementations` selects SDKv2 or Plugin Framework per resource type
+and step. The migration suite uses ordinary YAML discovery; cleanup retains the
+selection associated with its configuration. `RunNative` remains available for
+Go checks and custom transports/authentication, with `ProviderFactories` sharing
+the runner's mux construction. Fixtures remain stateless and strict; responses
+are marked placeholders. Original integration tests remain unchanged.

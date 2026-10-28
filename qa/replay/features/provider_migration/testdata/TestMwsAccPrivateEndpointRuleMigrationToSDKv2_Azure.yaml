@@ -6,6 +6,8 @@ host_metadata:
   host_type: account
 steps:
 - name: create
+  provider_implementations:
+    databricks_mws_ncc_private_endpoint_rule: plugin_framework
   config: |
     provider "databricks" {
       account_id = "replay-account"
@@ -89,6 +91,8 @@ steps:
   - *id001
   - *id002
 - name: switch_implementation
+  provider_implementations:
+    databricks_mws_ncc_private_endpoint_rule: sdkv2
   config: |
     provider "databricks" {
       account_id = "replay-account"

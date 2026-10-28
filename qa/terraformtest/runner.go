@@ -1,7 +1,6 @@
 package terraformtest
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -13,13 +12,9 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/config"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 
-	"github.com/databricks/terraform-provider-databricks/internal/providers"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/databricks/terraform-provider-databricks/qa/httpfixture"
 )
 
@@ -60,7 +55,7 @@ func runNative(t *testing.T, definition *testDefinition, configure func(*resourc
 	steps := testSteps(t, definition, handler)
 	testCase := resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: providerFactories(server.URL),
+		ProtoV6ProviderFactories: ProviderFactories(fixtureConfig(server.URL)),
 		Steps:                    steps,
 		ErrorCheck: func(err error) error {
 			// The testing framework attempts destroy after an interrupted lifecycle.
@@ -68,6 +63,7 @@ func runNative(t *testing.T, definition *testDefinition, configure func(*resourc
 			return errors.Join(err, cleanupErr)
 		},
 	}
+	configureProviderImplementations(definition, &testCase, fixtureConfig(server.URL))
 	if definition.InitialState != nil {
 		seedInitialCheckpoint(t, definition, &testCase)
 	}
@@ -110,7 +106,7 @@ func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Ha
 	t.Helper()
 	steps := make([]resource.TestStep, 0, len(definition.Steps)+1)
 	cleanupConfig := `provider "databricks" {}`
-	hasApplyConfig := false
+	cleanupSteps := definition.cleanupConfigSteps()
 	for i, s := range definition.Steps {
 		label := stepLabel(i, s.Name)
 		hcl := s.Config
@@ -118,10 +114,7 @@ func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Ha
 			hcl = cleanupConfig
 		}
 		testStep := configuredStep(t, handler, label, hcl, s)
-		if s.ExpectError == nil && (s.Import == nil || *s.Import.Persist) && (!s.PlanOnly || !hasApplyConfig) {
-			cleanupConfig = hcl
-			hasApplyConfig = !s.PlanOnly
-		} else if s.Import != nil && !hasApplyConfig && definition.InitialState != nil {
+		if cleanupSteps[i] == i {
 			cleanupConfig = hcl
 		}
 		steps = append(steps, testStep)
@@ -174,19 +167,6 @@ func terraformStep(t *testing.T, handler *httpfixture.Handler, label, hcl string
 		s.ConfigStateChecks = []statecheck.StateCheck{stateAssertion{label: label, expected: *state}}
 	}
 	return s
-}
-
-// providerFactories uses the production mux so both provider implementations
-// share the same local HTTP boundary.
-func providerFactories(host string) map[string]func() (tfprotov6.ProviderServer, error) {
-	return map[string]func() (tfprotov6.ProviderServer, error){
-		"databricks": func() (tfprotov6.ProviderServer, error) {
-			customize := fixtureConfig(host)
-			return providers.GetProviderServer(context.Background(),
-				providers.WithSdkV2Provider(sdkv2.DatabricksProvider(sdkv2.WithConfigCustomizer(customize))),
-				providers.WithPluginFrameworkProvider(pluginfw.GetDatabricksProviderPluginFramework(pluginfw.WithConfigCustomizer(customize))))
-		},
-	}
 }
 
 type fixtureLoader struct{}

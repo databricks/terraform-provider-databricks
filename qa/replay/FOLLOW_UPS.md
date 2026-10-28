@@ -24,7 +24,7 @@ distinguished below; not every affected sibling has been executed. Affected scen
 | P13 | Account/workspace routing | `TestAccCredentialOwner` configures a workspace-level service credential from `UnityAccountLevel` without a workspace ID. Offline replay fails with `managing a workspace-level resource requires a workspace_id, but none was found`. | Establish the original scenario's intended workspace routing before porting it. Do not invent a workspace configuration just to make replay pass. |
 | P14 | Provisioning-state read | `TestMwsAccGcpWorkspacesProvisioningToRunning` and `TestMwsAccGcpWorkspacesUnsetExpectedState` cannot finish their first step with a realistic response that omits input-only `expected_workspace_status`. Replay stalls in `ResourceMwsWorkspaces` Read at `WaitForExpectedStatus` while the fixture remains `PROVISIONING`; Read maps the API response into state before retrieving the configured expected status. | Preserve the configured input-only status through Read, then port both full transitions. Do not echo the Terraform-only expected status in API responses to conceal the problem. |
 | P15 | Acceptance/schema mismatch | `TestMwsAccNccPrivateEndpointRule_NoSpuriousAccountIdDrift` configures `account_id` on the endpoint rule in its first step. The current replay provider rejects it as an unconfigurable attribute on both AWS and Azure, before any HTTP call. | Reconcile the original scenario with the intended provider implementation/schema before copying it. Removing the first-step field would remove the regression's precondition. |
-| P16 | Provider-selection limitation | Share, quality-monitor, and private-endpoint migration cases select SDKv2/Plugin Framework factories per step; the endpoint-rule opt-in test also requires a specific factory. YAML replay uses the production mux without these per-step overrides. | Support faithful provider selection before copying these cases. Replaying both steps through the same implementation would omit the migration under test. |
+| P16 | Resolved | YAML `provider_implementations` selects SDKv2 or Plugin Framework per resource type and step without changing process-wide rollout settings. | Share, quality-monitor, and private-endpoint migration/opt-in cases use ordinary YAML discovery, with cleanup retaining the state-owning selection. |
 
 | P17 | Inventory exception | `TestAccessControlHashFunction` is a local unit test included by the broad AST inventory because its name begins with `TestAcc`. It tests an unexported hash helper, not an HTTP lifecycle. | Keep its existing hermetic test and resolve the inventory classification separately; no replay-engine feature is needed. |
 | P18 | Source-test inconsistency | Both user-list-with-groups tests create a `tf-…@databricks.com` user but query `userName eq "me-…@example.com"`, then expect the created user's membership. The NCC-list test configures nonexistent plural resource `databricks_mws_network_connectivity_configs` while referencing the singular resource. | Reconcile source intent before copying. Do not return a user that contradicts the requested equality filter or silently repair the source HCL and count it as unchanged coverage. |
@@ -150,11 +150,11 @@ native catalog probe reports update rather than replacement, consistent with
 routing-only update support in PR 5662; the share probe reports a workspace
 mismatch. Neither replacement assertion was changed.
 
-## Native Go conversion results
+## Provider selection and native Go conversion results
 
-P16 and P20 now have replay copies. Native Go tests select per-step factories,
-retain shared Terraform state and verify imports/no-op plans. Workspace-token
-cases use an explicit local-only alias in their Go transport, without adding
+P16 and P20 now have replay copies. YAML migration tests select per-step
+implementations, retain shared Terraform state and verify imports/no-op plans.
+Workspace-token cases use an explicit local-only alias in their Go transport, without adding
 host substitution or multiple-host features to YAML. The previously skipped
 AWS identity-switch scenario also has a five-step replay; fixed test credentials
 exercise provider token handling without OAuth propagation waits. No provider

@@ -7,6 +7,8 @@
   resolution or API calls.
 - Workspace/account IDs from the selected profile are translated to the fixture's
   stable IDs. Do not add a general placeholder syntax or edit checkpoint JSON.
+- The selected profile host maps to `example.databricks.com` in captured data
+  and back for recording. Other hosts require manual review.
 - Other resource IDs, volatile fields and assertions can need manual adjustment.
   Keep `any_string` annotations where meaningful; do not weaken unrelated checks
   merely to make a refresh pass.

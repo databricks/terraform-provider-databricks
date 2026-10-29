@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -16,13 +17,20 @@ import (
 
 type recordingID struct{ replay, live string }
 
+const recordingReplayHost = "example.databricks.com"
+
 type recordingNormalizer struct {
-	ids     []recordingID
-	secrets []string
+	ids      []recordingID
+	liveHost string
+	secrets  []string
 }
 
 func newRecordingNormalizer(d *testDefinition, cfg *config.Config) (*recordingNormalizer, error) {
-	n := &recordingNormalizer{}
+	host, err := url.Parse(cfg.Host)
+	if err != nil {
+		return nil, fmt.Errorf("cannot normalize recorder profile host")
+	}
+	n := &recordingNormalizer{liveHost: host.Host}
 	for _, field := range []struct{ name, live, fallback string }{
 		{"workspace_id", cfg.WorkspaceID, "12345"}, {"account_id", cfg.AccountID, "replay-account"},
 	} {
@@ -96,30 +104,40 @@ func recordingDefinition(path string, original []byte, n *recordingNormalizer) (
 	return d, err
 }
 
-// Only known account/workspace IDs are substituted. Boundaries avoid changing
-// unrelated IDs that happen to contain the same digits. YAML tags preserve
-// numeric versus string JSON values, including numbers larger than 2^53.
+// The selected profile host and routing IDs round-trip between live and replay.
+// Boundaries keep unrelated hosts and IDs intact; URL paths and schemes remain.
 func (n *recordingNormalizer) text(value string, toLive bool) string {
+	if n.liveHost != "" {
+		from, to := n.liveHost, recordingReplayHost
+		if toLive {
+			from, to = to, from
+		}
+		value = replaceRecordingValue(value, from, to, hostCharacter)
+	}
 	for _, id := range n.ids {
 		from, to := id.live, id.replay
 		if toLive {
 			from, to = to, from
 		}
-		var out strings.Builder
-		cursor := 0
-		for _, index := range allIndices(value, from) {
-			end := index + len(from)
-			if (index != 0 && idCharacter(value[index-1])) || (end != len(value) && idCharacter(value[end])) {
-				continue
-			}
-			out.WriteString(value[cursor:index])
-			out.WriteString(to)
-			cursor = end
-		}
-		out.WriteString(value[cursor:])
-		value = out.String()
+		value = replaceRecordingValue(value, from, to, idCharacter)
 	}
 	return value
+}
+
+func replaceRecordingValue(value, from, to string, part func(byte) bool) string {
+	var out strings.Builder
+	cursor := 0
+	for _, index := range allIndices(value, from) {
+		end := index + len(from)
+		if (index != 0 && part(value[index-1])) || (end != len(value) && part(value[end])) {
+			continue
+		}
+		out.WriteString(value[cursor:index])
+		out.WriteString(to)
+		cursor = end
+	}
+	out.WriteString(value[cursor:])
+	return out.String()
 }
 
 func allIndices(value, part string) []int {
@@ -137,6 +155,10 @@ func allIndices(value, part string) []int {
 
 func idCharacter(b byte) bool {
 	return b >= '0' && b <= '9' || b >= 'a' && b <= 'z' || b >= 'A' && b <= 'Z' || b == '_' || b == '-'
+}
+
+func hostCharacter(b byte) bool {
+	return idCharacter(b) || b == '.' || b == ':' || b == '[' || b == ']'
 }
 
 func (n *recordingNormalizer) transform(data []byte, toLive, redact bool) ([]byte, error) {

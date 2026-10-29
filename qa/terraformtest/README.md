@@ -78,9 +78,11 @@ The profile supplies host, authentication and real workspace/account IDs. Use
 stable replay IDs in `host_metadata` and literal provider fields; these must
 agree. Unified-host tests must set stable `account_id` and `workspace_id` in the
 provider HCL so replay has the same routing information without a profile.
-Only those two known IDs are mapped in both directions, preserving
-numeric versus string JSON values. Other IDs and author-selected assertions
-may need manual updates before a refresh. Credential headers are excluded and
+Those two known IDs are mapped in both directions, preserving numeric versus
+string JSON values. The profile's host is mapped to `example.databricks.com`
+in captured metadata and payloads, and restored for recording. URL schemes and
+paths are preserved; unrelated hosts are unchanged. Other IDs and author-selected
+assertions may need manual updates before a refresh. Credential headers are excluded and
 known profile secrets/common secret payload fields are redacted. Review every
 generated diff for service-specific secrets before committing it.
 

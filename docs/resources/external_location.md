@@ -158,8 +158,8 @@ The `file_event_queue` block supports the following:
   - `managed_resource_id` - (Computed) The ID of the managed resource.
 - `managed_aqs` - (Optional) Configuration for managed Azure Queue Storage queue.
   - `managed_resource_id` - (Computed) The ID of the managed resource.
-  - `resource_group` - (Required) The name of the Azure resource group.
-  - `subscription_id` - (Required) The Azure subscription ID.
+  - `resource_group` - (Optional) The name of the Azure resource group. If omitted, it's inferred from the access connector of an Azure managed identity storage credential. Required for service principal storage credentials.
+  - `subscription_id` - (Optional) The Azure subscription ID. If omitted, it's inferred from the access connector of an Azure managed identity storage credential. Required for service principal storage credentials.
 - `managed_sqs` - (Optional) Configuration for managed Amazon SQS queue.
   - `managed_resource_id` - (Computed) The ID of the managed resource.
 - `provided_pubsub` - (Optional) Configuration for provided Google Cloud Pub/Sub queue.

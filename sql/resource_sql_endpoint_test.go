@@ -41,6 +41,7 @@ var createRequest = sql.CreateWarehouseRequest{
 	AutoStopMins:       120,
 	EnablePhoton:       true,
 	SpotInstancePolicy: "COST_OPTIMIZED",
+	ForceSendFields:    []string{"StatementTimeout"},
 }
 var getResponse = sql.GetWarehouseResponse{
 	Name:           "foo",
@@ -87,19 +88,19 @@ func TestResourceSQLEndpointCreate_ForceSendFields(t *testing.T) {
 			hcl:                             "enable_serverless_compute = true",
 			expectedEnableServerlessCompute: true,
 			expectedPhoton:                  true,
-			expectedForceSendFields:         nil,
+			expectedForceSendFields:         []string{"StatementTimeout"},
 		},
 		{
 			hcl:                             "enable_serverless_compute = false",
 			expectedEnableServerlessCompute: false,
 			expectedPhoton:                  true,
-			expectedForceSendFields:         []string{"EnableServerlessCompute"},
+			expectedForceSendFields:         []string{"EnableServerlessCompute", "StatementTimeout"},
 		},
 		{
 			hcl:                             "enable_photon = false",
 			expectedEnableServerlessCompute: false,
 			expectedPhoton:                  false,
-			expectedForceSendFields:         []string{"EnablePhoton"},
+			expectedForceSendFields:         []string{"EnablePhoton", "StatementTimeout"},
 		},
 	}
 	for _, c := range cases {
@@ -158,7 +159,7 @@ func TestResourceSQLEndpointCreateNoAutoTermination(t *testing.T) {
 				AutoStopMins:       0,
 				EnablePhoton:       true,
 				SpotInstancePolicy: "COST_OPTIMIZED",
-				ForceSendFields:    []string{"AutoStopMins"},
+				ForceSendFields:    []string{"AutoStopMins", "StatementTimeout"},
 			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
 				Id:   "abc",
 				Poll: poll.Simple(getResponse),
@@ -214,7 +215,7 @@ func TestResourceSQLEndpointCreateRollback(t *testing.T) {
 				AutoStopMins:       0,
 				EnablePhoton:       true,
 				SpotInstancePolicy: "COST_OPTIMIZED",
-				ForceSendFields:    []string{"AutoStopMins"},
+				ForceSendFields:    []string{"AutoStopMins", "StatementTimeout"},
 			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
 				Id:   "warehouse_id",
 				Poll: simpleError[sql.GetWarehouseResponse](errors.New("Clusters are failing to launch")),
@@ -242,7 +243,7 @@ func TestResourceSQLEndpointCreateRollbackFailed(t *testing.T) {
 				AutoStopMins:       0,
 				EnablePhoton:       true,
 				SpotInstancePolicy: "COST_OPTIMIZED",
-				ForceSendFields:    []string{"AutoStopMins"},
+				ForceSendFields:    []string{"AutoStopMins", "StatementTimeout"},
 			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
 				Id:   "warehouse_id",
 				Poll: simpleError[sql.GetWarehouseResponse](errors.New("Clusters are failing to launch")),
@@ -291,6 +292,7 @@ func TestResourceSQLEndpointUpdate(t *testing.T) {
 				MaxNumClusters:     1,
 				EnablePhoton:       true,
 				SpotInstancePolicy: "COST_OPTIMIZED",
+				ForceSendFields:    []string{"StatementTimeout"},
 			}).Return(&sql.WaitGetWarehouseRunning[struct{}]{
 				Id:   "abc",
 				Poll: poll.Simple(getResponse),
@@ -335,6 +337,7 @@ func TestResourceSQLEndpointUpdateHealthNoDiff(t *testing.T) {
 			"enable_serverless_compute": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"data_source_id":            {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"creator_name":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"statement_timeout":         {Old: "", New: "0"},
 		},
 		HCL: `
 		name = "foo"
@@ -367,6 +370,7 @@ func TestResourceSQLEndpointUpdateNoAutoTermination(t *testing.T) {
 			"enable_serverless_compute": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"data_source_id":            {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
 			"creator_name":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"statement_timeout":         {Old: "", New: "0"},
 		},
 		HCL: `
 		name = "foo"

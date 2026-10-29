@@ -44,6 +44,7 @@ This data source exports the following attributes:
 * `min_num_clusters` - Minimum number of clusters available when a SQL warehouse is running.
 * `max_num_clusters` - Maximum number of clusters available when a SQL warehouse is running.
 * `auto_stop_mins` - Time in minutes until an idle SQL warehouse terminates all clusters and stops.
+* `statement_timeout` - Warehouse statement timeout in seconds.
 * `tags` - tags used for SQL warehouse resources.
 * `spot_instance_policy` - The spot policy to use for allocating instances to clusters: `COST_OPTIMIZED` or `RELIABILITY_OPTIMIZED`.
 * `enable_photon` - Whether [Photon](https://databricks.com/product/delta-engine) is enabled.

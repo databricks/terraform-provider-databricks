@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**520 copied; 25 pending.** Counts refer to original Go test functions, not
+**537 copied; 8 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. Copies preserve provider-owned behavior
 and meaningful assertions. Backend-only persistence checks are omitted; fixture
 requests verify what the provider sends. Unsupported provider behavior remains
@@ -27,7 +27,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [aws/user_role_provider_config_test.go](../../aws/user_role_provider_config_test.go) | 1 | 0 |
 | [aws/user_role_test.go](../../aws/user_role_test.go) | 2 | 0 |
 | [catalog/artifact_allowlist_test.go](../../catalog/artifact_allowlist_test.go) | 1 | 0 |
-| [catalog/catalog_test.go](../../catalog/catalog_test.go) | 9 | 1 |
+| [catalog/catalog_test.go](../../catalog/catalog_test.go) | 10 | 0 |
 | [catalog/connection_test.go](../../catalog/connection_test.go) | 3 | 0 |
 | [catalog/credential_provider_config_test.go](../../catalog/credential_provider_config_test.go) | 2 | 0 |
 | [catalog/credential_test.go](../../catalog/credential_test.go) | 1 | 1 |
@@ -172,7 +172,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [sql/sql_permissions_test.go](../../sql/sql_permissions_test.go) | 1 | 0 |
 | [sql/sql_query_provider_config_test.go](../../sql/sql_query_provider_config_test.go) | 1 | 0 |
 | [sql/sql_query_test.go](../../sql/sql_query_test.go) | 1 | 0 |
-| [sql/sql_table_test.go](../../sql/sql_table_test.go) | 2 | 16 |
+| [sql/sql_table_test.go](../../sql/sql_table_test.go) | 18 | 0 |
 | [sql/sql_visualization_provider_config_test.go](../../sql/sql_visualization_provider_config_test.go) | 1 | 0 |
 | [sql/sql_widget_provider_config_test.go](../../sql/sql_widget_provider_config_test.go) | 1 | 0 |
 | [storage/dbfs_file_provider_config_test.go](../../storage/dbfs_file_provider_config_test.go) | 1 | 0 |
@@ -584,3 +584,30 @@ selection associated with its configuration. `RunNative` remains available for
 Go checks and custom transports/authentication, with `ProviderFactories` sharing
 the runner's mux construction. Fixtures remain stateless and strict; responses
 are marked placeholders. Original integration tests remain unchanged.
+
+## SQL-table lifecycles
+
+This batch copies **16 original functions**, retaining all 33 HCL steps and
+expected errors. The inventory is **536 copied / 9 pending**.
+
+- Managed and identity-column tables retain property/comment/owner updates.
+  Partitioned and liquid tables retain options and clustering configuration.
+- Column scenarios retain type aliases, comments/nullability, renaming, adding,
+  dropping and combined updates, including the original rejected transitions.
+- Fixtures match exact SQL statement text, warehouse selection and Unity Catalog
+  requests. API responses are marked placeholders based on API models. Properties
+  remain in responses when a SQL SET updates other keys without removing them.
+- SQL rendering sorts property/option keys and removed-property keys; column
+  removals follow the original column order. This small provider change makes
+  strict request matching repeatable without accepting arbitrary SQL.
+
+Automatic destroy and Terraform's post-apply empty-plan checks remain enabled.
+The original integration tests are unchanged.
+
+## Catalog workspace-routing plan
+
+The provider-configuration suite now also copies the three-step catalog
+workspace-change scenario. Its final plan expects an in-place update, matching
+metastore-scoped routing support; the old replacement expectation is stale.
+This adds one source function: **537 copied / 8 pending**. The source integration
+test remains unchanged, and cleanup uses the last applied configuration.

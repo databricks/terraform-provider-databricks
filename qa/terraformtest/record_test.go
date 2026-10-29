@@ -123,7 +123,6 @@ func TestRecorderRoundTripAndFailurePreservesOriginal(t *testing.T) {
 			d.HostMetadata["workspace_id"] = "9876543210123456"
 			calls := append(d.metadataCalls(), d.Steps[0].Calls...)
 			calls = append(calls, d.Destroy.Calls...)
-			require.NoError(t, peer.SetReusableFixtures(calls))
 			var deletes atomic.Int32
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				if req.Method == "DELETE" {
@@ -132,6 +131,8 @@ func TestRecorderRoundTripAndFailurePreservesOriginal(t *testing.T) {
 				peer.ServeHTTP(w, req)
 			}))
 			t.Cleanup(server.Close)
+			d.HostMetadata["oidc_endpoint"] = server.URL + "/oidc"
+			require.NoError(t, peer.SetReusableFixtures(calls))
 			directory := t.TempDir()
 			writeDiscoveryFile(t, directory, "One.yaml", string(original))
 			writeDiscoveryFile(t, directory, "profiles", "[local]\nhost = "+server.URL+"\ntoken = recorder-secret\nworkspace_id = 9876543210123456\n")
@@ -150,6 +151,8 @@ func TestRecorderRoundTripAndFailurePreservesOriginal(t *testing.T) {
 			require.Contains(t, string(updated), "# JSON body matcher showcase")
 			require.NotContains(t, string(updated), "9876543210123456")
 			require.NotContains(t, string(updated), "recorder-secret")
+			require.NotContains(t, string(updated), server.URL)
+			require.Contains(t, string(updated), "http://example.databricks.com/oidc")
 			server.Close()
 			replayed, err := loadDefinition(filepath.Join(directory, "One.yaml"))
 			require.NoError(t, err)

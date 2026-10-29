@@ -5,9 +5,9 @@ host_metadata:
   account_id: replay-account
   cloud_provider: aws
   host_type: workspace
-  oidc_endpoint: https://example-workspace.cloud.databricks.com/oidc
+  oidc_endpoint: https://example.databricks.com/oidc
   token_federation_default_oidc_audiences:
-    - https://example-workspace.cloud.databricks.com/oidc/v1/token
+    - https://example.databricks.com/oidc/v1/token
   workspace_id: "12345"
 steps:
   - name: "select_default_version"

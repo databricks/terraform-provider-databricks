@@ -194,13 +194,10 @@ Destroy always requires an empty resource inventory, including data sources in
 child modules. This is enforced by the engine; `destroy` accepts only `calls`,
 with no configurable final-state assertion.
 
-## MVP scope
+## Schema validation
 
-Tests use handwritten fixtures and start with empty Terraform state unless an
-initial checkpoint is supplied. YAML has strict field validation: recording/setup
-templates and strict attribute matching are not yet supported. Unsupported fields fail
-before any Terraform operations. The step/call/state layout is kept stable
-so these capabilities can be added independently.
+Unknown fields fail before Terraform operations. Strict attribute matching is
+not supported; state assertions check only the selected paths.
 
 ## Local input files
 
@@ -503,31 +500,13 @@ Complete examples are in [testdata/plans](testdata/plans). They exercise
 checkpoint update/apply, empty and nonempty previews, multiple resource instances,
 known/unknown outputs, and automatic cleanup.
 
-## Constraints for future recording
+## Recording limitations
 
-Recording is not implemented. These replay contracts must survive capture and
-refresh:
+Existing plan and state expectations remain assertions; recording does not
+refresh their values or add new assertion paths. Keep checks focused on the
+behavior under test, and adjust server-generated IDs manually when necessary.
 
-- Keep every consumable exchange, including retries and repeated reads, in
-  request-dispatch order. Assign sequence numbers before sending requests;
-  response-completion order can differ under concurrency. Do not infer resource
-  ownership from HTTP calls. Identical concurrent signatures with different
-  responses remain ambiguous under FIFO replay and need explicit handling.
-- Preserve whole-step boundaries, including all native consistency plans and
-  destroy. Capture plan expectations at the same saved-plan hooks as replay:
-  pre-apply for apply steps, post-refresh for plan-only steps.
-- Preserve per-step provider implementation selections when refreshing fixtures;
-  recording must use the same implementation as replay.
-- Preserve author-selected paths, omitted assertions, explicit empty maps, and
-  unknown versus null. Do not turn partial assertions into whole-state snapshots
-  or silently change `enforce_call_order` while refreshing fixtures.
-- Capture reusable host metadata separately from consumable calls. Keep setup
-  and background-environment cleanup outside the test transcript; initial-state
-  resources belong to test destroy. Generate matching checkpoints and calls
-  together without editing opaque checkpoint JSON or reusing stale live IDs.
-- Capture multipart uploads as form parts, without matching the random boundary
-  in the top-level `Content-Type` header. Preserve exact content bytes using
-  text/base64 and keep local input files alongside their YAML definitions.
-- Decide retries/polling, secret and volatile-value handling before enabling
-  live capture. Recording must be explicit, single-test, unavailable in CI, and
-  must never be activated by a replay failure.
+Identical concurrent request signatures with different responses remain
+ambiguous under FIFO replay. Recording preserves dispatch order, but does not
+infer resource ownership or enable ordered replay. Review these scenarios
+before relying on a refreshed transcript.

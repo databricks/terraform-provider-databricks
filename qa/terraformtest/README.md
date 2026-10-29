@@ -42,6 +42,41 @@ profiles and environment defaults; SDK HTTP traffic is restricted to the
 test's local fixture server. Do not use `t.Parallel`: Terraform CLI discovery is
 configured through process environment variables.
 
+## Refresh HTTP fixtures
+
+Set `TEST_RECORDER_PROFILE_NAME` to a profile in `~/.databrickscfg` (or
+`DATABRICKS_CONFIG_FILE`) and select one exact, anchored test path:
+
+```sh
+TEST_RECORDER_PROFILE_NAME=my-dev-profile \
+  go test ./qa/terraformtest -count=1 \
+  -run '^TestRequestMatcherReplay$/^group_create_body$'
+```
+
+Use the wrapper name in your suite (`TestRequestMatcherReplay` is an example). This
+explicit mode makes real API calls and destroys the resources it manages. It
+is rejected in CI, with broad selection, or with Terraform debug logging enabled.
+Ordinary replay remains hermetic regardless of ambient Databricks credentials.
+Basic recording rejects `initial_state` and `recording` setup templates before
+loading a profile or making requests.
+
+HCL and existing checks still execute. HTTP calls are captured per step,
+including destroy. A local replay verifies the captured data before saving;
+unexpected failures, failed cleanup or failed replay leave the source untouched.
+The recorder writes the finished YAML atomically and refuses concurrent edits.
+It refreshes calls and reusable host metadata, keeping HCL, checks, comments
+outside refreshed fields, matcher annotations, and `enforce_call_order` choices.
+An annotation that cannot be associated with a new call fails refresh instead
+of being discarded. Capture order alone does not enable ordered replay.
+
+The profile supplies host, authentication and real workspace/account IDs. Use
+stable replay IDs in `host_metadata` and literal provider fields; these must
+agree. Only those two known IDs are mapped in both directions, preserving
+numeric versus string JSON values. Other IDs and author-selected assertions
+may need manual updates before a refresh. Credential headers are excluded and
+known profile secrets/common secret payload fields are redacted. Review every
+generated diff for service-specific secrets before committing it.
+
 ## Test definition
 
 Use `version: 1`, optional `initial_state`, followed by `steps` and `destroy`.

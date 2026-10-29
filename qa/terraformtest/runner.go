@@ -39,7 +39,6 @@ func RunNative(t *testing.T, path string, configure func(*resource.TestCase, fun
 
 func runNative(t *testing.T, definition *testDefinition, configure func(*resource.TestCase, func(*config.Config) error)) {
 	t.Helper()
-	configureTerraform(t)
 	handler := httpfixture.NewHandler()
 	handler.SetEnforceCallOrder(definition.EnforceCallOrder)
 	if err := handler.SetReusableFixtures(definition.metadataCalls()); err != nil {
@@ -52,10 +51,23 @@ func runNative(t *testing.T, definition *testDefinition, configure func(*resourc
 			t.Error(err)
 		}
 	})
+	runTerraform(t, definition, handler, fixtureConfig(server.URL), configure)
+}
+
+// stepHTTP is shared by replay and recording. Terraform operations and checks
+// stay identical; only the HTTP boundary changes.
+type stepHTTP interface {
+	StartStep(string, []httpfixture.Call) error
+	Verify() error
+}
+
+func runTerraform(t *testing.T, definition *testDefinition, handler stepHTTP, customize func(*config.Config) error, configure func(*resource.TestCase, func(*config.Config) error)) {
+	t.Helper()
+	configureTerraform(t)
 	steps := testSteps(t, definition, handler)
 	testCase := resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: ProviderFactories(fixtureConfig(server.URL)),
+		ProtoV6ProviderFactories: ProviderFactories(customize),
 		Steps:                    steps,
 		ErrorCheck: func(err error) error {
 			// The testing framework attempts destroy after an interrupted lifecycle.
@@ -63,13 +75,13 @@ func runNative(t *testing.T, definition *testDefinition, configure func(*resourc
 			return errors.Join(err, cleanupErr)
 		},
 	}
-	configureProviderImplementations(definition, &testCase, fixtureConfig(server.URL))
+	configureProviderImplementations(definition, &testCase, customize)
 	if definition.InitialState != nil {
 		seedInitialCheckpoint(t, definition, &testCase)
 	}
 	configureStepFiles(t, definition, &testCase)
 	if configure != nil {
-		configure(&testCase, fixtureConfig(server.URL))
+		configure(&testCase, customize)
 	}
 	resource.Test(t, testCase)
 }
@@ -102,7 +114,7 @@ func configureTerraform(t *testing.T) {
 
 // testSteps appends a numbered destroy using the last successful configuration.
 // Cleanup always requires empty state, independently of optional step checks.
-func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Handler) []resource.TestStep {
+func testSteps(t *testing.T, definition *testDefinition, handler stepHTTP) []resource.TestStep {
 	t.Helper()
 	steps := make([]resource.TestStep, 0, len(definition.Steps)+1)
 	cleanupConfig := `provider "databricks" {}`
@@ -130,7 +142,7 @@ func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Ha
 
 // configuredStep maps a YAML operation to native checks without changing the
 // configuration retained for later cleanup.
-func configuredStep(t *testing.T, handler *httpfixture.Handler, label, hcl string, s step) resource.TestStep {
+func configuredStep(t *testing.T, handler stepHTTP, label, hcl string, s step) resource.TestStep {
 	t.Helper()
 	native := terraformStep(t, handler, label, hcl, s.Calls, s.State)
 	configurePlan(&native, s, label)
@@ -146,7 +158,7 @@ func configuredStep(t *testing.T, handler *httpfixture.Handler, label, hcl strin
 }
 
 // terraformStep treats plan, apply, and consistency reads as one fixture phase.
-func terraformStep(t *testing.T, handler *httpfixture.Handler, label, hcl string, calls []httpfixture.Call, state *expectedState) resource.TestStep {
+func terraformStep(t *testing.T, handler stepHTTP, label, hcl string, calls []httpfixture.Call, state *expectedState) resource.TestStep {
 	t.Helper()
 	s := resource.TestStep{
 		Config: hcl,

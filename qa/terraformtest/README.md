@@ -55,7 +55,8 @@ TEST_RECORDER_PROFILE_NAME=my-dev-profile \
 
 The existing [Spark-version test](../replay/resources/spark_version/testdata/TestAccSparkVersion.yaml)
 lists available runtimes without creating or deleting live resources. Its fixtures
-were refreshed from Databricks; workspace names and hosts are anonymized.
+were refreshed from Databricks using a workspace-host profile; its hostname is
+anonymized.
 Use the wrapper name in your own suite.
 
 Recording makes real API calls and destroys the resources it manages. It

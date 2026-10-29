@@ -28,7 +28,7 @@ distinguished below; not every affected sibling has been executed. Affected scen
 
 | P17 | Inventory exception | `TestAccessControlHashFunction` is a local unit test included by the broad AST inventory because its name begins with `TestAcc`. It tests an unexported hash helper, not an HTTP lifecycle. | Keep its existing hermetic test and resolve the inventory classification separately; no replay-engine feature is needed. |
 | P18 | Source-test inconsistency | Both user-list-with-groups tests create a `tf-…@databricks.com` user but query `userName eq "me-…@example.com"`, then expect the created user's membership. The NCC-list test configures nonexistent plural resource `databricks_mws_network_connectivity_configs` while referencing the singular resource. | Reconcile source intent before copying. Do not return a user that contradicts the requested equality filter or silently repair the source HCL and count it as unchanged coverage. |
-| P19 | Input-state drift | `TestAccPipelineResourcLastModified` sends `expected_last_modified` on update, but Read resets it to zero. A strict replay with a realistic pipeline response fails the non-refresh post-apply empty-plan check. The API's GET response model has no `expected_last_modified` field. | Preserve this input-only value through Read, then copy the complete timestamp/precondition scenario. Do not fabricate a response field to avoid the drift. |
+| P19 | Provider bug; fix included | Read previously reset the input-only `expected_last_modified` value to zero because the pipeline GET response has no such field. This caused post-apply state drift. | Read now preserves the configured precondition. A focused unit regression and the copied two-step timestamp replay fail before the fix and pass with it, retaining exact update payloads, refreshed timestamps and automatic destroy. |
 | P20 | Derived-host routing | AWS workspace/token lifecycles derive a second HTTPS workspace host from the deployment name and use it for token creation/read/update. The replay transport permits only its own fixture-server URL. The token-update case also checks the token list through an SDK client for that derived host. | Define explicit local routing for derived hosts and preserve token-list assertions. Do not allow live network access or substitute an unrelated single-host lifecycle. This limitation was found by source inspection. |
 
 | P21 | Provider cache isolation | The process-global SCIM membership cache is keyed only by group ID. Repeating `TestAccGroupMemberResource`, `TestAccGroupDataSplitMembers`, or `TestAccAwsOboTokenResource` with `go test -count=3` reuses the cached fake group across fresh fixture servers and skips an expected GET. All three pass on their first run; the repeat runs fail with an unconsumed fixture. | Scope membership caching to the provider/client or give it an explicit lifecycle. Keep fixtures strict; do not make the missing reads optional or reset the cache from these YAML tests. Three newly copied functions reproduce it; account counterparts use the same cache. |
@@ -167,3 +167,12 @@ P11 is addressed in the SQL-table migration batch. SQL rendering sorts property,
 option and removed-property keys; multi-column removals use source column order.
 All 16 formerly pending SQL-table functions now have strict replay copies with
 exact statement matching. The unit tests assert the ordering directly.
+
+## Pipeline timestamp resolution
+
+P19 now has a provider fix and a full replay copy. Read retains the configured
+`expected_last_modified` while refreshing the independent `last_modified` field
+from the API. Unit coverage includes zero and nonzero preconditions; the replay
+checks the update request, changed timestamp, configured state and cleanup.
+Neither the inferred GET response nor the API model is extended with an
+input-only field. The original integration test remains unchanged.

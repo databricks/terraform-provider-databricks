@@ -34,7 +34,8 @@ The following attributes are exported:
 * `network_policy_id` (string) - The unique identifier for the network policy
 
 ### CustomerFacingIngressNetworkPolicy
-* `cross_workspace_access` (CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess)
+* `cross_workspace_access` (CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess) - The network policy restrictions for cross-workspace access: which other workspaces may
+  access this workspace
 * `private_access` (CustomerFacingIngressNetworkPolicyPrivateAccess) - The network policy restrictions for private access.
   Configures how requests arriving over private connectivity are governed
 * `public_access` (CustomerFacingIngressNetworkPolicyPublicAccess) - The network policy restrictions for public access to the workspace.

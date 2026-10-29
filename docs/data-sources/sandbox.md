@@ -31,6 +31,7 @@ The following arguments are supported:
 The following attributes are exported:
 * `create_time` (string) - Output only. The creation time of the sandbox
 * `display_name` (string) - Human-readable display label for the sandbox. At most 256 characters
+* `metadata` (SandboxMetadata) - Metadata associated with the sandbox
 * `name` (string) - The sandbox resource name, in the form `sandboxes/{sandbox_id}`. Derived from
   `sandbox_id`; any value supplied in a create or update request body is ignored
 * `spec` (SandboxSpec) - The desired configuration of the sandbox, supplied by the caller at creation time
@@ -41,9 +42,13 @@ The following attributes are exported:
 * `inactivity_timeout` (string) - Idle duration after which the sandbox is automatically terminated
 
 ### EnvironmentSpec
-* `image_uri` (string) - A Unity Catalog container artifact (e.g. `catalog.schema.folder.image:tag`) to run as the
-  sandbox environment. When set, this image is used as the environment instead of resolving a
-  managed image from `environment_version`
+* `image_uri` (string) - The Unity Catalog container image to use for the sandbox environment
+  (for example, `catalog.schema.folder.image:tag`). See
+  [Artifact Registry](https://docs.databricks.com/en/artifact-registry/)
+
+### SandboxMetadata
+* `custom_tags` (object) - Key-value tags associated with the sandbox. Supports up to 54 tags. Keys must be between
+  1 and 512 characters, and values must not exceed 256 characters
 
 ### SandboxSpec
 * `compute` (ComputeSpec) - Compute configuration (size, inactivity timeout) requested for the sandbox

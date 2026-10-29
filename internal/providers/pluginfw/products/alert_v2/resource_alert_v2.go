@@ -110,9 +110,11 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 type AlertV2 struct {
 	// The timestamp indicating when the alert was created.
 	CreateTime types.String `tfsdk:"create_time"`
-	// Custom description for the alert. support mustache template.
+	// Custom description for the alert. Interpreted according to
+	// `custom_template_format`.
 	CustomDescription types.String `tfsdk:"custom_description"`
-	// Custom summary for the alert. support mustache template.
+	// Custom summary for the alert. Interpreted according to
+	// `custom_template_format`.
 	CustomSummary types.String `tfsdk:"custom_summary"`
 	// The format used to interpret the `custom_summary` and
 	// `custom_description` templates.

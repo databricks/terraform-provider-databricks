@@ -54,6 +54,17 @@ This data source exports a single attribute, `monitors`. It is a list of resourc
 
 ### AnomalyDetectionConfig
 * `excluded_table_full_names` (list of string) - List of fully qualified table names to exclude from anomaly detection
+* `notification_settings` (NotificationSettings) - Who to alert when anomaly detection finds unhealthy tables in this schema. Applicable to
+  `schema` monitors only. This is the same schema alert you manage from **Manage alerts** in the
+  Data Quality Monitoring UI, so a change made in either place shows in both.
+  
+  Set the recipients in `on_unhealthy_table`; `on_failure` is not supported here. Only
+  `destination_ids` and `destination_user_ids` are supported.
+  
+  On update, an update mask of `*`, `anomaly_detection_config`, or
+  `anomaly_detection_config.notification_settings` replaces the alert's recipients with the ones
+  in the request; omitting the field, or leaving both recipient lists empty, removes the alert.
+  Other masks leave the alert unchanged
 
 ### CronSchedule
 * `pause_status` (string) - Read only field that indicates whether the schedule is paused or not. Possible values are: `CRON_SCHEDULE_PAUSE_STATUS_PAUSED`, `CRON_SCHEDULE_PAUSE_STATUS_UNPAUSED`
@@ -113,10 +124,19 @@ This data source exports a single attribute, `monitors`. It is a list of resourc
 * `timestamp_column` (string) - Column for the timestamp
 
 ### NotificationDestination
+* `destination_ids` (list of string) - The notification-destination IDs (Slack / Teams / webhook) to send the notification to. The
+  destinations must already exist in the workspace; a workspace admin creates them. A maximum of
+  25 destination IDs is supported.
+  Only supported on schema monitors, via `anomaly_detection_config`; rejected on table monitors
+* `destination_user_ids` (list of integer) - The IDs of the workspace users to notify by email. A maximum of 25 user IDs is supported.
+  Only supported on schema monitors, via `anomaly_detection_config`; rejected on table monitors
 * `email_addresses` (list of string) - The list of email addresses to send the notification to. A maximum of 5 email addresses is supported
 
 ### NotificationSettings
 * `on_failure` (NotificationDestination) - Destinations to send notifications on failure/timeout
+* `on_unhealthy_table` (NotificationDestination) - Recipients to notify when anomaly detection finds unhealthy tables in the schema. Each
+  recipient gets one notification per important unhealthy table. Only supported on schema
+  monitors, via `anomaly_detection_config`
 
 ### SnapshotConfig
 

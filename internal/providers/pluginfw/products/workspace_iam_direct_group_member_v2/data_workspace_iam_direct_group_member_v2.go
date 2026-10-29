@@ -99,7 +99,7 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 type DirectGroupMemberData struct {
 	// Display name of the principal.
 	DisplayName types.String `tfsdk:"display_name"`
-	// The external ID of the principal in Databricks.
+	// The external ID of the principal in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
 	// The internal ID of the group this member belongs to.
 	GroupId types.Int64 `tfsdk:"group_id"`

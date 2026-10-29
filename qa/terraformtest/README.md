@@ -49,13 +49,14 @@ Set `TEST_RECORDER_PROFILE_NAME` to a profile in `~/.databrickscfg` (or
 
 ```sh
 TEST_RECORDER_PROFILE_NAME=my-dev-profile \
-  go test ./qa/terraformtest -count=1 \
-  -run '^TestRecordedReplay$/^directory$'
+  go test ./qa/replay/resources/spark_version -count=1 \
+  -run '^TestSparkVersion$/^TestAccSparkVersion$'
 ```
 
-The [recorded directory example](testdata/recording/directory.yaml) reads `/Shared`
-without creating or deleting live resources. Its workspace names and hosts are
-anonymized. Use the wrapper name in your own suite.
+The existing [Spark-version test](../replay/resources/spark_version/testdata/TestAccSparkVersion.yaml)
+lists available runtimes without creating or deleting live resources. Its fixtures
+were refreshed from Databricks; workspace names and hosts are anonymized.
+Use the wrapper name in your own suite.
 
 Recording makes real API calls and destroys the resources it manages. It
 is rejected in CI, with broad selection, or with Terraform debug logging enabled.

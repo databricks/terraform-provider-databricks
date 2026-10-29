@@ -146,6 +146,7 @@ func finishInitialRecording(t *testing.T, path string, original, updated []byte,
 }
 
 func normalizedSetupCalls(initialCalls []httpfixture.Call, n *recordingNormalizer) ([]httpfixture.Call, error) {
+	redactSecretReads(initialCalls)
 	encoded, err := yaml.Marshal(initialCalls)
 	if err != nil {
 		return nil, err

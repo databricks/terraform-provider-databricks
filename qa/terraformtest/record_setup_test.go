@@ -127,6 +127,15 @@ func TestCheckpointPublicationPreservesOldSourceOnConcurrentEdits(t *testing.T) 
 	require.Equal(t, name, checkpointFilename(name, []byte("snapshot")))
 }
 
+func TestSetupTranscriptRedactsSecretsBeforeCheckpointGeneration(t *testing.T) {
+	calls, err := normalizedSetupCalls([]httpfixture.Call{{
+		Request:  httpfixture.Request{Method: "GET", Path: "/api/2.0/secrets/get"},
+		Response: httpfixture.Response{Status: 200, Body: &httpfixture.Body{JSON: map[string]any{"value": "encoded-secret"}}},
+	}}, &recordingNormalizer{})
+	require.NoError(t, err)
+	require.Equal(t, "W1JFREFDVEVEXQ==", calls[0].Response.Body.JSON.(map[string]any)["value"])
+}
+
 // Local fixtures stand in for Databricks so record-time ownership and generated
 // checkpoints can be tested without running a live integration test.
 func recordingGroupPeer(t *testing.T) *httpfixture.Handler {

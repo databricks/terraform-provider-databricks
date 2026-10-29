@@ -1,0 +1,328 @@
+# Placeholder API responses inferred from API models; not recorded.
+version: 1
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create_monitor
+    config: |
+      resource "databricks_catalog" "sandbox" {
+        name    = "sandboxreplay"
+        comment = "this catalog is managed by terraform"
+        properties = {
+          purpose = "testing"
+        }
+        force_destroy = true
+      }
+
+      resource "databricks_schema" "things" {
+        catalog_name = databricks_catalog.sandbox.id
+        name         = "thingsreplay"
+        comment      = "this database is managed by terraform"
+        properties = {
+          kind = "various"
+        }
+      }
+
+      resource "databricks_sql_table" "myInferenceTable" {
+        catalog_name       = databricks_catalog.sandbox.id
+        schema_name        = databricks_schema.things.name
+        name               = "barreplay_inference"
+        table_type         = "MANAGED"
+        data_source_format = "DELTA"
+        warehouse_id       = "warehouse-1"
+
+        column {
+          name = "model_id"
+          type = "int"
+        }
+        column {
+          name = "timestamp"
+          type = "int"
+        }
+        column {
+          name = "prediction"
+          type = "int"
+        }
+      }
+
+
+
+      resource "databricks_quality_monitor" "testMonitorInference" {
+        table_name         = databricks_sql_table.myInferenceTable.id
+        assets_dir         = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
+        output_schema_name = databricks_schema.things.id
+        inference_log {
+          granularities  = ["1 day"]
+          timestamp_col  = "timestamp"
+          prediction_col = "prediction"
+          model_id_col   = "model_id"
+          problem_type   = "PROBLEM_TYPE_REGRESSION"
+        }
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/catalogs
+          body:
+            json:
+              comment: this catalog is managed by terraform
+              name: sandboxreplay
+              properties:
+                purpose: testing
+        response:
+          status: 200
+          body:
+            json:
+              catalog_type: MANAGED_CATALOG
+              comment: this catalog is managed by terraform
+              enable_predictive_optimization: INHERIT
+              isolation_mode: OPEN
+              metastore_id: 11111111-1111-1111-1111-111111111111
+              name: sandboxreplay
+              owner: replay-admin
+              properties:
+                purpose: testing
+      - request:
+          method: DELETE
+          path: /api/2.1/unity-catalog/schemas/sandboxreplay.default
+          body: null
+        response:
+          status: 200
+          body: null
+      - &get_sandboxreplay_2
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/catalogs/sandboxreplay
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              catalog_type: MANAGED_CATALOG
+              comment: this catalog is managed by terraform
+              enable_predictive_optimization: INHERIT
+              isolation_mode: OPEN
+              metastore_id: 11111111-1111-1111-1111-111111111111
+              name: sandboxreplay
+              owner: replay-admin
+              properties:
+                purpose: testing
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/schemas
+          body:
+            json:
+              catalog_name: sandboxreplay
+              comment: this database is managed by terraform
+              name: thingsreplay
+              properties:
+                kind: various
+        response:
+          status: 200
+          body:
+            json:
+              catalog_name: sandboxreplay
+              comment: this database is managed by terraform
+              enable_predictive_optimization: INHERIT
+              full_name: sandboxreplay.thingsreplay
+              metastore_id: 11111111-1111-1111-1111-111111111111
+              name: thingsreplay
+              owner: replay-admin
+              properties:
+                kind: various
+              schema_id: 22222222-2222-2222-2222-222222222222
+      - &get_sandboxreplay_thingsreplay_3
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/schemas/sandboxreplay.thingsreplay
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              catalog_name: sandboxreplay
+              comment: this database is managed by terraform
+              enable_predictive_optimization: INHERIT
+              full_name: sandboxreplay.thingsreplay
+              metastore_id: 11111111-1111-1111-1111-111111111111
+              name: thingsreplay
+              owner: replay-admin
+              properties:
+                kind: various
+              schema_id: 22222222-2222-2222-2222-222222222222
+      - request:
+          method: POST
+          path: /api/2.0/sql/statements
+          body:
+            json:
+              on_wait_timeout: CANCEL
+              statement: |-
+                CREATE OR REPLACE TABLE `sandboxreplay`.`thingsreplay`.`barreplay_inference` (`model_id` int, `timestamp` int, `prediction` int)
+                USING DELTA;
+              wait_timeout: 50s
+              warehouse_id: warehouse-1
+        response:
+          status: 200
+          body:
+            json:
+              statement_id: statement-1
+              status:
+                state: SUCCEEDED
+      - &get_sandboxreplay_thingsreplay_barreplay_inference_1
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/tables/sandboxreplay.thingsreplay.barreplay_inference
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              catalog_name: sandboxreplay
+              columns:
+                - name: model_id
+                  nullable: true
+                  type_text: int
+                - name: timestamp
+                  nullable: true
+                  type_text: int
+                - name: prediction
+                  nullable: true
+                  type_text: int
+              data_source_format: DELTA
+              full_name: sandboxreplay.thingsreplay.barreplay_inference
+              name: barreplay_inference
+              owner: replay-admin
+              schema_name: thingsreplay
+              table_id: table-barreplay_inference
+              table_type: MANAGED
+      - *get_sandboxreplay_thingsreplay_barreplay_inference_1
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/tables/sandboxreplay.thingsreplay.barreplay_inference/monitor
+          body:
+            json:
+              assets_dir: /Shared/provider-test/databricks_quality_monitoring/barreplay_inference
+              inference_log:
+                granularities:
+                  - 1 day
+                model_id_col: model_id
+                prediction_col: prediction
+                problem_type: PROBLEM_TYPE_REGRESSION
+                timestamp_col: timestamp
+              output_schema_name: sandboxreplay.thingsreplay
+        response:
+          status: 200
+          body:
+            json:
+              assets_dir: /Shared/provider-test/databricks_quality_monitoring/barreplay_inference
+              drift_metrics_table_name: sandboxreplay.thingsreplay.barreplay_inference_drift_metrics
+              inference_log:
+                granularities:
+                  - 1 day
+                model_id_col: model_id
+                prediction_col: prediction
+                problem_type: PROBLEM_TYPE_REGRESSION
+                timestamp_col: timestamp
+              monitor_version: 1
+              output_schema_name: sandboxreplay.thingsreplay
+              profile_metrics_table_name: sandboxreplay.thingsreplay.barreplay_inference_profile_metrics
+              status: MONITOR_STATUS_ACTIVE
+              table_name: sandboxreplay.thingsreplay.barreplay_inference
+      - &get_monitor_4
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/tables/sandboxreplay.thingsreplay.barreplay_inference/monitor
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              assets_dir: /Shared/provider-test/databricks_quality_monitoring/barreplay_inference
+              drift_metrics_table_name: sandboxreplay.thingsreplay.barreplay_inference_drift_metrics
+              inference_log:
+                granularities:
+                  - 1 day
+                model_id_col: model_id
+                prediction_col: prediction
+                problem_type: PROBLEM_TYPE_REGRESSION
+                timestamp_col: timestamp
+              monitor_version: 1
+              output_schema_name: sandboxreplay.thingsreplay
+              profile_metrics_table_name: sandboxreplay.thingsreplay.barreplay_inference_profile_metrics
+              status: MONITOR_STATUS_ACTIVE
+              table_name: sandboxreplay.thingsreplay.barreplay_inference
+      - *get_sandboxreplay_2
+      - *get_sandboxreplay_thingsreplay_3
+      - *get_sandboxreplay_thingsreplay_barreplay_inference_1
+      - *get_sandboxreplay_thingsreplay_barreplay_inference_1
+      - *get_monitor_4
+  - name: import_by_table_name
+    import:
+      resource: databricks_quality_monitor.testMonitorInference
+      id: sandboxreplay.thingsreplay.barreplay_inference
+      persist: false
+      verify: true
+      identifier_attribute: table_name
+    calls:
+      - *get_monitor_4
+destroy:
+  calls:
+    - *get_sandboxreplay_2
+    - *get_sandboxreplay_thingsreplay_3
+    - *get_sandboxreplay_thingsreplay_barreplay_inference_1
+    - *get_sandboxreplay_thingsreplay_barreplay_inference_1
+    - *get_monitor_4
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/tables/sandboxreplay.thingsreplay.barreplay_inference/monitor
+        body: null
+      response:
+        status: 200
+        body: null
+    - request:
+        method: POST
+        path: /api/2.0/sql/statements
+        body:
+          json:
+            on_wait_timeout: CANCEL
+            statement: DROP TABLE `sandboxreplay`.`thingsreplay`.`barreplay_inference`
+            wait_timeout: 50s
+            warehouse_id: warehouse-1
+      response:
+        status: 200
+        body:
+          json:
+            statement_id: statement-1
+            status:
+              state: SUCCEEDED
+    - &get_current_metastore_assignment_5
+      request:
+        method: GET
+        path: /api/2.1/unity-catalog/current-metastore-assignment
+        body: null
+      response:
+        status: 200
+        body:
+          json:
+            metastore_id: 11111111-1111-1111-1111-111111111111
+            workspace_id: 12345
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/schemas/sandboxreplay.thingsreplay
+        body: null
+      response:
+        status: 200
+        body: null
+    - *get_current_metastore_assignment_5
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/catalogs/sandboxreplay
+        body: null
+        query:
+          force:
+            - 'true'
+      response:
+        status: 200
+        body: null

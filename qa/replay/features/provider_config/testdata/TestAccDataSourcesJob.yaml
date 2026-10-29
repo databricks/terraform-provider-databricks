@@ -1,0 +1,51 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "read"
+    config: |
+      data "databricks_jobs" "all" {
+        key = "id"
+      }
+    calls:
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.2/jobs/list"
+          query:
+            limit: ["100"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              jobs:
+                - job_id: 101
+                  settings:
+                    name: "existing-job"
+      - *get_1
+      - *get_1
+  - name: "add_workspace_id"
+    config: |
+      data "databricks_jobs" "all" {
+        key = "id"
+        provider_config {
+          workspace_id = "12345"
+        }
+      }
+    calls:
+      - *get_1
+      - *get_1
+      - *get_1
+    state:
+      resources:
+        data.databricks_jobs.all:
+          attributes:
+            - path: ["provider_config",0,"workspace_id"]
+              equals: "12345"
+destroy:
+  calls:
+    - *get_1

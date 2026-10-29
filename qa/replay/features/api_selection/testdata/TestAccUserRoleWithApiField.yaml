@@ -1,0 +1,111 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "assign_role"
+    config: |
+      resource "databricks_user" "this" {
+        user_name = "replay1@example.com"
+        api       = "workspace"
+      }
+      resource "databricks_user_role" "this" {
+        user_id = databricks_user.this.id
+        role    = "arn:aws:iam::999999999999:role/foo"
+        api     = "workspace"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/preview/scim/v2/Users"
+          body:
+            json:
+              active: true
+              entitlements:
+                - {}
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              userName: "replay1@example.com"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 201
+          body:
+            json:
+              active: true
+              entitlements: []
+              id: "201"
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              userName: "replay1@example.com"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Users/201"
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              entitlements: []
+              id: "201"
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              userName: "replay1@example.com"
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/preview/scim/v2/Users/201"
+          body:
+            json:
+              Operations:
+                - op: "add"
+                  path: "roles"
+                  value:
+                    - value: "arn:aws:iam::999999999999:role/foo"
+              schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Users/201"
+          query:
+            attributes: ["roles"]
+          body: null
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              entitlements: []
+              id: "201"
+              roles:
+                - value: "arn:aws:iam::999999999999:role/foo"
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              userName: "replay1@example.com"
+      - *get_1
+      - *get_2
+destroy:
+  calls:
+    - *get_1
+    - *get_2
+    - request:
+        method: "PATCH"
+        path: "/api/2.0/preview/scim/v2/Users/201"
+        body:
+          json:
+            Operations:
+              - op: "remove"
+                path: "roles[value eq \"arn:aws:iam::999999999999:role/foo\"]"
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"]
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/preview/scim/v2/Users/201"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 204
+        body: null

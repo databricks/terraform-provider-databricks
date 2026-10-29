@@ -2,13 +2,61 @@
 subcategory: "Apps"
 ---
 # databricks_app_space Resource
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/apps)
 
+App Spaces group related Databricks Apps and share configuration across them. Resources, user API scopes, and the usage policy configured on a space are available to every app in the space.
+
+### Use Cases
+
+App Spaces can be used to give a set of apps access to the same resources, such as SQL warehouses or secrets, without configuring each app individually.
+
+### Permissions
+
+Each app space has its own service principal. Resources configured on the space are granted to that service principal and are available to all apps that belong to the space.
 
 
 ## Example Usage
+### Basic Example
+
+This example creates an app space in the workspace with the specified name.
+
+```hcl
+resource "databricks_app_space" "this" {
+  name        = "my-space"
+  description = "My app space for team applications."
+}
+```
+
+### Example with Resources
+
+This example creates an app space that gives all of its apps access to a SQL warehouse and a secret.
+
+```hcl
+resource "databricks_app_space" "with_resources" {
+  name        = "analytics-space"
+  description = "Shared resources for analytics apps"
+  resources = [
+    {
+      name = "warehouse"
+      sql_warehouse = {
+        id         = "e9ca293f79a74b5c"
+        permission = "CAN_USE"
+      }
+    },
+    {
+      name = "api-key"
+      secret = {
+        scope      = "my-scope"
+        key        = "my-key"
+        permission = "READ"
+      }
+    }
+  ]
+  user_api_scopes = ["sql"]
+}
+```
 
 
 ## Arguments

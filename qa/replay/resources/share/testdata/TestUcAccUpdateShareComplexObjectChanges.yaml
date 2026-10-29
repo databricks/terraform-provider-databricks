@@ -1,0 +1,458 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_catalog" "sandbox" {
+        name = "sandbox-replay"
+        comment = "this catalog is managed by terraform"
+        properties = { purpose = "testing" }
+      }
+      resource "databricks_schema" "schema1" {
+        catalog_name = databricks_catalog.sandbox.id
+        name = "schema1-replay"
+        comment = "this database is managed by terraform"
+        properties = { kind = "various" }
+      }
+      resource "databricks_schema" "schema2" {
+        catalog_name = databricks_catalog.sandbox.id
+        name = "schema2-replay"
+        comment = "this database is managed by terraform"
+        properties = { kind = "various" }
+      }
+      resource "databricks_schema" "schema3" {
+        catalog_name = databricks_catalog.sandbox.id
+        name = "schema3-replay"
+        comment = "this database is managed by terraform"
+        properties = { kind = "various" }
+      }
+      resource "databricks_share" "myshare" {
+        name = "replay-terraform-delta-share"
+        object {
+          name = databricks_schema.schema1.id
+          data_object_type = "SCHEMA"
+          comment = "original comment"
+        }
+        object {
+          name = databricks_schema.schema2.id
+          data_object_type = "SCHEMA"
+          comment = "second schema"
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/catalogs"
+          body:
+            json:
+              comment: "this catalog is managed by terraform"
+              name: "sandbox-replay"
+              properties:
+                purpose: "testing"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              catalog_type: "MANAGED_CATALOG"
+              comment: "this catalog is managed by terraform"
+              enable_predictive_optimization: "INHERIT"
+              isolation_mode: "OPEN"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "sandbox-replay"
+              owner: "replay-admin"
+              properties:
+                purpose: "testing"
+      - request:
+          method: "DELETE"
+          path: "/api/2.1/unity-catalog/schemas/sandbox-replay.default"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/catalogs/sandbox-replay"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              catalog_type: "MANAGED_CATALOG"
+              comment: "this catalog is managed by terraform"
+              enable_predictive_optimization: "INHERIT"
+              isolation_mode: "OPEN"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "sandbox-replay"
+              owner: "replay-admin"
+              properties:
+                purpose: "testing"
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/schemas"
+          body:
+            json:
+              catalog_name: "sandbox-replay"
+              comment: "this database is managed by terraform"
+              name: "schema3-replay"
+              properties:
+                kind: "various"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              catalog_name: "sandbox-replay"
+              comment: "this database is managed by terraform"
+              enable_predictive_optimization: "INHERIT"
+              full_name: "sandbox-replay.schema3-replay"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "schema3-replay"
+              owner: "replay-admin"
+              properties:
+                kind: "various"
+              schema_id: "schema-3"
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/schemas"
+          body:
+            json:
+              catalog_name: "sandbox-replay"
+              comment: "this database is managed by terraform"
+              name: "schema1-replay"
+              properties:
+                kind: "various"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              catalog_name: "sandbox-replay"
+              comment: "this database is managed by terraform"
+              enable_predictive_optimization: "INHERIT"
+              full_name: "sandbox-replay.schema1-replay"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "schema1-replay"
+              owner: "replay-admin"
+              properties:
+                kind: "various"
+              schema_id: "schema-1"
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/schemas"
+          body:
+            json:
+              catalog_name: "sandbox-replay"
+              comment: "this database is managed by terraform"
+              name: "schema2-replay"
+              properties:
+                kind: "various"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              catalog_name: "sandbox-replay"
+              comment: "this database is managed by terraform"
+              enable_predictive_optimization: "INHERIT"
+              full_name: "sandbox-replay.schema2-replay"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "schema2-replay"
+              owner: "replay-admin"
+              properties:
+                kind: "various"
+              schema_id: "schema-2"
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/schemas/sandbox-replay.schema3-replay"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              catalog_name: "sandbox-replay"
+              comment: "this database is managed by terraform"
+              enable_predictive_optimization: "INHERIT"
+              full_name: "sandbox-replay.schema3-replay"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "schema3-replay"
+              owner: "replay-admin"
+              properties:
+                kind: "various"
+              schema_id: "schema-3"
+      - &get_3
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/schemas/sandbox-replay.schema1-replay"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              catalog_name: "sandbox-replay"
+              comment: "this database is managed by terraform"
+              enable_predictive_optimization: "INHERIT"
+              full_name: "sandbox-replay.schema1-replay"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "schema1-replay"
+              owner: "replay-admin"
+              properties:
+                kind: "various"
+              schema_id: "schema-1"
+      - &get_4
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/schemas/sandbox-replay.schema2-replay"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              catalog_name: "sandbox-replay"
+              comment: "this database is managed by terraform"
+              enable_predictive_optimization: "INHERIT"
+              full_name: "sandbox-replay.schema2-replay"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "schema2-replay"
+              owner: "replay-admin"
+              properties:
+                kind: "various"
+              schema_id: "schema-2"
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/shares"
+          body:
+            json:
+              name: "replay-terraform-delta-share"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              created_at: 1700000000000
+              created_by: "replay-admin"
+              name: "replay-terraform-delta-share"
+              objects: []
+              owner: "replay-admin"
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/shares/replay-terraform-delta-share"
+          body:
+            json:
+              updates:
+                - action: "ADD"
+                  data_object:
+                    comment: "original comment"
+                    data_object_type: "SCHEMA"
+                    name: "sandbox-replay.schema1-replay"
+                - action: "ADD"
+                  data_object:
+                    comment: "second schema"
+                    data_object_type: "SCHEMA"
+                    name: "sandbox-replay.schema2-replay"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              created_at: 1700000000000
+              created_by: "replay-admin"
+              name: "replay-terraform-delta-share"
+              objects:
+                - comment: "original comment"
+                  data_object_type: "SCHEMA"
+                  name: "sandbox-replay.schema1-replay"
+                - comment: "second schema"
+                  data_object_type: "SCHEMA"
+                  name: "sandbox-replay.schema2-replay"
+              owner: "replay-admin"
+      - *get_1
+      - *get_3
+      - *get_4
+      - *get_2
+      - &get_5
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/shares/replay-terraform-delta-share"
+          query:
+            include_shared_data: ["true"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              created_at: 1700000000000
+              created_by: "replay-admin"
+              name: "replay-terraform-delta-share"
+              objects:
+                - comment: "original comment"
+                  data_object_type: "SCHEMA"
+                  name: "sandbox-replay.schema1-replay"
+                - comment: "second schema"
+                  data_object_type: "SCHEMA"
+                  name: "sandbox-replay.schema2-replay"
+              owner: "replay-admin"
+  - name: "change_objects"
+    config: |
+      resource "databricks_catalog" "sandbox" {
+        name = "sandbox-replay"
+        comment = "this catalog is managed by terraform"
+        properties = { purpose = "testing" }
+      }
+      resource "databricks_schema" "schema1" {
+        catalog_name = databricks_catalog.sandbox.id
+        name = "schema1-replay"
+        comment = "this database is managed by terraform"
+        properties = { kind = "various" }
+      }
+      resource "databricks_schema" "schema2" {
+        catalog_name = databricks_catalog.sandbox.id
+        name = "schema2-replay"
+        comment = "this database is managed by terraform"
+        properties = { kind = "various" }
+      }
+      resource "databricks_schema" "schema3" {
+        catalog_name = databricks_catalog.sandbox.id
+        name = "schema3-replay"
+        comment = "this database is managed by terraform"
+        properties = { kind = "various" }
+      }
+      resource "databricks_share" "myshare" {
+        name = "replay-terraform-delta-share"
+        object {
+          name = databricks_schema.schema1.id
+          data_object_type = "SCHEMA"
+          comment = "updated comment"
+        }
+        object {
+          name = databricks_schema.schema3.id
+          data_object_type = "SCHEMA"
+          comment = "third schema"
+        }
+      }
+    calls:
+      - *get_1
+      - *get_4
+      - *get_3
+      - *get_2
+      - *get_5
+      - *get_5
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/shares/replay-terraform-delta-share"
+          body:
+            json:
+              updates:
+                - action: "REMOVE"
+                  data_object:
+                    comment: "second schema"
+                    data_object_type: "SCHEMA"
+                    name: "sandbox-replay.schema2-replay"
+                - action: "UPDATE"
+                  data_object:
+                    comment: "updated comment"
+                    data_object_type: "SCHEMA"
+                    name: "sandbox-replay.schema1-replay"
+                - action: "ADD"
+                  data_object:
+                    comment: "third schema"
+                    data_object_type: "SCHEMA"
+                    name: "sandbox-replay.schema3-replay"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              created_at: 1700000000000
+              created_by: "replay-admin"
+              name: "replay-terraform-delta-share"
+              objects:
+                - comment: "updated comment"
+                  data_object_type: "SCHEMA"
+                  name: "sandbox-replay.schema1-replay"
+                - comment: "third schema"
+                  data_object_type: "SCHEMA"
+                  name: "sandbox-replay.schema3-replay"
+              owner: "replay-admin"
+      - *get_1
+      - *get_2
+      - *get_4
+      - *get_3
+      - &get_6
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/shares/replay-terraform-delta-share"
+          query:
+            include_shared_data: ["true"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              created_at: 1700000000000
+              created_by: "replay-admin"
+              name: "replay-terraform-delta-share"
+              objects:
+                - comment: "updated comment"
+                  data_object_type: "SCHEMA"
+                  name: "sandbox-replay.schema1-replay"
+                - comment: "third schema"
+                  data_object_type: "SCHEMA"
+                  name: "sandbox-replay.schema3-replay"
+              owner: "replay-admin"
+destroy:
+  calls:
+    - *get_1
+    - *get_3
+    - *get_4
+    - *get_2
+    - *get_6
+    - &get_7
+      request:
+        method: "GET"
+        path: "/api/2.1/unity-catalog/current-metastore-assignment"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            default_catalog_name: "main"
+            metastore_id: "11111111-1111-1111-1111-111111111111"
+            workspace_id: 12345
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/schemas/sandbox-replay.schema2-replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/shares/replay-terraform-delta-share"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - *get_7
+    - *get_7
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/schemas/sandbox-replay.schema1-replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/schemas/sandbox-replay.schema3-replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - *get_7
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/catalogs/sandbox-replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

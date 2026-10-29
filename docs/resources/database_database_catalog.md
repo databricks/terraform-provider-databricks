@@ -8,6 +8,8 @@ subcategory: "Database Instances"
 
 Database Catalogs are databases inside a Lakebase Database Instance which are synced into a Postgres Catalog inside Unity Catalog.
 
+For new workloads, Databricks recommends the `databricks_postgres_catalog` resource.
+
 ### Use Cases
 
 Database Catalogs can be used to achieve governance of Postgres databases in Unity Catalog. It also allows access to underlying data via REST APIs and Feature Stores.

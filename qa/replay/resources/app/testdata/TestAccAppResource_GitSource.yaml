@@ -1,0 +1,98 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_app" "this" {
+        no_compute  = true
+        name        = "tf-replay"
+        description = "git-backed app"
+        git_repository = {
+          url      = "https://github.com/databricks/app-templates"
+          provider = "gitHub"
+        }
+        git_source = {
+          branch           = "main"
+          source_code_path = "streamlit-data-app"
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/apps"
+          query:
+            no_compute: ["true"]
+          body:
+            json:
+              description: "git-backed app"
+              git_repository:
+                provider: "gitHub"
+                url: "https://github.com/databricks/app-templates"
+              git_source:
+                branch: "main"
+                source_code_path: "streamlit-data-app"
+              name: "tf-replay"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              compute_status:
+                state: "STOPPED"
+              create_time: "2026-01-01T00:00:00Z"
+              default_git_source:
+                branch: "main"
+                git_repository:
+                  provider: "gitHub"
+                  url: "https://github.com/databricks/app-templates"
+                source_code_path: "streamlit-data-app"
+              description: "git-backed app"
+              git_repository:
+                provider: "gitHub"
+                url: "https://github.com/databricks/app-templates"
+              name: "tf-replay"
+              update_time: "2026-01-01T00:00:00Z"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/apps/tf-replay"
+          body: null
+        response: *response_1
+      - *get_1
+    state:
+      resources:
+        databricks_app.this:
+          attributes:
+            - path: ["git_source","branch"]
+              equals: "main"
+            - path: ["git_source","source_code_path"]
+              equals: "streamlit-data-app"
+  - name: "reapply_without_drift"
+    config: |
+      resource "databricks_app" "this" {
+        no_compute  = true
+        name        = "tf-replay"
+        description = "git-backed app"
+        git_repository = {
+          url      = "https://github.com/databricks/app-templates"
+          provider = "gitHub"
+        }
+        git_source = {
+          branch           = "main"
+          source_code_path = "streamlit-data-app"
+        }
+      }
+    calls:
+      - *get_1
+      - *get_1
+destroy:
+  calls:
+    - *get_1
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/apps/tf-replay"
+        body: null
+      response: *response_1

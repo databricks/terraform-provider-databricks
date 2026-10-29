@@ -1,0 +1,320 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  # The cluster is running and the table already exists in these fixtures.
+  - name: grant_table_select
+    config: |
+      resource "databricks_sql_permissions" "this" {
+        table = "table_acl_replay"
+        privilege_assignments {
+          principal  = "users"
+          privileges = ["SELECT"]
+        }
+        cluster_id = "0123-456789-replay"
+      }
+    calls:
+      - &call_1
+        request:
+          body: null
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: GET
+          path: /api/2.0/clusters/get
+          query:
+            cluster_id: [0123-456789-replay]
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              cluster_id: 0123-456789-replay
+              cluster_name: table-acl
+              data_security_mode: LEGACY_TABLE_ACL
+              node_type_id: i3.xlarge
+              spark_conf:
+                spark.databricks.acl.dfAclsEnabled: 'true'
+              spark_version: 17.3.x-scala2.13
+              state: RUNNING
+          status: 200
+      - *call_1
+      - &call_3
+        request:
+          body:
+            json:
+              clusterId: 0123-456789-replay
+              language: sql
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: POST
+          path: /api/1.2/contexts/create
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              id: context-1
+          status: 200
+      - &call_4
+        request:
+          body: null
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: GET
+          path: /api/1.2/contexts/status
+          query:
+            clusterId: [0123-456789-replay]
+            contextId: [context-1]
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              id: context-1
+              status: Running
+          status: 200
+      - request:
+          body:
+            json:
+              clusterId: 0123-456789-replay
+              command: |
+                SHOW GRANT ON TABLE `default`.`table_acl_replay`
+              contextId: context-1
+              language: sql
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: POST
+          path: /api/1.2/commands/execute
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              id: show-empty
+          status: 200
+      - &call_2
+        request:
+          body: null
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: GET
+          path: /api/1.2/commands/status
+          query:
+            clusterId: [0123-456789-replay]
+            commandId: [show-empty]
+            contextId: [context-1]
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              id: show-empty
+              results:
+                data: []
+                resultType: table
+                schema:
+                  - name: principal
+                    type: string
+                  - name: actionType
+                    type: string
+                  - name: objectType
+                    type: string
+                  - name: objectKey
+                    type: string
+              status: Finished
+          status: 200
+      - *call_2
+      - &call_6
+        request:
+          body:
+            json:
+              clusterId: 0123-456789-replay
+              contextId: context-1
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: POST
+          path: /api/1.2/contexts/destroy
+        response: # Inferred API response; not recorded.
+          body: null
+          status: 200
+      - *call_1
+      - *call_3
+      - *call_4
+      - request:
+          body:
+            json:
+              clusterId: 0123-456789-replay
+              command: |
+                GRANT SELECT ON TABLE `default`.`table_acl_replay` TO `users`
+              contextId: context-1
+              language: sql
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: POST
+          path: /api/1.2/commands/execute
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              id: grant-1
+          status: 200
+      - &call_5
+        request:
+          body: null
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: GET
+          path: /api/1.2/commands/status
+          query:
+            clusterId: [0123-456789-replay]
+            commandId: [grant-1]
+            contextId: [context-1]
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              id: grant-1
+              results:
+                data: []
+                resultType: table
+                schema:
+                  - name: principal
+                    type: string
+                  - name: actionType
+                    type: string
+                  - name: objectType
+                    type: string
+                  - name: objectKey
+                    type: string
+              status: Finished
+          status: 200
+      - *call_5
+      - *call_6
+      - *call_1
+      - *call_1
+      - *call_3
+      - *call_4
+      - &call_8
+        request:
+          body:
+            json:
+              clusterId: 0123-456789-replay
+              command: |
+                SHOW GRANT ON TABLE `default`.`table_acl_replay`
+              contextId: context-1
+              language: sql
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: POST
+          path: /api/1.2/commands/execute
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              id: show-granted
+          status: 200
+      - &call_7
+        request:
+          body: null
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: GET
+          path: /api/1.2/commands/status
+          query:
+            clusterId: [0123-456789-replay]
+            commandId: [show-granted]
+            contextId: [context-1]
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              id: show-granted
+              results:
+                data:
+                  - [users, SELECT, TABLE, default.table_acl_replay]
+                resultType: table
+                schema:
+                  - name: principal
+                    type: string
+                  - name: actionType
+                    type: string
+                  - name: objectType
+                    type: string
+                  - name: objectKey
+                    type: string
+              status: Finished
+          status: 200
+      - *call_7
+      - *call_6
+      - *call_1
+      - *call_1
+      - *call_3
+      - *call_4
+      - *call_8
+      - *call_7
+      - *call_7
+      - *call_6
+    state:
+      resources:
+        databricks_sql_permissions.this:
+          attributes:
+            - path: [id]
+              equals: table/default.table_acl_replay
+destroy:
+  calls:
+    - *call_1
+    - *call_1
+    - *call_3
+    - *call_4
+    - *call_8
+    - *call_7
+    - *call_7
+    - *call_6
+    - *call_1
+    - *call_1
+    - *call_3
+    - *call_4
+    - *call_8
+    - *call_7
+    - *call_7
+    - *call_6
+    - *call_1
+    - *call_3
+    - *call_4
+    - request:
+        body:
+          json:
+            clusterId: 0123-456789-replay
+            command: |
+              REVOKE ALL PRIVILEGES ON TABLE `default`.`table_acl_replay` FROM `users`
+            contextId: context-1
+            language: sql
+        headers:
+          X-Databricks-Workspace-Id: '12345'
+        method: POST
+        path: /api/1.2/commands/execute
+      response: # Inferred API response; not recorded.
+        body:
+          json:
+            id: revoke-1
+        status: 200
+    - &call_9
+      request:
+        body: null
+        headers:
+          X-Databricks-Workspace-Id: '12345'
+        method: GET
+        path: /api/1.2/commands/status
+        query:
+          clusterId: [0123-456789-replay]
+          commandId: [revoke-1]
+          contextId: [context-1]
+      response: # Inferred API response; not recorded.
+        body:
+          json:
+            id: revoke-1
+            results:
+              data: []
+              resultType: table
+              schema:
+                - name: principal
+                  type: string
+                - name: actionType
+                  type: string
+                - name: objectType
+                  type: string
+                - name: objectKey
+                  type: string
+            status: Finished
+        status: 200
+    - *call_9
+    - *call_6

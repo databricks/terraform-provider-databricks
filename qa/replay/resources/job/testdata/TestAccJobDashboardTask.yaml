@@ -1,0 +1,127 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_dashboard" "d1" {
+        display_name         = "Dashboard Task Test replay1"
+        warehouse_id         = "warehouse-1"
+        parent_path          = "/Shared/provider-test"
+        serialized_dashboard = "{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"
+      }
+
+      resource "databricks_job" "this" {
+        name = "Dashboard Task Test replay1"
+
+        task {
+          task_key = "d"
+
+          dashboard_task {
+            dashboard_id = databricks_dashboard.d1.id
+            warehouse_id = "warehouse-1"
+          }
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/lakeview/dashboards"
+          body:
+            json:
+              display_name: "Dashboard Task Test replay1"
+              parent_path: "/Shared/provider-test"
+              serialized_dashboard: "{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"
+              warehouse_id: "warehouse-1"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              create_time: "2025-01-01T00:00:00Z"
+              dashboard_id: "dashboard-1"
+              display_name: "Dashboard Task Test replay1"
+              parent_path: "/Shared/provider-test"
+              path: "/Shared/provider-test/dashboard-1.lvdash.json"
+              serialized_dashboard: "{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"
+              update_time: "2025-01-01T00:00:00Z"
+              warehouse_id: "warehouse-1"
+      - request:
+          method: "POST"
+          path: "/api/2.0/lakeview/dashboards/dashboard-1/published"
+          body:
+            json:
+              embed_credentials: true
+              warehouse_id: "warehouse-1"
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              dashboard_id: "dashboard-1"
+              display_name: "Dashboard Task Test replay1"
+              warehouse_id: "warehouse-1"
+      - &get_1
+        request: {method: "GET", path: "/api/2.0/lakeview/dashboards/dashboard-1", body: null}
+        response: *response_1
+      - request:
+          method: "POST"
+          path: "/api/2.2/jobs/create"
+          body:
+            json:
+              max_concurrent_runs: 1
+              name: "Dashboard Task Test replay1"
+              queue:
+                enabled: false
+              tasks:
+                - dashboard_task:
+                    dashboard_id: "dashboard-1"
+                    warehouse_id: "warehouse-1"
+                  task_key: "d"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              job_id: 101
+      - &get_2
+        request: {method: "GET", path: "/api/2.2/jobs/get", query: {"job_id": ["101"]}, body: null}
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              creator_user_name: "tester@example.com"
+              job_id: 101
+              settings:
+                format: "MULTI_TASK"
+                max_concurrent_runs: 1
+                name: "Dashboard Task Test replay1"
+                queue:
+                  enabled: false
+                tasks:
+                  - dashboard_task:
+                      dashboard_id: "dashboard-1"
+                      warehouse_id: "warehouse-1"
+                    task_key: "d"
+      - *get_1
+      - *get_2
+destroy:
+  calls:
+    - *get_1
+    - *get_2
+    - request:
+        method: "POST"
+        path: "/api/2.2/jobs/delete"
+        body:
+          json:
+            job_id: 101
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/lakeview/dashboards/dashboard-1"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

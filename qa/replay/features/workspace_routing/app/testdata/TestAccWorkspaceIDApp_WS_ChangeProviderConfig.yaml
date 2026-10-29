@@ -1,0 +1,82 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  workspace_id: "1001"
+  cloud: "AWS"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_app" "test" {
+        name = "dwsid-app-replay"
+        description = "workspace_id acceptance test"
+        no_compute = true
+        provider_config = {
+          workspace_id = "1001"
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/apps"
+          query:
+            no_compute: ["true"]
+          body:
+            json:
+              name: "dwsid-app-replay"
+              description: "workspace_id acceptance test"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              name: "dwsid-app-replay"
+              description: "workspace_id acceptance test"
+              compute_status:
+                state: "STOPPED"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/apps/dwsid-app-replay"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              name: "dwsid-app-replay"
+              description: "workspace_id acceptance test"
+              compute_status:
+                state: "STOPPED"
+      - *get_1
+    state:
+      resources:
+        databricks_app.test:
+          attributes:
+            - path: ["provider_config","workspace_id"]
+              equals: "1001"
+  - name: "reject_change"
+    config: |
+      resource "databricks_app" "test" {
+        name = "dwsid-app-replay"
+        description = "workspace_id acceptance test"
+        no_compute = true
+        provider_config = {
+          workspace_id = "123"
+        }
+      }
+    calls:
+      - *get_1
+      - request:
+          method: "DELETE"
+          path: "/api/2.0/apps/dwsid-app-replay"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              name: "dwsid-app-replay"
+              description: "workspace_id acceptance test"
+              compute_status:
+                state: "STOPPED"
+    expect_error: "workspace_id mismatch"
+destroy:
+  calls: []

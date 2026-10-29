@@ -18,6 +18,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -26,6 +28,20 @@ import (
 type AnomalyDetectionConfig struct {
 	// List of fully qualified table names to exclude from anomaly detection.
 	ExcludedTableFullNames types.List `tfsdk:"excluded_table_full_names"`
+	// Who to alert when anomaly detection finds unhealthy tables in this
+	// schema. Applicable to `schema` monitors only. This is the same schema
+	// alert you manage from **Manage alerts** in the Data Quality Monitoring
+	// UI, so a change made in either place shows in both.
+	//
+	// Set the recipients in `on_unhealthy_table`; `on_failure` is not supported
+	// here. Only `destination_ids` and `destination_user_ids` are supported.
+	//
+	// On update, an update mask of `*`, `anomaly_detection_config`, or
+	// `anomaly_detection_config.notification_settings` replaces the alert's
+	// recipients with the ones in the request; omitting the field, or leaving
+	// both recipient lists empty, removes the alert. Other masks leave the
+	// alert unchanged.
+	NotificationSettings types.Object `tfsdk:"notification_settings"`
 }
 
 func (to *AnomalyDetectionConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AnomalyDetectionConfig) {
@@ -34,6 +50,15 @@ func (to *AnomalyDetectionConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 		// If a user specified a non-Null, empty list for ExcludedTableFullNames, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ExcludedTableFullNames = from.ExcludedTableFullNames
+	}
+	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
+		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
+			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
+				// Recursively sync the fields of NotificationSettings
+				toNotificationSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromNotificationSettings)
+				to.SetNotificationSettings(ctx, toNotificationSettings)
+			}
+		}
 	}
 }
 
@@ -44,10 +69,19 @@ func (to *AnomalyDetectionConfig) SyncFieldsDuringRead(ctx context.Context, from
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ExcludedTableFullNames = from.ExcludedTableFullNames
 	}
+	if !from.NotificationSettings.IsNull() && !from.NotificationSettings.IsUnknown() {
+		if toNotificationSettings, ok := to.GetNotificationSettings(ctx); ok {
+			if fromNotificationSettings, ok := from.GetNotificationSettings(ctx); ok {
+				toNotificationSettings.SyncFieldsDuringRead(ctx, fromNotificationSettings)
+				to.SetNotificationSettings(ctx, toNotificationSettings)
+			}
+		}
+	}
 }
 
 func (m AnomalyDetectionConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["excluded_table_full_names"] = attrs["excluded_table_full_names"].SetOptional()
+	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
 
 	return attrs
 }
@@ -62,6 +96,7 @@ func (m AnomalyDetectionConfig) ApplySchemaCustomizations(attrs map[string]tfsch
 func (m AnomalyDetectionConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"excluded_table_full_names": reflect.TypeOf(types.String{}),
+		"notification_settings":     reflect.TypeOf(NotificationSettings{}),
 	}
 }
 
@@ -73,6 +108,7 @@ func (m AnomalyDetectionConfig) ToObjectValue(ctx context.Context) basetypes.Obj
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"excluded_table_full_names": m.ExcludedTableFullNames,
+			"notification_settings":     m.NotificationSettings,
 		})
 }
 
@@ -83,6 +119,7 @@ func (m AnomalyDetectionConfig) Type(ctx context.Context) attr.Type {
 			"excluded_table_full_names": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"notification_settings": NotificationSettings{}.Type(ctx),
 		},
 	}
 }
@@ -111,6 +148,31 @@ func (m *AnomalyDetectionConfig) SetExcludedTableFullNames(ctx context.Context, 
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["excluded_table_full_names"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.ExcludedTableFullNames = types.ListValueMust(t, vs)
+}
+
+// GetNotificationSettings returns the value of the NotificationSettings field in AnomalyDetectionConfig as
+// a NotificationSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AnomalyDetectionConfig) GetNotificationSettings(ctx context.Context) (NotificationSettings, bool) {
+	var e NotificationSettings
+	if m.NotificationSettings.IsNull() || m.NotificationSettings.IsUnknown() {
+		return e, false
+	}
+	var v NotificationSettings
+	d := m.NotificationSettings.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNotificationSettings sets the value of the NotificationSettings field in AnomalyDetectionConfig.
+func (m *AnomalyDetectionConfig) SetNotificationSettings(ctx context.Context, v NotificationSettings) {
+	vs := v.ToObjectValue(ctx)
+	m.NotificationSettings = vs
 }
 
 // Request to cancel a refresh.
@@ -661,6 +723,10 @@ func (to *DataProfilingConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 			}
 		}
 	}
+	if !from.SkipBuiltinDashboard.IsUnknown() && !from.SkipBuiltinDashboard.IsNull() {
+		// SkipBuiltinDashboard is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SkipBuiltinDashboard = from.SkipBuiltinDashboard
+	}
 	if !from.SlicingExprs.IsNull() && !from.SlicingExprs.IsUnknown() && to.SlicingExprs.IsNull() && len(from.SlicingExprs.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for SlicingExprs, and the deserialized field value is Null,
@@ -684,6 +750,10 @@ func (to *DataProfilingConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 				to.SetTimeSeries(ctx, toTimeSeries)
 			}
 		}
+	}
+	if !from.WarehouseId.IsUnknown() && !from.WarehouseId.IsNull() {
+		// WarehouseId is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.WarehouseId = from.WarehouseId
 	}
 }
 
@@ -730,6 +800,10 @@ func (to *DataProfilingConfig) SyncFieldsDuringRead(ctx context.Context, from Da
 			}
 		}
 	}
+	if !from.SkipBuiltinDashboard.IsUnknown() && !from.SkipBuiltinDashboard.IsNull() {
+		// SkipBuiltinDashboard is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SkipBuiltinDashboard = from.SkipBuiltinDashboard
+	}
 	if !from.SlicingExprs.IsNull() && !from.SlicingExprs.IsUnknown() && to.SlicingExprs.IsNull() && len(from.SlicingExprs.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for SlicingExprs, and the deserialized field value is Null,
@@ -752,6 +826,10 @@ func (to *DataProfilingConfig) SyncFieldsDuringRead(ctx context.Context, from Da
 			}
 		}
 	}
+	if !from.WarehouseId.IsUnknown() && !from.WarehouseId.IsNull() {
+		// WarehouseId is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.WarehouseId = from.WarehouseId
+	}
 }
 
 func (m DataProfilingConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -770,11 +848,15 @@ func (m DataProfilingConfig) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["profile_metrics_table_name"] = attrs["profile_metrics_table_name"].SetComputed()
 	attrs["schedule"] = attrs["schedule"].SetOptional()
 	attrs["skip_builtin_dashboard"] = attrs["skip_builtin_dashboard"].SetOptional()
+	attrs["skip_builtin_dashboard"] = attrs["skip_builtin_dashboard"].SetComputed()
+	attrs["skip_builtin_dashboard"] = attrs["skip_builtin_dashboard"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["slicing_exprs"] = attrs["slicing_exprs"].SetOptional()
 	attrs["snapshot"] = attrs["snapshot"].SetOptional()
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["time_series"] = attrs["time_series"].SetOptional()
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetComputed()
+	attrs["warehouse_id"] = attrs["warehouse_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -2062,12 +2144,34 @@ func (m *Monitor) SetDataProfilingConfig(ctx context.Context, v DataProfilingCon
 
 // Destination of the data quality monitoring notification.
 type NotificationDestination struct {
+	// The notification-destination IDs (Slack / Teams / webhook) to send the
+	// notification to. The destinations must already exist in the workspace; a
+	// workspace admin creates them. A maximum of 25 destination IDs is
+	// supported. Only supported on schema monitors, via
+	// `anomaly_detection_config`; rejected on table monitors.
+	DestinationIds types.List `tfsdk:"destination_ids"`
+	// The IDs of the workspace users to notify by email. A maximum of 25 user
+	// IDs is supported. Only supported on schema monitors, via
+	// `anomaly_detection_config`; rejected on table monitors.
+	DestinationUserIds types.List `tfsdk:"destination_user_ids"`
 	// The list of email addresses to send the notification to. A maximum of 5
 	// email addresses is supported.
 	EmailAddresses types.List `tfsdk:"email_addresses"`
 }
 
 func (to *NotificationDestination) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from NotificationDestination) {
+	if !from.DestinationIds.IsNull() && !from.DestinationIds.IsUnknown() && to.DestinationIds.IsNull() && len(from.DestinationIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DestinationIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DestinationIds = from.DestinationIds
+	}
+	if !from.DestinationUserIds.IsNull() && !from.DestinationUserIds.IsUnknown() && to.DestinationUserIds.IsNull() && len(from.DestinationUserIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DestinationUserIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DestinationUserIds = from.DestinationUserIds
+	}
 	if !from.EmailAddresses.IsNull() && !from.EmailAddresses.IsUnknown() && to.EmailAddresses.IsNull() && len(from.EmailAddresses.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for EmailAddresses, and the deserialized field value is Null,
@@ -2077,6 +2181,18 @@ func (to *NotificationDestination) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 }
 
 func (to *NotificationDestination) SyncFieldsDuringRead(ctx context.Context, from NotificationDestination) {
+	if !from.DestinationIds.IsNull() && !from.DestinationIds.IsUnknown() && to.DestinationIds.IsNull() && len(from.DestinationIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DestinationIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DestinationIds = from.DestinationIds
+	}
+	if !from.DestinationUserIds.IsNull() && !from.DestinationUserIds.IsUnknown() && to.DestinationUserIds.IsNull() && len(from.DestinationUserIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DestinationUserIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DestinationUserIds = from.DestinationUserIds
+	}
 	if !from.EmailAddresses.IsNull() && !from.EmailAddresses.IsUnknown() && to.EmailAddresses.IsNull() && len(from.EmailAddresses.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for EmailAddresses, and the deserialized field value is Null,
@@ -2086,6 +2202,8 @@ func (to *NotificationDestination) SyncFieldsDuringRead(ctx context.Context, fro
 }
 
 func (m NotificationDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_ids"] = attrs["destination_ids"].SetOptional()
+	attrs["destination_user_ids"] = attrs["destination_user_ids"].SetOptional()
 	attrs["email_addresses"] = attrs["email_addresses"].SetOptional()
 
 	return attrs
@@ -2100,7 +2218,9 @@ func (m NotificationDestination) ApplySchemaCustomizations(attrs map[string]tfsc
 // SDK values.
 func (m NotificationDestination) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"email_addresses": reflect.TypeOf(types.String{}),
+		"destination_ids":      reflect.TypeOf(types.String{}),
+		"destination_user_ids": reflect.TypeOf(types.Int64{}),
+		"email_addresses":      reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2111,7 +2231,9 @@ func (m NotificationDestination) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"email_addresses": m.EmailAddresses,
+			"destination_ids":      m.DestinationIds,
+			"destination_user_ids": m.DestinationUserIds,
+			"email_addresses":      m.EmailAddresses,
 		})
 }
 
@@ -2119,11 +2241,69 @@ func (m NotificationDestination) ToObjectValue(ctx context.Context) basetypes.Ob
 func (m NotificationDestination) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"destination_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"destination_user_ids": basetypes.ListType{
+				ElemType: types.Int64Type,
+			},
 			"email_addresses": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
 	}
+}
+
+// GetDestinationIds returns the value of the DestinationIds field in NotificationDestination as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *NotificationDestination) GetDestinationIds(ctx context.Context) ([]types.String, bool) {
+	if m.DestinationIds.IsNull() || m.DestinationIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.DestinationIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDestinationIds sets the value of the DestinationIds field in NotificationDestination.
+func (m *NotificationDestination) SetDestinationIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["destination_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.DestinationIds = types.ListValueMust(t, vs)
+}
+
+// GetDestinationUserIds returns the value of the DestinationUserIds field in NotificationDestination as
+// a slice of types.Int64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *NotificationDestination) GetDestinationUserIds(ctx context.Context) ([]types.Int64, bool) {
+	if m.DestinationUserIds.IsNull() || m.DestinationUserIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Int64
+	d := m.DestinationUserIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDestinationUserIds sets the value of the DestinationUserIds field in NotificationDestination.
+func (m *NotificationDestination) SetDestinationUserIds(ctx context.Context, v []types.Int64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["destination_user_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.DestinationUserIds = types.ListValueMust(t, vs)
 }
 
 // GetEmailAddresses returns the value of the EmailAddresses field in NotificationDestination as
@@ -2156,6 +2336,10 @@ func (m *NotificationDestination) SetEmailAddresses(ctx context.Context, v []typ
 type NotificationSettings struct {
 	// Destinations to send notifications on failure/timeout.
 	OnFailure types.Object `tfsdk:"on_failure"`
+	// Recipients to notify when anomaly detection finds unhealthy tables in the
+	// schema. Each recipient gets one notification per important unhealthy
+	// table. Only supported on schema monitors, via `anomaly_detection_config`.
+	OnUnhealthyTable types.Object `tfsdk:"on_unhealthy_table"`
 }
 
 func (to *NotificationSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from NotificationSettings) {
@@ -2165,6 +2349,15 @@ func (to *NotificationSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 				// Recursively sync the fields of OnFailure
 				toOnFailure.SyncFieldsDuringCreateOrUpdate(ctx, fromOnFailure)
 				to.SetOnFailure(ctx, toOnFailure)
+			}
+		}
+	}
+	if !from.OnUnhealthyTable.IsNull() && !from.OnUnhealthyTable.IsUnknown() {
+		if toOnUnhealthyTable, ok := to.GetOnUnhealthyTable(ctx); ok {
+			if fromOnUnhealthyTable, ok := from.GetOnUnhealthyTable(ctx); ok {
+				// Recursively sync the fields of OnUnhealthyTable
+				toOnUnhealthyTable.SyncFieldsDuringCreateOrUpdate(ctx, fromOnUnhealthyTable)
+				to.SetOnUnhealthyTable(ctx, toOnUnhealthyTable)
 			}
 		}
 	}
@@ -2179,10 +2372,19 @@ func (to *NotificationSettings) SyncFieldsDuringRead(ctx context.Context, from N
 			}
 		}
 	}
+	if !from.OnUnhealthyTable.IsNull() && !from.OnUnhealthyTable.IsUnknown() {
+		if toOnUnhealthyTable, ok := to.GetOnUnhealthyTable(ctx); ok {
+			if fromOnUnhealthyTable, ok := from.GetOnUnhealthyTable(ctx); ok {
+				toOnUnhealthyTable.SyncFieldsDuringRead(ctx, fromOnUnhealthyTable)
+				to.SetOnUnhealthyTable(ctx, toOnUnhealthyTable)
+			}
+		}
+	}
 }
 
 func (m NotificationSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["on_failure"] = attrs["on_failure"].SetOptional()
+	attrs["on_unhealthy_table"] = attrs["on_unhealthy_table"].SetOptional()
 
 	return attrs
 }
@@ -2196,7 +2398,8 @@ func (m NotificationSettings) ApplySchemaCustomizations(attrs map[string]tfschem
 // SDK values.
 func (m NotificationSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"on_failure": reflect.TypeOf(NotificationDestination{}),
+		"on_failure":         reflect.TypeOf(NotificationDestination{}),
+		"on_unhealthy_table": reflect.TypeOf(NotificationDestination{}),
 	}
 }
 
@@ -2207,7 +2410,8 @@ func (m NotificationSettings) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"on_failure": m.OnFailure,
+			"on_failure":         m.OnFailure,
+			"on_unhealthy_table": m.OnUnhealthyTable,
 		})
 }
 
@@ -2215,7 +2419,8 @@ func (m NotificationSettings) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m NotificationSettings) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"on_failure": NotificationDestination{}.Type(ctx),
+			"on_failure":         NotificationDestination{}.Type(ctx),
+			"on_unhealthy_table": NotificationDestination{}.Type(ctx),
 		},
 	}
 }
@@ -2243,6 +2448,31 @@ func (m *NotificationSettings) GetOnFailure(ctx context.Context) (NotificationDe
 func (m *NotificationSettings) SetOnFailure(ctx context.Context, v NotificationDestination) {
 	vs := v.ToObjectValue(ctx)
 	m.OnFailure = vs
+}
+
+// GetOnUnhealthyTable returns the value of the OnUnhealthyTable field in NotificationSettings as
+// a NotificationDestination value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *NotificationSettings) GetOnUnhealthyTable(ctx context.Context) (NotificationDestination, bool) {
+	var e NotificationDestination
+	if m.OnUnhealthyTable.IsNull() || m.OnUnhealthyTable.IsUnknown() {
+		return e, false
+	}
+	var v NotificationDestination
+	d := m.OnUnhealthyTable.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnUnhealthyTable sets the value of the OnUnhealthyTable field in NotificationSettings.
+func (m *NotificationSettings) SetOnUnhealthyTable(ctx context.Context, v NotificationDestination) {
+	vs := v.ToObjectValue(ctx)
+	m.OnUnhealthyTable = vs
 }
 
 // The Refresh object gives information on a refresh of the data quality

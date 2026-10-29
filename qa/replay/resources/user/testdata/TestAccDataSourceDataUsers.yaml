@@ -1,0 +1,178 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: list_created_users
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_user" "user1" {
+        user_name = "tf-replay-testuser-1@databricks.com"
+      }
+
+      resource "databricks_user" "user2" {
+        user_name = "tf-replay-testuser-2@databricks.com"
+      }
+
+      data "databricks_users" "this" {
+        filter     = "userName co \"testuser\""
+        depends_on = [databricks_user.user1, databricks_user.user2]
+      }
+    calls:
+      - request:
+          body:
+            json:
+              active: true
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-replay-testuser-1@databricks.com
+          method: POST
+          path: /api/2.0/accounts/replay-account/scim/v2/Users
+        response: &response_1 # Inferred API response; not recorded.
+          body:
+            json:
+              active: true
+              displayName: tf-replay-testuser-1@databricks.com
+              id: '101'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-replay-testuser-1@databricks.com
+          status: 200
+      - request:
+          body:
+            json:
+              active: true
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-replay-testuser-2@databricks.com
+          method: POST
+          path: /api/2.0/accounts/replay-account/scim/v2/Users
+        response: &response_2 # Inferred API response; not recorded.
+          body:
+            json:
+              active: true
+              displayName: tf-replay-testuser-2@databricks.com
+              id: '102'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-replay-testuser-2@databricks.com
+          status: 200
+      - &call_3
+        request:
+          body: null
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Users/101
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+        response: *response_1 # Inferred API response; not recorded.
+      - &call_4
+        request:
+          body: null
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Users/102
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+        response: *response_2 # Inferred API response; not recorded.
+      - &call_1
+        request:
+          body: null
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Users
+          query:
+            attributes: ['id,userName,displayName,externalId']
+            count: ['10000']
+            filter: [userName co "testuser"]
+            startIndex: ['1']
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              Resources:
+                - active: true
+                  displayName: tf-replay-testuser-1@databricks.com
+                  id: '101'
+                  schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+                  userName: tf-replay-testuser-1@databricks.com
+                - active: true
+                  displayName: tf-replay-testuser-2@databricks.com
+                  id: '102'
+                  schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+                  userName: tf-replay-testuser-2@databricks.com
+              startIndex: 1
+              totalResults: 2
+          status: 200
+      - &call_2
+        request:
+          body: null
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Users
+          query:
+            attributes: ['id,userName,displayName,externalId']
+            count: ['10000']
+            filter: [userName co "testuser"]
+            startIndex: ['3']
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              Resources: []
+              startIndex: 3
+              totalResults: 2
+          status: 200
+      - *call_1
+      - *call_2
+      - *call_3
+      - *call_4
+      - *call_1
+      - *call_2
+    state:
+      resources:
+        data.databricks_users.this:
+          attributes:
+            - path: [users, 0, id]
+              equals: '101'
+            - path: [users, 1, id]
+              equals: '102'
+        databricks_user.user1:
+          attributes:
+            - path: [id]
+              equals: '101'
+        databricks_user.user2:
+          attributes:
+            - path: [id]
+              equals: '102'
+destroy:
+  calls:
+    - *call_4
+    - *call_3
+    - *call_1
+    - *call_2
+    - request:
+        body:
+          json:
+            Operations:
+              - op: replace
+                path: active
+                value:
+                  - value: 'false'
+            schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp']
+        method: PATCH
+        path: /api/2.0/accounts/replay-account/scim/v2/Users/101
+      response: &response_3 # Inferred API response; not recorded.
+        body: null
+        status: 200
+    - request:
+        body:
+          json:
+            Operations:
+              - op: replace
+                path: active
+                value:
+                  - value: 'false'
+            schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp']
+        method: PATCH
+        path: /api/2.0/accounts/replay-account/scim/v2/Users/102
+      response: *response_3 # Inferred API response; not recorded.

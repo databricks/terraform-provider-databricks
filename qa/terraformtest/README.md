@@ -45,7 +45,7 @@ configured through process environment variables.
 ## Test definition
 
 Use `version: 1`, optional `initial_state`, followed by `steps` and `destroy`.
-Each step has a human `name`, literal HCL under `config`, `calls`, and optional
+Apply and plan steps have a human `name`, literal HCL under `config`, `calls`, and optional
 `state` expectations. State persists across steps. Destroy always runs using
 the last successful configuration;
 its HTTP exchanges belong under `destroy.calls`, and empty state is always
@@ -56,6 +56,8 @@ Each exchange contains `request` and `response`. Requests specify `method`,
 and `body`. Responses specify an explicit HTTP `status`, optional `headers`,
 and `body`. Use `body: null` for no HTTP body and `body: {json: null}` for JSON
 null. Other JSON values go under `body.json`; IDs are literal, without substitution.
+Non-JSON payloads use `body.text`, `body.base64`, or request-only
+`body.multipart`; see the [payload reference](../httpfixture/README.md#files-and-non-json-bodies).
 
 Optional `request.matchers` annotations allow selected volatile strings to
 vary without ignoring their presence or type. For example:
@@ -165,6 +167,82 @@ templates and strict attribute matching are not yet supported. Unsupported field
 before any Terraform operations. The step/call/state layout is kept stable
 so these capabilities can be added independently.
 
+## Local input files
+
+A step's optional `files` map copies checked-in inputs into Terraform's isolated
+working directory. Map each destination filename to a source path relative to
+the YAML file:
+
+```yaml
+files:
+  script.py: assets/script.py
+config: |
+  resource "databricks_workspace_file" "this" {
+    source = abspath("${path.module}/script.py")
+    path   = "/Shared/script.py"
+  }
+```
+
+Use `abspath` for filenames passed to the provider: the provider runs in the Go
+test process, whose current directory differs from Terraform's. Terraform's
+own `file("${path.module}/script.py")` function can read relative paths normally.
+No path substitution is performed by the runner.
+
+Files persist through subsequent steps and destroy; mapping the same destination
+again replaces its contents before that step. Sources for every step are loaded
+before replay begins, so missing files fail before any apply. Original inputs
+are never modified. Initial-state checkpoints and local inputs can be combined.
+
+Destinations are top-level filenames because HashiCorp's `ConfigDirectory` API
+does not copy nested directories. Terraform configuration, variable, state, and
+framework filenames are reserved. Source paths may point into shared fixture
+folders. File permissions are not preserved; these inputs are data, not scripts
+executed by the runner. Keep them minimal, such as a comment-only Python file.
+
+The [workspace-file example](testdata/files/workspace_file.yaml) creates a file,
+changes its contents, and destroys it, with exact multipart upload expectations.
+
+## Provider implementation selection
+
+Each step can select a resource implementation by Terraform resource type:
+
+```yaml
+steps:
+  - name: create_legacy_share
+    provider_implementations:
+      databricks_share: sdkv2
+    config: |
+      resource "databricks_share" "this" {
+        name = "example"
+      }
+    # calls omitted
+  - name: adopt_framework_share
+    provider_implementations:
+      databricks_share: plugin_framework
+    config: |
+      resource "databricks_share" "this" {
+        name = "example"
+      }
+    # calls omitted
+```
+
+Values are `sdkv2` or `plugin_framework`. Keys name resource types, such as
+`databricks_share`; every instance of that type uses the selected implementation.
+Multiple resource types can select different implementations in the same step.
+Unlisted resource types and all data sources use the production mux defaults.
+Each step declares its own selection; an omitted map uses production defaults.
+Invalid values and unavailable implementations fail instead of silently using
+another implementation. This does not add an implementation that the provider
+no longer ships.
+
+Steps share ordinary Terraform state, including across implementation switches.
+Destroy uses the selection retained with its cleanup configuration. Failed
+updates, discarded imports, and plan-only steps following an apply leave that
+selection unchanged. An import step can explicitly select its implementation.
+Provider selection also works with initial checkpoints and local input files.
+These settings are passed to provider constructors without changing process-wide
+rollout environment variables.
+
 ## Expected errors
 
 An optional step-level `expect_error` is a nonempty Go regular expression
@@ -190,8 +268,7 @@ still use ordinary HTTP fixtures. Unexpected calls and unused fixtures fail
 independently, even if their resulting diagnostic matches `expect_error`.
 Later steps still run after an expected failure.
 
-Automatic destroy remains mandatory and uses the last step without an expected
-error, so an invalid final configuration cannot prevent cleanup. If all steps
+Automatic destroy remains mandatory and uses the last successful apply configuration, so an invalid final configuration cannot prevent cleanup. If all steps
 expect errors, cleanup uses an empty default provider configuration. Tests that
 partially create resources before failing must still supply destroy fixtures.
 Provider aliases or routing that exist only in an expected-error configuration
@@ -200,6 +277,77 @@ are not available to that fallback cleanup configuration.
 State checks on expected-error steps are rejected: HashiCorp skips post-apply
 checks when an operation fails. Add a subsequent successful step to inspect
 state instead. Invalid or empty error patterns fail before Terraform runs.
+
+## Import steps
+
+An `import` step runs `terraform import` through HashiCorp's test framework,
+using ordinary HTTP fixtures. Every import must explicitly set `persist`:
+
+- `persist: false` imports into separate, empty state and discards it afterward.
+  Later steps and destroy use the journey's original state. This exercises the
+  importer without adopting the resource into the journey.
+- `persist: true` imports into the journey's current state. Later steps can use
+  or update the resource, and automatic destroy cleans it up alongside existing
+  resources. Terraform rejects an address that is already managed.
+
+```yaml
+- name: verify_catalog_import
+  import:
+    resource: databricks_catalog.test
+    persist: false
+    verify: true
+    ignore: [updated_at, updated_by]
+  calls:
+    # GET requests made by the importer and Terraform's import refresh.
+```
+
+`resource` is the Terraform instance address. A persistent import requires a
+literal `id`. A nonpersistent import can omit `id` to use the resource's prior
+state ID; without prior state, it also requires an explicit ID. Composite IDs
+and alternate formats are literal strings, with no interpolation or state-editing
+expressions. The first import step requires `config`; subsequent imports may
+omit it to reuse the last successful lifecycle configuration.
+
+For example, a resource already present remotely can be adopted as the first
+step without a create step or a checkpoint:
+
+```yaml
+- name: import_existing_group
+  config: |
+    resource "databricks_group" "this" {
+      display_name = "Example group"
+    }
+  import:
+    resource: databricks_group.this
+    id: group-id
+    persist: true
+  calls:
+    # Supply the importer's GET responses for group-id.
+```
+
+With `persist: false`, optional `verify: true` compares the imported attributes
+against prior state using HashiCorp's strict import verification. `verify`
+defaults to false. Verification requires prior state from an apply or checkpoint.
+Optional `ignore` lists excluded attribute prefixes in HashiCorp's flattened
+notation, such as `updated_at` or `options.bearer_token`. Use narrow prefixes:
+`name` also matches other attributes beginning with `name`.
+`identifier_attribute` selects the attribute used to match prior and imported
+instances; it defaults to `id`. Both fields require `verify: true`.
+
+Persistent imports use ordinary state or plan assertions in a following step;
+`import.verify` is reserved for the separate-state comparison. Native import
+skips ordinary `plan`, `plan_only`, and `state` checks, so those fields are rejected
+on import steps. `expect_error` is supported with verification disabled.
+Unexpected and unused HTTP calls fail independently of expected errors.
+
+A successful persistent import retains its configuration for subsequent imports
+and cleanup. A nonpersistent import leaves the lifecycle configuration unchanged.
+Local input files and initial checkpoints work with both modes. Plan-based import
+blocks are not exposed as a YAML operation.
+
+Examples cover [group import followed by update](testdata/imports/group.yaml),
+[app import by name](testdata/imports/app_by_name.yaml), and
+[separate-state verification](testdata/imports/app_verification.yaml).
 
 ## Initial state
 
@@ -333,6 +481,8 @@ refresh:
 - Preserve whole-step boundaries, including all native consistency plans and
   destroy. Capture plan expectations at the same saved-plan hooks as replay:
   pre-apply for apply steps, post-refresh for plan-only steps.
+- Preserve per-step provider implementation selections when refreshing fixtures;
+  recording must use the same implementation as replay.
 - Preserve author-selected paths, omitted assertions, explicit empty maps, and
   unknown versus null. Do not turn partial assertions into whole-state snapshots
   or silently change `enforce_call_order` while refreshing fixtures.
@@ -340,6 +490,9 @@ refresh:
   and background-environment cleanup outside the test transcript; initial-state
   resources belong to test destroy. Generate matching checkpoints and calls
   together without editing opaque checkpoint JSON or reusing stale live IDs.
+- Capture multipart uploads as form parts, without matching the random boundary
+  in the top-level `Content-Type` header. Preserve exact content bytes using
+  text/base64 and keep local input files alongside their YAML definitions.
 - Decide retries/polling, secret and volatile-value handling before enabling
   live capture. Recording must be explicit, single-test, unavailable in CI, and
   must never be activated by a replay failure.

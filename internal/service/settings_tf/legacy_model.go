@@ -3491,6 +3491,8 @@ func (m *CspEnablementAccountSetting_SdkV2) SetCspEnablementAccount(ctx context.
 
 // The network policies applying for ingress traffic.
 type CustomerFacingIngressNetworkPolicy_SdkV2 struct {
+	// The network policy restrictions for cross-workspace access: which other
+	// workspaces may access this workspace.
 	CrossWorkspaceAccess types.List `tfsdk:"cross_workspace_access"`
 	// The network policy restrictions for private access. Configures how
 	// requests arriving over private connectivity are governed.

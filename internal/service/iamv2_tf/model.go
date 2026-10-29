@@ -407,8 +407,8 @@ func (m *CreateGroupRequest) SetGroup(ctx context.Context, v Group) {
 
 type CreateIdentityVisibilityFilterRequest struct {
 	// Required. The filter to create. Set `principal_type` to `GROUP` and
-	// specify exactly one of `exact` or `prefix`. The server assigns the
-	// resource name; any supplied `name` is ignored.
+	// specify exactly one of `exact`, `prefix`, or `regex`. The server assigns
+	// the resource name; any supplied `name` is ignored.
 	IdentityVisibilityFilter types.Object `tfsdk:"identity_visibility_filter"`
 	// Optional. The ID to use for the filter, which becomes the final component
 	// of its resource name. If not specified or empty, the server generates
@@ -1923,7 +1923,7 @@ func (m DeleteWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
 type DirectGroupMember struct {
 	// Display name of the principal.
 	DisplayName types.String `tfsdk:"display_name"`
-	// The external ID of the principal in Databricks.
+	// The external ID of the principal in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
 	// The internal ID of the group this member belongs to.
 	GroupId types.Int64 `tfsdk:"group_id"`
@@ -3602,6 +3602,8 @@ type IdentityVisibilityFilter struct {
 	// The type of principal this rule applies to. Set to `GROUP` when creating
 	// a filter. Other principal types are not supported for creation.
 	PrincipalType types.String `tfsdk:"principal_type"`
+	// Full, case-sensitive RE2 match on the identity's display name.
+	Regex types.Object `tfsdk:"regex"`
 }
 
 func (to *IdentityVisibilityFilter) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from IdentityVisibilityFilter) {
@@ -3620,6 +3622,15 @@ func (to *IdentityVisibilityFilter) SyncFieldsDuringCreateOrUpdate(ctx context.C
 				// Recursively sync the fields of Prefix
 				toPrefix.SyncFieldsDuringCreateOrUpdate(ctx, fromPrefix)
 				to.SetPrefix(ctx, toPrefix)
+			}
+		}
+	}
+	if !from.Regex.IsNull() && !from.Regex.IsUnknown() {
+		if toRegex, ok := to.GetRegex(ctx); ok {
+			if fromRegex, ok := from.GetRegex(ctx); ok {
+				// Recursively sync the fields of Regex
+				toRegex.SyncFieldsDuringCreateOrUpdate(ctx, fromRegex)
+				to.SetRegex(ctx, toRegex)
 			}
 		}
 	}
@@ -3642,6 +3653,14 @@ func (to *IdentityVisibilityFilter) SyncFieldsDuringRead(ctx context.Context, fr
 			}
 		}
 	}
+	if !from.Regex.IsNull() && !from.Regex.IsUnknown() {
+		if toRegex, ok := to.GetRegex(ctx); ok {
+			if fromRegex, ok := from.GetRegex(ctx); ok {
+				toRegex.SyncFieldsDuringRead(ctx, fromRegex)
+				to.SetRegex(ctx, toRegex)
+			}
+		}
+	}
 }
 
 func (m IdentityVisibilityFilter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -3652,6 +3671,7 @@ func (m IdentityVisibilityFilter) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["prefix"] = attrs["prefix"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["principal_type"] = attrs["principal_type"].SetRequired()
 	attrs["principal_type"] = attrs["principal_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["regex"] = attrs["regex"].SetOptional()
 
 	return attrs
 }
@@ -3667,6 +3687,7 @@ func (m IdentityVisibilityFilter) GetComplexFieldTypes(ctx context.Context) map[
 	return map[string]reflect.Type{
 		"exact":  reflect.TypeOf(ExactMatchRule{}),
 		"prefix": reflect.TypeOf(PrefixMatchRule{}),
+		"regex":  reflect.TypeOf(RegexMatchRule{}),
 	}
 }
 
@@ -3681,6 +3702,7 @@ func (m IdentityVisibilityFilter) ToObjectValue(ctx context.Context) basetypes.O
 			"name":           m.Name,
 			"prefix":         m.Prefix,
 			"principal_type": m.PrincipalType,
+			"regex":          m.Regex,
 		})
 }
 
@@ -3692,6 +3714,7 @@ func (m IdentityVisibilityFilter) Type(ctx context.Context) attr.Type {
 			"name":           types.StringType,
 			"prefix":         PrefixMatchRule{}.Type(ctx),
 			"principal_type": types.StringType,
+			"regex":          RegexMatchRule{}.Type(ctx),
 		},
 	}
 }
@@ -3744,6 +3767,31 @@ func (m *IdentityVisibilityFilter) GetPrefix(ctx context.Context) (PrefixMatchRu
 func (m *IdentityVisibilityFilter) SetPrefix(ctx context.Context, v PrefixMatchRule) {
 	vs := v.ToObjectValue(ctx)
 	m.Prefix = vs
+}
+
+// GetRegex returns the value of the Regex field in IdentityVisibilityFilter as
+// a RegexMatchRule value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *IdentityVisibilityFilter) GetRegex(ctx context.Context) (RegexMatchRule, bool) {
+	var e RegexMatchRule
+	if m.Regex.IsNull() || m.Regex.IsUnknown() {
+		return e, false
+	}
+	var v RegexMatchRule
+	d := m.Regex.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRegex sets the value of the Regex field in IdentityVisibilityFilter.
+func (m *IdentityVisibilityFilter) SetRegex(ctx context.Context, v RegexMatchRule) {
+	vs := v.ToObjectValue(ctx)
+	m.Regex = vs
 }
 
 type ListDirectGroupMembersProxyRequest struct {
@@ -5703,6 +5751,57 @@ func (m PrefixMatchRule) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A rule that matches an identity whose complete display name matches an RE2
+// regular expression. Matching is case-sensitive. Use .* explicitly when
+// substring matching is desired.
+type RegexMatchRule struct {
+	// The RE2 regular expression matched against the complete display name.
+	DisplayNameRegex types.String `tfsdk:"display_name_regex"`
+}
+
+func (to *RegexMatchRule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RegexMatchRule) {
+}
+
+func (to *RegexMatchRule) SyncFieldsDuringRead(ctx context.Context, from RegexMatchRule) {
+}
+
+func (m RegexMatchRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["display_name_regex"] = attrs["display_name_regex"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RegexMatchRule.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RegexMatchRule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RegexMatchRule
+// only implements ToObjectValue() and Type().
+func (m RegexMatchRule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"display_name_regex": m.DisplayNameRegex,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RegexMatchRule) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"display_name_regex": types.StringType,
+		},
+	}
+}
+
 // Request message for resolving a group with the given external ID from the
 // customer's IdP into Databricks. Will resolve metadata such as the group's
 // name and inherited parent groups.
@@ -6428,7 +6527,7 @@ type UpdateGroupProxyRequest struct {
 	Group types.Object `tfsdk:"group"`
 	// Required. Internal ID of the group in Databricks.
 	GroupId types.String `tfsdk:"-"`
-	// Optional. The list of fields to update.
+	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -6530,7 +6629,7 @@ type UpdateGroupRequest struct {
 	Group types.Object `tfsdk:"group"`
 	// Required. Internal ID of the group in Databricks.
 	GroupId types.String `tfsdk:"-"`
-	// Optional. The list of fields to update.
+	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -6633,7 +6732,7 @@ type UpdateServicePrincipalProxyRequest struct {
 	ServicePrincipal types.Object `tfsdk:"service_principal"`
 	// Required. Internal ID of the service principal in Databricks.
 	ServicePrincipalId types.String `tfsdk:"-"`
-	// Optional. The list of fields to update.
+	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -6735,7 +6834,7 @@ type UpdateServicePrincipalRequest struct {
 	ServicePrincipal types.Object `tfsdk:"service_principal"`
 	// Required. Internal ID of the service principal in Databricks.
 	ServicePrincipalId types.String `tfsdk:"-"`
-	// Optional. The list of fields to update.
+	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -6834,7 +6933,7 @@ func (m *UpdateServicePrincipalRequest) SetServicePrincipal(ctx context.Context,
 }
 
 type UpdateUserProxyRequest struct {
-	// Optional. The list of fields to update.
+	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 	// Required. User to be updated in Databricks
 	User types.Object `tfsdk:"user"`
@@ -6936,7 +7035,7 @@ func (m *UpdateUserProxyRequest) SetUser(ctx context.Context, v User) {
 }
 
 type UpdateUserRequest struct {
-	// Optional. The list of fields to update.
+	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 	// Required. User to be updated in Databricks
 	User types.Object `tfsdk:"user"`

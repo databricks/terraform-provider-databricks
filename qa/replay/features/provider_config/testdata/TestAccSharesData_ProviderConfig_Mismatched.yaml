@@ -1,0 +1,257 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "reject_workspace"
+    config: |
+      resource "databricks_catalog" "sandbox" {
+        name    = "sandboxreplay"
+        comment = "this catalog is managed by terraform"
+        properties = {
+          purpose = "testing"
+        }
+      }
+      resource "databricks_schema" "schema1" {
+        catalog_name = databricks_catalog.sandbox.id
+        name         = "schema1replay"
+        comment      = "this database is managed by terraform"
+        properties = {
+          kind = "various"
+        }
+      }
+      resource "databricks_schema" "schema2" {
+        catalog_name = databricks_catalog.sandbox.id
+        name         = "schema2replay"
+        comment      = "this database is managed by terraform"
+        properties = {
+          kind = "various"
+        }
+      }
+      resource "databricks_schema" "schema3" {
+        catalog_name = databricks_catalog.sandbox.id
+        name         = "schema3replay"
+        comment      = "this database is managed by terraform"
+        properties = {
+          kind = "various"
+        }
+      }
+
+      resource "databricks_share" "myshare" {
+        name = "replay-share-config"
+        object {
+          name             = databricks_schema.schema1.id
+          data_object_type = "SCHEMA"
+        }
+      }
+      data "databricks_shares" "this" {
+        provider_config = { workspace_id = "123" }
+        depends_on      = [databricks_share.myshare]
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/catalogs"
+          body:
+            json:
+              comment: "this catalog is managed by terraform"
+              name: "sandboxreplay"
+              properties:
+                purpose: "testing"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              catalog_type: "MANAGED_CATALOG"
+              comment: "this catalog is managed by terraform"
+              enable_predictive_optimization: "INHERIT"
+              isolation_mode: "OPEN"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "sandboxreplay"
+              owner: "replay-admin"
+              properties:
+                purpose: "testing"
+      - request:
+          method: "DELETE"
+          path: "/api/2.1/unity-catalog/schemas/sandboxreplay.default"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_1
+        request: {method: "GET", path: "/api/2.1/unity-catalog/catalogs/sandboxreplay", body: null}
+        response: *response_1
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/schemas"
+          body:
+            json:
+              catalog_name: "sandboxreplay"
+              comment: "this database is managed by terraform"
+              name: "schema2replay"
+              properties:
+                kind: "various"
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              catalog_name: "sandboxreplay"
+              comment: "this database is managed by terraform"
+              enable_predictive_optimization: "INHERIT"
+              full_name: "sandboxreplay.schema2replay"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "schema2replay"
+              owner: "replay-admin"
+              properties:
+                kind: "various"
+              schema_id: "22222222-2222-2222-2222-222222222222"
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/schemas"
+          body:
+            json:
+              catalog_name: "sandboxreplay"
+              comment: "this database is managed by terraform"
+              name: "schema1replay"
+              properties:
+                kind: "various"
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              catalog_name: "sandboxreplay"
+              comment: "this database is managed by terraform"
+              enable_predictive_optimization: "INHERIT"
+              full_name: "sandboxreplay.schema1replay"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "schema1replay"
+              owner: "replay-admin"
+              properties:
+                kind: "various"
+              schema_id: "22222222-2222-2222-2222-222222222222"
+      - &get_2
+        request: {method: "GET", path: "/api/2.1/unity-catalog/schemas/sandboxreplay.schema2replay", body: null}
+        response: *response_2
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/schemas"
+          body:
+            json:
+              catalog_name: "sandboxreplay"
+              comment: "this database is managed by terraform"
+              name: "schema3replay"
+              properties:
+                kind: "various"
+        response: &response_4 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              catalog_name: "sandboxreplay"
+              comment: "this database is managed by terraform"
+              enable_predictive_optimization: "INHERIT"
+              full_name: "sandboxreplay.schema3replay"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "schema3replay"
+              owner: "replay-admin"
+              properties:
+                kind: "various"
+              schema_id: "22222222-2222-2222-2222-222222222222"
+      - &get_3
+        request: {method: "GET", path: "/api/2.1/unity-catalog/schemas/sandboxreplay.schema1replay", body: null}
+        response: *response_3
+      - &get_4
+        request: {method: "GET", path: "/api/2.1/unity-catalog/schemas/sandboxreplay.schema3replay", body: null}
+        response: *response_4
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/shares"
+          body:
+            json:
+              name: "replay-share-config"
+        response: &response_5 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              created_at: 1700000000000
+              created_by: "replay-admin"
+              name: "replay-share-config"
+              objects: []
+              owner: "replay-admin"
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/shares/replay-share-config"
+          body:
+            json:
+              updates:
+                - action: "ADD"
+                  data_object:
+                    data_object_type: "SCHEMA"
+                    name: "sandboxreplay.schema1replay"
+        response: &response_6 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              created_at: 1700000000000
+              created_by: "replay-admin"
+              name: "replay-share-config"
+              objects:
+                - data_object_type: "SCHEMA"
+                  name: "sandboxreplay.schema1replay"
+              owner: "replay-admin"
+    expect_error: "(?s)failed\\s+to\\s+get\\s+workspace\\s+client.*workspace_id\\s+mismatch.*please\\s+check\\s+the\\s+workspace_id\\s+provided\\s+in\\s+provider_config"
+destroy:
+  calls:
+    - *get_2
+    - *get_4
+    - *get_3
+    - *get_1
+    - request: {method: "GET", path: "/api/2.1/unity-catalog/shares/replay-share-config", query: {"include_shared_data": ["true"]}, body: null}
+      response: *response_6
+    - &get_5
+      request: {method: "GET", path: "/api/2.1/unity-catalog/current-metastore-assignment", body: null}
+      response: &response_7 # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            metastore_id: "11111111-1111-1111-1111-111111111111"
+            workspace_id: 12345
+    - *get_5
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/schemas/sandboxreplay.schema2replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/schemas/sandboxreplay.schema3replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/shares/replay-share-config"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - *get_5
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/schemas/sandboxreplay.schema1replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - *get_5
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/catalogs/sandboxreplay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

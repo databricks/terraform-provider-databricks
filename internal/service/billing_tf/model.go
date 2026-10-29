@@ -304,6 +304,88 @@ func (m *AlertConfiguration) SetPrincipalOverrides(ctx context.Context, v []Prin
 	m.PrincipalOverrides = types.ListValueMust(t, vs)
 }
 
+// The calling user's spend against a single blocking threshold. Values may be
+// omitted if live spend or threshold data is temporarily unavailable.
+type AlertSpendStatus struct {
+	// Percentage of the threshold consumed, as a decimal string rounded down to
+	// one decimal place (for example, "68.4" means 68.4%). May exceed 100 when
+	// spend is over the threshold. Returns "0.0" if there's no spend, and is
+	// omitted if the threshold is $0. For shared thresholds, this is the only
+	// value returned; the absolute `spend` and `threshold` dollar amounts are
+	// withheld.
+	PercentConsumed types.String `tfsdk:"percent_consumed"`
+	// Whether the threshold is evaluated per individual user
+	// (`ALERT_CONFIGURATION_SCOPE_TYPE_PER_USER`) or on the shared spend across
+	// all users (`ALERT_CONFIGURATION_SCOPE_TYPE_SHARED`).
+	ScopeType types.String `tfsdk:"scope_type"`
+	// The calling user's live spend against this threshold, in USD at list
+	// price. Returns "0" if the caller has no usage. Omitted for shared
+	// thresholds, where only `percent_consumed` is returned.
+	Spend types.String `tfsdk:"spend"`
+	// The calling user's effective threshold, in USD at list price. The
+	// effective threshold is the actual threshold amount that applies to the
+	// user, after adjusting for any user or group overrides. Omitted for shared
+	// thresholds, where only `percent_consumed` is returned.
+	Threshold types.String `tfsdk:"threshold"`
+	// The time window the threshold applies to, for example `MONTH`.
+	TimePeriod types.String `tfsdk:"time_period"`
+}
+
+func (to *AlertSpendStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AlertSpendStatus) {
+}
+
+func (to *AlertSpendStatus) SyncFieldsDuringRead(ctx context.Context, from AlertSpendStatus) {
+}
+
+func (m AlertSpendStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["percent_consumed"] = attrs["percent_consumed"].SetOptional()
+	attrs["scope_type"] = attrs["scope_type"].SetOptional()
+	attrs["spend"] = attrs["spend"].SetOptional()
+	attrs["threshold"] = attrs["threshold"].SetOptional()
+	attrs["time_period"] = attrs["time_period"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertSpendStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AlertSpendStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AlertSpendStatus
+// only implements ToObjectValue() and Type().
+func (m AlertSpendStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"percent_consumed": m.PercentConsumed,
+			"scope_type":       m.ScopeType,
+			"spend":            m.Spend,
+			"threshold":        m.Threshold,
+			"time_period":      m.TimePeriod,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AlertSpendStatus) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"percent_consumed": types.StringType,
+			"scope_type":       types.StringType,
+			"spend":            types.StringType,
+			"threshold":        types.StringType,
+			"time_period":      types.StringType,
+		},
+	}
+}
+
 type BudgetConfiguration struct {
 	// Databricks account ID.
 	AccountId types.String `tfsdk:"account_id"`
@@ -331,6 +413,12 @@ type BudgetConfiguration struct {
 	// empty to include all usage for this account. All provided filters must be
 	// matched for usage to be included.
 	Filter types.Object `tfsdk:"filter"`
+	// Whether this budget tracks external pass-through spend (third-party costs
+	// billed through a Databricks product) in addition to internal Databricks
+	// spend. Only applicable to Unity Gateway budgets, i.e. when
+	// `resource_type` is `BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY`. This field is
+	// immutable after create.
+	IncludeExternalSpend types.Bool `tfsdk:"include_external_spend"`
 	// The resource scope for this budget. Determines whether the budget tracks
 	// all resources or a specific resource.
 	ResourceType types.String `tfsdk:"resource_type"`
@@ -405,6 +493,7 @@ func (m BudgetConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["create_time"] = attrs["create_time"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["include_external_spend"] = attrs["include_external_spend"].SetOptional()
 	attrs["resource_type"] = attrs["resource_type"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetOptional()
 
@@ -438,6 +527,7 @@ func (m BudgetConfiguration) ToObjectValue(ctx context.Context) basetypes.Object
 			"create_time":             m.CreateTime,
 			"display_name":            m.DisplayName,
 			"filter":                  m.Filter,
+			"include_external_spend":  m.IncludeExternalSpend,
 			"resource_type":           m.ResourceType,
 			"update_time":             m.UpdateTime,
 		})
@@ -455,6 +545,7 @@ func (m BudgetConfiguration) Type(ctx context.Context) attr.Type {
 			"create_time":             types.Int64Type,
 			"display_name":            types.StringType,
 			"filter":                  BudgetConfigurationFilter{}.Type(ctx),
+			"include_external_spend":  types.BoolType,
 			"resource_type":           types.StringType,
 			"update_time":             types.Int64Type,
 		},
@@ -1139,6 +1230,132 @@ func (m *BudgetPolicy) SetCustomTags(ctx context.Context, v []compute_tf.CustomP
 	m.CustomTags = types.ListValueMust(t, vs)
 }
 
+// The calling user's live spend against the blocking thresholds of a single
+// budget.
+type BudgetSpendStatus struct {
+	// The calling user's spend against each blocking threshold on this budget,
+	// one entry per scope type and time period. A blocking threshold is a
+	// threshold that, once reached, blocks further requests through Unity
+	// Gateway.
+	AlertSpendStatuses types.List `tfsdk:"alert_spend_statuses"`
+	// The resource name of this budget spend status, of the form
+	// `accounts/{account_id}/budget-spend-statuses/{budget_id}`.
+	Name types.String `tfsdk:"name"`
+}
+
+func (to *BudgetSpendStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BudgetSpendStatus) {
+	if !from.AlertSpendStatuses.IsNull() && !from.AlertSpendStatuses.IsUnknown() && to.AlertSpendStatuses.IsNull() && len(from.AlertSpendStatuses.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AlertSpendStatuses, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AlertSpendStatuses = from.AlertSpendStatuses
+	}
+	if !from.AlertSpendStatuses.IsNull() && !from.AlertSpendStatuses.IsUnknown() {
+		if toAlertSpendStatuses, ok := to.GetAlertSpendStatuses(ctx); ok {
+			if fromAlertSpendStatuses, ok := from.GetAlertSpendStatuses(ctx); ok {
+				// Recursively sync the fields of each AlertSpendStatuses element by position.
+				for i := range toAlertSpendStatuses {
+					if i < len(fromAlertSpendStatuses) {
+						toAlertSpendStatuses[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAlertSpendStatuses[i])
+					}
+				}
+				to.SetAlertSpendStatuses(ctx, toAlertSpendStatuses)
+			}
+		}
+	}
+}
+
+func (to *BudgetSpendStatus) SyncFieldsDuringRead(ctx context.Context, from BudgetSpendStatus) {
+	if !from.AlertSpendStatuses.IsNull() && !from.AlertSpendStatuses.IsUnknown() && to.AlertSpendStatuses.IsNull() && len(from.AlertSpendStatuses.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AlertSpendStatuses, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AlertSpendStatuses = from.AlertSpendStatuses
+	}
+	if !from.AlertSpendStatuses.IsNull() && !from.AlertSpendStatuses.IsUnknown() {
+		if toAlertSpendStatuses, ok := to.GetAlertSpendStatuses(ctx); ok {
+			if fromAlertSpendStatuses, ok := from.GetAlertSpendStatuses(ctx); ok {
+				for i := range toAlertSpendStatuses {
+					if i < len(fromAlertSpendStatuses) {
+						toAlertSpendStatuses[i].SyncFieldsDuringRead(ctx, fromAlertSpendStatuses[i])
+					}
+				}
+				to.SetAlertSpendStatuses(ctx, toAlertSpendStatuses)
+			}
+		}
+	}
+}
+
+func (m BudgetSpendStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert_spend_statuses"] = attrs["alert_spend_statuses"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in BudgetSpendStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m BudgetSpendStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"alert_spend_statuses": reflect.TypeOf(AlertSpendStatus{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, BudgetSpendStatus
+// only implements ToObjectValue() and Type().
+func (m BudgetSpendStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"alert_spend_statuses": m.AlertSpendStatuses,
+			"name":                 m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m BudgetSpendStatus) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"alert_spend_statuses": basetypes.ListType{
+				ElemType: AlertSpendStatus{}.Type(ctx),
+			},
+			"name": types.StringType,
+		},
+	}
+}
+
+// GetAlertSpendStatuses returns the value of the AlertSpendStatuses field in BudgetSpendStatus as
+// a slice of AlertSpendStatus values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *BudgetSpendStatus) GetAlertSpendStatuses(ctx context.Context) ([]AlertSpendStatus, bool) {
+	if m.AlertSpendStatuses.IsNull() || m.AlertSpendStatuses.IsUnknown() {
+		return nil, false
+	}
+	var v []AlertSpendStatus
+	d := m.AlertSpendStatuses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAlertSpendStatuses sets the value of the AlertSpendStatuses field in BudgetSpendStatus.
+func (m *BudgetSpendStatus) SetAlertSpendStatuses(ctx context.Context, v []AlertSpendStatus) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_spend_statuses"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.AlertSpendStatuses = types.ListValueMust(t, vs)
+}
+
 type CreateBillingUsageDashboardRequest struct {
 	// Workspace level usage dashboard shows usage data for the specified
 	// workspace ID. Global level usage dashboard shows usage data for all
@@ -1273,6 +1490,12 @@ type CreateBudgetConfigurationBudget struct {
 	// empty to include all usage for this account. All provided filters must be
 	// matched for usage to be included.
 	Filter types.Object `tfsdk:"filter"`
+	// Whether this budget tracks external pass-through spend (third-party costs
+	// billed through a Databricks product) in addition to internal Databricks
+	// spend. Only applicable to Unity Gateway budgets, i.e. when
+	// `resource_type` is `BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY`. This field is
+	// immutable after create.
+	IncludeExternalSpend types.Bool `tfsdk:"include_external_spend"`
 	// The resource scope for this budget. Determines whether the budget tracks
 	// all resources or a specific resource.
 	ResourceType types.String `tfsdk:"resource_type"`
@@ -1343,6 +1566,7 @@ func (m CreateBudgetConfigurationBudget) ApplySchemaCustomizations(attrs map[str
 	attrs["alert_configurations"] = attrs["alert_configurations"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["include_external_spend"] = attrs["include_external_spend"].SetOptional()
 	attrs["resource_type"] = attrs["resource_type"].SetOptional()
 
 	return attrs
@@ -1369,11 +1593,12 @@ func (m CreateBudgetConfigurationBudget) ToObjectValue(ctx context.Context) base
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"account_id":           m.AccountId,
-			"alert_configurations": m.AlertConfigurations,
-			"display_name":         m.DisplayName,
-			"filter":               m.Filter,
-			"resource_type":        m.ResourceType,
+			"account_id":             m.AccountId,
+			"alert_configurations":   m.AlertConfigurations,
+			"display_name":           m.DisplayName,
+			"filter":                 m.Filter,
+			"include_external_spend": m.IncludeExternalSpend,
+			"resource_type":          m.ResourceType,
 		})
 }
 
@@ -1385,9 +1610,10 @@ func (m CreateBudgetConfigurationBudget) Type(ctx context.Context) attr.Type {
 			"alert_configurations": basetypes.ListType{
 				ElemType: CreateBudgetConfigurationBudgetAlertConfigurations{}.Type(ctx),
 			},
-			"display_name":  types.StringType,
-			"filter":        BudgetConfigurationFilter{}.Type(ctx),
-			"resource_type": types.StringType,
+			"display_name":           types.StringType,
+			"filter":                 BudgetConfigurationFilter{}.Type(ctx),
+			"include_external_spend": types.BoolType,
+			"resource_type":          types.StringType,
 		},
 	}
 }
@@ -2794,6 +3020,56 @@ func (m GetBudgetPolicyRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetBudgetSpendStatusRequest struct {
+	// The resource name of the budget spend status to read, of the form
+	// `accounts/{account_id}/budget-spend-statuses/{budget_id}`. A `budget_id`
+	// that isn't a valid UUID fails with INVALID_PARAMETER_VALUE.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetBudgetSpendStatusRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetBudgetSpendStatusRequest) {
+}
+
+func (to *GetBudgetSpendStatusRequest) SyncFieldsDuringRead(ctx context.Context, from GetBudgetSpendStatusRequest) {
+}
+
+func (m GetBudgetSpendStatusRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetBudgetSpendStatusRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetBudgetSpendStatusRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetBudgetSpendStatusRequest
+// only implements ToObjectValue() and Type().
+func (m GetBudgetSpendStatusRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetBudgetSpendStatusRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type GetLogDeliveryConfigurationResponse struct {
 	// The fetched log delivery configuration
 	LogDeliveryConfiguration types.Object `tfsdk:"log_delivery_configuration"`
@@ -3436,6 +3712,208 @@ func (m *ListBudgetPoliciesResponse) SetPolicies(ctx context.Context, v []Budget
 	m.Policies = types.ListValueMust(t, vs)
 }
 
+type ListBudgetSpendStatusesRequest struct {
+	// A filter expression that narrows the returned budgets by workspace. Only
+	// `workspace_id` is supported, in lower case with numeric workspace IDs,
+	// for example `workspace_id = 123` or `workspace_id IN (123, 456)`. Matches
+	// budgets that apply to any of the listed workspaces, including budgets
+	// that apply to all workspaces. Any other expression, such as an empty `IN
+	// ()` list, fails with INVALID_PARAMETER_VALUE. If empty, returns every
+	// budget in the account that has a blocking threshold.
+	Filter types.String `tfsdk:"-"`
+	// The maximum number of spend statuses to return per page. If unspecified
+	// or 0, at most 100 are returned. The maximum value is 100; values above
+	// 100 are coerced to 100. Negative values fail with
+	// INVALID_PARAMETER_VALUE. The server may return fewer results than
+	// requested, including zero, even when more pages remain; page until
+	// `next_page_token` is absent.
+	PageSize types.Int64 `tfsdk:"-"`
+	// A page token from a previous `ListBudgetSpendStatuses` response, used to
+	// fetch the next page. Requests the first page if absent. All other request
+	// parameters except `page_size` must match the request that returned the
+	// token; otherwise the request fails with INVALID_PARAMETER_VALUE.
+	PageToken types.String `tfsdk:"-"`
+	// The parent account whose budget spend statuses to list, of the form
+	// `accounts/{account_id}`.
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *ListBudgetSpendStatusesRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListBudgetSpendStatusesRequest) {
+}
+
+func (to *ListBudgetSpendStatusesRequest) SyncFieldsDuringRead(ctx context.Context, from ListBudgetSpendStatusesRequest) {
+}
+
+func (m ListBudgetSpendStatusesRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["filter"] = attrs["filter"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListBudgetSpendStatusesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListBudgetSpendStatusesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListBudgetSpendStatusesRequest
+// only implements ToObjectValue() and Type().
+func (m ListBudgetSpendStatusesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"filter":     m.Filter,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListBudgetSpendStatusesRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"filter":     types.StringType,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+		},
+	}
+}
+
+// Response for ListBudgetSpendStatuses.
+type ListBudgetSpendStatusesResponse struct {
+	// The calling user's spend status, one entry per returned budget.
+	BudgetSpendStatuses types.List `tfsdk:"budget_spend_statuses"`
+	// Token to pass as `page_token` to retrieve the next page. Absent when
+	// there are no more results. A page can contain fewer results than
+	// `page_size`, or none, while this token is still set, so keep paging until
+	// it's absent.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListBudgetSpendStatusesResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListBudgetSpendStatusesResponse) {
+	if !from.BudgetSpendStatuses.IsNull() && !from.BudgetSpendStatuses.IsUnknown() && to.BudgetSpendStatuses.IsNull() && len(from.BudgetSpendStatuses.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for BudgetSpendStatuses, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.BudgetSpendStatuses = from.BudgetSpendStatuses
+	}
+	if !from.BudgetSpendStatuses.IsNull() && !from.BudgetSpendStatuses.IsUnknown() {
+		if toBudgetSpendStatuses, ok := to.GetBudgetSpendStatuses(ctx); ok {
+			if fromBudgetSpendStatuses, ok := from.GetBudgetSpendStatuses(ctx); ok {
+				// Recursively sync the fields of each BudgetSpendStatuses element by position.
+				for i := range toBudgetSpendStatuses {
+					if i < len(fromBudgetSpendStatuses) {
+						toBudgetSpendStatuses[i].SyncFieldsDuringCreateOrUpdate(ctx, fromBudgetSpendStatuses[i])
+					}
+				}
+				to.SetBudgetSpendStatuses(ctx, toBudgetSpendStatuses)
+			}
+		}
+	}
+}
+
+func (to *ListBudgetSpendStatusesResponse) SyncFieldsDuringRead(ctx context.Context, from ListBudgetSpendStatusesResponse) {
+	if !from.BudgetSpendStatuses.IsNull() && !from.BudgetSpendStatuses.IsUnknown() && to.BudgetSpendStatuses.IsNull() && len(from.BudgetSpendStatuses.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for BudgetSpendStatuses, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.BudgetSpendStatuses = from.BudgetSpendStatuses
+	}
+	if !from.BudgetSpendStatuses.IsNull() && !from.BudgetSpendStatuses.IsUnknown() {
+		if toBudgetSpendStatuses, ok := to.GetBudgetSpendStatuses(ctx); ok {
+			if fromBudgetSpendStatuses, ok := from.GetBudgetSpendStatuses(ctx); ok {
+				for i := range toBudgetSpendStatuses {
+					if i < len(fromBudgetSpendStatuses) {
+						toBudgetSpendStatuses[i].SyncFieldsDuringRead(ctx, fromBudgetSpendStatuses[i])
+					}
+				}
+				to.SetBudgetSpendStatuses(ctx, toBudgetSpendStatuses)
+			}
+		}
+	}
+}
+
+func (m ListBudgetSpendStatusesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_spend_statuses"] = attrs["budget_spend_statuses"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListBudgetSpendStatusesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListBudgetSpendStatusesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"budget_spend_statuses": reflect.TypeOf(BudgetSpendStatus{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListBudgetSpendStatusesResponse
+// only implements ToObjectValue() and Type().
+func (m ListBudgetSpendStatusesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"budget_spend_statuses": m.BudgetSpendStatuses,
+			"next_page_token":       m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListBudgetSpendStatusesResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"budget_spend_statuses": basetypes.ListType{
+				ElemType: BudgetSpendStatus{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetBudgetSpendStatuses returns the value of the BudgetSpendStatuses field in ListBudgetSpendStatusesResponse as
+// a slice of BudgetSpendStatus values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListBudgetSpendStatusesResponse) GetBudgetSpendStatuses(ctx context.Context) ([]BudgetSpendStatus, bool) {
+	if m.BudgetSpendStatuses.IsNull() || m.BudgetSpendStatuses.IsUnknown() {
+		return nil, false
+	}
+	var v []BudgetSpendStatus
+	d := m.BudgetSpendStatuses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBudgetSpendStatuses sets the value of the BudgetSpendStatuses field in ListBudgetSpendStatusesResponse.
+func (m *ListBudgetSpendStatusesResponse) SetBudgetSpendStatuses(ctx context.Context, v []BudgetSpendStatus) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["budget_spend_statuses"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.BudgetSpendStatuses = types.ListValueMust(t, vs)
+}
+
 type ListLogDeliveryRequest struct {
 	// The Credentials id to filter the search results with
 	CredentialsId types.String `tfsdk:"-"`
@@ -3999,6 +4477,12 @@ type UpdateBudgetConfigurationBudget struct {
 	// empty to include all usage for this account. All provided filters must be
 	// matched for usage to be included.
 	Filter types.Object `tfsdk:"filter"`
+	// Whether this budget tracks external pass-through spend (third-party costs
+	// billed through a Databricks product) in addition to internal Databricks
+	// spend. Only applicable to Unity Gateway budgets, i.e. when
+	// `resource_type` is `BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY`. This field is
+	// immutable after create.
+	IncludeExternalSpend types.Bool `tfsdk:"include_external_spend"`
 	// The resource scope for this budget. Determines whether the budget tracks
 	// all resources or a specific resource.
 	ResourceType types.String `tfsdk:"resource_type"`
@@ -4070,6 +4554,7 @@ func (m UpdateBudgetConfigurationBudget) ApplySchemaCustomizations(attrs map[str
 	attrs["budget_configuration_id"] = attrs["budget_configuration_id"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["include_external_spend"] = attrs["include_external_spend"].SetOptional()
 	attrs["resource_type"] = attrs["resource_type"].SetOptional()
 
 	return attrs
@@ -4101,6 +4586,7 @@ func (m UpdateBudgetConfigurationBudget) ToObjectValue(ctx context.Context) base
 			"budget_configuration_id": m.BudgetConfigurationId,
 			"display_name":            m.DisplayName,
 			"filter":                  m.Filter,
+			"include_external_spend":  m.IncludeExternalSpend,
 			"resource_type":           m.ResourceType,
 		})
 }
@@ -4116,6 +4602,7 @@ func (m UpdateBudgetConfigurationBudget) Type(ctx context.Context) attr.Type {
 			"budget_configuration_id": types.StringType,
 			"display_name":            types.StringType,
 			"filter":                  BudgetConfigurationFilter{}.Type(ctx),
+			"include_external_spend":  types.BoolType,
 			"resource_type":           types.StringType,
 		},
 	}

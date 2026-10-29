@@ -1,0 +1,21 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "reject_invalid_workspace"
+    config: |
+      resource "databricks_catalog" "this" {
+        name = "test_catalog_replay"
+        comment = "test catalog"
+        force_destroy = true
+        provider_config {
+          workspace_id = ""
+        }
+      }
+    calls: []
+    expect_error: "expected \"provider_config.0.workspace_id\" to not be an empty string"
+destroy:
+  calls: []

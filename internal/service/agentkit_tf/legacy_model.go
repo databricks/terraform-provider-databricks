@@ -1469,6 +1469,54 @@ func (m GetManagedMemoryStoreRequest_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
+type GetMemoryStorePermissionRequest_SdkV2 struct {
+	// Resource name in the form `memory-stores/{managed_memory_store_id}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetMemoryStorePermissionRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetMemoryStorePermissionRequest_SdkV2) {
+}
+
+func (to *GetMemoryStorePermissionRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetMemoryStorePermissionRequest_SdkV2) {
+}
+
+func (m GetMemoryStorePermissionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetMemoryStorePermissionRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetMemoryStorePermissionRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetMemoryStorePermissionRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetMemoryStorePermissionRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetMemoryStorePermissionRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type GetSessionRequest_SdkV2 struct {
 	// Resource name in the form
 	// `session-stores/{session_store_id}/sessions/{session_id}`.
@@ -1511,6 +1559,54 @@ func (m GetSessionRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 
 // Type implements basetypes.ObjectValuable.
 func (m GetSessionRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type GetSessionStorePermissionRequest_SdkV2 struct {
+	// Resource name in the form `session-stores/{session_store_id}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetSessionStorePermissionRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetSessionStorePermissionRequest_SdkV2) {
+}
+
+func (to *GetSessionStorePermissionRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetSessionStorePermissionRequest_SdkV2) {
+}
+
+func (m GetSessionStorePermissionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSessionStorePermissionRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetSessionStorePermissionRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetSessionStorePermissionRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetSessionStorePermissionRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetSessionStorePermissionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -1563,6 +1659,306 @@ func (m GetSessionStoreRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
 		},
+	}
+}
+
+// Request to grant a READ or WRITE permission on a memory store to a principal.
+// Only the store owner or a workspace admin may grant permissions.
+type GrantMemoryStorePermissionRequest_SdkV2 struct {
+	// Resource name in the form `memory-stores/{managed_memory_store_id}`.
+	Name types.String `tfsdk:"-"`
+	// Permission level to grant.
+	Permission types.String `tfsdk:"permission"`
+	// Principal to grant the permission to.
+	Principal types.List `tfsdk:"principal"`
+}
+
+func (to *GrantMemoryStorePermissionRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GrantMemoryStorePermissionRequest_SdkV2) {
+	if !from.Principal.IsNull() && !from.Principal.IsUnknown() {
+		if toPrincipal, ok := to.GetPrincipal(ctx); ok {
+			if fromPrincipal, ok := from.GetPrincipal(ctx); ok {
+				// Recursively sync the fields of Principal
+				toPrincipal.SyncFieldsDuringCreateOrUpdate(ctx, fromPrincipal)
+				to.SetPrincipal(ctx, toPrincipal)
+			}
+		}
+	}
+}
+
+func (to *GrantMemoryStorePermissionRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GrantMemoryStorePermissionRequest_SdkV2) {
+	if !from.Principal.IsNull() && !from.Principal.IsUnknown() {
+		if toPrincipal, ok := to.GetPrincipal(ctx); ok {
+			if fromPrincipal, ok := from.GetPrincipal(ctx); ok {
+				toPrincipal.SyncFieldsDuringRead(ctx, fromPrincipal)
+				to.SetPrincipal(ctx, toPrincipal)
+			}
+		}
+	}
+}
+
+func (m GrantMemoryStorePermissionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetRequired()
+	attrs["principal"] = attrs["principal"].SetRequired()
+	attrs["principal"] = attrs["principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GrantMemoryStorePermissionRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GrantMemoryStorePermissionRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"principal": reflect.TypeOf(StorePrincipal_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GrantMemoryStorePermissionRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GrantMemoryStorePermissionRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":       m.Name,
+			"permission": m.Permission,
+			"principal":  m.Principal,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GrantMemoryStorePermissionRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":       types.StringType,
+			"permission": types.StringType,
+			"principal": basetypes.ListType{
+				ElemType: StorePrincipal_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetPrincipal returns the value of the Principal field in GrantMemoryStorePermissionRequest_SdkV2 as
+// a StorePrincipal_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GrantMemoryStorePermissionRequest_SdkV2) GetPrincipal(ctx context.Context) (StorePrincipal_SdkV2, bool) {
+	var e StorePrincipal_SdkV2
+	if m.Principal.IsNull() || m.Principal.IsUnknown() {
+		return e, false
+	}
+	var v []StorePrincipal_SdkV2
+	d := m.Principal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPrincipal sets the value of the Principal field in GrantMemoryStorePermissionRequest_SdkV2.
+func (m *GrantMemoryStorePermissionRequest_SdkV2) SetPrincipal(ctx context.Context, v StorePrincipal_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["principal"]
+	m.Principal = types.ListValueMust(t, vs)
+}
+
+// Response from granting a permission on a memory store.
+type GrantMemoryStorePermissionResponse_SdkV2 struct {
+}
+
+func (to *GrantMemoryStorePermissionResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GrantMemoryStorePermissionResponse_SdkV2) {
+}
+
+func (to *GrantMemoryStorePermissionResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GrantMemoryStorePermissionResponse_SdkV2) {
+}
+
+func (m GrantMemoryStorePermissionResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GrantMemoryStorePermissionResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GrantMemoryStorePermissionResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GrantMemoryStorePermissionResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GrantMemoryStorePermissionResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GrantMemoryStorePermissionResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+// Request to grant a READ or WRITE permission on a session store to a
+// principal. Only the store owner or a workspace admin may grant permissions.
+type GrantSessionStorePermissionRequest_SdkV2 struct {
+	// Resource name in the form `session-stores/{session_store_id}`.
+	Name types.String `tfsdk:"-"`
+	// Permission level to grant.
+	Permission types.String `tfsdk:"permission"`
+	// Principal to grant the permission to.
+	Principal types.List `tfsdk:"principal"`
+}
+
+func (to *GrantSessionStorePermissionRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GrantSessionStorePermissionRequest_SdkV2) {
+	if !from.Principal.IsNull() && !from.Principal.IsUnknown() {
+		if toPrincipal, ok := to.GetPrincipal(ctx); ok {
+			if fromPrincipal, ok := from.GetPrincipal(ctx); ok {
+				// Recursively sync the fields of Principal
+				toPrincipal.SyncFieldsDuringCreateOrUpdate(ctx, fromPrincipal)
+				to.SetPrincipal(ctx, toPrincipal)
+			}
+		}
+	}
+}
+
+func (to *GrantSessionStorePermissionRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GrantSessionStorePermissionRequest_SdkV2) {
+	if !from.Principal.IsNull() && !from.Principal.IsUnknown() {
+		if toPrincipal, ok := to.GetPrincipal(ctx); ok {
+			if fromPrincipal, ok := from.GetPrincipal(ctx); ok {
+				toPrincipal.SyncFieldsDuringRead(ctx, fromPrincipal)
+				to.SetPrincipal(ctx, toPrincipal)
+			}
+		}
+	}
+}
+
+func (m GrantSessionStorePermissionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetRequired()
+	attrs["principal"] = attrs["principal"].SetRequired()
+	attrs["principal"] = attrs["principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GrantSessionStorePermissionRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GrantSessionStorePermissionRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"principal": reflect.TypeOf(StorePrincipal_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GrantSessionStorePermissionRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GrantSessionStorePermissionRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":       m.Name,
+			"permission": m.Permission,
+			"principal":  m.Principal,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GrantSessionStorePermissionRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":       types.StringType,
+			"permission": types.StringType,
+			"principal": basetypes.ListType{
+				ElemType: StorePrincipal_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetPrincipal returns the value of the Principal field in GrantSessionStorePermissionRequest_SdkV2 as
+// a StorePrincipal_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GrantSessionStorePermissionRequest_SdkV2) GetPrincipal(ctx context.Context) (StorePrincipal_SdkV2, bool) {
+	var e StorePrincipal_SdkV2
+	if m.Principal.IsNull() || m.Principal.IsUnknown() {
+		return e, false
+	}
+	var v []StorePrincipal_SdkV2
+	d := m.Principal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPrincipal sets the value of the Principal field in GrantSessionStorePermissionRequest_SdkV2.
+func (m *GrantSessionStorePermissionRequest_SdkV2) SetPrincipal(ctx context.Context, v StorePrincipal_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["principal"]
+	m.Principal = types.ListValueMust(t, vs)
+}
+
+// Response from granting a permission on a session store.
+type GrantSessionStorePermissionResponse_SdkV2 struct {
+}
+
+func (to *GrantSessionStorePermissionResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GrantSessionStorePermissionResponse_SdkV2) {
+}
+
+func (to *GrantSessionStorePermissionResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GrantSessionStorePermissionResponse_SdkV2) {
+}
+
+func (m GrantSessionStorePermissionResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GrantSessionStorePermissionResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GrantSessionStorePermissionResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GrantSessionStorePermissionResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GrantSessionStorePermissionResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GrantSessionStorePermissionResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -1948,6 +2344,188 @@ func (m *ListManagedMemoryStoresResponse_SdkV2) SetManagedMemoryStores(ctx conte
 	m.ManagedMemoryStores = types.ListValueMust(t, vs)
 }
 
+type ListMemoryStorePermissionsRequest_SdkV2 struct {
+	// Maximum number of permissions to return. Defaults to 100; maximum is
+	// 1000.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Continuation token from a previous response.
+	PageToken types.String `tfsdk:"-"`
+	// Resource name of the store, in the form
+	// `memory-stores/{managed_memory_store_id}`.
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *ListMemoryStorePermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListMemoryStorePermissionsRequest_SdkV2) {
+}
+
+func (to *ListMemoryStorePermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListMemoryStorePermissionsRequest_SdkV2) {
+}
+
+func (m ListMemoryStorePermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListMemoryStorePermissionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListMemoryStorePermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListMemoryStorePermissionsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListMemoryStorePermissionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListMemoryStorePermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+		},
+	}
+}
+
+// A page of explicit memory store permissions.
+type ListMemoryStorePermissionsResponse_SdkV2 struct {
+	// Explicit READ or WRITE grants. Implicit owner/admin access and inherited
+	// grants are excluded.
+	MemoryStorePermissions types.List `tfsdk:"memory_store_permissions"`
+	// Token for the next page, omitted when all permissions have been returned.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListMemoryStorePermissionsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListMemoryStorePermissionsResponse_SdkV2) {
+	if !from.MemoryStorePermissions.IsNull() && !from.MemoryStorePermissions.IsUnknown() && to.MemoryStorePermissions.IsNull() && len(from.MemoryStorePermissions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for MemoryStorePermissions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.MemoryStorePermissions = from.MemoryStorePermissions
+	}
+	if !from.MemoryStorePermissions.IsNull() && !from.MemoryStorePermissions.IsUnknown() {
+		if toMemoryStorePermissions, ok := to.GetMemoryStorePermissions(ctx); ok {
+			if fromMemoryStorePermissions, ok := from.GetMemoryStorePermissions(ctx); ok {
+				// Recursively sync the fields of each MemoryStorePermissions element by position.
+				for i := range toMemoryStorePermissions {
+					if i < len(fromMemoryStorePermissions) {
+						toMemoryStorePermissions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMemoryStorePermissions[i])
+					}
+				}
+				to.SetMemoryStorePermissions(ctx, toMemoryStorePermissions)
+			}
+		}
+	}
+}
+
+func (to *ListMemoryStorePermissionsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListMemoryStorePermissionsResponse_SdkV2) {
+	if !from.MemoryStorePermissions.IsNull() && !from.MemoryStorePermissions.IsUnknown() && to.MemoryStorePermissions.IsNull() && len(from.MemoryStorePermissions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for MemoryStorePermissions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.MemoryStorePermissions = from.MemoryStorePermissions
+	}
+	if !from.MemoryStorePermissions.IsNull() && !from.MemoryStorePermissions.IsUnknown() {
+		if toMemoryStorePermissions, ok := to.GetMemoryStorePermissions(ctx); ok {
+			if fromMemoryStorePermissions, ok := from.GetMemoryStorePermissions(ctx); ok {
+				for i := range toMemoryStorePermissions {
+					if i < len(fromMemoryStorePermissions) {
+						toMemoryStorePermissions[i].SyncFieldsDuringRead(ctx, fromMemoryStorePermissions[i])
+					}
+				}
+				to.SetMemoryStorePermissions(ctx, toMemoryStorePermissions)
+			}
+		}
+	}
+}
+
+func (m ListMemoryStorePermissionsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["memory_store_permissions"] = attrs["memory_store_permissions"].SetComputed()
+	attrs["next_page_token"] = attrs["next_page_token"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListMemoryStorePermissionsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListMemoryStorePermissionsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"memory_store_permissions": reflect.TypeOf(MemoryStorePermission_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListMemoryStorePermissionsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListMemoryStorePermissionsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"memory_store_permissions": m.MemoryStorePermissions,
+			"next_page_token":          m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListMemoryStorePermissionsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"memory_store_permissions": basetypes.ListType{
+				ElemType: MemoryStorePermission_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetMemoryStorePermissions returns the value of the MemoryStorePermissions field in ListMemoryStorePermissionsResponse_SdkV2 as
+// a slice of MemoryStorePermission_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListMemoryStorePermissionsResponse_SdkV2) GetMemoryStorePermissions(ctx context.Context) ([]MemoryStorePermission_SdkV2, bool) {
+	if m.MemoryStorePermissions.IsNull() || m.MemoryStorePermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []MemoryStorePermission_SdkV2
+	d := m.MemoryStorePermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMemoryStorePermissions sets the value of the MemoryStorePermissions field in ListMemoryStorePermissionsResponse_SdkV2.
+func (m *ListMemoryStorePermissionsResponse_SdkV2) SetMemoryStorePermissions(ctx context.Context, v []MemoryStorePermission_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["memory_store_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.MemoryStorePermissions = types.ListValueMust(t, vs)
+}
+
 type ListSessionItemsRequest_SdkV2 struct {
 	// Sort order. Supported values are `create_time asc` and `create_time
 	// desc`. The default is `create_time desc`, which returns the most recently
@@ -2135,6 +2713,188 @@ func (m *ListSessionItemsResponse_SdkV2) SetSessionItems(ctx context.Context, v 
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["session_items"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.SessionItems = types.ListValueMust(t, vs)
+}
+
+type ListSessionStorePermissionsRequest_SdkV2 struct {
+	// Maximum number of permissions to return. Defaults to 100; maximum is
+	// 1000.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Continuation token from a previous response.
+	PageToken types.String `tfsdk:"-"`
+	// Resource name of the store, in the form
+	// `session-stores/{session_store_id}`.
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *ListSessionStorePermissionsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListSessionStorePermissionsRequest_SdkV2) {
+}
+
+func (to *ListSessionStorePermissionsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListSessionStorePermissionsRequest_SdkV2) {
+}
+
+func (m ListSessionStorePermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSessionStorePermissionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListSessionStorePermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSessionStorePermissionsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListSessionStorePermissionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListSessionStorePermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+		},
+	}
+}
+
+// A page of explicit session store permissions.
+type ListSessionStorePermissionsResponse_SdkV2 struct {
+	// Token for the next page, omitted when all permissions have been returned.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// Explicit READ or WRITE grants. Implicit owner/admin access and inherited
+	// grants are excluded.
+	SessionStorePermissions types.List `tfsdk:"session_store_permissions"`
+}
+
+func (to *ListSessionStorePermissionsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListSessionStorePermissionsResponse_SdkV2) {
+	if !from.SessionStorePermissions.IsNull() && !from.SessionStorePermissions.IsUnknown() && to.SessionStorePermissions.IsNull() && len(from.SessionStorePermissions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SessionStorePermissions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SessionStorePermissions = from.SessionStorePermissions
+	}
+	if !from.SessionStorePermissions.IsNull() && !from.SessionStorePermissions.IsUnknown() {
+		if toSessionStorePermissions, ok := to.GetSessionStorePermissions(ctx); ok {
+			if fromSessionStorePermissions, ok := from.GetSessionStorePermissions(ctx); ok {
+				// Recursively sync the fields of each SessionStorePermissions element by position.
+				for i := range toSessionStorePermissions {
+					if i < len(fromSessionStorePermissions) {
+						toSessionStorePermissions[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSessionStorePermissions[i])
+					}
+				}
+				to.SetSessionStorePermissions(ctx, toSessionStorePermissions)
+			}
+		}
+	}
+}
+
+func (to *ListSessionStorePermissionsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListSessionStorePermissionsResponse_SdkV2) {
+	if !from.SessionStorePermissions.IsNull() && !from.SessionStorePermissions.IsUnknown() && to.SessionStorePermissions.IsNull() && len(from.SessionStorePermissions.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SessionStorePermissions, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SessionStorePermissions = from.SessionStorePermissions
+	}
+	if !from.SessionStorePermissions.IsNull() && !from.SessionStorePermissions.IsUnknown() {
+		if toSessionStorePermissions, ok := to.GetSessionStorePermissions(ctx); ok {
+			if fromSessionStorePermissions, ok := from.GetSessionStorePermissions(ctx); ok {
+				for i := range toSessionStorePermissions {
+					if i < len(fromSessionStorePermissions) {
+						toSessionStorePermissions[i].SyncFieldsDuringRead(ctx, fromSessionStorePermissions[i])
+					}
+				}
+				to.SetSessionStorePermissions(ctx, toSessionStorePermissions)
+			}
+		}
+	}
+}
+
+func (m ListSessionStorePermissionsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetComputed()
+	attrs["session_store_permissions"] = attrs["session_store_permissions"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSessionStorePermissionsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListSessionStorePermissionsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"session_store_permissions": reflect.TypeOf(SessionStorePermission_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSessionStorePermissionsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListSessionStorePermissionsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token":           m.NextPageToken,
+			"session_store_permissions": m.SessionStorePermissions,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListSessionStorePermissionsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"session_store_permissions": basetypes.ListType{
+				ElemType: SessionStorePermission_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSessionStorePermissions returns the value of the SessionStorePermissions field in ListSessionStorePermissionsResponse_SdkV2 as
+// a slice of SessionStorePermission_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListSessionStorePermissionsResponse_SdkV2) GetSessionStorePermissions(ctx context.Context) ([]SessionStorePermission_SdkV2, bool) {
+	if m.SessionStorePermissions.IsNull() || m.SessionStorePermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []SessionStorePermission_SdkV2
+	d := m.SessionStorePermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSessionStorePermissions sets the value of the SessionStorePermissions field in ListSessionStorePermissionsResponse_SdkV2.
+func (m *ListSessionStorePermissionsResponse_SdkV2) SetSessionStorePermissions(ctx context.Context, v []SessionStorePermission_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["session_store_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.SessionStorePermissions = types.ListValueMust(t, vs)
 }
 
 type ListSessionStoresRequest_SdkV2 struct {
@@ -2522,6 +3282,7 @@ type ManagedMemoryEntry_SdkV2 struct {
 	Description types.String `tfsdk:"description"`
 	// Resource name in the form
 	// `memory-stores/{managed_memory_store_id}/entries/{managed_memory_entry_id}`.
+	// Required for updates; assigned by the service on creation.
 	Name types.String `tfsdk:"name"`
 	// Absolute, case-sensitive path identifying the entry within its actor and
 	// optional session. Paths must begin with `/` and must not contain empty,
@@ -2549,7 +3310,7 @@ func (m ManagedMemoryEntry_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["content"] = attrs["content"].SetOptional()
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
-	attrs["name"] = attrs["name"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
 	attrs["path"] = attrs["path"].SetRequired()
 	attrs["path"] = attrs["path"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["session_id"] = attrs["session_id"].SetOptional()
@@ -2855,6 +3616,109 @@ func (m *ManagedMemoryStore_SdkV2) SetStorageBackend(ctx context.Context, v Stor
 	m.StorageBackend = types.ListValueMust(t, vs)
 }
 
+// A principal's permission on a memory store.
+type MemoryStorePermission_SdkV2 struct {
+	// The permission level. WRITE includes READ; PERMISSION_LEVEL_UNSPECIFIED
+	// means neither is available.
+	Permission types.String `tfsdk:"permission"`
+	// The principal whose permission is reported.
+	Principal types.List `tfsdk:"principal"`
+}
+
+func (to *MemoryStorePermission_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MemoryStorePermission_SdkV2) {
+	if !from.Principal.IsNull() && !from.Principal.IsUnknown() {
+		if toPrincipal, ok := to.GetPrincipal(ctx); ok {
+			if fromPrincipal, ok := from.GetPrincipal(ctx); ok {
+				// Recursively sync the fields of Principal
+				toPrincipal.SyncFieldsDuringCreateOrUpdate(ctx, fromPrincipal)
+				to.SetPrincipal(ctx, toPrincipal)
+			}
+		}
+	}
+}
+
+func (to *MemoryStorePermission_SdkV2) SyncFieldsDuringRead(ctx context.Context, from MemoryStorePermission_SdkV2) {
+	if !from.Principal.IsNull() && !from.Principal.IsUnknown() {
+		if toPrincipal, ok := to.GetPrincipal(ctx); ok {
+			if fromPrincipal, ok := from.GetPrincipal(ctx); ok {
+				toPrincipal.SyncFieldsDuringRead(ctx, fromPrincipal)
+				to.SetPrincipal(ctx, toPrincipal)
+			}
+		}
+	}
+}
+
+func (m MemoryStorePermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetComputed()
+	attrs["principal"] = attrs["principal"].SetComputed()
+	attrs["principal"] = attrs["principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MemoryStorePermission.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m MemoryStorePermission_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"principal": reflect.TypeOf(StorePrincipal_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MemoryStorePermission_SdkV2
+// only implements ToObjectValue() and Type().
+func (m MemoryStorePermission_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"permission": m.Permission,
+			"principal":  m.Principal,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m MemoryStorePermission_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"permission": types.StringType,
+			"principal": basetypes.ListType{
+				ElemType: StorePrincipal_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetPrincipal returns the value of the Principal field in MemoryStorePermission_SdkV2 as
+// a StorePrincipal_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MemoryStorePermission_SdkV2) GetPrincipal(ctx context.Context) (StorePrincipal_SdkV2, bool) {
+	var e StorePrincipal_SdkV2
+	if m.Principal.IsNull() || m.Principal.IsUnknown() {
+		return e, false
+	}
+	var v []StorePrincipal_SdkV2
+	d := m.Principal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPrincipal sets the value of the Principal field in MemoryStorePermission_SdkV2.
+func (m *MemoryStorePermission_SdkV2) SetPrincipal(ctx context.Context, v StorePrincipal_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["principal"]
+	m.Principal = types.ListValueMust(t, vs)
+}
+
 // Request to pop an item from a session.
 type PopSessionItemRequest_SdkV2 struct {
 	// Resource name of the containing session, in the form
@@ -3000,6 +3864,296 @@ func (m *PopSessionItemResponse_SdkV2) SetItem(ctx context.Context, v SessionIte
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["item"]
 	m.Item = types.ListValueMust(t, vs)
+}
+
+// Request to revoke all explicit access to a memory store. Only the owner or a
+// workspace admin may revoke permissions.
+type RevokeMemoryStorePermissionRequest_SdkV2 struct {
+	// Resource name in the form `memory-stores/{managed_memory_store_id}`.
+	Name types.String `tfsdk:"-"`
+	// Principal whose READ and WRITE grants will be removed.
+	Principal types.List `tfsdk:"principal"`
+}
+
+func (to *RevokeMemoryStorePermissionRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RevokeMemoryStorePermissionRequest_SdkV2) {
+	if !from.Principal.IsNull() && !from.Principal.IsUnknown() {
+		if toPrincipal, ok := to.GetPrincipal(ctx); ok {
+			if fromPrincipal, ok := from.GetPrincipal(ctx); ok {
+				// Recursively sync the fields of Principal
+				toPrincipal.SyncFieldsDuringCreateOrUpdate(ctx, fromPrincipal)
+				to.SetPrincipal(ctx, toPrincipal)
+			}
+		}
+	}
+}
+
+func (to *RevokeMemoryStorePermissionRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RevokeMemoryStorePermissionRequest_SdkV2) {
+	if !from.Principal.IsNull() && !from.Principal.IsUnknown() {
+		if toPrincipal, ok := to.GetPrincipal(ctx); ok {
+			if fromPrincipal, ok := from.GetPrincipal(ctx); ok {
+				toPrincipal.SyncFieldsDuringRead(ctx, fromPrincipal)
+				to.SetPrincipal(ctx, toPrincipal)
+			}
+		}
+	}
+}
+
+func (m RevokeMemoryStorePermissionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["principal"] = attrs["principal"].SetRequired()
+	attrs["principal"] = attrs["principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RevokeMemoryStorePermissionRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RevokeMemoryStorePermissionRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"principal": reflect.TypeOf(StorePrincipal_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RevokeMemoryStorePermissionRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m RevokeMemoryStorePermissionRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":      m.Name,
+			"principal": m.Principal,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RevokeMemoryStorePermissionRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+			"principal": basetypes.ListType{
+				ElemType: StorePrincipal_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetPrincipal returns the value of the Principal field in RevokeMemoryStorePermissionRequest_SdkV2 as
+// a StorePrincipal_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *RevokeMemoryStorePermissionRequest_SdkV2) GetPrincipal(ctx context.Context) (StorePrincipal_SdkV2, bool) {
+	var e StorePrincipal_SdkV2
+	if m.Principal.IsNull() || m.Principal.IsUnknown() {
+		return e, false
+	}
+	var v []StorePrincipal_SdkV2
+	d := m.Principal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPrincipal sets the value of the Principal field in RevokeMemoryStorePermissionRequest_SdkV2.
+func (m *RevokeMemoryStorePermissionRequest_SdkV2) SetPrincipal(ctx context.Context, v StorePrincipal_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["principal"]
+	m.Principal = types.ListValueMust(t, vs)
+}
+
+// Response from revoking a memory store permission.
+type RevokeMemoryStorePermissionResponse_SdkV2 struct {
+}
+
+func (to *RevokeMemoryStorePermissionResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RevokeMemoryStorePermissionResponse_SdkV2) {
+}
+
+func (to *RevokeMemoryStorePermissionResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RevokeMemoryStorePermissionResponse_SdkV2) {
+}
+
+func (m RevokeMemoryStorePermissionResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RevokeMemoryStorePermissionResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RevokeMemoryStorePermissionResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RevokeMemoryStorePermissionResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m RevokeMemoryStorePermissionResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RevokeMemoryStorePermissionResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+// Request to revoke all explicit access to a session store. Only the owner or a
+// workspace admin may revoke permissions.
+type RevokeSessionStorePermissionRequest_SdkV2 struct {
+	// Resource name in the form `session-stores/{session_store_id}`.
+	Name types.String `tfsdk:"-"`
+	// Principal whose READ and WRITE grants will be removed.
+	Principal types.List `tfsdk:"principal"`
+}
+
+func (to *RevokeSessionStorePermissionRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RevokeSessionStorePermissionRequest_SdkV2) {
+	if !from.Principal.IsNull() && !from.Principal.IsUnknown() {
+		if toPrincipal, ok := to.GetPrincipal(ctx); ok {
+			if fromPrincipal, ok := from.GetPrincipal(ctx); ok {
+				// Recursively sync the fields of Principal
+				toPrincipal.SyncFieldsDuringCreateOrUpdate(ctx, fromPrincipal)
+				to.SetPrincipal(ctx, toPrincipal)
+			}
+		}
+	}
+}
+
+func (to *RevokeSessionStorePermissionRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RevokeSessionStorePermissionRequest_SdkV2) {
+	if !from.Principal.IsNull() && !from.Principal.IsUnknown() {
+		if toPrincipal, ok := to.GetPrincipal(ctx); ok {
+			if fromPrincipal, ok := from.GetPrincipal(ctx); ok {
+				toPrincipal.SyncFieldsDuringRead(ctx, fromPrincipal)
+				to.SetPrincipal(ctx, toPrincipal)
+			}
+		}
+	}
+}
+
+func (m RevokeSessionStorePermissionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["principal"] = attrs["principal"].SetRequired()
+	attrs["principal"] = attrs["principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RevokeSessionStorePermissionRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RevokeSessionStorePermissionRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"principal": reflect.TypeOf(StorePrincipal_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RevokeSessionStorePermissionRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m RevokeSessionStorePermissionRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":      m.Name,
+			"principal": m.Principal,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RevokeSessionStorePermissionRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+			"principal": basetypes.ListType{
+				ElemType: StorePrincipal_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetPrincipal returns the value of the Principal field in RevokeSessionStorePermissionRequest_SdkV2 as
+// a StorePrincipal_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *RevokeSessionStorePermissionRequest_SdkV2) GetPrincipal(ctx context.Context) (StorePrincipal_SdkV2, bool) {
+	var e StorePrincipal_SdkV2
+	if m.Principal.IsNull() || m.Principal.IsUnknown() {
+		return e, false
+	}
+	var v []StorePrincipal_SdkV2
+	d := m.Principal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPrincipal sets the value of the Principal field in RevokeSessionStorePermissionRequest_SdkV2.
+func (m *RevokeSessionStorePermissionRequest_SdkV2) SetPrincipal(ctx context.Context, v StorePrincipal_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["principal"]
+	m.Principal = types.ListValueMust(t, vs)
+}
+
+// Response from revoking a session store permission.
+type RevokeSessionStorePermissionResponse_SdkV2 struct {
+}
+
+func (to *RevokeSessionStorePermissionResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RevokeSessionStorePermissionResponse_SdkV2) {
+}
+
+func (to *RevokeSessionStorePermissionResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RevokeSessionStorePermissionResponse_SdkV2) {
+}
+
+func (m RevokeSessionStorePermissionResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RevokeSessionStorePermissionResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RevokeSessionStorePermissionResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RevokeSessionStorePermissionResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m RevokeSessionStorePermissionResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RevokeSessionStorePermissionResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Request to search memory entries by text query for one actor. Search returns
@@ -3599,6 +4753,109 @@ func (m *SessionStore_SdkV2) SetMetadata(ctx context.Context, v map[string]types
 	m.Metadata = types.MapValueMust(t, vs)
 }
 
+// A principal's permission on a session store.
+type SessionStorePermission_SdkV2 struct {
+	// The permission level. WRITE includes READ; PERMISSION_LEVEL_UNSPECIFIED
+	// means neither is available.
+	Permission types.String `tfsdk:"permission"`
+	// The principal whose permission is reported.
+	Principal types.List `tfsdk:"principal"`
+}
+
+func (to *SessionStorePermission_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SessionStorePermission_SdkV2) {
+	if !from.Principal.IsNull() && !from.Principal.IsUnknown() {
+		if toPrincipal, ok := to.GetPrincipal(ctx); ok {
+			if fromPrincipal, ok := from.GetPrincipal(ctx); ok {
+				// Recursively sync the fields of Principal
+				toPrincipal.SyncFieldsDuringCreateOrUpdate(ctx, fromPrincipal)
+				to.SetPrincipal(ctx, toPrincipal)
+			}
+		}
+	}
+}
+
+func (to *SessionStorePermission_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SessionStorePermission_SdkV2) {
+	if !from.Principal.IsNull() && !from.Principal.IsUnknown() {
+		if toPrincipal, ok := to.GetPrincipal(ctx); ok {
+			if fromPrincipal, ok := from.GetPrincipal(ctx); ok {
+				toPrincipal.SyncFieldsDuringRead(ctx, fromPrincipal)
+				to.SetPrincipal(ctx, toPrincipal)
+			}
+		}
+	}
+}
+
+func (m SessionStorePermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetComputed()
+	attrs["principal"] = attrs["principal"].SetComputed()
+	attrs["principal"] = attrs["principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SessionStorePermission.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SessionStorePermission_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"principal": reflect.TypeOf(StorePrincipal_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SessionStorePermission_SdkV2
+// only implements ToObjectValue() and Type().
+func (m SessionStorePermission_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"permission": m.Permission,
+			"principal":  m.Principal,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SessionStorePermission_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"permission": types.StringType,
+			"principal": basetypes.ListType{
+				ElemType: StorePrincipal_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetPrincipal returns the value of the Principal field in SessionStorePermission_SdkV2 as
+// a StorePrincipal_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SessionStorePermission_SdkV2) GetPrincipal(ctx context.Context) (StorePrincipal_SdkV2, bool) {
+	var e StorePrincipal_SdkV2
+	if m.Principal.IsNull() || m.Principal.IsUnknown() {
+		return e, false
+	}
+	var v []StorePrincipal_SdkV2
+	d := m.Principal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPrincipal sets the value of the Principal field in SessionStorePermission_SdkV2.
+func (m *SessionStorePermission_SdkV2) SetPrincipal(ctx context.Context, v StorePrincipal_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["principal"]
+	m.Principal = types.ListValueMust(t, vs)
+}
+
 // Service-managed storage backing a memory store.
 type StorageBackend_SdkV2 struct {
 	// Backend-specific identifier. For Lakebase, this is the project ID.
@@ -3653,11 +4910,68 @@ func (m StorageBackend_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A principal a store permission is granted to. `name` is the principal's
+// Lakebase identifier: a user's email or a service principal's application
+// (client) id.
+type StorePrincipal_SdkV2 struct {
+	Name types.String `tfsdk:"name"`
+	// The kind of principal. Required unless the deprecated type alias is
+	// supplied.
+	PrincipalType types.String `tfsdk:"principal_type"`
+}
+
+func (to *StorePrincipal_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StorePrincipal_SdkV2) {
+}
+
+func (to *StorePrincipal_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StorePrincipal_SdkV2) {
+}
+
+func (m StorePrincipal_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["principal_type"] = attrs["principal_type"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StorePrincipal.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StorePrincipal_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StorePrincipal_SdkV2
+// only implements ToObjectValue() and Type().
+func (m StorePrincipal_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":           m.Name,
+			"principal_type": m.PrincipalType,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StorePrincipal_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":           types.StringType,
+			"principal_type": types.StringType,
+		},
+	}
+}
+
 type UpdateManagedMemoryEntryRequest_SdkV2 struct {
 	// The memory entry to update.
 	ManagedMemoryEntry types.List `tfsdk:"managed_memory_entry"`
 	// Resource name in the form
 	// `memory-stores/{managed_memory_store_id}/entries/{managed_memory_entry_id}`.
+	// Required for updates; assigned by the service on creation.
 	Name types.String `tfsdk:"-"`
 	// Fields to update. Only `content` and `description` may be updated.
 	UpdateMask types.String `tfsdk:"-"`
@@ -3689,7 +5003,7 @@ func (to *UpdateManagedMemoryEntryRequest_SdkV2) SyncFieldsDuringRead(ctx contex
 func (m UpdateManagedMemoryEntryRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["managed_memory_entry"] = attrs["managed_memory_entry"].SetRequired()
 	attrs["managed_memory_entry"] = attrs["managed_memory_entry"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["name"] = attrs["name"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
 	return attrs

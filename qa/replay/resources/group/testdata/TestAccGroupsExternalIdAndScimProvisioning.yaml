@@ -1,0 +1,174 @@
+# Source: scim/group_test.go#TestAccGroupsExternalIdAndScimProvisioning
+# All responses, including host metadata, are inferred, not recorded.
+# The source mutates externalId with the SDK after create. The next refresh supplies
+# that out-of-band change; no provider PUT or replacement should occur.
+# Regression: https://github.com/databricks/terraform-provider-databricks/issues/1099
+version: 1
+host_metadata:
+  host_type: "workspace"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_group" "this" {
+        display_name = "tfgroup-initial"
+        allow_cluster_create = true
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/preview/scim/v2/Groups"
+          body:
+            json:
+              displayName: "tfgroup-initial"
+              schemas:
+                - "urn:ietf:params:scim:schemas:core:2.0:Group"
+              entitlements:
+                - value: "allow-cluster-create"
+        response: # Inferred from the source scenario and SCIM API model; not recorded.
+          status: 201
+          body:
+            json:
+              schemas:
+                - "urn:ietf:params:scim:schemas:core:2.0:Group"
+              id: "group-id"
+              displayName: "tfgroup-initial"
+              entitlements:
+                - value: "allow-cluster-create"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Groups/group-id"
+          query:
+            attributes:
+              - "displayName,externalId,entitlements"
+          body: null
+        response: # Inferred from the source scenario and SCIM API model; not recorded.
+          status: 200
+          body:
+            json:
+              schemas:
+                - "urn:ietf:params:scim:schemas:core:2.0:Group"
+              id: "group-id"
+              displayName: "tfgroup-initial"
+              entitlements:
+                - value: "allow-cluster-create"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Groups/group-id"
+          query:
+            attributes:
+              - "displayName,externalId,entitlements"
+          body: null
+        response: # Inferred from the source scenario and SCIM API model; not recorded.
+          status: 200
+          body:
+            json:
+              schemas:
+                - "urn:ietf:params:scim:schemas:core:2.0:Group"
+              id: "group-id"
+              displayName: "tfgroup-initial"
+              entitlements:
+                - value: "allow-cluster-create"
+    state:
+      resources:
+        databricks_group.this:
+          attributes:
+            - path:
+                - "display_name"
+              equals: "tfgroup-initial"
+            - path:
+                - "allow_cluster_create"
+              equals: true
+            - path:
+                - "allow_instance_pool_create"
+              equals: false
+  # The same HCL must retain the external ID and remain a no-op.
+  - name: "preserve_external_scim_change"
+    config: |
+      resource "databricks_group" "this" {
+        display_name = "tfgroup-initial"
+        allow_cluster_create = true
+      }
+    plan:
+      expect: "empty"
+      changes: {}
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Groups/group-id"
+          query:
+            attributes:
+              - "displayName,externalId,entitlements"
+          body: null
+        response: # Inferred from the source scenario and SCIM API model; not recorded.
+          status: 200
+          body:
+            json:
+              schemas:
+                - "urn:ietf:params:scim:schemas:core:2.0:Group"
+              id: "group-id"
+              displayName: "tfgroup-initial"
+              entitlements:
+                - value: "allow-cluster-create"
+              externalId: "external-scim-id"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Groups/group-id"
+          query:
+            attributes:
+              - "displayName,externalId,entitlements"
+          body: null
+        response: # Inferred from the source scenario and SCIM API model; not recorded.
+          status: 200
+          body:
+            json:
+              schemas:
+                - "urn:ietf:params:scim:schemas:core:2.0:Group"
+              id: "group-id"
+              displayName: "tfgroup-initial"
+              entitlements:
+                - value: "allow-cluster-create"
+              externalId: "external-scim-id"
+    state:
+      resources:
+        databricks_group.this:
+          attributes:
+            - path:
+                - "display_name"
+              equals: "tfgroup-initial"
+            - path:
+                - "external_id"
+              equals: "external-scim-id"
+            - path:
+                - "allow_cluster_create"
+              equals: true
+            - path:
+                - "allow_instance_pool_create"
+              equals: false
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.0/preview/scim/v2/Groups/group-id"
+        query:
+          attributes:
+            - "displayName,externalId,entitlements"
+        body: null
+      response: # Inferred from the source scenario and SCIM API model; not recorded.
+        status: 200
+        body:
+          json:
+            schemas:
+              - "urn:ietf:params:scim:schemas:core:2.0:Group"
+            id: "group-id"
+            displayName: "tfgroup-initial"
+            entitlements:
+              - value: "allow-cluster-create"
+            externalId: "external-scim-id"
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/preview/scim/v2/Groups/group-id"
+        body: null
+      response: # Inferred from the source scenario and SCIM API model; not recorded.
+        status: 204
+        body: null

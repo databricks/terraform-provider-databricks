@@ -138,6 +138,7 @@ func TestRejectInvalidDefinition(t *testing.T) {
 		name, yaml, message string
 	}{
 		{"version", strings.Replace(minimalDefinition, "version: 1", "version: 2", 1), "unsupported version 2"},
+		{"unknown root field", minimalDefinition + "unknown_field: true\n", "field unknown_field not found"},
 		{"no steps", "version: 1\nsteps: []", "at least one step"},
 		{"unnamed step", strings.Replace(minimalDefinition, "name: create", "name: ''", 1), "name and config"},
 		{"no HCL", "version: 1\nsteps: [{name: create}]", "name and config"},
@@ -189,15 +190,6 @@ steps:
 				require.NotNil(t, d.Steps[0].State)
 				require.Empty(t, d.Steps[0].State.Resources)
 			}
-		})
-	}
-}
-
-func TestRejectDeferredFeatures(t *testing.T) {
-	for _, field := range []string{"recording", "environment_template", "initial_state_template", "force_order", "strict"} {
-		t.Run(field, func(t *testing.T) {
-			_, err := decodeDefinition(strings.NewReader(minimalDefinition + field + ": {}\n"))
-			require.ErrorContains(t, err, "field "+field+" not found")
 		})
 	}
 }

@@ -20,8 +20,16 @@ func Run(t *testing.T, directory string) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	profile := os.Getenv(recorderProfileEnv)
+	if err := recordingSelection(t.Name(), files, profile, testRunFilter()); err != nil {
+		t.Fatal(err)
+	}
 	for _, file := range files {
 		t.Run(file.name, func(t *testing.T) {
+			if profile != "" {
+				recordFile(t, file.path, profile)
+				return
+			}
 			definition, err := loadDefinition(file.path)
 			if err != nil {
 				t.Fatalf("%s: %v", file.path, err)

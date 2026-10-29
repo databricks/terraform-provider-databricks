@@ -15,13 +15,21 @@ import (
 )
 
 type testDefinition struct {
-	Version          int            `yaml:"version"`
-	HostMetadata     map[string]any `yaml:"host_metadata,omitempty"`
-	InitialState     *initialState  `yaml:"initial_state,omitempty"`
-	EnforceCallOrder bool           `yaml:"enforce_call_order,omitempty"`
-	Steps            []step         `yaml:"steps"`
-	Destroy          destroy        `yaml:"destroy"`
+	Version          int             `yaml:"version"`
+	HostMetadata     map[string]any  `yaml:"host_metadata,omitempty"`
+	InitialState     *initialState   `yaml:"initial_state,omitempty"`
+	Recording        *recordingSetup `yaml:"recording,omitempty"`
+	EnforceCallOrder bool            `yaml:"enforce_call_order,omitempty"`
+	Steps            []step          `yaml:"steps"`
+	Destroy          destroy         `yaml:"destroy"`
 	checkpoint       []byte
+}
+
+// Setup is recorder-only. Replay never creates background resources or regenerates
+// checkpoints; both templates are interpreted only by initial-state recording.
+type recordingSetup struct {
+	EnvironmentTemplate  string `yaml:"environment_template,omitempty"`
+	InitialStateTemplate string `yaml:"initial_state_template,omitempty"`
 }
 
 type initialState struct {

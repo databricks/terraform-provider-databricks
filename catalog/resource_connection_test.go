@@ -5,11 +5,13 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestConnectionsCornerCases(t *testing.T) {
@@ -260,6 +262,79 @@ func TestConnectionsRead(t *testing.T) {
 	assert.Equal(t, "testConnectionType", d.Get("connection_type"))
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
 	assert.Equal(t, map[string]interface{}{"host": "test.com"}, d.Get("options"))
+}
+
+// The API leaves some options out of its response, and which ones depends on the
+// connection type. Read must keep their configured values, or every plan shows drift.
+func TestConnectionsRead_KeepsOptionsTheApiOmits(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockConnectionsAPI().EXPECT().GetByName(mock.Anything, "gsc").Return(&catalog.ConnectionInfo{
+				Name:           "gsc",
+				ConnectionType: catalog.ConnectionType("API_SOURCE"),
+				FullName:       "gsc",
+				MetastoreId:    "abc",
+				Options: map[string]string{
+					"source_name":             "google_search_console",
+					"access_token_expiration": "1767225600",
+				},
+			}, nil)
+		},
+		Resource: ResourceConnection(),
+		Read:     true,
+		ID:       "abc|gsc",
+		HCL: `
+		name = "gsc"
+		connection_type = "API_SOURCE"
+		options = {
+			source_name          = "google_search_console"
+			authentication_type  = "OAUTH_GOOGLE_SERVICE_ACCOUNT"
+			service_account_json = "{\"type\": \"service_account\"}"
+		}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{
+		"source_name":             "google_search_console",
+		"access_token_expiration": "1767225600",
+		"authentication_type":     "OAUTH_GOOGLE_SERVICE_ACCOUNT",
+		"service_account_json":    "{\"type\": \"service_account\"}",
+	}, d.Get("options"))
+}
+
+// For an option the API returns, the API value wins so drift still shows, except for
+// sensitive options, whose returned value isn't the real one.
+func TestConnectionsRead_ReturnedOptions(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockConnectionsAPI().EXPECT().GetByName(mock.Anything, "pg").Return(&catalog.ConnectionInfo{
+				Name:           "pg",
+				ConnectionType: catalog.ConnectionTypePostgresql,
+				FullName:       "pg",
+				MetastoreId:    "abc",
+				Options: map[string]string{
+					"host":     "changed.example.com",
+					"password": "[REDACTED]",
+				},
+			}, nil)
+		},
+		Resource: ResourceConnection(),
+		Read:     true,
+		ID:       "abc|pg",
+		HCL: `
+		name = "pg"
+		connection_type = "POSTGRESQL"
+		options = {
+			host     = "db.example.com"
+			password = "secret"
+		}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{
+		"host":     "changed.example.com",
+		"password": "secret",
+	}, d.Get("options"))
 }
 
 func TestConnectionRead_Error(t *testing.T) {

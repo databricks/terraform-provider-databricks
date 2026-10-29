@@ -24,6 +24,27 @@ func setStruct(s *settings.NotificationDestination, readND *settings.Notificatio
 					readND.Config.Slack.OauthToken = s.Config.Slack.OauthToken
 				}
 			}
+		case settings.DestinationTypeDatabricksAppSlack:
+			if readND.Config.DatabricksAppSlack != nil && s.Config.DatabricksAppSlack != nil {
+				if readND.Config.DatabricksAppSlack.ChannelIdSet {
+					readND.Config.DatabricksAppSlack.ChannelId = s.Config.DatabricksAppSlack.ChannelId
+				}
+				if readND.Config.DatabricksAppSlack.TeamIdSet {
+					readND.Config.DatabricksAppSlack.TeamId = s.Config.DatabricksAppSlack.TeamId
+				}
+			}
+		case settings.DestinationTypeDatabricksAppTeams:
+			if readND.Config.DatabricksAppTeams != nil && s.Config.DatabricksAppTeams != nil {
+				if readND.Config.DatabricksAppTeams.ChannelIdSet {
+					readND.Config.DatabricksAppTeams.ChannelId = s.Config.DatabricksAppTeams.ChannelId
+				}
+				if readND.Config.DatabricksAppTeams.TeamIdSet {
+					readND.Config.DatabricksAppTeams.TeamId = s.Config.DatabricksAppTeams.TeamId
+				}
+				if readND.Config.DatabricksAppTeams.TenantIdSet {
+					readND.Config.DatabricksAppTeams.TenantId = s.Config.DatabricksAppTeams.TenantId
+				}
+			}
 		case settings.DestinationTypePagerduty:
 			if readND.Config.Pagerduty != nil && s.Config.Pagerduty != nil {
 				if readND.Config.Pagerduty.IntegrationKeySet {
@@ -121,6 +142,11 @@ func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("config", "slack", "url_set").SetComputed()
 	s.SchemaPath("config", "slack", "channel_id_set").SetComputed()
 	s.SchemaPath("config", "slack", "oauth_token_set").SetComputed()
+	s.SchemaPath("config", "databricks_app_slack", "channel_id_set").SetComputed()
+	s.SchemaPath("config", "databricks_app_slack", "team_id_set").SetComputed()
+	s.SchemaPath("config", "databricks_app_teams", "channel_id_set").SetComputed()
+	s.SchemaPath("config", "databricks_app_teams", "team_id_set").SetComputed()
+	s.SchemaPath("config", "databricks_app_teams", "tenant_id_set").SetComputed()
 	s.SchemaPath("config", "pagerduty", "integration_key_set").SetComputed()
 	s.SchemaPath("config", "microsoft_teams", "url_set").SetComputed()
 	s.SchemaPath("config", "generic_webhook", "url_set").SetComputed()
@@ -128,6 +154,8 @@ func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("config", "generic_webhook", "username_set").SetComputed()
 
 	// ForceNew fields
+	s.SchemaPath("config", "databricks_app_slack").SetForceNew()
+	s.SchemaPath("config", "databricks_app_teams").SetForceNew()
 	s.SchemaPath("config", "slack").SetForceNew()
 	s.SchemaPath("config", "pagerduty").SetForceNew()
 	s.SchemaPath("config", "microsoft_teams").SetForceNew()
@@ -135,7 +163,7 @@ func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("config", "email").SetForceNew()
 
 	// ConflictsWith fields
-	config_eoo := []string{"config.0.slack", "config.0.pagerduty", "config.0.microsoft_teams", "config.0.generic_webhook", "config.0.email"}
+	config_eoo := []string{"config.0.slack", "config.0.pagerduty", "config.0.microsoft_teams", "config.0.generic_webhook", "config.0.email", "config.0.databricks_app_slack", "config.0.databricks_app_teams"}
 	s.SchemaPath("config", "slack").SetExactlyOneOf(config_eoo)
 
 	// RequiredWith fields
@@ -155,6 +183,11 @@ func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("config", "microsoft_teams", "tenant_id").SetSensitive()
 	s.SchemaPath("config", "microsoft_teams", "app_id").SetSensitive()
 	s.SchemaPath("config", "pagerduty", "integration_key").SetSensitive()
+	s.SchemaPath("config", "databricks_app_slack", "channel_id").SetSensitive()
+	s.SchemaPath("config", "databricks_app_slack", "team_id").SetSensitive()
+	s.SchemaPath("config", "databricks_app_teams", "channel_id").SetSensitive()
+	s.SchemaPath("config", "databricks_app_teams", "team_id").SetSensitive()
+	s.SchemaPath("config", "databricks_app_teams", "tenant_id").SetSensitive()
 	s.SchemaPath("config", "slack", "url").SetSensitive()
 	s.SchemaPath("config", "slack", "oauth_token").SetSensitive()
 	s.SchemaPath("config", "slack", "channel_id").SetSensitive()

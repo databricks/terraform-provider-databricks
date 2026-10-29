@@ -65,8 +65,15 @@ func replayRoutingID(d *testDefinition, name, fallback string) (string, error) {
 	if value, ok := d.HostMetadata[name]; ok {
 		values[fmt.Sprint(value)] = true
 	}
+	configs := make([]string, 0, len(d.Steps)+2)
 	for _, step := range d.Steps {
-		file, diags := hclsyntax.ParseConfig([]byte(step.Config), "test.tf", hcl.InitialPos)
+		configs = append(configs, step.Config)
+	}
+	if d.Recording != nil {
+		configs = append(configs, d.Recording.EnvironmentTemplate, d.Recording.InitialStateTemplate)
+	}
+	for _, source := range configs {
+		file, diags := hclsyntax.ParseConfig([]byte(source), "test.tf", hcl.InitialPos)
 		if diags.HasErrors() {
 			continue // Invalid HCL can itself be the expected diagnostic.
 		}

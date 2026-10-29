@@ -50,11 +50,14 @@ Set `TEST_RECORDER_PROFILE_NAME` to a profile in `~/.databrickscfg` (or
 ```sh
 TEST_RECORDER_PROFILE_NAME=my-dev-profile \
   go test ./qa/terraformtest -count=1 \
-  -run '^TestRequestMatcherReplay$/^group_create_body$'
+  -run '^TestRecordedReplay$/^directory$'
 ```
 
-Use the wrapper name in your suite (`TestRequestMatcherReplay` is an example). This
-explicit mode makes real API calls and destroys the resources it manages. It
+The [recorded directory example](testdata/recording/directory.yaml) reads `/Shared`
+without creating or deleting live resources. Its workspace names and hosts are
+anonymized. Use the wrapper name in your own suite.
+
+Recording makes real API calls and destroys the resources it manages. It
 is rejected in CI, with broad selection, or with Terraform debug logging enabled.
 Ordinary replay remains hermetic regardless of ambient Databricks credentials.
 Basic recording rejects `initial_state` and `recording` setup templates before
@@ -71,7 +74,9 @@ of being discarded. Capture order alone does not enable ordered replay.
 
 The profile supplies host, authentication and real workspace/account IDs. Use
 stable replay IDs in `host_metadata` and literal provider fields; these must
-agree. Only those two known IDs are mapped in both directions, preserving
+agree. Unified-host tests must set stable `account_id` and `workspace_id` in the
+provider HCL so replay has the same routing information without a profile.
+Only those two known IDs are mapped in both directions, preserving
 numeric versus string JSON values. Other IDs and author-selected assertions
 may need manual updates before a refresh. Credential headers are excluded and
 known profile secrets/common secret payload fields are redacted. Review every

@@ -17,3 +17,9 @@
   commit credentials, tokens, private keys or sensitive user data.
 - Preserve HCL, assertion intent and the test's ordering setting when refreshing
   HTTP data. Unexpected failures or incomplete cleanup must leave YAML untouched.
+- Recording setup has two owners: `environment_template` uses separate state and
+  is cleaned up last; `initial_state_template` seeds the journey's own state.
+  Replay runs neither template. Generate checkpoints with Terraform from sanitized
+  fixture responses, never by editing a live checkpoint or private provider data.
+- Checkpoints are immutable and content-addressed. Preserve historical migration
+  snapshots; refresh generates state for the provider version in this checkout.

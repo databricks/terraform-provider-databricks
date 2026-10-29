@@ -61,7 +61,7 @@ func recordFile(t *testing.T, path, profileName string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := validateBasicRecording(definition); err != nil {
+	if err := validateRecordingSetup(definition); err != nil {
 		t.Fatal(err)
 	}
 	profile, err := loadRecordingProfile(profileName)
@@ -69,13 +69,6 @@ func recordFile(t *testing.T, path, profileName string) {
 		t.Fatal(err)
 	}
 	recordLoadedFile(t, path, original, definition, profile)
-}
-
-func validateBasicRecording(d *testDefinition) error {
-	if d.InitialState != nil || d.Recording != nil {
-		return fmt.Errorf("basic recording does not support initial_state or recording setup templates")
-	}
-	return nil
 }
 
 func recordLoadedFile(t *testing.T, path string, original []byte, definition *testDefinition, profile *recordingProfile) {
@@ -87,6 +80,10 @@ func recordLoadedFile(t *testing.T, path string, original []byte, definition *te
 	live, err := recordingDefinition(path, original, normalizer)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if definition.InitialState != nil || definition.Recording != nil {
+		recordWithSetup(t, path, original, definition, live, profile, normalizer)
+		return
 	}
 	updated := captureRecording(t, original, definition, live, profile, normalizer)
 	if updated == nil || !verifyRecordedFile(t, path, updated) {

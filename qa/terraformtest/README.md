@@ -62,8 +62,8 @@ Use the wrapper name in your own suite.
 Recording makes real API calls and destroys the resources it manages. It
 is rejected in CI, with broad selection, or with Terraform debug logging enabled.
 Ordinary replay remains hermetic regardless of ambient Databricks credentials.
-Basic recording rejects `initial_state` and `recording` setup templates before
-loading a profile or making requests.
+Recording an `initial_state` requires its setup template before loading a
+profile or making requests; see below.
 
 HCL and existing checks still execute. HTTP calls are captured per step,
 including destroy. A local replay verifies the captured data before saving;
@@ -85,6 +85,43 @@ paths are preserved; unrelated hosts are unchanged. Other IDs and author-selecte
 assertions may need manual updates before a refresh. Credential headers are excluded and
 known profile secrets/common secret payload fields are redacted. Review every
 generated diff for service-specific secrets before committing it.
+
+### Recording setup and initial state
+
+```yaml
+recording:
+  environment_template: |
+    resource "databricks_group" "background" {
+      display_name = "Background group"
+    }
+  initial_state_template: |
+    resource "databricks_group" "this" {
+      display_name = "Original group"
+    }
+initial_state:
+  checkpoint: checkpoints/group.tfstate
+# steps and destroy follow as usual
+```
+
+Both templates are optional and run only during recording. Environment resources
+live in separate Terraform state: test steps cannot delete them, and the recorder
+cleans them up after the tested journey, including on failure. Use this for
+resources read by data sources. Resources in `initial_state_template` belong to
+the test's state and its mandatory destroy. Initial setup uses files declared
+by the first step. An initial-state template requires `initial_state.checkpoint`,
+and recording an initial state requires the template.
+
+Recording creates initial resources through Terraform, then executes the steps
+and cleanup. After cleanup, a local replay of the sanitized setup transcript
+generates a genuine Terraform checkpoint; no state JSON is constructed or edited.
+A replay starting from that checkpoint must pass before files are saved. Replay
+runs neither recording template: it reads only the saved checkpoint and fixtures.
+
+Checkpoints use immutable content-hashed filenames. The checkpoint is published
+before the YAML reference is replaced atomically, so an interrupted write cannot
+alter an older snapshot. Older checkpoints remain until explicitly removed after
+checking their references. Regeneration uses the provider version in this checkout;
+preserve historical migration checkpoints rather than refreshing them routinely.
 
 ## Test definition
 

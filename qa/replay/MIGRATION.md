@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**507 copied; 38 pending.** Counts refer to original Go test functions, not
+**520 copied; 25 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. Copies preserve provider-owned behavior
 and meaningful assertions. Backend-only persistence checks are omitted; fixture
 requests verify what the provider sends. Unsupported provider behavior remains
@@ -77,19 +77,19 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [internal/acceptance/workspace_id_pf_app_acc_test.go](../../internal/acceptance/workspace_id_pf_app_acc_test.go) | 21 | 0 |
 | [internal/acceptance/workspace_id_pf_tag_policy_acc_test.go](../../internal/acceptance/workspace_id_pf_tag_policy_acc_test.go) | 21 | 0 |
 | [internal/acceptance/workspace_id_sdkv2_gosdk_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_gosdk_acc_test.go) | 21 | 0 |
-| [internal/acceptance/workspace_id_sdkv2_http_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_http_acc_test.go) | 19 | 2 |
+| [internal/acceptance/workspace_id_sdkv2_http_acc_test.go](../../internal/acceptance/workspace_id_sdkv2_http_acc_test.go) | 21 | 0 |
 | [internal/providers/pluginfw/products/app/data_app_acc_test.go](../../internal/providers/pluginfw/products/app/data_app_acc_test.go) | 1 | 0 |
 | [internal/providers/pluginfw/products/app/data_apps_acc_test.go](../../internal/providers/pluginfw/products/app/data_apps_acc_test.go) | 1 | 0 |
 | [internal/providers/pluginfw/products/app/resource_app_acc_test.go](../../internal/providers/pluginfw/products/app/resource_app_acc_test.go) | 8 | 0 |
 | [internal/providers/pluginfw/products/cluster/data_cluster_acc_test.go](../../internal/providers/pluginfw/products/cluster/data_cluster_acc_test.go) | 2 | 0 |
 | [internal/providers/pluginfw/products/dashboards/data_dashboards_acc_test.go](../../internal/providers/pluginfw/products/dashboards/data_dashboards_acc_test.go) | 1 | 0 |
-| [internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go](../../internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go) | 0 | 3 |
+| [internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go](../../internal/providers/pluginfw/products/networks/privateendpointrule/resource_acc_test.go) | 3 | 0 |
 | [internal/providers/pluginfw/products/notificationdestinations/data_notification_destinations_acc_test.go](../../internal/providers/pluginfw/products/notificationdestinations/data_notification_destinations_acc_test.go) | 2 | 0 |
-| [internal/providers/pluginfw/products/qualitymonitor/resource_quality_monitor_acc_test.go](../../internal/providers/pluginfw/products/qualitymonitor/resource_quality_monitor_acc_test.go) | 4 | 2 |
+| [internal/providers/pluginfw/products/qualitymonitor/resource_quality_monitor_acc_test.go](../../internal/providers/pluginfw/products/qualitymonitor/resource_quality_monitor_acc_test.go) | 6 | 0 |
 | [internal/providers/pluginfw/products/sharing/data_recipients_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_recipients_acc_test.go) | 1 | 0 |
 | [internal/providers/pluginfw/products/sharing/data_share_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_share_acc_test.go) | 2 | 0 |
 | [internal/providers/pluginfw/products/sharing/data_shares_acc_test.go](../../internal/providers/pluginfw/products/sharing/data_shares_acc_test.go) | 2 | 0 |
-| [internal/providers/pluginfw/products/sharing/resource_share_acc_test.go](../../internal/providers/pluginfw/products/sharing/resource_share_acc_test.go) | 20 | 5 |
+| [internal/providers/pluginfw/products/sharing/resource_share_acc_test.go](../../internal/providers/pluginfw/products/sharing/resource_share_acc_test.go) | 23 | 2 |
 | [internal/providers/pluginfw/products/user/data_users_acc_test.go](../../internal/providers/pluginfw/products/user/data_users_acc_test.go) | 8 | 0 |
 | [internal/providers/pluginfw/products/volume/data_volumes_acc_test.go](../../internal/providers/pluginfw/products/volume/data_volumes_acc_test.go) | 1 | 0 |
 | [jobs/data_job_acc_test.go](../../jobs/data_job_acc_test.go) | 5 | 0 |
@@ -114,7 +114,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [mws/mws_private_access_settings_test.go](../../mws/mws_private_access_settings_test.go) | 2 | 0 |
 | [mws/mws_storage_configurations_test.go](../../mws/mws_storage_configurations_test.go) | 1 | 0 |
 | [mws/mws_vpc_endpoint_test.go](../../mws/mws_vpc_endpoint_test.go) | 2 | 0 |
-| [mws/mws_workspaces_test.go](../../mws/mws_workspaces_test.go) | 4 | 5 |
+| [mws/mws_workspaces_test.go](../../mws/mws_workspaces_test.go) | 7 | 2 |
 | [mws/resource_mws_ncc_private_endpoint_rule_acc_test.go](../../mws/resource_mws_ncc_private_endpoint_rule_acc_test.go) | 1 | 0 |
 | [permissions/access_control_rule_set_provider_config_test.go](../../permissions/access_control_rule_set_provider_config_test.go) | 1 | 0 |
 | [permissions/account_rule_set_test.go](../../permissions/account_rule_set_test.go) | 2 | 0 |
@@ -205,9 +205,8 @@ See [PENDING.md](PENDING.md) for the remaining per-test blockers and
   models account/workspace clients and host transitions on the local server.
   YAML aliases repeat consumable fixtures; they do not make calls reusable.
   The provider-upgrade cases retain the originals' current-provider approximation.
-  Removed defaults/overrides retain diagnostic checks. The two notebook removal
-  cases remain pending because the provider attempts creation rather than
-  returning the expected planning diagnostic.
+  Removed defaults/overrides retain diagnostic checks. Notebook removal refreshes
+  the workspace saved in state before rejecting the missing workspace fallback.
 - Current-config cloud branches use separate YAML files for AWS, Azure, and
   GCP but still count as one source function. Explicit API cases extend
   `features/api_selection`; inference and cloud overrides stay in the
@@ -551,6 +550,37 @@ Azure and GCP permutations. The inventory is **507 copied / 38 pending**.
   computed-only field and requires an empty plan.
 
 Responses are marked placeholders, inferred from API models rather than captured
-from a live service. No integration test is changed. The two notebook removal
-cases remain pending: their routing failure currently leads to recreation before
-the expected plan diagnostic, so their assertions have not been relaxed.
+from a live service. No integration test is changed.
+
+## Provider migration and native workspace-token replays
+
+This batch copies **13 original functions** in 16 replay scenarios: 13 YAML and
+three native Go, including both NCC cloud forms. The inventory is
+**520 copied / 25 pending**.
+
+- Notebook removal cases use ordinary expected-error steps: planning refreshes
+  the old workspace successfully, then rejects the missing workspace fallback
+  before apply. Workspace and account SCIM /Me fixtures distinguish requests by
+  their workspace-routing header.
+- Endpoint rules explicitly select Plugin Framework for opt-in/import and switch
+  SDKv2/PF in both directions. Settled connection state, strict import verification,
+  and no-op migration plans remain checked.
+- Quality monitors switch implementations while updating inference granularities.
+  Shares retain both schema objects/comments, reverse adoption and volume sharing,
+  including the original independent prerequisite resources.
+- Workspace/token cases retain AWS credentials, keys, storage and network setup,
+  token replacement and foo/bar list checks. Their explicit Go transport maps one
+  fictional workspace URL to the local fixture server; all other destinations
+  still pass through the runner's rejecting transport.
+- The authentication-switch case retains all five steps: create, tolerate an
+  inaccessible token, remove it, reject recreation and restore the original
+  identity. Fixed local credentials and exact Authorization-header fixtures
+  distinguish identities. OAuth exchange and backend propagation polling are
+  omitted; these are not provider behavior.
+
+`provider_implementations` selects SDKv2 or Plugin Framework per resource type
+and step. The migration suite uses ordinary YAML discovery; cleanup retains the
+selection associated with its configuration. `RunNative` remains available for
+Go checks and custom transports/authentication, with `ProviderFactories` sharing
+the runner's mux construction. Fixtures remain stateless and strict; responses
+are marked placeholders. Original integration tests remain unchanged.

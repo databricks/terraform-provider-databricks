@@ -202,6 +202,47 @@ executed by the runner. Keep them minimal, such as a comment-only Python file.
 The [workspace-file example](testdata/files/workspace_file.yaml) creates a file,
 changes its contents, and destroys it, with exact multipart upload expectations.
 
+## Provider implementation selection
+
+Each step can select a resource implementation by Terraform resource type:
+
+```yaml
+steps:
+  - name: create_legacy_share
+    provider_implementations:
+      databricks_share: sdkv2
+    config: |
+      resource "databricks_share" "this" {
+        name = "example"
+      }
+    # calls omitted
+  - name: adopt_framework_share
+    provider_implementations:
+      databricks_share: plugin_framework
+    config: |
+      resource "databricks_share" "this" {
+        name = "example"
+      }
+    # calls omitted
+```
+
+Values are `sdkv2` or `plugin_framework`. Keys name resource types, such as
+`databricks_share`; every instance of that type uses the selected implementation.
+Multiple resource types can select different implementations in the same step.
+Unlisted resource types and all data sources use the production mux defaults.
+Each step declares its own selection; an omitted map uses production defaults.
+Invalid values and unavailable implementations fail instead of silently using
+another implementation. This does not add an implementation that the provider
+no longer ships.
+
+Steps share ordinary Terraform state, including across implementation switches.
+Destroy uses the selection retained with its cleanup configuration. Failed
+updates, discarded imports, and plan-only steps following an apply leave that
+selection unchanged. An import step can explicitly select its implementation.
+Provider selection also works with initial checkpoints and local input files.
+These settings are passed to provider constructors without changing process-wide
+rollout environment variables.
+
 ## Expected errors
 
 An optional step-level `expect_error` is a nonempty Go regular expression
@@ -440,6 +481,8 @@ refresh:
 - Preserve whole-step boundaries, including all native consistency plans and
   destroy. Capture plan expectations at the same saved-plan hooks as replay:
   pre-apply for apply steps, post-refresh for plan-only steps.
+- Preserve per-step provider implementation selections when refreshing fixtures;
+  recording must use the same implementation as replay.
 - Preserve author-selected paths, omitted assertions, explicit empty maps, and
   unknown versus null. Do not turn partial assertions into whole-state snapshots
   or silently change `enforce_call_order` while refreshing fixtures.

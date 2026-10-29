@@ -29,8 +29,9 @@ type initialState struct {
 }
 
 type step struct {
-	Name   string `yaml:"name"`
-	Config string `yaml:"config"`
+	Name                    string                  `yaml:"name"`
+	Config                  string                  `yaml:"config"`
+	ProviderImplementations providerImplementations `yaml:"provider_implementations,omitempty"`
 	// Files maps Terraform working-directory filenames to sources relative to
 	// the YAML. HashiCorp runs Terraform in an isolated temporary directory,
 	// where files beside the YAML are not automatically available.
@@ -142,6 +143,9 @@ func (d *testDefinition) validate() error {
 func (s step) validate() error {
 	if strings.TrimSpace(s.Name) == "" || (strings.TrimSpace(s.Config) == "" && s.Import == nil) {
 		return fmt.Errorf("name and config are required")
+	}
+	if err := s.ProviderImplementations.validate(); err != nil {
+		return err
 	}
 	if err := validateFiles(s.Files); err != nil {
 		return err

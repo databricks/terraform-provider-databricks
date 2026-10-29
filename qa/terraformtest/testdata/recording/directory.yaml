@@ -1,0 +1,221 @@
+# Recorded from Databricks; workspace names and hosts anonymized.
+version: 1
+host_metadata:
+  account_id: replay-account
+  cloud_provider: aws
+  host_type: unified
+  oidc_endpoint: https://example.databricks.com/oidc/accounts/{account_id}
+  token_federation_default_oidc_audiences:
+    - replay-account
+steps:
+  - name: read_shared
+    config: |
+      provider "databricks" {
+        account_id   = "replay-account"
+        workspace_id = "12345"
+      }
+
+      data "databricks_directory" "shared" {
+        path = "/Shared"
+      }
+    calls:
+      - request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/12345
+          body: null
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json; charset=utf-8
+          body:
+            json:
+              account_id: replay-account
+              aws_region: eu-central-1
+              compute_mode: SERVERLESS
+              creation_time: 1774362189103
+              deployment_name: example-workspace
+              identity_federation_info:
+                enable_identity_federation: true
+              is_no_public_ip_enabled: true
+              pricing_tier: ENTERPRISE
+              workspace_fqdn: example-workspace.cloud.databricks.com
+              workspace_id: 12345
+              workspace_info:
+                compliance_security_profile:
+                  is_enabled: false
+                enhanced_security_monitoring:
+                  is_enabled: false
+              workspace_name: recorded-workspace
+              workspace_status: RUNNING
+              workspace_status_message: Workspace is running.
+      - request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path:
+              - /Shared
+          body: null
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            json:
+              directory_info:
+                is_git_folder: false
+              object_id: 24978369143046
+              object_type: DIRECTORY
+              path: /Shared
+              resource_id: "24978369143046"
+      - request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/12345
+          body: null
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json; charset=utf-8
+          body:
+            json:
+              account_id: replay-account
+              aws_region: eu-central-1
+              compute_mode: SERVERLESS
+              creation_time: 1774362189103
+              deployment_name: example-workspace
+              identity_federation_info:
+                enable_identity_federation: true
+              is_no_public_ip_enabled: true
+              pricing_tier: ENTERPRISE
+              workspace_fqdn: example-workspace.cloud.databricks.com
+              workspace_id: 12345
+              workspace_info:
+                compliance_security_profile:
+                  is_enabled: false
+                enhanced_security_monitoring:
+                  is_enabled: false
+              workspace_name: recorded-workspace
+              workspace_status: RUNNING
+              workspace_status_message: Workspace is running.
+      - request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path:
+              - /Shared
+          body: null
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            json:
+              directory_info:
+                is_git_folder: false
+              object_id: 24978369143046
+              object_type: DIRECTORY
+              path: /Shared
+              resource_id: "24978369143046"
+      - request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/12345
+          body: null
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json; charset=utf-8
+          body:
+            json:
+              account_id: replay-account
+              aws_region: eu-central-1
+              compute_mode: SERVERLESS
+              creation_time: 1774362189103
+              deployment_name: example-workspace
+              identity_federation_info:
+                enable_identity_federation: true
+              is_no_public_ip_enabled: true
+              pricing_tier: ENTERPRISE
+              workspace_fqdn: example-workspace.cloud.databricks.com
+              workspace_id: 12345
+              workspace_info:
+                compliance_security_profile:
+                  is_enabled: false
+                enhanced_security_monitoring:
+                  is_enabled: false
+              workspace_name: recorded-workspace
+              workspace_status: RUNNING
+              workspace_status_message: Workspace is running.
+      - request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path:
+              - /Shared
+          body: null
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            json:
+              directory_info:
+                is_git_folder: false
+              object_id: 24978369143046
+              object_type: DIRECTORY
+              path: /Shared
+              resource_id: "24978369143046"
+    state:
+      resources:
+        data.databricks_directory.shared:
+          attributes:
+            - path: [workspace_path]
+              equals: /Workspace/Shared
+destroy:
+  calls:
+    - request:
+        method: GET
+        path: /api/2.0/accounts/replay-account/workspaces/12345
+        body: null
+      response:
+        status: 200
+        headers:
+          Content-Type: application/json; charset=utf-8
+        body:
+          json:
+            account_id: replay-account
+            aws_region: eu-central-1
+            compute_mode: SERVERLESS
+            creation_time: 1774362189103
+            deployment_name: example-workspace
+            identity_federation_info:
+              enable_identity_federation: true
+            is_no_public_ip_enabled: true
+            pricing_tier: ENTERPRISE
+            workspace_fqdn: example-workspace.cloud.databricks.com
+            workspace_id: 12345
+            workspace_info:
+              compliance_security_profile:
+                is_enabled: false
+              enhanced_security_monitoring:
+                is_enabled: false
+            workspace_name: recorded-workspace
+            workspace_status: RUNNING
+            workspace_status_message: Workspace is running.
+    - request:
+        method: GET
+        path: /api/2.0/workspace/get-status
+        query:
+          path:
+            - /Shared
+        body: null
+      response:
+        status: 200
+        headers:
+          Content-Type: application/json
+        body:
+          json:
+            directory_info:
+              is_git_folder: false
+            object_id: 24978369143046
+            object_type: DIRECTORY
+            path: /Shared
+            resource_id: "24978369143046"

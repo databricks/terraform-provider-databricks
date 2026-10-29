@@ -145,3 +145,26 @@ func TestCaptureRejectsIncompleteRecordingsWithoutLeakingErrors(t *testing.T) {
 type roundTripperFunc func(*http.Request) (*http.Response, error)
 
 func (f roundTripperFunc) RoundTrip(req *http.Request) (*http.Response, error) { return f(req) }
+
+// Unified hosts distinguish a bodyless HTTP/2 GET from an unknown-length body.
+// Capturing must retain the SDK's http.NoBody sentinel and wire framing.
+func TestCapturePreservesBodylessRequestFraming(t *testing.T) {
+	length := make(chan int64, 1)
+	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		length <- req.ContentLength
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	server.EnableHTTP2 = true
+	server.StartTLS()
+	defer server.Close()
+	capture := NewCaptureTransport(server.Client().Transport)
+	require.NoError(t, capture.StartStep("read"))
+	req, err := http.NewRequest(http.MethodGet, server.URL+"?path=%2FShared", strings.NewReader(""))
+	require.NoError(t, err)
+	response, err := capture.RoundTrip(req)
+	require.NoError(t, err)
+	require.NoError(t, response.Body.Close())
+	require.Equal(t, "HTTP/2.0", response.Proto)
+	require.Equal(t, int64(0), <-length)
+	require.NoError(t, capture.Verify())
+}

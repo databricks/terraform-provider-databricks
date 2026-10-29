@@ -2,10 +2,12 @@ package terraformtest
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 
@@ -17,6 +19,9 @@ import (
 func refreshRecording(original []byte, d *testDefinition, captured []httpfixture.CapturedStep, n *recordingNormalizer) ([]byte, error) {
 	if len(captured) != len(d.Steps)+1 || captured[len(captured)-1].Label != stepLabel(len(d.Steps), "destroy") {
 		return nil, fmt.Errorf("recording did not complete all steps and mandatory destroy; YAML unchanged")
+	}
+	for _, phase := range captured {
+		redactSecretReads(phase.Calls)
 	}
 	encoded, err := yaml.Marshal(captured)
 	if err != nil {
@@ -53,6 +58,21 @@ func refreshRecording(original []byte, d *testDefinition, captured []httpfixture
 		return nil, fmt.Errorf("refreshed recording is invalid: %w", err)
 	}
 	return out.Bytes(), nil
+}
+
+// Secrets/get uses a generic "value" field rather than a secret-labelled key.
+// Keep its wire encoding valid so provider decoding still runs during replay.
+func redactSecretReads(calls []httpfixture.Call) {
+	for _, call := range calls {
+		if !strings.HasSuffix(call.Request.Path, "/secrets/get") || call.Response.Body == nil {
+			continue
+		}
+		if value, ok := call.Response.Body.JSON.(map[string]any); ok {
+			if _, exists := value["value"]; exists {
+				value["value"] = base64.StdEncoding.EncodeToString([]byte("[REDACTED]"))
+			}
+		}
+	}
 }
 
 func refreshStepCalls(root *yaml.Node, d *testDefinition, captured []httpfixture.CapturedStep) (map[string]any, error) {

@@ -86,8 +86,23 @@ func TestRecordingNormalizesKnownIDsAndRedactsPayloads(t *testing.T) {
 	live, err := n.transform(normalized, true, false)
 	require.NoError(t, err)
 	require.Contains(t, string(live), "workspace_id: 9876543210123456")
+	payload, err := n.transform([]byte("body: {json: {base64: not-a-base64-body, token_value: confidential, accessToken: confidential}}"), false, true)
+	require.NoError(t, err)
+	require.Contains(t, string(payload), "not-a-base64-body")
+	require.NotContains(t, string(payload), "confidential")
 	_, err = newRecordingNormalizer(d, &config.Config{WorkspaceID: "12345"})
 	require.ErrorContains(t, err, "different from the recorder profile")
+}
+
+func TestRecordingRedactsSecretReadResponseValues(t *testing.T) {
+	calls := []httpfixture.Call{{Request: httpfixture.Request{Path: "/api/2.0/secrets/get"},
+		Response: httpfixture.Response{Body: &httpfixture.Body{JSON: map[string]any{"value": "encoded-secret", "key": "test-key"}}}}}
+	redactSecretReads(calls)
+	value := calls[0].Response.Body.JSON.(map[string]any)
+	decoded, err := base64.StdEncoding.DecodeString(value["value"].(string))
+	require.NoError(t, err)
+	require.Equal(t, "[REDACTED]", string(decoded))
+	require.Equal(t, "test-key", value["key"])
 }
 
 // Record against a deterministic local peer, then replay with the peer closed.

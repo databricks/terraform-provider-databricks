@@ -144,15 +144,16 @@ func (n *recordingNormalizer) transform(data []byte, toLive, redact bool) ([]byt
 	if err := yaml.Unmarshal(data, &document); err != nil {
 		return nil, err
 	}
-	if err := n.visit(&document, "", toLive, redact); err != nil {
+	if err := n.visit(&document, "", toLive, redact, false); err != nil {
 		return nil, err
 	}
 	return yaml.Marshal(&document)
 }
 
-func (n *recordingNormalizer) visit(node *yaml.Node, key string, toLive, redact bool) error {
+func (n *recordingNormalizer) visit(node *yaml.Node, key string, toLive, redact, inJSON bool) error {
 	if node.Kind == yaml.ScalarNode {
-		return n.scalar(node, key, toLive, redact)
+		// A JSON property named base64 is ordinary data, not a body selector.
+		return n.scalar(node, key, toLive, redact, key == "base64" && !inJSON)
 	}
 	for i, child := range node.Content {
 		childKey := key
@@ -162,16 +163,16 @@ func (n *recordingNormalizer) visit(node *yaml.Node, key string, toLive, redact 
 			}
 			childKey = node.Content[i-1].Value
 		}
-		if err := n.visit(child, childKey, toLive, redact); err != nil {
+		if err := n.visit(child, childKey, toLive, redact, inJSON || key == "json"); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (n *recordingNormalizer) scalar(node *yaml.Node, key string, toLive, redact bool) error {
+func (n *recordingNormalizer) scalar(node *yaml.Node, key string, toLive, redact, binary bool) error {
 	value := node.Value
-	if key == "base64" {
+	if binary {
 		decoded, err := base64.StdEncoding.DecodeString(value)
 		if err != nil {
 			return err
@@ -183,11 +184,12 @@ func (n *recordingNormalizer) scalar(node *yaml.Node, key string, toLive, redact
 		for _, secret := range n.secrets {
 			value = strings.ReplaceAll(value, secret, "[REDACTED]")
 		}
-		if sensitiveRecordingKey(key) && node.Tag == "!!str" {
+		if sensitiveRecordingKey(key) && node.Tag != "!!null" {
 			value = "[REDACTED]"
+			node.Tag = "!!str"
 		}
 	}
-	if key == "base64" {
+	if binary {
 		value = base64.StdEncoding.EncodeToString([]byte(value))
 	}
 	if node.Tag == "!!int" && node.Value != value {
@@ -202,11 +204,11 @@ func (n *recordingNormalizer) scalar(node *yaml.Node, key string, toLive, redact
 }
 
 func sensitiveRecordingKey(key string) bool {
-	key = strings.ToLower(strings.ReplaceAll(key, "-", "_"))
+	key = strings.ToLower(strings.NewReplacer("-", "", "_", "").Replace(key))
 	switch key {
-	case "authorization", "cookie", "set_cookie", "token", "access_token", "refresh_token", "id_token",
-		"password", "client_secret", "secret", "secret_value", "string_value", "bytes_value", "private_key",
-		"aws_secret_key", "aws_session_token", "azure_client_secret", "gcp_service_account_key":
+	case "authorization", "cookie", "setcookie", "token", "tokenvalue", "accesstoken", "refreshtoken", "idtoken",
+		"password", "clientsecret", "secret", "secretvalue", "stringvalue", "bytesvalue", "privatekey",
+		"secretaccesskey", "awssecretkey", "awssecretaccesskey", "awssessiontoken", "azureclientsecret", "gcpserviceaccountkey":
 		return true
 	}
 	return false

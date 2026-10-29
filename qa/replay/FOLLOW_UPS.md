@@ -17,7 +17,7 @@ distinguished below; not every affected sibling has been executed. Affected scen
 | P6 | Multiple-provider limitation | `internal/acceptance/tf_provider_test.go` tests deferred configuration with an additional noop provider. It is already hermetic, but the YAML runner currently registers only Databricks. | Decide how to retain this existing test in the migration inventory or support its additional provider. Do not replace it with a single-provider scenario. |
 | P7 | Provider/API mismatch | `TestUcAccMetastoreWithOwnerUpdates` changes the metastore name in its third step. The account update model sends owner and sharing settings but has no name field. With a response that preserves the unchanged server name, Terraform reports a nonempty post-apply plan on AWS, Azure, and GCP. | Resolve rename support before copying the full scenario. Do not return an unrequested new name in the response fixture. |
 | P8 | Diagnostic mismatch | `TestAccShare_ProviderConfig_Invalid` expects an integer-validator diagnostic, but the provider now reports a workspace-client validation error that also explains connection IDs. | This share case remains skipped. Both notebook workspace-removal cases have replay copies preserving the original diagnostic; their earlier failures came from incomplete refresh fixtures. |
-| P9 | Routing/plan mismatch | `TestAccShare_ProviderConfig_Recreate` expects a replacement plan when changing to another workspace. Current planning rejects the workspace ID as mismatched first. The catalog counterpart has the same replacement expectation and also remains pending; it has not yet been replayed. | Resolve the intended routing and plan behavior before porting these scenarios. Preserve the original plan assertions until that decision is made. |
+| P9 | Routing/plan mismatch | `TestAccShare_ProviderConfig_Recreate` expects replacement, but planning rejects the changed workspace ID first. The catalog counterpart plans an update instead of its expected replacement, consistent with routing-only update support. | Skip the broken share case for replay migration; leave the original integration test unchanged. Catalog migration remains pending a decision on the replacement assertion. |
 | P10 | SDKv2 schema race | `TestUcAccSchema` creates multiple grants resources. Under `-race`, concurrent `ValidateResourceConfig` calls report writes to the same `AtLeastOneOf` backing slice inside `validateAtLeastOneAttribute` / `removeDuplicates` in the vendored Terraform Plugin SDK. `ResourceGrants` shares this slice across its securable attributes. | Resolve the shared schema slice mutation and replay the unchanged multi-resource scenario under `-race`. Keep its grants/resources independent and leave the source test pending. |
 | P11 | Request determinism risk | `catalog/resource_sql_table.go` serializes properties and options by iterating Go maps into SQL strings. Multiple entries can therefore change order inside the JSON statement value; semantic JSON matching does not normalize SQL. This risk was found by source inspection, without a failing replay reproduction. | Verify deterministic SQL generation or define narrow SQL matching before copying the multi-property/option scenarios. Do not wildcard the entire statement and lose request validation. |
 | P12 | Post-apply plan limitation | `TestAccJobClusterPolicySparkVersion` explicitly allows a nonempty post-apply plan because policy defaults cause permanent drift. YAML's `plan.expect` checks the pre-apply plan and does not relax HashiCorp's post-apply consistency check. | Define support for the original post-apply expectation before porting this case. Do not replace it with a pre-apply nonempty-plan assertion. |
@@ -145,10 +145,11 @@ configuring computed-only attributes.
 P8's two notebook removal cases pass as ordinary expected-error steps. Workspace
 /Me succeeds during refresh using the old workspace's routing header; account
 /Me fails without that header when planning resolves the removed fallback. Both
-retain the original diagnostic and automatic destroy. P9 remains pending: a
-native catalog probe reports update rather than replacement, consistent with
-routing-only update support in PR 5662; the share probe reports a workspace
-mismatch. Neither replacement assertion was changed.
+retain the original diagnostic and automatic destroy. For P9, the broken share
+replacement case is intentionally skipped for migration: planning rejects the
+changed workspace ID. The catalog probe reports update rather than replacement,
+consistent with routing-only update support in PR 5662; its migration remains
+pending. Original integration tests remain unchanged.
 
 ## Provider selection and native Go conversion results
 

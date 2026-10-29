@@ -1,6 +1,6 @@
 # Pending acceptance scenarios
 
-**9 original functions remain pending** in the 545-function baseline. See
+**8 original functions remain pending** in the 545-function baseline. See
 [MIGRATION.md](MIGRATION.md) for counts and [FOLLOW_UPS.md](FOLLOW_UPS.md) for
 blocker details. Original tests remain unchanged.
 
@@ -16,7 +16,6 @@ All five P5 import cases now have replay copies.
 
 | Source | Original function | Blockers | Reason |
 | --- | --- | --- | --- |
-| [catalog/catalog_test.go](../../catalog/catalog_test.go) | `TestAccCatalog_ProviderConfig_Recreate` | P9 | Expects replacement, but current workspace-routing changes produce an update plan. |
 | [catalog/credential_test.go](../../catalog/credential_test.go) | `TestAccCredentialOwner` | P13 | Workspace credential configured without workspace routing. |
 | [internal/acceptance/tf_provider_test.go](../../internal/acceptance/tf_provider_test.go) | `TestAccProviderPlanShouldSucceedWithIncompleteConfiguration` | P6 | Additional noop provider; already hermetic. |
 | [internal/providers/pluginfw/products/sharing/resource_share_acc_test.go](../../internal/providers/pluginfw/products/sharing/resource_share_acc_test.go) | `TestAccShare_ProviderConfig_Invalid` | P8 | Current diagnostic differs from the original expectation. |

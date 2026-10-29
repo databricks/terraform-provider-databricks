@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**536 copied; 9 pending.** Counts refer to original Go test functions, not
+**537 copied; 8 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. Copies preserve provider-owned behavior
 and meaningful assertions. Backend-only persistence checks are omitted; fixture
 requests verify what the provider sends. Unsupported provider behavior remains
@@ -27,7 +27,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [aws/user_role_provider_config_test.go](../../aws/user_role_provider_config_test.go) | 1 | 0 |
 | [aws/user_role_test.go](../../aws/user_role_test.go) | 2 | 0 |
 | [catalog/artifact_allowlist_test.go](../../catalog/artifact_allowlist_test.go) | 1 | 0 |
-| [catalog/catalog_test.go](../../catalog/catalog_test.go) | 9 | 1 |
+| [catalog/catalog_test.go](../../catalog/catalog_test.go) | 10 | 0 |
 | [catalog/connection_test.go](../../catalog/connection_test.go) | 3 | 0 |
 | [catalog/credential_provider_config_test.go](../../catalog/credential_provider_config_test.go) | 2 | 0 |
 | [catalog/credential_test.go](../../catalog/credential_test.go) | 1 | 1 |
@@ -603,3 +603,11 @@ expected errors. The inventory is **536 copied / 9 pending**.
 
 Automatic destroy and Terraform's post-apply empty-plan checks remain enabled.
 The original integration tests are unchanged.
+
+## Catalog workspace-routing plan
+
+The provider-configuration suite now also copies the three-step catalog
+workspace-change scenario. Its final plan expects an in-place update, matching
+metastore-scoped routing support; the old replacement expectation is stale.
+This adds one source function: **537 copied / 8 pending**. The source integration
+test remains unchanged, and cleanup uses the last applied configuration.

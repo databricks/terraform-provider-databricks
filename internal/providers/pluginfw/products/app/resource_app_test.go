@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/apps"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -188,4 +189,25 @@ func TestResourceApp_GitSourceInputOnlySchema(t *testing.T) {
 	branch, ok := gitSource.Attributes["branch"].(schema.StringAttribute)
 	require.True(t, ok, "git_source.branch must be a string attribute")
 	assert.True(t, branch.Optional, "git_source.branch should be settable")
+}
+
+func TestChangedUpdateMask(t *testing.T) {
+	base := apps.App{Description: "a", ComputeSize: apps.ComputeSizeMedium, ComputeMinInstances: 1, ComputeMaxInstances: 1}
+	cases := []struct {
+		name string
+		plan apps.App
+		want []string
+	}{
+		{"no change", base, nil},
+		{"description", apps.App{Description: "b", ComputeSize: apps.ComputeSizeMedium, ComputeMinInstances: 1, ComputeMaxInstances: 1}, []string{"description"}},
+		{"compute size alone", apps.App{Description: "a", ComputeSize: apps.ComputeSizeLarge, ComputeMinInstances: 1, ComputeMaxInstances: 1}, []string{"compute_size"}},
+		// The API requires min and max together, so a change to one masks both.
+		{"max only masks both", apps.App{Description: "a", ComputeSize: apps.ComputeSizeMedium, ComputeMinInstances: 1, ComputeMaxInstances: 2}, []string{"compute_min_instances", "compute_max_instances"}},
+		{"scopes", apps.App{Description: "a", ComputeSize: apps.ComputeSizeMedium, ComputeMinInstances: 1, ComputeMaxInstances: 1, UserApiScopes: []string{"sql"}}, []string{"user_api_scopes"}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, changedUpdateMask(base, tc.plan))
+		})
+	}
 }

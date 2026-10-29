@@ -103,6 +103,8 @@ type SandboxData struct {
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Human-readable display label for the sandbox. At most 256 characters.
 	DisplayName types.String `tfsdk:"display_name"`
+	// Metadata associated with the sandbox.
+	Metadata types.Object `tfsdk:"metadata"`
 	// The sandbox resource name, in the form `sandboxes/{sandbox_id}`. Derived
 	// from `sandbox_id`; any value supplied in a create or update request body
 	// is ignored.
@@ -126,6 +128,7 @@ type SandboxData struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m SandboxData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"metadata":        reflect.TypeOf(sandbox_tf.SandboxMetadata{}),
 		"spec":            reflect.TypeOf(sandbox_tf.SandboxSpec{}),
 		"status":          reflect.TypeOf(sandbox_tf.SandboxStatus{}),
 		"provider_config": reflect.TypeOf(ProviderConfigData{}),
@@ -144,6 +147,7 @@ func (m SandboxData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"create_time":  m.CreateTime,
 			"display_name": m.DisplayName,
+			"metadata":     m.Metadata,
 			"name":         m.Name,
 			"spec":         m.Spec,
 			"status":       m.Status,
@@ -161,6 +165,7 @@ func (m SandboxData) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"create_time":  timetypes.RFC3339{}.Type(ctx),
 			"display_name": types.StringType,
+			"metadata":     sandbox_tf.SandboxMetadata{}.Type(ctx),
 			"name":         types.StringType,
 			"spec":         sandbox_tf.SandboxSpec{}.Type(ctx),
 			"status":       sandbox_tf.SandboxStatus{}.Type(ctx),
@@ -174,6 +179,7 @@ func (m SandboxData) Type(ctx context.Context) attr.Type {
 func (m SandboxData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["display_name"] = attrs["display_name"].SetComputed()
+	attrs["metadata"] = attrs["metadata"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["spec"] = attrs["spec"].SetComputed()
 	attrs["status"] = attrs["status"].SetComputed()

@@ -36,8 +36,8 @@ The following arguments are supported:
 ## Attributes
 The following attributes are exported:
 * `create_time` (string) - The timestamp indicating when the alert was created
-* `custom_description` (string) - Custom description for the alert. support mustache template
-* `custom_summary` (string) - Custom summary for the alert. support mustache template
+* `custom_description` (string) - Custom description for the alert. Interpreted according to `custom_template_format`
+* `custom_summary` (string) - Custom summary for the alert. Interpreted according to `custom_template_format`
 * `custom_template_format` (string) - The format used to interpret the `custom_summary` and `custom_description` templates.
   
   `HTML` treats both templates as HTML with Mustache `{{VARIABLE_NAME}}` placeholders.

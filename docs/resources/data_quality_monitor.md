@@ -16,6 +16,8 @@ For the `table` `object_type`, you must either:
    - **USE_SCHEMA** on the table's parent schema
    - be an owner of the table.
 
+For a `schema` monitor, `anomaly_detection_config.notification_settings` manages the schema's alert, the same alert shown under **Manage alerts** in the Data Quality Monitoring UI. Because the provider updates the whole `anomaly_detection_config`, a monitor without `notification_settings` deletes an alert that was set up in the UI. To stop alerts, remove the `notification_settings` block. Don't set it to an empty value: the API accepts it and deletes the alert, but the apply then fails because the API returns no `notification_settings`.
+
 -> **Note** This resource can only be used with a workspace-level provider!
 
 
@@ -29,6 +31,23 @@ resource "databricks_data_quality_monitor" "this" {
   object_type = "schema"
   object_id = databricks_schema.this.schema_id
   anomaly_detection_config = {}
+}
+```
+
+To alert workspace users or notification destinations when anomaly detection finds unhealthy tables in the schema, set `notification_settings`:
+
+```hcl
+resource "databricks_data_quality_monitor" "with_alerts" {
+  object_type = "schema"
+  object_id = databricks_schema.this.schema_id
+  anomaly_detection_config = {
+    notification_settings = {
+      on_unhealthy_table = {
+        destination_user_ids = ["<user-id>"]
+        destination_ids = ["<notification-destination-id>"]
+      }
+    }
+  }
 }
 ```
 
@@ -55,6 +74,17 @@ The following arguments are supported:
 
 ### AnomalyDetectionConfig
 * `excluded_table_full_names` (list of string, optional) - List of fully qualified table names to exclude from anomaly detection
+* `notification_settings` (NotificationSettings, optional) - Who to alert when anomaly detection finds unhealthy tables in this schema. Applicable to
+  `schema` monitors only. This is the same schema alert you manage from **Manage alerts** in the
+  Data Quality Monitoring UI, so a change made in either place shows in both.
+  
+  Set the recipients in `on_unhealthy_table`; `on_failure` is not supported here. Only
+  `destination_ids` and `destination_user_ids` are supported.
+  
+  On update, an update mask of `*`, `anomaly_detection_config`, or
+  `anomaly_detection_config.notification_settings` replaces the alert's recipients with the ones
+  in the request; omitting the field, or leaving both recipient lists empty, removes the alert.
+  Other masks leave the alert unchanged
 
 ### CronSchedule
 * `quartz_cron_expression` (string, required) - The expression that determines when to run the monitor. See [examples](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)
@@ -102,10 +132,19 @@ The following arguments are supported:
 * `label_column` (string, optional) - Column for the label
 
 ### NotificationDestination
+* `destination_ids` (list of string, optional) - The notification-destination IDs (Slack / Teams / webhook) to send the notification to. The
+  destinations must already exist in the workspace; a workspace admin creates them. A maximum of
+  25 destination IDs is supported.
+  Only supported on schema monitors, via `anomaly_detection_config`; rejected on table monitors
+* `destination_user_ids` (list of integer, optional) - The IDs of the workspace users to notify by email. A maximum of 25 user IDs is supported.
+  Only supported on schema monitors, via `anomaly_detection_config`; rejected on table monitors
 * `email_addresses` (list of string, optional) - The list of email addresses to send the notification to. A maximum of 5 email addresses is supported
 
 ### NotificationSettings
 * `on_failure` (NotificationDestination, optional) - Destinations to send notifications on failure/timeout
+* `on_unhealthy_table` (NotificationDestination, optional) - Recipients to notify when anomaly detection finds unhealthy tables in the schema. Each
+  recipient gets one notification per important unhealthy table. Only supported on schema
+  monitors, via `anomaly_detection_config`
 
 ### TimeSeriesConfig
 * `granularities` (list of string, required) - List of granularities to use when aggregating data into time windows based on their timestamp

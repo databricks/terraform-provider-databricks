@@ -35,7 +35,7 @@ The following arguments are supported:
 ## Attributes
 The following attributes are exported:
 * `display_name` (string) - Display name of the principal
-* `external_id` (string) - The external ID of the principal in Databricks
+* `external_id` (string) - The external ID of the principal in the customer's IdP
 * `group_id` (integer) - The internal ID of the group this member belongs to
 * `membership_source` (string) - The source of group membership (internal or from identity provider). Possible values are: `IDENTITY_PROVIDER`, `INTERNAL`
 * `principal_id` (integer) - Internal ID of the principal in Databricks

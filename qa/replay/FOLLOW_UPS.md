@@ -16,15 +16,15 @@ distinguished below; not every affected sibling has been executed. Affected scen
 | P5 | Resolved | YAML exposes native import with required `persist: true` or `false`, explicit IDs, and optional separate-state verification. | All five source functions have replay copies in [PR 6123](https://github.com/databricks/terraform-provider-databricks/pull/6123): catalog, schema-level connection, app, quality monitor and warehouse permissions. P1 remains tracked independently for concurrent setup. |
 | P6 | Multiple-provider limitation | `internal/acceptance/tf_provider_test.go` tests deferred configuration with an additional noop provider. It is already hermetic, but the YAML runner currently registers only Databricks. | Decide how to retain this existing test in the migration inventory or support its additional provider. Do not replace it with a single-provider scenario. |
 | P7 | Provider/API mismatch | `TestUcAccMetastoreWithOwnerUpdates` changes the metastore name in its third step. The account update model sends owner and sharing settings but has no name field. With a response that preserves the unchanged server name, Terraform reports a nonempty post-apply plan on AWS, Azure, and GCP. | Resolve rename support before copying the full scenario. Do not return an unrequested new name in the response fixture. |
-| P8 | Diagnostic mismatch | `TestMwsAccWorkspaceIDHttp_RemoveDefault` and `TestMwsAccWorkspaceIDHttp_RemoveOverrideNoFallback` expect a missing-workspace diagnostic during planning. The current notebook path instead attempts another workspace import. `TestAccShare_ProviderConfig_Invalid` expects an integer-validator diagnostic, but the provider now reports a workspace-client validation error that also explains connection IDs. | Review the original expectations against current behavior, then preserve the agreed diagnostics in replay. Keep these cases pending rather than accepting any error. |
-| P9 | Routing/plan mismatch | `TestAccShare_ProviderConfig_Recreate` expects a replacement plan when changing to another workspace. Current planning rejects the workspace ID as mismatched first. The catalog counterpart has the same replacement expectation and also remains pending; it has not yet been replayed. | Resolve the intended routing and plan behavior before porting these scenarios. Preserve the original plan assertions until that decision is made. |
+| P8 | Diagnostic mismatch | `TestAccShare_ProviderConfig_Invalid` expects an integer-validator diagnostic, but the provider now reports a workspace-client validation error that also explains connection IDs. | This share case remains skipped. Both notebook workspace-removal cases have replay copies preserving the original diagnostic; their earlier failures came from incomplete refresh fixtures. |
+| P9 | Routing/plan mismatch | `TestAccShare_ProviderConfig_Recreate` expects replacement, but planning rejects the changed workspace ID first. The catalog counterpart plans an update instead of its expected replacement, consistent with routing-only update support. | Skip the broken share case for replay migration; leave the original integration test unchanged. The catalog replay expects the supported in-place update; the original integration test remains unchanged. |
 | P10 | SDKv2 schema race | `TestUcAccSchema` creates multiple grants resources. Under `-race`, concurrent `ValidateResourceConfig` calls report writes to the same `AtLeastOneOf` backing slice inside `validateAtLeastOneAttribute` / `removeDuplicates` in the vendored Terraform Plugin SDK. `ResourceGrants` shares this slice across its securable attributes. | Resolve the shared schema slice mutation and replay the unchanged multi-resource scenario under `-race`. Keep its grants/resources independent and leave the source test pending. |
 | P11 | Request determinism risk | `catalog/resource_sql_table.go` serializes properties and options by iterating Go maps into SQL strings. Multiple entries can therefore change order inside the JSON statement value; semantic JSON matching does not normalize SQL. This risk was found by source inspection, without a failing replay reproduction. | Verify deterministic SQL generation or define narrow SQL matching before copying the multi-property/option scenarios. Do not wildcard the entire statement and lose request validation. |
 | P12 | Post-apply plan limitation | `TestAccJobClusterPolicySparkVersion` explicitly allows a nonempty post-apply plan because policy defaults cause permanent drift. YAML's `plan.expect` checks the pre-apply plan and does not relax HashiCorp's post-apply consistency check. | Define support for the original post-apply expectation before porting this case. Do not replace it with a pre-apply nonempty-plan assertion. |
 | P13 | Account/workspace routing | `TestAccCredentialOwner` configures a workspace-level service credential from `UnityAccountLevel` without a workspace ID. Offline replay fails with `managing a workspace-level resource requires a workspace_id, but none was found`. | Establish the original scenario's intended workspace routing before porting it. Do not invent a workspace configuration just to make replay pass. |
 | P14 | Provisioning-state read | `TestMwsAccGcpWorkspacesProvisioningToRunning` and `TestMwsAccGcpWorkspacesUnsetExpectedState` cannot finish their first step with a realistic response that omits input-only `expected_workspace_status`. Replay stalls in `ResourceMwsWorkspaces` Read at `WaitForExpectedStatus` while the fixture remains `PROVISIONING`; Read maps the API response into state before retrieving the configured expected status. | Preserve the configured input-only status through Read, then port both full transitions. Do not echo the Terraform-only expected status in API responses to conceal the problem. |
 | P15 | Acceptance/schema mismatch | `TestMwsAccNccPrivateEndpointRule_NoSpuriousAccountIdDrift` configures `account_id` on the endpoint rule in its first step. The current replay provider rejects it as an unconfigurable attribute on both AWS and Azure, before any HTTP call. | Reconcile the original scenario with the intended provider implementation/schema before copying it. Removing the first-step field would remove the regression's precondition. |
-| P16 | Provider-selection limitation | Share, quality-monitor, and private-endpoint migration cases select SDKv2/Plugin Framework factories per step; the endpoint-rule opt-in test also requires a specific factory. YAML replay uses the production mux without these per-step overrides. | Support faithful provider selection before copying these cases. Replaying both steps through the same implementation would omit the migration under test. |
+| P16 | Resolved | YAML `provider_implementations` selects SDKv2 or Plugin Framework per resource type and step without changing process-wide rollout settings. | Share, quality-monitor, and private-endpoint migration/opt-in cases use ordinary YAML discovery, with cleanup retaining the state-owning selection. |
 
 | P17 | Inventory exception | `TestAccessControlHashFunction` is a local unit test included by the broad AST inventory because its name begins with `TestAcc`. It tests an unexported hash helper, not an HTTP lifecycle. | Keep its existing hermetic test and resolve the inventory classification separately; no replay-engine feature is needed. |
 | P18 | Source-test inconsistency | Both user-list-with-groups tests create a `tf-…@databricks.com` user but query `userName eq "me-…@example.com"`, then expect the created user's membership. The NCC-list test configures nonexistent plural resource `databricks_mws_network_connectivity_configs` while referencing the singular resource. | Reconcile source intent before copying. Do not return a user that contradicts the requested equality filter or silently repair the source HCL and count it as unchanged coverage. |
@@ -142,10 +142,28 @@ P12 uses a convergent API response and does not assert permanent drift. P15 uses
 Terraform-generated checkpoints with server-populated account IDs instead of
 configuring computed-only attributes.
 
-P8's two notebook removal attempts remain pending. The workspace-only /Me error
-is handled as a missing resource during refresh, so Terraform attempts a notebook
-import before the expected missing-workspace planning diagnostic. The strict
-probe did not pass; no broad error matcher or fabricated success response was
-committed. P9 remains pending: a native catalog probe reports update rather than
-replacement, consistent with routing-only update support in PR 5662; the share
-probe reports a workspace mismatch. Neither replacement assertion was changed.
+P8's two notebook removal cases pass as ordinary expected-error steps. Workspace
+/Me succeeds during refresh using the old workspace's routing header; account
+/Me fails without that header when planning resolves the removed fallback. Both
+retain the original diagnostic and automatic destroy. For P9, the broken share
+replacement case is intentionally skipped for migration: planning rejects the
+changed workspace ID. The catalog probe reports update rather than replacement,
+consistent with routing-only update support in PR 5662. Its YAML replay now
+asserts that update plan. Original integration tests remain unchanged.
+
+## Provider selection and native Go conversion results
+
+P16 and P20 now have replay copies. YAML migration tests select per-step
+implementations, retain shared Terraform state and verify imports/no-op plans.
+Workspace-token cases use an explicit local-only alias in their Go transport, without adding
+host substitution or multiple-host features to YAML. The previously skipped
+AWS identity-switch scenario also has a five-step replay; fixed test credentials
+exercise provider token handling without OAuth propagation waits. No provider
+bug fixes are included in this batch.
+
+## SQL request determinism
+
+P11 is addressed in the SQL-table migration batch. SQL rendering sorts property,
+option and removed-property keys; multi-column removals use source column order.
+All 16 formerly pending SQL-table functions now have strict replay copies with
+exact statement matching. The unit tests assert the ordering directly.

@@ -61,7 +61,7 @@ func TestStepFilesPersistAndCanBeReplaced(t *testing.T) {
 		{fileContents: map[string][]byte{"script.py": []byte("# comment\n"), "data.json": []byte("{}")}},
 		{fileContents: map[string][]byte{"script.py": []byte("# updated\n")}},
 	}}
-	testCase := resource.TestCase{ProtoV6ProviderFactories: providerFactories("http://127.0.0.1"), Steps: []resource.TestStep{
+	testCase := resource.TestCase{ProtoV6ProviderFactories: ProviderFactories(fixtureConfig("http://127.0.0.1")), Steps: []resource.TestStep{
 		{Config: `provider "databricks" {}`},
 		{Config: `provider "databricks" {}`},
 		{Config: `provider "databricks" {}`, Destroy: true},
@@ -92,7 +92,7 @@ func TestFilesPreserveInitialCheckpoint(t *testing.T) {
 	d, err := loadDefinition("testdata/initial_state/group_update.yaml")
 	require.NoError(t, err)
 	d.Steps[0].fileContents = map[string][]byte{"script.py": []byte("# comment\n")}
-	testCase := resource.TestCase{ProtoV6ProviderFactories: providerFactories("http://127.0.0.1"), Steps: []resource.TestStep{
+	testCase := resource.TestCase{ProtoV6ProviderFactories: ProviderFactories(fixtureConfig("http://127.0.0.1")), Steps: []resource.TestStep{
 		{Config: d.Steps[0].Config},
 		{Config: d.Steps[0].Config, Destroy: true},
 	}}

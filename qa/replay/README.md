@@ -83,9 +83,9 @@ account-provider/workspace-entitlements regression. That success case uses
 step-local metadata fixtures for the account and derived workspace clients.
 The workspace-routing suite copies directory, app, tag-policy, and notebook
 cases, including defaults, overrides, host transitions, and replacement plans.
-The raw-HTTP notebook cases use inline base64 content. Two notebook removal
-scenarios remain pending because their expected diagnostics differ from current
-provider behavior; see P8 in the follow-up list.
+The raw-HTTP notebook cases use inline base64 content. Workspace-removal cases
+refresh through the workspace saved in state, then retain the expected planning
+error when the account provider has no workspace fallback.
 
 Account provisioning, Unity Catalog, sharing, and MLflow each have resource suites
 with related data-source cases. Resource-carried configuration checks stay in

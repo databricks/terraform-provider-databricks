@@ -312,3 +312,18 @@ handle environment and initial-state templates with separate cleanup ownership.
 The repository ignores `*.tfstate` by default to protect ordinary local state.
 After reviewing a fixture for secrets, add that exact checkpoint explicitly with
 `git add -f path/to/checkpoint.tfstate`; do not relax the global ignore rule.
+
+## Native Go checks and provider selection
+
+Use YAML for ordinary lifecycles. For a case that needs per-step provider
+factories or a Go check, `RunNative(t, path, configure)` loads one fixture file
+and lets Go customize its HashiCorp `resource.TestCase` before execution. It
+supplies a config customizer that retains the runner's local HTTP boundary and
+isolated authentication. Apply it to every custom provider and SDK client;
+keep the generated step and cleanup hooks so fixtures are verified and destroy
+still requires empty state.
+
+See `qa/replay/features/provider_migration/replay_test.go` for factory switches
+and `qa/replay/resources/mws_workspaces/native_test.go` for SDK checks and an
+explicit local workspace-host alias. Native fixture files are registered by
+their Go wrappers; do not also discover them through the ordinary YAML wrapper.

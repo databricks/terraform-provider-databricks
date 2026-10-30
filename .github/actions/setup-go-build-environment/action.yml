@@ -9,7 +9,7 @@ inputs:
     description: "Path to go.mod to read Go version from (mutually exclusive with go-version)"
     required: false
   go-cache:
-    description: "Enable Go module caching in setup-go"
+    description: "Enable setup-go caching of both modules and builds"
     required: false
     default: "true"
   cache-dependency-path:
@@ -55,18 +55,18 @@ runs:
       shell: bash
       run: jf goc --repo-resolve=db-golang
 
-    # Without OIDC access a run cannot authenticate to JFrog. Restore the module
-    # cache pre-warmed by the "Warm Go Cache" workflow and resolve modules from
-    # it offline through Go's file:// proxy.
+    # Forks need these modules to run offline. Jobs with a separate build
+    # cache also reuse them without restoring setup-go's ordinary build cache;
+    # authenticated jobs can still fetch missing modules through JFrog.
     - name: Compute pre-warmed cache key (cached)
-      if: inputs.use-cache == 'true'
+      if: inputs.use-cache == 'true' || inputs.go-cache == 'false'
       id: modcache
       shell: bash
       run: |
         echo "prefix=go-modules-${{ runner.os }}-${{ hashFiles('go.sum') }}" >> "$GITHUB_OUTPUT"
 
     - name: Restore pre-warmed Go module cache (cached)
-      if: inputs.use-cache == 'true'
+      if: inputs.use-cache == 'true' || inputs.go-cache == 'false'
       uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: ~/go/pkg/mod/cache/download

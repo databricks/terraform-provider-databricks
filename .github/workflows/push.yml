@@ -11,13 +11,19 @@ jobs:
     name: ${{ matrix.suite }} (${{ matrix.shard }})
     strategy:
       fail-fast: false
-      max-parallel: 10
+      max-parallel: 13
       matrix:
         include:
           - suite: lint
             shard: all
           - suite: unit
-            shard: all
+            shard: 1
+          - suite: unit
+            shard: 2
+          - suite: unit
+            shard: 3
+          - suite: unit
+            shard: 4
           - suite: replay
             shard: 1
           - suite: replay
@@ -107,7 +113,7 @@ jobs:
         env:
           SUITE: ${{ matrix.suite }}
           SHARD: ${{ matrix.shard }}
-          SHARD_COUNT: '8'
+          SHARD_COUNT: ${{ matrix.suite == 'unit' && '4' || '8' }}
         run: |
           # Each job independently computes the same balanced partition.
           python3 .github/scripts/select_test_packages.py "$SUITE" \

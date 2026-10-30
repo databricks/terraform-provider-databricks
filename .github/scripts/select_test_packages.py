@@ -27,6 +27,12 @@ def replay_weight(directory):
     return max(1, count)
 
 
+def unit_weight(directory):
+    # Compilation dominates unit CI; source size also accounts for generated
+    # packages without tests, which must remain in the coverage report.
+    return max(1, sum(path.stat().st_size for path in Path(directory).glob("*.go")))
+
+
 def select_packages(packages, suite, shard, shard_count):
     unit_packages = []
     replay_packages = []
@@ -35,14 +41,11 @@ def select_packages(packages, suite, shard, shard_count):
             replay_packages.append((import_path, directory))
         else:
             # Keep replay helper packages without tests in the normal coverage report.
-            unit_packages.append(import_path)
+            unit_packages.append((import_path, directory))
 
-    if suite == "unit":
-        return unit_packages
-
-    weighted = [
-        (replay_weight(directory), name) for name, directory in replay_packages
-    ]
+    candidates = unit_packages if suite == "unit" else replay_packages
+    weight_for = unit_weight if suite == "unit" else replay_weight
+    weighted = [(weight_for(directory), name) for name, directory in candidates]
     groups = [[] for _ in range(shard_count)]
     loads = [0] * shard_count
     # Largest suites go first to avoid concentrating expensive packages in one job.
@@ -54,7 +57,7 @@ def select_packages(packages, suite, shard, shard_count):
 
     selected = groups[shard - 1]
     print(
-        f"Replay shard {shard}: {len(selected)} packages, weight {loads[shard - 1]}",
+        f"{suite.title()} shard {shard}: {len(selected)} packages, weight {loads[shard - 1]}",
         file=sys.stderr,
     )
     return selected
@@ -63,23 +66,15 @@ def select_packages(packages, suite, shard, shard_count):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("suite", choices=("unit", "replay"))
-    parser.add_argument(
-        "--shard", default="1", help="1-based replay shard; ignored for unit"
-    )
-    parser.add_argument("--shard-count", type=int, default=8)
+    parser.add_argument("--shard", type=int, default=1, help="1-based shard")
+    parser.add_argument("--shard-count", type=int, required=True)
     args = parser.parse_args()
     if args.shard_count < 1:
         parser.error("shard count must be positive")
-    shard = 1
-    if args.suite == "replay":
-        try:
-            shard = int(args.shard)
-        except ValueError:
-            parser.error("replay shard must be an integer")
-        if not 1 <= shard <= args.shard_count:
-            parser.error("replay shard must be between 1 and shard count")
+    if not 1 <= args.shard <= args.shard_count:
+        parser.error("shard must be between 1 and shard count")
 
-    selected = select_packages(load_packages(), args.suite, shard, args.shard_count)
+    selected = select_packages(load_packages(), args.suite, args.shard, args.shard_count)
     # Empty arguments would make `go test` run only the repository root package.
     if not selected:
         parser.exit(1, f"No packages selected for {args.suite} shard {args.shard}\n")

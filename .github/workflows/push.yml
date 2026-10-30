@@ -42,6 +42,9 @@ jobs:
         with:
           go-version-file: go.mod
           use-cache: ${{ steps.proxy-check.outputs.use_cache }}
+          # Test builds use the refreshed cache below; lint-only matrix jobs
+          # keep setup-go's ordinary build cache.
+          go-cache: ${{ matrix.suite == 'lint' }}
 
       - name: Pull external libraries
         shell: bash
@@ -63,6 +66,10 @@ jobs:
           echo "GOPROXY=file://$(go env GOMODCACHE)/cache/download" >> $GITHUB_ENV
           echo "GONOSUMCHECK=*" >> $GITHUB_ENV
           echo "GONOSUMDB=*" >> $GITHUB_ENV
+
+      - name: Restore test build cache
+        if: matrix.suite != 'lint'
+        uses: ./.github/actions/restore-go-test-build-cache
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1 # v2.0.3

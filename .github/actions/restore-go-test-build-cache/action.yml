@@ -1,0 +1,36 @@
+name: Restore Go test build cache
+description: Restore coverage-enabled test builds warmed on the default branch
+
+outputs:
+  path:
+    description: Go build cache directory
+    value: ${{ steps.cache-key.outputs.path }}
+  key:
+    description: Cache key for this commit
+    value: ${{ steps.restore.outputs.cache-primary-key }}
+  cache-hit:
+    description: Whether the cache exactly matches this commit
+    value: ${{ steps.restore.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - name: Compute test build cache key
+      id: cache-key
+      shell: bash
+      env:
+        DEPENDENCY_HASH: ${{ hashFiles('go.sum') }}
+      run: |
+        echo "path=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
+        echo "prefix=go-test-build-v1-${RUNNER_OS}-${RUNNER_ARCH}-${ImageOS}-$(go env GOVERSION)-${DEPENDENCY_HASH}-" >> "$GITHUB_OUTPUT"
+
+    # A source commit suffix lets the main-branch warmer replace old builds
+    # without changing dependencies. PRs only restore; shards cannot save an
+    # incomplete cache or compete with CodeQL's non-coverage build cache.
+    - name: Restore test builds
+      id: restore
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ${{ steps.cache-key.outputs.path }}
+        key: ${{ steps.cache-key.outputs.prefix }}${{ github.sha }}
+        restore-keys: ${{ steps.cache-key.outputs.prefix }}

@@ -1,6 +1,8 @@
 name: Warm Go Cache
 
-# Pre-warms the Go module cache using JFrog as the module proxy.
+# Pre-warms modules using JFrog and coverage-enabled test builds from main.
+# The build cache uses commit-specific keys and is only written here, so PR
+# jobs can reuse recent test builds instead of CodeQL's non-coverage builds.
 #
 # Fork PRs cannot mint OIDC tokens, so they cannot authenticate to JFrog.
 # Instead, the tests workflow restores the cache saved here and resolves
@@ -23,6 +25,11 @@ on:
     paths:
       - go.mod
       - go.sum
+      - '**/*.go'
+      - Makefile
+      - .github/actions/setup-go-build-environment/**
+      - .github/actions/restore-go-test-build-cache/**
+      - .github/workflows/push.yml
       - .github/workflows/warm-go-cache.yml
   schedule:
     - cron: "0 6 * * *" # Daily; GitHub evicts caches not accessed for 7 days
@@ -111,3 +118,51 @@ jobs:
         with:
           path: ~/go/pkg/mod/cache/download
           key: ${{ steps.cache-key.outputs.key }}
+
+  warm-test-build-cache:
+    # Fork manifest warming must never compile PR-selected dependencies into
+    # the default branch's shared test build cache.
+    if: github.ref == 'refs/heads/main' && inputs.pr_number == ''
+    needs: warm-cache
+    runs-on:
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Go build environment
+        uses: ./.github/actions/setup-go-build-environment
+        with:
+          go-version-file: go.mod
+          # Test builds use their own cache, separate from CodeQL and releases.
+          go-cache: "false"
+
+      - name: Pull external libraries
+        shell: bash
+        run: |
+          jf go mod vendor
+          echo "GOPROXY=file://$(go env GOMODCACHE)/cache/download" >> "$GITHUB_ENV"
+          echo "GONOSUMCHECK=*" >> "$GITHUB_ENV"
+          echo "GONOSUMDB=*" >> "$GITHUB_ENV"
+
+      - name: Restore test build cache
+        id: test-cache
+        uses: ./.github/actions/restore-go-test-build-cache
+
+      - name: Compile coverage-enabled tests
+        if: steps.test-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          # Match CI's coverage instrumentation, but run no test bodies. This
+          # includes replay binaries without needing Terraform or credentials.
+          go tool gotestsum --format pkgname --raw-command \
+            go test -json -short -run '^$' -coverprofile="$RUNNER_TEMP/coverage.txt" ./...
+
+      - name: Save test build cache
+        if: steps.test-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.test-cache.outputs.path }}
+          key: ${{ steps.test-cache.outputs.key }}

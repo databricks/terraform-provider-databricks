@@ -7,7 +7,33 @@ on:
     types: [checks_requested]
 
 jobs:
-  tests:
+  test-suites:
+    name: ${{ matrix.suite }} (${{ matrix.shard }})
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        include:
+          - suite: lint
+            shard: all
+          - suite: unit
+            shard: all
+          - suite: replay
+            shard: 1
+          - suite: replay
+            shard: 2
+          - suite: replay
+            shard: 3
+          - suite: replay
+            shard: 4
+          - suite: replay
+            shard: 5
+          - suite: replay
+            shard: 6
+          - suite: replay
+            shard: 7
+          - suite: replay
+            shard: 8
     runs-on:
       group: databricks-protected-runner-group
       labels: linux-ubuntu-latest
@@ -65,12 +91,64 @@ jobs:
           echo "GONOSUMDB=*" >> $GITHUB_ENV
 
       - name: Setup Terraform
+        if: matrix.suite != 'lint'
         uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1 # v2.0.3
         with:
           terraform_version: 1.13.5
           terraform_wrapper: false
 
+      - name: Run lint
+        if: matrix.suite == 'lint'
+        run: make lint
+
+      - name: Select test packages
+        if: matrix.suite != 'lint'
+        shell: bash
+        env:
+          SUITE: ${{ matrix.suite }}
+          SHARD: ${{ matrix.shard }}
+          SHARD_COUNT: '8'
+        run: |
+          go list -f '{{.ImportPath}} {{if or .TestGoFiles .XTestGoFiles}}test{{else}}none{{end}} {{.Dir}}' ./... > "$RUNNER_TEMP/go-packages.txt"
+          if [ "$SUITE" = unit ]; then
+            # Keep replay helper packages without tests in the normal coverage report.
+            awk '$1 !~ /\/qa\/replay\// || $2 != "test" { print $1 }' \
+              "$RUNNER_TEMP/go-packages.txt" > "$RUNNER_TEMP/test-packages.txt"
+          else
+            while read -r package has_tests directory; do
+              [[ "$package" == */qa/replay/* && "$has_tests" == test ]] || continue
+              weight=$(find "$directory" -maxdepth 2 -path "$directory/testdata/*" \
+                -type f \( -name '*.yaml' -o -name '*.yml' \) -printf '.' | wc -c)
+              if [ "$weight" -lt 1 ]; then
+                weight=1
+              fi
+              printf '%s %s\n' "$weight" "$package"
+            done < "$RUNNER_TEMP/go-packages.txt" > "$RUNNER_TEMP/replay-weights.txt"
+
+            # Largest suites go first; assign each to the least-loaded shard.
+            LC_ALL=C sort -k1,1nr -k2,2 "$RUNNER_TEMP/replay-weights.txt" |
+              awk -v shard="$SHARD" -v count="$SHARD_COUNT" '
+                {
+                  selected = 1
+                  for (i = 2; i <= count; i++)
+                    if (load[i] < load[selected]) selected = i
+                  load[selected] += $1
+                  packages[selected]++
+                  if (selected == shard) print $2
+                }
+                END {
+                  printf "Replay shard %d: %d packages, weight %d\n", shard, packages[shard], load[shard] > "/dev/stderr"
+                }
+              ' > "$RUNNER_TEMP/test-packages.txt"
+          fi
+          if [ ! -s "$RUNNER_TEMP/test-packages.txt" ]; then
+            echo "No packages selected for $SUITE shard $SHARD"
+            exit 1
+          fi
+          echo "Selected $(wc -l < "$RUNNER_TEMP/test-packages.txt") packages; available CPUs: $(nproc)"
+
       - name: Run tests
+        if: matrix.suite != 'lint'
         shell: bash
         run: |
           # Unset OIDC token env vars injected by the id-token: write permission.
@@ -78,14 +156,28 @@ jobs:
           # which interferes with the test suite.
           unset ACTIONS_ID_TOKEN_REQUEST_URL
           unset ACTIONS_ID_TOKEN_REQUEST_TOKEN
-          make test
+          mapfile -t packages < "$RUNNER_TEMP/test-packages.txt"
+          go tool gotestsum --format pkgname-and-test-fails --no-summary=skipped --raw-command \
+            go test -v -json -short -coverprofile=coverage.txt "${packages[@]}"
 
       - name: Publish test coverage
         # No CODECOV_TOKEN on fork/Dependabot runs; skip the upload.
-        if: steps.proxy-check.outputs.use_cache != 'true'
+        if: matrix.suite != 'lint' && steps.proxy-check.outputs.use_cache != 'true'
         uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
+        with:
+          files: coverage.txt
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  tests:
+    if: always()
+    needs: [test-suites]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check test suite results
+        env:
+          SUITES_RESULT: ${{ needs.test-suites.result }}
+        run: test "$SUITES_RESULT" = success
 
   fmt:
     runs-on: ubuntu-latest

@@ -3,6 +3,9 @@ default: build
 # Use the Go version from go.mod so formatting and linting match CI on any machine.
 export GOTOOLCHAIN := go$(shell awk '/^go /{print $$2}' go.mod)
 
+# Leave empty to retain Go's default package concurrency for local runs.
+TEST_PACKAGE_PARALLELISM ?=
+
 fmt:
 	@echo "✓ Formatting source code with goimports ..."
 	@go tool goimports -w $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./.git/*")
@@ -22,7 +25,7 @@ lint: vendor
 
 test: lint
 	@echo "✓ Running tests ..."
-	@go tool gotestsum --format pkgname-and-test-fails --no-summary=skipped --raw-command go test -v -json -short -coverprofile=coverage.txt ./...
+	@go tool gotestsum --format pkgname-and-test-fails --no-summary=skipped --raw-command go test $(if $(TEST_PACKAGE_PARALLELISM),-p $(TEST_PACKAGE_PARALLELISM)) -v -json -short -coverprofile=coverage.txt ./...
 
 coverage: test
 	@echo "✓ Opening coverage for unit tests ..."

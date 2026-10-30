@@ -72,12 +72,15 @@ jobs:
 
       - name: Run tests
         shell: bash
+        env:
+          TEST_PACKAGE_PARALLELISM: '8'
         run: |
           # Unset OIDC token env vars injected by the id-token: write permission.
           # The Terraform provider detects these and attempts GitHub OIDC auth,
           # which interferes with the test suite.
           unset ACTIONS_ID_TOKEN_REQUEST_URL
           unset ACTIONS_ID_TOKEN_REQUEST_TOKEN
+          echo "Available CPUs: $(nproc); package concurrency: $TEST_PACKAGE_PARALLELISM"
           make test
 
       - name: Publish test coverage

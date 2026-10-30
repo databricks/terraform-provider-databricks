@@ -179,6 +179,8 @@ The following arguments are available:
 
 ### alert_configurations Configuration Block (Required)
 
+Alerts are matched by content, so the order of alerts, actions, and principal overrides in the configuration doesn't matter. Changing an alert replaces it with a new alert.
+
 * `time_period` - (Required, String Enum) The time window of usage data for the budget. (Enum: `MONTH`)
 * `trigger_type` - (Required, String Enum) The evaluation method to determine when this budget alert is in a triggered state. (Enum: `CUMULATIVE_SPENDING_EXCEEDED`)
 * `quantity_type` - (Required, String Enum) The way to calculate cost for this budget alert. This is what quantity_threshold is measured in. (Enum: `LIST_PRICE_DOLLARS_USD`)

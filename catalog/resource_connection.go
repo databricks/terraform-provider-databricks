@@ -17,6 +17,15 @@ var sensitiveOptions = []string{"user", "password", "personalAccessToken", "acce
 
 var computedOptions = []string{"pem_private_key_expiration_epoch_sec", "access_token_expiration"}
 
+// suppressSecretNameCase ignores case-only differences in secret names, which UC stores
+// lowercased. The map's element count is left alone so an unknown map stays unknown.
+func suppressSecretNameCase(k, old, new string, d *schema.ResourceData) bool {
+	if strings.HasSuffix(k, ".%") {
+		return false
+	}
+	return common.EqualFoldDiffSuppress(k, old, new, d)
+}
+
 func suppressComputedFields(k, old, new string, d *schema.ResourceData) bool {
 	for _, option := range computedOptions {
 		if k == "options."+option {
@@ -77,6 +86,7 @@ func ResourceConnection() common.Resource {
 			// Suppress case-only diffs (UC identifiers are case-insensitive) so a case difference
 			// does not trigger a spurious ForceNew recreate; validate the format at plan time.
 			common.CustomizeSchemaPath(m, "parent").SetCustomSuppressDiff(common.EqualFoldDiffSuppress).SetValidateFunc(validateConnectionParent)
+			common.CustomizeSchemaPath(m, "secrets").SetCustomSuppressDiff(suppressSecretNameCase)
 			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})

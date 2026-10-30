@@ -39,7 +39,7 @@ The following arguments are supported:
 * `max_num_clusters` - Maximum number of clusters available when a SQL warehouse is running. Defaults to `1`. Must be `1` for REALTIME warehouses.
 * `max_dbu` - (Optional, REALTIME only) Maximum compute capacity in DBU/hour. Must be a positive integer; the server enforces capacity limits. Omit to preserve the server value; `0` cannot clear it.
 * `auto_stop_mins` - Idle minutes before the warehouse stops. Defaults to `120` for PRO/CLASSIC and `10` for REALTIME. Use `0` to disable autostop. REALTIME requires `0` or at least `5`.
-* `statement_timeout` - (Optional, REALTIME only) Statement timeout in seconds: a nonnegative integer. Omit to preserve the server setting; Terraform supplies no default. Use `0` to clear the warehouse override and use the runtime fallback.
+* `statement_timeout` - (Optional) Statement timeout in seconds: a nonnegative integer. Omit to preserve the server setting; Terraform supplies no default. Use `0` to clear the warehouse override and use the runtime fallback.
 * `tags` - Databricks tags all endpoint resources with these tags.
 * `spot_instance_policy` - The spot policy to use for allocating instances to clusters: `COST_OPTIMIZED` or `RELIABILITY_OPTIMIZED`. Defaults to `COST_OPTIMIZED`, the only accepted value for REALTIME.
 * `enable_photon` - Whether to enable [Photon](https://databricks.com/product/delta-engine). Enabled by default. Must be `true` for REALTIME.

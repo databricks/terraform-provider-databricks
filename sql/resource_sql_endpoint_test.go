@@ -614,12 +614,10 @@ func TestResourceSQLEndpointRealtimeFieldValidation(t *testing.T) {
 		assert.True(t, ResourceSqlEndpoint().ToResource().Validate(config).HasError(), "max_dbu=%v", value)
 	}
 	for _, warehouseType := range []string{"PRO", "CLASSIC"} {
-		for _, field := range []string{"max_dbu", "statement_timeout"} {
-			qa.ResourceFixture{
-				Resource: ResourceSqlEndpoint(), Create: true,
-				State: map[string]any{"name": "foo", "cluster_size": "Small", "warehouse_type": warehouseType, field: 96},
-			}.ExpectError(t, field+" is only supported for REALTIME warehouses")
-		}
+		qa.ResourceFixture{
+			Resource: ResourceSqlEndpoint(), Create: true,
+			State: map[string]any{"name": "foo", "cluster_size": "Small", "warehouse_type": warehouseType, "max_dbu": 96},
+		}.ExpectError(t, "max_dbu is only supported for REALTIME warehouses")
 	}
 }
 

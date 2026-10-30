@@ -109,42 +109,9 @@ jobs:
           SHARD: ${{ matrix.shard }}
           SHARD_COUNT: '8'
         run: |
-          go list -f '{{.ImportPath}} {{if or .TestGoFiles .XTestGoFiles}}test{{else}}none{{end}} {{.Dir}}' ./... > "$RUNNER_TEMP/go-packages.txt"
-          if [ "$SUITE" = unit ]; then
-            # Keep replay helper packages without tests in the normal coverage report.
-            awk '$1 !~ /\/qa\/replay\// || $2 != "test" { print $1 }' \
-              "$RUNNER_TEMP/go-packages.txt" > "$RUNNER_TEMP/test-packages.txt"
-          else
-            while read -r package has_tests directory; do
-              [[ "$package" == */qa/replay/* && "$has_tests" == test ]] || continue
-              weight=$(find "$directory" -maxdepth 2 -path "$directory/testdata/*" \
-                -type f \( -name '*.yaml' -o -name '*.yml' \) -printf '.' | wc -c)
-              if [ "$weight" -lt 1 ]; then
-                weight=1
-              fi
-              printf '%s %s\n' "$weight" "$package"
-            done < "$RUNNER_TEMP/go-packages.txt" > "$RUNNER_TEMP/replay-weights.txt"
-
-            # Largest suites go first; assign each to the least-loaded shard.
-            LC_ALL=C sort -k1,1nr -k2,2 "$RUNNER_TEMP/replay-weights.txt" |
-              awk -v shard="$SHARD" -v count="$SHARD_COUNT" '
-                {
-                  selected = 1
-                  for (i = 2; i <= count; i++)
-                    if (load[i] < load[selected]) selected = i
-                  load[selected] += $1
-                  packages[selected]++
-                  if (selected == shard) print $2
-                }
-                END {
-                  printf "Replay shard %d: %d packages, weight %d\n", shard, packages[shard], load[shard] > "/dev/stderr"
-                }
-              ' > "$RUNNER_TEMP/test-packages.txt"
-          fi
-          if [ ! -s "$RUNNER_TEMP/test-packages.txt" ]; then
-            echo "No packages selected for $SUITE shard $SHARD"
-            exit 1
-          fi
+          # Each job independently computes the same balanced partition.
+          python3 .github/scripts/select_test_packages.py "$SUITE" \
+            --shard "$SHARD" --shard-count "$SHARD_COUNT" > "$RUNNER_TEMP/test-packages.txt"
           echo "Selected $(wc -l < "$RUNNER_TEMP/test-packages.txt") packages; available CPUs: $(nproc)"
 
       - name: Run tests

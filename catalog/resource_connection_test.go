@@ -1,15 +1,18 @@
 package catalog
 
 import (
+	"fmt"
 	"net/http"
+	"reflect"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestConnectionsCornerCases(t *testing.T) {
@@ -697,4 +700,210 @@ func TestConnectionsRead_SchemaLevelReconstructsParent(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "schemas/main.default", d.Get("parent"), "parent must be reconstructed from full_name on read")
+}
+
+func TestParseWriteOnlyOptions(t *testing.T) {
+	opts, err := parseWriteOnlyOptions(`{"user":"u","password":"p"}`)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]string{"user": "u", "password": "p"}, opts)
+
+	_, err = parseWriteOnlyOptions(`{"password":"s3cr3t`)
+	assert.ErrorContains(t, err, "must be a JSON-encoded object with string values")
+	assert.NotContains(t, err.Error(), "s3cr3t")
+
+	for _, key := range []string{"pem_key_passphrase", "userProvidedServerCertificate", "client_private_key",
+		"client_certificate", "ssl_key", "kafka.ssl.keystore.password", "kafka.ssl.truststore.location",
+		"ssl_keystore_key", "ssl_key_password", "ssl_keystore_certificate_chain", "ssl_truststore_certificates",
+		"schema_registry_api_key", "schema_registry_api_secret"} {
+		_, err = parseWriteOnlyOptions(fmt.Sprintf(`{%q:"value"}`, key))
+		assert.NoError(t, err, key)
+	}
+
+	for _, key := range []string{"host", "port", "base_path", "bootstrap_servers", "schema_registry_url"} {
+		_, err = parseWriteOnlyOptions(fmt.Sprintf(`{%q:"value"}`, key))
+		assert.ErrorContains(t, err, fmt.Sprintf(`option %q is not supported in `, key)+"`options_wo`")
+	}
+}
+
+func expectConnectionOptions(name string, options map[string]string) func(catalog.CreateConnection) bool {
+	return func(req catalog.CreateConnection) bool {
+		return req.Name == name && reflect.DeepEqual(req.Options, options)
+	}
+}
+
+func TestConnectionsCreate_WriteOnlyOptions(t *testing.T) {
+	connInfo := &catalog.ConnectionInfo{
+		Name:           "testConnectionName",
+		ConnectionType: catalog.ConnectionType("testConnectionType"),
+		FullName:       "testConnectionName",
+		MetastoreId:    "abc",
+		Options:        map[string]string{"host": "test.com"},
+	}
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockConnectionsAPI().EXPECT()
+			e.Create(mock.Anything, mock.MatchedBy(expectConnectionOptions("testConnectionName", map[string]string{
+				"host":     "test.com",
+				"user":     "testUser",
+				"password": "testPassword",
+			}))).Return(connInfo, nil)
+			e.GetByName(mock.Anything, "testConnectionName").Return(connInfo, nil)
+		},
+		Resource: ResourceConnection(),
+		Create:   true,
+		State: map[string]any{
+			"name":            "testConnectionName",
+			"connection_type": "testConnectionType",
+			"options": map[string]any{
+				"host": "test.com",
+			},
+			"options_wo":         `{"user":"testUser","password":"testPassword"}`,
+			"options_wo_version": 1,
+		},
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{"host": "test.com"}, d.Get("options"))
+	assert.Equal(t, 1, d.Get("options_wo_version"))
+}
+
+func TestConnectionsUpdate_WriteOnlyOptionsVersionChange(t *testing.T) {
+	connInfo := &catalog.ConnectionInfo{
+		Name:           "testConnectionName",
+		ConnectionType: catalog.ConnectionType("testConnectionType"),
+		FullName:       "testConnectionName",
+		MetastoreId:    "abc",
+		Options:        map[string]string{"host": "test.com"},
+	}
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockConnectionsAPI().EXPECT()
+			e.Update(mock.Anything, mock.MatchedBy(func(req catalog.UpdateConnection) bool {
+				return req.Name == "testConnectionName" && reflect.DeepEqual(req.Options, map[string]string{
+					"host":     "test.com",
+					"password": "newPassword",
+				})
+			})).Return(connInfo, nil)
+			e.GetByName(mock.Anything, "testConnectionName").Return(connInfo, nil)
+		},
+		Resource: ResourceConnection(),
+		Update:   true,
+		ID:       "abc|testConnectionName",
+		InstanceState: map[string]string{
+			"name":               "testConnectionName",
+			"connection_type":    "testConnectionType",
+			"options.%":          "1",
+			"options.host":       "test.com",
+			"options_wo_version": "1",
+		},
+		State: map[string]any{
+			"name":            "testConnectionName",
+			"connection_type": "testConnectionType",
+			"options": map[string]any{
+				"host": "test.com",
+			},
+			"options_wo":         `{"password":"newPassword"}`,
+			"options_wo_version": 2,
+		},
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{"host": "test.com"}, d.Get("options"))
+	assert.Equal(t, 2, d.Get("options_wo_version"))
+}
+
+func TestConnectionsRead_WriteOnlyOptionsNotStored(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockConnectionsAPI().EXPECT().GetByName(mock.Anything, "testConnectionName").Return(&catalog.ConnectionInfo{
+				Name:           "testConnectionName",
+				ConnectionType: catalog.ConnectionType("testConnectionType"),
+				FullName:       "testConnectionName",
+				MetastoreId:    "abc",
+				Options: map[string]string{
+					"host":                    "test.com",
+					"user":                    "testUser",
+					"client_certificate":      "-----BEGIN CERTIFICATE-----",
+					"access_token_expiration": "123",
+				},
+			}, nil)
+		},
+		Resource: ResourceConnection(),
+		Read:     true,
+		ID:       "abc|testConnectionName",
+		State: map[string]any{
+			"name":            "testConnectionName",
+			"connection_type": "testConnectionType",
+			"options": map[string]any{
+				"host": "test.com",
+			},
+			"options_wo":         `{"user":"testUser","client_certificate":"-----BEGIN CERTIFICATE-----"}`,
+			"options_wo_version": 1,
+		},
+	}.ApplyAndExpectData(t, map[string]any{
+		"options": map[string]any{"host": "test.com", "access_token_expiration": "123"},
+	})
+}
+
+func TestConnectionsRead_PreservesPemKeyPassphrase(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockConnectionsAPI().EXPECT().GetByName(mock.Anything, "testConnectionName").Return(&catalog.ConnectionInfo{
+				Name:           "testConnectionName",
+				ConnectionType: catalog.ConnectionType("testConnectionType"),
+				FullName:       "testConnectionName",
+				MetastoreId:    "abc",
+				Options:        map[string]string{"host": "sftp.test.com"},
+			}, nil)
+		},
+		Resource: ResourceConnection(),
+		Read:     true,
+		ID:       "abc|testConnectionName",
+		State: map[string]any{
+			"name":            "testConnectionName",
+			"connection_type": "testConnectionType",
+			"options": map[string]any{
+				"host":               "sftp.test.com",
+				"pem_private_key":    "key",
+				"pem_key_passphrase": "passphrase",
+				"ssl_keystore_key":   "client-key",
+			},
+		},
+	}.ApplyAndExpectData(t, map[string]any{
+		"options": map[string]any{
+			"host":               "sftp.test.com",
+			"pem_private_key":    "key",
+			"pem_key_passphrase": "passphrase",
+			"ssl_keystore_key":   "client-key",
+		},
+	})
+}
+
+func TestConnectionsCreate_WriteOnlyOptionsOverlap(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource: ResourceConnection(),
+		Create:   true,
+		State: map[string]any{
+			"name":            "testConnectionName",
+			"connection_type": "testConnectionType",
+			"options": map[string]any{
+				"password": "a",
+			},
+			"options_wo":         `{"password":"b"}`,
+			"options_wo_version": 1,
+		},
+	}.Apply(t)
+	assert.ErrorContains(t, err, "option \"password\" is set in both `options` and `options_wo`")
+}
+
+func TestConnectionsCreate_WriteOnlyOptionsInvalidKey(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource: ResourceConnection(),
+		Create:   true,
+		State: map[string]any{
+			"name":               "testConnectionName",
+			"connection_type":    "testConnectionType",
+			"options_wo":         `{"host":"test.com"}`,
+			"options_wo_version": 1,
+		},
+	}.Apply(t)
+	assert.ErrorContains(t, err, "is not supported in `options_wo`")
 }

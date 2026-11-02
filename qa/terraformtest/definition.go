@@ -29,13 +29,20 @@ type initialState struct {
 }
 
 type step struct {
-	Name        string             `yaml:"name"`
-	Config      string             `yaml:"config"`
-	Calls       []httpfixture.Call `yaml:"calls"`
-	State       *expectedState     `yaml:"state,omitempty"`
-	ExpectError *string            `yaml:"expect_error,omitempty"`
-	Plan        *expectedPlan      `yaml:"plan,omitempty"`
-	PlanOnly    bool               `yaml:"plan_only,omitempty"`
+	Name                    string                  `yaml:"name"`
+	Config                  string                  `yaml:"config"`
+	ProviderImplementations providerImplementations `yaml:"provider_implementations,omitempty"`
+	// Files maps Terraform working-directory filenames to sources relative to
+	// the YAML. HashiCorp runs Terraform in an isolated temporary directory,
+	// where files beside the YAML are not automatically available.
+	Files        map[string]string  `yaml:"files,omitempty"`
+	Calls        []httpfixture.Call `yaml:"calls"`
+	State        *expectedState     `yaml:"state,omitempty"`
+	ExpectError  *string            `yaml:"expect_error,omitempty"`
+	Plan         *expectedPlan      `yaml:"plan,omitempty"`
+	PlanOnly     bool               `yaml:"plan_only,omitempty"`
+	Import       *importStep        `yaml:"import,omitempty"`
+	fileContents map[string][]byte
 }
 
 type destroy struct {
@@ -63,8 +70,14 @@ func loadDefinition(path string) (*testDefinition, error) {
 	}
 	defer file.Close()
 	definition, err := decodeDefinition(file)
-	if err != nil || definition.InitialState == nil {
-		return definition, err
+	if err != nil {
+		return nil, err
+	}
+	if err := definition.loadFiles(filepath.Dir(path)); err != nil {
+		return nil, err
+	}
+	if definition.InitialState == nil {
+		return definition, nil
 	}
 	path = filepath.Join(filepath.Dir(path), definition.InitialState.Checkpoint)
 	definition.checkpoint, err = os.ReadFile(path)
@@ -108,22 +121,42 @@ func (d *testDefinition) validate() error {
 			return fmt.Errorf("initial_state.checkpoint must be a nonempty path relative to the YAML file")
 		}
 	}
+	hasPriorState := d.InitialState != nil
 	for i, s := range d.Steps {
 		label := stepLabel(i, s.Name)
-		if strings.TrimSpace(s.Name) == "" || strings.TrimSpace(s.Config) == "" {
-			return fmt.Errorf("%s: name and config are required", label)
-		}
-		if err := validateState(s.State); err != nil {
+		if err := s.validateImport(hasPriorState); err != nil {
 			return fmt.Errorf("%s: %w", label, err)
 		}
-		if err := s.validateExpectedError(); err != nil {
+		if err := s.validate(); err != nil {
 			return fmt.Errorf("%s: %w", label, err)
 		}
-		if err := s.validatePlan(); err != nil {
-			return fmt.Errorf("%s: %w", label, err)
+		if i == 0 && s.Import != nil && strings.TrimSpace(s.Config) == "" {
+			return fmt.Errorf("%s: config is required for the first import step", label)
+		}
+		if s.ExpectError == nil && !s.PlanOnly && (s.Import == nil || *s.Import.Persist) {
+			hasPriorState = true
 		}
 	}
 	return d.validateCalls()
+}
+
+func (s step) validate() error {
+	if strings.TrimSpace(s.Name) == "" || (strings.TrimSpace(s.Config) == "" && s.Import == nil) {
+		return fmt.Errorf("name and config are required")
+	}
+	if err := s.ProviderImplementations.validate(); err != nil {
+		return err
+	}
+	if err := validateFiles(s.Files); err != nil {
+		return err
+	}
+	if err := validateState(s.State); err != nil {
+		return err
+	}
+	if err := s.validateExpectedError(); err != nil {
+		return err
+	}
+	return s.validatePlan()
 }
 
 // validateExpectedError prevents broad empty patterns and assertions that the

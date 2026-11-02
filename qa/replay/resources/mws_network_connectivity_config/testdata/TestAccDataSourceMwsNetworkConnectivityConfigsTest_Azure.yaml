@@ -1,0 +1,87 @@
+# API responses are placeholders based on the API models, not recorded.
+version: 1
+host_metadata:
+  account_id: replay-account
+  cloud: Azure
+  host_type: account
+steps:
+- name: list_created_ncc
+  config: |
+    provider "databricks" {
+      account_id = "replay-account"
+    }
+
+    resource "databricks_mws_network_connectivity_config" "this" {
+      name   = "tf-replay1"
+      region = "eastus2"
+    }
+
+    data "databricks_mws_network_connectivity_configs" "this" {
+      depends_on = [databricks_mws_network_connectivity_config.this]
+      region     = databricks_mws_network_connectivity_config.this.region
+    }
+  calls:
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/network-connectivity-configs
+      body:
+        json:
+          name: tf-replay1
+          region: eastus2
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          name: tf-replay1
+          network_connectivity_config_id: ncc-1
+          region: eastus2
+  - &id002
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/network-connectivity-configs/ncc-1
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          name: tf-replay1
+          network_connectivity_config_id: ncc-1
+          region: eastus2
+  - &id001
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/network-connectivity-configs
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          items:
+          - account_id: replay-account
+            name: tf-replay1
+            network_connectivity_config_id: ncc-1
+            region: eastus2
+  - *id001
+  - *id002
+  - *id001
+  state:
+    resources:
+      data.databricks_mws_network_connectivity_configs.this:
+        attributes:
+        - path:
+          - names
+          - 0
+          equals: tf-replay1
+destroy:
+  calls:
+  - *id002
+  - *id001
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/network-connectivity-configs/ncc-1
+      body: null
+    response:
+      status: 200
+      body: null

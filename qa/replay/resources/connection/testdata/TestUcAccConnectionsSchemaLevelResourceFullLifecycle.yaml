@@ -1,0 +1,324 @@
+# Placeholder API responses inferred from API models; not recorded.
+version: 1
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create
+    config: |
+      resource "databricks_catalog" "this" {
+        name = "tf_test_sc_cat_replay"
+      }
+      resource "databricks_schema" "this" {
+        catalog_name = databricks_catalog.this.name
+        name = "tf_test_sc_schema"
+      }
+      resource "databricks_connection" "this" {
+        name = "tf-test-schema-conn-replay"
+        connection_type = "HTTP"
+        parent = "schemas/${databricks_catalog.this.name}.${databricks_schema.this.name}"
+        comment = "schema-level connection acceptance test"
+        options = {
+          host = "https://example.com"
+          port = "8433"
+          base_path = "/api/"
+          bearer_token = "bearer_token"
+        }
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/catalogs
+          body:
+            json:
+              name: tf_test_sc_cat_replay
+        response:
+          status: 200
+          body:
+            json:
+              name: tf_test_sc_cat_replay
+              metastore_id: 11111111-1111-1111-1111-111111111111
+              owner: replay-admin
+              catalog_type: MANAGED_CATALOG
+              enable_predictive_optimization: INHERIT
+              isolation_mode: OPEN
+      - request:
+          method: DELETE
+          path: /api/2.1/unity-catalog/schemas/tf_test_sc_cat_replay.default
+          body: null
+        response:
+          status: 200
+          body: null
+      - &get_tf_test_sc_cat_replay_1
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/catalogs/tf_test_sc_cat_replay
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              name: tf_test_sc_cat_replay
+              metastore_id: 11111111-1111-1111-1111-111111111111
+              owner: replay-admin
+              catalog_type: MANAGED_CATALOG
+              enable_predictive_optimization: INHERIT
+              isolation_mode: OPEN
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/schemas
+          body:
+            json:
+              catalog_name: tf_test_sc_cat_replay
+              name: tf_test_sc_schema
+        response:
+          status: 200
+          body:
+            json:
+              name: tf_test_sc_schema
+              full_name: tf_test_sc_cat_replay.tf_test_sc_schema
+              catalog_name: tf_test_sc_cat_replay
+              schema_id: 22222222-2222-2222-2222-222222222222
+              metastore_id: 11111111-1111-1111-1111-111111111111
+              owner: replay-admin
+              enable_predictive_optimization: INHERIT
+      - &get_tf_test_sc_cat_replay_tf_test_sc_schema_2
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/schemas/tf_test_sc_cat_replay.tf_test_sc_schema
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              name: tf_test_sc_schema
+              full_name: tf_test_sc_cat_replay.tf_test_sc_schema
+              catalog_name: tf_test_sc_cat_replay
+              schema_id: 22222222-2222-2222-2222-222222222222
+              metastore_id: 11111111-1111-1111-1111-111111111111
+              owner: replay-admin
+              enable_predictive_optimization: INHERIT
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/connections
+          body:
+            json:
+              name: tf-test-schema-conn-replay
+              parent: schemas/tf_test_sc_cat_replay.tf_test_sc_schema
+              connection_type: HTTP
+              comment: schema-level connection acceptance test
+              options:
+                host: https://example.com
+                port: '8433'
+                base_path: /api/
+                bearer_token: bearer_token
+        response:
+          status: 200
+          body:
+            json:
+              name: tf-test-schema-conn-replay
+              full_name: tf_test_sc_cat_replay.tf_test_sc_schema.tf-test-schema-conn-replay
+              connection_type: HTTP
+              comment: schema-level connection acceptance test
+              metastore_id: 11111111-1111-1111-1111-111111111111
+              connection_id: connection-123
+              owner: replay-admin
+              options:
+                host: https://example.com
+                port: '8433'
+                base_path: /api/
+              provisioning_info:
+                state: ACTIVE
+      - &get_tf_test_sc_cat_replay_tf_test_sc_schema_tf_test_schema_conn_replay_3
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/connections/tf_test_sc_cat_replay.tf_test_sc_schema.tf-test-schema-conn-replay
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              name: tf-test-schema-conn-replay
+              full_name: tf_test_sc_cat_replay.tf_test_sc_schema.tf-test-schema-conn-replay
+              connection_type: HTTP
+              comment: schema-level connection acceptance test
+              metastore_id: 11111111-1111-1111-1111-111111111111
+              connection_id: connection-123
+              owner: replay-admin
+              options:
+                host: https://example.com
+                port: '8433'
+                base_path: /api/
+              provisioning_info:
+                state: ACTIVE
+      - *get_tf_test_sc_cat_replay_1
+      - *get_tf_test_sc_cat_replay_tf_test_sc_schema_2
+      - *get_tf_test_sc_cat_replay_tf_test_sc_schema_tf_test_schema_conn_replay_3
+  - name: unchanged_parent
+    config: |
+      resource "databricks_catalog" "this" {
+        name = "tf_test_sc_cat_replay"
+      }
+      resource "databricks_schema" "this" {
+        catalog_name = databricks_catalog.this.name
+        name = "tf_test_sc_schema"
+      }
+      resource "databricks_connection" "this" {
+        name = "tf-test-schema-conn-replay"
+        connection_type = "HTTP"
+        parent = "schemas/${databricks_catalog.this.name}.${databricks_schema.this.name}"
+        comment = "schema-level connection acceptance test"
+        options = {
+          host = "https://example.com"
+          port = "8433"
+          base_path = "/api/"
+          bearer_token = "bearer_token"
+        }
+      }
+    plan:
+      expect: empty
+    calls:
+      - *get_tf_test_sc_cat_replay_1
+      - *get_tf_test_sc_cat_replay_tf_test_sc_schema_2
+      - *get_tf_test_sc_cat_replay_tf_test_sc_schema_tf_test_schema_conn_replay_3
+      - *get_tf_test_sc_cat_replay_1
+      - *get_tf_test_sc_cat_replay_tf_test_sc_schema_2
+      - *get_tf_test_sc_cat_replay_tf_test_sc_schema_tf_test_schema_conn_replay_3
+  - name: update_host
+    config: |
+      resource "databricks_catalog" "this" {
+        name = "tf_test_sc_cat_replay"
+      }
+      resource "databricks_schema" "this" {
+        catalog_name = databricks_catalog.this.name
+        name = "tf_test_sc_schema"
+      }
+      resource "databricks_connection" "this" {
+        name = "tf-test-schema-conn-replay"
+        connection_type = "HTTP"
+        parent = "schemas/${databricks_catalog.this.name}.${databricks_schema.this.name}"
+        comment = "schema-level connection acceptance test"
+        options = {
+          host = "https://example2.com"
+          port = "8433"
+          base_path = "/api/"
+          bearer_token = "bearer_token"
+        }
+      }
+    plan:
+      changes:
+        databricks_connection.this:
+          actions:
+            - update
+    calls:
+      - *get_tf_test_sc_cat_replay_1
+      - *get_tf_test_sc_cat_replay_tf_test_sc_schema_2
+      - *get_tf_test_sc_cat_replay_tf_test_sc_schema_tf_test_schema_conn_replay_3
+      - &get_current_metastore_assignment_5
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/current-metastore-assignment
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              metastore_id: 11111111-1111-1111-1111-111111111111
+              default_catalog_name: main
+              workspace_id: 12345
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/connections/tf_test_sc_cat_replay.tf_test_sc_schema.tf-test-schema-conn-replay
+          body:
+            json:
+              options:
+                host: https://example2.com
+                port: '8433'
+                base_path: /api/
+                bearer_token: bearer_token
+        response:
+          status: 200
+          body:
+            json:
+              name: tf-test-schema-conn-replay
+              full_name: tf_test_sc_cat_replay.tf_test_sc_schema.tf-test-schema-conn-replay
+              connection_type: HTTP
+              comment: schema-level connection acceptance test
+              metastore_id: 11111111-1111-1111-1111-111111111111
+              connection_id: connection-123
+              owner: replay-admin
+              options:
+                host: https://example2.com
+                port: '8433'
+                base_path: /api/
+              provisioning_info:
+                state: ACTIVE
+      - &get_tf_test_sc_cat_replay_tf_test_sc_schema_tf_test_schema_conn_replay_4
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/connections/tf_test_sc_cat_replay.tf_test_sc_schema.tf-test-schema-conn-replay
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              name: tf-test-schema-conn-replay
+              full_name: tf_test_sc_cat_replay.tf_test_sc_schema.tf-test-schema-conn-replay
+              connection_type: HTTP
+              comment: schema-level connection acceptance test
+              metastore_id: 11111111-1111-1111-1111-111111111111
+              connection_id: connection-123
+              owner: replay-admin
+              options:
+                host: https://example2.com
+                port: '8433'
+                base_path: /api/
+              provisioning_info:
+                state: ACTIVE
+      - *get_tf_test_sc_cat_replay_1
+      - *get_tf_test_sc_cat_replay_tf_test_sc_schema_2
+      - *get_tf_test_sc_cat_replay_tf_test_sc_schema_tf_test_schema_conn_replay_4
+    state:
+      resources:
+        databricks_connection.this:
+          attributes:
+            - path:
+                - options
+                - host
+              equals: https://example2.com
+  - name: import
+    import:
+      resource: databricks_connection.this
+      persist: false
+    calls:
+      - *get_tf_test_sc_cat_replay_tf_test_sc_schema_tf_test_schema_conn_replay_4
+      - *get_tf_test_sc_cat_replay_tf_test_sc_schema_tf_test_schema_conn_replay_4
+destroy:
+  calls:
+    - *get_tf_test_sc_cat_replay_1
+    - *get_tf_test_sc_cat_replay_tf_test_sc_schema_2
+    - *get_tf_test_sc_cat_replay_tf_test_sc_schema_tf_test_schema_conn_replay_4
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/connections/tf_test_sc_cat_replay.tf_test_sc_schema.tf-test-schema-conn-replay
+        body: null
+      response:
+        status: 200
+        body: null
+    - *get_current_metastore_assignment_5
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/schemas/tf_test_sc_cat_replay.tf_test_sc_schema
+        body: null
+      response:
+        status: 200
+        body: null
+    - *get_current_metastore_assignment_5
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/catalogs/tf_test_sc_cat_replay
+        body: null
+      response:
+        status: 200
+        body: null

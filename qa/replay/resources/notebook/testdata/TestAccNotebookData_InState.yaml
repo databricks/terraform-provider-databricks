@@ -1,0 +1,137 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create_and_read
+    config: |
+      resource "databricks_notebook" "this" {
+        source = abspath("${path.module}/notebook.dbc")
+        path   = "/Shared/provider-test/jupiter_replay"
+      }
+      data "databricks_notebook" "this" {
+        path   = databricks_notebook.this.path
+        format = "DBC"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/workspace/import
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              content: UEsDBBQAAAAIAAAAIVCwOxTLJgAAACsAAAALAAAAbWFuaWZlc3QubWarVipLLSrOzM9TslLyTczLTEstLlHSUcpLzE0FiuRCRfRy05RqAVBLAwQUAAAACAAAACFQJCDcy1kAAAB1AAAACwAAAHRlc3QucHl0aG9uq1YqSy0qzszPU7JS8ssvSU3Kz88OM1TSUcpLzE0FipWkFpcAeTmJeemliekgkYLKkgygch2l5Pzc3MS8lGIlq+hqJFOcIcJgQ6BKgKLKCiB2al6JUm1sLQBQSwECFAMUAAAACAAAACFQsDsUyyYAAAArAAAACwAAAAAAAAAAAAAAgAEAAAAAbWFuaWZlc3QubWZQSwECFAMUAAAACAAAACFQJCDcy1kAAAB1AAAACwAAAAAAAAAAAAAAgAFPAAAAdGVzdC5weXRob25QSwUGAAAAAAIAAgByAAAA0QAAAAAA
+              format: DBC
+              path: /Shared/provider-test/jupiter_replay
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 200
+      - &call_3
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          query:
+            excludedAttributes: [entitlements]
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          headers:
+            X-Databricks-Org-Id: '12345'
+          body:
+            json:
+              id: '100'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tester@example.com
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/provider-test/jupiter_replay]
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 200
+              object_type: DIRECTORY
+              path: /Shared/provider-test/jupiter_replay
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/workspace/export
+          query:
+            format: [DBC]
+            path: [/Shared/provider-test/jupiter_replay]
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              content: UEsDBBQAAAAIAAAAIVCwOxTLJgAAACsAAAALAAAAbWFuaWZlc3QubWarVipLLSrOzM9TslLyTczLTEstLlHSUcpLzE0FiuRCRfRy05RqAVBLAwQUAAAACAAAACFQJCDcy1kAAAB1AAAACwAAAHRlc3QucHl0aG9uq1YqSy0qzszPU7JS8ssvSU3Kz88OM1TSUcpLzE0FipWkFpcAeTmJeemliekgkYLKkgygch2l5Pzc3MS8lGIlq+hqJFOcIcJgQ6BKgKLKCiB2al6JUm1sLQBQSwECFAMUAAAACAAAACFQsDsUyyYAAAArAAAACwAAAAAAAAAAAAAAgAEAAAAAbWFuaWZlc3QubWZQSwECFAMUAAAACAAAACFQJCDcy1kAAAB1AAAACwAAAAAAAAAAAAAAgAFPAAAAdGVzdC5weXRob25QSwUGAAAAAAIAAgByAAAA0QAAAAAA
+      - *call_1
+      - *call_2
+      - *call_1
+      - *call_3
+      - *call_1
+      - *call_2
+      - *call_1
+    files:
+      notebook.dbc: ../../../testdata/files/notebook.dbc
+  - name: persist_workspace_override
+    config: |
+      resource "databricks_notebook" "this" {
+        source = abspath("${path.module}/notebook.dbc")
+        path   = "/Shared/provider-test/jupiter_replay"
+      }
+      data "databricks_notebook" "this" {
+        provider_config { workspace_id = "12345" }
+        path   = databricks_notebook.this.path
+        format = "DBC"
+      }
+    calls:
+      - *call_3
+      - *call_1
+      - *call_2
+      - *call_1
+      - *call_2
+      - *call_1
+      - *call_3
+      - *call_1
+      - *call_2
+      - *call_1
+    state:
+      resources:
+        data.databricks_notebook.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: '12345'
+destroy:
+  calls:
+    - *call_3
+    - *call_1
+    - *call_2
+    - *call_1
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        headers:
+          X-Databricks-Workspace-Id: '12345'
+        body:
+          json:
+            path: /Shared/provider-test/jupiter_replay
+            recursive: true
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

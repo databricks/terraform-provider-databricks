@@ -8,6 +8,8 @@ subcategory: "Database Instances"
 
 Lakebase Database Instances are managed Postgres instances, composed of a primary Postgres compute instance and 0 or more read replica instances.
 
+For new workloads, Databricks recommends the `databricks_postgres_project` resource, which supports the latest Lakebase features.
+
 ### Use Cases
 
 Database Instances can be accessed for reading and writing structured data via SQL. 

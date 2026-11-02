@@ -32,6 +32,7 @@ resource "databricks_sandbox" "this" {
 The following arguments are supported:
 * `sandbox_id` (string, required) - Client-supplied ID that becomes the final path segment of the resource name
 * `display_name` (string, optional) - Human-readable display label for the sandbox. At most 256 characters
+* `metadata` (SandboxMetadata, optional) - Metadata associated with the sandbox
 * `spec` (SandboxSpec, optional) - The desired configuration of the sandbox, supplied by the caller at creation time
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
@@ -42,9 +43,13 @@ The following arguments are supported:
 * `inactivity_timeout` (string, optional) - Idle duration after which the sandbox is automatically terminated
 
 ### EnvironmentSpec
-* `image_uri` (string, optional) - A Unity Catalog container artifact (e.g. `catalog.schema.folder.image:tag`) to run as the
-  sandbox environment. When set, this image is used as the environment instead of resolving a
-  managed image from `environment_version`
+* `image_uri` (string, optional) - The Unity Catalog container image to use for the sandbox environment
+  (for example, `catalog.schema.folder.image:tag`). See
+  [Artifact Registry](https://docs.databricks.com/en/artifact-registry/)
+
+### SandboxMetadata
+* `custom_tags` (object, optional) - Key-value tags associated with the sandbox. Supports up to 54 tags. Keys must be between
+  1 and 512 characters, and values must not exceed 256 characters
 
 ### SandboxSpec
 * `compute` (ComputeSpec, optional) - Compute configuration (size, inactivity timeout) requested for the sandbox

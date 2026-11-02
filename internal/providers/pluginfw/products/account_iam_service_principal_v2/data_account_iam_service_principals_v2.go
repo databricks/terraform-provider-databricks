@@ -36,6 +36,9 @@ type ServicePrincipalsData struct {
 	// also the maximum allowed. Requests for more than the maximum are clamped
 	// to 1000.
 	PageSize types.Int64 `tfsdk:"page_size"`
+	// The parent resource name of the account whose service principals to list.
+	// Format: accounts/{account_id}
+	Parent types.String `tfsdk:"parent"`
 }
 
 func (ServicePrincipalsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -45,6 +48,7 @@ func (ServicePrincipalsData) GetComplexFieldTypes(context.Context) map[string]re
 }
 
 func (m ServicePrincipalsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["filter"] = attrs["filter"].SetOptional()
 

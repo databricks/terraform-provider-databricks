@@ -1576,6 +1576,8 @@ type ConnectorOptions_SdkV2 struct {
 
 	MetaAdsOptions types.List `tfsdk:"meta_ads_options"`
 
+	OnedriveOptions types.List `tfsdk:"onedrive_options"`
+
 	OutlookOptions types.List `tfsdk:"outlook_options"`
 
 	RabbitmqOptions types.List `tfsdk:"rabbitmq_options"`
@@ -1670,6 +1672,15 @@ func (to *ConnectorOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 				// Recursively sync the fields of MetaAdsOptions
 				toMetaAdsOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromMetaAdsOptions)
 				to.SetMetaAdsOptions(ctx, toMetaAdsOptions)
+			}
+		}
+	}
+	if !from.OnedriveOptions.IsNull() && !from.OnedriveOptions.IsUnknown() {
+		if toOnedriveOptions, ok := to.GetOnedriveOptions(ctx); ok {
+			if fromOnedriveOptions, ok := from.GetOnedriveOptions(ctx); ok {
+				// Recursively sync the fields of OnedriveOptions
+				toOnedriveOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromOnedriveOptions)
+				to.SetOnedriveOptions(ctx, toOnedriveOptions)
 			}
 		}
 	}
@@ -1811,6 +1822,14 @@ func (to *ConnectorOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 			}
 		}
 	}
+	if !from.OnedriveOptions.IsNull() && !from.OnedriveOptions.IsUnknown() {
+		if toOnedriveOptions, ok := to.GetOnedriveOptions(ctx); ok {
+			if fromOnedriveOptions, ok := from.GetOnedriveOptions(ctx); ok {
+				toOnedriveOptions.SyncFieldsDuringRead(ctx, fromOnedriveOptions)
+				to.SetOnedriveOptions(ctx, toOnedriveOptions)
+			}
+		}
+	}
 	if !from.OutlookOptions.IsNull() && !from.OutlookOptions.IsUnknown() {
 		if toOutlookOptions, ok := to.GetOutlookOptions(ctx); ok {
 			if fromOutlookOptions, ok := from.GetOutlookOptions(ctx); ok {
@@ -1888,6 +1907,8 @@ func (m ConnectorOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["marketo_options"] = attrs["marketo_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["meta_ads_options"] = attrs["meta_ads_options"].SetOptional()
 	attrs["meta_ads_options"] = attrs["meta_ads_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["onedrive_options"] = attrs["onedrive_options"].SetOptional()
+	attrs["onedrive_options"] = attrs["onedrive_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["outlook_options"] = attrs["outlook_options"].SetOptional()
 	attrs["outlook_options"] = attrs["outlook_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["rabbitmq_options"] = attrs["rabbitmq_options"].SetOptional()
@@ -1924,6 +1945,7 @@ func (m ConnectorOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[st
 		"linkedin_ads_options":         reflect.TypeOf(LinkedInAdsOptions_SdkV2{}),
 		"marketo_options":              reflect.TypeOf(MarketoOptions_SdkV2{}),
 		"meta_ads_options":             reflect.TypeOf(MetaMarketingOptions_SdkV2{}),
+		"onedrive_options":             reflect.TypeOf(OneDriveOptions_SdkV2{}),
 		"outlook_options":              reflect.TypeOf(OutlookOptions_SdkV2{}),
 		"rabbitmq_options":             reflect.TypeOf(RabbitmqOptions_SdkV2{}),
 		"reddit_ads_options":           reflect.TypeOf(RedditAdsOptions_SdkV2{}),
@@ -1950,6 +1972,7 @@ func (m ConnectorOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 			"linkedin_ads_options":         m.LinkedinAdsOptions,
 			"marketo_options":              m.MarketoOptions,
 			"meta_ads_options":             m.MetaAdsOptions,
+			"onedrive_options":             m.OnedriveOptions,
 			"outlook_options":              m.OutlookOptions,
 			"rabbitmq_options":             m.RabbitmqOptions,
 			"reddit_ads_options":           m.RedditAdsOptions,
@@ -1990,6 +2013,9 @@ func (m ConnectorOptions_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"meta_ads_options": basetypes.ListType{
 				ElemType: MetaMarketingOptions_SdkV2{}.Type(ctx),
+			},
+			"onedrive_options": basetypes.ListType{
+				ElemType: OneDriveOptions_SdkV2{}.Type(ctx),
 			},
 			"outlook_options": basetypes.ListType{
 				ElemType: OutlookOptions_SdkV2{}.Type(ctx),
@@ -2248,6 +2274,32 @@ func (m *ConnectorOptions_SdkV2) SetMetaAdsOptions(ctx context.Context, v MetaMa
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["meta_ads_options"]
 	m.MetaAdsOptions = types.ListValueMust(t, vs)
+}
+
+// GetOnedriveOptions returns the value of the OnedriveOptions field in ConnectorOptions_SdkV2 as
+// a OneDriveOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectorOptions_SdkV2) GetOnedriveOptions(ctx context.Context) (OneDriveOptions_SdkV2, bool) {
+	var e OneDriveOptions_SdkV2
+	if m.OnedriveOptions.IsNull() || m.OnedriveOptions.IsUnknown() {
+		return e, false
+	}
+	var v []OneDriveOptions_SdkV2
+	d := m.OnedriveOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOnedriveOptions sets the value of the OnedriveOptions field in ConnectorOptions_SdkV2.
+func (m *ConnectorOptions_SdkV2) SetOnedriveOptions(ctx context.Context, v OneDriveOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["onedrive_options"]
+	m.OnedriveOptions = types.ListValueMust(t, vs)
 }
 
 // GetOutlookOptions returns the value of the OutlookOptions field in ConnectorOptions_SdkV2 as
@@ -9907,6 +9959,113 @@ func (m *Notifications_SdkV2) SetEmailRecipients(ctx context.Context, v []types.
 	m.EmailRecipients = types.ListValueMust(t, vs)
 }
 
+type OneDriveOptions_SdkV2 struct {
+	// (Optional) The type of OneDrive entity to ingest. If not specified,
+	// defaults to FILE.
+	EntityType types.String `tfsdk:"entity_type"`
+	// (Optional) File ingestion options for processing files.
+	FileIngestionOptions types.List `tfsdk:"file_ingestion_options"`
+	// Required. The OneDrive URL.
+	Url types.String `tfsdk:"url"`
+}
+
+func (to *OneDriveOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from OneDriveOptions_SdkV2) {
+	if !from.FileIngestionOptions.IsNull() && !from.FileIngestionOptions.IsUnknown() {
+		if toFileIngestionOptions, ok := to.GetFileIngestionOptions(ctx); ok {
+			if fromFileIngestionOptions, ok := from.GetFileIngestionOptions(ctx); ok {
+				// Recursively sync the fields of FileIngestionOptions
+				toFileIngestionOptions.SyncFieldsDuringCreateOrUpdate(ctx, fromFileIngestionOptions)
+				to.SetFileIngestionOptions(ctx, toFileIngestionOptions)
+			}
+		}
+	}
+}
+
+func (to *OneDriveOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from OneDriveOptions_SdkV2) {
+	if !from.FileIngestionOptions.IsNull() && !from.FileIngestionOptions.IsUnknown() {
+		if toFileIngestionOptions, ok := to.GetFileIngestionOptions(ctx); ok {
+			if fromFileIngestionOptions, ok := from.GetFileIngestionOptions(ctx); ok {
+				toFileIngestionOptions.SyncFieldsDuringRead(ctx, fromFileIngestionOptions)
+				to.SetFileIngestionOptions(ctx, toFileIngestionOptions)
+			}
+		}
+	}
+}
+
+func (m OneDriveOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_type"] = attrs["entity_type"].SetOptional()
+	attrs["file_ingestion_options"] = attrs["file_ingestion_options"].SetOptional()
+	attrs["file_ingestion_options"] = attrs["file_ingestion_options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["url"] = attrs["url"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in OneDriveOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m OneDriveOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"file_ingestion_options": reflect.TypeOf(FileIngestionOptions_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, OneDriveOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m OneDriveOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entity_type":            m.EntityType,
+			"file_ingestion_options": m.FileIngestionOptions,
+			"url":                    m.Url,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m OneDriveOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entity_type": types.StringType,
+			"file_ingestion_options": basetypes.ListType{
+				ElemType: FileIngestionOptions_SdkV2{}.Type(ctx),
+			},
+			"url": types.StringType,
+		},
+	}
+}
+
+// GetFileIngestionOptions returns the value of the FileIngestionOptions field in OneDriveOptions_SdkV2 as
+// a FileIngestionOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *OneDriveOptions_SdkV2) GetFileIngestionOptions(ctx context.Context) (FileIngestionOptions_SdkV2, bool) {
+	var e FileIngestionOptions_SdkV2
+	if m.FileIngestionOptions.IsNull() || m.FileIngestionOptions.IsUnknown() {
+		return e, false
+	}
+	var v []FileIngestionOptions_SdkV2
+	d := m.FileIngestionOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFileIngestionOptions sets the value of the FileIngestionOptions field in OneDriveOptions_SdkV2.
+func (m *OneDriveOptions_SdkV2) SetFileIngestionOptions(ctx context.Context, v FileIngestionOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["file_ingestion_options"]
+	m.FileIngestionOptions = types.ListValueMust(t, vs)
+}
+
 // Proto representing a window
 type OperationTimeWindow_SdkV2 struct {
 	// Days of week in which the window is allowed to happen If not specified
@@ -16011,6 +16170,9 @@ type StartUpdate_SdkV2 struct {
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
 	FullRefreshSelection types.List `tfsdk:"full_refresh_selection"`
+	// A list of file paths that identify the tables to update with a full
+	// refresh.
+	FullRefreshSelectionByPath types.List `tfsdk:"full_refresh_selection_by_path"`
 	// Key/value map of parameters to pass to the pipeline execution
 	Parameters types.Map `tfsdk:"parameters"`
 
@@ -16020,6 +16182,8 @@ type StartUpdate_SdkV2 struct {
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
 	RefreshSelection types.List `tfsdk:"refresh_selection"`
+	// A list of file paths that identify the tables to update.
+	RefreshSelectionByPath types.List `tfsdk:"refresh_selection_by_path"`
 	// A list of predicate overrides for replace_where flows in this update.
 	// Only replace_where flows may be specified. Flows not listed use their
 	// original predicate.
@@ -16044,11 +16208,23 @@ func (to *StartUpdate_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FullRefreshSelection = from.FullRefreshSelection
 	}
+	if !from.FullRefreshSelectionByPath.IsNull() && !from.FullRefreshSelectionByPath.IsUnknown() && to.FullRefreshSelectionByPath.IsNull() && len(from.FullRefreshSelectionByPath.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FullRefreshSelectionByPath, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FullRefreshSelectionByPath = from.FullRefreshSelectionByPath
+	}
 	if !from.RefreshSelection.IsNull() && !from.RefreshSelection.IsUnknown() && to.RefreshSelection.IsNull() && len(from.RefreshSelection.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for RefreshSelection, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RefreshSelection = from.RefreshSelection
+	}
+	if !from.RefreshSelectionByPath.IsNull() && !from.RefreshSelectionByPath.IsUnknown() && to.RefreshSelectionByPath.IsNull() && len(from.RefreshSelectionByPath.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RefreshSelectionByPath, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RefreshSelectionByPath = from.RefreshSelectionByPath
 	}
 	if !from.ReplaceWhereOverrides.IsNull() && !from.ReplaceWhereOverrides.IsUnknown() && to.ReplaceWhereOverrides.IsNull() && len(from.ReplaceWhereOverrides.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -16093,11 +16269,23 @@ func (to *StartUpdate_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Star
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FullRefreshSelection = from.FullRefreshSelection
 	}
+	if !from.FullRefreshSelectionByPath.IsNull() && !from.FullRefreshSelectionByPath.IsUnknown() && to.FullRefreshSelectionByPath.IsNull() && len(from.FullRefreshSelectionByPath.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FullRefreshSelectionByPath, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FullRefreshSelectionByPath = from.FullRefreshSelectionByPath
+	}
 	if !from.RefreshSelection.IsNull() && !from.RefreshSelection.IsUnknown() && to.RefreshSelection.IsNull() && len(from.RefreshSelection.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for RefreshSelection, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RefreshSelection = from.RefreshSelection
+	}
+	if !from.RefreshSelectionByPath.IsNull() && !from.RefreshSelectionByPath.IsUnknown() && to.RefreshSelectionByPath.IsNull() && len(from.RefreshSelectionByPath.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RefreshSelectionByPath, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RefreshSelectionByPath = from.RefreshSelectionByPath
 	}
 	if !from.ReplaceWhereOverrides.IsNull() && !from.ReplaceWhereOverrides.IsUnknown() && to.ReplaceWhereOverrides.IsNull() && len(from.ReplaceWhereOverrides.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -16138,8 +16326,10 @@ func (m StartUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["development"] = attrs["development"].SetOptional()
 	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
 	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
+	attrs["full_refresh_selection_by_path"] = attrs["full_refresh_selection_by_path"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
+	attrs["refresh_selection_by_path"] = attrs["refresh_selection_by_path"].SetOptional()
 	attrs["replace_where_overrides"] = attrs["replace_where_overrides"].SetOptional()
 	attrs["reset_checkpoint_selection"] = attrs["reset_checkpoint_selection"].SetOptional()
 	attrs["rewind_spec"] = attrs["rewind_spec"].SetOptional()
@@ -16159,12 +16349,14 @@ func (m StartUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // SDK values.
 func (m StartUpdate_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"full_refresh_selection":     reflect.TypeOf(types.String{}),
-		"parameters":                 reflect.TypeOf(types.String{}),
-		"refresh_selection":          reflect.TypeOf(types.String{}),
-		"replace_where_overrides":    reflect.TypeOf(ReplaceWhereOverride_SdkV2{}),
-		"reset_checkpoint_selection": reflect.TypeOf(types.String{}),
-		"rewind_spec":                reflect.TypeOf(RewindSpec_SdkV2{}),
+		"full_refresh_selection":         reflect.TypeOf(types.String{}),
+		"full_refresh_selection_by_path": reflect.TypeOf(types.String{}),
+		"parameters":                     reflect.TypeOf(types.String{}),
+		"refresh_selection":              reflect.TypeOf(types.String{}),
+		"refresh_selection_by_path":      reflect.TypeOf(types.String{}),
+		"replace_where_overrides":        reflect.TypeOf(ReplaceWhereOverride_SdkV2{}),
+		"reset_checkpoint_selection":     reflect.TypeOf(types.String{}),
+		"rewind_spec":                    reflect.TypeOf(RewindSpec_SdkV2{}),
 	}
 }
 
@@ -16175,17 +16367,19 @@ func (m StartUpdate_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"cause":                      m.Cause,
-			"development":                m.Development,
-			"full_refresh":               m.FullRefresh,
-			"full_refresh_selection":     m.FullRefreshSelection,
-			"parameters":                 m.Parameters,
-			"pipeline_id":                m.PipelineId,
-			"refresh_selection":          m.RefreshSelection,
-			"replace_where_overrides":    m.ReplaceWhereOverrides,
-			"reset_checkpoint_selection": m.ResetCheckpointSelection,
-			"rewind_spec":                m.RewindSpec,
-			"validate_only":              m.ValidateOnly,
+			"cause":                          m.Cause,
+			"development":                    m.Development,
+			"full_refresh":                   m.FullRefresh,
+			"full_refresh_selection":         m.FullRefreshSelection,
+			"full_refresh_selection_by_path": m.FullRefreshSelectionByPath,
+			"parameters":                     m.Parameters,
+			"pipeline_id":                    m.PipelineId,
+			"refresh_selection":              m.RefreshSelection,
+			"refresh_selection_by_path":      m.RefreshSelectionByPath,
+			"replace_where_overrides":        m.ReplaceWhereOverrides,
+			"reset_checkpoint_selection":     m.ResetCheckpointSelection,
+			"rewind_spec":                    m.RewindSpec,
+			"validate_only":                  m.ValidateOnly,
 		})
 }
 
@@ -16199,11 +16393,17 @@ func (m StartUpdate_SdkV2) Type(ctx context.Context) attr.Type {
 			"full_refresh_selection": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"full_refresh_selection_by_path": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"pipeline_id": types.StringType,
 			"refresh_selection": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"refresh_selection_by_path": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"replace_where_overrides": basetypes.ListType{
@@ -16244,6 +16444,32 @@ func (m *StartUpdate_SdkV2) SetFullRefreshSelection(ctx context.Context, v []typ
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["full_refresh_selection"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.FullRefreshSelection = types.ListValueMust(t, vs)
+}
+
+// GetFullRefreshSelectionByPath returns the value of the FullRefreshSelectionByPath field in StartUpdate_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StartUpdate_SdkV2) GetFullRefreshSelectionByPath(ctx context.Context) ([]types.String, bool) {
+	if m.FullRefreshSelectionByPath.IsNull() || m.FullRefreshSelectionByPath.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.FullRefreshSelectionByPath.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFullRefreshSelectionByPath sets the value of the FullRefreshSelectionByPath field in StartUpdate_SdkV2.
+func (m *StartUpdate_SdkV2) SetFullRefreshSelectionByPath(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["full_refresh_selection_by_path"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.FullRefreshSelectionByPath = types.ListValueMust(t, vs)
 }
 
 // GetParameters returns the value of the Parameters field in StartUpdate_SdkV2 as
@@ -16296,6 +16522,32 @@ func (m *StartUpdate_SdkV2) SetRefreshSelection(ctx context.Context, v []types.S
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["refresh_selection"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.RefreshSelection = types.ListValueMust(t, vs)
+}
+
+// GetRefreshSelectionByPath returns the value of the RefreshSelectionByPath field in StartUpdate_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StartUpdate_SdkV2) GetRefreshSelectionByPath(ctx context.Context) ([]types.String, bool) {
+	if m.RefreshSelectionByPath.IsNull() || m.RefreshSelectionByPath.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.RefreshSelectionByPath.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRefreshSelectionByPath sets the value of the RefreshSelectionByPath field in StartUpdate_SdkV2.
+func (m *StartUpdate_SdkV2) SetRefreshSelectionByPath(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["refresh_selection_by_path"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.RefreshSelectionByPath = types.ListValueMust(t, vs)
 }
 
 // GetReplaceWhereOverrides returns the value of the ReplaceWhereOverrides field in StartUpdate_SdkV2 as
@@ -18003,6 +18255,9 @@ type UpdateInfo_SdkV2 struct {
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
 	FullRefreshSelection types.List `tfsdk:"full_refresh_selection"`
+	// A list of file paths that identify the tables to update with a full
+	// refresh.
+	FullRefreshSelectionByPath types.List `tfsdk:"full_refresh_selection_by_path"`
 	// Indicates whether the update is either part of a continuous job run, or
 	// running in legacy continuous pipeline mode. Returned only for GetUpdate;
 	// not populated in ListUpdates responses.
@@ -18016,6 +18271,8 @@ type UpdateInfo_SdkV2 struct {
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
 	RefreshSelection types.List `tfsdk:"refresh_selection"`
+	// A list of file paths that identify the tables to update.
+	RefreshSelectionByPath types.List `tfsdk:"refresh_selection_by_path"`
 	// The update state.
 	State types.String `tfsdk:"state"`
 	// The ID of this update.
@@ -18041,11 +18298,23 @@ func (to *UpdateInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FullRefreshSelection = from.FullRefreshSelection
 	}
+	if !from.FullRefreshSelectionByPath.IsNull() && !from.FullRefreshSelectionByPath.IsUnknown() && to.FullRefreshSelectionByPath.IsNull() && len(from.FullRefreshSelectionByPath.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FullRefreshSelectionByPath, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FullRefreshSelectionByPath = from.FullRefreshSelectionByPath
+	}
 	if !from.RefreshSelection.IsNull() && !from.RefreshSelection.IsUnknown() && to.RefreshSelection.IsNull() && len(from.RefreshSelection.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for RefreshSelection, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RefreshSelection = from.RefreshSelection
+	}
+	if !from.RefreshSelectionByPath.IsNull() && !from.RefreshSelectionByPath.IsUnknown() && to.RefreshSelectionByPath.IsNull() && len(from.RefreshSelectionByPath.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RefreshSelectionByPath, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RefreshSelectionByPath = from.RefreshSelectionByPath
 	}
 }
 
@@ -18064,11 +18333,23 @@ func (to *UpdateInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Updat
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FullRefreshSelection = from.FullRefreshSelection
 	}
+	if !from.FullRefreshSelectionByPath.IsNull() && !from.FullRefreshSelectionByPath.IsUnknown() && to.FullRefreshSelectionByPath.IsNull() && len(from.FullRefreshSelectionByPath.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for FullRefreshSelectionByPath, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.FullRefreshSelectionByPath = from.FullRefreshSelectionByPath
+	}
 	if !from.RefreshSelection.IsNull() && !from.RefreshSelection.IsUnknown() && to.RefreshSelection.IsNull() && len(from.RefreshSelection.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for RefreshSelection, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.RefreshSelection = from.RefreshSelection
+	}
+	if !from.RefreshSelectionByPath.IsNull() && !from.RefreshSelectionByPath.IsUnknown() && to.RefreshSelectionByPath.IsNull() && len(from.RefreshSelectionByPath.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RefreshSelectionByPath, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RefreshSelectionByPath = from.RefreshSelectionByPath
 	}
 }
 
@@ -18080,10 +18361,12 @@ func (m UpdateInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["creation_time"] = attrs["creation_time"].SetOptional()
 	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
 	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
+	attrs["full_refresh_selection_by_path"] = attrs["full_refresh_selection_by_path"].SetOptional()
 	attrs["mode"] = attrs["mode"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
 	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
+	attrs["refresh_selection_by_path"] = attrs["refresh_selection_by_path"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
 	attrs["update_id"] = attrs["update_id"].SetOptional()
 	attrs["validate_only"] = attrs["validate_only"].SetOptional()
@@ -18100,10 +18383,12 @@ func (m UpdateInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (m UpdateInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"config":                 reflect.TypeOf(PipelineSpec_SdkV2{}),
-		"full_refresh_selection": reflect.TypeOf(types.String{}),
-		"parameters":             reflect.TypeOf(types.String{}),
-		"refresh_selection":      reflect.TypeOf(types.String{}),
+		"config":                         reflect.TypeOf(PipelineSpec_SdkV2{}),
+		"full_refresh_selection":         reflect.TypeOf(types.String{}),
+		"full_refresh_selection_by_path": reflect.TypeOf(types.String{}),
+		"parameters":                     reflect.TypeOf(types.String{}),
+		"refresh_selection":              reflect.TypeOf(types.String{}),
+		"refresh_selection_by_path":      reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -18114,19 +18399,21 @@ func (m UpdateInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"cause":                  m.Cause,
-			"cluster_id":             m.ClusterId,
-			"config":                 m.Config,
-			"creation_time":          m.CreationTime,
-			"full_refresh":           m.FullRefresh,
-			"full_refresh_selection": m.FullRefreshSelection,
-			"mode":                   m.Mode,
-			"parameters":             m.Parameters,
-			"pipeline_id":            m.PipelineId,
-			"refresh_selection":      m.RefreshSelection,
-			"state":                  m.State,
-			"update_id":              m.UpdateId,
-			"validate_only":          m.ValidateOnly,
+			"cause":                          m.Cause,
+			"cluster_id":                     m.ClusterId,
+			"config":                         m.Config,
+			"creation_time":                  m.CreationTime,
+			"full_refresh":                   m.FullRefresh,
+			"full_refresh_selection":         m.FullRefreshSelection,
+			"full_refresh_selection_by_path": m.FullRefreshSelectionByPath,
+			"mode":                           m.Mode,
+			"parameters":                     m.Parameters,
+			"pipeline_id":                    m.PipelineId,
+			"refresh_selection":              m.RefreshSelection,
+			"refresh_selection_by_path":      m.RefreshSelectionByPath,
+			"state":                          m.State,
+			"update_id":                      m.UpdateId,
+			"validate_only":                  m.ValidateOnly,
 		})
 }
 
@@ -18144,12 +18431,18 @@ func (m UpdateInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"full_refresh_selection": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"full_refresh_selection_by_path": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"mode": types.StringType,
 			"parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"pipeline_id": types.StringType,
 			"refresh_selection": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"refresh_selection_by_path": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"state":         types.StringType,
@@ -18211,6 +18504,32 @@ func (m *UpdateInfo_SdkV2) SetFullRefreshSelection(ctx context.Context, v []type
 	m.FullRefreshSelection = types.ListValueMust(t, vs)
 }
 
+// GetFullRefreshSelectionByPath returns the value of the FullRefreshSelectionByPath field in UpdateInfo_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateInfo_SdkV2) GetFullRefreshSelectionByPath(ctx context.Context) ([]types.String, bool) {
+	if m.FullRefreshSelectionByPath.IsNull() || m.FullRefreshSelectionByPath.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.FullRefreshSelectionByPath.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFullRefreshSelectionByPath sets the value of the FullRefreshSelectionByPath field in UpdateInfo_SdkV2.
+func (m *UpdateInfo_SdkV2) SetFullRefreshSelectionByPath(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["full_refresh_selection_by_path"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.FullRefreshSelectionByPath = types.ListValueMust(t, vs)
+}
+
 // GetParameters returns the value of the Parameters field in UpdateInfo_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
@@ -18261,6 +18580,32 @@ func (m *UpdateInfo_SdkV2) SetRefreshSelection(ctx context.Context, v []types.St
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["refresh_selection"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.RefreshSelection = types.ListValueMust(t, vs)
+}
+
+// GetRefreshSelectionByPath returns the value of the RefreshSelectionByPath field in UpdateInfo_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateInfo_SdkV2) GetRefreshSelectionByPath(ctx context.Context) ([]types.String, bool) {
+	if m.RefreshSelectionByPath.IsNull() || m.RefreshSelectionByPath.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.RefreshSelectionByPath.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRefreshSelectionByPath sets the value of the RefreshSelectionByPath field in UpdateInfo_SdkV2.
+func (m *UpdateInfo_SdkV2) SetRefreshSelectionByPath(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["refresh_selection_by_path"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.RefreshSelectionByPath = types.ListValueMust(t, vs)
 }
 
 type UpdateStateInfo_SdkV2 struct {

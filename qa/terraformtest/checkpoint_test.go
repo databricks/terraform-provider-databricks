@@ -73,7 +73,7 @@ func TestCheckpointSeedPreservesBytesAndOnlyRunsOnFirstStep(t *testing.T) {
 	d, err := loadDefinition("testdata/initial_state/group_update.yaml")
 	require.NoError(t, err)
 	testCase := resource.TestCase{
-		ProtoV6ProviderFactories: providerFactories("http://127.0.0.1"),
+		ProtoV6ProviderFactories: ProviderFactories(fixtureConfig("http://127.0.0.1")),
 		Steps: []resource.TestStep{
 			{Config: d.Steps[0].Config},
 			{Config: `provider "databricks" {}`},
@@ -113,7 +113,7 @@ func TestCheckpointConfigKeepsExplicitProviderRequirements(t *testing.T) {
 		require.Equal(t, 1, strings.Count(hcl, "terraform {"))
 	}
 	_, err := checkpointConfig(`resource "databricks_group" {`)
-	require.ErrorContains(t, err, "initial_state step configuration")
+	require.ErrorContains(t, err, "directory step configuration")
 }
 
 func TestInitialCheckpointRejectsAlternateBackends(t *testing.T) {

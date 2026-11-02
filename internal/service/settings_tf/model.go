@@ -3378,6 +3378,8 @@ func (m *CspEnablementAccountSetting) SetCspEnablementAccount(ctx context.Contex
 
 // The network policies applying for ingress traffic.
 type CustomerFacingIngressNetworkPolicy struct {
+	// The network policy restrictions for cross-workspace access: which other
+	// workspaces may access this workspace.
 	CrossWorkspaceAccess types.Object `tfsdk:"cross_workspace_access"`
 	// The network policy restrictions for private access. Configures how
 	// requests arriving over private connectivity are governed.
@@ -17164,6 +17166,10 @@ type NetworkConnectivityConfiguration struct {
 	// Your Databricks account ID. You can find your account ID in your
 	// Databricks accounts console.
 	AccountId types.String `tfsdk:"account_id"`
+	// The workspace to which charges for this network connectivity
+	// configuration are attributed. The workspace must be active and attached
+	// to this network connectivity configuration when set.
+	BillingWorkspaceId types.Int64 `tfsdk:"billing_workspace_id"`
 	// Time in epoch milliseconds when this object was created.
 	CreationTime types.Int64 `tfsdk:"creation_time"`
 	// The network connectivity rules that apply to network traffic from your
@@ -17209,6 +17215,7 @@ func (to *NetworkConnectivityConfiguration) SyncFieldsDuringRead(ctx context.Con
 
 func (m NetworkConnectivityConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetOptional()
+	attrs["billing_workspace_id"] = attrs["billing_workspace_id"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetOptional()
 	attrs["egress_config"] = attrs["egress_config"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -17240,6 +17247,7 @@ func (m NetworkConnectivityConfiguration) ToObjectValue(ctx context.Context) bas
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"account_id":                     m.AccountId,
+			"billing_workspace_id":           m.BillingWorkspaceId,
 			"creation_time":                  m.CreationTime,
 			"egress_config":                  m.EgressConfig,
 			"name":                           m.Name,
@@ -17254,6 +17262,7 @@ func (m NetworkConnectivityConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id":                     types.StringType,
+			"billing_workspace_id":           types.Int64Type,
 			"creation_time":                  types.Int64Type,
 			"egress_config":                  NccEgressConfig{}.Type(ctx),
 			"name":                           types.StringType,
@@ -21893,6 +21902,109 @@ func (m *UpdateNccPrivateEndpointRuleRequest) GetPrivateEndpointRule(ctx context
 func (m *UpdateNccPrivateEndpointRuleRequest) SetPrivateEndpointRule(ctx context.Context, v UpdatePrivateEndpointRule) {
 	vs := v.ToObjectValue(ctx)
 	m.PrivateEndpointRule = vs
+}
+
+type UpdateNetworkConnectivityConfigRequest struct {
+	// The network connectivity configuration fields to update.
+	NetworkConnectivityConfig types.Object `tfsdk:"network_connectivity_config"`
+	// Your Network Connectivity Configuration ID.
+	NetworkConnectivityConfigId types.String `tfsdk:"-"`
+	// Must contain at least one of `name` or `billing_workspace_id`.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateNetworkConnectivityConfigRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateNetworkConnectivityConfigRequest) {
+	if !from.NetworkConnectivityConfig.IsNull() && !from.NetworkConnectivityConfig.IsUnknown() {
+		if toNetworkConnectivityConfig, ok := to.GetNetworkConnectivityConfig(ctx); ok {
+			if fromNetworkConnectivityConfig, ok := from.GetNetworkConnectivityConfig(ctx); ok {
+				// Recursively sync the fields of NetworkConnectivityConfig
+				toNetworkConnectivityConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromNetworkConnectivityConfig)
+				to.SetNetworkConnectivityConfig(ctx, toNetworkConnectivityConfig)
+			}
+		}
+	}
+}
+
+func (to *UpdateNetworkConnectivityConfigRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateNetworkConnectivityConfigRequest) {
+	if !from.NetworkConnectivityConfig.IsNull() && !from.NetworkConnectivityConfig.IsUnknown() {
+		if toNetworkConnectivityConfig, ok := to.GetNetworkConnectivityConfig(ctx); ok {
+			if fromNetworkConnectivityConfig, ok := from.GetNetworkConnectivityConfig(ctx); ok {
+				toNetworkConnectivityConfig.SyncFieldsDuringRead(ctx, fromNetworkConnectivityConfig)
+				to.SetNetworkConnectivityConfig(ctx, toNetworkConnectivityConfig)
+			}
+		}
+	}
+}
+
+func (m UpdateNetworkConnectivityConfigRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["network_connectivity_config"] = attrs["network_connectivity_config"].SetRequired()
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateNetworkConnectivityConfigRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateNetworkConnectivityConfigRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"network_connectivity_config": reflect.TypeOf(NetworkConnectivityConfiguration{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateNetworkConnectivityConfigRequest
+// only implements ToObjectValue() and Type().
+func (m UpdateNetworkConnectivityConfigRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"network_connectivity_config":    m.NetworkConnectivityConfig,
+			"network_connectivity_config_id": m.NetworkConnectivityConfigId,
+			"update_mask":                    m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateNetworkConnectivityConfigRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"network_connectivity_config":    NetworkConnectivityConfiguration{}.Type(ctx),
+			"network_connectivity_config_id": types.StringType,
+			"update_mask":                    types.StringType,
+		},
+	}
+}
+
+// GetNetworkConnectivityConfig returns the value of the NetworkConnectivityConfig field in UpdateNetworkConnectivityConfigRequest as
+// a NetworkConnectivityConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateNetworkConnectivityConfigRequest) GetNetworkConnectivityConfig(ctx context.Context) (NetworkConnectivityConfiguration, bool) {
+	var e NetworkConnectivityConfiguration
+	if m.NetworkConnectivityConfig.IsNull() || m.NetworkConnectivityConfig.IsUnknown() {
+		return e, false
+	}
+	var v NetworkConnectivityConfiguration
+	d := m.NetworkConnectivityConfig.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNetworkConnectivityConfig sets the value of the NetworkConnectivityConfig field in UpdateNetworkConnectivityConfigRequest.
+func (m *UpdateNetworkConnectivityConfigRequest) SetNetworkConnectivityConfig(ctx context.Context, v NetworkConnectivityConfiguration) {
+	vs := v.ToObjectValue(ctx)
+	m.NetworkConnectivityConfig = vs
 }
 
 type UpdateNetworkPolicyRequest struct {

@@ -1,0 +1,337 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create_permissions
+    config: |
+      resource "databricks_cluster_policy" "this" {
+        name = "replay"
+        definition = jsonencode({
+          "spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL" : {
+            "type" : "fixed",
+            "value" : "jdbc:sqlserver://<jdbc-url>"
+          }
+        })
+      }
+      data "databricks_current_user" "me" {}
+      resource "databricks_group" "_0" {
+        display_name = "permissions-replay-0"
+      }
+      resource "databricks_permissions" "this" {
+        cluster_policy_id = databricks_cluster_policy.this.id
+        access_control {
+          group_name       = databricks_group._0.display_name
+          permission_level = "CAN_USE"
+        }
+      }
+    calls:
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          body: null
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              displayName: Replay runner
+              groups:
+                - display: admins
+                  value: '901'
+              id: '900'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: 11111111-1111-4111-8111-000000000000
+          headers:
+            X-Databricks-Org-Id: '12345'
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          body:
+            json:
+              displayName: permissions-replay-0
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: permissions-replay-0
+              id: '1000'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+      - request:
+          method: POST
+          path: /api/2.0/policies/clusters/create
+          body:
+            json:
+              definition: '{"spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL":{"type":"fixed","value":"jdbc:sqlserver://\u003cjdbc-url\u003e"}}'
+              name: replay
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              policy_id: policy-id
+      - &call_3
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/1000
+          body: null
+          query:
+            attributes: ['displayName,externalId,entitlements']
+        response: *response_1 # Inferred API response; not recorded.
+      - &call_4
+        request:
+          method: GET
+          path: /api/2.0/policies/clusters/get
+          body: null
+          query:
+            policy_id: [policy-id]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              definition: '{"spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL":{"type":"fixed","value":"jdbc:sqlserver://\u003cjdbc-url\u003e"}}'
+              name: replay
+              policy_id: policy-id
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          body: null
+          query:
+            excludedAttributes: [entitlements]
+        response: *response_2 # Inferred API response; not recorded.
+      - request:
+          method: PUT
+          path: /api/2.0/permissions/cluster-policies/policy-id
+          body:
+            json:
+              access_control_list:
+                - group_name: permissions-replay-0
+                  permission_level: CAN_USE
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              access_control_list:
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_USE
+                  group_name: permissions-replay-0
+              object_id: /cluster-policies/policy-id
+              object_type: cluster-policy
+      - *call_1
+      - &call_5
+        request:
+          method: GET
+          path: /api/2.0/permissions/cluster-policies/policy-id
+          body: null
+        response: *response_3 # Inferred API response; not recorded.
+      - *call_2
+      - *call_2
+      - *call_3
+      - *call_4
+      - *call_1
+      - *call_5
+  - name: update_permissions
+    config: |
+      resource "databricks_cluster_policy" "this" {
+        name = "replay"
+        definition = jsonencode({
+          "spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL" : {
+            "type" : "fixed",
+            "value" : "jdbc:sqlserver://<jdbc-url>"
+          }
+        })
+      }
+      data "databricks_current_user" "me" {}
+      resource "databricks_service_principal" "_1" {
+        display_name = "permissions-replay-1"
+      }
+      resource "databricks_group" "_0" {
+        display_name = "permissions-replay-0"
+      }
+      resource "databricks_user" "_0" {
+        user_name = "permissions-replay-0@databricks.com"
+      }
+      resource "databricks_permissions" "this" {
+        cluster_policy_id = databricks_cluster_policy.this.id
+        access_control {
+          service_principal_name = data.databricks_current_user.me.user_name
+          permission_level       = "CAN_USE"
+        }
+        access_control {
+          service_principal_name = databricks_service_principal._1.application_id
+          permission_level       = "CAN_USE"
+        }
+        access_control {
+          group_name       = databricks_group._0.display_name
+          permission_level = "CAN_USE"
+        }
+        access_control {
+          user_name        = databricks_user._0.user_name
+          permission_level = "CAN_USE"
+        }
+      }
+    calls:
+      - *call_2
+      - *call_3
+      - *call_4
+      - *call_1
+      - *call_5
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Users
+          body:
+            json:
+              active: true
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: permissions-replay-0@databricks.com
+        response: &response_4 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              id: '2000'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: permissions-replay-0@databricks.com
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          body:
+            json:
+              active: true
+              displayName: permissions-replay-1
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+        response: &response_5 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              applicationId: 11111111-1111-4111-8111-000000000002
+              displayName: permissions-replay-1
+              id: '3001'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+      - &call_6
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Users/2000
+          body: null
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+        response: *response_4 # Inferred API response; not recorded.
+      - &call_7
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/3001
+          body: null
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+        response: *response_5 # Inferred API response; not recorded.
+      - *call_1
+      - request:
+          method: PUT
+          path: /api/2.0/permissions/cluster-policies/policy-id
+          body:
+            json:
+              access_control_list:
+                - permission_level: CAN_USE
+                  service_principal_name: 11111111-1111-4111-8111-000000000002
+                - group_name: permissions-replay-0
+                  permission_level: CAN_USE
+                - permission_level: CAN_USE
+                  user_name: permissions-replay-0@databricks.com
+                - permission_level: CAN_USE
+                  service_principal_name: 11111111-1111-4111-8111-000000000000
+        response: &response_6 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              access_control_list:
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_USE
+                  service_principal_name: 11111111-1111-4111-8111-000000000002
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_USE
+                  group_name: permissions-replay-0
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_USE
+                  user_name: permissions-replay-0@databricks.com
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_USE
+                  service_principal_name: 11111111-1111-4111-8111-000000000000
+              object_id: /cluster-policies/policy-id
+              object_type: cluster-policy
+      - *call_1
+      - &call_8
+        request:
+          method: GET
+          path: /api/2.0/permissions/cluster-policies/policy-id
+          body: null
+        response: *response_6 # Inferred API response; not recorded.
+      - *call_2
+      - *call_2
+      - *call_3
+      - *call_6
+      - *call_7
+      - *call_4
+      - *call_1
+      - *call_8
+destroy:
+  calls:
+    - *call_2
+    - *call_4
+    - *call_3
+    - *call_6
+    - *call_7
+    - *call_1
+    - *call_8
+    - *call_8
+    - request:
+        method: PUT
+        path: /api/2.0/permissions/cluster-policies/policy-id
+        body:
+          json: {}
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            access_control_list: []
+            object_id: /cluster-policies/policy-id
+            object_type: cluster-policy
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Groups/1000
+        body: null
+      response: &response_7 # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: POST
+        path: /api/2.0/policies/clusters/delete
+        body:
+          json:
+            policy_id: policy-id
+      response: *response_7 # Inferred API response; not recorded.
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Users/2000
+        body: null
+      response: *response_7 # Inferred API response; not recorded.
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/ServicePrincipals/3001
+        body: null
+      response: *response_7 # Inferred API response; not recorded.

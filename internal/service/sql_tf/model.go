@@ -1057,9 +1057,11 @@ func (m AlertStatementParameter) Type(ctx context.Context) attr.Type {
 type AlertV2 struct {
 	// The timestamp indicating when the alert was created.
 	CreateTime types.String `tfsdk:"create_time"`
-	// Custom description for the alert. support mustache template.
+	// Custom description for the alert. Interpreted according to
+	// `custom_template_format`.
 	CustomDescription types.String `tfsdk:"custom_description"`
-	// Custom summary for the alert. support mustache template.
+	// Custom summary for the alert. Interpreted according to
+	// `custom_template_format`.
 	CustomSummary types.String `tfsdk:"custom_summary"`
 	// The format used to interpret the `custom_summary` and
 	// `custom_description` templates.
@@ -3641,8 +3643,9 @@ type CreateWarehouseRequest struct {
 	// Deprecated. Instance profile used to pass IAM role to the cluster
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
-	// Must be a multiple of 3 between 3 and 960. The effective maximum cannot
-	// be lower than the warehouse's minimum capacity.
+	// Must be at least the minimum DBU for the selected warehouse size and no
+	// greater than the configured DBU limit. Actual capacity may be below this
+	// ceiling.
 	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
@@ -5583,8 +5586,9 @@ type EditWarehouseRequest struct {
 	// Deprecated. Instance profile used to pass IAM role to the cluster
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
-	// Must be a multiple of 3 between 3 and 960. The effective maximum cannot
-	// be lower than the warehouse's minimum capacity.
+	// Must be at least the minimum DBU for the selected warehouse size and no
+	// greater than the configured DBU limit. Actual capacity may be below this
+	// ceiling.
 	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
@@ -6101,8 +6105,9 @@ type EndpointInfo struct {
 	// the jdbc connection string for this warehouse
 	JdbcUrl types.String `tfsdk:"jdbc_url"`
 	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
-	// Must be a multiple of 3 between 3 and 960. The effective maximum cannot
-	// be lower than the warehouse's minimum capacity.
+	// Must be at least the minimum DBU for the selected warehouse size and no
+	// greater than the configured DBU limit. Actual capacity may be below this
+	// ceiling.
 	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
@@ -8390,8 +8395,9 @@ type GetWarehouseResponse struct {
 	// the jdbc connection string for this warehouse
 	JdbcUrl types.String `tfsdk:"jdbc_url"`
 	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
-	// Must be a multiple of 3 between 3 and 960. The effective maximum cannot
-	// be lower than the warehouse's minimum capacity.
+	// Must be at least the minimum DBU for the selected warehouse size and no
+	// greater than the configured DBU limit. Actual capacity may be below this
+	// ceiling.
 	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.

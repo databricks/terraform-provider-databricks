@@ -32,8 +32,10 @@ type WorkspaceAssignmentsData struct {
 	// return fewer than this value. If not provided, defaults to 1000, which is
 	// also the maximum allowed. Requests for more than the maximum are clamped
 	// to 1000.
-	PageSize    types.Int64 `tfsdk:"page_size"`
-	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
+	PageSize types.Int64 `tfsdk:"page_size"`
+	// The parent resource name of the workspace whose assignments to list.
+	// Format: accounts/{account_id}/workspaces/{workspace_id}
+	Parent types.String `tfsdk:"parent"`
 }
 
 func (WorkspaceAssignmentsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -43,10 +45,10 @@ func (WorkspaceAssignmentsData) GetComplexFieldTypes(context.Context) map[string
 }
 
 func (m WorkspaceAssignmentsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["workspace_assignments"] = attrs["workspace_assignments"].SetComputed()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	return attrs
 }
 

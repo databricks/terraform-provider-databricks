@@ -3732,8 +3732,9 @@ type CreateWarehouseRequest_SdkV2 struct {
 	// Deprecated. Instance profile used to pass IAM role to the cluster
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
-	// Must be a multiple of 3 between 3 and 960. The effective maximum cannot
-	// be lower than the warehouse's minimum capacity.
+	// Must be at least the minimum DBU for the selected warehouse size and no
+	// greater than the configured DBU limit. Actual capacity may be below this
+	// ceiling.
 	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
@@ -5702,8 +5703,9 @@ type EditWarehouseRequest_SdkV2 struct {
 	// Deprecated. Instance profile used to pass IAM role to the cluster
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
-	// Must be a multiple of 3 between 3 and 960. The effective maximum cannot
-	// be lower than the warehouse's minimum capacity.
+	// Must be at least the minimum DBU for the selected warehouse size and no
+	// greater than the configured DBU limit. Actual capacity may be below this
+	// ceiling.
 	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
@@ -6232,8 +6234,9 @@ type EndpointInfo_SdkV2 struct {
 	// the jdbc connection string for this warehouse
 	JdbcUrl types.String `tfsdk:"jdbc_url"`
 	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
-	// Must be a multiple of 3 between 3 and 960. The effective maximum cannot
-	// be lower than the warehouse's minimum capacity.
+	// Must be at least the minimum DBU for the selected warehouse size and no
+	// greater than the configured DBU limit. Actual capacity may be below this
+	// ceiling.
 	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
@@ -8545,8 +8548,9 @@ type GetWarehouseResponse_SdkV2 struct {
 	// the jdbc connection string for this warehouse
 	JdbcUrl types.String `tfsdk:"jdbc_url"`
 	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
-	// Must be a multiple of 3 between 3 and 960. The effective maximum cannot
-	// be lower than the warehouse's minimum capacity.
+	// Must be at least the minimum DBU for the selected warehouse size and no
+	// greater than the configured DBU limit. Actual capacity may be below this
+	// ceiling.
 	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.

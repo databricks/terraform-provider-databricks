@@ -16,12 +16,15 @@ List all account groups.
 
 ```hcl
 data "databricks_account_iam_groups_v2" "this" {
+  parent = "accounts/00000000-0000-0000-0000-000000000000"
 }
 ```
 
 
 ## Arguments
 The following arguments are supported:
+* `parent` (string, required) - The parent resource name of the account whose groups to list.
+  Format: accounts/{account_id}
 * `filter` (string, optional) - Optional. Allows filtering groups by group name or external id
 * `page_size` (integer, optional) - The maximum number of groups to return. The service may return fewer than this value.
   If not provided, defaults to 1000, which is also the maximum allowed. Requests for more than the maximum are clamped to 1000
@@ -33,3 +36,8 @@ This data source exports a single attribute, `groups`. It is a list of resources
 * `external_id` (string) - ExternalId of the group in the customer's IdP
 * `group_id` (string) - Internal group ID of the group in Databricks
 * `group_name` (string) - Display name of the group
+* `name` (string) - The resource name of the group. The format depends on the API that returned it:
+  - Account-scoped: accounts/{account_id}/groups/{group_id}
+  - Workspace-scoped: groups/{group_id}
+* `parent` (string) - The resource name of the account that contains the group, `accounts/{account_id}`. Both the
+  account-scoped and workspace-scoped APIs return it

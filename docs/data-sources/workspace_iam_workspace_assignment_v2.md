@@ -6,7 +6,7 @@ subcategory: "Identity and Access Management"
 
 [API Documentation](https://docs.databricks.com/api/workspace/iamv2)
 
-Reads a single workspace assignment, scoped to the workspace, identified by principal ID.
+Reads a single workspace assignment, scoped to the workspace, by its resource name, `workspace-assignments/{principal_id}`.
 
 
 ## Example Usage
@@ -17,14 +17,16 @@ provider (the workspace is taken from the provider context).
 
 ```hcl
 data "databricks_workspace_iam_workspace_assignment_v2" "this" {
-  principal_id = 987654321
+  name = "workspace-assignments/987654321"
 }
 ```
 
 
 ## Arguments
 The following arguments are supported:
-* `principal_id` (integer, required) - The internal ID of the principal (user/sp/group) in Databricks
+* `name` (string, required) - The resource name of the workspace assignment. The format depends on the API that returned it:
+  - Account-scoped: accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}
+  - Workspace-scoped: workspace-assignments/{principal_id}
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -39,6 +41,14 @@ The following attributes are exported:
   client-settable field. Create and update manage exactly this set, including entitlements the
   principal also holds through a group.
   List responses leave this field empty. Get a single principal to read its entitlements
-* `principal_id` (integer) - The internal ID of the principal (user/sp/group) in Databricks
+* `name` (string) - The resource name of the workspace assignment. The format depends on the API that returned it:
+  - Account-scoped: accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}
+  - Workspace-scoped: workspace-assignments/{principal_id}
+* `parent` (string) - The resource name of the workspace that contains the assignment,
+  `accounts/{account_id}/workspaces/{workspace_id}`. Both the account-scoped and workspace-scoped
+  APIs return it
+* `principal_id` (integer) - The internal ID of the principal (user/sp/group) in Databricks. Set when the assignment is
+  created and cannot be changed afterwards; to assign a different principal, create a new
+  assignment
 * `principal_type` (string) - The type of the principal (user/service principal/group) that is assigned. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
 * `workspace_id` (integer) - The workspace ID where the principal is assigned

@@ -1886,13 +1886,17 @@ type CreateRoleRequest_SdkV2 struct {
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"-"`
 	// If true, update the role if it already exists instead of returning an
-	// error.
+	// error. This requires `role_id` to be set. Without `role_id`, the request
+	// follows the normal create path and fails if the role name already exists.
 	//
-	// When the role already exists, the provided `role` spec fully replaces the
-	// existing one: `membership_roles` is overwritten, not merged. Leaving
-	// `membership_roles` empty clears all of the role's existing memberships,
-	// including `DATABRICKS_SUPERUSER`. Always send the complete desired list
-	// of memberships when using this field.
+	// When the role already exists, only mutable fields are updated. Attributes
+	// omitted from the request retain their current values. Set an attribute
+	// explicitly to false to disable it. `identity_type`, `auth_method`, and
+	// `postgres_role` retain their existing values; supplied values for these
+	// fields are ignored. `membership_roles` is overwritten, not merged.
+	// Leaving `membership_roles` empty clears all of the role's existing
+	// memberships, including `DATABRICKS_SUPERUSER`. Always send the complete
+	// desired list of memberships when using this field.
 	ReplaceExisting types.Bool `tfsdk:"-"`
 	// The desired specification of a Role.
 	Role types.List `tfsdk:"role"`
@@ -9219,12 +9223,22 @@ type RoleRoleSpec_SdkV2 struct {
 	//
 	// NOTE: for the Databricks identity type GROUP, LAKEBASE_OAUTH_V1 is the
 	// default auth method (group can login as well).
+	//
+	// This field is set when the role is created and cannot be changed by
+	// UpdateRole. If provided in an UpdateRole request body, its value is
+	// ignored and the existing value is retained. Do not include this field as
+	// an explicit path in update_mask.
 	AuthMethod types.String `tfsdk:"auth_method"`
 	// The type of role. When specifying a managed-identity, the chosen role_id
 	// must be a valid:
 	//
 	// * application ID for SERVICE_PRINCIPAL * user email for USER * group name
 	// for GROUP
+	//
+	// This field is set when the role is created and cannot be changed by
+	// UpdateRole. If provided in an UpdateRole request body, its value is
+	// ignored and the existing value is retained. Do not include this field as
+	// an explicit path in update_mask.
 	IdentityType types.String `tfsdk:"identity_type"`
 	// An enum value for a standard role that this role is a member of.
 	MembershipRoles types.List `tfsdk:"membership_roles"`
@@ -9240,6 +9254,11 @@ type RoleRoleSpec_SdkV2 struct {
 	//
 	// 1. user email for IdentityType.USER 2. app ID for
 	// IdentityType.SERVICE_PRINCIPAL 2. group name for IdentityType.GROUP
+	//
+	// This field is set when the role is created and cannot be changed by
+	// UpdateRole. If provided in an UpdateRole request body, its value is
+	// ignored and the existing value is retained. Do not include this field as
+	// an explicit path in update_mask.
 	PostgresRole types.String `tfsdk:"postgres_role"`
 }
 
@@ -12024,7 +12043,21 @@ type UpdateRoleRequest_SdkV2 struct {
 	// The role's `name` field is used to identify the role to update. Format:
 	// projects/{project_id}/branches/{branch_id}/roles/{role_id}
 	Role types.List `tfsdk:"role"`
-	// The list of fields to update.
+	// The list of fields to update. Supported fields are
+	// `spec.membership_roles`, `spec.attributes.createdb`,
+	// `spec.attributes.createrole`, and `spec.attributes.bypassrls`.
+	//
+	// `spec.identity_type`, `spec.auth_method`, and `spec.postgres_role` cannot
+	// be changed. Values supplied for these fields in the request body are
+	// ignored. Including one of these fields as an explicit path in update_mask
+	// returns an INVALID_PARAMETER_VALUE error. When `spec` is the only path in
+	// the mask, only the supplied mutable attributes are updated. `*` by
+	// itself, or `spec` combined with other supported paths, selects all
+	// supported mutable fields. For these masks, all three attributes
+	// (`createdb`, `createrole`, and `bypassrls`) must be supplied; omitting
+	// any returns an INVALID_PARAMETER_VALUE error. Each of these mask forms
+	// replaces `membership_roles`. Omitting it or supplying an empty list
+	// clears all memberships, including `DATABRICKS_SUPERUSER`.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

@@ -23623,7 +23623,8 @@ func (m *ListFunctionsResponse_SdkV2) SetFunctions(ctx context.Context, v []Func
 
 type ListMcpServicesRequest_SdkV2 struct {
 	// Maximum number of MCP services to return. Defaults to 200 when unset or
-	// 0; the maximum is 200. Use `page_token` to retrieve additional pages.
+	// 0; the maximum is 1000 for `view = BASIC` and 200 for `view = FULL`. Use
+	// `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from the previous response.
 	PageToken types.String `tfsdk:"-"`
@@ -23997,7 +23998,8 @@ func (m *ListMetastoresResponse_SdkV2) SetMetastores(ctx context.Context, v []Me
 
 type ListModelProviderServicesRequest_SdkV2 struct {
 	// Maximum number of provider services to return. Defaults to 200 when unset
-	// or 0; the maximum is 200. Use `page_token` to retrieve additional pages.
+	// or 0; the maximum is 1000 for `view = BASIC` and 200 for `view = FULL`.
+	// Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from the previous response.
 	PageToken types.String `tfsdk:"-"`
@@ -24188,7 +24190,8 @@ func (m *ListModelProviderServicesResponse_SdkV2) SetModelProviderServices(ctx c
 
 type ListModelServicesRequest_SdkV2 struct {
 	// Maximum number of model services to return. Defaults to 200 when unset or
-	// 0; the maximum is 200. Use `page_token` to retrieve additional pages.
+	// 0; the maximum is 1000 for `view = BASIC` and 200 for `view = FULL`. Use
+	// `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from the previous response.
 	PageToken types.String `tfsdk:"-"`
@@ -36840,7 +36843,7 @@ type ReadVolumeRequest_SdkV2 struct {
 	// Whether to include volumes in the response for which the principal can
 	// only access selective metadata for
 	IncludeBrowse types.Bool `tfsdk:"-"`
-	// The three-level (fully qualified) name of the volume
+	// The fully qualified name of the volume.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -46451,13 +46454,14 @@ func (m *UpdateWorkspaceBindingsResponse_SdkV2) SetBindings(ctx context.Context,
 }
 
 type ValidateCredentialRequest_SdkV2 struct {
+	// Deprecated: create a credential and pass its credential_name instead.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
-
+	// Deprecated: create a credential and pass its credential_name instead.
 	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity"`
 	// Required. The name of an existing credential or long-lived cloud
 	// credential to validate.
 	CredentialName types.String `tfsdk:"credential_name"`
-
+	// Deprecated: create a credential and pass its credential_name instead.
 	DatabricksGcpServiceAccount types.List `tfsdk:"databricks_gcp_service_account"`
 	// The name of an existing external location to validate. Only applicable
 	// for storage credentials (purpose is **STORAGE**.)
@@ -46801,15 +46805,23 @@ func (m *ValidateCredentialResponse_SdkV2) SetResults(ctx context.Context, v []C
 }
 
 type ValidateStorageCredential_SdkV2 struct {
-	// The AWS IAM role configuration.
+	// Deprecated: create a storage credential and pass its
+	// storage_credential_name instead. The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
-	// The Azure managed identity configuration.
+	// Deprecated: create a storage credential and pass its
+	// storage_credential_name instead. The Azure managed identity
+	// configuration.
 	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity"`
-	// The Azure service principal configuration.
+	// Deprecated: create a storage credential and pass its
+	// storage_credential_name instead. The Azure service principal
+	// configuration.
 	AzureServicePrincipal types.List `tfsdk:"azure_service_principal"`
-	// The Cloudflare API token configuration.
+	// Deprecated: create a storage credential and pass its
+	// storage_credential_name instead. The Cloudflare API token configuration.
 	CloudflareApiToken types.List `tfsdk:"cloudflare_api_token"`
-	// The Databricks created GCP service account configuration.
+	// Deprecated: create a storage credential and pass its
+	// storage_credential_name instead. The Databricks created GCP service
+	// account configuration.
 	DatabricksGcpServiceAccount types.List `tfsdk:"databricks_gcp_service_account"`
 	// The name of an existing external location to validate.
 	ExternalLocationName types.String `tfsdk:"external_location_name"`

@@ -32,7 +32,9 @@ type DirectGroupMembersData struct {
 	// than this value. If not provided, defaults to 1000, which is also the
 	// maximum allowed. Requests for more than the maximum are clamped to 1000.
 	PageSize types.Int64 `tfsdk:"page_size"`
-	GroupId  types.Int64 `tfsdk:"group_id"`
+	// The parent resource name of the group whose direct members to list.
+	// Format: accounts/{account_id}/groups/{group_id}
+	Parent types.String `tfsdk:"parent"`
 }
 
 func (DirectGroupMembersData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -42,10 +44,10 @@ func (DirectGroupMembersData) GetComplexFieldTypes(context.Context) map[string]r
 }
 
 func (m DirectGroupMembersData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["direct_group_members"] = attrs["direct_group_members"].SetComputed()
-	attrs["group_id"] = attrs["group_id"].SetRequired()
 	return attrs
 }
 

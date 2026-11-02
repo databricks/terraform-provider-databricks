@@ -34,7 +34,11 @@ type GroupsData struct {
 	// The maximum number of groups to return. The service may return fewer than
 	// this value. If not provided, defaults to 1000, which is also the maximum
 	// allowed. Requests for more than the maximum are clamped to 1000.
-	PageSize           types.Int64  `tfsdk:"page_size"`
+	PageSize types.Int64 `tfsdk:"page_size"`
+	// The resource name of the account to list groups in,
+	// `accounts/{account_id}`. Optional: defaults to the account of the calling
+	// workspace, and any other account is rejected.
+	Parent             types.String `tfsdk:"parent"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
@@ -48,6 +52,7 @@ func (GroupsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type 
 func (m GroupsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetOptional()
 
 	attrs["groups"] = attrs["groups"].SetComputed()
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()

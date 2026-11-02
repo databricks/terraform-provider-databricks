@@ -35,6 +35,14 @@ Plugin Framework resources.
 Install Terraform on `PATH`, or set `TF_ACC_TERRAFORM_PATH` to its executable.
 The normal GitHub Actions tests job installs Terraform 1.13.5 with its wrapper
 disabled so the test runner can invoke the CLI directly.
+
+CI runs lint, four non-replay shards, and eight replay shards in separate jobs.
+The fixed matrix uses `.github/scripts/select_test_packages.py` to discover Go
+packages, balancing non-replay shards by Go source size and replay shards by YAML
+fixture count. New packages are included automatically, and packages without
+tests stay in the non-replay coverage report. Each test job uploads its coverage
+report, and the required `tests` check waits for every job to succeed.
+
 These hermetic tests run in the normal Go test suite, including `-short`;
 they do not require `TF_ACC`, live credentials, or `CLOUD_ENV`. The runner
 does not download Terraform. Client configuration ignores ambient credential

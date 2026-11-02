@@ -16,12 +16,15 @@ List all account service principals.
 
 ```hcl
 data "databricks_account_iam_service_principals_v2" "this" {
+  parent = "accounts/00000000-0000-0000-0000-000000000000"
 }
 ```
 
 
 ## Arguments
 The following arguments are supported:
+* `parent` (string, required) - The parent resource name of the account whose service principals to list.
+  Format: accounts/{account_id}
 * `filter` (string, optional) - Optional. Allows filtering service principals by application id or external id
 * `page_size` (integer, optional) - The maximum number of service principals to return. The service may return fewer than this value.
   If not provided, defaults to 1000, which is also the maximum allowed. Requests for more than the maximum are clamped to 1000
@@ -35,4 +38,9 @@ This data source exports a single attribute, `service_principals`. It is a list 
   afterwards; when omitted, the server generates one
 * `display_name` (string) - Display name of the service principal
 * `external_id` (string) - ExternalId of the service principal in the customer's IdP
+* `name` (string) - The resource name of the service principal. The format depends on the API that returned it:
+  - Account-scoped: accounts/{account_id}/service-principals/{service_principal_id}
+  - Workspace-scoped: service-principals/{service_principal_id}
+* `parent` (string) - The resource name of the account that contains the service principal,
+  `accounts/{account_id}`. Both the account-scoped and workspace-scoped APIs return it
 * `service_principal_id` (string) - Internal service principal ID of the service principal in Databricks

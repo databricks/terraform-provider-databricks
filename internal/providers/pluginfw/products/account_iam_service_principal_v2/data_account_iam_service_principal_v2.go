@@ -43,6 +43,15 @@ type ServicePrincipalData struct {
 	DisplayName types.String `tfsdk:"display_name"`
 	// ExternalId of the service principal in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
+	// The resource name of the service principal. The format depends on the API
+	// that returned it: - Account-scoped:
+	// accounts/{account_id}/service-principals/{service_principal_id} -
+	// Workspace-scoped: service-principals/{service_principal_id}
+	Name types.String `tfsdk:"name"`
+	// The resource name of the account that contains the service principal,
+	// `accounts/{account_id}`. Both the account-scoped and workspace-scoped
+	// APIs return it.
+	Parent types.String `tfsdk:"parent"`
 	// Internal service principal ID of the service principal in Databricks.
 	ServicePrincipalId types.String `tfsdk:"service_principal_id"`
 }
@@ -73,6 +82,8 @@ func (m ServicePrincipalData) ToObjectValue(ctx context.Context) basetypes.Objec
 			"application_id":       m.ApplicationId,
 			"display_name":         m.DisplayName,
 			"external_id":          m.ExternalId,
+			"name":                 m.Name,
+			"parent":               m.Parent,
 			"service_principal_id": m.ServicePrincipalId,
 		},
 	)
@@ -88,6 +99,8 @@ func (m ServicePrincipalData) Type(ctx context.Context) attr.Type {
 			"application_id":       types.StringType,
 			"display_name":         types.StringType,
 			"external_id":          types.StringType,
+			"name":                 types.StringType,
+			"parent":               types.StringType,
 			"service_principal_id": types.StringType,
 		},
 	}
@@ -99,7 +112,9 @@ func (m ServicePrincipalData) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["application_id"] = attrs["application_id"].SetComputed()
 	attrs["display_name"] = attrs["display_name"].SetComputed()
 	attrs["external_id"] = attrs["external_id"].SetComputed()
-	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
 
 	return attrs
 }

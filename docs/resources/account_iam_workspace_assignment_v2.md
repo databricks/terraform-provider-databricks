@@ -20,7 +20,7 @@ or `principal_id` replaces the assignment.
 
 ```hcl
 resource "databricks_account_iam_workspace_assignment_v2" "this" {
-  workspace_id = 123456789
+  parent       = "accounts/00000000-0000-0000-0000-000000000000/workspaces/123456789"
   principal_id = 987654321
   entitlements = ["WORKSPACE_ACCESS"]
 }
@@ -29,7 +29,12 @@ resource "databricks_account_iam_workspace_assignment_v2" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `principal_id` (integer, required) - The internal ID of the principal (user/sp/group) in Databricks
+* `parent` (string, required) - The resource name of the workspace that contains the assignment,
+  `accounts/{account_id}/workspaces/{workspace_id}`. Both the account-scoped and workspace-scoped
+  APIs return it
+* `principal_id` (integer, required) - The internal ID of the principal (user/sp/group) in Databricks. Set when the assignment is
+  created and cannot be changed afterwards; to assign a different principal, create a new
+  assignment
 * `entitlements` (list of string, optional) - Entitlements granted directly to the principal on this workspace. This is the only
   client-settable field. Create and update manage exactly this set, including entitlements the
   principal also holds through a group.
@@ -40,6 +45,9 @@ In addition to the above arguments, the following attributes are exported:
 * `account_id` (string) - The account ID parent of the workspace where the principal is assigned
 * `effective_entitlements` (list of string) - Every entitlement the principal holds in this workspace, whether granted directly or through
   group membership. Get responses populate this field. List responses leave it empty
+* `name` (string) - The resource name of the workspace assignment. The format depends on the API that returned it:
+  - Account-scoped: accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}
+  - Workspace-scoped: workspace-assignments/{principal_id}
 * `principal_type` (string) - The type of the principal (user/service principal/group) that is assigned. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
 * `workspace_id` (integer) - The workspace ID where the principal is assigned
 
@@ -47,12 +55,12 @@ In addition to the above arguments, the following attributes are exported:
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = "workspace_id,principal_id"
+  id = "name"
   to = databricks_account_iam_workspace_assignment_v2.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_account_iam_workspace_assignment_v2.this "workspace_id,principal_id"
+terraform import databricks_account_iam_workspace_assignment_v2.this "name"
 ```

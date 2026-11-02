@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -22,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -111,6 +109,11 @@ type WorkspaceIdentityDetail struct {
 	// The type of assignment the principal has to the workspace (direct or
 	// indirect).
 	AssignmentType types.String `tfsdk:"assignment_type"`
+	// The resource name of the workspace identity detail. Format:
+	// principals/{principal_id}/workspace-identity-detail
+	Name types.String `tfsdk:"name"`
+	// The resource name of the parent.
+	Parent types.String `tfsdk:"parent"`
 	// The internal ID of the principal (user/sp/group) in Databricks.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The type of the principal (user/service principal/group).
@@ -143,6 +146,8 @@ func (m WorkspaceIdentityDetail) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"assignment_type": m.AssignmentType,
+			"name":                      m.Name,
+			"parent":                    m.Parent,
 			"principal_id":              m.PrincipalId,
 			"principal_type":            m.PrincipalType,
 			"workspace_identity_status": m.WorkspaceIdentityStatus,
@@ -157,6 +162,8 @@ func (m WorkspaceIdentityDetail) ToObjectValue(ctx context.Context) basetypes.Ob
 func (m WorkspaceIdentityDetail) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"assignment_type": types.StringType,
+			"name":                      types.StringType,
+			"parent":                    types.StringType,
 			"principal_id":              types.Int64Type,
 			"principal_type":            types.StringType,
 			"workspace_identity_status": types.StringType,
@@ -170,6 +177,9 @@ func (m WorkspaceIdentityDetail) Type(ctx context.Context) attr.Type {
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (to *WorkspaceIdentityDetail) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from WorkspaceIdentityDetail) {
+	if !from.Parent.IsUnknown() {
+		to.Parent = from.Parent
+	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -178,17 +188,24 @@ func (to *WorkspaceIdentityDetail) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 // including both embedded model fields and additional fields. This method is called
 // during read.
 func (to *WorkspaceIdentityDetail) SyncFieldsDuringRead(ctx context.Context, from WorkspaceIdentityDetail) {
+	if !from.Parent.IsUnknown() {
+		to.Parent = from.Parent
+	}
 	to.ProviderConfig = from.ProviderConfig
 
+	to.Parent = types.StringValue(strings.TrimSuffix(to.Name.ValueString(), "/workspace-identity-detail"))
 }
 
 func (m WorkspaceIdentityDetail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["assignment_type"] = attrs["assignment_type"].SetComputed()
+	attrs["name"] = attrs["name"].SetComputed()
 	attrs["principal_id"] = attrs["principal_id"].SetComputed()
 	attrs["principal_type"] = attrs["principal_type"].SetComputed()
 	attrs["workspace_identity_status"] = attrs["workspace_identity_status"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
-	attrs["principal_id"] = attrs["principal_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 	attrs["provider_config"] = attrs["provider_config"].SetComputed()
 	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
@@ -295,6 +312,8 @@ func (r *WorkspaceIdentityDetailResource) Read(ctx context.Context, req resource
 }
 
 func (r *WorkspaceIdentityDetailResource) update(ctx context.Context, plan WorkspaceIdentityDetail, diags *diag.Diagnostics, state *tfsdk.State) {
+	// AIP-156 singletons have no ID, so derive the computed name from the parent and static path segment.
+	plan.Name = types.StringValue(plan.Parent.ValueString() + "/workspace-identity-detail")
 	var workspace_identity_detail iamv2.WorkspaceIdentityDetail
 
 	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &workspace_identity_detail)...)
@@ -304,7 +323,7 @@ func (r *WorkspaceIdentityDetailResource) update(ctx context.Context, plan Works
 
 	updateRequest := iamv2.UpdateWorkspaceIdentityDetailRequest{
 		WorkspaceIdentityDetail: workspace_identity_detail,
-		PrincipalId:             plan.PrincipalId.ValueInt64(),
+		Name:                    plan.Name.ValueString(),
 		UpdateMask:              *fieldmask.New(strings.Split("workspace_identity_status", ",")),
 	}
 
@@ -364,17 +383,13 @@ func (r *WorkspaceIdentityDetailResource) ImportState(ctx context.Context, req r
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
 			fmt.Sprintf(
-				"Expected import identifier with format: principal_id. Got: %q",
+				"Expected import identifier with format: name. Got: %q",
 				req.ID,
 			),
 		)
 		return
 	}
 
-	principalId, err := strconv.ParseInt(parts[0], 10, 64)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to parse import identifier", err.Error())
-		return
-	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("principal_id"), principalId)...)
+	name := parts[0]
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
 }

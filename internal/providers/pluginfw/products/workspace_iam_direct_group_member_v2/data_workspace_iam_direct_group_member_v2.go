@@ -105,6 +105,16 @@ type DirectGroupMemberData struct {
 	GroupId types.Int64 `tfsdk:"group_id"`
 	// The source of group membership (internal or from identity provider).
 	MembershipSource types.String `tfsdk:"membership_source"`
+	// The resource name of the group membership. The format depends on the API
+	// that returned it: - Account-scoped:
+	// accounts/{account_id}/groups/{group_id}/direct-members/{principal_id} -
+	// Workspace-scoped: groups/{group_id}/direct-members/{principal_id}
+	Name types.String `tfsdk:"name"`
+	// The resource name of the group that contains the membership. The format
+	// depends on the API that returned it: - Account-scoped:
+	// accounts/{account_id}/groups/{group_id} - Workspace-scoped:
+	// groups/{group_id}
+	Parent types.String `tfsdk:"parent"`
 	// Internal ID of the principal in Databricks.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The type of the principal (user/service principal/group).
@@ -139,6 +149,8 @@ func (m DirectGroupMemberData) ToObjectValue(ctx context.Context) basetypes.Obje
 			"external_id":       m.ExternalId,
 			"group_id":          m.GroupId,
 			"membership_source": m.MembershipSource,
+			"name":              m.Name,
+			"parent":            m.Parent,
 			"principal_id":      m.PrincipalId,
 			"principal_type":    m.PrincipalType,
 
@@ -156,6 +168,8 @@ func (m DirectGroupMemberData) Type(ctx context.Context) attr.Type {
 			"external_id":       types.StringType,
 			"group_id":          types.Int64Type,
 			"membership_source": types.StringType,
+			"name":              types.StringType,
+			"parent":            types.StringType,
 			"principal_id":      types.Int64Type,
 			"principal_type":    types.StringType,
 
@@ -167,9 +181,11 @@ func (m DirectGroupMemberData) Type(ctx context.Context) attr.Type {
 func (m DirectGroupMemberData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["display_name"] = attrs["display_name"].SetComputed()
 	attrs["external_id"] = attrs["external_id"].SetComputed()
-	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["group_id"] = attrs["group_id"].SetComputed()
 	attrs["membership_source"] = attrs["membership_source"].SetComputed()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["principal_id"] = attrs["principal_id"].SetComputed()
 	attrs["principal_type"] = attrs["principal_type"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()

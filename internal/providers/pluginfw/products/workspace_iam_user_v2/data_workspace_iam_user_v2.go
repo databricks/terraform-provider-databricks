@@ -106,6 +106,14 @@ type UserData struct {
 	ExternalId types.String `tfsdk:"external_id"`
 
 	FullName types.Object `tfsdk:"full_name"`
+	// The resource name of the user. The format depends on the API that
+	// returned it: - Account-scoped: accounts/{account_id}/users/{user_id} -
+	// Workspace-scoped: users/{user_id}
+	Name types.String `tfsdk:"name"`
+	// The resource name of the account that contains the user,
+	// `accounts/{account_id}`. Both the account-scoped and workspace-scoped
+	// APIs return it.
+	Parent types.String `tfsdk:"parent"`
 	// Internal userId of the user in Databricks.
 	UserId types.String `tfsdk:"user_id"`
 	// Username/email of the user.
@@ -141,6 +149,8 @@ func (m UserData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"account_user_status": m.AccountUserStatus,
 			"external_id":         m.ExternalId,
 			"full_name":           m.FullName,
+			"name":                m.Name,
+			"parent":              m.Parent,
 			"user_id":             m.UserId,
 			"username":            m.Username,
 
@@ -158,6 +168,8 @@ func (m UserData) Type(ctx context.Context) attr.Type {
 			"account_user_status": types.StringType,
 			"external_id":         types.StringType,
 			"full_name":           iamv2_tf.UserFullName{}.Type(ctx),
+			"name":                types.StringType,
+			"parent":              types.StringType,
 			"user_id":             types.StringType,
 			"username":            types.StringType,
 
@@ -171,7 +183,9 @@ func (m UserData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["account_user_status"] = attrs["account_user_status"].SetComputed()
 	attrs["external_id"] = attrs["external_id"].SetComputed()
 	attrs["full_name"] = attrs["full_name"].SetComputed()
-	attrs["user_id"] = attrs["user_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["user_id"] = attrs["user_id"].SetComputed()
 	attrs["username"] = attrs["username"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()

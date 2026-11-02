@@ -18,7 +18,7 @@ immutable — changing either field replaces the resource.
 
 ```hcl
 resource "databricks_account_iam_direct_group_member_v2" "this" {
-  group_id     = 123456789
+  parent       = "accounts/00000000-0000-0000-0000-000000000000/groups/123456789"
   principal_id = 987654321
 }
 ```
@@ -26,6 +26,10 @@ resource "databricks_account_iam_direct_group_member_v2" "this" {
 
 ## Arguments
 The following arguments are supported:
+* `parent` (string, required) - The resource name of the group that contains the membership. The format depends on the API
+  that returned it:
+  - Account-scoped: accounts/{account_id}/groups/{group_id}
+  - Workspace-scoped: groups/{group_id}
 * `principal_id` (integer, required) - Internal ID of the principal in Databricks
 
 ## Attributes
@@ -34,18 +38,21 @@ In addition to the above arguments, the following attributes are exported:
 * `external_id` (string) - The external ID of the principal in the customer's IdP
 * `group_id` (integer) - The internal ID of the group this member belongs to
 * `membership_source` (string) - The source of group membership (internal or from identity provider). Possible values are: `IDENTITY_PROVIDER`, `INTERNAL`
+* `name` (string) - The resource name of the group membership. The format depends on the API that returned it:
+  - Account-scoped: accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}
+  - Workspace-scoped: groups/{group_id}/direct-members/{principal_id}
 * `principal_type` (string) - The type of the principal (user/service principal/group). Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = "group_id,principal_id"
+  id = "name"
   to = databricks_account_iam_direct_group_member_v2.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_account_iam_direct_group_member_v2.this "group_id,principal_id"
+terraform import databricks_account_iam_direct_group_member_v2.this "name"
 ```

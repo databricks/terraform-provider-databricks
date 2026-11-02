@@ -40,6 +40,14 @@ type GroupData struct {
 	GroupId types.String `tfsdk:"group_id"`
 	// Display name of the group.
 	GroupName types.String `tfsdk:"group_name"`
+	// The resource name of the group. The format depends on the API that
+	// returned it: - Account-scoped: accounts/{account_id}/groups/{group_id} -
+	// Workspace-scoped: groups/{group_id}
+	Name types.String `tfsdk:"name"`
+	// The resource name of the account that contains the group,
+	// `accounts/{account_id}`. Both the account-scoped and workspace-scoped
+	// APIs return it.
+	Parent types.String `tfsdk:"parent"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -67,6 +75,8 @@ func (m GroupData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"external_id": m.ExternalId,
 			"group_id":    m.GroupId,
 			"group_name":  m.GroupName,
+			"name":        m.Name,
+			"parent":      m.Parent,
 		},
 	)
 }
@@ -80,6 +90,8 @@ func (m GroupData) Type(ctx context.Context) attr.Type {
 			"external_id": types.StringType,
 			"group_id":    types.StringType,
 			"group_name":  types.StringType,
+			"name":        types.StringType,
+			"parent":      types.StringType,
 		},
 	}
 }
@@ -87,8 +99,10 @@ func (m GroupData) Type(ctx context.Context) attr.Type {
 func (m GroupData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["external_id"] = attrs["external_id"].SetComputed()
-	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["group_id"] = attrs["group_id"].SetComputed()
 	attrs["group_name"] = attrs["group_name"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetComputed()
 
 	return attrs
 }

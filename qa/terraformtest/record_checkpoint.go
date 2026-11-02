@@ -1,10 +1,6 @@
 package terraformtest
 
 import (
-	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -44,71 +40,28 @@ func replayCheckpoint(t *testing.T, d *testDefinition) []byte {
 	return checkpoint
 }
 
-// Publish an immutable checkpoint first, then atomically update its YAML
-// reference. A failed/interrupted YAML write cannot corrupt an older snapshot
-// that this or another test still references.
-func saveRecordedCheckpoint(path string, original, updated, checkpoint []byte, requested string) error {
-	name := checkpointFilename(requested, checkpoint)
+// Write the test's checkpoint before updating the YAML. If the YAML write fails,
+// rerun recording to refresh both files; no checkpoint rollback is needed.
+func saveRecordedCheckpoint(path string, original, updated, checkpoint []byte) error {
+	name := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+	relative := filepath.Join("checkpoints", name+".tfstate")
 	var document yaml.Node
 	if err := yaml.Unmarshal(updated, &document); err != nil {
 		return err
 	}
-	if err := setYAMLField(yamlField(document.Content[0], "initial_state"), "checkpoint", filepath.ToSlash(name)); err != nil {
+	if err := setYAMLField(yamlField(document.Content[0], "initial_state"), "checkpoint", filepath.ToSlash(relative)); err != nil {
 		return err
 	}
 	final, err := yaml.Marshal(&document)
 	if err != nil {
 		return err
 	}
-	target := filepath.Join(filepath.Dir(path), name)
-	created, err := publishCheckpoint(target, checkpoint)
-	if err != nil {
+	target := filepath.Join(filepath.Dir(path), relative)
+	if err := os.MkdirAll(filepath.Dir(target), 0700); err != nil {
 		return err
 	}
-	if err := replaceRecording(path, original, final); err != nil {
-		if created {
-			_ = os.Remove(target)
-		}
+	if err := os.WriteFile(target, checkpoint, 0600); err != nil {
 		return err
 	}
-	return nil
-}
-
-func checkpointFilename(requested string, checkpoint []byte) string {
-	ext := filepath.Ext(requested)
-	stem := strings.TrimSuffix(requested, ext)
-	// Refresh a previously generated name instead of appending hashes forever.
-	if dot := strings.LastIndexByte(stem, '.'); dot >= 0 && len(stem)-dot-1 == 64 {
-		if _, err := hex.DecodeString(stem[dot+1:]); err == nil {
-			stem = stem[:dot]
-		}
-	}
-	return fmt.Sprintf("%s.%x%s", stem, sha256.Sum256(checkpoint), ext)
-}
-
-func publishCheckpoint(path string, checkpoint []byte) (bool, error) {
-	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
-		return false, err
-	}
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
-	if os.IsExist(err) {
-		existing, readErr := os.ReadFile(path)
-		if readErr == nil && !bytes.Equal(existing, checkpoint) {
-			readErr = fmt.Errorf("immutable checkpoint already exists with different contents")
-		}
-		return false, readErr
-	}
-	if err != nil {
-		return false, err
-	}
-	_, writeErr := file.Write(checkpoint)
-	if writeErr == nil {
-		writeErr = file.Sync()
-	}
-	closeErr := file.Close()
-	if writeErr != nil || closeErr != nil {
-		_ = os.Remove(path)
-		return false, fmt.Errorf("could not publish initial checkpoint")
-	}
-	return true, nil
+	return replaceRecording(path, original, final)
 }

@@ -9,7 +9,7 @@ host_metadata:
         - https://example.databricks.com/oidc/v1/token
     workspace_id: "12345"
 initial_state:
-    checkpoint: checkpoints/group.eb64ceb74d6197e24cdfbb3ed0a2163ea14c76a5b86c40538aa84c39cf955156.tfstate
+    checkpoint: checkpoints/rejected_update.tfstate
 recording:
     initial_state_template: |
         resource "databricks_group" "this" {

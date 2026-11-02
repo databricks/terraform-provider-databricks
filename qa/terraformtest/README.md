@@ -118,6 +118,8 @@ for examples and the record/replay checklist.
 
 ### Recording setup and initial state
 
+For `example.yaml`:
+
 ```yaml
 recording:
   environment_template: |
@@ -129,7 +131,7 @@ recording:
       display_name = "Original group"
     }
 initial_state:
-  checkpoint: checkpoints/group.tfstate
+  checkpoint: checkpoints/example.tfstate
 # steps and destroy follow as usual
 ```
 
@@ -147,11 +149,12 @@ generates a genuine Terraform checkpoint; no state JSON is constructed or edited
 A replay starting from that checkpoint must pass before files are saved. Replay
 runs neither recording template: it reads only the saved checkpoint and fixtures.
 
-Checkpoints use immutable content-hashed filenames. The checkpoint is published
-before the YAML reference is replaced atomically, so an interrupted write cannot
-alter an older snapshot. Older checkpoints remain until explicitly removed after
-checking their references. Regeneration uses the provider version in this checkout;
-preserve historical migration checkpoints rather than refreshing them routinely.
+Recording writes `checkpoints/<test_name>.tfstate` beside the YAML, using its
+filename without the extension as the test name. Refresh overwrites that checkpoint
+and updates the YAML reference; older checkpoint files are left in place. The
+checkpoint is written first. If saving the YAML fails, rerun recording to refresh
+both files. Regeneration uses the provider version in this checkout; preserve
+historical migration checkpoints rather than refreshing them routinely.
 
 The [rejected-update example](testdata/initial_state/rejected_update.yaml) creates
 a group for its initial state, checks a reserved-name validation error, and

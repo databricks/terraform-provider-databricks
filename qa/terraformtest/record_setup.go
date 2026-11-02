@@ -140,7 +140,7 @@ func finishInitialRecording(t *testing.T, path string, original, updated []byte,
 	if !t.Run("replay", func(t *testing.T) { run(t, d) }) {
 		return
 	}
-	if err := saveRecordedCheckpoint(path, original, updated, checkpoint, d.InitialState.Checkpoint); err != nil {
+	if err := saveRecordedCheckpoint(path, original, updated, checkpoint); err != nil {
 		t.Fatal(err)
 	}
 }

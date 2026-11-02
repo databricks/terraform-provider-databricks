@@ -32,13 +32,15 @@ func TestInitialStateRecordingGeneratesAndReplaysNativeCheckpoint(t *testing.T) 
 	server := httptest.NewServer(peer)
 	t.Cleanup(server.Close)
 	directory := localRecordingFiles(t, original, server.URL)
-	// Existing historical snapshots are never edited or replaced in place.
+	// Recording refreshes this test's checkpoint without deleting older files.
 	writeDiscoveryFile(t, directory, "checkpoints/group.tfstate", "historical-checkpoint")
+	writeDiscoveryFile(t, directory, "checkpoints/One.tfstate", "previous checkpoint")
 	output, err := recorderSubprocess(t, directory, "local")
 	require.NoError(t, err, output)
 	updated, err := loadDefinition(filepath.Join(directory, "One.yaml"))
 	require.NoError(t, err)
-	require.NotEqual(t, "checkpoints/group.tfstate", updated.InitialState.Checkpoint)
+	require.Equal(t, "checkpoints/One.tfstate", updated.InitialState.Checkpoint)
+	require.NotContains(t, string(updated.checkpoint), "previous checkpoint")
 	require.NotContains(t, string(updated.checkpoint), "9876543210123456")
 	require.NotContains(t, string(updated.checkpoint), "recorder-secret")
 	require.Contains(t, string(updated.checkpoint), `"workspace_id": "12345"`)
@@ -115,18 +117,19 @@ destroy: {calls: []}
 	}
 }
 
-func TestCheckpointPublicationPreservesOldSourceOnConcurrentEdits(t *testing.T) {
+func TestCheckpointWriteRemainsWhenYAMLUpdateFails(t *testing.T) {
 	directory := t.TempDir()
 	path := filepath.Join(directory, "test.yaml")
-	updated := []byte(minimalDefinition + "initial_state: {checkpoint: snapshots/group.tfstate}\n")
+	updated := []byte(minimalDefinition + "initial_state: {checkpoint: checkpoints/old.tfstate}\n")
 	require.NoError(t, os.WriteFile(path, []byte("concurrent edit"), 0600))
-	err := saveRecordedCheckpoint(path, []byte("original"), updated, []byte("new snapshot"), "snapshots/group.tfstate")
+	err := saveRecordedCheckpoint(path, []byte("original"), updated, []byte("new snapshot"))
 	require.ErrorContains(t, err, "changed while recording")
-	files, err := os.ReadDir(filepath.Join(directory, "snapshots"))
+	checkpoint, err := os.ReadFile(filepath.Join(directory, "checkpoints/test.tfstate"))
 	require.NoError(t, err)
-	require.Empty(t, files)
-	name := checkpointFilename("group.tfstate", []byte("snapshot"))
-	require.Equal(t, name, checkpointFilename(name, []byte("snapshot")))
+	require.Equal(t, "new snapshot", string(checkpoint))
+	contents, err := os.ReadFile(path)
+	require.NoError(t, err)
+	require.Equal(t, "concurrent edit", string(contents))
 }
 
 func TestSetupTranscriptRedactsSecretsBeforeCheckpointGeneration(t *testing.T) {

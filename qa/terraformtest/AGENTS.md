@@ -25,5 +25,7 @@
   is cleaned up last; `initial_state_template` seeds the journey's own state.
   Replay runs neither template. Generate checkpoints with Terraform from sanitized
   fixture responses, never by editing a live checkpoint or private provider data.
-- Checkpoints are immutable and content-addressed. Preserve historical migration
-  snapshots; refresh generates state for the provider version in this checkout.
+- Recording overwrites `checkpoints/<test_name>.tfstate` before updating the YAML.
+  If saving YAML fails, rerun recording.
+  Leave older checkpoint files in place. Preserve historical migration snapshots;
+  refresh generates state for the provider version in this checkout.

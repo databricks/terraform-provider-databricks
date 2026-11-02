@@ -153,6 +153,16 @@ alter an older snapshot. Older checkpoints remain until explicitly removed after
 checking their references. Regeneration uses the provider version in this checkout;
 preserve historical migration checkpoints rather than refreshing them routinely.
 
+The [rejected-update example](testdata/initial_state/rejected_update.yaml) creates
+a group for its initial state, checks a reserved-name validation error, and
+destroys the group. Refresh its fixtures and checkpoint with:
+
+```sh
+TEST_RECORDER_PROFILE_NAME=my-dev-profile \
+  go test ./qa/terraformtest -count=1 \
+  -run '^TestInitialStateReplay$/^rejected_update$'
+```
+
 ## Test definition
 
 Use `version: 1`, optional `initial_state`, followed by `steps` and `destroy`.

@@ -21,6 +21,8 @@ func TestInitialStateRecordingGeneratesAndReplaysNativeCheckpoint(t *testing.T) 
 	require.NoError(t, err)
 	var document yaml.Node
 	require.NoError(t, yaml.Unmarshal(original, &document))
+	require.NoError(t, setYAMLField(document.Content[0], "host_metadata", map[string]any{"workspace_id": "12345"}))
+	require.NoError(t, setYAMLField(yamlField(document.Content[0], "initial_state"), "checkpoint", "checkpoints/group.tfstate"))
 	require.NoError(t, setYAMLField(document.Content[0], "recording", recordingSetup{
 		InitialStateTemplate: "resource \"databricks_group\" \"this\" {\n  display_name = \"Example group\"\n}\n",
 	}))

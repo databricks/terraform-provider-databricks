@@ -44,7 +44,18 @@ type WorkspaceAssignmentData struct {
 	// List responses leave this field empty. Get a single principal to read its
 	// entitlements.
 	Entitlements types.Set `tfsdk:"entitlements"`
-	// The internal ID of the principal (user/sp/group) in Databricks.
+	// The resource name of the workspace assignment. The format depends on the
+	// API that returned it: - Account-scoped:
+	// accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}
+	// - Workspace-scoped: workspace-assignments/{principal_id}
+	Name types.String `tfsdk:"name"`
+	// The resource name of the workspace that contains the assignment,
+	// `accounts/{account_id}/workspaces/{workspace_id}`. Both the
+	// account-scoped and workspace-scoped APIs return it.
+	Parent types.String `tfsdk:"parent"`
+	// The internal ID of the principal (user/sp/group) in Databricks. Set when
+	// the assignment is created and cannot be changed afterwards; to assign a
+	// different principal, create a new assignment.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The type of the principal (user/service principal/group) that is
 	// assigned.
@@ -80,6 +91,8 @@ func (m WorkspaceAssignmentData) ToObjectValue(ctx context.Context) basetypes.Ob
 			"account_id":             m.AccountId,
 			"effective_entitlements": m.EffectiveEntitlements,
 			"entitlements":           m.Entitlements,
+			"name":                   m.Name,
+			"parent":                 m.Parent,
 			"principal_id":           m.PrincipalId,
 			"principal_type":         m.PrincipalType,
 			"workspace_id":           m.WorkspaceId,
@@ -99,6 +112,8 @@ func (m WorkspaceAssignmentData) Type(ctx context.Context) attr.Type {
 			"entitlements": basetypes.SetType{
 				ElemType: types.StringType,
 			},
+			"name":           types.StringType,
+			"parent":         types.StringType,
 			"principal_id":   types.Int64Type,
 			"principal_type": types.StringType,
 			"workspace_id":   types.Int64Type,
@@ -110,9 +125,11 @@ func (m WorkspaceAssignmentData) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["effective_entitlements"] = attrs["effective_entitlements"].SetComputed()
 	attrs["entitlements"] = attrs["entitlements"].SetComputed()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["principal_id"] = attrs["principal_id"].SetComputed()
 	attrs["principal_type"] = attrs["principal_type"].SetComputed()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 
 	return attrs
 }

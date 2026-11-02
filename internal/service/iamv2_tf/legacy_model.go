@@ -29,8 +29,9 @@ import (
 type CreateDirectGroupMemberProxyRequest_SdkV2 struct {
 	// Required. The group membership to create.
 	DirectGroupMember types.List `tfsdk:"direct_group_member"`
-	// Required. Internal ID of the group in Databricks.
-	GroupId types.Int64 `tfsdk:"-"`
+	// The parent resource name of the group to add the member to. Format:
+	// groups/{group_id}
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *CreateDirectGroupMemberProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateDirectGroupMemberProxyRequest_SdkV2) {
@@ -59,7 +60,7 @@ func (to *CreateDirectGroupMemberProxyRequest_SdkV2) SyncFieldsDuringRead(ctx co
 func (m CreateDirectGroupMemberProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["direct_group_member"] = attrs["direct_group_member"].SetRequired()
 	attrs["direct_group_member"] = attrs["direct_group_member"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
 
 	return attrs
 }
@@ -85,7 +86,7 @@ func (m CreateDirectGroupMemberProxyRequest_SdkV2) ToObjectValue(ctx context.Con
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"direct_group_member": m.DirectGroupMember,
-			"group_id":            m.GroupId,
+			"parent":              m.Parent,
 		})
 }
 
@@ -96,7 +97,7 @@ func (m CreateDirectGroupMemberProxyRequest_SdkV2) Type(ctx context.Context) att
 			"direct_group_member": basetypes.ListType{
 				ElemType: DirectGroupMember_SdkV2{}.Type(ctx),
 			},
-			"group_id": types.Int64Type,
+			"parent": types.StringType,
 		},
 	}
 }
@@ -130,8 +131,9 @@ func (m *CreateDirectGroupMemberProxyRequest_SdkV2) SetDirectGroupMember(ctx con
 type CreateDirectGroupMemberRequest_SdkV2 struct {
 	// Required. The direct group member to be added to the group.
 	DirectGroupMember types.List `tfsdk:"direct_group_member"`
-	// Required. Internal ID of the group in Databricks.
-	GroupId types.Int64 `tfsdk:"-"`
+	// The parent resource name of the group to add the member to. Format:
+	// accounts/{account_id}/groups/{group_id}
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *CreateDirectGroupMemberRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateDirectGroupMemberRequest_SdkV2) {
@@ -160,8 +162,7 @@ func (to *CreateDirectGroupMemberRequest_SdkV2) SyncFieldsDuringRead(ctx context
 func (m CreateDirectGroupMemberRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["direct_group_member"] = attrs["direct_group_member"].SetRequired()
 	attrs["direct_group_member"] = attrs["direct_group_member"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
 
 	return attrs
 }
@@ -187,7 +188,7 @@ func (m CreateDirectGroupMemberRequest_SdkV2) ToObjectValue(ctx context.Context)
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"direct_group_member": m.DirectGroupMember,
-			"group_id":            m.GroupId,
+			"parent":              m.Parent,
 		})
 }
 
@@ -198,7 +199,7 @@ func (m CreateDirectGroupMemberRequest_SdkV2) Type(ctx context.Context) attr.Typ
 			"direct_group_member": basetypes.ListType{
 				ElemType: DirectGroupMember_SdkV2{}.Type(ctx),
 			},
-			"group_id": types.Int64Type,
+			"parent": types.StringType,
 		},
 	}
 }
@@ -232,6 +233,10 @@ func (m *CreateDirectGroupMemberRequest_SdkV2) SetDirectGroupMember(ctx context.
 type CreateGroupProxyRequest_SdkV2 struct {
 	// Required. Group to be created in Databricks
 	Group types.List `tfsdk:"group"`
+	// The resource name of the account to create the group in,
+	// `accounts/{account_id}`. Optional: defaults to the account of the calling
+	// workspace, and any other account is rejected.
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *CreateGroupProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateGroupProxyRequest_SdkV2) {
@@ -260,6 +265,7 @@ func (to *CreateGroupProxyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 func (m CreateGroupProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group"] = attrs["group"].SetRequired()
 	attrs["group"] = attrs["group"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].SetOptional()
 
 	return attrs
 }
@@ -284,7 +290,8 @@ func (m CreateGroupProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basety
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group": m.Group,
+			"group":  m.Group,
+			"parent": m.Parent,
 		})
 }
 
@@ -295,6 +302,7 @@ func (m CreateGroupProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"group": basetypes.ListType{
 				ElemType: Group_SdkV2{}.Type(ctx),
 			},
+			"parent": types.StringType,
 		},
 	}
 }
@@ -328,6 +336,9 @@ func (m *CreateGroupProxyRequest_SdkV2) SetGroup(ctx context.Context, v Group_Sd
 type CreateGroupRequest_SdkV2 struct {
 	// Required. Group to be created in Databricks
 	Group types.List `tfsdk:"group"`
+	// The parent resource name of the account in which to create the group.
+	// Format: accounts/{account_id}
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *CreateGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateGroupRequest_SdkV2) {
@@ -356,7 +367,7 @@ func (to *CreateGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 func (m CreateGroupRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group"] = attrs["group"].SetRequired()
 	attrs["group"] = attrs["group"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
 
 	return attrs
 }
@@ -381,7 +392,8 @@ func (m CreateGroupRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group": m.Group,
+			"group":  m.Group,
+			"parent": m.Parent,
 		})
 }
 
@@ -392,6 +404,7 @@ func (m CreateGroupRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"group": basetypes.ListType{
 				ElemType: Group_SdkV2{}.Type(ctx),
 			},
+			"parent": types.StringType,
 		},
 	}
 }
@@ -533,6 +546,10 @@ func (m *CreateIdentityVisibilityFilterRequest_SdkV2) SetIdentityVisibilityFilte
 }
 
 type CreateServicePrincipalProxyRequest_SdkV2 struct {
+	// The resource name of the account to create the service principal in,
+	// `accounts/{account_id}`. Optional: defaults to the account of the calling
+	// workspace, and any other account is rejected.
+	Parent types.String `tfsdk:"-"`
 	// Required. Service principal to be created in Databricks
 	ServicePrincipal types.List `tfsdk:"service_principal"`
 }
@@ -563,6 +580,7 @@ func (to *CreateServicePrincipalProxyRequest_SdkV2) SyncFieldsDuringRead(ctx con
 func (m CreateServicePrincipalProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["service_principal"] = attrs["service_principal"].SetRequired()
 	attrs["service_principal"] = attrs["service_principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].SetOptional()
 
 	return attrs
 }
@@ -587,6 +605,7 @@ func (m CreateServicePrincipalProxyRequest_SdkV2) ToObjectValue(ctx context.Cont
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"parent":            m.Parent,
 			"service_principal": m.ServicePrincipal,
 		})
 }
@@ -595,6 +614,7 @@ func (m CreateServicePrincipalProxyRequest_SdkV2) ToObjectValue(ctx context.Cont
 func (m CreateServicePrincipalProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"parent": types.StringType,
 			"service_principal": basetypes.ListType{
 				ElemType: ServicePrincipal_SdkV2{}.Type(ctx),
 			},
@@ -629,6 +649,9 @@ func (m *CreateServicePrincipalProxyRequest_SdkV2) SetServicePrincipal(ctx conte
 }
 
 type CreateServicePrincipalRequest_SdkV2 struct {
+	// The parent resource name of the account in which to create the service
+	// principal. Format: accounts/{account_id}
+	Parent types.String `tfsdk:"-"`
 	// Required. Service principal to be created in Databricks
 	ServicePrincipal types.List `tfsdk:"service_principal"`
 }
@@ -659,7 +682,7 @@ func (to *CreateServicePrincipalRequest_SdkV2) SyncFieldsDuringRead(ctx context.
 func (m CreateServicePrincipalRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["service_principal"] = attrs["service_principal"].SetRequired()
 	attrs["service_principal"] = attrs["service_principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
 
 	return attrs
 }
@@ -684,6 +707,7 @@ func (m CreateServicePrincipalRequest_SdkV2) ToObjectValue(ctx context.Context) 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"parent":            m.Parent,
 			"service_principal": m.ServicePrincipal,
 		})
 }
@@ -692,6 +716,7 @@ func (m CreateServicePrincipalRequest_SdkV2) ToObjectValue(ctx context.Context) 
 func (m CreateServicePrincipalRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"parent": types.StringType,
 			"service_principal": basetypes.ListType{
 				ElemType: ServicePrincipal_SdkV2{}.Type(ctx),
 			},
@@ -726,6 +751,10 @@ func (m *CreateServicePrincipalRequest_SdkV2) SetServicePrincipal(ctx context.Co
 }
 
 type CreateUserProxyRequest_SdkV2 struct {
+	// The resource name of the account to create the user in,
+	// `accounts/{account_id}`. Optional: defaults to the account of the calling
+	// workspace, and any other account is rejected.
+	Parent types.String `tfsdk:"-"`
 	// Required. User to be created in Databricks
 	User types.List `tfsdk:"user"`
 }
@@ -756,6 +785,7 @@ func (to *CreateUserProxyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context
 func (m CreateUserProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["user"] = attrs["user"].SetRequired()
 	attrs["user"] = attrs["user"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].SetOptional()
 
 	return attrs
 }
@@ -780,7 +810,8 @@ func (m CreateUserProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"user": m.User,
+			"parent": m.Parent,
+			"user":   m.User,
 		})
 }
 
@@ -788,6 +819,7 @@ func (m CreateUserProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetyp
 func (m CreateUserProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"parent": types.StringType,
 			"user": basetypes.ListType{
 				ElemType: User_SdkV2{}.Type(ctx),
 			},
@@ -822,6 +854,9 @@ func (m *CreateUserProxyRequest_SdkV2) SetUser(ctx context.Context, v User_SdkV2
 }
 
 type CreateUserRequest_SdkV2 struct {
+	// The parent resource name of the account in which to create the user.
+	// Format: accounts/{account_id}
+	Parent types.String `tfsdk:"-"`
 	// Required. User to be created in Databricks
 	User types.List `tfsdk:"user"`
 }
@@ -852,7 +887,7 @@ func (to *CreateUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 func (m CreateUserRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["user"] = attrs["user"].SetRequired()
 	attrs["user"] = attrs["user"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
 
 	return attrs
 }
@@ -877,7 +912,8 @@ func (m CreateUserRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"user": m.User,
+			"parent": m.Parent,
+			"user":   m.User,
 		})
 }
 
@@ -885,6 +921,7 @@ func (m CreateUserRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 func (m CreateUserRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"parent": types.StringType,
 			"user": basetypes.ListType{
 				ElemType: User_SdkV2{}.Type(ctx),
 			},
@@ -1118,6 +1155,10 @@ func (m *CreateWorkspaceAssignmentDetailRequest_SdkV2) SetWorkspaceAssignmentDet
 }
 
 type CreateWorkspaceAssignmentProxyRequest_SdkV2 struct {
+	// The resource name of the workspace to assign the principal to,
+	// `accounts/{account_id}/workspaces/{workspace_id}`. Optional: defaults to
+	// the calling workspace, and any other workspace is rejected.
+	Parent types.String `tfsdk:"-"`
 	// Required. Workspace assignment to be created in Databricks.
 	WorkspaceAssignment types.List `tfsdk:"workspace_assignment"`
 }
@@ -1148,6 +1189,7 @@ func (to *CreateWorkspaceAssignmentProxyRequest_SdkV2) SyncFieldsDuringRead(ctx 
 func (m CreateWorkspaceAssignmentProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["workspace_assignment"] = attrs["workspace_assignment"].SetRequired()
 	attrs["workspace_assignment"] = attrs["workspace_assignment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].SetOptional()
 
 	return attrs
 }
@@ -1172,6 +1214,7 @@ func (m CreateWorkspaceAssignmentProxyRequest_SdkV2) ToObjectValue(ctx context.C
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"parent":               m.Parent,
 			"workspace_assignment": m.WorkspaceAssignment,
 		})
 }
@@ -1180,6 +1223,7 @@ func (m CreateWorkspaceAssignmentProxyRequest_SdkV2) ToObjectValue(ctx context.C
 func (m CreateWorkspaceAssignmentProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"parent": types.StringType,
 			"workspace_assignment": basetypes.ListType{
 				ElemType: WorkspaceAssignment_SdkV2{}.Type(ctx),
 			},
@@ -1214,11 +1258,11 @@ func (m *CreateWorkspaceAssignmentProxyRequest_SdkV2) SetWorkspaceAssignment(ctx
 }
 
 type CreateWorkspaceAssignmentRequest_SdkV2 struct {
+	// The parent resource name of the workspace to assign the principal to.
+	// Format: accounts/{account_id}/workspaces/{workspace_id}
+	Parent types.String `tfsdk:"-"`
 	// Required. Workspace assignment to be created in Databricks.
 	WorkspaceAssignment types.List `tfsdk:"workspace_assignment"`
-	// Required. The workspace ID for which the workspace assignment is being
-	// created.
-	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
 func (to *CreateWorkspaceAssignmentRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateWorkspaceAssignmentRequest_SdkV2) {
@@ -1247,8 +1291,7 @@ func (to *CreateWorkspaceAssignmentRequest_SdkV2) SyncFieldsDuringRead(ctx conte
 func (m CreateWorkspaceAssignmentRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["workspace_assignment"] = attrs["workspace_assignment"].SetRequired()
 	attrs["workspace_assignment"] = attrs["workspace_assignment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
 
 	return attrs
 }
@@ -1273,8 +1316,8 @@ func (m CreateWorkspaceAssignmentRequest_SdkV2) ToObjectValue(ctx context.Contex
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"parent":               m.Parent,
 			"workspace_assignment": m.WorkspaceAssignment,
-			"workspace_id":         m.WorkspaceId,
 		})
 }
 
@@ -1282,10 +1325,10 @@ func (m CreateWorkspaceAssignmentRequest_SdkV2) ToObjectValue(ctx context.Contex
 func (m CreateWorkspaceAssignmentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"parent": types.StringType,
 			"workspace_assignment": basetypes.ListType{
 				ElemType: WorkspaceAssignment_SdkV2{}.Type(ctx),
 			},
-			"workspace_id": types.Int64Type,
 		},
 	}
 }
@@ -1317,10 +1360,9 @@ func (m *CreateWorkspaceAssignmentRequest_SdkV2) SetWorkspaceAssignment(ctx cont
 }
 
 type DeleteDirectGroupMemberProxyRequest_SdkV2 struct {
-	// Required. Internal ID of the group in Databricks.
-	GroupId types.Int64 `tfsdk:"-"`
-	// Required. Internal ID of the principal to be unassigned from the group.
-	PrincipalId types.Int64 `tfsdk:"-"`
+	// The resource name of the group membership. Format:
+	// groups/{group_id}/direct-members/{principal_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *DeleteDirectGroupMemberProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteDirectGroupMemberProxyRequest_SdkV2) {
@@ -1330,8 +1372,7 @@ func (to *DeleteDirectGroupMemberProxyRequest_SdkV2) SyncFieldsDuringRead(ctx co
 }
 
 func (m DeleteDirectGroupMemberProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["group_id"] = attrs["group_id"].SetRequired()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -1354,8 +1395,7 @@ func (m DeleteDirectGroupMemberProxyRequest_SdkV2) ToObjectValue(ctx context.Con
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group_id":     m.GroupId,
-			"principal_id": m.PrincipalId,
+			"name": m.Name,
 		})
 }
 
@@ -1363,17 +1403,15 @@ func (m DeleteDirectGroupMemberProxyRequest_SdkV2) ToObjectValue(ctx context.Con
 func (m DeleteDirectGroupMemberProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"group_id":     types.Int64Type,
-			"principal_id": types.Int64Type,
+			"name": types.StringType,
 		},
 	}
 }
 
 type DeleteDirectGroupMemberRequest_SdkV2 struct {
-	// Required. Internal ID of the group in Databricks.
-	GroupId types.Int64 `tfsdk:"-"`
-	// Required. Internal ID of the principal to be unassigned from the group.
-	PrincipalId types.Int64 `tfsdk:"-"`
+	// The resource name of the group membership. Format:
+	// accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *DeleteDirectGroupMemberRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteDirectGroupMemberRequest_SdkV2) {
@@ -1383,9 +1421,7 @@ func (to *DeleteDirectGroupMemberRequest_SdkV2) SyncFieldsDuringRead(ctx context
 }
 
 func (m DeleteDirectGroupMemberRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["group_id"] = attrs["group_id"].SetRequired()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -1408,8 +1444,7 @@ func (m DeleteDirectGroupMemberRequest_SdkV2) ToObjectValue(ctx context.Context)
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group_id":     m.GroupId,
-			"principal_id": m.PrincipalId,
+			"name": m.Name,
 		})
 }
 
@@ -1417,15 +1452,14 @@ func (m DeleteDirectGroupMemberRequest_SdkV2) ToObjectValue(ctx context.Context)
 func (m DeleteDirectGroupMemberRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"group_id":     types.Int64Type,
-			"principal_id": types.Int64Type,
+			"name": types.StringType,
 		},
 	}
 }
 
 type DeleteGroupProxyRequest_SdkV2 struct {
-	// Required. Internal ID of the group in Databricks.
-	GroupId types.String `tfsdk:"-"`
+	// The resource name of the group. Format: groups/{group_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *DeleteGroupProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteGroupProxyRequest_SdkV2) {
@@ -1435,7 +1469,7 @@ func (to *DeleteGroupProxyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 }
 
 func (m DeleteGroupProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -1458,7 +1492,7 @@ func (m DeleteGroupProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basety
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group_id": m.GroupId,
+			"name": m.Name,
 		})
 }
 
@@ -1466,14 +1500,15 @@ func (m DeleteGroupProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basety
 func (m DeleteGroupProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"group_id": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
 
 type DeleteGroupRequest_SdkV2 struct {
-	// Required. Internal ID of the group in Databricks.
-	GroupId types.String `tfsdk:"-"`
+	// The resource name of the group. Format:
+	// accounts/{account_id}/groups/{group_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *DeleteGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteGroupRequest_SdkV2) {
@@ -1483,8 +1518,7 @@ func (to *DeleteGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 }
 
 func (m DeleteGroupRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -1507,7 +1541,7 @@ func (m DeleteGroupRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group_id": m.GroupId,
+			"name": m.Name,
 		})
 }
 
@@ -1515,7 +1549,7 @@ func (m DeleteGroupRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 func (m DeleteGroupRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"group_id": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -1570,8 +1604,9 @@ func (m DeleteIdentityVisibilityFilterRequest_SdkV2) Type(ctx context.Context) a
 }
 
 type DeleteServicePrincipalProxyRequest_SdkV2 struct {
-	// Required. Internal ID of the service principal in Databricks.
-	ServicePrincipalId types.String `tfsdk:"-"`
+	// The resource name of the service principal. Format:
+	// service-principals/{service_principal_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *DeleteServicePrincipalProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteServicePrincipalProxyRequest_SdkV2) {
@@ -1581,7 +1616,7 @@ func (to *DeleteServicePrincipalProxyRequest_SdkV2) SyncFieldsDuringRead(ctx con
 }
 
 func (m DeleteServicePrincipalProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -1604,7 +1639,7 @@ func (m DeleteServicePrincipalProxyRequest_SdkV2) ToObjectValue(ctx context.Cont
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"service_principal_id": m.ServicePrincipalId,
+			"name": m.Name,
 		})
 }
 
@@ -1612,14 +1647,15 @@ func (m DeleteServicePrincipalProxyRequest_SdkV2) ToObjectValue(ctx context.Cont
 func (m DeleteServicePrincipalProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"service_principal_id": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
 
 type DeleteServicePrincipalRequest_SdkV2 struct {
-	// Required. Internal ID of the service principal in Databricks.
-	ServicePrincipalId types.String `tfsdk:"-"`
+	// The resource name of the service principal. Format:
+	// accounts/{account_id}/service-principals/{service_principal_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *DeleteServicePrincipalRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteServicePrincipalRequest_SdkV2) {
@@ -1629,8 +1665,7 @@ func (to *DeleteServicePrincipalRequest_SdkV2) SyncFieldsDuringRead(ctx context.
 }
 
 func (m DeleteServicePrincipalRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -1653,7 +1688,7 @@ func (m DeleteServicePrincipalRequest_SdkV2) ToObjectValue(ctx context.Context) 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"service_principal_id": m.ServicePrincipalId,
+			"name": m.Name,
 		})
 }
 
@@ -1661,14 +1696,14 @@ func (m DeleteServicePrincipalRequest_SdkV2) ToObjectValue(ctx context.Context) 
 func (m DeleteServicePrincipalRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"service_principal_id": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
 
 type DeleteUserProxyRequest_SdkV2 struct {
-	// Required. Internal ID of the user in Databricks.
-	UserId types.String `tfsdk:"-"`
+	// The resource name of the user. Format: users/{user_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *DeleteUserProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteUserProxyRequest_SdkV2) {
@@ -1678,7 +1713,7 @@ func (to *DeleteUserProxyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context
 }
 
 func (m DeleteUserProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["user_id"] = attrs["user_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -1701,7 +1736,7 @@ func (m DeleteUserProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"user_id": m.UserId,
+			"name": m.Name,
 		})
 }
 
@@ -1709,14 +1744,15 @@ func (m DeleteUserProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetyp
 func (m DeleteUserProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"user_id": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
 
 type DeleteUserRequest_SdkV2 struct {
-	// Required. Internal ID of the user in Databricks.
-	UserId types.String `tfsdk:"-"`
+	// The resource name of the user. Format:
+	// accounts/{account_id}/users/{user_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *DeleteUserRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteUserRequest_SdkV2) {
@@ -1726,8 +1762,7 @@ func (to *DeleteUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 }
 
 func (m DeleteUserRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["user_id"] = attrs["user_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -1750,7 +1785,7 @@ func (m DeleteUserRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"user_id": m.UserId,
+			"name": m.Name,
 		})
 }
 
@@ -1758,7 +1793,7 @@ func (m DeleteUserRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 func (m DeleteUserRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"user_id": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -1868,9 +1903,9 @@ func (m DeleteWorkspaceAssignmentDetailRequest_SdkV2) Type(ctx context.Context) 
 }
 
 type DeleteWorkspaceAssignmentProxyRequest_SdkV2 struct {
-	// Required. ID of the principal in Databricks to delete workspace
-	// assignment for.
-	PrincipalId types.Int64 `tfsdk:"-"`
+	// The resource name of the workspace assignment. Format:
+	// workspace-assignments/{principal_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *DeleteWorkspaceAssignmentProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteWorkspaceAssignmentProxyRequest_SdkV2) {
@@ -1880,7 +1915,7 @@ func (to *DeleteWorkspaceAssignmentProxyRequest_SdkV2) SyncFieldsDuringRead(ctx 
 }
 
 func (m DeleteWorkspaceAssignmentProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -1903,7 +1938,7 @@ func (m DeleteWorkspaceAssignmentProxyRequest_SdkV2) ToObjectValue(ctx context.C
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal_id": m.PrincipalId,
+			"name": m.Name,
 		})
 }
 
@@ -1911,17 +1946,15 @@ func (m DeleteWorkspaceAssignmentProxyRequest_SdkV2) ToObjectValue(ctx context.C
 func (m DeleteWorkspaceAssignmentProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"principal_id": types.Int64Type,
+			"name": types.StringType,
 		},
 	}
 }
 
 type DeleteWorkspaceAssignmentRequest_SdkV2 struct {
-	// Required. ID of the principal in Databricks to delete workspace
-	// assignment for.
-	PrincipalId types.Int64 `tfsdk:"-"`
-	// The workspace ID where the principal has access.
-	WorkspaceId types.Int64 `tfsdk:"-"`
+	// The resource name of the workspace assignment. Format:
+	// accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *DeleteWorkspaceAssignmentRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteWorkspaceAssignmentRequest_SdkV2) {
@@ -1931,9 +1964,7 @@ func (to *DeleteWorkspaceAssignmentRequest_SdkV2) SyncFieldsDuringRead(ctx conte
 }
 
 func (m DeleteWorkspaceAssignmentRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -1956,8 +1987,7 @@ func (m DeleteWorkspaceAssignmentRequest_SdkV2) ToObjectValue(ctx context.Contex
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal_id": m.PrincipalId,
-			"workspace_id": m.WorkspaceId,
+			"name": m.Name,
 		})
 }
 
@@ -1965,8 +1995,7 @@ func (m DeleteWorkspaceAssignmentRequest_SdkV2) ToObjectValue(ctx context.Contex
 func (m DeleteWorkspaceAssignmentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"principal_id": types.Int64Type,
-			"workspace_id": types.Int64Type,
+			"name": types.StringType,
 		},
 	}
 }
@@ -1982,6 +2011,16 @@ type DirectGroupMember_SdkV2 struct {
 	GroupId types.Int64 `tfsdk:"group_id"`
 	// The source of group membership (internal or from identity provider).
 	MembershipSource types.String `tfsdk:"membership_source"`
+	// The resource name of the group membership. The format depends on the API
+	// that returned it: - Account-scoped:
+	// accounts/{account_id}/groups/{group_id}/direct-members/{principal_id} -
+	// Workspace-scoped: groups/{group_id}/direct-members/{principal_id}
+	Name types.String `tfsdk:"name"`
+	// The resource name of the group that contains the membership. The format
+	// depends on the API that returned it: - Account-scoped:
+	// accounts/{account_id}/groups/{group_id} - Workspace-scoped:
+	// groups/{group_id}
+	Parent types.String `tfsdk:"parent"`
 	// Internal ID of the principal in Databricks.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The type of the principal (user/service principal/group).
@@ -1999,6 +2038,9 @@ func (m DirectGroupMember_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["external_id"] = attrs["external_id"].SetComputed()
 	attrs["group_id"] = attrs["group_id"].SetComputed()
 	attrs["membership_source"] = attrs["membership_source"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["principal_id"] = attrs["principal_id"].SetRequired()
 	attrs["principal_id"] = attrs["principal_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["principal_type"] = attrs["principal_type"].SetComputed()
@@ -2028,6 +2070,8 @@ func (m DirectGroupMember_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 			"external_id":       m.ExternalId,
 			"group_id":          m.GroupId,
 			"membership_source": m.MembershipSource,
+			"name":              m.Name,
+			"parent":            m.Parent,
 			"principal_id":      m.PrincipalId,
 			"principal_type":    m.PrincipalType,
 		})
@@ -2041,6 +2085,8 @@ func (m DirectGroupMember_SdkV2) Type(ctx context.Context) attr.Type {
 			"external_id":       types.StringType,
 			"group_id":          types.Int64Type,
 			"membership_source": types.StringType,
+			"name":              types.StringType,
+			"parent":            types.StringType,
 			"principal_id":      types.Int64Type,
 			"principal_type":    types.StringType,
 		},
@@ -2456,11 +2502,9 @@ func (m FullName_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetDirectGroupMemberProxyRequest_SdkV2 struct {
-	// Required. Internal ID of the group in Databricks.
-	GroupId types.Int64 `tfsdk:"-"`
-	// Required. Internal ID of the principal belonging to the group in
-	// Databricks.
-	PrincipalId types.Int64 `tfsdk:"-"`
+	// The resource name of the group membership. Format:
+	// groups/{group_id}/direct-members/{principal_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *GetDirectGroupMemberProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetDirectGroupMemberProxyRequest_SdkV2) {
@@ -2470,8 +2514,7 @@ func (to *GetDirectGroupMemberProxyRequest_SdkV2) SyncFieldsDuringRead(ctx conte
 }
 
 func (m GetDirectGroupMemberProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["group_id"] = attrs["group_id"].SetRequired()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -2494,8 +2537,7 @@ func (m GetDirectGroupMemberProxyRequest_SdkV2) ToObjectValue(ctx context.Contex
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group_id":     m.GroupId,
-			"principal_id": m.PrincipalId,
+			"name": m.Name,
 		})
 }
 
@@ -2503,18 +2545,15 @@ func (m GetDirectGroupMemberProxyRequest_SdkV2) ToObjectValue(ctx context.Contex
 func (m GetDirectGroupMemberProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"group_id":     types.Int64Type,
-			"principal_id": types.Int64Type,
+			"name": types.StringType,
 		},
 	}
 }
 
 type GetDirectGroupMemberRequest_SdkV2 struct {
-	// Required. Internal ID of the group in Databricks.
-	GroupId types.Int64 `tfsdk:"-"`
-	// Required. Internal ID of the principal belonging to the group in
-	// Databricks.
-	PrincipalId types.Int64 `tfsdk:"-"`
+	// The resource name of the group membership. Format:
+	// accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *GetDirectGroupMemberRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetDirectGroupMemberRequest_SdkV2) {
@@ -2524,9 +2563,7 @@ func (to *GetDirectGroupMemberRequest_SdkV2) SyncFieldsDuringRead(ctx context.Co
 }
 
 func (m GetDirectGroupMemberRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["group_id"] = attrs["group_id"].SetRequired()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -2549,8 +2586,7 @@ func (m GetDirectGroupMemberRequest_SdkV2) ToObjectValue(ctx context.Context) ba
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group_id":     m.GroupId,
-			"principal_id": m.PrincipalId,
+			"name": m.Name,
 		})
 }
 
@@ -2558,8 +2594,7 @@ func (m GetDirectGroupMemberRequest_SdkV2) ToObjectValue(ctx context.Context) ba
 func (m GetDirectGroupMemberRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"group_id":     types.Int64Type,
-			"principal_id": types.Int64Type,
+			"name": types.StringType,
 		},
 	}
 }
@@ -2859,8 +2894,8 @@ func (m GetExternalUserRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetGroupProxyRequest_SdkV2 struct {
-	// Required. Internal ID of the group in Databricks.
-	GroupId types.String `tfsdk:"-"`
+	// The resource name of the group. Format: groups/{group_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *GetGroupProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetGroupProxyRequest_SdkV2) {
@@ -2870,7 +2905,7 @@ func (to *GetGroupProxyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 }
 
 func (m GetGroupProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -2893,7 +2928,7 @@ func (m GetGroupProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group_id": m.GroupId,
+			"name": m.Name,
 		})
 }
 
@@ -2901,14 +2936,15 @@ func (m GetGroupProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes
 func (m GetGroupProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"group_id": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
 
 type GetGroupRequest_SdkV2 struct {
-	// Required. Internal ID of the group in Databricks.
-	GroupId types.String `tfsdk:"-"`
+	// The resource name of the group. Format:
+	// accounts/{account_id}/groups/{group_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *GetGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetGroupRequest_SdkV2) {
@@ -2918,8 +2954,7 @@ func (to *GetGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 }
 
 func (m GetGroupRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -2942,7 +2977,7 @@ func (m GetGroupRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group_id": m.GroupId,
+			"name": m.Name,
 		})
 }
 
@@ -2950,7 +2985,7 @@ func (m GetGroupRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 func (m GetGroupRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"group_id": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -3005,8 +3040,9 @@ func (m GetIdentityVisibilityFilterRequest_SdkV2) Type(ctx context.Context) attr
 }
 
 type GetServicePrincipalProxyRequest_SdkV2 struct {
-	// Required. Internal ID of the service principal in Databricks.
-	ServicePrincipalId types.String `tfsdk:"-"`
+	// The resource name of the service principal. Format:
+	// service-principals/{service_principal_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *GetServicePrincipalProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetServicePrincipalProxyRequest_SdkV2) {
@@ -3016,7 +3052,7 @@ func (to *GetServicePrincipalProxyRequest_SdkV2) SyncFieldsDuringRead(ctx contex
 }
 
 func (m GetServicePrincipalProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -3039,7 +3075,7 @@ func (m GetServicePrincipalProxyRequest_SdkV2) ToObjectValue(ctx context.Context
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"service_principal_id": m.ServicePrincipalId,
+			"name": m.Name,
 		})
 }
 
@@ -3047,14 +3083,15 @@ func (m GetServicePrincipalProxyRequest_SdkV2) ToObjectValue(ctx context.Context
 func (m GetServicePrincipalProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"service_principal_id": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
 
 type GetServicePrincipalRequest_SdkV2 struct {
-	// Required. Internal ID of the service principal in Databricks.
-	ServicePrincipalId types.String `tfsdk:"-"`
+	// The resource name of the service principal. Format:
+	// accounts/{account_id}/service-principals/{service_principal_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *GetServicePrincipalRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetServicePrincipalRequest_SdkV2) {
@@ -3064,8 +3101,7 @@ func (to *GetServicePrincipalRequest_SdkV2) SyncFieldsDuringRead(ctx context.Con
 }
 
 func (m GetServicePrincipalRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -3088,7 +3124,7 @@ func (m GetServicePrincipalRequest_SdkV2) ToObjectValue(ctx context.Context) bas
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"service_principal_id": m.ServicePrincipalId,
+			"name": m.Name,
 		})
 }
 
@@ -3096,14 +3132,14 @@ func (m GetServicePrincipalRequest_SdkV2) ToObjectValue(ctx context.Context) bas
 func (m GetServicePrincipalRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"service_principal_id": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
 
 type GetUserProxyRequest_SdkV2 struct {
-	// Required. Internal ID of the user in Databricks.
-	UserId types.String `tfsdk:"-"`
+	// The resource name of the user. Format: users/{user_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *GetUserProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetUserProxyRequest_SdkV2) {
@@ -3113,7 +3149,7 @@ func (to *GetUserProxyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 }
 
 func (m GetUserProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["user_id"] = attrs["user_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -3136,7 +3172,7 @@ func (m GetUserProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"user_id": m.UserId,
+			"name": m.Name,
 		})
 }
 
@@ -3144,14 +3180,15 @@ func (m GetUserProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 func (m GetUserProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"user_id": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
 
 type GetUserRequest_SdkV2 struct {
-	// Required. Internal ID of the user in Databricks.
-	UserId types.String `tfsdk:"-"`
+	// The resource name of the user. Format:
+	// accounts/{account_id}/users/{user_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *GetUserRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetUserRequest_SdkV2) {
@@ -3161,8 +3198,7 @@ func (to *GetUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from G
 }
 
 func (m GetUserRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["user_id"] = attrs["user_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -3185,7 +3221,7 @@ func (m GetUserRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"user_id": m.UserId,
+			"name": m.Name,
 		})
 }
 
@@ -3193,15 +3229,15 @@ func (m GetUserRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m GetUserRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"user_id": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
 
 type GetWorkspaceAccessDetailLocalRequest_SdkV2 struct {
-	// Required. The internal ID of the principal (user/sp/group) for which the
-	// access details are being requested.
-	PrincipalId types.Int64 `tfsdk:"-"`
+	// The resource name of the workspace access detail. Format:
+	// workspace-access-details/{principal_id}
+	Name types.String `tfsdk:"-"`
 	// Controls what fields are returned.
 	View types.String `tfsdk:"-"`
 }
@@ -3213,7 +3249,7 @@ func (to *GetWorkspaceAccessDetailLocalRequest_SdkV2) SyncFieldsDuringRead(ctx c
 }
 
 func (m GetWorkspaceAccessDetailLocalRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["view"] = attrs["view"].SetOptional()
 
 	return attrs
@@ -3237,8 +3273,8 @@ func (m GetWorkspaceAccessDetailLocalRequest_SdkV2) ToObjectValue(ctx context.Co
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal_id": m.PrincipalId,
-			"view":         m.View,
+			"name": m.Name,
+			"view": m.View,
 		})
 }
 
@@ -3246,21 +3282,18 @@ func (m GetWorkspaceAccessDetailLocalRequest_SdkV2) ToObjectValue(ctx context.Co
 func (m GetWorkspaceAccessDetailLocalRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"principal_id": types.Int64Type,
-			"view":         types.StringType,
+			"name": types.StringType,
+			"view": types.StringType,
 		},
 	}
 }
 
 type GetWorkspaceAccessDetailRequest_SdkV2 struct {
-	// Required. The internal ID of the principal (user/sp/group) for which the
-	// access details are being requested.
-	PrincipalId types.Int64 `tfsdk:"-"`
+	// The resource name of the workspace access detail. Format:
+	// accounts/{account_id}/workspaces/{workspace_id}/workspace-access-details/{principal_id}
+	Name types.String `tfsdk:"-"`
 	// Controls what fields are returned.
 	View types.String `tfsdk:"-"`
-	// Required. The workspace ID for which the access details are being
-	// requested.
-	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
 func (to *GetWorkspaceAccessDetailRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetWorkspaceAccessDetailRequest_SdkV2) {
@@ -3270,9 +3303,7 @@ func (to *GetWorkspaceAccessDetailRequest_SdkV2) SyncFieldsDuringRead(ctx contex
 }
 
 func (m GetWorkspaceAccessDetailRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["view"] = attrs["view"].SetOptional()
 
 	return attrs
@@ -3296,9 +3327,8 @@ func (m GetWorkspaceAccessDetailRequest_SdkV2) ToObjectValue(ctx context.Context
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal_id": m.PrincipalId,
-			"view":         m.View,
-			"workspace_id": m.WorkspaceId,
+			"name": m.Name,
+			"view": m.View,
 		})
 }
 
@@ -3306,9 +3336,8 @@ func (m GetWorkspaceAccessDetailRequest_SdkV2) ToObjectValue(ctx context.Context
 func (m GetWorkspaceAccessDetailRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"principal_id": types.Int64Type,
-			"view":         types.StringType,
-			"workspace_id": types.Int64Type,
+			"name": types.StringType,
+			"view": types.StringType,
 		},
 	}
 }
@@ -3419,9 +3448,9 @@ func (m GetWorkspaceAssignmentDetailRequest_SdkV2) Type(ctx context.Context) att
 }
 
 type GetWorkspaceAssignmentProxyRequest_SdkV2 struct {
-	// Required. The internal ID of the principal (user/sp/group) for which the
-	// assignment is being requested.
-	PrincipalId types.Int64 `tfsdk:"-"`
+	// The resource name of the workspace assignment. Format:
+	// workspace-assignments/{principal_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *GetWorkspaceAssignmentProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetWorkspaceAssignmentProxyRequest_SdkV2) {
@@ -3431,7 +3460,7 @@ func (to *GetWorkspaceAssignmentProxyRequest_SdkV2) SyncFieldsDuringRead(ctx con
 }
 
 func (m GetWorkspaceAssignmentProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -3454,7 +3483,7 @@ func (m GetWorkspaceAssignmentProxyRequest_SdkV2) ToObjectValue(ctx context.Cont
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal_id": m.PrincipalId,
+			"name": m.Name,
 		})
 }
 
@@ -3462,17 +3491,15 @@ func (m GetWorkspaceAssignmentProxyRequest_SdkV2) ToObjectValue(ctx context.Cont
 func (m GetWorkspaceAssignmentProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"principal_id": types.Int64Type,
+			"name": types.StringType,
 		},
 	}
 }
 
 type GetWorkspaceAssignmentRequest_SdkV2 struct {
-	// Required. The internal ID of the principal (user/sp/group) for which the
-	// assignment is being requested.
-	PrincipalId types.Int64 `tfsdk:"-"`
-	// Required. The workspace ID for which the assignment is being requested.
-	WorkspaceId types.Int64 `tfsdk:"-"`
+	// The resource name of the workspace assignment. Format:
+	// accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *GetWorkspaceAssignmentRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetWorkspaceAssignmentRequest_SdkV2) {
@@ -3482,9 +3509,7 @@ func (to *GetWorkspaceAssignmentRequest_SdkV2) SyncFieldsDuringRead(ctx context.
 }
 
 func (m GetWorkspaceAssignmentRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -3507,8 +3532,7 @@ func (m GetWorkspaceAssignmentRequest_SdkV2) ToObjectValue(ctx context.Context) 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal_id": m.PrincipalId,
-			"workspace_id": m.WorkspaceId,
+			"name": m.Name,
 		})
 }
 
@@ -3516,16 +3540,15 @@ func (m GetWorkspaceAssignmentRequest_SdkV2) ToObjectValue(ctx context.Context) 
 func (m GetWorkspaceAssignmentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"principal_id": types.Int64Type,
-			"workspace_id": types.Int64Type,
+			"name": types.StringType,
 		},
 	}
 }
 
 type GetWorkspaceIdentityDetailRequest_SdkV2 struct {
-	// Required. The internal ID of the principal (user/sp/group) for which the
-	// identity details are being requested.
-	PrincipalId types.Int64 `tfsdk:"-"`
+	// The resource name of the workspace identity detail. Format:
+	// principals/{principal_id}/workspace-identity-detail
+	Name types.String `tfsdk:"-"`
 }
 
 func (to *GetWorkspaceIdentityDetailRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetWorkspaceIdentityDetailRequest_SdkV2) {
@@ -3535,7 +3558,7 @@ func (to *GetWorkspaceIdentityDetailRequest_SdkV2) SyncFieldsDuringRead(ctx cont
 }
 
 func (m GetWorkspaceIdentityDetailRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -3558,7 +3581,7 @@ func (m GetWorkspaceIdentityDetailRequest_SdkV2) ToObjectValue(ctx context.Conte
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal_id": m.PrincipalId,
+			"name": m.Name,
 		})
 }
 
@@ -3566,7 +3589,7 @@ func (m GetWorkspaceIdentityDetailRequest_SdkV2) ToObjectValue(ctx context.Conte
 func (m GetWorkspaceIdentityDetailRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"principal_id": types.Int64Type,
+			"name": types.StringType,
 		},
 	}
 }
@@ -3581,6 +3604,14 @@ type Group_SdkV2 struct {
 	GroupId types.String `tfsdk:"group_id"`
 	// Display name of the group.
 	GroupName types.String `tfsdk:"group_name"`
+	// The resource name of the group. The format depends on the API that
+	// returned it: - Account-scoped: accounts/{account_id}/groups/{group_id} -
+	// Workspace-scoped: groups/{group_id}
+	Name types.String `tfsdk:"name"`
+	// The resource name of the account that contains the group,
+	// `accounts/{account_id}`. Both the account-scoped and workspace-scoped
+	// APIs return it.
+	Parent types.String `tfsdk:"parent"`
 }
 
 func (to *Group_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Group_SdkV2) {
@@ -3591,9 +3622,14 @@ func (to *Group_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Group_SdkV
 
 func (m Group_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["account_id"] = attrs["account_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["group_id"] = attrs["group_id"].SetComputed()
+	attrs["group_id"] = attrs["group_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -3620,6 +3656,8 @@ func (m Group_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"external_id": m.ExternalId,
 			"group_id":    m.GroupId,
 			"group_name":  m.GroupName,
+			"name":        m.Name,
+			"parent":      m.Parent,
 		})
 }
 
@@ -3631,6 +3669,8 @@ func (m Group_SdkV2) Type(ctx context.Context) attr.Type {
 			"external_id": types.StringType,
 			"group_id":    types.StringType,
 			"group_name":  types.StringType,
+			"name":        types.StringType,
+			"parent":      types.StringType,
 		},
 	}
 }
@@ -3864,9 +3904,6 @@ func (m *IdentityVisibilityFilter_SdkV2) SetRegex(ctx context.Context, v RegexMa
 }
 
 type ListDirectGroupMembersProxyRequest_SdkV2 struct {
-	// Required. Internal ID of the group in Databricks whose direct members are
-	// being listed.
-	GroupId types.Int64 `tfsdk:"-"`
 	// The maximum number of members to return. The service may return fewer
 	// than this value. If not provided, defaults to 1000, which is also the
 	// maximum allowed. Requests for more than the maximum are clamped to 1000.
@@ -3874,6 +3911,9 @@ type ListDirectGroupMembersProxyRequest_SdkV2 struct {
 	// A page token from a previous list call. Provide this to retrieve the
 	// subsequent page.
 	PageToken types.String `tfsdk:"-"`
+	// The parent resource name of the group whose direct members to list.
+	// Format: groups/{group_id}
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *ListDirectGroupMembersProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListDirectGroupMembersProxyRequest_SdkV2) {
@@ -3883,7 +3923,7 @@ func (to *ListDirectGroupMembersProxyRequest_SdkV2) SyncFieldsDuringRead(ctx con
 }
 
 func (m ListDirectGroupMembersProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 
@@ -3908,9 +3948,9 @@ func (m ListDirectGroupMembersProxyRequest_SdkV2) ToObjectValue(ctx context.Cont
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group_id":   m.GroupId,
 			"page_size":  m.PageSize,
 			"page_token": m.PageToken,
+			"parent":     m.Parent,
 		})
 }
 
@@ -3918,17 +3958,14 @@ func (m ListDirectGroupMembersProxyRequest_SdkV2) ToObjectValue(ctx context.Cont
 func (m ListDirectGroupMembersProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"group_id":   types.Int64Type,
 			"page_size":  types.Int64Type,
 			"page_token": types.StringType,
+			"parent":     types.StringType,
 		},
 	}
 }
 
 type ListDirectGroupMembersRequest_SdkV2 struct {
-	// Required. Internal ID of the group in Databricks whose direct members are
-	// being listed.
-	GroupId types.Int64 `tfsdk:"-"`
 	// The maximum number of members to return. The service may return fewer
 	// than this value. If not provided, defaults to 1000, which is also the
 	// maximum allowed. Requests for more than the maximum are clamped to 1000.
@@ -3936,6 +3973,9 @@ type ListDirectGroupMembersRequest_SdkV2 struct {
 	// A page token, received from a previous ListDirectGroupMembers call.
 	// Provide this to retrieve the subsequent page.
 	PageToken types.String `tfsdk:"-"`
+	// The parent resource name of the group whose direct members to list.
+	// Format: accounts/{account_id}/groups/{group_id}
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *ListDirectGroupMembersRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListDirectGroupMembersRequest_SdkV2) {
@@ -3945,8 +3985,7 @@ func (to *ListDirectGroupMembersRequest_SdkV2) SyncFieldsDuringRead(ctx context.
 }
 
 func (m ListDirectGroupMembersRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 
@@ -3971,9 +4010,9 @@ func (m ListDirectGroupMembersRequest_SdkV2) ToObjectValue(ctx context.Context) 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"group_id":   m.GroupId,
 			"page_size":  m.PageSize,
 			"page_token": m.PageToken,
+			"parent":     m.Parent,
 		})
 }
 
@@ -3981,9 +4020,9 @@ func (m ListDirectGroupMembersRequest_SdkV2) ToObjectValue(ctx context.Context) 
 func (m ListDirectGroupMembersRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"group_id":   types.Int64Type,
 			"page_size":  types.Int64Type,
 			"page_token": types.StringType,
+			"parent":     types.StringType,
 		},
 	}
 }
@@ -4120,6 +4159,10 @@ type ListGroupsProxyRequest_SdkV2 struct {
 	// A page token, received from a previous ListGroups call. Provide this to
 	// retrieve the subsequent page.
 	PageToken types.String `tfsdk:"-"`
+	// The resource name of the account to list groups in,
+	// `accounts/{account_id}`. Optional: defaults to the account of the calling
+	// workspace, and any other account is rejected.
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *ListGroupsProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListGroupsProxyRequest_SdkV2) {
@@ -4132,6 +4175,7 @@ func (m ListGroupsProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetOptional()
 
 	return attrs
 }
@@ -4157,6 +4201,7 @@ func (m ListGroupsProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetyp
 			"filter":     m.Filter,
 			"page_size":  m.PageSize,
 			"page_token": m.PageToken,
+			"parent":     m.Parent,
 		})
 }
 
@@ -4167,6 +4212,7 @@ func (m ListGroupsProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"filter":     types.StringType,
 			"page_size":  types.Int64Type,
 			"page_token": types.StringType,
+			"parent":     types.StringType,
 		},
 	}
 }
@@ -4181,6 +4227,9 @@ type ListGroupsRequest_SdkV2 struct {
 	// A page token, received from a previous ListGroups call. Provide this to
 	// retrieve the subsequent page.
 	PageToken types.String `tfsdk:"-"`
+	// The parent resource name of the account whose groups to list. Format:
+	// accounts/{account_id}
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *ListGroupsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListGroupsRequest_SdkV2) {
@@ -4190,7 +4239,7 @@ func (to *ListGroupsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 }
 
 func (m ListGroupsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["filter"] = attrs["filter"].SetOptional()
@@ -4219,6 +4268,7 @@ func (m ListGroupsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 			"filter":     m.Filter,
 			"page_size":  m.PageSize,
 			"page_token": m.PageToken,
+			"parent":     m.Parent,
 		})
 }
 
@@ -4229,6 +4279,7 @@ func (m ListGroupsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"filter":     types.StringType,
 			"page_size":  types.Int64Type,
 			"page_token": types.StringType,
+			"parent":     types.StringType,
 		},
 	}
 }
@@ -4550,6 +4601,10 @@ type ListServicePrincipalsProxyRequest_SdkV2 struct {
 	// A page token, received from a previous ListServicePrincipals call.
 	// Provide this to retrieve the subsequent page.
 	PageToken types.String `tfsdk:"-"`
+	// The resource name of the account to list service principals in,
+	// `accounts/{account_id}`. Optional: defaults to the account of the calling
+	// workspace, and any other account is rejected.
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *ListServicePrincipalsProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListServicePrincipalsProxyRequest_SdkV2) {
@@ -4562,6 +4617,7 @@ func (m ListServicePrincipalsProxyRequest_SdkV2) ApplySchemaCustomizations(attrs
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetOptional()
 
 	return attrs
 }
@@ -4587,6 +4643,7 @@ func (m ListServicePrincipalsProxyRequest_SdkV2) ToObjectValue(ctx context.Conte
 			"filter":     m.Filter,
 			"page_size":  m.PageSize,
 			"page_token": m.PageToken,
+			"parent":     m.Parent,
 		})
 }
 
@@ -4597,6 +4654,7 @@ func (m ListServicePrincipalsProxyRequest_SdkV2) Type(ctx context.Context) attr.
 			"filter":     types.StringType,
 			"page_size":  types.Int64Type,
 			"page_token": types.StringType,
+			"parent":     types.StringType,
 		},
 	}
 }
@@ -4613,6 +4671,9 @@ type ListServicePrincipalsRequest_SdkV2 struct {
 	// A page token, received from a previous ListServicePrincipals call.
 	// Provide this to retrieve the subsequent page.
 	PageToken types.String `tfsdk:"-"`
+	// The parent resource name of the account whose service principals to list.
+	// Format: accounts/{account_id}
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *ListServicePrincipalsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListServicePrincipalsRequest_SdkV2) {
@@ -4622,7 +4683,7 @@ func (to *ListServicePrincipalsRequest_SdkV2) SyncFieldsDuringRead(ctx context.C
 }
 
 func (m ListServicePrincipalsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["filter"] = attrs["filter"].SetOptional()
@@ -4651,6 +4712,7 @@ func (m ListServicePrincipalsRequest_SdkV2) ToObjectValue(ctx context.Context) b
 			"filter":     m.Filter,
 			"page_size":  m.PageSize,
 			"page_token": m.PageToken,
+			"parent":     m.Parent,
 		})
 }
 
@@ -4661,6 +4723,7 @@ func (m ListServicePrincipalsRequest_SdkV2) Type(ctx context.Context) attr.Type 
 			"filter":     types.StringType,
 			"page_size":  types.Int64Type,
 			"page_token": types.StringType,
+			"parent":     types.StringType,
 		},
 	}
 }
@@ -4796,9 +4859,9 @@ type ListTransitiveParentGroupsProxyRequest_SdkV2 struct {
 	// A page token, received from a previous ListTransitiveParentGroups call.
 	// Provide this to retrieve the subsequent page.
 	PageToken types.String `tfsdk:"-"`
-	// Required. Internal ID of the principal in Databricks whose transitive
-	// parent groups are being listed.
-	PrincipalId types.Int64 `tfsdk:"-"`
+	// The parent resource name of the principal whose transitive parent groups
+	// to list. Format: principals/{principal_id}
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *ListTransitiveParentGroupsProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListTransitiveParentGroupsProxyRequest_SdkV2) {
@@ -4808,7 +4871,7 @@ func (to *ListTransitiveParentGroupsProxyRequest_SdkV2) SyncFieldsDuringRead(ctx
 }
 
 func (m ListTransitiveParentGroupsProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 
@@ -4833,9 +4896,9 @@ func (m ListTransitiveParentGroupsProxyRequest_SdkV2) ToObjectValue(ctx context.
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_size":    m.PageSize,
-			"page_token":   m.PageToken,
-			"principal_id": m.PrincipalId,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
 		})
 }
 
@@ -4843,9 +4906,9 @@ func (m ListTransitiveParentGroupsProxyRequest_SdkV2) ToObjectValue(ctx context.
 func (m ListTransitiveParentGroupsProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"page_size":    types.Int64Type,
-			"page_token":   types.StringType,
-			"principal_id": types.Int64Type,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
 		},
 	}
 }
@@ -4859,9 +4922,9 @@ type ListTransitiveParentGroupsRequest_SdkV2 struct {
 	// A page token, received from a previous ListTransitiveParentGroups call.
 	// Provide this to retrieve the subsequent page.
 	PageToken types.String `tfsdk:"-"`
-	// Required. Internal ID of the principal in Databricks whose transitive
-	// parent groups are being listed.
-	PrincipalId types.Int64 `tfsdk:"-"`
+	// The parent resource name of the principal whose transitive parent groups
+	// to list. Format: accounts/{account_id}/principals/{principal_id}
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *ListTransitiveParentGroupsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListTransitiveParentGroupsRequest_SdkV2) {
@@ -4871,8 +4934,7 @@ func (to *ListTransitiveParentGroupsRequest_SdkV2) SyncFieldsDuringRead(ctx cont
 }
 
 func (m ListTransitiveParentGroupsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 
@@ -4897,9 +4959,9 @@ func (m ListTransitiveParentGroupsRequest_SdkV2) ToObjectValue(ctx context.Conte
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_size":    m.PageSize,
-			"page_token":   m.PageToken,
-			"principal_id": m.PrincipalId,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
 		})
 }
 
@@ -4907,9 +4969,9 @@ func (m ListTransitiveParentGroupsRequest_SdkV2) ToObjectValue(ctx context.Conte
 func (m ListTransitiveParentGroupsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"page_size":    types.Int64Type,
-			"page_token":   types.StringType,
-			"principal_id": types.Int64Type,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
 		},
 	}
 }
@@ -5046,6 +5108,10 @@ type ListUsersProxyRequest_SdkV2 struct {
 	// A page token, received from a previous ListUsers call. Provide this to
 	// retrieve the subsequent page.
 	PageToken types.String `tfsdk:"-"`
+	// The resource name of the account to list users in,
+	// `accounts/{account_id}`. Optional: defaults to the account of the calling
+	// workspace, and any other account is rejected.
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *ListUsersProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListUsersProxyRequest_SdkV2) {
@@ -5058,6 +5124,7 @@ func (m ListUsersProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetOptional()
 
 	return attrs
 }
@@ -5083,6 +5150,7 @@ func (m ListUsersProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetype
 			"filter":     m.Filter,
 			"page_size":  m.PageSize,
 			"page_token": m.PageToken,
+			"parent":     m.Parent,
 		})
 }
 
@@ -5093,6 +5161,7 @@ func (m ListUsersProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"filter":     types.StringType,
 			"page_size":  types.Int64Type,
 			"page_token": types.StringType,
+			"parent":     types.StringType,
 		},
 	}
 }
@@ -5107,6 +5176,9 @@ type ListUsersRequest_SdkV2 struct {
 	// A page token, received from a previous ListUsers call. Provide this to
 	// retrieve the subsequent page.
 	PageToken types.String `tfsdk:"-"`
+	// The parent resource name of the account whose users to list. Format:
+	// accounts/{account_id}
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *ListUsersRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListUsersRequest_SdkV2) {
@@ -5116,7 +5188,7 @@ func (to *ListUsersRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 }
 
 func (m ListUsersRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["filter"] = attrs["filter"].SetOptional()
@@ -5145,6 +5217,7 @@ func (m ListUsersRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 			"filter":     m.Filter,
 			"page_size":  m.PageSize,
 			"page_token": m.PageToken,
+			"parent":     m.Parent,
 		})
 }
 
@@ -5155,6 +5228,7 @@ func (m ListUsersRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"filter":     types.StringType,
 			"page_size":  types.Int64Type,
 			"page_token": types.StringType,
+			"parent":     types.StringType,
 		},
 	}
 }
@@ -5532,6 +5606,10 @@ type ListWorkspaceAssignmentsProxyRequest_SdkV2 struct {
 	// A page token from a previous list call. Provide this to retrieve the
 	// subsequent page.
 	PageToken types.String `tfsdk:"-"`
+	// The resource name of the workspace to list assignments of,
+	// `accounts/{account_id}/workspaces/{workspace_id}`. Optional: defaults to
+	// the calling workspace, and any other workspace is rejected.
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *ListWorkspaceAssignmentsProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListWorkspaceAssignmentsProxyRequest_SdkV2) {
@@ -5543,6 +5621,7 @@ func (to *ListWorkspaceAssignmentsProxyRequest_SdkV2) SyncFieldsDuringRead(ctx c
 func (m ListWorkspaceAssignmentsProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetOptional()
 
 	return attrs
 }
@@ -5567,6 +5646,7 @@ func (m ListWorkspaceAssignmentsProxyRequest_SdkV2) ToObjectValue(ctx context.Co
 		map[string]attr.Value{
 			"page_size":  m.PageSize,
 			"page_token": m.PageToken,
+			"parent":     m.Parent,
 		})
 }
 
@@ -5576,6 +5656,7 @@ func (m ListWorkspaceAssignmentsProxyRequest_SdkV2) Type(ctx context.Context) at
 		AttrTypes: map[string]attr.Type{
 			"page_size":  types.Int64Type,
 			"page_token": types.StringType,
+			"parent":     types.StringType,
 		},
 	}
 }
@@ -5589,9 +5670,9 @@ type ListWorkspaceAssignmentsRequest_SdkV2 struct {
 	// A page token, received from a previous ListWorkspaceAssignments call.
 	// Provide this to retrieve the subsequent page.
 	PageToken types.String `tfsdk:"-"`
-	// Required. The workspace ID for which the workspace assignments are being
-	// fetched.
-	WorkspaceId types.Int64 `tfsdk:"-"`
+	// The parent resource name of the workspace whose assignments to list.
+	// Format: accounts/{account_id}/workspaces/{workspace_id}
+	Parent types.String `tfsdk:"-"`
 }
 
 func (to *ListWorkspaceAssignmentsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListWorkspaceAssignmentsRequest_SdkV2) {
@@ -5601,8 +5682,7 @@ func (to *ListWorkspaceAssignmentsRequest_SdkV2) SyncFieldsDuringRead(ctx contex
 }
 
 func (m ListWorkspaceAssignmentsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 
@@ -5627,9 +5707,9 @@ func (m ListWorkspaceAssignmentsRequest_SdkV2) ToObjectValue(ctx context.Context
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"page_size":    m.PageSize,
-			"page_token":   m.PageToken,
-			"workspace_id": m.WorkspaceId,
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
 		})
 }
 
@@ -5637,9 +5717,9 @@ func (m ListWorkspaceAssignmentsRequest_SdkV2) ToObjectValue(ctx context.Context
 func (m ListWorkspaceAssignmentsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"page_size":    types.Int64Type,
-			"page_token":   types.StringType,
-			"workspace_id": types.Int64Type,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
 		},
 	}
 }
@@ -6481,6 +6561,15 @@ type ServicePrincipal_SdkV2 struct {
 	DisplayName types.String `tfsdk:"display_name"`
 	// ExternalId of the service principal in the customer's IdP.
 	ExternalId types.String `tfsdk:"external_id"`
+	// The resource name of the service principal. The format depends on the API
+	// that returned it: - Account-scoped:
+	// accounts/{account_id}/service-principals/{service_principal_id} -
+	// Workspace-scoped: service-principals/{service_principal_id}
+	Name types.String `tfsdk:"name"`
+	// The resource name of the account that contains the service principal,
+	// `accounts/{account_id}`. Both the account-scoped and workspace-scoped
+	// APIs return it.
+	Parent types.String `tfsdk:"parent"`
 	// Internal service principal ID of the service principal in Databricks.
 	ServicePrincipalId types.String `tfsdk:"service_principal_id"`
 }
@@ -6493,12 +6582,17 @@ func (to *ServicePrincipal_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 
 func (m ServicePrincipal_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["account_id"] = attrs["account_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["account_sp_status"] = attrs["account_sp_status"].SetRequired()
 	attrs["application_id"] = attrs["application_id"].SetComputed()
 	attrs["application_id"] = attrs["application_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["display_name"] = attrs["display_name"].SetRequired()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -6526,6 +6620,8 @@ func (m ServicePrincipal_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 			"application_id":       m.ApplicationId,
 			"display_name":         m.DisplayName,
 			"external_id":          m.ExternalId,
+			"name":                 m.Name,
+			"parent":               m.Parent,
 			"service_principal_id": m.ServicePrincipalId,
 		})
 }
@@ -6539,6 +6635,8 @@ func (m ServicePrincipal_SdkV2) Type(ctx context.Context) attr.Type {
 			"application_id":       types.StringType,
 			"display_name":         types.StringType,
 			"external_id":          types.StringType,
+			"name":                 types.StringType,
+			"parent":               types.StringType,
 			"service_principal_id": types.StringType,
 		},
 	}
@@ -6552,6 +6650,12 @@ type TransitiveParentGroup_SdkV2 struct {
 	ExternalId types.String `tfsdk:"external_id"`
 	// Internal group ID of the group in Databricks.
 	GroupId types.String `tfsdk:"group_id"`
+	// The resource name of the transitive parent group. The format depends on
+	// the API that returned it: - Account-scoped:
+	// accounts/{account_id}/principals/{principal_id}/transitive-parent-groups/{group_id}
+	// - Workspace-scoped:
+	// principals/{principal_id}/transitive-parent-groups/{group_id}
+	Name types.String `tfsdk:"name"`
 }
 
 func (to *TransitiveParentGroup_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TransitiveParentGroup_SdkV2) {
@@ -6564,6 +6668,7 @@ func (m TransitiveParentGroup_SdkV2) ApplySchemaCustomizations(attrs map[string]
 	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["external_id"] = attrs["external_id"].SetComputed()
 	attrs["group_id"] = attrs["group_id"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
 
 	return attrs
 }
@@ -6589,6 +6694,7 @@ func (m TransitiveParentGroup_SdkV2) ToObjectValue(ctx context.Context) basetype
 			"account_id":  m.AccountId,
 			"external_id": m.ExternalId,
 			"group_id":    m.GroupId,
+			"name":        m.Name,
 		})
 }
 
@@ -6599,6 +6705,7 @@ func (m TransitiveParentGroup_SdkV2) Type(ctx context.Context) attr.Type {
 			"account_id":  types.StringType,
 			"external_id": types.StringType,
 			"group_id":    types.StringType,
+			"name":        types.StringType,
 		},
 	}
 }
@@ -6606,8 +6713,10 @@ func (m TransitiveParentGroup_SdkV2) Type(ctx context.Context) attr.Type {
 type UpdateGroupProxyRequest_SdkV2 struct {
 	// Required. Group to be updated in Databricks
 	Group types.List `tfsdk:"group"`
-	// Required. Internal ID of the group in Databricks.
-	GroupId types.String `tfsdk:"-"`
+	// The resource name of the group. The format depends on the API that
+	// returned it: - Account-scoped: accounts/{account_id}/groups/{group_id} -
+	// Workspace-scoped: groups/{group_id}
+	Name types.String `tfsdk:"-"`
 	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 }
@@ -6638,7 +6747,7 @@ func (to *UpdateGroupProxyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 func (m UpdateGroupProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group"] = attrs["group"].SetRequired()
 	attrs["group"] = attrs["group"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
 	return attrs
@@ -6665,7 +6774,7 @@ func (m UpdateGroupProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basety
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"group":       m.Group,
-			"group_id":    m.GroupId,
+			"name":        m.Name,
 			"update_mask": m.UpdateMask,
 		})
 }
@@ -6677,7 +6786,7 @@ func (m UpdateGroupProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"group": basetypes.ListType{
 				ElemType: Group_SdkV2{}.Type(ctx),
 			},
-			"group_id":    types.StringType,
+			"name":        types.StringType,
 			"update_mask": types.StringType,
 		},
 	}
@@ -6712,8 +6821,10 @@ func (m *UpdateGroupProxyRequest_SdkV2) SetGroup(ctx context.Context, v Group_Sd
 type UpdateGroupRequest_SdkV2 struct {
 	// Required. Group to be updated in Databricks
 	Group types.List `tfsdk:"group"`
-	// Required. Internal ID of the group in Databricks.
-	GroupId types.String `tfsdk:"-"`
+	// The resource name of the group. The format depends on the API that
+	// returned it: - Account-scoped: accounts/{account_id}/groups/{group_id} -
+	// Workspace-scoped: groups/{group_id}
+	Name types.String `tfsdk:"-"`
 	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 }
@@ -6744,8 +6855,7 @@ func (to *UpdateGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 func (m UpdateGroupRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group"] = attrs["group"].SetRequired()
 	attrs["group"] = attrs["group"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
 	return attrs
@@ -6772,7 +6882,7 @@ func (m UpdateGroupRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"group":       m.Group,
-			"group_id":    m.GroupId,
+			"name":        m.Name,
 			"update_mask": m.UpdateMask,
 		})
 }
@@ -6784,7 +6894,7 @@ func (m UpdateGroupRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"group": basetypes.ListType{
 				ElemType: Group_SdkV2{}.Type(ctx),
 			},
-			"group_id":    types.StringType,
+			"name":        types.StringType,
 			"update_mask": types.StringType,
 		},
 	}
@@ -6817,10 +6927,13 @@ func (m *UpdateGroupRequest_SdkV2) SetGroup(ctx context.Context, v Group_SdkV2) 
 }
 
 type UpdateServicePrincipalProxyRequest_SdkV2 struct {
+	// The resource name of the service principal. The format depends on the API
+	// that returned it: - Account-scoped:
+	// accounts/{account_id}/service-principals/{service_principal_id} -
+	// Workspace-scoped: service-principals/{service_principal_id}
+	Name types.String `tfsdk:"-"`
 	// Required. Service principal to be updated in Databricks
 	ServicePrincipal types.List `tfsdk:"service_principal"`
-	// Required. Internal ID of the service principal in Databricks.
-	ServicePrincipalId types.String `tfsdk:"-"`
 	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 }
@@ -6851,7 +6964,7 @@ func (to *UpdateServicePrincipalProxyRequest_SdkV2) SyncFieldsDuringRead(ctx con
 func (m UpdateServicePrincipalProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["service_principal"] = attrs["service_principal"].SetRequired()
 	attrs["service_principal"] = attrs["service_principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
 	return attrs
@@ -6877,9 +6990,9 @@ func (m UpdateServicePrincipalProxyRequest_SdkV2) ToObjectValue(ctx context.Cont
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"service_principal":    m.ServicePrincipal,
-			"service_principal_id": m.ServicePrincipalId,
-			"update_mask":          m.UpdateMask,
+			"name":              m.Name,
+			"service_principal": m.ServicePrincipal,
+			"update_mask":       m.UpdateMask,
 		})
 }
 
@@ -6887,11 +7000,11 @@ func (m UpdateServicePrincipalProxyRequest_SdkV2) ToObjectValue(ctx context.Cont
 func (m UpdateServicePrincipalProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
 			"service_principal": basetypes.ListType{
 				ElemType: ServicePrincipal_SdkV2{}.Type(ctx),
 			},
-			"service_principal_id": types.StringType,
-			"update_mask":          types.StringType,
+			"update_mask": types.StringType,
 		},
 	}
 }
@@ -6923,10 +7036,13 @@ func (m *UpdateServicePrincipalProxyRequest_SdkV2) SetServicePrincipal(ctx conte
 }
 
 type UpdateServicePrincipalRequest_SdkV2 struct {
+	// The resource name of the service principal. The format depends on the API
+	// that returned it: - Account-scoped:
+	// accounts/{account_id}/service-principals/{service_principal_id} -
+	// Workspace-scoped: service-principals/{service_principal_id}
+	Name types.String `tfsdk:"-"`
 	// Required. Service Principal to be updated in Databricks
 	ServicePrincipal types.List `tfsdk:"service_principal"`
-	// Required. Internal ID of the service principal in Databricks.
-	ServicePrincipalId types.String `tfsdk:"-"`
 	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 }
@@ -6957,8 +7073,7 @@ func (to *UpdateServicePrincipalRequest_SdkV2) SyncFieldsDuringRead(ctx context.
 func (m UpdateServicePrincipalRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["service_principal"] = attrs["service_principal"].SetRequired()
 	attrs["service_principal"] = attrs["service_principal"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
 	return attrs
@@ -6984,9 +7099,9 @@ func (m UpdateServicePrincipalRequest_SdkV2) ToObjectValue(ctx context.Context) 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"service_principal":    m.ServicePrincipal,
-			"service_principal_id": m.ServicePrincipalId,
-			"update_mask":          m.UpdateMask,
+			"name":              m.Name,
+			"service_principal": m.ServicePrincipal,
+			"update_mask":       m.UpdateMask,
 		})
 }
 
@@ -6994,11 +7109,11 @@ func (m UpdateServicePrincipalRequest_SdkV2) ToObjectValue(ctx context.Context) 
 func (m UpdateServicePrincipalRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
 			"service_principal": basetypes.ListType{
 				ElemType: ServicePrincipal_SdkV2{}.Type(ctx),
 			},
-			"service_principal_id": types.StringType,
-			"update_mask":          types.StringType,
+			"update_mask": types.StringType,
 		},
 	}
 }
@@ -7030,12 +7145,14 @@ func (m *UpdateServicePrincipalRequest_SdkV2) SetServicePrincipal(ctx context.Co
 }
 
 type UpdateUserProxyRequest_SdkV2 struct {
+	// The resource name of the user. The format depends on the API that
+	// returned it: - Account-scoped: accounts/{account_id}/users/{user_id} -
+	// Workspace-scoped: users/{user_id}
+	Name types.String `tfsdk:"-"`
 	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 	// Required. User to be updated in Databricks
 	User types.List `tfsdk:"user"`
-	// Required. Internal ID of the user in Databricks.
-	UserId types.String `tfsdk:"-"`
 }
 
 func (to *UpdateUserProxyRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateUserProxyRequest_SdkV2) {
@@ -7064,7 +7181,7 @@ func (to *UpdateUserProxyRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context
 func (m UpdateUserProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["user"] = attrs["user"].SetRequired()
 	attrs["user"] = attrs["user"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["user_id"] = attrs["user_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
 	return attrs
@@ -7090,9 +7207,9 @@ func (m UpdateUserProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"name":        m.Name,
 			"update_mask": m.UpdateMask,
 			"user":        m.User,
-			"user_id":     m.UserId,
 		})
 }
 
@@ -7100,11 +7217,11 @@ func (m UpdateUserProxyRequest_SdkV2) ToObjectValue(ctx context.Context) basetyp
 func (m UpdateUserProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"name":        types.StringType,
 			"update_mask": types.StringType,
 			"user": basetypes.ListType{
 				ElemType: User_SdkV2{}.Type(ctx),
 			},
-			"user_id": types.StringType,
 		},
 	}
 }
@@ -7136,12 +7253,14 @@ func (m *UpdateUserProxyRequest_SdkV2) SetUser(ctx context.Context, v User_SdkV2
 }
 
 type UpdateUserRequest_SdkV2 struct {
+	// The resource name of the user. The format depends on the API that
+	// returned it: - Account-scoped: accounts/{account_id}/users/{user_id} -
+	// Workspace-scoped: users/{user_id}
+	Name types.String `tfsdk:"-"`
 	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 	// Required. User to be updated in Databricks
 	User types.List `tfsdk:"user"`
-	// Required. Internal ID of the user in Databricks.
-	UserId types.String `tfsdk:"-"`
 }
 
 func (to *UpdateUserRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateUserRequest_SdkV2) {
@@ -7170,8 +7289,7 @@ func (to *UpdateUserRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 func (m UpdateUserRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["user"] = attrs["user"].SetRequired()
 	attrs["user"] = attrs["user"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["user_id"] = attrs["user_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
 	return attrs
@@ -7197,9 +7315,9 @@ func (m UpdateUserRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"name":        m.Name,
 			"update_mask": m.UpdateMask,
 			"user":        m.User,
-			"user_id":     m.UserId,
 		})
 }
 
@@ -7207,11 +7325,11 @@ func (m UpdateUserRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 func (m UpdateUserRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"name":        types.StringType,
 			"update_mask": types.StringType,
 			"user": basetypes.ListType{
 				ElemType: User_SdkV2{}.Type(ctx),
 			},
-			"user_id": types.StringType,
 		},
 	}
 }
@@ -7462,8 +7580,11 @@ func (m *UpdateWorkspaceAssignmentDetailRequest_SdkV2) SetWorkspaceAssignmentDet
 }
 
 type UpdateWorkspaceAssignmentProxyRequest_SdkV2 struct {
-	// Required. ID of the principal in Databricks.
-	PrincipalId types.Int64 `tfsdk:"-"`
+	// The resource name of the workspace assignment. The format depends on the
+	// API that returned it: - Account-scoped:
+	// accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}
+	// - Workspace-scoped: workspace-assignments/{principal_id}
+	Name types.String `tfsdk:"-"`
 	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 	// Required. Workspace assignment to be updated in Databricks.
@@ -7496,7 +7617,7 @@ func (to *UpdateWorkspaceAssignmentProxyRequest_SdkV2) SyncFieldsDuringRead(ctx 
 func (m UpdateWorkspaceAssignmentProxyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["workspace_assignment"] = attrs["workspace_assignment"].SetRequired()
 	attrs["workspace_assignment"] = attrs["workspace_assignment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
 	return attrs
@@ -7522,7 +7643,7 @@ func (m UpdateWorkspaceAssignmentProxyRequest_SdkV2) ToObjectValue(ctx context.C
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal_id":         m.PrincipalId,
+			"name":                 m.Name,
 			"update_mask":          m.UpdateMask,
 			"workspace_assignment": m.WorkspaceAssignment,
 		})
@@ -7532,8 +7653,8 @@ func (m UpdateWorkspaceAssignmentProxyRequest_SdkV2) ToObjectValue(ctx context.C
 func (m UpdateWorkspaceAssignmentProxyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"principal_id": types.Int64Type,
-			"update_mask":  types.StringType,
+			"name":        types.StringType,
+			"update_mask": types.StringType,
 			"workspace_assignment": basetypes.ListType{
 				ElemType: WorkspaceAssignment_SdkV2{}.Type(ctx),
 			},
@@ -7568,15 +7689,15 @@ func (m *UpdateWorkspaceAssignmentProxyRequest_SdkV2) SetWorkspaceAssignment(ctx
 }
 
 type UpdateWorkspaceAssignmentRequest_SdkV2 struct {
-	// Required. ID of the principal in Databricks.
-	PrincipalId types.Int64 `tfsdk:"-"`
+	// The resource name of the workspace assignment. The format depends on the
+	// API that returned it: - Account-scoped:
+	// accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}
+	// - Workspace-scoped: workspace-assignments/{principal_id}
+	Name types.String `tfsdk:"-"`
 	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 	// Required. Workspace assignment to be updated in Databricks.
 	WorkspaceAssignment types.List `tfsdk:"workspace_assignment"`
-	// Required. The workspace ID for which the workspace assignment is being
-	// updated.
-	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
 func (to *UpdateWorkspaceAssignmentRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateWorkspaceAssignmentRequest_SdkV2) {
@@ -7605,9 +7726,7 @@ func (to *UpdateWorkspaceAssignmentRequest_SdkV2) SyncFieldsDuringRead(ctx conte
 func (m UpdateWorkspaceAssignmentRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["workspace_assignment"] = attrs["workspace_assignment"].SetRequired()
 	attrs["workspace_assignment"] = attrs["workspace_assignment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["account_id"] = attrs["account_id"].SetRequired()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
 	return attrs
@@ -7633,10 +7752,9 @@ func (m UpdateWorkspaceAssignmentRequest_SdkV2) ToObjectValue(ctx context.Contex
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal_id":         m.PrincipalId,
+			"name":                 m.Name,
 			"update_mask":          m.UpdateMask,
 			"workspace_assignment": m.WorkspaceAssignment,
-			"workspace_id":         m.WorkspaceId,
 		})
 }
 
@@ -7644,12 +7762,11 @@ func (m UpdateWorkspaceAssignmentRequest_SdkV2) ToObjectValue(ctx context.Contex
 func (m UpdateWorkspaceAssignmentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"principal_id": types.Int64Type,
-			"update_mask":  types.StringType,
+			"name":        types.StringType,
+			"update_mask": types.StringType,
 			"workspace_assignment": basetypes.ListType{
 				ElemType: WorkspaceAssignment_SdkV2{}.Type(ctx),
 			},
-			"workspace_id": types.Int64Type,
 		},
 	}
 }
@@ -7681,8 +7798,9 @@ func (m *UpdateWorkspaceAssignmentRequest_SdkV2) SetWorkspaceAssignment(ctx cont
 }
 
 type UpdateWorkspaceIdentityDetailRequest_SdkV2 struct {
-	// Required. ID of the principal in Databricks.
-	PrincipalId types.Int64 `tfsdk:"-"`
+	// The resource name of the workspace identity detail. Format:
+	// principals/{principal_id}/workspace-identity-detail
+	Name types.String `tfsdk:"-"`
 	// Required. The list of fields to update.
 	UpdateMask types.String `tfsdk:"-"`
 	// Required. Workspace identity detail to be updated in Databricks.
@@ -7715,7 +7833,7 @@ func (to *UpdateWorkspaceIdentityDetailRequest_SdkV2) SyncFieldsDuringRead(ctx c
 func (m UpdateWorkspaceIdentityDetailRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["workspace_identity_detail"] = attrs["workspace_identity_detail"].SetRequired()
 	attrs["workspace_identity_detail"] = attrs["workspace_identity_detail"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
 	return attrs
@@ -7741,7 +7859,7 @@ func (m UpdateWorkspaceIdentityDetailRequest_SdkV2) ToObjectValue(ctx context.Co
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"principal_id":              m.PrincipalId,
+			"name":                      m.Name,
 			"update_mask":               m.UpdateMask,
 			"workspace_identity_detail": m.WorkspaceIdentityDetail,
 		})
@@ -7751,8 +7869,8 @@ func (m UpdateWorkspaceIdentityDetailRequest_SdkV2) ToObjectValue(ctx context.Co
 func (m UpdateWorkspaceIdentityDetailRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"principal_id": types.Int64Type,
-			"update_mask":  types.StringType,
+			"name":        types.StringType,
+			"update_mask": types.StringType,
 			"workspace_identity_detail": basetypes.ListType{
 				ElemType: WorkspaceIdentityDetail_SdkV2{}.Type(ctx),
 			},
@@ -7796,6 +7914,14 @@ type User_SdkV2 struct {
 	ExternalId types.String `tfsdk:"external_id"`
 
 	FullName types.List `tfsdk:"full_name"`
+	// The resource name of the user. The format depends on the API that
+	// returned it: - Account-scoped: accounts/{account_id}/users/{user_id} -
+	// Workspace-scoped: users/{user_id}
+	Name types.String `tfsdk:"name"`
+	// The resource name of the account that contains the user,
+	// `accounts/{account_id}`. Both the account-scoped and workspace-scoped
+	// APIs return it.
+	Parent types.String `tfsdk:"parent"`
 	// Internal userId of the user in Databricks.
 	UserId types.String `tfsdk:"user_id"`
 	// Username/email of the user.
@@ -7827,11 +7953,16 @@ func (to *User_SdkV2) SyncFieldsDuringRead(ctx context.Context, from User_SdkV2)
 
 func (m User_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["account_id"] = attrs["account_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["account_user_status"] = attrs["account_user_status"].SetRequired()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetRequired()
 	attrs["full_name"] = attrs["full_name"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["user_id"] = attrs["user_id"].SetComputed()
+	attrs["user_id"] = attrs["user_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["username"] = attrs["username"].SetRequired()
 	attrs["username"] = attrs["username"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
@@ -7862,6 +7993,8 @@ func (m User_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"account_user_status": m.AccountUserStatus,
 			"external_id":         m.ExternalId,
 			"full_name":           m.FullName,
+			"name":                m.Name,
+			"parent":              m.Parent,
 			"user_id":             m.UserId,
 			"username":            m.Username,
 		})
@@ -7877,6 +8010,8 @@ func (m User_SdkV2) Type(ctx context.Context) attr.Type {
 			"full_name": basetypes.ListType{
 				ElemType: UserFullName_SdkV2{}.Type(ctx),
 			},
+			"name":     types.StringType,
+			"parent":   types.StringType,
 			"user_id":  types.StringType,
 			"username": types.StringType,
 		},
@@ -7966,6 +8101,11 @@ type WorkspaceAccessDetail_SdkV2 struct {
 	AccessType types.String `tfsdk:"access_type"`
 	// The account ID parent of the workspace where the principal has access.
 	AccountId types.String `tfsdk:"account_id"`
+	// The resource name of the workspace access detail. The format depends on
+	// the API that returned it: - Account-scoped:
+	// accounts/{account_id}/workspaces/{workspace_id}/workspace-access-details/{principal_id}
+	// - Workspace-scoped: workspace-access-details/{principal_id}
+	Name types.String `tfsdk:"name"`
 	// The permissions granted to the principal in the workspace.
 	Permissions types.List `tfsdk:"permissions"`
 	// The internal ID of the principal (user/sp/group) in Databricks.
@@ -8000,6 +8140,7 @@ func (to *WorkspaceAccessDetail_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 func (m WorkspaceAccessDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_type"] = attrs["access_type"].SetComputed()
 	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
 	attrs["permissions"] = attrs["permissions"].SetOptional()
 	attrs["principal_id"] = attrs["principal_id"].SetComputed()
 	attrs["principal_type"] = attrs["principal_type"].SetComputed()
@@ -8031,6 +8172,7 @@ func (m WorkspaceAccessDetail_SdkV2) ToObjectValue(ctx context.Context) basetype
 		map[string]attr.Value{
 			"access_type":    m.AccessType,
 			"account_id":     m.AccountId,
+			"name":           m.Name,
 			"permissions":    m.Permissions,
 			"principal_id":   m.PrincipalId,
 			"principal_type": m.PrincipalType,
@@ -8045,6 +8187,7 @@ func (m WorkspaceAccessDetail_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"access_type": types.StringType,
 			"account_id":  types.StringType,
+			"name":        types.StringType,
 			"permissions": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -8118,7 +8261,18 @@ type WorkspaceAssignment_SdkV2 struct {
 	// List responses leave this field empty. Get a single principal to read its
 	// entitlements.
 	Entitlements types.Set `tfsdk:"entitlements"`
-	// The internal ID of the principal (user/sp/group) in Databricks.
+	// The resource name of the workspace assignment. The format depends on the
+	// API that returned it: - Account-scoped:
+	// accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}
+	// - Workspace-scoped: workspace-assignments/{principal_id}
+	Name types.String `tfsdk:"name"`
+	// The resource name of the workspace that contains the assignment,
+	// `accounts/{account_id}/workspaces/{workspace_id}`. Both the
+	// account-scoped and workspace-scoped APIs return it.
+	Parent types.String `tfsdk:"parent"`
+	// The internal ID of the principal (user/sp/group) in Databricks. Set when
+	// the assignment is created and cannot be changed afterwards; to assign a
+	// different principal, create a new assignment.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The type of the principal (user/service principal/group) that is
 	// assigned.
@@ -8159,11 +8313,17 @@ func (to *WorkspaceAssignment_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 
 func (m WorkspaceAssignment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["account_id"] = attrs["account_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["effective_entitlements"] = attrs["effective_entitlements"].SetComputed()
 	attrs["entitlements"] = attrs["entitlements"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["principal_id"] = attrs["principal_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["principal_type"] = attrs["principal_type"].SetComputed()
 	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -8192,6 +8352,8 @@ func (m WorkspaceAssignment_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 			"account_id":             m.AccountId,
 			"effective_entitlements": m.EffectiveEntitlements,
 			"entitlements":           m.Entitlements,
+			"name":                   m.Name,
+			"parent":                 m.Parent,
 			"principal_id":           m.PrincipalId,
 			"principal_type":         m.PrincipalType,
 			"workspace_id":           m.WorkspaceId,
@@ -8209,6 +8371,8 @@ func (m WorkspaceAssignment_SdkV2) Type(ctx context.Context) attr.Type {
 			"entitlements": basetypes.SetType{
 				ElemType: types.StringType,
 			},
+			"name":           types.StringType,
+			"parent":         types.StringType,
 			"principal_id":   types.Int64Type,
 			"principal_type": types.StringType,
 			"workspace_id":   types.Int64Type,
@@ -8459,6 +8623,9 @@ type WorkspaceIdentityDetail_SdkV2 struct {
 	// The type of assignment the principal has to the workspace (direct or
 	// indirect).
 	AssignmentType types.String `tfsdk:"assignment_type"`
+	// The resource name of the workspace identity detail. Format:
+	// principals/{principal_id}/workspace-identity-detail
+	Name types.String `tfsdk:"name"`
 	// The internal ID of the principal (user/sp/group) in Databricks.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The type of the principal (user/service principal/group).
@@ -8475,6 +8642,7 @@ func (to *WorkspaceIdentityDetail_SdkV2) SyncFieldsDuringRead(ctx context.Contex
 
 func (m WorkspaceIdentityDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["assignment_type"] = attrs["assignment_type"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
 	attrs["principal_id"] = attrs["principal_id"].SetComputed()
 	attrs["principal_type"] = attrs["principal_type"].SetComputed()
 	attrs["workspace_identity_status"] = attrs["workspace_identity_status"].SetOptional()
@@ -8501,6 +8669,7 @@ func (m WorkspaceIdentityDetail_SdkV2) ToObjectValue(ctx context.Context) basety
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"assignment_type":           m.AssignmentType,
+			"name":                      m.Name,
 			"principal_id":              m.PrincipalId,
 			"principal_type":            m.PrincipalType,
 			"workspace_identity_status": m.WorkspaceIdentityStatus,
@@ -8512,6 +8681,7 @@ func (m WorkspaceIdentityDetail_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"assignment_type":           types.StringType,
+			"name":                      types.StringType,
 			"principal_id":              types.Int64Type,
 			"principal_type":            types.StringType,
 			"workspace_identity_status": types.StringType,

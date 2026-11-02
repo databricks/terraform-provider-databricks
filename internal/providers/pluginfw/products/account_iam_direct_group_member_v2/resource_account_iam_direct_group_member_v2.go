@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -48,6 +47,16 @@ type DirectGroupMember struct {
 	GroupId types.Int64 `tfsdk:"group_id"`
 	// The source of group membership (internal or from identity provider).
 	MembershipSource types.String `tfsdk:"membership_source"`
+	// The resource name of the group membership. The format depends on the API
+	// that returned it: - Account-scoped:
+	// accounts/{account_id}/groups/{group_id}/direct-members/{principal_id} -
+	// Workspace-scoped: groups/{group_id}/direct-members/{principal_id}
+	Name types.String `tfsdk:"name"`
+	// The resource name of the group that contains the membership. The format
+	// depends on the API that returned it: - Account-scoped:
+	// accounts/{account_id}/groups/{group_id} - Workspace-scoped:
+	// groups/{group_id}
+	Parent types.String `tfsdk:"parent"`
 	// Internal ID of the principal in Databricks.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The type of the principal (user/service principal/group).
@@ -78,6 +87,8 @@ func (m DirectGroupMember) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"external_id":       m.ExternalId,
 			"group_id":          m.GroupId,
 			"membership_source": m.MembershipSource,
+			"name":              m.Name,
+			"parent":            m.Parent,
 			"principal_id":      m.PrincipalId,
 			"principal_type":    m.PrincipalType,
 		},
@@ -92,6 +103,8 @@ func (m DirectGroupMember) Type(ctx context.Context) attr.Type {
 			"external_id":       types.StringType,
 			"group_id":          types.Int64Type,
 			"membership_source": types.StringType,
+			"name":              types.StringType,
+			"parent":            types.StringType,
 			"principal_id":      types.Int64Type,
 			"principal_type":    types.StringType,
 		},
@@ -121,13 +134,16 @@ func (m DirectGroupMember) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["group_id"] = attrs["group_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["membership_source"] = attrs["membership_source"].SetComputed()
 	attrs["membership_source"] = attrs["membership_source"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["principal_id"] = attrs["principal_id"].SetRequired()
 	attrs["principal_id"] = attrs["principal_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["principal_type"] = attrs["principal_type"].SetComputed()
 	attrs["principal_type"] = attrs["principal_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
-	attrs["group_id"] = attrs["group_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
-	attrs["principal_id"] = attrs["principal_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	return attrs
 }
 
@@ -165,7 +181,7 @@ func (r *DirectGroupMemberResource) Create(ctx context.Context, req resource.Cre
 
 	createRequest := iamv2.CreateDirectGroupMemberRequest{
 		DirectGroupMember: direct_group_member,
-		GroupId:           plan.GroupId.ValueInt64(),
+		Parent:            plan.Parent.ValueString(),
 	}
 
 	client, clientDiags := r.Client.GetAccountClient()
@@ -282,27 +298,17 @@ var _ resource.ResourceWithImportState = &DirectGroupMemberResource{}
 func (r *DirectGroupMemberResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+	if len(parts) != 1 || parts[0] == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
 			fmt.Sprintf(
-				"Expected import identifier with format: group_id,principal_id. Got: %q",
+				"Expected import identifier with format: name. Got: %q",
 				req.ID,
 			),
 		)
 		return
 	}
 
-	groupId, err := strconv.ParseInt(parts[0], 10, 64)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to parse import identifier", err.Error())
-		return
-	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("group_id"), groupId)...)
-	principalId, err := strconv.ParseInt(parts[1], 10, 64)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to parse import identifier", err.Error())
-		return
-	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("principal_id"), principalId)...)
+	name := parts[0]
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
 }

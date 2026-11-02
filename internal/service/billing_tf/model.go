@@ -309,10 +309,10 @@ func (m *AlertConfiguration) SetPrincipalOverrides(ctx context.Context, v []Prin
 type AlertSpendStatus struct {
 	// Percentage of the threshold consumed, as a decimal string rounded down to
 	// one decimal place (for example, "68.4" means 68.4%). May exceed 100 when
-	// spend is over the threshold. Returns "0.0" if there's no spend, and is
-	// omitted if the threshold is $0. For shared thresholds, this is the only
-	// value returned; the absolute `spend` and `threshold` dollar amounts are
-	// withheld.
+	// spend is over the threshold. Returns "0.0" if there's no spend, except
+	// that a $0 threshold always returns "100.0". For shared thresholds, this
+	// is the only value returned; the absolute `spend` and `threshold` dollar
+	// amounts are withheld.
 	PercentConsumed types.String `tfsdk:"percent_consumed"`
 	// Whether the threshold is evaluated per individual user
 	// (`ALERT_CONFIGURATION_SCOPE_TYPE_PER_USER`) or on the shared spend across

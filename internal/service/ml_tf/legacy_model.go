@@ -1590,13 +1590,16 @@ func (m AvgFunction_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type BackfillFeaturesRequest_SdkV2 struct {
-	// Output ranges to backfill.
+	// Time ranges of source data to backfill. Ranges must not overlap.
 	BackfillRanges types.List `tfsdk:"backfill_ranges"`
 	// The budget policy ID, in UUID format, used to attribute the serverless
 	// compute cost of this backfill. If not specified, a default budget policy
 	// may be applied.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
-	// Full names of the features to backfill.
+	// Full names of the features to backfill. All features must share the same
+	// interval between values and the same offset. The interval is the
+	// slide_duration of a sliding window or the window_duration of a tumbling
+	// window.
 	FeatureFullNames types.List `tfsdk:"feature_full_names"`
 	// Idempotency token for the request.
 	RequestId types.String `tfsdk:"request_id"`
@@ -1823,7 +1826,10 @@ func (m BackfillFeaturesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Progress and configuration for a backfill.
 type BackfillOperationMetadata_SdkV2 struct {
-	// Output ranges targeted by the backfill.
+	// The requested time ranges, each aligned outward to the boundaries at
+	// which the features emit values. Ranges that overlap after alignment are
+	// combined into one. The backfill stops at the most recent materialized
+	// values, so a range may extend past the values that it recomputed.
 	BackfillRanges types.List `tfsdk:"backfill_ranges"`
 	// Full names of the features targeted by the backfill.
 	FeatureFullNames types.List `tfsdk:"feature_full_names"`
@@ -1988,10 +1994,15 @@ func (m *BackfillOperationMetadata_SdkV2) SetFeatureFullNames(ctx context.Contex
 	m.FeatureFullNames = types.ListValueMust(t, vs)
 }
 
-// A time range for a backfill.
+// A time range of source data for a backfill. The range is aligned outward to
+// the boundaries at which the feature emits values: every slide_duration for a
+// sliding window or every window_duration for a tumbling window, shifted by
+// offset. Feature values up to one window_duration after the aligned end may
+// change. The backfill stops at the most recent materialized values and leaves
+// later values to materialization.
 type BackfillRange_SdkV2 struct {
-	// End of the backfill range, exclusive. If unset, defaults to the current
-	// time.
+	// End of the backfill range, exclusive. If unset, defaults to the most
+	// recent materialized values.
 	EndTime timetypes.RFC3339 `tfsdk:"end_time"`
 	// Start of the backfill range, inclusive. If unset, defaults to the
 	// earliest source timestamp of the feature.
@@ -20722,8 +20733,8 @@ func (m *MaterializationFailureNotification_SdkV2) SetEmailAddresses(ctx context
 	m.EmailAddresses = types.ListValueMust(t, vs)
 }
 
-// Notifications for the jobs and pipelines that materialize a feature, one
-// field per trigger.
+// Notifications for the jobs and pipelines that materialize the features in a
+// set, one field per trigger.
 type MaterializationNotifications_SdkV2 struct {
 	// Who to notify when a run fails, and on which attempts.
 	OnFailure types.List `tfsdk:"on_failure"`
@@ -21749,16 +21760,13 @@ type MaterializedFeature_SdkV2 struct {
 	// Name of the latest backfill operation on this materialized feature.
 	// Format: operations/{operation_id}.
 	LatestBackfillOperation types.String `tfsdk:"latest_backfill_operation"`
-	// The materialization set this materialized feature was created for,
-	// through DABs or direct-engine creation. Unset for a materialized feature
-	// that was not created as part of a set.
+	// The ID of the materialization set containing this materialized feature.
+	// Unset for a materialized feature that is not part of a set.
 	MaterializationSetId types.String `tfsdk:"materialization_set_id"`
 	// Server-assigned unique identifier for the materialized feature.
 	MaterializedFeatureId types.String `tfsdk:"materialized_feature_id"`
-	// Notification configuration around the materialization job or pipeline
-	// lifecycle. They are applied to every job and pipeline that materializes
-	// this feature. Features which are materialized in the same pipeline will
-	// share the same notification.
+	// Notification configuration for the jobs and pipelines that materialize
+	// this feature.
 	Notifications types.List `tfsdk:"notifications"`
 	// Destination for writing feature values to an offline Delta table. The
 	// resulting table is returned as `table_name`.
@@ -21769,8 +21777,8 @@ type MaterializedFeature_SdkV2 struct {
 	// The ID of the pipeline that materializes this feature. This is only
 	// present for streaming features.
 	PipelineId types.String `tfsdk:"pipeline_id"`
-	// The schedule state of the materialization pipeline. Hidden from GraphQL:
-	// being deprecated, so not exposed to Catalog Explorer.
+	// Deprecated: This legacy pipeline setting does not control batch job
+	// scheduling.
 	PipelineScheduleState types.String `tfsdk:"pipeline_schedule_state"`
 	// The Structured Streaming trigger mode used for materialization. Real-time
 	// mode (RTM) targets sub-second latency for operational workloads;
@@ -21923,7 +21931,7 @@ func (m MaterializedFeature_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["materialization_set_id"] = attrs["materialization_set_id"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetOptional()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["notifications"] = attrs["notifications"].SetOptional()
+	attrs["notifications"] = attrs["notifications"].SetComputed()
 	attrs["notifications"] = attrs["notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetOptional()
 	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
@@ -32443,8 +32451,9 @@ type TimeWindow_SdkV2 struct {
 	// tumbling and fixed-duration sliding windows first emit at an
 	// offset-aligned boundary after a full window can be formed. If unset,
 	// lifetime sliding windows and rolling windows emit as soon as eligible
-	// source data exists. Not currently supported for sawtooth windows or for
-	// Features with a stream source.
+	// source data exists. For sawtooth windows, start_time must not be later
+	// than the time the Feature is created. Not supported for rolling windows
+	// on Features with a stream source.
 	StartTime timetypes.RFC3339 `tfsdk:"start_time"`
 
 	Tumbling types.List `tfsdk:"tumbling"`
@@ -33936,7 +33945,7 @@ type UpdateMaterializationSetRequest_SdkV2 struct {
 	// checked against the rest of the request. Omit it and each request updates
 	// independently.
 	RequestId types.String `tfsdk:"-"`
-	// The fields to update. Only 'materialized_features' is supported.
+	// The fields to update. Only 'materialized_features' or '*' is supported.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -34046,8 +34055,7 @@ type UpdateMaterializedFeatureRequest_SdkV2 struct {
 	MaterializedFeature types.List `tfsdk:"materialized_feature"`
 	// Server-assigned unique identifier for the materialized feature.
 	MaterializedFeatureId types.String `tfsdk:"-"`
-	// Provide the materialization feature fields which should be updated.
-	// Currently, only the pipeline_state field can be updated.
+	// The fields to update. Only `pipeline_schedule_state` is supported.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

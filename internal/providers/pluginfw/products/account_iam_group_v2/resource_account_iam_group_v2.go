@@ -48,6 +48,14 @@ type Group struct {
 	GroupId types.String `tfsdk:"group_id"`
 	// Display name of the group.
 	GroupName types.String `tfsdk:"group_name"`
+	// The resource name of the group. The format depends on the API that
+	// returned it: - Account-scoped: accounts/{account_id}/groups/{group_id} -
+	// Workspace-scoped: groups/{group_id}
+	Name types.String `tfsdk:"name"`
+	// The resource name of the account that contains the group,
+	// `accounts/{account_id}`. Both the account-scoped and workspace-scoped
+	// APIs return it.
+	Parent types.String `tfsdk:"parent"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -74,6 +82,8 @@ func (m Group) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"external_id": m.ExternalId,
 			"group_id":    m.GroupId,
 			"group_name":  m.GroupName,
+			"name":        m.Name,
+			"parent":      m.Parent,
 		},
 	)
 }
@@ -86,6 +96,8 @@ func (m Group) Type(ctx context.Context) attr.Type {
 			"external_id": types.StringType,
 			"group_id":    types.StringType,
 			"group_name":  types.StringType,
+			"name":        types.StringType,
+			"parent":      types.StringType,
 		},
 	}
 }
@@ -104,11 +116,16 @@ func (to *Group) SyncFieldsDuringRead(ctx context.Context, from Group) {
 
 func (m Group) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["account_id"] = attrs["account_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["group_id"] = attrs["group_id"].SetComputed()
-	attrs["group_name"] = attrs["group_name"].SetOptional()
-
 	attrs["group_id"] = attrs["group_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	return attrs
 }
 
@@ -145,7 +162,8 @@ func (r *GroupResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	createRequest := iamv2.CreateGroupRequest{
-		Group: group,
+		Group:  group,
+		Parent: plan.Parent.ValueString(),
 	}
 
 	client, clientDiags := r.Client.GetAccountClient()
@@ -229,7 +247,7 @@ func (r *GroupResource) update(ctx context.Context, plan Group, diags *diag.Diag
 
 	updateRequest := iamv2.UpdateGroupRequest{
 		Group:      group,
-		GroupId:    plan.GroupId.ValueString(),
+		Name:       plan.Name.ValueString(),
 		UpdateMask: "external_id,group_name",
 	}
 
@@ -311,13 +329,13 @@ func (r *GroupResource) ImportState(ctx context.Context, req resource.ImportStat
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
 			fmt.Sprintf(
-				"Expected import identifier with format: group_id. Got: %q",
+				"Expected import identifier with format: name. Got: %q",
 				req.ID,
 			),
 		)
 		return
 	}
 
-	groupId := parts[0]
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("group_id"), groupId)...)
+	name := parts[0]
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
 }

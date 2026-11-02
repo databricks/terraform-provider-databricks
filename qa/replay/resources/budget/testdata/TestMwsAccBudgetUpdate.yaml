@@ -142,6 +142,8 @@ steps:
       }
     calls:
       - *get_1
+      # Update reads the budget to match the configured alerts with the existing ones.
+      - *get_1
       - request:
           method: "PUT"
           path: "/api/2.1/accounts/replay-account/budgets/budget-1"

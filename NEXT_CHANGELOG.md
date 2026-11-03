@@ -13,7 +13,7 @@
 ### Bug Fixes
 
 * Fix data races when concurrent resource operations access the unified provider's client caches ([#6120](https://github.com/databricks/terraform-provider-databricks/pull/6120)).
-* Use the asynchronous Apps update API with a wildcard update mask in `databricks_app` so changes to `compute_size`, `compute_min_instances`, and `compute_max_instances` are applied.
+* Use the asynchronous Apps update API with a wildcard update mask in `databricks_app` so changes to `compute_size`, `compute_min_instances`, and `compute_max_instances` are applied ([#6151](https://github.com/databricks/terraform-provider-databricks/pull/6151)).
 
   Fields omitted from the configuration are now cleared or reset to their backend defaults on update.
 

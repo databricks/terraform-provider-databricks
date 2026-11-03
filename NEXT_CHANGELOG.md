@@ -15,6 +15,7 @@
 * Fix data races when concurrent resource operations access the unified provider's client caches ([#6120](https://github.com/databricks/terraform-provider-databricks/pull/6120)).
 
 ### Documentation
+* Fix the VPC endpoint security group rules in the AWS Private Link guide: add the missing inbound ports (5432 and 8443-8451), source the rules from the workspace security group, and drop the unnecessary egress rules ([#5930](https://github.com/databricks/terraform-provider-databricks/pull/5930)).
 
 ### Exporter
 

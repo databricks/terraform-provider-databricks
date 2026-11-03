@@ -121,6 +121,9 @@ type resourceApp struct {
 
 func (a resourceApp) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
+	// The identity holds the app name and the workspace ID, matching the
+	// generated resources, which mark it mutable.
+	resp.ResourceBehavior.MutableIdentity = true
 }
 
 func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -335,6 +338,9 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 	appGoSdk, err := w.Apps.GetByName(ctx, app.Name.ValueString())
 	if err != nil {
 		if apierr.IsMissing(err) {
+			// Terraform requires an identity even when the resource is gone, and
+			// state written before identity support has none.
+			resp.Diagnostics.Append(tfschema.SetWorkspaceResourceIdentity(ctx, resp.Identity, app.Name.ValueString(), req.State)...)
 			resp.State.RemoveResource(ctx)
 			return
 		}

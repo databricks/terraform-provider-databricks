@@ -233,6 +233,9 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 	})
 	if err != nil {
 		if apierr.IsMissing(err) {
+			// Terraform requires an identity even when the resource is gone, and
+			// state written before identity support has none.
+			resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, monitorInfoTfSDK.TableName.ValueString(), workspaceID)...)
 			resp.State.RemoveResource(ctx)
 			return
 		}

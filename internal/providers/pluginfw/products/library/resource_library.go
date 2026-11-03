@@ -270,6 +270,9 @@ func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 	if installedLib == nil {
 		resp.Diagnostics.AddWarning("library not found", fmt.Sprintf("library %s not found on cluster %s, marking as deleted", libraryRep, clusterId))
+		// Terraform requires an identity even when the resource is gone, and
+		// state written before identity support has none.
+		resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, libraryTfSDK.ID.ValueString(), workspaceID)...)
 		resp.State.RemoveResource(ctx)
 		return
 	}

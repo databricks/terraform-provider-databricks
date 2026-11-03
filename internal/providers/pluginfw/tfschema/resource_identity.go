@@ -22,7 +22,7 @@ import (
 // See https://developer.hashicorp.com/terraform/plugin/framework/resources/identity.
 
 // workspaceResourceIdentity is the identity of a workspace-level resource. ID
-// holds the same string as the import ID, so existing import ID parsing applies.
+// holds the same string as the import ID, so ImportState parses it like one.
 type workspaceResourceIdentity struct {
 	ID          types.String `tfsdk:"id"`
 	WorkspaceID types.String `tfsdk:"workspace_id"`

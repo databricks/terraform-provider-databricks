@@ -187,6 +187,15 @@ func (r Resource) ToResource() *schema.Resource {
 	// Workspace-level managed resources accept a resource identity on import, so
 	// account-level and unified-host providers can be told the workspace ID.
 	hasIdentity := hasProviderConfig && !skipProviderConfigStatePopulation && isManaged
+	setIdentityIfSupported := func(ctx context.Context, d *schema.ResourceData) diag.Diagnostics {
+		if !hasIdentity || d.Id() == "" {
+			return nil
+		}
+		if err := setWorkspaceResourceIdentity(d); err != nil {
+			return diag.FromErr(nicerError(ctx, err, "set identity for"))
+		}
+		return nil
+	}
 
 	var update func(ctx context.Context, d *schema.ResourceData,
 		m any) diag.Diagnostics
@@ -199,24 +208,20 @@ func (r Resource) ToResource() *schema.Resource {
 				err = nicerError(ctx, err, "update")
 				return diag.FromErr(err)
 			}
-			if r.CanSkipReadAfterCreateAndUpdate == nil || !r.CanSkipReadAfterCreateAndUpdate(d) {
-				if err := recoverable(r.Read)(ctx, d, c); err != nil {
-					err = nicerError(ctx, err, "read")
-					return diag.FromErr(err)
-				}
+			// State written before identity support has no identity, and Terraform
+			// rejects an update without one, so both paths set it.
+			if r.CanSkipReadAfterCreateAndUpdate != nil && r.CanSkipReadAfterCreateAndUpdate(d) {
+				return setIdentityIfSupported(ctx, d)
+			}
+			if err := recoverable(r.Read)(ctx, d, c); err != nil {
+				err = nicerError(ctx, err, "read")
+				return diag.FromErr(err)
 			}
 			// No post-Read hook needed for Update: provider_config.workspace_id is
 			// already in state from a previous Create, and r.Read() never touches it.
 			// If the workspace ID had changed, CustomizeDiff would have triggered
 			// ForceNew (destroy+create), so Update only runs when it's unchanged.
-			// The identity is still set, because state written before identity
-			// support has none, and Terraform rejects an update without one.
-			if hasIdentity {
-				if err := setWorkspaceResourceIdentity(d); err != nil {
-					return diag.FromErr(nicerError(ctx, err, "set identity for"))
-				}
-			}
-			return nil
+			return setIdentityIfSupported(ctx, d)
 		}
 	} else {
 		// set ForceNew to all attributes with CRD
@@ -241,7 +246,7 @@ func (r Resource) ToResource() *schema.Resource {
 		}
 	}
 	// Ignore missing for read for resources, but not for data sources.
-	ignoreMissingForRead := isManaged
+	ignoreMissingForRead := (r.Create != nil || r.Update != nil || r.Delete != nil)
 	generateReadFunc := func(ignoreMissing bool) func(ctx context.Context, d *schema.ResourceData,
 		m any) diag.Diagnostics {
 		return func(ctx context.Context, d *schema.ResourceData,
@@ -271,12 +276,7 @@ func (r Resource) ToResource() *schema.Resource {
 					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
 				}
 			}
-			if hasIdentity && d.Id() != "" {
-				if err := setWorkspaceResourceIdentity(d); err != nil {
-					return diag.FromErr(nicerError(ctx, err, "set identity for"))
-				}
-			}
-			return nil
+			return setIdentityIfSupported(ctx, d)
 		}
 	}
 	resource := &schema.Resource{
@@ -309,12 +309,7 @@ func (r Resource) ToResource() *schema.Resource {
 						return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
 					}
 				}
-				if hasIdentity && d.Id() != "" {
-					if err := setWorkspaceResourceIdentity(d); err != nil {
-						return diag.FromErr(nicerError(ctx, err, "set identity for"))
-					}
-				}
-				return nil
+				return setIdentityIfSupported(ctx, d)
 			}
 			if err = recoverable(r.Read)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "read")
@@ -330,12 +325,7 @@ func (r Resource) ToResource() *schema.Resource {
 					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
 				}
 			}
-			if hasIdentity && d.Id() != "" {
-				if err := setWorkspaceResourceIdentity(d); err != nil {
-					return diag.FromErr(nicerError(ctx, err, "set identity for"))
-				}
-			}
-			return nil
+			return setIdentityIfSupported(ctx, d)
 		}
 	}
 	if r.Delete != nil {

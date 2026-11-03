@@ -39,8 +39,8 @@ func workspaceResourceIdentity() *schema.ResourceIdentity {
 }
 
 // importerWithIdentity wraps an importer so that the import identity is copied
-// into the resource data before the wrapped importer runs. Existing ID parsing
-// in the wrapped importer is unchanged.
+// into the resource data before the wrapped importer runs. The wrapped importer
+// then parses d.Id() as usual.
 func importerWithIdentity(inner *schema.ResourceImporter, isDual bool) *schema.ResourceImporter {
 	return &schema.ResourceImporter{
 		StateContext: func(ctx context.Context, d *schema.ResourceData, m any) ([]*schema.ResourceData, error) {

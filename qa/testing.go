@@ -361,6 +361,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	schemaMap := schema.InternalMap(f.Resource.Schema)
 	is := &terraform.InstanceState{
 		Attributes: f.InstanceState,
+		RawConfig:  makeResourceRawConfig(resourceConfig, resource),
 	}
 	ctx := context.Background()
 	diff, err := resource.Diff(ctx, is, resourceConfig, client)
@@ -408,6 +409,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		return resourceData, fmt.Errorf("resource is not expected to be removed")
 	}
 	newState := resourceData.State()
+	if newState != nil {
+		newState.RawConfig = makeResourceRawConfig(resourceConfig, resource)
+	}
 	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, resource.CustomizeDiff, client, true)
 	if err != nil {
 		return nil, err

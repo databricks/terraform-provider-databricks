@@ -434,9 +434,14 @@ type FailoverGroup_SdkV2 struct {
 	// Opaque version string for optimistic locking. Server-generated and
 	// returned in responses.
 	Etag types.String `tfsdk:"etag"`
+	// True if errors currently block the replication point.
+	HasReplicationPointBlockingErrors types.Bool `tfsdk:"has_replication_point_blocking_errors"`
 	// Initial primary region. Used only in Create requests to set the starting
 	// primary region. Not returned in responses.
 	InitialPrimaryRegion types.String `tfsdk:"initial_primary_region"`
+	// Initial replication progress of all in-scope assets. Set only when the
+	// FailoverGroup is in INITIAL_REPLICATION state.
+	InitialReplicationProgress types.List `tfsdk:"initial_replication_progress"`
 	// Fully qualified resource name in the format
 	// accounts/{account_id}/failover-groups/{failover_group_id}.
 	Name types.String `tfsdk:"name"`
@@ -458,6 +463,15 @@ func (to *FailoverGroup_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 	if !from.InitialPrimaryRegion.IsUnknown() && !from.InitialPrimaryRegion.IsNull() {
 		// InitialPrimaryRegion is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.InitialPrimaryRegion = from.InitialPrimaryRegion
+	}
+	if !from.InitialReplicationProgress.IsNull() && !from.InitialReplicationProgress.IsUnknown() {
+		if toInitialReplicationProgress, ok := to.GetInitialReplicationProgress(ctx); ok {
+			if fromInitialReplicationProgress, ok := from.GetInitialReplicationProgress(ctx); ok {
+				// Recursively sync the fields of InitialReplicationProgress
+				toInitialReplicationProgress.SyncFieldsDuringCreateOrUpdate(ctx, fromInitialReplicationProgress)
+				to.SetInitialReplicationProgress(ctx, toInitialReplicationProgress)
+			}
+		}
 	}
 	if !from.UnityCatalogAssets.IsNull() && !from.UnityCatalogAssets.IsUnknown() {
 		if toUnityCatalogAssets, ok := to.GetUnityCatalogAssets(ctx); ok {
@@ -488,6 +502,14 @@ func (to *FailoverGroup_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Fa
 		// InitialPrimaryRegion is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.InitialPrimaryRegion = from.InitialPrimaryRegion
 	}
+	if !from.InitialReplicationProgress.IsNull() && !from.InitialReplicationProgress.IsUnknown() {
+		if toInitialReplicationProgress, ok := to.GetInitialReplicationProgress(ctx); ok {
+			if fromInitialReplicationProgress, ok := from.GetInitialReplicationProgress(ctx); ok {
+				toInitialReplicationProgress.SyncFieldsDuringRead(ctx, fromInitialReplicationProgress)
+				to.SetInitialReplicationProgress(ctx, toInitialReplicationProgress)
+			}
+		}
+	}
 	if !from.UnityCatalogAssets.IsNull() && !from.UnityCatalogAssets.IsUnknown() {
 		if toUnityCatalogAssets, ok := to.GetUnityCatalogAssets(ctx); ok {
 			if fromUnityCatalogAssets, ok := from.GetUnityCatalogAssets(ctx); ok {
@@ -514,8 +536,11 @@ func (m FailoverGroup_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["effective_primary_region"] = attrs["effective_primary_region"].SetComputed()
 	attrs["etag"] = attrs["etag"].SetComputed()
+	attrs["has_replication_point_blocking_errors"] = attrs["has_replication_point_blocking_errors"].SetComputed()
 	attrs["initial_primary_region"] = attrs["initial_primary_region"].SetRequired()
 	attrs["initial_primary_region"] = attrs["initial_primary_region"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["initial_replication_progress"] = attrs["initial_replication_progress"].SetComputed()
+	attrs["initial_replication_progress"] = attrs["initial_replication_progress"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["regions"] = attrs["regions"].SetRequired()
@@ -539,9 +564,10 @@ func (m FailoverGroup_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 // SDK values.
 func (m FailoverGroup_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"regions":              reflect.TypeOf(types.String{}),
-		"unity_catalog_assets": reflect.TypeOf(UcReplicationConfig_SdkV2{}),
-		"workspace_sets":       reflect.TypeOf(WorkspaceSet_SdkV2{}),
+		"initial_replication_progress": reflect.TypeOf(InitialReplicationProgress_SdkV2{}),
+		"regions":                      reflect.TypeOf(types.String{}),
+		"unity_catalog_assets":         reflect.TypeOf(UcReplicationConfig_SdkV2{}),
+		"workspace_sets":               reflect.TypeOf(WorkspaceSet_SdkV2{}),
 	}
 }
 
@@ -552,17 +578,19 @@ func (m FailoverGroup_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time":              m.CreateTime,
-			"effective_primary_region": m.EffectivePrimaryRegion,
-			"etag":                     m.Etag,
-			"initial_primary_region":   m.InitialPrimaryRegion,
-			"name":                     m.Name,
-			"regions":                  m.Regions,
-			"replication_point":        m.ReplicationPoint,
-			"state":                    m.State,
-			"unity_catalog_assets":     m.UnityCatalogAssets,
-			"update_time":              m.UpdateTime,
-			"workspace_sets":           m.WorkspaceSets,
+			"create_time":                           m.CreateTime,
+			"effective_primary_region":              m.EffectivePrimaryRegion,
+			"etag":                                  m.Etag,
+			"has_replication_point_blocking_errors": m.HasReplicationPointBlockingErrors,
+			"initial_primary_region":                m.InitialPrimaryRegion,
+			"initial_replication_progress":          m.InitialReplicationProgress,
+			"name":                                  m.Name,
+			"regions":                               m.Regions,
+			"replication_point":                     m.ReplicationPoint,
+			"state":                                 m.State,
+			"unity_catalog_assets":                  m.UnityCatalogAssets,
+			"update_time":                           m.UpdateTime,
+			"workspace_sets":                        m.WorkspaceSets,
 		})
 }
 
@@ -570,11 +598,15 @@ func (m FailoverGroup_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 func (m FailoverGroup_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":              timetypes.RFC3339{}.Type(ctx),
-			"effective_primary_region": types.StringType,
-			"etag":                     types.StringType,
-			"initial_primary_region":   types.StringType,
-			"name":                     types.StringType,
+			"create_time":                           timetypes.RFC3339{}.Type(ctx),
+			"effective_primary_region":              types.StringType,
+			"etag":                                  types.StringType,
+			"has_replication_point_blocking_errors": types.BoolType,
+			"initial_primary_region":                types.StringType,
+			"initial_replication_progress": basetypes.ListType{
+				ElemType: InitialReplicationProgress_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
 			"regions": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -589,6 +621,32 @@ func (m FailoverGroup_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetInitialReplicationProgress returns the value of the InitialReplicationProgress field in FailoverGroup_SdkV2 as
+// a InitialReplicationProgress_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *FailoverGroup_SdkV2) GetInitialReplicationProgress(ctx context.Context) (InitialReplicationProgress_SdkV2, bool) {
+	var e InitialReplicationProgress_SdkV2
+	if m.InitialReplicationProgress.IsNull() || m.InitialReplicationProgress.IsUnknown() {
+		return e, false
+	}
+	var v []InitialReplicationProgress_SdkV2
+	d := m.InitialReplicationProgress.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInitialReplicationProgress sets the value of the InitialReplicationProgress field in FailoverGroup_SdkV2.
+func (m *FailoverGroup_SdkV2) SetInitialReplicationProgress(ctx context.Context, v InitialReplicationProgress_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["initial_replication_progress"]
+	m.InitialReplicationProgress = types.ListValueMust(t, vs)
 }
 
 // GetRegions returns the value of the Regions field in FailoverGroup_SdkV2 as
@@ -763,6 +821,57 @@ func (m GetStableUrlRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
+		},
+	}
+}
+
+// Progress of the initial replication of all in-scope assets (Unity Catalog and
+// workspace assets) of a FailoverGroup. Populated only while the FailoverGroup
+// is in INITIAL_REPLICATION.
+type InitialReplicationProgress_SdkV2 struct {
+	// Percent complete, 0-100.
+	Completed types.Int64 `tfsdk:"completed"`
+}
+
+func (to *InitialReplicationProgress_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from InitialReplicationProgress_SdkV2) {
+}
+
+func (to *InitialReplicationProgress_SdkV2) SyncFieldsDuringRead(ctx context.Context, from InitialReplicationProgress_SdkV2) {
+}
+
+func (m InitialReplicationProgress_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["completed"] = attrs["completed"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in InitialReplicationProgress.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m InitialReplicationProgress_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, InitialReplicationProgress_SdkV2
+// only implements ToObjectValue() and Type().
+func (m InitialReplicationProgress_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"completed": m.Completed,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m InitialReplicationProgress_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"completed": types.Int64Type,
 		},
 	}
 }

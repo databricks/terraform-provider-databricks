@@ -1,0 +1,81 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create_without_elastic_disk"
+    config: |
+      data "databricks_node_type" "smallest" {
+        local_disk = true
+      }
+
+      resource "databricks_instance_pool" "this" {
+        instance_pool_name                    = "test-elastic-disk-false-replay1"
+        min_idle_instances                    = 0
+        max_capacity                          = 1
+        node_type_id                          = data.databricks_node_type.smallest.id
+        idle_instance_autotermination_minutes = 10
+        enable_elastic_disk                   = false
+      }
+    calls:
+      - &get_1
+        request: {method: "GET", path: "/api/2.1/clusters/list-node-types", body: null}
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              node_types:
+                - memory_mb: 30500
+                  node_instance_type:
+                    instance_type_id: "i3.xlarge"
+                    local_disk_size_gb: 950
+                    local_disks: 1
+                  node_type_id: "i3.xlarge"
+                  num_cores: 4
+      - request:
+          method: "POST"
+          path: "/api/2.0/instance-pools/create"
+          body:
+            json:
+              custom_tags: null
+              enable_elastic_disk: false
+              idle_instance_autotermination_minutes: 10
+              instance_pool_name: "test-elastic-disk-false-replay1"
+              max_capacity: 1
+              node_type_id: "i3.xlarge"
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              instance_pool_id: "pool-1"
+      - &get_2
+        request: {method: "GET", path: "/api/2.0/instance-pools/get", query: {"instance_pool_id": ["pool-1"]}, body: null}
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              enable_elastic_disk: false
+              idle_instance_autotermination_minutes: 10
+              instance_pool_id: "pool-1"
+              instance_pool_name: "test-elastic-disk-false-replay1"
+              max_capacity: 1
+              min_idle_instances: 0
+              node_type_id: "i3.xlarge"
+      - *get_1
+      - *get_1
+      - *get_2
+destroy:
+  calls:
+    - *get_1
+    - *get_2
+    - request:
+        method: "POST"
+        path: "/api/2.0/instance-pools/delete"
+        body:
+          json:
+            instance_pool_id: "pool-1"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

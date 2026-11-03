@@ -403,8 +403,8 @@ func (m AiDecideOptions) Type(ctx context.Context) attr.Type {
 type AiDecideRequest struct {
 	// Function options. Omitted fields fall back to their documented defaults.
 	Options types.Object `tfsdk:"options"`
-	// A JSON object mapping question IDs to their definitions. Choose a
-	// nonempty string for each ID; its answer is returned with the same ID in
+	// A JSON object mapping question IDs to their definitions. Each ID must
+	// contain non-whitespace text; its answer is returned with the same ID in
 	// `response.answers`.
 	//
 	// Each definition is an object with the required fields `type` and
@@ -429,8 +429,9 @@ type AiDecideRequest struct {
 	// - `noul`: Estimates the probability that the answer to a true-or-false
 	// question is true. `criteria` can take the fields `true` or `false`, or
 	// both, with descriptions that are strings, objects, or arrays. Omit
-	// `criteria` to use the question alone. For example, both of the following
-	// are valid:
+	// `criteria` to use the question alone. The instructions or at least one
+	// criteria description must contain non-whitespace text, a nonempty object,
+	// or a nonempty array. For example, both of the following are valid:
 	//
 	// ```json { "escalate": { "type": "noul", "instructions": "Does this ticket
 	// need escalation?", "criteria": { "true": "Suspected fraud or an exception
@@ -444,8 +445,8 @@ type AiDecideRequest struct {
 	//
 	// - `score`: Rates the state on an ordered scale. Requires `criteria` to be
 	// an array of 2 to 10 level descriptions, ordered from low to high.
-	// Descriptions can be strings, objects, or arrays. Array positions define
-	// levels starting at 0. For example:
+	// Descriptions must contain non-whitespace text, a nonempty object, or a
+	// nonempty array. Array positions define levels starting at 0. For example:
 	//
 	// ```json { "urgency": { "type": "score", "instructions": "How urgent is
 	// this ticket?", "criteria": [ "Routine: can wait a few days",
@@ -1579,10 +1580,12 @@ func (m AiParseDocumentPageError) Type(ctx context.Context) attr.Type {
 }
 
 type AiParseDocumentRequest struct {
-	// The document to parse, given as a Unity Catalog volume path to the source
-	// file (the REST API accepts only a UC volume path, not inline binary
-	// data). Supported formats: PDF, DOCX, DOC, PPTX, PPT, JPG, JPEG, PNG,
-	// TIFF. Accepts up to 100 pages and 100 MB per document.
+	// The document to parse. The REST API accepts a Unity Catalog volume path
+	// to the source file or a base64 data URL containing the file bytes (for
+	// example, data:application/pdf;base64,<encoded-file-bytes> or
+	// data:image/jpeg;base64,<encoded-file-bytes>). Supported formats: PDF,
+	// DOCX, DOC, PPTX, PPT, JPG, JPEG, PNG, TIFF. Accepts up to 100 pages and
+	// 100 MB per document.
 	Content types.String `tfsdk:"content"`
 	// Function options. Omitted fields fall back to their documented defaults.
 	Options types.Object `tfsdk:"options"`

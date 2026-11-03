@@ -1,0 +1,209 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_model_serving" "endpoint" {
+        name = "terraform-test-model-serving-pt-replay"
+        config {
+          served_entities {
+            name                       = "pt_model"
+            entity_name                = "system.ai.meta_llama_v3_1_8b_instruct"
+            entity_version             = "2"
+            min_provisioned_throughput = 0
+            max_provisioned_throughput = 970
+          }
+          traffic_config {
+            routes {
+              served_model_name  = "pt_model"
+              traffic_percentage = 100
+            }
+          }
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/serving-endpoints"
+          body:
+            json:
+              config:
+                served_entities:
+                  - entity_name: "system.ai.meta_llama_v3_1_8b_instruct"
+                    entity_version: "2"
+                    max_provisioned_throughput: 970
+                    name: "pt_model"
+                traffic_config:
+                  routes:
+                    - served_model_name: "pt_model"
+                      traffic_percentage: 100
+              name: "terraform-test-model-serving-pt-replay"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              config:
+                served_entities:
+                  - entity_name: "system.ai.meta_llama_v3_1_8b_instruct"
+                    entity_version: "2"
+                    max_provisioned_throughput: 970
+                    name: "pt_model"
+                traffic_config:
+                  routes:
+                    - served_model_name: "pt_model"
+                      traffic_percentage: 100
+              id: "endpoint-1"
+              name: "terraform-test-model-serving-pt-replay"
+              state:
+                config_update: "NOT_UPDATING"
+                ready: "READY"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/serving-endpoints/terraform-test-model-serving-pt-replay"
+          body: null
+        response: *response_1
+      - *get_1
+      - *get_1
+  - name: "update_1"
+    config: |
+      resource "databricks_model_serving" "endpoint" {
+        name = "terraform-test-model-serving-pt-replay"
+        config {
+          served_entities {
+            name                       = "pt_model"
+            entity_name                = "system.ai.meta_llama_v3_1_8b_instruct"
+            entity_version             = "2"
+            min_provisioned_throughput = 970
+            max_provisioned_throughput = 1940
+          }
+          traffic_config {
+            routes {
+              served_model_name  = "pt_model"
+              traffic_percentage = 100
+            }
+          }
+        }
+      }
+    calls:
+      - *get_1
+      - request:
+          method: "PUT"
+          path: "/api/2.0/serving-endpoints/terraform-test-model-serving-pt-replay/config"
+          body:
+            json:
+              served_entities:
+                - entity_name: "system.ai.meta_llama_v3_1_8b_instruct"
+                  entity_version: "2"
+                  max_provisioned_throughput: 1940
+                  min_provisioned_throughput: 970
+                  name: "pt_model"
+              traffic_config:
+                routes:
+                  - served_model_name: "pt_model"
+                    traffic_percentage: 100
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              config:
+                served_entities:
+                  - entity_name: "system.ai.meta_llama_v3_1_8b_instruct"
+                    entity_version: "2"
+                    max_provisioned_throughput: 1940
+                    min_provisioned_throughput: 970
+                    name: "pt_model"
+                traffic_config:
+                  routes:
+                    - served_model_name: "pt_model"
+                      traffic_percentage: 100
+              id: "endpoint-1"
+              name: "terraform-test-model-serving-pt-replay"
+              state:
+                config_update: "NOT_UPDATING"
+                ready: "READY"
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.0/serving-endpoints/terraform-test-model-serving-pt-replay"
+          body: null
+        response: *response_2
+      - *get_2
+      - *get_2
+  - name: "update_2"
+    config: |
+      resource "databricks_model_serving" "endpoint" {
+        name = "terraform-test-model-serving-pt-replay"
+        config {
+          served_entities {
+            name                       = "pt_model"
+            entity_name                = "system.ai.meta_llama_v3_1_8b_instruct"
+            entity_version             = "2"
+            min_provisioned_throughput = 0
+            max_provisioned_throughput = 1940
+          }
+          traffic_config {
+            routes {
+              served_model_name  = "pt_model"
+              traffic_percentage = 100
+            }
+          }
+        }
+      }
+    calls:
+      - *get_2
+      - request:
+          method: "PUT"
+          path: "/api/2.0/serving-endpoints/terraform-test-model-serving-pt-replay/config"
+          body:
+            json:
+              served_entities:
+                - entity_name: "system.ai.meta_llama_v3_1_8b_instruct"
+                  entity_version: "2"
+                  max_provisioned_throughput: 1940
+                  name: "pt_model"
+              traffic_config:
+                routes:
+                  - served_model_name: "pt_model"
+                    traffic_percentage: 100
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              config:
+                served_entities:
+                  - entity_name: "system.ai.meta_llama_v3_1_8b_instruct"
+                    entity_version: "2"
+                    max_provisioned_throughput: 1940
+                    name: "pt_model"
+                traffic_config:
+                  routes:
+                    - served_model_name: "pt_model"
+                      traffic_percentage: 100
+              id: "endpoint-1"
+              name: "terraform-test-model-serving-pt-replay"
+              state:
+                config_update: "NOT_UPDATING"
+                ready: "READY"
+      - &get_3
+        request:
+          method: "GET"
+          path: "/api/2.0/serving-endpoints/terraform-test-model-serving-pt-replay"
+          body: null
+        response: *response_3
+      - *get_3
+      - *get_3
+destroy:
+  calls:
+    - *get_3
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/serving-endpoints/terraform-test-model-serving-pt-replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

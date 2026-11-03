@@ -1,0 +1,164 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create_token_for_admin_service_principal
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name = "tf-replay"
+      }
+
+      data "databricks_group" "admins" {
+        display_name = "admins"
+      }
+
+      resource "databricks_group_member" "this" {
+        group_id  = data.databricks_group.admins.id
+        member_id = databricks_service_principal.this.id
+      }
+
+      resource "databricks_obo_token" "this" {
+        depends_on       = [databricks_group_member.this]
+        application_id   = databricks_service_principal.this.application_id
+        comment          = "PAT on behalf of ${databricks_service_principal.this.display_name}"
+        lifetime_seconds = 3600
+      }
+    calls:
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups
+          body: null
+          query:
+            filter: [displayName eq "admins"]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              Resources:
+                - displayName: admins
+                  id: '9600'
+                  members: []
+                  schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+              totalResults: 1
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          body:
+            json:
+              active: true
+              displayName: tf-replay
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              applicationId: 11111111-1111-4111-8111-000000009601
+              displayName: tf-replay
+              id: '9601'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/9601
+          body: null
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+        response: *response_1 # Inferred API response; not recorded.
+      - request:
+          method: PATCH
+          path: /api/2.0/preview/scim/v2/Groups/9600
+          body:
+            json:
+              Operations:
+                - op: add
+                  path: members
+                  value:
+                    - value: '9601'
+              schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp']
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/9600
+          body: null
+          query:
+            attributes: [members]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: admins
+              id: '9600'
+              members:
+                - $ref: ServicePrincipals/9601
+                  value: '9601'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+      - request:
+          method: POST
+          path: /api/2.0/token-management/on-behalf-of/tokens
+          body:
+            json:
+              application_id: 11111111-1111-4111-8111-000000009601
+              comment: PAT on behalf of tf-replay
+              lifetime_seconds: 3600
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              token_info:
+                comment: PAT on behalf of tf-replay
+                creation_time: 4102441200000
+                expiry_time: 4102444800000
+                token_id: obo-1
+              token_value: fixture-token
+      - &call_3
+        request:
+          method: GET
+          path: /api/2.0/token-management/tokens/obo-1
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              token_info:
+                comment: PAT on behalf of tf-replay
+                creation_time: 4102441200000
+                expiry_time: 4102444800000
+                token_id: obo-1
+      - *call_1
+      - *call_1
+      - *call_2
+      - *call_3
+destroy:
+  calls:
+    - *call_1
+    - *call_2
+    - *call_3
+    - request:
+        method: DELETE
+        path: /api/2.0/token-management/tokens/obo-1
+        body: null
+      response: *response_2 # Inferred API response; not recorded.
+    - request:
+        method: PATCH
+        path: /api/2.0/preview/scim/v2/Groups/9600
+        body:
+          json:
+            Operations:
+              - op: remove
+                path: members[value eq "9601"]
+            schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp']
+      response: *response_2 # Inferred API response; not recorded.
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/ServicePrincipals/9601
+        body: null
+      response: *response_2 # Inferred API response; not recorded.

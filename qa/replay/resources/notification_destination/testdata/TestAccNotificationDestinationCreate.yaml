@@ -1,0 +1,121 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create_email_and_slack
+    config: |
+      resource "databricks_notification_destination" "email" {
+        display_name = "tf-test-replay-email"
+        config {
+          email {
+            addresses = ["abc@gmail.com"]
+          }
+        }
+      }
+
+      resource "databricks_notification_destination" "slack" {
+        display_name = "tf-test-replay-slack"
+        config {
+          slack {
+            url = "https://hooks.slack.com/services/..."
+          }
+        }
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/notification-destinations
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              config:
+                slack:
+                  url: https://hooks.slack.com/services/...
+              display_name: tf-test-replay-slack
+        response: &response_1 # Inferred API response; not recorded.
+          body:
+            json:
+              config:
+                slack:
+                  url_set: true
+              destination_type: SLACK
+              display_name: tf-test-replay-slack
+              id: slack-1
+          status: 200
+      - request:
+          method: POST
+          path: /api/2.0/notification-destinations
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              config:
+                email:
+                  addresses: [abc@gmail.com]
+              display_name: tf-test-replay-email
+        response: &response_2 # Inferred API response; not recorded.
+          body:
+            json:
+              config:
+                email:
+                  addresses: [abc@gmail.com]
+              destination_type: EMAIL
+              display_name: tf-test-replay-email
+              id: email-1
+          status: 200
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/notification-destinations/slack-1
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_1 # Inferred API response; not recorded.
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/notification-destinations/email-1
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_2 # Inferred API response; not recorded.
+      - *call_1
+      - *call_2
+    state:
+      resources:
+        databricks_notification_destination.email:
+          attributes:
+            - path: [id]
+              equals: email-1
+            - path: [destination_type]
+              equals: EMAIL
+        databricks_notification_destination.slack:
+          attributes:
+            - path: [id]
+              equals: slack-1
+            - path: [destination_type]
+              equals: SLACK
+destroy:
+  calls:
+    - *call_2
+    - *call_1
+    - request:
+        method: DELETE
+        path: /api/2.0/notification-destinations/email-1
+        headers:
+          X-Databricks-Workspace-Id: '12345'
+        body: null
+      response: &response_3 # Inferred API response; not recorded.
+        body: null
+        status: 200
+    - request:
+        method: DELETE
+        path: /api/2.0/notification-destinations/slack-1
+        headers:
+          X-Databricks-Workspace-Id: '12345'
+        body: null
+      response: *response_3 # Inferred API response; not recorded.

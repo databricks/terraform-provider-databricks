@@ -1,0 +1,97 @@
+# Source: scim/group_test.go#TestAccGroupWithApiField
+# All responses, including host metadata, are inferred, not recorded.
+# Generic API selection: the group is a carrier; endpoint routing and api state are checked.
+version: 1
+host_metadata:
+  host_type: "workspace"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_group" "this" {
+        display_name = "tfgroup-initial"
+        api = "workspace"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/preview/scim/v2/Groups"
+          body:
+            json:
+              displayName: "tfgroup-initial"
+              schemas:
+                - "urn:ietf:params:scim:schemas:core:2.0:Group"
+              entitlements:
+                - {}
+        response: # Inferred from the source scenario and SCIM API model; not recorded.
+          status: 201
+          body:
+            json:
+              schemas:
+                - "urn:ietf:params:scim:schemas:core:2.0:Group"
+              id: "group-id"
+              displayName: "tfgroup-initial"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Groups/group-id"
+          query:
+            attributes:
+              - "displayName,externalId,entitlements"
+          body: null
+        response: # Inferred from the source scenario and SCIM API model; not recorded.
+          status: 200
+          body:
+            json:
+              schemas:
+                - "urn:ietf:params:scim:schemas:core:2.0:Group"
+              id: "group-id"
+              displayName: "tfgroup-initial"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Groups/group-id"
+          query:
+            attributes:
+              - "displayName,externalId,entitlements"
+          body: null
+        response: # Inferred from the source scenario and SCIM API model; not recorded.
+          status: 200
+          body:
+            json:
+              schemas:
+                - "urn:ietf:params:scim:schemas:core:2.0:Group"
+              id: "group-id"
+              displayName: "tfgroup-initial"
+    state:
+      resources:
+        databricks_group.this:
+          attributes:
+            - path:
+                - "display_name"
+              equals: "tfgroup-initial"
+            - path:
+                - "api"
+              equals: "workspace"
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.0/preview/scim/v2/Groups/group-id"
+        query:
+          attributes:
+            - "displayName,externalId,entitlements"
+        body: null
+      response: # Inferred from the source scenario and SCIM API model; not recorded.
+        status: 200
+        body:
+          json:
+            schemas:
+              - "urn:ietf:params:scim:schemas:core:2.0:Group"
+            id: "group-id"
+            displayName: "tfgroup-initial"
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/preview/scim/v2/Groups/group-id"
+        body: null
+      response: # Inferred from the source scenario and SCIM API model; not recorded.
+        status: 204
+        body: null

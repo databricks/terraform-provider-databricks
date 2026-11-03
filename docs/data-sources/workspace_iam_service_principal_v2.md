@@ -6,7 +6,7 @@ subcategory: "Identity and Access Management"
 
 [API Documentation](https://docs.databricks.com/api/workspace/iamv2)
 
-Reads a single service principal by its internal ID, using a workspace-scoped provider.
+Reads a single service principal by its resource name, `service-principals/{service_principal_id}`, using a workspace-scoped provider.
 
 
 ## Example Usage
@@ -16,14 +16,16 @@ Look up a service principal by its internal ID, using a workspace-scoped provide
 
 ```hcl
 data "databricks_workspace_iam_service_principal_v2" "this" {
-  service_principal_id = "123456789"
+  name = "service-principals/123456789"
 }
 ```
 
 
 ## Arguments
 The following arguments are supported:
-* `service_principal_id` (string, required) - Internal service principal ID of the service principal in Databricks
+* `name` (string, required) - The resource name of the service principal. The format depends on the API that returned it:
+  - Account-scoped: accounts/{account_id}/service-principals/{service_principal_id}
+  - Workspace-scoped: service-principals/{service_principal_id}
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -37,4 +39,9 @@ The following attributes are exported:
   afterwards; when omitted, the server generates one
 * `display_name` (string) - Display name of the service principal
 * `external_id` (string) - ExternalId of the service principal in the customer's IdP
+* `name` (string) - The resource name of the service principal. The format depends on the API that returned it:
+  - Account-scoped: accounts/{account_id}/service-principals/{service_principal_id}
+  - Workspace-scoped: service-principals/{service_principal_id}
+* `parent` (string) - The resource name of the account that contains the service principal,
+  `accounts/{account_id}`. Both the account-scoped and workspace-scoped APIs return it
 * `service_principal_id` (string) - Internal service principal ID of the service principal in Databricks

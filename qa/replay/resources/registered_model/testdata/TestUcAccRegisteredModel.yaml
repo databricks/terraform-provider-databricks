@@ -1,0 +1,216 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create_with_grants"
+    config: |
+      resource "databricks_registered_model" "model" {
+        name         = "terraform-test-registered-model-replay"
+        catalog_name = "main"
+        schema_name  = "default"
+      }
+
+      resource "databricks_grants" "model_grants" {
+        model = databricks_registered_model.model.id
+
+        grant {
+          principal  = "account users"
+          privileges = ["EXECUTE"]
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/models"
+          body:
+            json:
+              catalog_name: "main"
+              name: "terraform-test-registered-model-replay"
+              schema_name: "default"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              catalog_name: "main"
+              full_name: "main.default.terraform-test-registered-model-replay"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "terraform-test-registered-model-replay"
+              owner: "replay-admin"
+              schema_name: "default"
+      - &get_1
+        request: {method: "GET", path: "/api/2.1/unity-catalog/models/main.default.terraform-test-registered-model-replay", body: null}
+        response: *response_1
+      - &get_2
+        request: {method: "GET", path: "/api/2.1/unity-catalog/permissions/function/main.default.terraform-test-registered-model-replay", body: null}
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              privilege_assignments: []
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/permissions/function/main.default.terraform-test-registered-model-replay"
+          body:
+            json:
+              changes:
+                - add: ["EXECUTE"]
+                  principal: "account users"
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              privilege_assignments:
+                - principal: "account users"
+                  privileges: ["EXECUTE"]
+      - &get_3
+        request: {method: "GET", path: "/api/2.1/unity-catalog/permissions/function/main.default.terraform-test-registered-model-replay", body: null}
+        response: *response_2
+      - *get_3
+      - *get_1
+      - *get_3
+  - name: "remove_grants_and_update_comment"
+    config: |
+      resource "databricks_registered_model" "model" {
+        name         = "terraform-test-registered-model-replay"
+        catalog_name = "main"
+        schema_name  = "default"
+        comment      = "new comment"
+      }
+    calls:
+      - *get_1
+      - *get_3
+      - *get_3
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/permissions/function/main.default.terraform-test-registered-model-replay"
+          body:
+            json:
+              changes:
+                - principal: "account users"
+                  remove: ["EXECUTE"]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              privilege_assignments: []
+      - *get_2
+      - &patch_4
+        request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/models/main.default.terraform-test-registered-model-replay"
+          body:
+            json:
+              catalog_name: "main"
+              comment: "new comment"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "terraform-test-registered-model-replay"
+              schema_name: "default"
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              catalog_name: "main"
+              comment: "new comment"
+              full_name: "main.default.terraform-test-registered-model-replay"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "terraform-test-registered-model-replay"
+              owner: "replay-admin"
+              schema_name: "default"
+      - *patch_4
+      - &get_5
+        request: {method: "GET", path: "/api/2.1/unity-catalog/models/main.default.terraform-test-registered-model-replay", body: null}
+        response: *response_3
+      - *get_5
+  - name: "replace_and_lookup"
+    config: |
+      resource "databricks_registered_model" "model" {
+        name         = "terraform-test-registered-model-update-replay"
+        catalog_name = "main"
+        schema_name  = "default"
+        owner        = "account users"
+        comment      = "new comment"
+      }
+      data "databricks_registered_model" "model" {
+        full_name = databricks_registered_model.model.id
+      }
+      data "databricks_registered_model_versions" "model_versions" {
+        full_name = databricks_registered_model.model.id
+      }
+      output "model" {
+        value = data.databricks_registered_model.model
+      }
+      output "model_versions" {
+        value = data.databricks_registered_model_versions.model_versions
+      }
+    calls:
+      - *get_5
+      - request:
+          method: "DELETE"
+          path: "/api/2.1/unity-catalog/models/main.default.terraform-test-registered-model-replay"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/models"
+          body:
+            json:
+              catalog_name: "main"
+              comment: "new comment"
+              name: "terraform-test-registered-model-update-replay"
+              owner: "account users"
+              schema_name: "default"
+        response: &response_4 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              catalog_name: "main"
+              comment: "new comment"
+              full_name: "main.default.terraform-test-registered-model-update-replay"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "terraform-test-registered-model-update-replay"
+              owner: "account users"
+              schema_name: "default"
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/models/main.default.terraform-test-registered-model-update-replay"
+          body:
+            json:
+              catalog_name: "main"
+              comment: "new comment"
+              name: "terraform-test-registered-model-update-replay"
+              owner: "account users"
+              schema_name: "default"
+        response: *response_4
+      - &get_6
+        request: {method: "GET", path: "/api/2.1/unity-catalog/models/main.default.terraform-test-registered-model-update-replay", body: null}
+        response: *response_4
+      - &get_7
+        request: {method: "GET", path: "/api/2.1/unity-catalog/models/main.default.terraform-test-registered-model-update-replay/versions", body: null}
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              model_versions: []
+      - *get_6
+      - *get_7
+      - *get_6
+      - *get_6
+      - *get_7
+      - *get_6
+destroy:
+  calls:
+    - *get_6
+    - *get_6
+    - *get_7
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/models/main.default.terraform-test-registered-model-update-replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

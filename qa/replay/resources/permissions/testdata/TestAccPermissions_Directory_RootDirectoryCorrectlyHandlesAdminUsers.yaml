@@ -1,0 +1,348 @@
+# API responses are placeholders based on the API models, not recorded.
+version: 1
+host_metadata:
+  cloud: AWS
+  host_type: workspace
+  workspace_id: '12345'
+steps:
+- name: set_root_by_id
+  config: |
+    data "databricks_current_user" "me" {}
+    resource "databricks_group" "_0" {
+      display_name = "permissions-replay-0"
+    }
+    resource "databricks_permissions" "this" {
+      directory_id = "0"
+      access_control {
+        group_name       = databricks_group._0.display_name
+        permission_level = "CAN_RUN"
+      }
+    }
+  calls:
+  - &id002
+    request:
+      method: GET
+      path: /api/2.0/preview/scim/v2/Me
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      headers:
+        X-Databricks-Org-Id: '12345'
+      body:
+        json:
+          active: true
+          displayName: Replay runner
+          groups:
+          - display: admins
+            value: '901'
+          id: '900'
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:User
+          userName: 11111111-1111-4111-8111-000000000000
+  - request:
+      method: POST
+      path: /api/2.0/preview/scim/v2/Groups
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          displayName: permissions-replay-0
+          entitlements:
+          - {}
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:Group
+    response:
+      status: 200
+      body:
+        json:
+          displayName: permissions-replay-0
+          id: '1000'
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:Group
+  - &id003
+    request:
+      method: GET
+      path: /api/2.0/preview/scim/v2/Groups/1000
+      query:
+        attributes:
+        - displayName,externalId,entitlements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          displayName: permissions-replay-0
+          id: '1000'
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:Group
+  - &id001
+    request:
+      method: GET
+      path: /api/2.0/preview/scim/v2/Me
+      query:
+        excludedAttributes:
+        - entitlements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      headers:
+        X-Databricks-Org-Id: '12345'
+      body:
+        json:
+          active: true
+          displayName: Replay runner
+          groups:
+          - display: admins
+            value: '901'
+          id: '900'
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:User
+          userName: 11111111-1111-4111-8111-000000000000
+  - request:
+      method: PUT
+      path: /api/2.0/permissions/directories/0
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          access_control_list:
+          - group_name: permissions-replay-0
+            permission_level: CAN_RUN
+          - group_name: admins
+            permission_level: CAN_MANAGE
+    response:
+      status: 200
+      body:
+        json:
+          access_control_list:
+          - all_permissions:
+            - inherited: false
+              permission_level: CAN_RUN
+            group_name: permissions-replay-0
+          object_id: /directories/0
+          object_type: directory
+  - *id001
+  - &id004
+    request:
+      method: GET
+      path: /api/2.0/permissions/directories/0
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          access_control_list:
+          - all_permissions:
+            - inherited: false
+              permission_level: CAN_RUN
+            group_name: permissions-replay-0
+          object_id: /directories/0
+          object_type: directory
+  - *id002
+  - *id003
+  - *id002
+  - *id001
+  - *id004
+- name: reset_id_to_admins
+  config: |
+    data "databricks_current_user" "me" {}
+  calls:
+  - *id002
+  - *id003
+  - *id001
+  - *id004
+  - &id007
+    request:
+      method: GET
+      path: /api/2.0/permissions/directories/0
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          access_control_list: []
+          object_id: /directories/0
+          object_type: directory
+  - &id008
+    request:
+      method: PUT
+      path: /api/2.0/permissions/directories/0
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          access_control_list:
+          - group_name: admins
+            permission_level: CAN_MANAGE
+    response:
+      status: 200
+      body:
+        json:
+          access_control_list: []
+          object_id: /directories/0
+          object_type: directory
+  - request:
+      method: DELETE
+      path: /api/2.0/preview/scim/v2/Groups/1000
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body: null
+  - *id002
+  - *id002
+- name: set_root_by_path
+  config: |
+    data "databricks_current_user" "me" {}
+    resource "databricks_user" "_0" {
+      user_name = "permissions-replay-0@databricks.com"
+    }
+    resource "databricks_permissions" "this" {
+      directory_path = "/"
+      access_control {
+        user_name        = databricks_user._0.user_name
+        permission_level = "CAN_RUN"
+      }
+    }
+  calls:
+  - *id002
+  - request:
+      method: POST
+      path: /api/2.0/preview/scim/v2/Users
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          active: true
+          entitlements:
+          - {}
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:User
+          userName: permissions-replay-0@databricks.com
+    response:
+      status: 200
+      body:
+        json:
+          active: true
+          id: '2000'
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:User
+          userName: permissions-replay-0@databricks.com
+  - &id005
+    request:
+      method: GET
+      path: /api/2.0/preview/scim/v2/Users/2000
+      query:
+        attributes:
+        - userName,displayName,active,externalId,entitlements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          active: true
+          id: '2000'
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:User
+          userName: permissions-replay-0@databricks.com
+  - request:
+      method: GET
+      path: /api/2.0/workspace/get-status
+      query:
+        path:
+        - /
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          object_id: 0
+          object_type: DIRECTORY
+          path: /
+  - *id001
+  - request:
+      method: PUT
+      path: /api/2.0/permissions/directories/0
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          access_control_list:
+          - permission_level: CAN_RUN
+            user_name: permissions-replay-0@databricks.com
+          - group_name: admins
+            permission_level: CAN_MANAGE
+    response:
+      status: 200
+      body:
+        json:
+          access_control_list:
+          - all_permissions:
+            - inherited: false
+              permission_level: CAN_RUN
+            user_name: permissions-replay-0@databricks.com
+          object_id: /directories/0
+          object_type: directory
+  - *id001
+  - &id006
+    request:
+      method: GET
+      path: /api/2.0/permissions/directories/0
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          access_control_list:
+          - all_permissions:
+            - inherited: false
+              permission_level: CAN_RUN
+            user_name: permissions-replay-0@databricks.com
+          object_id: /directories/0
+          object_type: directory
+  - *id002
+  - *id002
+  - *id005
+  - *id001
+  - *id006
+- name: reset_path_to_admins
+  config: |
+    data "databricks_current_user" "me" {}
+  calls:
+  - *id002
+  - *id005
+  - *id001
+  - *id006
+  - *id007
+  - *id008
+  - request:
+      method: DELETE
+      path: /api/2.0/preview/scim/v2/Users/2000
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body: null
+  - *id002
+  - *id002
+destroy:
+  calls:
+  - *id002

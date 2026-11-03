@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -122,7 +121,18 @@ type WorkspaceAssignment struct {
 	// List responses leave this field empty. Get a single principal to read its
 	// entitlements.
 	Entitlements types.Set `tfsdk:"entitlements"`
-	// The internal ID of the principal (user/sp/group) in Databricks.
+	// The resource name of the workspace assignment. The format depends on the
+	// API that returned it: - Account-scoped:
+	// accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}
+	// - Workspace-scoped: workspace-assignments/{principal_id}
+	Name types.String `tfsdk:"name"`
+	// The resource name of the workspace that contains the assignment,
+	// `accounts/{account_id}/workspaces/{workspace_id}`. Both the
+	// account-scoped and workspace-scoped APIs return it.
+	Parent types.String `tfsdk:"parent"`
+	// The internal ID of the principal (user/sp/group) in Databricks. Set when
+	// the assignment is created and cannot be changed afterwards; to assign a
+	// different principal, create a new assignment.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The type of the principal (user/service principal/group) that is
 	// assigned.
@@ -159,6 +169,8 @@ func (m WorkspaceAssignment) ToObjectValue(ctx context.Context) basetypes.Object
 		map[string]attr.Value{"account_id": m.AccountId,
 			"effective_entitlements": m.EffectiveEntitlements,
 			"entitlements":           m.Entitlements,
+			"name":                   m.Name,
+			"parent":                 m.Parent,
 			"principal_id":           m.PrincipalId,
 			"principal_type":         m.PrincipalType,
 			"workspace_id":           m.WorkspaceId,
@@ -179,6 +191,8 @@ func (m WorkspaceAssignment) Type(ctx context.Context) attr.Type {
 			"entitlements": basetypes.SetType{
 				ElemType: types.StringType,
 			},
+			"name":           types.StringType,
+			"parent":         types.StringType,
 			"principal_id":   types.Int64Type,
 			"principal_type": types.StringType,
 			"workspace_id":   types.Int64Type,
@@ -230,15 +244,21 @@ func (to *WorkspaceAssignment) SyncFieldsDuringRead(ctx context.Context, from Wo
 
 func (m WorkspaceAssignment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["account_id"] = attrs["account_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["effective_entitlements"] = attrs["effective_entitlements"].SetComputed()
 	attrs["entitlements"] = attrs["entitlements"].SetOptional()
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["principal_id"] = attrs["principal_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["principal_type"] = attrs["principal_type"].SetComputed()
 	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
 	attrs["workspace_id"] = attrs["workspace_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
-	attrs["principal_id"] = attrs["principal_id"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 	attrs["provider_config"] = attrs["provider_config"].SetComputed()
 	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
@@ -324,10 +344,6 @@ func (r *WorkspaceAssignmentResource) ModifyPlan(ctx context.Context, req resour
 		return
 	}
 	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *WorkspaceAssignmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -347,6 +363,7 @@ func (r *WorkspaceAssignmentResource) Create(ctx context.Context, req resource.C
 
 	createRequest := iamv2.CreateWorkspaceAssignmentProxyRequest{
 		WorkspaceAssignment: workspace_assignment,
+		Parent:              plan.Parent.ValueString(),
 	}
 
 	var namespace ProviderConfig
@@ -451,7 +468,7 @@ func (r *WorkspaceAssignmentResource) update(ctx context.Context, plan Workspace
 
 	updateRequest := iamv2.UpdateWorkspaceAssignmentProxyRequest{
 		WorkspaceAssignment: workspace_assignment,
-		PrincipalId:         plan.PrincipalId.ValueInt64(),
+		Name:                plan.Name.ValueString(),
 		UpdateMask:          *fieldmask.New(strings.Split("entitlements", ",")),
 	}
 
@@ -549,17 +566,13 @@ func (r *WorkspaceAssignmentResource) ImportState(ctx context.Context, req resou
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
 			fmt.Sprintf(
-				"Expected import identifier with format: principal_id. Got: %q",
+				"Expected import identifier with format: name. Got: %q",
 				req.ID,
 			),
 		)
 		return
 	}
 
-	principalId, err := strconv.ParseInt(parts[0], 10, 64)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to parse import identifier", err.Error())
-		return
-	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("principal_id"), principalId)...)
+	name := parts[0]
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
 }

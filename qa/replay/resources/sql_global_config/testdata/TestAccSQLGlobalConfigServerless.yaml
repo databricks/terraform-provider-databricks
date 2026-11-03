@@ -1,0 +1,76 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "configure"
+    config: |
+      resource "databricks_sql_global_config" "this" {
+        data_access_config        = { "spark.sql.session.timeZone" = "UTC" }
+        enable_serverless_compute = true
+      }
+    calls:
+      - request:
+          method: "PUT"
+          path: "/api/2.0/sql/config/warehouses"
+          body:
+            json:
+              data_access_config:
+                - key: "spark.sql.session.timeZone"
+                  value: "UTC"
+              enable_serverless_compute: true
+              security_policy: "DATA_ACCESS_CONTROL"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/sql/config/warehouses"
+          body: null
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              data_access_config:
+                - key: "spark.sql.session.timeZone"
+                  value: "UTC"
+              enable_serverless_compute: true
+              security_policy: "DATA_ACCESS_CONTROL"
+      - *get_1
+    state:
+      resources:
+        databricks_sql_global_config.this:
+          attributes:
+            - path: ["enable_serverless_compute"]
+              equals: true
+  - name: "omit_serverless_setting"
+    config: |
+      resource "databricks_sql_global_config" "this" {
+        data_access_config = { "spark.sql.session.timeZone" = "UTC" }
+      }
+    calls:
+      - *get_1
+      - *get_1
+    state:
+      resources:
+        databricks_sql_global_config.this:
+          attributes:
+            - path: ["enable_serverless_compute"]
+              equals: true
+destroy:
+  calls:
+    - *get_1
+    - request:
+        method: "PUT"
+        path: "/api/2.0/sql/config/warehouses"
+        body:
+          json:
+            data_access_config: []
+            enable_serverless_compute: true
+            security_policy: "DATA_ACCESS_CONTROL"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

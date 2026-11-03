@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -13,17 +15,34 @@ import (
 )
 
 type testDefinition struct {
-	Version      int            `yaml:"version"`
-	HostMetadata map[string]any `yaml:"host_metadata,omitempty"`
-	Steps        []step         `yaml:"steps"`
-	Destroy      destroy        `yaml:"destroy"`
+	Version          int            `yaml:"version"`
+	HostMetadata     map[string]any `yaml:"host_metadata,omitempty"`
+	InitialState     *initialState  `yaml:"initial_state,omitempty"`
+	EnforceCallOrder bool           `yaml:"enforce_call_order,omitempty"`
+	Steps            []step         `yaml:"steps"`
+	Destroy          destroy        `yaml:"destroy"`
+	checkpoint       []byte
+}
+
+type initialState struct {
+	Checkpoint string `yaml:"checkpoint"`
 }
 
 type step struct {
-	Name   string             `yaml:"name"`
-	Config string             `yaml:"config"`
-	Calls  []httpfixture.Call `yaml:"calls"`
-	State  *expectedState     `yaml:"state,omitempty"`
+	Name                    string                  `yaml:"name"`
+	Config                  string                  `yaml:"config"`
+	ProviderImplementations providerImplementations `yaml:"provider_implementations,omitempty"`
+	// Files maps Terraform working-directory filenames to sources relative to
+	// the YAML. HashiCorp runs Terraform in an isolated temporary directory,
+	// where files beside the YAML are not automatically available.
+	Files        map[string]string  `yaml:"files,omitempty"`
+	Calls        []httpfixture.Call `yaml:"calls"`
+	State        *expectedState     `yaml:"state,omitempty"`
+	ExpectError  *string            `yaml:"expect_error,omitempty"`
+	Plan         *expectedPlan      `yaml:"plan,omitempty"`
+	PlanOnly     bool               `yaml:"plan_only,omitempty"`
+	Import       *importStep        `yaml:"import,omitempty"`
+	fileContents map[string][]byte
 }
 
 type destroy struct {
@@ -41,7 +60,7 @@ type expectedResource struct {
 type expectedAttribute struct {
 	Path []any `yaml:"path"`
 	// A node distinguishes explicit null from an accidentally omitted expectation.
-	Equals yaml.Node `yaml:"equals"`
+	Equals yaml.Node `yaml:"equals,omitempty"`
 }
 
 func loadDefinition(path string) (*testDefinition, error) {
@@ -50,7 +69,25 @@ func loadDefinition(path string) (*testDefinition, error) {
 		return nil, err
 	}
 	defer file.Close()
-	return decodeDefinition(file)
+	definition, err := decodeDefinition(file)
+	if err != nil {
+		return nil, err
+	}
+	if err := definition.loadFiles(filepath.Dir(path)); err != nil {
+		return nil, err
+	}
+	if definition.InitialState == nil {
+		return definition, nil
+	}
+	path = filepath.Join(filepath.Dir(path), definition.InitialState.Checkpoint)
+	definition.checkpoint, err = os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("initial_state checkpoint %s: %w", path, err)
+	}
+	if len(strings.TrimSpace(string(definition.checkpoint))) == 0 {
+		return nil, fmt.Errorf("initial_state checkpoint %s must not be empty", path)
+	}
+	return definition, nil
 }
 
 // decodeDefinition rejects misspelled or unsupported fields before Terraform
@@ -79,16 +116,65 @@ func (d *testDefinition) validate() error {
 	if len(d.Steps) == 0 {
 		return fmt.Errorf("at least one step is required")
 	}
+	if d.InitialState != nil {
+		if strings.TrimSpace(d.InitialState.Checkpoint) == "" || filepath.IsAbs(d.InitialState.Checkpoint) {
+			return fmt.Errorf("initial_state.checkpoint must be a nonempty path relative to the YAML file")
+		}
+	}
+	hasPriorState := d.InitialState != nil
 	for i, s := range d.Steps {
 		label := stepLabel(i, s.Name)
-		if strings.TrimSpace(s.Name) == "" || strings.TrimSpace(s.Config) == "" {
-			return fmt.Errorf("%s: name and config are required", label)
-		}
-		if err := validateState(s.State); err != nil {
+		if err := s.validateImport(hasPriorState); err != nil {
 			return fmt.Errorf("%s: %w", label, err)
+		}
+		if err := s.validate(); err != nil {
+			return fmt.Errorf("%s: %w", label, err)
+		}
+		if i == 0 && s.Import != nil && strings.TrimSpace(s.Config) == "" {
+			return fmt.Errorf("%s: config is required for the first import step", label)
+		}
+		if s.ExpectError == nil && !s.PlanOnly && (s.Import == nil || *s.Import.Persist) {
+			hasPriorState = true
 		}
 	}
 	return d.validateCalls()
+}
+
+func (s step) validate() error {
+	if strings.TrimSpace(s.Name) == "" || (strings.TrimSpace(s.Config) == "" && s.Import == nil) {
+		return fmt.Errorf("name and config are required")
+	}
+	if err := s.ProviderImplementations.validate(); err != nil {
+		return err
+	}
+	if err := validateFiles(s.Files); err != nil {
+		return err
+	}
+	if err := validateState(s.State); err != nil {
+		return err
+	}
+	if err := s.validateExpectedError(); err != nil {
+		return err
+	}
+	return s.validatePlan()
+}
+
+// validateExpectedError prevents broad empty patterns and assertions that the
+// testing framework would skip after an expected failure.
+func (s step) validateExpectedError() error {
+	if s.ExpectError == nil {
+		return nil
+	}
+	if strings.TrimSpace(*s.ExpectError) == "" {
+		return fmt.Errorf("expect_error must be a nonempty regular expression")
+	}
+	if _, err := regexp.Compile(*s.ExpectError); err != nil {
+		return fmt.Errorf("invalid expect_error regular expression: %w", err)
+	}
+	if s.State != nil {
+		return fmt.Errorf("state checks on expected-error steps are not supported; check state in a subsequent successful step")
+	}
+	return nil
 }
 
 func validateState(state *expectedState) error {

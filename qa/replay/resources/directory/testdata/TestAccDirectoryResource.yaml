@@ -1,0 +1,159 @@
+# Source: workspace/directory_test.go#TestAccDirectoryResource
+# All responses, including host metadata, are inferred, not recorded.
+# ObjectInfo payloads contain fake IDs and the source's paths; no live server was used.
+# /Users already exists: it is read as a data source and must never be deleted.
+# The source relies on Terraform consistency; these computed-path/ID checks also
+# exercise API-to-state conversion for the resource and data source.
+version: 1
+host_metadata:
+  host_type: "workspace"
+  workspace_id: "12345"
+steps:
+  - name: "create_and_read_existing_directory"
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/Shared/provider-test/dir_replay"
+      }
+
+      data "databricks_directory" "users" {
+        path = "/Users"
+      }
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/workspace/get-status"
+          query:
+            path:
+              - "/Users"
+          body: null
+        response: # Inferred from the source scenario and workspace API model; not recorded.
+          status: 200
+          body:
+            json:
+              object_type: "DIRECTORY"
+              object_id: 100
+              path: "/Users"
+      - request:
+          method: "POST"
+          path: "/api/2.0/workspace/mkdirs"
+          body:
+            json:
+              path: "/Shared/provider-test/dir_replay"
+        response: # Inferred from the source scenario and workspace API model; not recorded.
+          status: 200
+          body:
+            json: {}
+      - request:
+          method: "GET"
+          path: "/api/2.0/workspace/get-status"
+          query:
+            path:
+              - "/Shared/provider-test/dir_replay"
+          body: null
+        response: # Inferred from the source scenario and workspace API model; not recorded.
+          status: 200
+          body:
+            json:
+              object_type: "DIRECTORY"
+              object_id: 101
+              path: "/Shared/provider-test/dir_replay"
+      - request:
+          method: "GET"
+          path: "/api/2.0/workspace/get-status"
+          query:
+            path:
+              - "/Shared/provider-test/dir_replay"
+          body: null
+        response: # Inferred from the source scenario and workspace API model; not recorded.
+          status: 200
+          body:
+            json:
+              object_type: "DIRECTORY"
+              object_id: 101
+              path: "/Shared/provider-test/dir_replay"
+      - request:
+          method: "GET"
+          path: "/api/2.0/workspace/get-status"
+          query:
+            path:
+              - "/Users"
+          body: null
+        response: # Inferred from the source scenario and workspace API model; not recorded.
+          status: 200
+          body:
+            json:
+              object_type: "DIRECTORY"
+              object_id: 100
+              path: "/Users"
+      # Terraform reads the data source again during its plan/apply checks.
+      - request:
+          method: "GET"
+          path: "/api/2.0/workspace/get-status"
+          query:
+            path: ["/Users"]
+          body: null
+        response: # Inferred from the source scenario and workspace API model; not recorded.
+          status: 200
+          body:
+            json:
+              object_type: "DIRECTORY"
+              object_id: 100
+              path: "/Users"
+    state:
+      resources:
+        databricks_directory.this:
+          attributes:
+            - path:
+                - "object_id"
+              equals: 101
+            - path:
+                - "workspace_path"
+              equals: "/Workspace/Shared/provider-test/dir_replay"
+        data.databricks_directory.users:
+          attributes:
+            - path:
+                - "object_id"
+              equals: 100
+            - path:
+                - "workspace_path"
+              equals: "/Workspace/Users"
+destroy:
+  calls:
+    # Cleanup's pre-apply plan still reads the unmanaged data source.
+    - request:
+        method: "GET"
+        path: "/api/2.0/workspace/get-status"
+        query:
+          path: ["/Users"]
+        body: null
+      response: # Inferred from the source scenario and workspace API model; not recorded.
+        status: 200
+        body:
+          json:
+            object_type: "DIRECTORY"
+            object_id: 100
+            path: "/Users"
+    - request:
+        method: "GET"
+        path: "/api/2.0/workspace/get-status"
+        query:
+          path:
+            - "/Shared/provider-test/dir_replay"
+        body: null
+      response: # Inferred from the source scenario and workspace API model; not recorded.
+        status: 200
+        body:
+          json:
+            object_type: "DIRECTORY"
+            object_id: 101
+            path: "/Shared/provider-test/dir_replay"
+    - request:
+        method: "POST"
+        path: "/api/2.0/workspace/delete"
+        body:
+          json:
+            path: "/Shared/provider-test/dir_replay"
+      response: # Inferred from the source scenario and workspace API model; not recorded.
+        status: 200
+        body:
+          json: {}

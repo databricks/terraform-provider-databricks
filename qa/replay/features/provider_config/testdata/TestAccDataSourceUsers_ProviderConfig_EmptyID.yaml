@@ -1,0 +1,17 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "reject_workspace_id"
+    config: |
+      data "databricks_users" "this" {
+        filter          = "userName co \"testuser\""
+        provider_config = { workspace_id = "" }
+      }
+    calls: []
+    expect_error: "Invalid Attribute Value Length"
+destroy:
+  calls: []

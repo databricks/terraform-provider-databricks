@@ -1,0 +1,875 @@
+# API responses are placeholders based on the API models, not recorded.
+version: 1
+host_metadata:
+  cloud: AWS
+  host_type: workspace
+  workspace_id: '12345'
+steps:
+- name: create
+  config: |
+    resource "databricks_schema" "this" {
+      name         = "replay"
+      catalog_name = "main"
+    }
+
+    resource "databricks_sql_table" "this" {
+      name         = "replay"
+      catalog_name = "main"
+      schema_name  = databricks_schema.this.name
+      table_type   = "MANAGED"
+      warehouse_id = "warehouse-1"
+      properties = {
+        "this"                        = "that"
+        "something"                   = "else"
+        "delta.feature.columnMapping" = "supported"
+        "delta.feature.invariants"    = "supported"
+        "delta.minReaderVersion"      = 3
+        "delta.minWriterVersion"      = 7
+        "delta.columnMapping.mode"    = "name"
+      }
+
+
+      column {
+        name     = "replay0"
+        type     = "integer"
+        nullable = true
+        comment  = "comment00"
+      }
+
+      column {
+        name     = "replay1"
+        type     = "long"
+        nullable = true
+        comment  = "comment10"
+      }
+
+      column {
+        name     = "replay2"
+        type     = "real"
+        nullable = true
+        comment  = "comment20"
+      }
+
+      column {
+        name     = "replay3"
+        type     = "short"
+        nullable = true
+        comment  = "comment30"
+      }
+
+      column {
+        name     = "replay4"
+        type     = "byte"
+        nullable = true
+        comment  = "comment40"
+      }
+
+      column {
+        name     = "replay5"
+        type     = "decimal"
+        nullable = true
+        comment  = "comment50"
+      }
+
+      column {
+        name     = "replay6"
+        type     = "dec"
+        nullable = true
+        comment  = "comment60"
+      }
+
+      column {
+        name     = "replay7"
+        type     = "numeric"
+        nullable = true
+        comment  = "comment70"
+      }
+
+      comment = "this table is managed by terraform"
+    }
+  calls:
+  - request:
+      method: POST
+      path: /api/2.1/unity-catalog/schemas
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          catalog_name: main
+          name: replay
+    response:
+      status: 200
+      body:
+        json:
+          catalog_name: main
+          enable_predictive_optimization: INHERIT
+          full_name: main.replay
+          name: replay
+          owner: replay-admin
+  - &id002
+    request:
+      method: GET
+      path: /api/2.1/unity-catalog/schemas/main.replay
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          catalog_name: main
+          enable_predictive_optimization: INHERIT
+          full_name: main.replay
+          name: replay
+          owner: replay-admin
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            CREATE TABLE `main`.`replay`.`replay` (`replay0` integer COMMENT 'comment00', `replay1` long COMMENT 'comment10', `replay2` real COMMENT 'comment20', `replay3` short COMMENT 'comment30', `replay4` byte COMMENT 'comment40', `replay5` decimal COMMENT 'comment50', `replay6` dec COMMENT 'comment60', `replay7` numeric COMMENT 'comment70')
+            COMMENT 'this table is managed by terraform'
+            TBLPROPERTIES ('delta.columnMapping.mode'='name', 'delta.feature.columnMapping'='supported', 'delta.feature.invariants'='supported', 'delta.minReaderVersion'='3', 'delta.minWriterVersion'='7', 'something'='else', 'this'='that');
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - &id001
+    request:
+      method: GET
+      path: /api/2.1/unity-catalog/tables/main.replay.replay
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          catalog_name: main
+          cluster_keys: []
+          columns:
+          - comment: comment00
+            name: replay0
+            nullable: true
+            type_text: int
+          - comment: comment10
+            name: replay1
+            nullable: true
+            type_text: bigint
+          - comment: comment20
+            name: replay2
+            nullable: true
+            type_text: float
+          - comment: comment30
+            name: replay3
+            nullable: true
+            type_text: smallint
+          - comment: comment40
+            name: replay4
+            nullable: true
+            type_text: tinyint
+          - comment: comment50
+            name: replay5
+            nullable: true
+            type_text: decimal(10,0)
+          - comment: comment60
+            name: replay6
+            nullable: true
+            type_text: decimal(10,0)
+          - comment: comment70
+            name: replay7
+            nullable: true
+            type_text: decimal(10,0)
+          comment: this table is managed by terraform
+          data_source_format: DELTA
+          full_name: main.replay.replay
+          name: replay
+          owner: replay-admin
+          properties:
+            delta.columnMapping.mode: name
+            delta.feature.columnMapping: supported
+            delta.feature.invariants: supported
+            delta.minReaderVersion: '3'
+            delta.minWriterVersion: '7'
+            something: else
+            this: that
+          schema_name: replay
+          table_id: table-replay
+          table_type: MANAGED
+  - *id001
+  - *id002
+  - *id001
+  - *id001
+- name: update_1
+  config: |
+    resource "databricks_schema" "this" {
+      name         = "replay"
+      catalog_name = "main"
+    }
+
+    resource "databricks_sql_table" "this" {
+      name         = "replay"
+      catalog_name = "main"
+      schema_name  = databricks_schema.this.name
+      table_type   = "MANAGED"
+      warehouse_id = "warehouse-1"
+      properties = {
+        "this"                        = "that"
+        "something"                   = "else"
+        "delta.feature.columnMapping" = "supported"
+        "delta.feature.invariants"    = "supported"
+        "delta.minReaderVersion"      = 3
+        "delta.minWriterVersion"      = 7
+        "delta.columnMapping.mode"    = "name"
+      }
+
+
+      column {
+        name     = "replay0"
+        type     = "INTEGER"
+        nullable = true
+        comment  = "comment01"
+      }
+
+      column {
+        name     = "replay1"
+        type     = "LONG"
+        nullable = true
+        comment  = "comment11"
+      }
+
+      column {
+        name     = "replay2"
+        type     = "REAL"
+        nullable = true
+        comment  = "comment21"
+      }
+
+      column {
+        name     = "replay3"
+        type     = "SHORT"
+        nullable = true
+        comment  = "comment31"
+      }
+
+      column {
+        name     = "replay4"
+        type     = "BYTE"
+        nullable = true
+        comment  = "comment41"
+      }
+
+      column {
+        name     = "replay5"
+        type     = "DECIMAL"
+        nullable = true
+        comment  = "comment51"
+      }
+
+      column {
+        name     = "replay6"
+        type     = "DEC"
+        nullable = true
+        comment  = "comment61"
+      }
+
+      column {
+        name     = "replay7"
+        type     = "NUMERIC"
+        nullable = true
+        comment  = "comment71"
+      }
+
+      comment = "this table is managed by terraform"
+    }
+  calls:
+  - *id002
+  - *id001
+  - *id001
+  - *id001
+  - &id004
+    request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` SET TBLPROPERTIES ('delta.columnMapping.mode'='name', 'delta.feature.columnMapping'='supported', 'delta.feature.invariants'='supported', 'delta.minReaderVersion'='3', 'delta.minWriterVersion'='7', 'something'='else', 'this'='that')
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` ALTER COLUMN `replay0` COMMENT 'comment01'
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` ALTER COLUMN `replay1` COMMENT 'comment11'
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` ALTER COLUMN `replay2` COMMENT 'comment21'
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` ALTER COLUMN `replay3` COMMENT 'comment31'
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` ALTER COLUMN `replay4` COMMENT 'comment41'
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` ALTER COLUMN `replay5` COMMENT 'comment51'
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` ALTER COLUMN `replay6` COMMENT 'comment61'
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` ALTER COLUMN `replay7` COMMENT 'comment71'
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - &id003
+    request:
+      method: GET
+      path: /api/2.1/unity-catalog/tables/main.replay.replay
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          catalog_name: main
+          cluster_keys: []
+          columns:
+          - comment: comment01
+            name: replay0
+            nullable: true
+            type_text: int
+          - comment: comment11
+            name: replay1
+            nullable: true
+            type_text: bigint
+          - comment: comment21
+            name: replay2
+            nullable: true
+            type_text: float
+          - comment: comment31
+            name: replay3
+            nullable: true
+            type_text: smallint
+          - comment: comment41
+            name: replay4
+            nullable: true
+            type_text: tinyint
+          - comment: comment51
+            name: replay5
+            nullable: true
+            type_text: decimal(10,0)
+          - comment: comment61
+            name: replay6
+            nullable: true
+            type_text: decimal(10,0)
+          - comment: comment71
+            name: replay7
+            nullable: true
+            type_text: decimal(10,0)
+          comment: this table is managed by terraform
+          data_source_format: DELTA
+          full_name: main.replay.replay
+          name: replay
+          owner: replay-admin
+          properties:
+            delta.columnMapping.mode: name
+            delta.feature.columnMapping: supported
+            delta.feature.invariants: supported
+            delta.minReaderVersion: '3'
+            delta.minWriterVersion: '7'
+            something: else
+            this: that
+          schema_name: replay
+          table_id: table-replay
+          table_type: MANAGED
+  - *id003
+  - *id002
+  - *id003
+  - *id003
+- name: update_2
+  config: |
+    resource "databricks_schema" "this" {
+      name         = "replay"
+      catalog_name = "main"
+    }
+
+    resource "databricks_sql_table" "this" {
+      name         = "replay"
+      catalog_name = "main"
+      schema_name  = databricks_schema.this.name
+      table_type   = "MANAGED"
+      warehouse_id = "warehouse-1"
+      properties = {
+        "this"                        = "that"
+        "something"                   = "else"
+        "delta.feature.columnMapping" = "supported"
+        "delta.feature.invariants"    = "supported"
+        "delta.minReaderVersion"      = 3
+        "delta.minWriterVersion"      = 7
+        "delta.columnMapping.mode"    = "name"
+      }
+
+
+      column {
+        name     = "replay0"
+        type     = "int"
+        nullable = true
+        comment  = "comment02"
+      }
+
+      column {
+        name     = "replay1"
+        type     = "bigint"
+        nullable = true
+        comment  = "comment12"
+      }
+
+      column {
+        name     = "replay2"
+        type     = "float"
+        nullable = true
+        comment  = "comment22"
+      }
+
+      column {
+        name     = "replay3"
+        type     = "smallint"
+        nullable = true
+        comment  = "comment32"
+      }
+
+      column {
+        name     = "replay4"
+        type     = "tinyint"
+        nullable = true
+        comment  = "comment42"
+      }
+
+      column {
+        name     = "replay5"
+        type     = "decimal(10,0)"
+        nullable = true
+        comment  = "comment52"
+      }
+
+      column {
+        name     = "replay6"
+        type     = "decimal(10,0)"
+        nullable = true
+        comment  = "comment62"
+      }
+
+      column {
+        name     = "replay7"
+        type     = "decimal(10,0)"
+        nullable = true
+        comment  = "comment72"
+      }
+
+      comment = "this table is managed by terraform"
+    }
+  calls:
+  - *id002
+  - *id003
+  - *id003
+  - *id003
+  - *id004
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` ALTER COLUMN `replay0` COMMENT 'comment02'
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` ALTER COLUMN `replay1` COMMENT 'comment12'
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` ALTER COLUMN `replay2` COMMENT 'comment22'
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` ALTER COLUMN `replay3` COMMENT 'comment32'
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` ALTER COLUMN `replay4` COMMENT 'comment42'
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` ALTER COLUMN `replay5` COMMENT 'comment52'
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` ALTER COLUMN `replay6` COMMENT 'comment62'
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            ALTER TABLE `main`.`replay`.`replay` ALTER COLUMN `replay7` COMMENT 'comment72'
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - &id005
+    request:
+      method: GET
+      path: /api/2.1/unity-catalog/tables/main.replay.replay
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          catalog_name: main
+          cluster_keys: []
+          columns:
+          - comment: comment02
+            name: replay0
+            nullable: true
+            type_text: int
+          - comment: comment12
+            name: replay1
+            nullable: true
+            type_text: bigint
+          - comment: comment22
+            name: replay2
+            nullable: true
+            type_text: float
+          - comment: comment32
+            name: replay3
+            nullable: true
+            type_text: smallint
+          - comment: comment42
+            name: replay4
+            nullable: true
+            type_text: tinyint
+          - comment: comment52
+            name: replay5
+            nullable: true
+            type_text: decimal(10,0)
+          - comment: comment62
+            name: replay6
+            nullable: true
+            type_text: decimal(10,0)
+          - comment: comment72
+            name: replay7
+            nullable: true
+            type_text: decimal(10,0)
+          comment: this table is managed by terraform
+          data_source_format: DELTA
+          full_name: main.replay.replay
+          name: replay
+          owner: replay-admin
+          properties:
+            delta.columnMapping.mode: name
+            delta.feature.columnMapping: supported
+            delta.feature.invariants: supported
+            delta.minReaderVersion: '3'
+            delta.minWriterVersion: '7'
+            something: else
+            this: that
+          schema_name: replay
+          table_id: table-replay
+          table_type: MANAGED
+  - *id005
+  - *id002
+  - *id005
+  - *id005
+destroy:
+  calls:
+  - *id002
+  - *id005
+  - *id005
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: |-
+            DROP TABLE `main`.`replay`.`replay`
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: DELETE
+      path: /api/2.1/unity-catalog/schemas/main.replay
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body: null

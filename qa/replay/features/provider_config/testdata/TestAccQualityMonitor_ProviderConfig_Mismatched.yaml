@@ -1,0 +1,75 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: reject_mismatched_workspace
+    config: |
+      resource "databricks_catalog" "sandbox" {
+        name    = "sandboxreplay"
+        comment = "this catalog is managed by terraform"
+        properties = {
+          purpose = "testing"
+        }
+        force_destroy = true
+      }
+
+      resource "databricks_schema" "things" {
+        catalog_name = databricks_catalog.sandbox.id
+        name         = "thingsreplay"
+        comment      = "this database is managed by terraform"
+        properties = {
+          kind = "various"
+        }
+      }
+
+      resource "databricks_sql_table" "myInferenceTable" {
+        catalog_name       = databricks_catalog.sandbox.id
+        schema_name        = databricks_schema.things.name
+        name               = "barreplay_inference"
+        table_type         = "MANAGED"
+        data_source_format = "DELTA"
+        warehouse_id       = "warehouse-1"
+
+        column {
+          name = "model_id"
+          type = "int"
+        }
+        column {
+          name = "timestamp"
+          type = "int"
+        }
+        column {
+          name = "prediction"
+          type = "int"
+        }
+      }
+
+
+      resource "databricks_sql_table" "myTable" {
+        catalog_name       = databricks_catalog.sandbox.id
+        schema_name        = databricks_schema.things.name
+        name               = "barreplay"
+        table_type         = "MANAGED"
+        data_source_format = "DELTA"
+        column {
+          name = "timestamp"
+          type = "int"
+        }
+      }
+
+      resource "databricks_quality_monitor" "testMonitor" {
+        table_name         = databricks_sql_table.myTable.id
+        assets_dir         = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myTable.name}"
+        output_schema_name = databricks_schema.things.id
+        snapshot {}
+        provider_config {
+          workspace_id = "1234"
+        }
+      }
+    calls: []
+    expect_error: (?s)failed to get workspace client
+destroy:
+  calls: []

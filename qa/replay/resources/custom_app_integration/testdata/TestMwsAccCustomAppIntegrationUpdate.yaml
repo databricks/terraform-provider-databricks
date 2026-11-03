@@ -1,0 +1,121 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "AWS"
+  account_id: "replay-account"
+steps:
+  - name: "create"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_custom_app_integration" "this" {
+        name          = "tf-replay-app-integration"
+        redirect_urls = ["https://example.com"]
+        scopes        = ["all-apis"]
+        token_access_policy {
+          access_token_ttl_in_minutes  = 30
+          refresh_token_ttl_in_minutes = 30
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/accounts/replay-account/oauth2/custom-app-integrations"
+          body:
+            json:
+              name: "tf-replay-app-integration"
+              redirect_urls: ["https://example.com"]
+              scopes: ["all-apis"]
+              token_access_policy:
+                access_token_ttl_in_minutes: 30
+                refresh_token_ttl_in_minutes: 30
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              client_id: "client-1"
+              client_secret: "placeholder-secret"
+              integration_id: "integration-1"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/oauth2/custom-app-integrations/integration-1"
+          body: null
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              client_id: "client-1"
+              create_time: 1700000000000
+              created_by: 100
+              integration_id: "integration-1"
+              name: "tf-replay-app-integration"
+              redirect_urls: ["https://example.com"]
+              scopes: ["all-apis"]
+              token_access_policy:
+                access_token_ttl_in_minutes: 30
+                refresh_token_ttl_in_minutes: 30
+      - *get_1
+  - name: "update_ttl"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_custom_app_integration" "this" {
+        name          = "tf-replay-app-integration"
+        redirect_urls = ["https://example.com"]
+        scopes        = ["all-apis"]
+        token_access_policy {
+          access_token_ttl_in_minutes  = 15
+          refresh_token_ttl_in_minutes = 30
+        }
+      }
+    calls:
+      - *get_1
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/accounts/replay-account/oauth2/custom-app-integrations/integration-1"
+          body:
+            json:
+              redirect_urls: ["https://example.com"]
+              scopes: ["all-apis"]
+              token_access_policy:
+                access_token_ttl_in_minutes: 15
+                refresh_token_ttl_in_minutes: 30
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/oauth2/custom-app-integrations/integration-1"
+          body: null
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              client_id: "client-1"
+              create_time: 1700000000000
+              created_by: 100
+              integration_id: "integration-1"
+              name: "tf-replay-app-integration"
+              redirect_urls: ["https://example.com"]
+              scopes: ["all-apis"]
+              token_access_policy:
+                access_token_ttl_in_minutes: 15
+                refresh_token_ttl_in_minutes: 30
+      - *get_2
+destroy:
+  calls:
+    - *get_2
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/accounts/replay-account/oauth2/custom-app-integrations/integration-1"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

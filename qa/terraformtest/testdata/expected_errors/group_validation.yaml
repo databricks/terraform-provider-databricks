@@ -1,0 +1,13 @@
+version: 1
+steps:
+  - name: reject_reserved_name
+    config: |
+      resource "databricks_group" "this" {
+        display_name = "admins"
+      }
+    # SDKv2's StringNotInSlice rejects the reserved names "users" and "admins"
+    # during local schema validation, before any HTTP request.
+    expect_error: 'expected display_name to not be any of'
+    calls: []
+destroy:
+  calls: []

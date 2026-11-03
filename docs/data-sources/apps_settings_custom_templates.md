@@ -72,4 +72,4 @@ This data source exports a single attribute, `templates`. It is a list of resour
 
 ### AppManifestAppResourceUcSecurableSpec
 * `permission` (string) - Possible values are: `EXECUTE`, `MANAGE`, `READ_VOLUME`, `SELECT`, `USE_CONNECTION`, `WRITE_VOLUME`
-* `securable_type` (string) - Possible values are: `CONNECTION`, `FUNCTION`, `TABLE`, `VOLUME`
+* `securable_type` (string) - Possible values are: `CONNECTION`, `FUNCTION`, `MODEL_SERVICE`, `TABLE`, `VOLUME`

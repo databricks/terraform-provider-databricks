@@ -1,5 +1,56 @@
 # Version changelog
 
+## Release v1.141.0 (2026-11-02)
+
+### New Features and Improvements
+* Add resource and data sources for `databricks_genie_agent`.
+
+* Support fixed-size REALTIME warehouses with `max_dbu`, `statement_timeout`, and `customer_version_label` in `databricks_sql_endpoint` and `databricks_sql_warehouse` ([#6092](https://github.com/databricks/terraform-provider-databricks/pull/6092)).
+
+### Documentation
+
+* Fix the Azure Databricks US Gov account console host in the provider authentication docs to `https://accounts.usgov.databricks.azure.us` ([#6071](https://github.com/databricks/terraform-provider-databricks/pull/6071)).
+
+### Exporter
+
+* Preserve `auto_stop_mins`, REALTIME `statement_timeout`, and `max_dbu` in warehouse exports ([#6092](https://github.com/databricks/terraform-provider-databricks/pull/6092)).
+
+
+## Release v1.140.0 (2026-10-26)
+
+### Internal Changes
+
+* Bump Go toolchain from 1.26.8 to 1.26.10 to pick up updated certificates.
+
+
+## Release v1.139.0 (2026-10-22)
+
+### New Features and Improvements
+* [Breaking] Remove resource and data sources for `databricks_mason_managed_memory_store`.
+* [Breaking] Remove resource and data sources for `databricks_mason_managed_memory_entry`.
+* [Breaking] Remove resource and data sources for `databricks_mason_session_store`.
+* [Breaking] Remove resource and data sources for `databricks_mason_session`.
+* Add resource and data sources for `databricks_agent_kit_managed_memory_store`.
+* Add resource and data sources for `databricks_agent_kit_managed_memory_entry`.
+* Add resource and data sources for `databricks_agent_kit_session_store`.
+* Add resource and data sources for `databricks_agent_kit_session`.
+* [Breaking] Remove resource and data sources for `databricks_feature_engineering_materialized_feature`.
+* [Breaking] Remove resource and data sources for `databricks_feature_engineering_kafka_config`.
+
+
+## Release v1.138.0 (2026-10-19)
+
+### Breaking Changes
+
+* Remove the `databricks_mason_managed_memory_entry`, `databricks_mason_managed_memory_store`, `databricks_mason_session`, and `databricks_mason_session_store` resources and their data sources ([#6087](https://github.com/databricks/terraform-provider-databricks/pull/6087)).
+
+  The Databricks Go SDK renamed the Mason API to AgentKit.
+
+* Remove the `databricks_feature_engineering_kafka_config` and `databricks_feature_engineering_materialized_feature` resources and their data sources ([#6087](https://github.com/databricks/terraform-provider-databricks/pull/6087)).
+
+  The API no longer exposes these resources to Terraform.
+
+
 ## Release v1.137.0 (2026-10-06)
 
 ### New Features and Improvements

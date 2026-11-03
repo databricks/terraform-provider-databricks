@@ -188,6 +188,106 @@ func (m ComputeSpec) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Selects a sandbox directory to create and whether to create its parents.
+type CreateDirectoryRequest struct {
+	Parent types.String `tfsdk:"-"`
+	// Defaults to true, which also succeeds when the directory already exists.
+	Parents types.Bool `tfsdk:"parents"`
+	// Absolute UTF-8 path of the directory.
+	Path types.String `tfsdk:"path"`
+}
+
+func (to *CreateDirectoryRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateDirectoryRequest) {
+}
+
+func (to *CreateDirectoryRequest) SyncFieldsDuringRead(ctx context.Context, from CreateDirectoryRequest) {
+}
+
+func (m CreateDirectoryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parents"] = attrs["parents"].SetOptional()
+	attrs["path"] = attrs["path"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDirectoryRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateDirectoryRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateDirectoryRequest
+// only implements ToObjectValue() and Type().
+func (m CreateDirectoryRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"parent":  m.Parent,
+			"parents": m.Parents,
+			"path":    m.Path,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateDirectoryRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"parent":  types.StringType,
+			"parents": types.BoolType,
+			"path":    types.StringType,
+		},
+	}
+}
+
+// Confirms that the requested directory exists.
+type CreateDirectoryResponse struct {
+}
+
+func (to *CreateDirectoryResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateDirectoryResponse) {
+}
+
+func (to *CreateDirectoryResponse) SyncFieldsDuringRead(ctx context.Context, from CreateDirectoryResponse) {
+}
+
+func (m CreateDirectoryResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDirectoryResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateDirectoryResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateDirectoryResponse
+// only implements ToObjectValue() and Type().
+func (m CreateDirectoryResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateDirectoryResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type CreateSandboxRequest struct {
 	// The sandbox to create.
 	Sandbox types.Object `tfsdk:"sandbox"`
@@ -286,6 +386,106 @@ func (m *CreateSandboxRequest) SetSandbox(ctx context.Context, v Sandbox) {
 	m.Sandbox = vs
 }
 
+// Selects a sandbox path to delete and whether to delete its contents.
+type DeletePathRequest struct {
+	Parent types.String `tfsdk:"-"`
+	// Absolute UTF-8 path of the entry to delete.
+	Path types.String `tfsdk:"path"`
+	// Required for a non-empty directory.
+	Recursive types.Bool `tfsdk:"recursive"`
+}
+
+func (to *DeletePathRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeletePathRequest) {
+}
+
+func (to *DeletePathRequest) SyncFieldsDuringRead(ctx context.Context, from DeletePathRequest) {
+}
+
+func (m DeletePathRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetRequired()
+	attrs["recursive"] = attrs["recursive"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePathRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeletePathRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeletePathRequest
+// only implements ToObjectValue() and Type().
+func (m DeletePathRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"parent":    m.Parent,
+			"path":      m.Path,
+			"recursive": m.Recursive,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeletePathRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"parent":    types.StringType,
+			"path":      types.StringType,
+			"recursive": types.BoolType,
+		},
+	}
+}
+
+// Confirms that the requested path is absent.
+type DeletePathResponse struct {
+}
+
+func (to *DeletePathResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeletePathResponse) {
+}
+
+func (to *DeletePathResponse) SyncFieldsDuringRead(ctx context.Context, from DeletePathResponse) {
+}
+
+func (m DeletePathResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePathResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeletePathResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeletePathResponse
+// only implements ToObjectValue() and Type().
+func (m DeletePathResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeletePathResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type DeleteSandboxRequest struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -333,11 +533,180 @@ func (m DeleteSandboxRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type DownloadFileRequest struct {
+	// A single byte range, such as bytes=0-1023 or bytes=-1024. Equivalent to
+	// the Range header.
+	ByteRange types.String `tfsdk:"-"`
+	// Entity tags or *. A mismatch returns 412 Precondition Failed. Equivalent
+	// to the If-Match header.
+	IfMatch types.String `tfsdk:"-"`
+	// An HTTP-date. Returns 304 if the file has not changed since this time.
+	// Ignored when If-None-Match is present. Equivalent to the
+	// If-Modified-Since header.
+	IfModifiedSince types.String `tfsdk:"-"`
+	// Entity tags or *. A match returns 304 Not Modified. Equivalent to the
+	// If-None-Match header.
+	IfNoneMatch types.String `tfsdk:"-"`
+	// A strong entity tag. A mismatch, weak entity tag, or HTTP-date causes a
+	// full download. Equivalent to the If-Range header.
+	IfRange types.String `tfsdk:"-"`
+	// An HTTP-date. Returns 412 if the file has changed since this time.
+	// Ignored when If-Match is present. Equivalent to the If-Unmodified-Since
+	// header.
+	IfUnmodifiedSince types.String `tfsdk:"-"`
+	// The sandbox resource name, in the form sandboxes/{sandbox_id}.
+	Parent types.String `tfsdk:"-"`
+	// The absolute UTF-8 path of the file inside the sandbox.
+	Path types.String `tfsdk:"-"`
+}
+
+func (to *DownloadFileRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DownloadFileRequest) {
+}
+
+func (to *DownloadFileRequest) SyncFieldsDuringRead(ctx context.Context, from DownloadFileRequest) {
+}
+
+func (m DownloadFileRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["path"] = attrs["path"].SetRequired()
+	attrs["byte_range"] = attrs["byte_range"].SetOptional()
+	attrs["if_range"] = attrs["if_range"].SetOptional()
+	attrs["if_match"] = attrs["if_match"].SetOptional()
+	attrs["if_none_match"] = attrs["if_none_match"].SetOptional()
+	attrs["if_modified_since"] = attrs["if_modified_since"].SetOptional()
+	attrs["if_unmodified_since"] = attrs["if_unmodified_since"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DownloadFileRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DownloadFileRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DownloadFileRequest
+// only implements ToObjectValue() and Type().
+func (m DownloadFileRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"byte_range":          m.ByteRange,
+			"if_match":            m.IfMatch,
+			"if_modified_since":   m.IfModifiedSince,
+			"if_none_match":       m.IfNoneMatch,
+			"if_range":            m.IfRange,
+			"if_unmodified_since": m.IfUnmodifiedSince,
+			"parent":              m.Parent,
+			"path":                m.Path,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DownloadFileRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"byte_range":          types.StringType,
+			"if_match":            types.StringType,
+			"if_modified_since":   types.StringType,
+			"if_none_match":       types.StringType,
+			"if_range":            types.StringType,
+			"if_unmodified_since": types.StringType,
+			"parent":              types.StringType,
+			"path":                types.StringType,
+		},
+	}
+}
+
+type DownloadFileResponse struct {
+	// The supported range unit: bytes.
+	AcceptRanges types.String `tfsdk:"-"`
+	// The length of the response body in bytes.
+	ContentLength types.Int64 `tfsdk:"-"`
+	// The returned byte range and full file length, for a partial response.
+	ContentRange types.String `tfsdk:"-"`
+	// The media type of the response body: application/octet-stream.
+	ContentType types.String `tfsdk:"-"`
+
+	Contents types.Object `tfsdk:"-"`
+	// The entity tag used for conditional requests.
+	Etag types.String `tfsdk:"-"`
+	// The modification time as an HTTP-date, when representable.
+	LastModified types.String `tfsdk:"-"`
+}
+
+func (to *DownloadFileResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DownloadFileResponse) {
+}
+
+func (to *DownloadFileResponse) SyncFieldsDuringRead(ctx context.Context, from DownloadFileResponse) {
+}
+
+func (m DownloadFileResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["contents"] = attrs["contents"].SetOptional()
+	attrs["accept_ranges"] = attrs["accept_ranges"].SetOptional()
+	attrs["content_length"] = attrs["content_length"].SetOptional()
+	attrs["content_range"] = attrs["content_range"].SetOptional()
+	attrs["content_type"] = attrs["content_type"].SetOptional()
+	attrs["last_modified"] = attrs["last_modified"].SetOptional()
+	attrs["etag"] = attrs["etag"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DownloadFileResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DownloadFileResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DownloadFileResponse
+// only implements ToObjectValue() and Type().
+func (m DownloadFileResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"accept_ranges":  m.AcceptRanges,
+			"content_length": m.ContentLength,
+			"content_range":  m.ContentRange,
+			"content_type":   m.ContentType,
+			"contents":       m.Contents,
+			"etag":           m.Etag,
+			"last_modified":  m.LastModified,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DownloadFileResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"accept_ranges":  types.StringType,
+			"content_length": types.Int64Type,
+			"content_range":  types.StringType,
+			"content_type":   types.StringType,
+			"contents":       types.ObjectType{},
+			"etag":           types.StringType,
+			"last_modified":  types.StringType,
+		},
+	}
+}
+
 type EnvironmentSpec struct {
-	// A Unity Catalog container artifact (e.g.
-	// `catalog.schema.folder.image:tag`) to run as the sandbox environment.
-	// When set, this image is used as the environment instead of resolving a
-	// managed image from `environment_version`.
+	// The Unity Catalog container image to use for the sandbox environment (for
+	// example, `catalog.schema.folder.image:tag`). See [Artifact Registry].
+	//
+	// [Artifact Registry]: https://docs.databricks.com/en/artifact-registry/
 	ImageUri types.String `tfsdk:"image_uri"`
 }
 
@@ -612,6 +981,150 @@ func (m ExecuteCommandSyncResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetMetadataRequest struct {
+	Parent types.String `tfsdk:"-"`
+	// Absolute UTF-8 path of the entry to inspect.
+	Path types.String `tfsdk:"-"`
+}
+
+func (to *GetMetadataRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetMetadataRequest) {
+}
+
+func (to *GetMetadataRequest) SyncFieldsDuringRead(ctx context.Context, from GetMetadataRequest) {
+}
+
+func (m GetMetadataRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["path"] = attrs["path"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetMetadataRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetMetadataRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetMetadataRequest
+// only implements ToObjectValue() and Type().
+func (m GetMetadataRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"parent": m.Parent,
+			"path":   m.Path,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetMetadataRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"parent": types.StringType,
+			"path":   types.StringType,
+		},
+	}
+}
+
+// Contains metadata for the requested path without following its final symlink.
+type GetMetadataResponse struct {
+	File types.Object `tfsdk:"file"`
+}
+
+func (to *GetMetadataResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetMetadataResponse) {
+	if !from.File.IsNull() && !from.File.IsUnknown() {
+		if toFile, ok := to.GetFile(ctx); ok {
+			if fromFile, ok := from.GetFile(ctx); ok {
+				// Recursively sync the fields of File
+				toFile.SyncFieldsDuringCreateOrUpdate(ctx, fromFile)
+				to.SetFile(ctx, toFile)
+			}
+		}
+	}
+}
+
+func (to *GetMetadataResponse) SyncFieldsDuringRead(ctx context.Context, from GetMetadataResponse) {
+	if !from.File.IsNull() && !from.File.IsUnknown() {
+		if toFile, ok := to.GetFile(ctx); ok {
+			if fromFile, ok := from.GetFile(ctx); ok {
+				toFile.SyncFieldsDuringRead(ctx, fromFile)
+				to.SetFile(ctx, toFile)
+			}
+		}
+	}
+}
+
+func (m GetMetadataResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file"] = attrs["file"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetMetadataResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetMetadataResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"file": reflect.TypeOf(SandboxFileInfo{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetMetadataResponse
+// only implements ToObjectValue() and Type().
+func (m GetMetadataResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"file": m.File,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetMetadataResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"file": SandboxFileInfo{}.Type(ctx),
+		},
+	}
+}
+
+// GetFile returns the value of the File field in GetMetadataResponse as
+// a SandboxFileInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *GetMetadataResponse) GetFile(ctx context.Context) (SandboxFileInfo, bool) {
+	var e SandboxFileInfo
+	if m.File.IsNull() || m.File.IsUnknown() {
+		return e, false
+	}
+	var v SandboxFileInfo
+	d := m.File.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFile sets the value of the File field in GetMetadataResponse.
+func (m *GetMetadataResponse) SetFile(ctx context.Context, v SandboxFileInfo) {
+	vs := v.ToObjectValue(ctx)
+	m.File = vs
+}
+
 type GetSandboxRequest struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -840,6 +1353,192 @@ func (m *ListCommandsResponse) SetCommands(ctx context.Context, v []Command) {
 	m.Commands = types.ListValueMust(t, vs)
 }
 
+type ListDirectoryContentsRequest struct {
+	// Zero uses the default of 1000; values above 1000 are clamped to 1000.
+	PageSize types.Int64 `tfsdk:"-"`
+	// The token from a prior response. Keep parent and path unchanged between
+	// pages.
+	PageToken types.String `tfsdk:"-"`
+
+	Parent types.String `tfsdk:"-"`
+	// Absolute UTF-8 path of the directory.
+	Path types.String `tfsdk:"-"`
+}
+
+func (to *ListDirectoryContentsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListDirectoryContentsRequest) {
+}
+
+func (to *ListDirectoryContentsRequest) SyncFieldsDuringRead(ctx context.Context, from ListDirectoryContentsRequest) {
+}
+
+func (m ListDirectoryContentsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["path"] = attrs["path"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDirectoryContentsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListDirectoryContentsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDirectoryContentsRequest
+// only implements ToObjectValue() and Type().
+func (m ListDirectoryContentsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+			"path":       m.Path,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListDirectoryContentsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+			"path":       types.StringType,
+		},
+	}
+}
+
+// Contains a page of immediate directory entries and an optional continuation
+// token. An empty token marks the final page. Pages reflect concurrent
+// directory changes.
+type ListDirectoryContentsResponse struct {
+	Contents types.List `tfsdk:"contents"`
+
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListDirectoryContentsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListDirectoryContentsResponse) {
+	if !from.Contents.IsNull() && !from.Contents.IsUnknown() && to.Contents.IsNull() && len(from.Contents.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Contents, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Contents = from.Contents
+	}
+	if !from.Contents.IsNull() && !from.Contents.IsUnknown() {
+		if toContents, ok := to.GetContents(ctx); ok {
+			if fromContents, ok := from.GetContents(ctx); ok {
+				// Recursively sync the fields of each Contents element by position.
+				for i := range toContents {
+					if i < len(fromContents) {
+						toContents[i].SyncFieldsDuringCreateOrUpdate(ctx, fromContents[i])
+					}
+				}
+				to.SetContents(ctx, toContents)
+			}
+		}
+	}
+}
+
+func (to *ListDirectoryContentsResponse) SyncFieldsDuringRead(ctx context.Context, from ListDirectoryContentsResponse) {
+	if !from.Contents.IsNull() && !from.Contents.IsUnknown() && to.Contents.IsNull() && len(from.Contents.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Contents, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Contents = from.Contents
+	}
+	if !from.Contents.IsNull() && !from.Contents.IsUnknown() {
+		if toContents, ok := to.GetContents(ctx); ok {
+			if fromContents, ok := from.GetContents(ctx); ok {
+				for i := range toContents {
+					if i < len(fromContents) {
+						toContents[i].SyncFieldsDuringRead(ctx, fromContents[i])
+					}
+				}
+				to.SetContents(ctx, toContents)
+			}
+		}
+	}
+}
+
+func (m ListDirectoryContentsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["contents"] = attrs["contents"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDirectoryContentsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListDirectoryContentsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"contents": reflect.TypeOf(SandboxFileInfo{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListDirectoryContentsResponse
+// only implements ToObjectValue() and Type().
+func (m ListDirectoryContentsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"contents":        m.Contents,
+			"next_page_token": m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListDirectoryContentsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"contents": basetypes.ListType{
+				ElemType: SandboxFileInfo{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetContents returns the value of the Contents field in ListDirectoryContentsResponse as
+// a slice of SandboxFileInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListDirectoryContentsResponse) GetContents(ctx context.Context) ([]SandboxFileInfo, bool) {
+	if m.Contents.IsNull() || m.Contents.IsUnknown() {
+		return nil, false
+	}
+	var v []SandboxFileInfo
+	d := m.Contents.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetContents sets the value of the Contents field in ListDirectoryContentsResponse.
+func (m *ListDirectoryContentsResponse) SetContents(ctx context.Context, v []SandboxFileInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["contents"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Contents = types.ListValueMust(t, vs)
+}
+
 type ListSandboxesRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -1012,12 +1711,115 @@ func (m *ListSandboxesResponse) SetSandboxes(ctx context.Context, v []Sandbox) {
 	m.Sandboxes = types.ListValueMust(t, vs)
 }
 
+// Identifies the source and exact destination for a sandbox path rename.
+type RenamePathRequest struct {
+	// Exact absolute UTF-8 destination; it must not already exist.
+	Destination types.String `tfsdk:"destination"`
+	// Sandbox resource name, for example `sandboxes/my-sandbox`.
+	Parent types.String `tfsdk:"-"`
+	// Absolute UTF-8 path to move.
+	Source types.String `tfsdk:"source"`
+}
+
+func (to *RenamePathRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RenamePathRequest) {
+}
+
+func (to *RenamePathRequest) SyncFieldsDuringRead(ctx context.Context, from RenamePathRequest) {
+}
+
+func (m RenamePathRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination"] = attrs["destination"].SetRequired()
+	attrs["source"] = attrs["source"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RenamePathRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RenamePathRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RenamePathRequest
+// only implements ToObjectValue() and Type().
+func (m RenamePathRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"destination": m.Destination,
+			"parent":      m.Parent,
+			"source":      m.Source,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RenamePathRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"destination": types.StringType,
+			"parent":      types.StringType,
+			"source":      types.StringType,
+		},
+	}
+}
+
+// Confirms that the sandbox path was renamed.
+type RenamePathResponse struct {
+}
+
+func (to *RenamePathResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RenamePathResponse) {
+}
+
+func (to *RenamePathResponse) SyncFieldsDuringRead(ctx context.Context, from RenamePathResponse) {
+}
+
+func (m RenamePathResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RenamePathResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RenamePathResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RenamePathResponse
+// only implements ToObjectValue() and Type().
+func (m RenamePathResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RenamePathResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 // A Sandbox resource representing an execution environment.
 type Sandbox struct {
 	// Output only. The creation time of the sandbox.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Human-readable display label for the sandbox. At most 256 characters.
 	DisplayName types.String `tfsdk:"display_name"`
+	// Metadata associated with the sandbox.
+	Metadata types.Object `tfsdk:"metadata"`
 	// The sandbox resource name, in the form `sandboxes/{sandbox_id}`. Derived
 	// from `sandbox_id`; any value supplied in a create or update request body
 	// is ignored.
@@ -1032,6 +1834,15 @@ type Sandbox struct {
 }
 
 func (to *Sandbox) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sandbox) {
+	if !from.Metadata.IsNull() && !from.Metadata.IsUnknown() {
+		if toMetadata, ok := to.GetMetadata(ctx); ok {
+			if fromMetadata, ok := from.GetMetadata(ctx); ok {
+				// Recursively sync the fields of Metadata
+				toMetadata.SyncFieldsDuringCreateOrUpdate(ctx, fromMetadata)
+				to.SetMetadata(ctx, toMetadata)
+			}
+		}
+	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -1053,6 +1864,14 @@ func (to *Sandbox) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sand
 }
 
 func (to *Sandbox) SyncFieldsDuringRead(ctx context.Context, from Sandbox) {
+	if !from.Metadata.IsNull() && !from.Metadata.IsUnknown() {
+		if toMetadata, ok := to.GetMetadata(ctx); ok {
+			if fromMetadata, ok := from.GetMetadata(ctx); ok {
+				toMetadata.SyncFieldsDuringRead(ctx, fromMetadata)
+				to.SetMetadata(ctx, toMetadata)
+			}
+		}
+	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -1074,6 +1893,7 @@ func (to *Sandbox) SyncFieldsDuringRead(ctx context.Context, from Sandbox) {
 func (m Sandbox) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["metadata"] = attrs["metadata"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["status"] = attrs["status"].SetComputed()
@@ -1091,8 +1911,9 @@ func (m Sandbox) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 // SDK values.
 func (m Sandbox) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"spec":   reflect.TypeOf(SandboxSpec{}),
-		"status": reflect.TypeOf(SandboxStatus{}),
+		"metadata": reflect.TypeOf(SandboxMetadata{}),
+		"spec":     reflect.TypeOf(SandboxSpec{}),
+		"status":   reflect.TypeOf(SandboxStatus{}),
 	}
 }
 
@@ -1105,6 +1926,7 @@ func (m Sandbox) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"create_time":  m.CreateTime,
 			"display_name": m.DisplayName,
+			"metadata":     m.Metadata,
 			"name":         m.Name,
 			"spec":         m.Spec,
 			"status":       m.Status,
@@ -1118,12 +1940,38 @@ func (m Sandbox) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"create_time":  timetypes.RFC3339{}.Type(ctx),
 			"display_name": types.StringType,
+			"metadata":     SandboxMetadata{}.Type(ctx),
 			"name":         types.StringType,
 			"spec":         SandboxSpec{}.Type(ctx),
 			"status":       SandboxStatus{}.Type(ctx),
 			"update_time":  timetypes.RFC3339{}.Type(ctx),
 		},
 	}
+}
+
+// GetMetadata returns the value of the Metadata field in Sandbox as
+// a SandboxMetadata value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Sandbox) GetMetadata(ctx context.Context) (SandboxMetadata, bool) {
+	var e SandboxMetadata
+	if m.Metadata.IsNull() || m.Metadata.IsUnknown() {
+		return e, false
+	}
+	var v SandboxMetadata
+	d := m.Metadata.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMetadata sets the value of the Metadata field in Sandbox.
+func (m *Sandbox) SetMetadata(ctx context.Context, v SandboxMetadata) {
+	vs := v.ToObjectValue(ctx)
+	m.Metadata = vs
 }
 
 // GetSpec returns the value of the Spec field in Sandbox as
@@ -1174,6 +2022,180 @@ func (m *Sandbox) GetStatus(ctx context.Context) (SandboxStatus, bool) {
 func (m *Sandbox) SetStatus(ctx context.Context, v SandboxStatus) {
 	vs := v.ToObjectValue(ctx)
 	m.Status = vs
+}
+
+// Metadata for a sandbox filesystem entry, describing a final symlink itself.
+type SandboxFileInfo struct {
+	FileType types.String `tfsdk:"file_type"`
+
+	Group types.String `tfsdk:"group"`
+
+	Mode types.Int64 `tfsdk:"mode"`
+	// Nanosecond precision is preserved on the wire.
+	ModifyTime timetypes.RFC3339 `tfsdk:"modify_time"`
+
+	Name types.String `tfsdk:"name"`
+
+	Owner types.String `tfsdk:"owner"`
+
+	Path types.String `tfsdk:"path"`
+
+	Permissions types.String `tfsdk:"permissions"`
+
+	Size types.Int64 `tfsdk:"size"`
+
+	SymlinkTarget types.String `tfsdk:"symlink_target"`
+}
+
+func (to *SandboxFileInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SandboxFileInfo) {
+}
+
+func (to *SandboxFileInfo) SyncFieldsDuringRead(ctx context.Context, from SandboxFileInfo) {
+}
+
+func (m SandboxFileInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_type"] = attrs["file_type"].SetOptional()
+	attrs["group"] = attrs["group"].SetOptional()
+	attrs["mode"] = attrs["mode"].SetOptional()
+	attrs["modify_time"] = attrs["modify_time"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["owner"] = attrs["owner"].SetOptional()
+	attrs["path"] = attrs["path"].SetOptional()
+	attrs["permissions"] = attrs["permissions"].SetOptional()
+	attrs["size"] = attrs["size"].SetOptional()
+	attrs["symlink_target"] = attrs["symlink_target"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SandboxFileInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SandboxFileInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SandboxFileInfo
+// only implements ToObjectValue() and Type().
+func (m SandboxFileInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"file_type":      m.FileType,
+			"group":          m.Group,
+			"mode":           m.Mode,
+			"modify_time":    m.ModifyTime,
+			"name":           m.Name,
+			"owner":          m.Owner,
+			"path":           m.Path,
+			"permissions":    m.Permissions,
+			"size":           m.Size,
+			"symlink_target": m.SymlinkTarget,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SandboxFileInfo) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"file_type":      types.StringType,
+			"group":          types.StringType,
+			"mode":           types.Int64Type,
+			"modify_time":    timetypes.RFC3339{}.Type(ctx),
+			"name":           types.StringType,
+			"owner":          types.StringType,
+			"path":           types.StringType,
+			"permissions":    types.StringType,
+			"size":           types.Int64Type,
+			"symlink_target": types.StringType,
+		},
+	}
+}
+
+// Metadata associated with a sandbox.
+type SandboxMetadata struct {
+	// Key-value tags associated with the sandbox. Supports up to 54 tags. Keys
+	// must be between 1 and 512 characters, and values must not exceed 256
+	// characters.
+	CustomTags types.Map `tfsdk:"custom_tags"`
+}
+
+func (to *SandboxMetadata) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SandboxMetadata) {
+}
+
+func (to *SandboxMetadata) SyncFieldsDuringRead(ctx context.Context, from SandboxMetadata) {
+}
+
+func (m SandboxMetadata) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SandboxMetadata.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SandboxMetadata) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"custom_tags": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SandboxMetadata
+// only implements ToObjectValue() and Type().
+func (m SandboxMetadata) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"custom_tags": m.CustomTags,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SandboxMetadata) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"custom_tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetCustomTags returns the value of the CustomTags field in SandboxMetadata as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SandboxMetadata) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if m.CustomTags.IsNull() || m.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in SandboxMetadata.
+func (m *SandboxMetadata) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.CustomTags = types.MapValueMust(t, vs)
 }
 
 type SandboxSpec struct {
@@ -1569,4 +2591,62 @@ func (m *UpdateSandboxRequest) GetSandbox(ctx context.Context) (Sandbox, bool) {
 func (m *UpdateSandboxRequest) SetSandbox(ctx context.Context, v Sandbox) {
 	vs := v.ToObjectValue(ctx)
 	m.Sandbox = vs
+}
+
+type UploadFileRequest struct {
+	// The complete file contents. An empty body creates an empty file.
+	Contents types.Object `tfsdk:"-"`
+	// The sandbox resource name, in the form sandboxes/{sandbox_id}.
+	Parent types.String `tfsdk:"-"`
+	// The absolute UTF-8 destination path inside the sandbox.
+	Path types.String `tfsdk:"-"`
+}
+
+func (to *UploadFileRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UploadFileRequest) {
+}
+
+func (to *UploadFileRequest) SyncFieldsDuringRead(ctx context.Context, from UploadFileRequest) {
+}
+
+func (m UploadFileRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["contents"] = attrs["contents"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["path"] = attrs["path"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UploadFileRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UploadFileRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UploadFileRequest
+// only implements ToObjectValue() and Type().
+func (m UploadFileRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"contents": m.Contents,
+			"parent":   m.Parent,
+			"path":     m.Path,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UploadFileRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"contents": types.ObjectType{},
+			"parent":   types.StringType,
+			"path":     types.StringType,
+		},
+	}
 }

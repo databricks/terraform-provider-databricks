@@ -1,0 +1,214 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "AWS"
+  account_id: "replay-account"
+steps:
+  - name: "create"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_budget" "this" {
+        display_name = "tf-replay1"
+
+        alert_configurations {
+          time_period        = "MONTH"
+          trigger_type       = "CUMULATIVE_SPENDING_EXCEEDED"
+          quantity_type      = "LIST_PRICE_DOLLARS_USD"
+          quantity_threshold = "840"
+
+          action_configurations {
+            action_type = "EMAIL_NOTIFICATION"
+            target      = "me@databricks.com"
+          }
+        }
+
+        filter {
+          tags {
+            key = "Environment"
+            value {
+              operator = "IN"
+              values   = ["Testing"]
+            }
+          }
+
+          workspace_id {
+            operator = "IN"
+            values = [
+              12345
+            ]
+          }
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.1/accounts/replay-account/budgets"
+          body:
+            json:
+              budget:
+                alert_configurations:
+                  - action_configurations:
+                      - action_type: "EMAIL_NOTIFICATION"
+                        target: "me@databricks.com"
+                    quantity_threshold: "840"
+                    quantity_type: "LIST_PRICE_DOLLARS_USD"
+                    time_period: "MONTH"
+                    trigger_type: "CUMULATIVE_SPENDING_EXCEEDED"
+                display_name: "tf-replay1"
+                filter:
+                  tags:
+                    - key: "Environment"
+                      value:
+                        operator: "IN"
+                        values: ["Testing"]
+                  workspace_id:
+                    operator: "IN"
+                    values: [12345]
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              budget:
+                account_id: "replay-account"
+                alert_configurations:
+                  - action_configurations:
+                      - action_type: "EMAIL_NOTIFICATION"
+                        target: "me@databricks.com"
+                    quantity_threshold: "840"
+                    quantity_type: "LIST_PRICE_DOLLARS_USD"
+                    time_period: "MONTH"
+                    trigger_type: "CUMULATIVE_SPENDING_EXCEEDED"
+                budget_configuration_id: "budget-1"
+                create_time: 1700000000000
+                display_name: "tf-replay1"
+                filter:
+                  tags:
+                    - key: "Environment"
+                      value:
+                        operator: "IN"
+                        values: ["Testing"]
+                  workspace_id:
+                    operator: "IN"
+                    values: [12345]
+                update_time: 1700000000000
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.1/accounts/replay-account/budgets/budget-1"
+          body: null
+        response: *response_1
+      - *get_1
+  - name: "update_threshold"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_budget" "this" {
+        display_name = "tf-replay2"
+
+        alert_configurations {
+          time_period        = "MONTH"
+          trigger_type       = "CUMULATIVE_SPENDING_EXCEEDED"
+          quantity_type      = "LIST_PRICE_DOLLARS_USD"
+          quantity_threshold = "940"
+
+          action_configurations {
+            action_type = "EMAIL_NOTIFICATION"
+            target      = "me@databricks.com"
+          }
+        }
+
+        filter {
+          tags {
+            key = "Environment"
+            value {
+              operator = "IN"
+              values   = ["Testing"]
+            }
+          }
+
+          workspace_id {
+            operator = "IN"
+            values = [
+              12345
+            ]
+          }
+        }
+      }
+    calls:
+      - *get_1
+      - request:
+          method: "PUT"
+          path: "/api/2.1/accounts/replay-account/budgets/budget-1"
+          body:
+            json:
+              budget:
+                account_id: "replay-account"
+                alert_configurations:
+                  - action_configurations:
+                      - action_type: "EMAIL_NOTIFICATION"
+                        target: "me@databricks.com"
+                    quantity_threshold: "940"
+                    quantity_type: "LIST_PRICE_DOLLARS_USD"
+                    time_period: "MONTH"
+                    trigger_type: "CUMULATIVE_SPENDING_EXCEEDED"
+                budget_configuration_id: "budget-1"
+                display_name: "tf-replay2"
+                filter:
+                  tags:
+                    - key: "Environment"
+                      value:
+                        operator: "IN"
+                        values: ["Testing"]
+                  workspace_id:
+                    operator: "IN"
+                    values: [12345]
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              budget:
+                account_id: "replay-account"
+                alert_configurations:
+                  - action_configurations:
+                      - action_type: "EMAIL_NOTIFICATION"
+                        target: "me@databricks.com"
+                    quantity_threshold: "940"
+                    quantity_type: "LIST_PRICE_DOLLARS_USD"
+                    time_period: "MONTH"
+                    trigger_type: "CUMULATIVE_SPENDING_EXCEEDED"
+                budget_configuration_id: "budget-1"
+                create_time: 1700000000000
+                display_name: "tf-replay2"
+                filter:
+                  tags:
+                    - key: "Environment"
+                      value:
+                        operator: "IN"
+                        values: ["Testing"]
+                  workspace_id:
+                    operator: "IN"
+                    values: [12345]
+                update_time: 1700000000001
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.1/accounts/replay-account/budgets/budget-1"
+          body: null
+        response: *response_2
+      - *get_2
+destroy:
+  calls:
+    - *get_2
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/accounts/replay-account/budgets/budget-1"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

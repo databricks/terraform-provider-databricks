@@ -1,0 +1,82 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_job" "this" {
+        name = "replay1"
+
+        trigger {
+          pause_status = "UNPAUSED"
+          periodic {
+            interval = 17
+            unit     = "HOURS"
+          }
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/jobs/create"
+          body:
+            json:
+              max_concurrent_runs: 1
+              name: "replay1"
+              trigger:
+                pause_status: "UNPAUSED"
+                periodic:
+                  interval: 17
+                  unit: "HOURS"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              job_id: 101
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/jobs/get"
+          query:
+            job_id: ["101"]
+          body: null
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              creator_user_name: "tester@example.com"
+              job_id: 101
+              settings:
+                max_concurrent_runs: 1
+                name: "replay1"
+                trigger:
+                  pause_status: "UNPAUSED"
+                  periodic:
+                    interval: 17
+                    unit: "HOURS"
+      - *get_1
+    state:
+      resources:
+        databricks_job.this:
+          attributes:
+            - path: ["trigger",0,"pause_status"]
+              equals: "UNPAUSED"
+            - path: ["trigger",0,"periodic",0,"interval"]
+              equals: 17
+            - path: ["trigger",0,"periodic",0,"unit"]
+              equals: "HOURS"
+destroy:
+  calls:
+    - *get_1
+    - request:
+        method: "POST"
+        path: "/api/2.2/jobs/delete"
+        body:
+          json:
+            job_id: 101
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

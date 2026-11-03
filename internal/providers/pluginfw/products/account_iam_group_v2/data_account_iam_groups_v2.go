@@ -34,6 +34,9 @@ type GroupsData struct {
 	// this value. If not provided, defaults to 1000, which is also the maximum
 	// allowed. Requests for more than the maximum are clamped to 1000.
 	PageSize types.Int64 `tfsdk:"page_size"`
+	// The parent resource name of the account whose groups to list. Format:
+	// accounts/{account_id}
+	Parent types.String `tfsdk:"parent"`
 }
 
 func (GroupsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -43,6 +46,7 @@ func (GroupsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type 
 }
 
 func (m GroupsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["filter"] = attrs["filter"].SetOptional()
 

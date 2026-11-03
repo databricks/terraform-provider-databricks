@@ -1,7 +1,6 @@
 package terraformtest
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,25 +8,40 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"regexp"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/config"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 
-	"github.com/databricks/terraform-provider-databricks/internal/providers"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/databricks/terraform-provider-databricks/qa/httpfixture"
 )
 
 // run keeps the fixture server alive through the framework's deferred destroy,
 // then checks for requests or fixtures left over after cleanup.
 func run(t *testing.T, definition *testDefinition) {
+	runNative(t, definition, nil)
+}
+
+// RunNative runs one fixture file with native HashiCorp test customization.
+// It is intended for Go scenarios requiring per-step provider factories or Go
+// checks. The customizer supplies isolated authentication and the same strict
+// local HTTP boundary as YAML replay; retain the generated cleanup hooks.
+func RunNative(t *testing.T, path string, configure func(*resource.TestCase, func(*config.Config) error)) {
+	t.Helper()
+	definition, err := loadDefinition(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runNative(t, definition, configure)
+}
+
+func runNative(t *testing.T, definition *testDefinition, configure func(*resource.TestCase, func(*config.Config) error)) {
 	t.Helper()
 	configureTerraform(t)
 	handler := httpfixture.NewHandler()
+	handler.SetEnforceCallOrder(definition.EnforceCallOrder)
 	if err := handler.SetReusableFixtures(definition.metadataCalls()); err != nil {
 		t.Fatal(err)
 	}
@@ -39,16 +53,25 @@ func run(t *testing.T, definition *testDefinition) {
 		}
 	})
 	steps := testSteps(t, definition, handler)
-	resource.Test(t, resource.TestCase{
+	testCase := resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: providerFactories(server.URL),
+		ProtoV6ProviderFactories: ProviderFactories(fixtureConfig(server.URL)),
 		Steps:                    steps,
 		ErrorCheck: func(err error) error {
 			// The testing framework attempts destroy after an interrupted lifecycle.
 			cleanupErr := handler.StartStep(stepLabel(len(definition.Steps), "destroy"), definition.Destroy.Calls)
 			return errors.Join(err, cleanupErr)
 		},
-	})
+	}
+	configureProviderImplementations(definition, &testCase, fixtureConfig(server.URL))
+	if definition.InitialState != nil {
+		seedInitialCheckpoint(t, definition, &testCase)
+	}
+	configureStepFiles(t, definition, &testCase)
+	if configure != nil {
+		configure(&testCase, fixtureConfig(server.URL))
+	}
+	resource.Test(t, testCase)
 }
 
 // configureTerraform disables implicit CLI downloads and optional extra
@@ -67,6 +90,9 @@ func configureTerraform(t *testing.T) {
 	t.Setenv("TF_ACC_TERRAFORM_VERSION", "")
 	t.Setenv("CHECKPOINT_DISABLE", "1")
 	t.Setenv("TF_IN_AUTOMATION", "1")
+	// Checkpoints refer to the real provider address, not HashiCorp's test default.
+	t.Setenv("TF_ACC_PROVIDER_NAMESPACE", "databricks")
+	t.Setenv("TF_ACC_PROVIDER_HOST", "registry.terraform.io")
 	// Optional framework refresh modes would change the required HTTP transcript.
 	t.Setenv("TF_ACC_REFRESH_AFTER_APPLY", "")
 	if err := os.Unsetenv("TF_ACC_REFRESH_AFTER_APPLY"); err != nil {
@@ -74,22 +100,49 @@ func configureTerraform(t *testing.T) {
 	}
 }
 
-// testSteps appends a numbered destroy using the last HCL configuration.
+// testSteps appends a numbered destroy using the last successful configuration.
 // Cleanup always requires empty state, independently of optional step checks.
 func testSteps(t *testing.T, definition *testDefinition, handler *httpfixture.Handler) []resource.TestStep {
 	t.Helper()
 	steps := make([]resource.TestStep, 0, len(definition.Steps)+1)
+	cleanupConfig := `provider "databricks" {}`
+	cleanupSteps := definition.cleanupConfigSteps()
 	for i, s := range definition.Steps {
 		label := stepLabel(i, s.Name)
-		steps = append(steps, terraformStep(t, handler, label, s.Config, s.Calls, s.State))
+		hcl := s.Config
+		if s.Import != nil && hcl == "" {
+			hcl = cleanupConfig
+		}
+		testStep := configuredStep(t, handler, label, hcl, s)
+		if cleanupSteps[i] == i {
+			cleanupConfig = hcl
+		}
+		steps = append(steps, testStep)
 	}
-	last := definition.Steps[len(definition.Steps)-1]
 	label := stepLabel(len(definition.Steps), "destroy")
-	cleanup := terraformStep(t, handler, label, last.Config, definition.Destroy.Calls, nil)
+	// Invalid resource configuration must not prevent cleanup of earlier steps.
+	cleanup := terraformStep(t, handler, label, cleanupConfig, definition.Destroy.Calls, nil)
 	cleanup.Destroy = true
 	cleanup.ConfigStateChecks = []statecheck.StateCheck{emptyStateAssertion{label: label}}
 	steps = append(steps, cleanup)
 	return steps
+}
+
+// configuredStep maps a YAML operation to native checks without changing the
+// configuration retained for later cleanup.
+func configuredStep(t *testing.T, handler *httpfixture.Handler, label, hcl string, s step) resource.TestStep {
+	t.Helper()
+	native := terraformStep(t, handler, label, hcl, s.Calls, s.State)
+	configurePlan(&native, s, label)
+	if s.Import != nil {
+		if err := configureImport(&native, *s.Import, handler); err != nil {
+			t.Fatalf("%s: %v", label, err)
+		}
+	}
+	if s.ExpectError != nil {
+		native.ExpectError = regexp.MustCompile(*s.ExpectError)
+	}
+	return native
 }
 
 // terraformStep treats plan, apply, and consistency reads as one fixture phase.
@@ -114,19 +167,6 @@ func terraformStep(t *testing.T, handler *httpfixture.Handler, label, hcl string
 		s.ConfigStateChecks = []statecheck.StateCheck{stateAssertion{label: label, expected: *state}}
 	}
 	return s
-}
-
-// providerFactories uses the production mux so both provider implementations
-// share the same local HTTP boundary.
-func providerFactories(host string) map[string]func() (tfprotov6.ProviderServer, error) {
-	return map[string]func() (tfprotov6.ProviderServer, error){
-		"databricks": func() (tfprotov6.ProviderServer, error) {
-			customize := fixtureConfig(host)
-			return providers.GetProviderServer(context.Background(),
-				providers.WithSdkV2Provider(sdkv2.DatabricksProvider(sdkv2.WithConfigCustomizer(customize))),
-				providers.WithPluginFrameworkProvider(pluginfw.GetDatabricksProviderPluginFramework(pluginfw.WithConfigCustomizer(customize))))
-		},
-	}
 }
 
 type fixtureLoader struct{}

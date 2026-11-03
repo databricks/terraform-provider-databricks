@@ -1,0 +1,55 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_mlflow_experiment" "e1" {
+        name = "/Shared/tf-replay"
+        artifact_location = "dbfs:/tmp/tf-replay"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/mlflow/experiments/create"
+          body:
+            json:
+              artifact_location: "dbfs:/tmp/tf-replay"
+              name: "/Shared/tf-replay"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              experiment_id: "123"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/mlflow/experiments/get"
+          query:
+            experiment_id: ["123"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              experiment:
+                artifact_location: "dbfs:/tmp/tf-replay"
+                experiment_id: "123"
+                lifecycle_stage: "active"
+                name: "/Shared/tf-replay"
+      - *get_1
+destroy:
+  calls:
+    - *get_1
+    - request:
+        method: "POST"
+        path: "/api/2.0/mlflow/experiments/delete"
+        body:
+          json:
+            experiment_id: "123"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

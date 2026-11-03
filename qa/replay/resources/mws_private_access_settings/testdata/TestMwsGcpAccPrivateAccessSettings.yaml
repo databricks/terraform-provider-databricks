@@ -1,0 +1,54 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "GCP"
+  account_id: "replay-account"
+steps:
+  - name: "create"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_mws_private_access_settings" "this" {
+        account_id                   = "replay-account"
+        private_access_settings_name = "tf-replay1"
+        region                       = "us-central1"
+        public_access_enabled        = true
+        private_access_level         = "ACCOUNT"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/accounts/replay-account/private-access-settings"
+          body:
+            json:
+              private_access_level: "ACCOUNT"
+              private_access_settings_name: "tf-replay1"
+              public_access_enabled: true
+              region: "us-central1"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              private_access_level: "ACCOUNT"
+              private_access_settings_id: "pas-1"
+              private_access_settings_name: "tf-replay1"
+              public_access_enabled: true
+              region: "us-central1"
+      - &get_1
+        request: {method: "GET", path: "/api/2.0/accounts/replay-account/private-access-settings/pas-1", body: null}
+        response: *response_1
+      - *get_1
+destroy:
+  calls:
+    - *get_1
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/accounts/replay-account/private-access-settings/pas-1"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

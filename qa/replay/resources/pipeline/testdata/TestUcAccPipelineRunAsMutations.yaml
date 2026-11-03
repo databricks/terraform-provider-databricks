@@ -1,0 +1,595 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: &config_1 |
+      data "databricks_current_user" "me" {}
+
+      locals {
+        name = "pipeline-acceptance-replay"
+      }
+      resource "databricks_pipeline" "this" {
+        name    = local.name
+        storage = "/test/${local.name}"
+
+        configuration = {
+          key1 = "value1"
+          key2 = "value2"
+        }
+
+        library {
+          notebook {
+            path = databricks_notebook.this.path
+          }
+        }
+
+        cluster {
+          label       = "default"
+          num_workers = 2
+          custom_tags = {
+            cluster_type = "default"
+          }
+        }
+
+        cluster {
+          label       = "maintenance"
+          num_workers = 1
+          custom_tags = {
+            cluster_type = "maintenance"
+          }
+        }
+
+        continuous = false
+      }
+      resource "databricks_notebook" "this" {
+        content_base64 = base64encode(<<-EOT
+          CREATE LIVE TABLE clickstream_raw AS
+          SELECT * FROM json.`/databricks-datasets/wikipedia-datasets/data-001/clickstream/raw-uncompressed-json/2015_2_clickstream.json`
+
+          -- COMMAND ----------
+
+          CREATE LIVE TABLE clickstream_clean(
+            CONSTRAINT valid_current_page EXPECT (current_page_id IS NOT NULL and current_page_title IS NOT NULL),
+            CONSTRAINT valid_count EXPECT (click_count > 0) ON VIOLATION FAIL UPDATE
+          ) TBLPROPERTIES ("quality" = "silver")
+          AS SELECT
+            CAST (curr_id AS INT) AS current_page_id,
+            curr_title AS current_page_title,
+            CAST(n AS INT) AS click_count,
+            CAST (prev_id AS INT) AS previous_page_id,
+            prev_title AS previous_page_title
+          FROM live.clickstream_raw
+
+          -- COMMAND ----------
+
+          CREATE LIVE TABLE top_spark_referers TBLPROPERTIES ("quality" = "gold")
+          AS SELECT
+            previous_page_title as referrer,
+            click_count
+          FROM live.clickstream_clean
+          WHERE current_page_title = 'Apache_Spark'
+          ORDER BY click_count DESC
+          LIMIT 10
+          EOT
+        )
+        path     = "/Shared/${local.name}"
+        language = "SQL"
+      }
+    calls:
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Me"
+          body: null
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          headers:
+            "X-Databricks-Org-Id": "12345"
+          body:
+            json:
+              displayName: "Replay tester"
+              id: "100"
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              userName: "tester@example.com"
+      - request:
+          method: "POST"
+          path: "/api/2.0/workspace/import"
+          body:
+            json:
+              content: "Q1JFQVRFIExJVkUgVEFCTEUgY2xpY2tzdHJlYW1fcmF3IEFTClNFTEVDVCAqIEZST00ganNvbi5gL2RhdGFicmlja3MtZGF0YXNldHMvd2lraXBlZGlhLWRhdGFzZXRzL2RhdGEtMDAxL2NsaWNrc3RyZWFtL3Jhdy11bmNvbXByZXNzZWQtanNvbi8yMDE1XzJfY2xpY2tzdHJlYW0uanNvbmAKCi0tIENPTU1BTkQgLS0tLS0tLS0tLQoKQ1JFQVRFIExJVkUgVEFCTEUgY2xpY2tzdHJlYW1fY2xlYW4oCiAgQ09OU1RSQUlOVCB2YWxpZF9jdXJyZW50X3BhZ2UgRVhQRUNUIChjdXJyZW50X3BhZ2VfaWQgSVMgTk9UIE5VTEwgYW5kIGN1cnJlbnRfcGFnZV90aXRsZSBJUyBOT1QgTlVMTCksCiAgQ09OU1RSQUlOVCB2YWxpZF9jb3VudCBFWFBFQ1QgKGNsaWNrX2NvdW50ID4gMCkgT04gVklPTEFUSU9OIEZBSUwgVVBEQVRFCikgVEJMUFJPUEVSVElFUyAoInF1YWxpdHkiID0gInNpbHZlciIpCkFTIFNFTEVDVAogIENBU1QgKGN1cnJfaWQgQVMgSU5UKSBBUyBjdXJyZW50X3BhZ2VfaWQsCiAgY3Vycl90aXRsZSBBUyBjdXJyZW50X3BhZ2VfdGl0bGUsCiAgQ0FTVChuIEFTIElOVCkgQVMgY2xpY2tfY291bnQsCiAgQ0FTVCAocHJldl9pZCBBUyBJTlQpIEFTIHByZXZpb3VzX3BhZ2VfaWQsCiAgcHJldl90aXRsZSBBUyBwcmV2aW91c19wYWdlX3RpdGxlCkZST00gbGl2ZS5jbGlja3N0cmVhbV9yYXcKCi0tIENPTU1BTkQgLS0tLS0tLS0tLQoKQ1JFQVRFIExJVkUgVEFCTEUgdG9wX3NwYXJrX3JlZmVyZXJzIFRCTFBST1BFUlRJRVMgKCJxdWFsaXR5IiA9ICJnb2xkIikKQVMgU0VMRUNUCiAgcHJldmlvdXNfcGFnZV90aXRsZSBhcyByZWZlcnJlciwKICBjbGlja19jb3VudApGUk9NIGxpdmUuY2xpY2tzdHJlYW1fY2xlYW4KV0hFUkUgY3VycmVudF9wYWdlX3RpdGxlID0gJ0FwYWNoZV9TcGFyaycKT1JERVIgQlkgY2xpY2tfY291bnQgREVTQwpMSU1JVCAxMAo="
+              format: "SOURCE"
+              language: "SQL"
+              overwrite: true
+              path: "/Shared/pipeline-acceptance-replay"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 200
+      - request:
+          method: "POST"
+          path: "/api/2.0/pipelines"
+          body:
+            json:
+              channel: "CURRENT"
+              clusters:
+                - custom_tags:
+                    cluster_type: "default"
+                  label: "default"
+                  num_workers: 2
+                - custom_tags:
+                    cluster_type: "maintenance"
+                  label: "maintenance"
+                  num_workers: 1
+              configuration:
+                key1: "value1"
+                key2: "value2"
+              edition: "ADVANCED"
+              libraries:
+                - notebook:
+                    path: "/Shared/pipeline-acceptance-replay"
+              name: "pipeline-acceptance-replay"
+              storage: "/test/pipeline-acceptance-replay"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              pipeline_id: "pipeline-1"
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.0/pipelines/pipeline-1"
+          body: null
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              creator_user_name: "tester@example.com"
+              name: "pipeline-acceptance-replay"
+              pipeline_id: "pipeline-1"
+              spec:
+                channel: "CURRENT"
+                clusters:
+                  - custom_tags:
+                      cluster_type: "default"
+                    label: "default"
+                    num_workers: 2
+                  - custom_tags:
+                      cluster_type: "maintenance"
+                    label: "maintenance"
+                    num_workers: 1
+                configuration:
+                  key1: "value1"
+                  key2: "value2"
+                continuous: false
+                edition: "ADVANCED"
+                libraries:
+                  - notebook:
+                      path: "/Shared/pipeline-acceptance-replay"
+                name: "pipeline-acceptance-replay"
+                storage: "/test/pipeline-acceptance-replay"
+              state: "IDLE"
+      - *get_2
+      - *get_1
+      - *get_1
+      - &get_3
+        request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Me"
+          query:
+            excludedAttributes: ["entitlements"]
+          body: null
+        response: *response_1
+      - &get_4
+        request:
+          method: "GET"
+          path: "/api/2.0/workspace/get-status"
+          query:
+            path: ["/Shared/pipeline-acceptance-replay"]
+          body: null
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              language: "SQL"
+              object_id: 200
+              object_type: "NOTEBOOK"
+              path: "/Shared/pipeline-acceptance-replay"
+      - *get_2
+  - name: "update"
+    config: &config_2 |
+      data "databricks_current_user" "me" {}
+
+      locals {
+        name = "pipeline-acceptance-replay"
+      }
+      resource "databricks_pipeline" "this" {
+        name    = local.name
+        storage = "/test/${local.name}"
+
+        configuration = {
+          key1 = "value1"
+          key2 = "value2"
+        }
+
+        library {
+          notebook {
+            path = databricks_notebook.this.path
+          }
+        }
+
+        cluster {
+          label       = "default"
+          num_workers = 2
+          custom_tags = {
+            cluster_type = "default"
+          }
+        }
+
+        cluster {
+          label       = "maintenance"
+          num_workers = 1
+          custom_tags = {
+            cluster_type = "maintenance"
+          }
+        }
+
+        continuous = false
+
+        run_as { service_principal_name = "11111111-1111-4111-8111-111111111111" }
+      }
+      resource "databricks_notebook" "this" {
+        content_base64 = base64encode(<<-EOT
+          CREATE LIVE TABLE clickstream_raw AS
+          SELECT * FROM json.`/databricks-datasets/wikipedia-datasets/data-001/clickstream/raw-uncompressed-json/2015_2_clickstream.json`
+
+          -- COMMAND ----------
+
+          CREATE LIVE TABLE clickstream_clean(
+            CONSTRAINT valid_current_page EXPECT (current_page_id IS NOT NULL and current_page_title IS NOT NULL),
+            CONSTRAINT valid_count EXPECT (click_count > 0) ON VIOLATION FAIL UPDATE
+          ) TBLPROPERTIES ("quality" = "silver")
+          AS SELECT
+            CAST (curr_id AS INT) AS current_page_id,
+            curr_title AS current_page_title,
+            CAST(n AS INT) AS click_count,
+            CAST (prev_id AS INT) AS previous_page_id,
+            prev_title AS previous_page_title
+          FROM live.clickstream_raw
+
+          -- COMMAND ----------
+
+          CREATE LIVE TABLE top_spark_referers TBLPROPERTIES ("quality" = "gold")
+          AS SELECT
+            previous_page_title as referrer,
+            click_count
+          FROM live.clickstream_clean
+          WHERE current_page_title = 'Apache_Spark'
+          ORDER BY click_count DESC
+          LIMIT 10
+          EOT
+        )
+        path     = "/Shared/${local.name}"
+        language = "SQL"
+      }
+    calls:
+      - *get_1
+      - *get_3
+      - *get_4
+      - *get_2
+      - &put_5
+        request:
+          method: "PUT"
+          path: "/api/2.0/pipelines/pipeline-1"
+          body:
+            json:
+              channel: "CURRENT"
+              clusters:
+                - custom_tags:
+                    cluster_type: "default"
+                  label: "default"
+                  num_workers: 2
+                - custom_tags:
+                    cluster_type: "maintenance"
+                  label: "maintenance"
+                  num_workers: 1
+              configuration:
+                key1: "value1"
+                key2: "value2"
+              edition: "ADVANCED"
+              id: "pipeline-1"
+              libraries:
+                - notebook:
+                    path: "/Shared/pipeline-acceptance-replay"
+              name: "pipeline-acceptance-replay"
+              run_as:
+                service_principal_name: "11111111-1111-4111-8111-111111111111"
+              storage: "/test/pipeline-acceptance-replay"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_6
+        request:
+          method: "GET"
+          path: "/api/2.0/pipelines/pipeline-1"
+          body: null
+        response: &response_4 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              creator_user_name: "tester@example.com"
+              name: "pipeline-acceptance-replay"
+              pipeline_id: "pipeline-1"
+              spec:
+                channel: "CURRENT"
+                clusters:
+                  - custom_tags:
+                      cluster_type: "default"
+                    label: "default"
+                    num_workers: 2
+                  - custom_tags:
+                      cluster_type: "maintenance"
+                    label: "maintenance"
+                    num_workers: 1
+                configuration:
+                  key1: "value1"
+                  key2: "value2"
+                continuous: false
+                edition: "ADVANCED"
+                libraries:
+                  - notebook:
+                      path: "/Shared/pipeline-acceptance-replay"
+                name: "pipeline-acceptance-replay"
+                run_as:
+                  service_principal_name: "11111111-1111-4111-8111-111111111111"
+                storage: "/test/pipeline-acceptance-replay"
+              state: "IDLE"
+      - *get_6
+      - *get_1
+      - *get_1
+      - *get_3
+      - *get_4
+      - *get_6
+  - name: "update"
+    config: |
+      data "databricks_current_user" "me" {}
+
+      locals {
+        name = "pipeline-acceptance-replay"
+      }
+      resource "databricks_pipeline" "this" {
+        name    = local.name
+        storage = "/test/${local.name}"
+
+        configuration = {
+          key1 = "value1"
+          key2 = "value2"
+        }
+
+        library {
+          notebook {
+            path = databricks_notebook.this.path
+          }
+        }
+
+        cluster {
+          label       = "default"
+          num_workers = 2
+          custom_tags = {
+            cluster_type = "default"
+          }
+        }
+
+        cluster {
+          label       = "maintenance"
+          num_workers = 1
+          custom_tags = {
+            cluster_type = "maintenance"
+          }
+        }
+
+        continuous = false
+
+        run_as { user_name = data.databricks_current_user.me.user_name }
+      }
+      resource "databricks_notebook" "this" {
+        content_base64 = base64encode(<<-EOT
+          CREATE LIVE TABLE clickstream_raw AS
+          SELECT * FROM json.`/databricks-datasets/wikipedia-datasets/data-001/clickstream/raw-uncompressed-json/2015_2_clickstream.json`
+
+          -- COMMAND ----------
+
+          CREATE LIVE TABLE clickstream_clean(
+            CONSTRAINT valid_current_page EXPECT (current_page_id IS NOT NULL and current_page_title IS NOT NULL),
+            CONSTRAINT valid_count EXPECT (click_count > 0) ON VIOLATION FAIL UPDATE
+          ) TBLPROPERTIES ("quality" = "silver")
+          AS SELECT
+            CAST (curr_id AS INT) AS current_page_id,
+            curr_title AS current_page_title,
+            CAST(n AS INT) AS click_count,
+            CAST (prev_id AS INT) AS previous_page_id,
+            prev_title AS previous_page_title
+          FROM live.clickstream_raw
+
+          -- COMMAND ----------
+
+          CREATE LIVE TABLE top_spark_referers TBLPROPERTIES ("quality" = "gold")
+          AS SELECT
+            previous_page_title as referrer,
+            click_count
+          FROM live.clickstream_clean
+          WHERE current_page_title = 'Apache_Spark'
+          ORDER BY click_count DESC
+          LIMIT 10
+          EOT
+        )
+        path     = "/Shared/${local.name}"
+        language = "SQL"
+      }
+    calls:
+      - *get_1
+      - *get_3
+      - *get_4
+      - *get_6
+      - request:
+          method: "PUT"
+          path: "/api/2.0/pipelines/pipeline-1"
+          body:
+            json:
+              channel: "CURRENT"
+              clusters:
+                - custom_tags:
+                    cluster_type: "default"
+                  label: "default"
+                  num_workers: 2
+                - custom_tags:
+                    cluster_type: "maintenance"
+                  label: "maintenance"
+                  num_workers: 1
+              configuration:
+                key1: "value1"
+                key2: "value2"
+              edition: "ADVANCED"
+              id: "pipeline-1"
+              libraries:
+                - notebook:
+                    path: "/Shared/pipeline-acceptance-replay"
+              name: "pipeline-acceptance-replay"
+              run_as:
+                user_name: "tester@example.com"
+              storage: "/test/pipeline-acceptance-replay"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_7
+        request:
+          method: "GET"
+          path: "/api/2.0/pipelines/pipeline-1"
+          body: null
+        response: &response_5 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              creator_user_name: "tester@example.com"
+              name: "pipeline-acceptance-replay"
+              pipeline_id: "pipeline-1"
+              spec:
+                channel: "CURRENT"
+                clusters:
+                  - custom_tags:
+                      cluster_type: "default"
+                    label: "default"
+                    num_workers: 2
+                  - custom_tags:
+                      cluster_type: "maintenance"
+                    label: "maintenance"
+                    num_workers: 1
+                configuration:
+                  key1: "value1"
+                  key2: "value2"
+                continuous: false
+                edition: "ADVANCED"
+                libraries:
+                  - notebook:
+                      path: "/Shared/pipeline-acceptance-replay"
+                name: "pipeline-acceptance-replay"
+                run_as:
+                  user_name: "tester@example.com"
+                storage: "/test/pipeline-acceptance-replay"
+              state: "IDLE"
+      - *get_7
+      - *get_1
+      - *get_3
+      - *get_1
+      - *get_4
+      - *get_7
+  - name: "update"
+    config: *config_2
+    calls:
+      - *get_3
+      - *get_1
+      - *get_4
+      - *get_7
+      - *put_5
+      - *get_6
+      - *get_6
+      - *get_1
+      - *get_1
+      - *get_3
+      - *get_4
+      - *get_6
+  - name: "reject_run_as_removal"
+    config: *config_1
+    calls:
+      - *get_1
+      - *get_3
+      - *get_4
+      - *get_6
+      - request:
+          method: "PUT"
+          path: "/api/2.0/pipelines/pipeline-1"
+          body:
+            json:
+              channel: "CURRENT"
+              clusters:
+                - custom_tags:
+                    cluster_type: "default"
+                  label: "default"
+                  num_workers: 2
+                - custom_tags:
+                    cluster_type: "maintenance"
+                  label: "maintenance"
+                  num_workers: 1
+              configuration:
+                key1: "value1"
+                key2: "value2"
+              edition: "ADVANCED"
+              id: "pipeline-1"
+              libraries:
+                - notebook:
+                    path: "/Shared/pipeline-acceptance-replay"
+              name: "pipeline-acceptance-replay"
+              storage: "/test/pipeline-acceptance-replay"
+        response: &response_6 # Inferred API response; not recorded.
+          status: 400
+          body:
+            json:
+              error_code: "INVALID_PARAMETER_VALUE"
+              message: "Once configured, run_as of the pipeline can not be set to null. Please set run_as to 11111111-1111-4111-8111-111111111111 to preserve the pipeline's run_as"
+    expect_error: "Once configured, run_as of the pipeline can not be set to null. Please set run_as to 11111111-1111-4111-8111-111111111111 to preserve the pipeline's run_as"
+destroy:
+  calls:
+    - *get_1
+    - *get_3
+    - *get_4
+    - *get_6
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/pipelines/pipeline-1"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: "GET"
+        path: "/api/2.0/pipelines/pipeline-1"
+        body: null
+      response: &response_7 # Inferred API response; not recorded.
+        status: 404
+        body:
+          json:
+            error_code: "RESOURCE_DOES_NOT_EXIST"
+            message: "Pipeline not found"
+    - request:
+        method: "POST"
+        path: "/api/2.0/workspace/delete"
+        body:
+          json:
+            path: "/Shared/pipeline-acceptance-replay"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

@@ -1,0 +1,51 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+# Metadata fixtures are dummy account/workspace configuration.
+# The account host rejects the workspace API request without a workspace ID.
+version: 1
+steps:
+  - name: "create"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_notebook" "test" {
+        path = "/Shared/dwsid-test-replay"
+        content_base64 = "IyBEYXRhYnJpY2tzIG5vdGVib29rIHNvdXJjZQpwcmludCgnaGVsbG8nKQ=="
+        language = "PYTHON"
+      }
+    calls:
+      - &metadata_account
+        request:
+          method: "GET"
+          path: "/.well-known/databricks-config"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              host_type: "account"
+              account_id: "replay-account"
+              cloud: "AWS"
+      - *metadata_account
+      - *metadata_account
+      - *metadata_account
+      - request:
+          method: "POST"
+          path: "/api/2.0/workspace/import"
+          body:
+            json:
+              content: "IyBEYXRhYnJpY2tzIG5vdGVib29rIHNvdXJjZQpwcmludCgnaGVsbG8nKQ=="
+              path: "/Shared/dwsid-test-replay"
+              language: "PYTHON"
+              format: "SOURCE"
+              overwrite: true
+        response: # Inferred API response; not recorded.
+          status: 400
+          body:
+            json:
+              error_code: "INVALID_PARAMETER_VALUE"
+              message: "Workspace API requires a workspace ID on the account host"
+    expect_error: "cannot create notebook"
+destroy:
+  calls: []

@@ -2,33 +2,28 @@
 package httpfixture
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"math/big"
 	"net/http"
-	"net/url"
-	"reflect"
 	"strings"
 	"sync"
 )
 
-// Body distinguishes an absent HTTP body from a JSON value, including JSON null.
-type Body struct {
-	JSON any `yaml:"json"`
-}
-
 // Request defines a complete signature; only listed headers are compared.
 type Request struct {
-	Method  string              `yaml:"method"`
-	Path    string              `yaml:"path"`
-	Query   map[string][]string `yaml:"query,omitempty"`
-	Headers map[string]string   `yaml:"headers,omitempty"`
-	Body    *Body               `yaml:"body"`
+	Method   string              `yaml:"method"`
+	Path     string              `yaml:"path"`
+	Query    map[string][]string `yaml:"query,omitempty"`
+	Headers  map[string]string   `yaml:"headers,omitempty"`
+	Body     *Body               `yaml:"body"`
+	Matchers Matchers            `yaml:"matchers,omitempty"`
 }
 
-// Response defines the HTTP reply, with an optional JSON body.
+// Response defines the HTTP reply, with an optional JSON, text, or binary body.
 type Response struct {
 	Status  int               `yaml:"status"`
 	Headers map[string]string `yaml:"headers,omitempty"`
@@ -44,23 +39,35 @@ type Call struct {
 type exchange struct {
 	call         Call
 	expectedBody any
+	matchers     Matchers
 	responseBody []byte
+	bodyKind     string
 	used         bool
 }
 
 // Handler permits independent requests to interleave and consumes identical
 // request signatures FIFO. A mutex keeps matching and consumption atomic.
 type Handler struct {
-	mu       sync.Mutex
-	label    string
-	calls    []exchange
-	reusable []exchange
-	failures []error
+	mu               sync.Mutex
+	label            string
+	calls            []exchange
+	reusable         []exchange
+	failures         []error
+	enforceCallOrder bool
 }
 
 // NewHandler returns an empty handler; fixture sets are configured separately.
 func NewHandler() *Handler {
 	return &Handler{}
+}
+
+// SetEnforceCallOrder requires consumable calls in fixture order when enabled.
+// Reusable fallbacks remain unordered. Changing this setting preserves the
+// current step's consumption and failures.
+func (h *Handler) SetEnforceCallOrder(enabled bool) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.enforceCallOrder = enabled
 }
 
 // SetReusableFixtures replaces test-wide fallback exchanges, such as metadata.
@@ -108,13 +115,27 @@ func compileCalls(calls []Call) ([]exchange, error) {
 		e := exchange{call: call}
 		var err error
 		if call.Request.Body != nil {
-			e.expectedBody, err = normalizedValue(call.Request.Body.JSON)
+			e.bodyKind, err = call.Request.Body.kind()
+			if err == nil {
+				switch e.bodyKind {
+				case "json":
+					e.expectedBody, err = normalizedValue(call.Request.Body.JSON)
+				case "multipart":
+					err = compileMultipart(call.Request.Body.Multipart)
+				default:
+					e.expectedBody, err = call.Request.Body.literalBytes()
+				}
+			}
 			if err != nil {
 				return nil, fmt.Errorf("call %d request: %w", i+1, err)
 			}
 		}
+		e.matchers, e.expectedBody, err = compileMatchers(call.Request.Matchers, e.expectedBody, e.bodyKind == "json")
+		if err != nil {
+			return nil, fmt.Errorf("call %d request matchers: %w", i+1, err)
+		}
 		if call.Response.Body != nil {
-			e.responseBody, err = json.Marshal(call.Response.Body.JSON)
+			e.responseBody, err = call.Response.Body.literalBytes()
 			if err != nil {
 				return nil, fmt.Errorf("call %d response: %w", i+1, err)
 			}
@@ -167,53 +188,73 @@ func normalizeNumbers(value any) any {
 }
 
 // matches checks the whole signature without consuming the exchange.
-func (e *exchange) matches(req *http.Request, body []byte, value any) bool {
+func (e *exchange) matches(req *http.Request, body requestBody) bool {
 	expected := e.call.Request
 	if e.used || expected.Method != req.Method || expected.Path != req.URL.EscapedPath() {
 		return false
 	}
-	if url.Values(expected.Query).Encode() != req.URL.Query().Encode() {
+	if !matchesQuery(expected.Query, e.matchers.Query, req.URL.Query()) {
 		return false
 	}
 	for key, header := range expected.Headers {
+		if _, overridden := e.matchers.Headers[http.CanonicalHeaderKey(key)]; overridden {
+			continue
+		}
 		if req.Header.Get(key) != header {
 			return false
 		}
 	}
-	if expected.Body == nil {
-		return len(body) == 0
+	for key := range e.matchers.Headers {
+		if len(req.Header.Values(key)) != 1 {
+			return false
+		}
 	}
-	return len(body) > 0 && reflect.DeepEqual(e.expectedBody, value)
+	if expected.Body == nil {
+		return len(body.raw) == 0
+	}
+	switch e.bodyKind {
+	case "json":
+		return body.jsonValid && matchesJSON(e.expectedBody, body.json)
+	case "multipart":
+		return matchesMultipart(expected.Body.Multipart, body.parts)
+	default:
+		return bytes.Equal(e.expectedBody.([]byte), body.raw)
+	}
 }
 
 // ServeHTTP prefers consumable step fixtures over reusable fallbacks. Matching
 // and consumption share a lock so concurrent requests cannot consume a call twice.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	body, err := io.ReadAll(req.Body)
-	var value any
-	if err == nil && len(body) > 0 {
-		value, err = decodeJSON(body)
-	}
+	body, err := parseRequestBody(req)
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	if err != nil {
 		h.fail(w, fmt.Errorf("%s: %s %s: invalid request body: %w", h.label, req.Method, req.URL.RequestURI(), err))
 		return
 	}
+	next := -1
 	for i := range h.calls {
-		if h.calls[i].matches(req, body, value) {
+		if next == -1 && !h.calls[i].used {
+			next = i
+		}
+		if h.calls[i].matches(req, body) {
+			if h.enforceCallOrder && i != next {
+				expected := h.calls[next].call.Request
+				h.fail(w, fmt.Errorf("%s: out-of-order HTTP call: %s %s body=%s matched call %d; next expected call %d: %s %s", h.label, req.Method, req.URL.RequestURI(), body.raw, i+1, next+1, expected.Method, expected.Path))
+				return
+			}
 			h.calls[i].used = true
 			writeResponse(w, &h.calls[i])
 			return
 		}
 	}
 	for i := range h.reusable {
-		if h.reusable[i].matches(req, body, value) {
+		if h.reusable[i].matches(req, body) {
 			writeResponse(w, &h.reusable[i])
 			return
 		}
 	}
-	h.fail(w, fmt.Errorf("%s: unexpected HTTP call: %s %s body=%s", h.label, req.Method, req.URL.RequestURI(), body))
+	h.fail(w, fmt.Errorf("%s: unexpected HTTP call: %s %s body=%s", h.label, req.Method, req.URL.RequestURI(), body.raw))
 }
 
 func writeResponse(w http.ResponseWriter, e *exchange) {
@@ -221,7 +262,9 @@ func writeResponse(w http.ResponseWriter, e *exchange) {
 		w.Header().Set(key, value)
 	}
 	if e.call.Response.Body != nil && w.Header().Get("Content-Type") == "" {
-		w.Header().Set("Content-Type", "application/json")
+		kind, _ := e.call.Response.Body.kind()
+		contentType := map[string]string{"json": "application/json", "text": "text/plain; charset=utf-8", "base64": "application/octet-stream"}
+		w.Header().Set("Content-Type", contentType[kind])
 	}
 	w.WriteHeader(e.call.Response.Status)
 	_, _ = w.Write(e.responseBody)

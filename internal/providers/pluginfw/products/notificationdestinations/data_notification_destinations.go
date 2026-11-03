@@ -75,6 +75,8 @@ func (d *NotificationDestinationsDataSource) Configure(_ context.Context, req da
 
 func validateType(notificationType string) diag.Diagnostics {
 	validTypes := []string{
+		string(settings.DestinationTypeDatabricksAppSlack),
+		string(settings.DestinationTypeDatabricksAppTeams),
 		string(settings.DestinationTypeEmail),
 		string(settings.DestinationTypeMicrosoftTeams),
 		string(settings.DestinationTypePagerduty),

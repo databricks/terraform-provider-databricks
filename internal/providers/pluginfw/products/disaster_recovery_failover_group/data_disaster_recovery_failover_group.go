@@ -42,9 +42,14 @@ type FailoverGroupData struct {
 	// Opaque version string for optimistic locking. Server-generated and
 	// returned in responses.
 	Etag types.String `tfsdk:"etag"`
+	// True if errors currently block the replication point.
+	HasReplicationPointBlockingErrors types.Bool `tfsdk:"has_replication_point_blocking_errors"`
 	// Initial primary region. Used only in Create requests to set the starting
 	// primary region. Not returned in responses.
 	InitialPrimaryRegion types.String `tfsdk:"initial_primary_region"`
+	// Initial replication progress of all in-scope assets. Set only when the
+	// FailoverGroup is in INITIAL_REPLICATION state.
+	InitialReplicationProgress types.Object `tfsdk:"initial_replication_progress"`
 	// Fully qualified resource name in the format
 	// accounts/{account_id}/failover-groups/{failover_group_id}.
 	Name types.String `tfsdk:"name"`
@@ -71,9 +76,10 @@ type FailoverGroupData struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m FailoverGroupData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"regions":              reflect.TypeOf(types.String{}),
-		"unity_catalog_assets": reflect.TypeOf(disasterrecovery_tf.UcReplicationConfig{}),
-		"workspace_sets":       reflect.TypeOf(disasterrecovery_tf.WorkspaceSet{}),
+		"initial_replication_progress": reflect.TypeOf(disasterrecovery_tf.InitialReplicationProgress{}),
+		"regions":                      reflect.TypeOf(types.String{}),
+		"unity_catalog_assets":         reflect.TypeOf(disasterrecovery_tf.UcReplicationConfig{}),
+		"workspace_sets":               reflect.TypeOf(disasterrecovery_tf.WorkspaceSet{}),
 	}
 }
 
@@ -87,17 +93,19 @@ func (m FailoverGroupData) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time":              m.CreateTime,
-			"effective_primary_region": m.EffectivePrimaryRegion,
-			"etag":                     m.Etag,
-			"initial_primary_region":   m.InitialPrimaryRegion,
-			"name":                     m.Name,
-			"regions":                  m.Regions,
-			"replication_point":        m.ReplicationPoint,
-			"state":                    m.State,
-			"unity_catalog_assets":     m.UnityCatalogAssets,
-			"update_time":              m.UpdateTime,
-			"workspace_sets":           m.WorkspaceSets,
+			"create_time":                           m.CreateTime,
+			"effective_primary_region":              m.EffectivePrimaryRegion,
+			"etag":                                  m.Etag,
+			"has_replication_point_blocking_errors": m.HasReplicationPointBlockingErrors,
+			"initial_primary_region":                m.InitialPrimaryRegion,
+			"initial_replication_progress":          m.InitialReplicationProgress,
+			"name":                                  m.Name,
+			"regions":                               m.Regions,
+			"replication_point":                     m.ReplicationPoint,
+			"state":                                 m.State,
+			"unity_catalog_assets":                  m.UnityCatalogAssets,
+			"update_time":                           m.UpdateTime,
+			"workspace_sets":                        m.WorkspaceSets,
 		},
 	)
 }
@@ -107,11 +115,13 @@ func (m FailoverGroupData) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (m FailoverGroupData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":              timetypes.RFC3339{}.Type(ctx),
-			"effective_primary_region": types.StringType,
-			"etag":                     types.StringType,
-			"initial_primary_region":   types.StringType,
-			"name":                     types.StringType,
+			"create_time":                           timetypes.RFC3339{}.Type(ctx),
+			"effective_primary_region":              types.StringType,
+			"etag":                                  types.StringType,
+			"has_replication_point_blocking_errors": types.BoolType,
+			"initial_primary_region":                types.StringType,
+			"initial_replication_progress":          disasterrecovery_tf.InitialReplicationProgress{}.Type(ctx),
+			"name":                                  types.StringType,
 			"regions": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -130,7 +140,9 @@ func (m FailoverGroupData) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["effective_primary_region"] = attrs["effective_primary_region"].SetComputed()
 	attrs["etag"] = attrs["etag"].SetComputed()
+	attrs["has_replication_point_blocking_errors"] = attrs["has_replication_point_blocking_errors"].SetComputed()
 	attrs["initial_primary_region"] = attrs["initial_primary_region"].SetComputed()
+	attrs["initial_replication_progress"] = attrs["initial_replication_progress"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["regions"] = attrs["regions"].SetComputed()
 	attrs["replication_point"] = attrs["replication_point"].SetComputed()

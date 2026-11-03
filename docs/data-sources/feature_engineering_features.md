@@ -2,11 +2,26 @@
 subcategory: "Machine Learning"
 ---
 # databricks_feature_engineering_features Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/featureengineering)
+
+Lists the features registered in one Unity Catalog schema. Both `catalog_name` and `schema_name` are required, so a single query never spans schemas.
 
 
 ## Example Usage
+List every feature in a schema, then project their names.
+
+```hcl
+data "databricks_feature_engineering_features" "in_schema" {
+  catalog_name = "main"
+  schema_name  = "features"
+}
+
+output "feature_names" {
+  value = [for f in data.databricks_feature_engineering_features.in_schema.features : f.full_name]
+}
+```
 
 
 ## Arguments
@@ -26,11 +41,10 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `created_at` (string) - Time at which this feature was created
 * `created_by` (string) - Username of the feature creator
 * `description` (string) - The description of the feature
-* `entities` (list of EntityColumn) - The entity columns for the feature, used as aggregation keys and for query-time lookup
+* `entities` (list of EntityColumn) - The entity columns for the feature, used as aggregation keys and for query-time lookup.
+  Optional since entities are not set for RequestSource features or on-demand calculated features
 * `filter_condition` (string, deprecated)
-* `full_name` (string) - The full three-part name (catalog, schema, name) of the feature. This is the
-  feature's resource identifier; the catalog_name, schema_name, and name fields
-  below are OUTPUT_ONLY decomposed views of this value
+* `full_name` (string) - The full three-part name (catalog, schema, name) of the feature
 * `function` (Function) - The function by which the feature is computed
 * `inputs` (list of string, deprecated)
 * `lineage_context` (LineageContext) - Lineage context information for this feature.
@@ -42,7 +56,9 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `schema_name` (string) - Name of parent schema relative to its parent catalog
 * `source` (DataSource) - The data source of the feature
 * `time_window` (TimeWindow, deprecated)
-* `timeseries_column` (TimeseriesColumn) - Column recording time, used for point-in-time joins, backfills, and aggregations
+* `timeseries_column` (TimeseriesColumn) - Column recording time, used for point-in-time joins, backfills, and aggregations.
+  Optional since a timeseries column is not set for RequestSource features or on-demand
+  calculated features
 
 ### AggregationFunction
 * `approx_count_distinct` (ApproxCountDistinctFunction)
@@ -66,12 +82,27 @@ This data source exports a single attribute, `features`. It is a list of resourc
 
 ### ApproxCountDistinctFunction
 * `input` (string) - The input column from which the approximate count of distinct values is computed
-* `relative_sd` (number) - The maximum relative standard deviation allowed (default defined by Spark)
+* `relative_error` (number) - The error the user accepts, as a fraction of the count, between 0.02 (by default) and 0.3.
+  This is one standard error of the estimate, the same meaning as Spark's relativeSD: 0.02 means
+  the result is within ±2% of the true count about 68% of the time (one standard deviation covers
+  68% of the region). Feature Store picks the sketch size that gives this relative error. If
+  neither relative_error nor relative_sd is set, 0.02 is default chosen at feature creation
+* `relative_sd` (number) - The maximum relative standard deviation allowed (default defined by Spark).
+  Deprecated: use relative_error. When relative_error is set, reads return the same value here
+  for clients that don't have relative_error, and a request may only send that value
 
 ### ApproxPercentileFunction
-* `accuracy` (integer) - The accuracy parameter (higher is more accurate but slower)
+* `accuracy` (integer) - The accuracy parameter (higher is more accurate but slower).
+  Deprecated: use relative_error. When relative_error is set, reads return ceil(1 /
+  relative_error) here for clients that don't have relative_error, and a request may only send
+  that value
 * `input` (string) - The input column from which the approximate percentile is computed
 * `percentile` (number) - The percentile value to compute (between 0 and 1)
+* `relative_error` (number) - The error the user accepts, as a fraction of rank, between 0.01 (by default) and 0.3. The
+  result is within this rank error with 99% confidence: at 0.01, the value returned for p95 is
+  between the true p94 and p96 at least 99% of the time. Feature Store picks the sketch size that
+  gives this error.
+  If neither relative_error nor accuracy is set, 0.01 is default chosen at feature creation
 
 ### AvgFunction
 * `input` (string) - The input column from which the average is computed. For Kafka sources, use dot-prefixed path
@@ -107,6 +138,7 @@ This data source exports a single attribute, `features`. It is a list of resourc
 * `lateness` (SourceLateness) - Completeness timing for this Feature's use of the source. This configuration is part of the
   Feature definition; it does not modify the underlying table or stream
 * `request_source` (RequestSource) - A request-time data source
+* `sdp_source` (SdpSource) - A Spark Declarative Pipeline data source
 * `stream_source` (StreamSource) - A Stream data source
 
 ### DeltaTableSource
@@ -218,6 +250,28 @@ This data source exports a single attribute, `features`. It is a list of resourc
   need not be a whole number of days (e.g. 3 days 15 minutes is allowed). Absent means lifetime
   (aggregate over the entity's entire history)
 
+### SdpSource
+* `dataframe_schema` (string) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
+  Required if transformation_sql is specified.
+  Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
+* `filter_condition` (string) - Single WHERE clause to filter the pipeline's output table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections
+* `input_tables` (list of string) - The full three-part names of the tables the pipeline reads from. Required to materialize this
+  feature with a TableTrigger, which starts a run when these tables update. Each table must exist
+  when the feature is created. Feature Store doesn't confirm that the pipeline reads from these
+  tables. At most 100 tables
+* `output_table` (string) - The full three-part (catalog, schema, table) name of the pipeline's output table to read from.
+  The table doesn't need to exist until the pipeline first runs. Required
+* `pipeline_id` (string) - The ID of the Spark Declarative Pipeline that Feature Store runs to produce this source, before
+  each materialization or backfill. The pipeline must already exist when the feature is created,
+  and you need CAN_RUN, CAN_MANAGE, or owner permission on it. It doesn't need to have run yet.
+  Deleting the feature doesn't delete the pipeline. If the pipeline is deleted, this field reads
+  back empty. Required
+* `pipeline_state` (string) - State tracking pipeline execution and output table validation. PENDING until the pipeline
+  has run at least once and created the output table; then RESOLVED on success, or ERROR on failure. Possible values are: `ERROR`, `PENDING`, `RESOLVED`
+* `transformation_sql` (string) - A single SQL SELECT expression applied after filter_condition.
+  Should contain all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
+  If transformation_sql is not provided, all columns of the pipeline's output table are present in the DataSource dataframe
+
 ### SlidingWindow
 * `delay` (string) - Non-negative analytic lag that evaluates the window this far in the past. Use this for timing
   variations unrelated to source lateness, such as a 30-day count as of one week ago. If unset,
@@ -272,7 +326,8 @@ This data source exports a single attribute, `features`. It is a list of resourc
   tumbling and fixed-duration sliding windows first emit at an offset-aligned boundary after a
   full window can be formed. If unset, lifetime sliding windows and rolling windows emit as soon as
   eligible source data exists.
-  Not currently supported for sawtooth windows or for Features with a stream source
+  For sawtooth windows, start_time must not be later than the time the Feature is created.
+  Not supported for rolling windows on Features with a stream source
 * `tumbling` (TumblingWindow)
 
 ### TimeseriesColumn

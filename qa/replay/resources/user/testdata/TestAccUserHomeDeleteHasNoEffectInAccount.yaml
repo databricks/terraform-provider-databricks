@@ -1,0 +1,118 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_with_home_cleanup
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_user" "first" {
+        user_name             = "tf-replay@example.com"
+        force_delete_home_dir = true
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/accounts/replay-account/scim/v2/Users
+          body:
+            json:
+              active: true
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-replay@example.com
+        response: &response_1 # Inferred API response; not recorded.
+          body:
+            json:
+              active: true
+              displayName: tf-replay@example.com
+              entitlements: []
+              externalId: ext-id-replay
+              id: '101'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-replay@example.com
+          status: 200
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Users/101
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+          body: null
+        response: *response_1 # Inferred API response; not recorded.
+      - *call_1
+  - name: replace_without_workspace_cleanup
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_user" "second" {
+        user_name = "replay@example.com"
+      }
+    calls:
+      - *call_1
+      - request:
+          method: PATCH
+          path: /api/2.0/accounts/replay-account/scim/v2/Users/101
+          body:
+            json:
+              Operations:
+                - op: replace
+                  path: active
+                  value:
+                    - value: 'false'
+              schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp']
+        response: &response_3 # Inferred API response; not recorded.
+          body: null
+          status: 200
+      - request:
+          method: POST
+          path: /api/2.0/accounts/replay-account/scim/v2/Users
+          body:
+            json:
+              active: true
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: replay@example.com
+        response: &response_2 # Inferred API response; not recorded.
+          body:
+            json:
+              active: true
+              displayName: replay@example.com
+              entitlements: []
+              externalId: ext-id-replay
+              id: '102'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: replay@example.com
+          status: 200
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Users/102
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+          body: null
+        response: *response_2 # Inferred API response; not recorded.
+      - *call_2
+destroy:
+  calls:
+    - *call_2
+    - request:
+        method: PATCH
+        path: /api/2.0/accounts/replay-account/scim/v2/Users/102
+        body:
+          json:
+            Operations:
+              - op: replace
+                path: active
+                value:
+                  - value: 'false'
+            schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp']
+      response: *response_3 # Inferred API response; not recorded.

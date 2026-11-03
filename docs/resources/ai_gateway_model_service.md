@@ -63,10 +63,17 @@ The following arguments are supported:
 * `model` (string, required) - Provider-side model identifier, such as `gpt-5` or `claude-opus-4-7`.
   This identifies a model at the upstream provider; it is not a Unity
   Catalog model resource
+* `endpoint_route` (string, optional) - Relative path appended to a custom provider's `base_url` for this model,
+  such as `serve/openai/chat`. Nonempty values are only supported for
+  custom model provider service targets; other provider types reject them.
+  Model service destinations do not support this field. Do not include
+  URI templates, queries, or fragments. When empty, `base_url` is used unchanged
 * `native_api_types` (list of string, optional) - Provider-native API types supported by this model, such as
-  `openai/v1/chat/completions`. At least one value is required. AI Gateway
-  uses these values to translate requests and responses. At most 64 entries
-  of 256 characters each are allowed
+  `openai/v1/chat/completions`. A model provider service target requires at
+  least one value. A model service destination may omit the list to use the
+  matching provider service target's types when available. AI Gateway uses
+  the selected types for translation. At most 64 entries of 256 characters
+  each are allowed
 
 ### ModelServiceConfig
 * `inference_table` (InferenceTableConfig, optional) - Inference table configuration for payload logging

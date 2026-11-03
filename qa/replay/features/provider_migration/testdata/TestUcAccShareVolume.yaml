@@ -1,0 +1,611 @@
+# API responses are placeholders based on the API models, not recorded.
+version: 1
+host_metadata:
+  cloud: AWS
+  host_type: workspace
+  workspace_id: '12345'
+steps:
+- name: create_legacy_share
+  provider_implementations:
+    databricks_share: sdkv2
+  config: |
+    resource "databricks_catalog" "sandbox" {
+      name    = "sandboxreplay"
+      comment = "this catalog is managed by terraform"
+      properties = {
+        purpose = "testing"
+      }
+    }
+    resource "databricks_schema" "things" {
+      catalog_name = databricks_catalog.sandbox.id
+      name         = "thingsreplay"
+      comment      = "this database is managed by terraform"
+      properties = {
+        kind = "various"
+      }
+    }
+    resource "databricks_sql_table" "mytable" {
+      catalog_name = databricks_catalog.sandbox.id
+      schema_name  = databricks_schema.things.name
+      name         = "bar"
+      table_type   = "MANAGED"
+      warehouse_id = "warehouse-1"
+      column {
+        name = "id"
+        type = "int"
+      }
+    }
+    resource "databricks_sql_table" "mytable_2" {
+      catalog_name = databricks_catalog.sandbox.id
+      schema_name  = databricks_schema.things.name
+      name         = "bar_2"
+      table_type   = "MANAGED"
+      warehouse_id = "warehouse-1"
+      column {
+        name = "id"
+        type = "int"
+      }
+    }
+    resource "databricks_sql_table" "mytable_3" {
+      catalog_name = databricks_catalog.sandbox.id
+      schema_name  = databricks_schema.things.name
+      name         = "bar_3"
+      table_type   = "MANAGED"
+      warehouse_id = "warehouse-1"
+      column {
+        name = "id"
+        type = "int"
+      }
+    }
+    resource "databricks_volume" "this" {
+      name         = "share_volume_test-replay"
+      catalog_name = databricks_catalog.sandbox.name
+      schema_name  = databricks_schema.things.name
+      volume_type  = "MANAGED"
+    }
+    resource "databricks_share" "myshare" {
+      name = "replay-terraform-share-with-volume"
+      object {
+        name             = databricks_volume.this.id
+        data_object_type = "VOLUME"
+      }
+    }
+  calls:
+  - request:
+      method: POST
+      path: /api/2.1/unity-catalog/catalogs
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          comment: this catalog is managed by terraform
+          name: sandboxreplay
+          properties:
+            purpose: testing
+    response:
+      status: 200
+      body:
+        json:
+          catalog_type: MANAGED_CATALOG
+          comment: this catalog is managed by terraform
+          enable_predictive_optimization: INHERIT
+          isolation_mode: OPEN
+          metastore_id: 11111111-1111-1111-1111-111111111111
+          name: sandboxreplay
+          owner: replay-admin
+          properties:
+            purpose: testing
+  - request:
+      method: DELETE
+      path: /api/2.1/unity-catalog/schemas/sandboxreplay.default
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body: null
+  - &id004
+    request:
+      method: GET
+      path: /api/2.1/unity-catalog/catalogs/sandboxreplay
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          catalog_type: MANAGED_CATALOG
+          comment: this catalog is managed by terraform
+          enable_predictive_optimization: INHERIT
+          isolation_mode: OPEN
+          metastore_id: 11111111-1111-1111-1111-111111111111
+          name: sandboxreplay
+          owner: replay-admin
+          properties:
+            purpose: testing
+  - request:
+      method: POST
+      path: /api/2.1/unity-catalog/schemas
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          catalog_name: sandboxreplay
+          comment: this database is managed by terraform
+          name: thingsreplay
+          properties:
+            kind: various
+    response:
+      status: 200
+      body:
+        json:
+          catalog_name: sandboxreplay
+          comment: this database is managed by terraform
+          enable_predictive_optimization: INHERIT
+          full_name: sandboxreplay.thingsreplay
+          metastore_id: 11111111-1111-1111-1111-111111111111
+          name: thingsreplay
+          owner: replay-admin
+          properties:
+            kind: various
+          schema_id: 22222222-2222-2222-2222-222222222222
+  - &id005
+    request:
+      method: GET
+      path: /api/2.1/unity-catalog/schemas/sandboxreplay.thingsreplay
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          catalog_name: sandboxreplay
+          comment: this database is managed by terraform
+          enable_predictive_optimization: INHERIT
+          full_name: sandboxreplay.thingsreplay
+          metastore_id: 11111111-1111-1111-1111-111111111111
+          name: thingsreplay
+          owner: replay-admin
+          properties:
+            kind: various
+          schema_id: 22222222-2222-2222-2222-222222222222
+  - request:
+      method: POST
+      path: /api/2.1/unity-catalog/volumes
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          catalog_name: sandboxreplay
+          name: share_volume_test-replay
+          schema_name: thingsreplay
+          volume_type: MANAGED
+    response:
+      status: 200
+      body:
+        json:
+          catalog_name: sandboxreplay
+          full_name: sandboxreplay.thingsreplay.share_volume_test-replay
+          name: share_volume_test-replay
+          owner: replay-admin
+          schema_name: thingsreplay
+          storage_location: s3://replay/volume
+          volume_id: volume-1
+          volume_type: MANAGED
+  - &id006
+    request:
+      method: GET
+      path: /api/2.1/unity-catalog/volumes/sandboxreplay.thingsreplay.share_volume_test-replay
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          catalog_name: sandboxreplay
+          full_name: sandboxreplay.thingsreplay.share_volume_test-replay
+          name: share_volume_test-replay
+          owner: replay-admin
+          schema_name: thingsreplay
+          storage_location: s3://replay/volume
+          volume_id: volume-1
+          volume_type: MANAGED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: CREATE TABLE `sandboxreplay`.`thingsreplay`.`bar` (`id` int);
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: CREATE TABLE `sandboxreplay`.`thingsreplay`.`bar_2` (`id` int);
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: CREATE TABLE `sandboxreplay`.`thingsreplay`.`bar_3` (`id` int);
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - &id003
+    request:
+      method: GET
+      path: /api/2.1/unity-catalog/tables/sandboxreplay.thingsreplay.bar
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          catalog_name: sandboxreplay
+          columns:
+          - name: id
+            nullable: true
+            type_text: int
+          data_source_format: DELTA
+          full_name: sandboxreplay.thingsreplay.bar
+          name: bar
+          owner: replay-admin
+          schema_name: thingsreplay
+          table_id: table-bar
+          table_type: MANAGED
+  - &id001
+    request:
+      method: GET
+      path: /api/2.1/unity-catalog/tables/sandboxreplay.thingsreplay.bar_2
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          catalog_name: sandboxreplay
+          columns:
+          - name: id
+            nullable: true
+            type_text: int
+          data_source_format: DELTA
+          full_name: sandboxreplay.thingsreplay.bar_2
+          name: bar_2
+          owner: replay-admin
+          schema_name: thingsreplay
+          table_id: table-bar_2
+          table_type: MANAGED
+  - &id002
+    request:
+      method: GET
+      path: /api/2.1/unity-catalog/tables/sandboxreplay.thingsreplay.bar_3
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          catalog_name: sandboxreplay
+          columns:
+          - name: id
+            nullable: true
+            type_text: int
+          data_source_format: DELTA
+          full_name: sandboxreplay.thingsreplay.bar_3
+          name: bar_3
+          owner: replay-admin
+          schema_name: thingsreplay
+          table_id: table-bar_3
+          table_type: MANAGED
+  - *id001
+  - *id002
+  - *id003
+  - request:
+      method: POST
+      path: /api/2.1/unity-catalog/shares
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          name: replay-terraform-share-with-volume
+    response:
+      status: 200
+      body:
+        json:
+          name: replay-terraform-share-with-volume
+          objects:
+          - data_object_type: VOLUME
+            name: sandboxreplay.thingsreplay.share_volume_test-replay
+          owner: replay-admin
+  - request:
+      method: PATCH
+      path: /api/2.1/unity-catalog/shares/replay-terraform-share-with-volume
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          updates:
+          - action: ADD
+            data_object:
+              data_object_type: VOLUME
+              name: sandboxreplay.thingsreplay.share_volume_test-replay
+    response:
+      status: 200
+      body:
+        json:
+          name: replay-terraform-share-with-volume
+          objects:
+          - data_object_type: VOLUME
+            name: sandboxreplay.thingsreplay.share_volume_test-replay
+          owner: replay-admin
+  - &id007
+    request:
+      method: GET
+      path: /api/2.1/unity-catalog/shares/replay-terraform-share-with-volume
+      query:
+        include_shared_data:
+        - 'true'
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          name: replay-terraform-share-with-volume
+          objects:
+          - data_object_type: VOLUME
+            name: sandboxreplay.thingsreplay.share_volume_test-replay
+          owner: replay-admin
+  - *id004
+  - *id005
+  - *id006
+  - *id001
+  - *id003
+  - *id002
+  - *id001
+  - *id003
+  - *id002
+  - *id007
+- name: adopt_framework_share
+  provider_implementations:
+    databricks_share: plugin_framework
+  config: |
+    resource "databricks_catalog" "sandbox" {
+      name    = "sandboxreplay"
+      comment = "this catalog is managed by terraform"
+      properties = {
+        purpose = "testing"
+      }
+    }
+    resource "databricks_schema" "things" {
+      catalog_name = databricks_catalog.sandbox.id
+      name         = "thingsreplay"
+      comment      = "this database is managed by terraform"
+      properties = {
+        kind = "various"
+      }
+    }
+    resource "databricks_sql_table" "mytable" {
+      catalog_name = databricks_catalog.sandbox.id
+      schema_name  = databricks_schema.things.name
+      name         = "bar"
+      table_type   = "MANAGED"
+      warehouse_id = "warehouse-1"
+      column {
+        name = "id"
+        type = "int"
+      }
+    }
+    resource "databricks_sql_table" "mytable_2" {
+      catalog_name = databricks_catalog.sandbox.id
+      schema_name  = databricks_schema.things.name
+      name         = "bar_2"
+      table_type   = "MANAGED"
+      warehouse_id = "warehouse-1"
+      column {
+        name = "id"
+        type = "int"
+      }
+    }
+    resource "databricks_sql_table" "mytable_3" {
+      catalog_name = databricks_catalog.sandbox.id
+      schema_name  = databricks_schema.things.name
+      name         = "bar_3"
+      table_type   = "MANAGED"
+      warehouse_id = "warehouse-1"
+      column {
+        name = "id"
+        type = "int"
+      }
+    }
+    resource "databricks_volume" "this" {
+      name         = "share_volume_test-replay"
+      catalog_name = databricks_catalog.sandbox.name
+      schema_name  = databricks_schema.things.name
+      volume_type  = "MANAGED"
+    }
+    resource "databricks_share" "myshare" {
+      name = "replay-terraform-share-with-volume"
+      object {
+        name             = databricks_volume.this.id
+        data_object_type = "VOLUME"
+      }
+    }
+  calls:
+  - *id004
+  - *id005
+  - *id006
+  - *id003
+  - *id002
+  - *id001
+  - *id003
+  - *id002
+  - *id001
+  - *id007
+  - *id007
+  - *id004
+  - *id005
+  - *id006
+  - *id002
+  - *id001
+  - *id002
+  - *id003
+  - *id001
+  - *id003
+  - *id007
+destroy:
+  calls:
+  - *id004
+  - *id005
+  - *id006
+  - *id002
+  - *id001
+  - *id003
+  - *id002
+  - *id001
+  - *id003
+  - *id007
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: DROP TABLE `sandboxreplay`.`thingsreplay`.`bar_2`
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: DROP TABLE `sandboxreplay`.`thingsreplay`.`bar`
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: POST
+      path: /api/2.0/sql/statements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          on_wait_timeout: CANCEL
+          statement: DROP TABLE `sandboxreplay`.`thingsreplay`.`bar_3`
+          wait_timeout: 50s
+          warehouse_id: warehouse-1
+    response:
+      status: 200
+      body:
+        json:
+          statement_id: statement-1
+          status:
+            state: SUCCEEDED
+  - request:
+      method: DELETE
+      path: /api/2.1/unity-catalog/shares/replay-terraform-share-with-volume
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: DELETE
+      path: /api/2.1/unity-catalog/volumes/sandboxreplay.thingsreplay.share_volume_test-replay
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body: null
+  - &id008
+    request:
+      method: GET
+      path: /api/2.1/unity-catalog/current-metastore-assignment
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          metastore_id: 11111111-1111-1111-1111-111111111111
+          workspace_id: 12345
+  - request:
+      method: DELETE
+      path: /api/2.1/unity-catalog/schemas/sandboxreplay.thingsreplay
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body: null
+  - *id008
+  - request:
+      method: DELETE
+      path: /api/2.1/unity-catalog/catalogs/sandboxreplay
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body: null

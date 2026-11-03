@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -119,13 +120,12 @@ type Feature struct {
 	// The description of the feature.
 	Description types.String `tfsdk:"description"`
 	// The entity columns for the feature, used as aggregation keys and for
-	// query-time lookup.
+	// query-time lookup. Optional since entities are not set for RequestSource
+	// features or on-demand calculated features.
 	Entities types.List `tfsdk:"entities"`
 
 	FilterCondition types.String `tfsdk:"filter_condition"`
-	// The full three-part name (catalog, schema, name) of the feature. This is
-	// the feature's resource identifier; the catalog_name, schema_name, and
-	// name fields below are OUTPUT_ONLY decomposed views of this value.
+	// The full three-part name (catalog, schema, name) of the feature.
 	FullName types.String `tfsdk:"full_name"`
 	// The function by which the feature is computed.
 	Function types.Object `tfsdk:"function"`
@@ -149,7 +149,8 @@ type Feature struct {
 
 	TimeWindow types.Object `tfsdk:"time_window"`
 	// Column recording time, used for point-in-time joins, backfills, and
-	// aggregations.
+	// aggregations. Optional since a timeseries column is not set for
+	// RequestSource features or on-demand calculated features.
 	TimeseriesColumn types.Object `tfsdk:"timeseries_column"`
 	ProviderConfig   types.Object `tfsdk:"provider_config"`
 }
@@ -271,6 +272,10 @@ func (to *Feature) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Feat
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Inputs = from.Inputs
 	}
+	if !from.LineageContext.IsUnknown() && !from.LineageContext.IsNull() {
+		// LineageContext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.LineageContext = from.LineageContext
+	}
 	if !from.LineageContext.IsNull() && !from.LineageContext.IsUnknown() {
 		if toLineageContext, ok := to.GetLineageContext(ctx); ok {
 			if fromLineageContext, ok := from.GetLineageContext(ctx); ok {
@@ -347,6 +352,10 @@ func (to *Feature) SyncFieldsDuringRead(ctx context.Context, from Feature) {
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Inputs = from.Inputs
 	}
+	if !from.LineageContext.IsUnknown() && !from.LineageContext.IsNull() {
+		// LineageContext is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.LineageContext = from.LineageContext
+	}
 	if !from.LineageContext.IsNull() && !from.LineageContext.IsUnknown() {
 		if toLineageContext, ok := to.GetLineageContext(ctx); ok {
 			if fromLineageContext, ok := from.GetLineageContext(ctx); ok {
@@ -389,19 +398,27 @@ func (m Feature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["entities"] = attrs["entities"].SetOptional()
+	attrs["entities"] = attrs["entities"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["filter_condition"] = attrs["filter_condition"].SetOptional()
+	attrs["filter_condition"] = attrs["filter_condition"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["full_name"] = attrs["full_name"].SetRequired()
 	attrs["full_name"] = attrs["full_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["function"] = attrs["function"].SetRequired()
 	attrs["function"] = attrs["function"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["inputs"] = attrs["inputs"].SetOptional()
+	attrs["inputs"] = attrs["inputs"].(tfschema.ListAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["lineage_context"] = attrs["lineage_context"].SetOptional()
+	attrs["lineage_context"] = attrs["lineage_context"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["lineage_context"] = attrs["lineage_context"].SetComputed()
+	attrs["lineage_context"] = attrs["lineage_context"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["schema_name"] = attrs["schema_name"].SetComputed()
 	attrs["source"] = attrs["source"].SetRequired()
 	attrs["source"] = attrs["source"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["time_window"] = attrs["time_window"].SetOptional()
+	attrs["time_window"] = attrs["time_window"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["timeseries_column"] = attrs["timeseries_column"].SetOptional()
+	attrs["timeseries_column"] = attrs["timeseries_column"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	attrs["full_name"] = attrs["full_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -614,10 +631,6 @@ func (r *FeatureResource) ModifyPlan(ctx context.Context, req resource.ModifyPla
 		return
 	}
 	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *FeatureResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -742,7 +755,7 @@ func (r *FeatureResource) update(ctx context.Context, plan Feature, diags *diag.
 	updateRequest := ml.UpdateFeatureRequest{
 		Feature:    feature,
 		FullName:   plan.FullName.ValueString(),
-		UpdateMask: "description,entities,filter_condition,inputs,lineage_context,time_window,timeseries_column",
+		UpdateMask: "description",
 	}
 
 	var namespace ProviderConfig

@@ -1,0 +1,23 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "reject_invalid_workspace"
+    config: |
+      resource "databricks_grants" "this" {
+        table = "main.default.test"
+        grant {
+          principal = "account users"
+          privileges = ["SELECT"]
+        }
+        provider_config {
+          workspace_id = "123"
+        }
+      }
+    calls: []
+    expect_error: "workspace_id mismatch.*please check the workspace_id provided in provider_config"
+destroy:
+  calls: []

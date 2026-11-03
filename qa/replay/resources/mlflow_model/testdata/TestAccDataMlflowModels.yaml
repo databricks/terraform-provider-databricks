@@ -1,0 +1,113 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "list"
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        name = "model-replay-0"
+        description = "My MLflow model description"
+        tags {
+          key = "key1"
+          value = "value1"
+        }
+        tags {
+          key = "key2"
+          value = "value2"
+        }
+      }
+      data "databricks_mlflow_models" "this" {
+        depends_on = [databricks_mlflow_model.this]
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/mlflow/registered-models/create"
+          body:
+            json:
+              description: "My MLflow model description"
+              name: "model-replay-0"
+              tags:
+                - key: "key1"
+                  value: "value1"
+                - key: "key2"
+                  value: "value2"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              registered_model:
+                description: "My MLflow model description"
+                id: "model-123"
+                name: "model-replay-0"
+                tags:
+                  - key: "key1"
+                    value: "value1"
+                  - key: "key2"
+                    value: "value2"
+                user_id: "100"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/mlflow/databricks/registered-models/get"
+          query:
+            name: ["model-replay-0"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              registered_model_databricks:
+                description: "My MLflow model description"
+                id: "model-123"
+                name: "model-replay-0"
+                tags:
+                  - key: "key1"
+                    value: "value1"
+                  - key: "key2"
+                    value: "value2"
+                user_id: "100"
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.0/mlflow/registered-models/list"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              registered_models:
+                - description: "My MLflow model description"
+                  id: "model-123"
+                  name: "model-replay-0"
+                  tags:
+                    - key: "key1"
+                      value: "value1"
+                    - key: "key2"
+                      value: "value2"
+                  user_id: "100"
+      - *get_2
+      - *get_1
+      - *get_2
+    state:
+      resources:
+        data.databricks_mlflow_models.this:
+          attributes:
+            - path: ["names",0]
+              equals: "model-replay-0"
+destroy:
+  calls:
+    - *get_1
+    - *get_2
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/mlflow/registered-models/delete"
+        query:
+          name: ["model-replay-0"]
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

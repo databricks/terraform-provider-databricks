@@ -1573,6 +1573,10 @@ func (m *ComplianceSecurityProfileSetting_SdkV2) SetComplianceSecurityProfileWor
 }
 
 type Config_SdkV2 struct {
+	DatabricksAppSlack types.List `tfsdk:"databricks_app_slack"`
+
+	DatabricksAppTeams types.List `tfsdk:"databricks_app_teams"`
+
 	Email types.List `tfsdk:"email"`
 
 	GenericWebhook types.List `tfsdk:"generic_webhook"`
@@ -1585,6 +1589,24 @@ type Config_SdkV2 struct {
 }
 
 func (to *Config_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Config_SdkV2) {
+	if !from.DatabricksAppSlack.IsNull() && !from.DatabricksAppSlack.IsUnknown() {
+		if toDatabricksAppSlack, ok := to.GetDatabricksAppSlack(ctx); ok {
+			if fromDatabricksAppSlack, ok := from.GetDatabricksAppSlack(ctx); ok {
+				// Recursively sync the fields of DatabricksAppSlack
+				toDatabricksAppSlack.SyncFieldsDuringCreateOrUpdate(ctx, fromDatabricksAppSlack)
+				to.SetDatabricksAppSlack(ctx, toDatabricksAppSlack)
+			}
+		}
+	}
+	if !from.DatabricksAppTeams.IsNull() && !from.DatabricksAppTeams.IsUnknown() {
+		if toDatabricksAppTeams, ok := to.GetDatabricksAppTeams(ctx); ok {
+			if fromDatabricksAppTeams, ok := from.GetDatabricksAppTeams(ctx); ok {
+				// Recursively sync the fields of DatabricksAppTeams
+				toDatabricksAppTeams.SyncFieldsDuringCreateOrUpdate(ctx, fromDatabricksAppTeams)
+				to.SetDatabricksAppTeams(ctx, toDatabricksAppTeams)
+			}
+		}
+	}
 	if !from.Email.IsNull() && !from.Email.IsUnknown() {
 		if toEmail, ok := to.GetEmail(ctx); ok {
 			if fromEmail, ok := from.GetEmail(ctx); ok {
@@ -1633,6 +1655,22 @@ func (to *Config_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 }
 
 func (to *Config_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Config_SdkV2) {
+	if !from.DatabricksAppSlack.IsNull() && !from.DatabricksAppSlack.IsUnknown() {
+		if toDatabricksAppSlack, ok := to.GetDatabricksAppSlack(ctx); ok {
+			if fromDatabricksAppSlack, ok := from.GetDatabricksAppSlack(ctx); ok {
+				toDatabricksAppSlack.SyncFieldsDuringRead(ctx, fromDatabricksAppSlack)
+				to.SetDatabricksAppSlack(ctx, toDatabricksAppSlack)
+			}
+		}
+	}
+	if !from.DatabricksAppTeams.IsNull() && !from.DatabricksAppTeams.IsUnknown() {
+		if toDatabricksAppTeams, ok := to.GetDatabricksAppTeams(ctx); ok {
+			if fromDatabricksAppTeams, ok := from.GetDatabricksAppTeams(ctx); ok {
+				toDatabricksAppTeams.SyncFieldsDuringRead(ctx, fromDatabricksAppTeams)
+				to.SetDatabricksAppTeams(ctx, toDatabricksAppTeams)
+			}
+		}
+	}
 	if !from.Email.IsNull() && !from.Email.IsUnknown() {
 		if toEmail, ok := to.GetEmail(ctx); ok {
 			if fromEmail, ok := from.GetEmail(ctx); ok {
@@ -1676,6 +1714,10 @@ func (to *Config_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Config_Sd
 }
 
 func (m Config_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["databricks_app_slack"] = attrs["databricks_app_slack"].SetOptional()
+	attrs["databricks_app_slack"] = attrs["databricks_app_slack"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["databricks_app_teams"] = attrs["databricks_app_teams"].SetOptional()
+	attrs["databricks_app_teams"] = attrs["databricks_app_teams"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["email"] = attrs["email"].SetOptional()
 	attrs["email"] = attrs["email"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["generic_webhook"] = attrs["generic_webhook"].SetOptional()
@@ -1699,11 +1741,13 @@ func (m Config_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // SDK values.
 func (m Config_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"email":           reflect.TypeOf(EmailConfig_SdkV2{}),
-		"generic_webhook": reflect.TypeOf(GenericWebhookConfig_SdkV2{}),
-		"microsoft_teams": reflect.TypeOf(MicrosoftTeamsConfig_SdkV2{}),
-		"pagerduty":       reflect.TypeOf(PagerdutyConfig_SdkV2{}),
-		"slack":           reflect.TypeOf(SlackConfig_SdkV2{}),
+		"databricks_app_slack": reflect.TypeOf(DatabricksAppSlackConfig_SdkV2{}),
+		"databricks_app_teams": reflect.TypeOf(DatabricksAppTeamsConfig_SdkV2{}),
+		"email":                reflect.TypeOf(EmailConfig_SdkV2{}),
+		"generic_webhook":      reflect.TypeOf(GenericWebhookConfig_SdkV2{}),
+		"microsoft_teams":      reflect.TypeOf(MicrosoftTeamsConfig_SdkV2{}),
+		"pagerduty":            reflect.TypeOf(PagerdutyConfig_SdkV2{}),
+		"slack":                reflect.TypeOf(SlackConfig_SdkV2{}),
 	}
 }
 
@@ -1714,11 +1758,13 @@ func (m Config_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"email":           m.Email,
-			"generic_webhook": m.GenericWebhook,
-			"microsoft_teams": m.MicrosoftTeams,
-			"pagerduty":       m.Pagerduty,
-			"slack":           m.Slack,
+			"databricks_app_slack": m.DatabricksAppSlack,
+			"databricks_app_teams": m.DatabricksAppTeams,
+			"email":                m.Email,
+			"generic_webhook":      m.GenericWebhook,
+			"microsoft_teams":      m.MicrosoftTeams,
+			"pagerduty":            m.Pagerduty,
+			"slack":                m.Slack,
 		})
 }
 
@@ -1726,6 +1772,12 @@ func (m Config_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Config_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"databricks_app_slack": basetypes.ListType{
+				ElemType: DatabricksAppSlackConfig_SdkV2{}.Type(ctx),
+			},
+			"databricks_app_teams": basetypes.ListType{
+				ElemType: DatabricksAppTeamsConfig_SdkV2{}.Type(ctx),
+			},
 			"email": basetypes.ListType{
 				ElemType: EmailConfig_SdkV2{}.Type(ctx),
 			},
@@ -1743,6 +1795,58 @@ func (m Config_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetDatabricksAppSlack returns the value of the DatabricksAppSlack field in Config_SdkV2 as
+// a DatabricksAppSlackConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Config_SdkV2) GetDatabricksAppSlack(ctx context.Context) (DatabricksAppSlackConfig_SdkV2, bool) {
+	var e DatabricksAppSlackConfig_SdkV2
+	if m.DatabricksAppSlack.IsNull() || m.DatabricksAppSlack.IsUnknown() {
+		return e, false
+	}
+	var v []DatabricksAppSlackConfig_SdkV2
+	d := m.DatabricksAppSlack.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDatabricksAppSlack sets the value of the DatabricksAppSlack field in Config_SdkV2.
+func (m *Config_SdkV2) SetDatabricksAppSlack(ctx context.Context, v DatabricksAppSlackConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["databricks_app_slack"]
+	m.DatabricksAppSlack = types.ListValueMust(t, vs)
+}
+
+// GetDatabricksAppTeams returns the value of the DatabricksAppTeams field in Config_SdkV2 as
+// a DatabricksAppTeamsConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Config_SdkV2) GetDatabricksAppTeams(ctx context.Context) (DatabricksAppTeamsConfig_SdkV2, bool) {
+	var e DatabricksAppTeamsConfig_SdkV2
+	if m.DatabricksAppTeams.IsNull() || m.DatabricksAppTeams.IsUnknown() {
+		return e, false
+	}
+	var v []DatabricksAppTeamsConfig_SdkV2
+	d := m.DatabricksAppTeams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDatabricksAppTeams sets the value of the DatabricksAppTeams field in Config_SdkV2.
+func (m *Config_SdkV2) SetDatabricksAppTeams(ctx context.Context, v DatabricksAppTeamsConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["databricks_app_teams"]
+	m.DatabricksAppTeams = types.ListValueMust(t, vs)
 }
 
 // GetEmail returns the value of the Email field in Config_SdkV2 as
@@ -3387,6 +3491,8 @@ func (m *CspEnablementAccountSetting_SdkV2) SetCspEnablementAccount(ctx context.
 
 // The network policies applying for ingress traffic.
 type CustomerFacingIngressNetworkPolicy_SdkV2 struct {
+	// The network policy restrictions for cross-workspace access: which other
+	// workspaces may access this workspace.
 	CrossWorkspaceAccess types.List `tfsdk:"cross_workspace_access"`
 	// The network policy restrictions for private access. Configures how
 	// requests arriving over private connectivity are governed.
@@ -6860,6 +6966,149 @@ func (m *DashboardEmailSubscriptions_SdkV2) SetBooleanVal(ctx context.Context, v
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["boolean_val"]
 	m.BooleanVal = types.ListValueMust(t, vs)
+}
+
+// Slack channel reached through the Databricks app. The app must already be
+// installed in the Slack workspace and connected to this Databricks workspace.
+type DatabricksAppSlackConfig_SdkV2 struct {
+	// [Input-Only] Slack channel ID notifications are posted to.
+	ChannelId types.String `tfsdk:"channel_id"`
+	// [Output-Only] Whether channel ID is set.
+	ChannelIdSet types.Bool `tfsdk:"channel_id_set"`
+	// [Input-Only] Slack workspace (team) ID the Databricks app is installed
+	// in.
+	TeamId types.String `tfsdk:"team_id"`
+	// [Output-Only] Whether team ID is set.
+	TeamIdSet types.Bool `tfsdk:"team_id_set"`
+}
+
+func (to *DatabricksAppSlackConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DatabricksAppSlackConfig_SdkV2) {
+}
+
+func (to *DatabricksAppSlackConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DatabricksAppSlackConfig_SdkV2) {
+}
+
+func (m DatabricksAppSlackConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["channel_id"] = attrs["channel_id"].SetOptional()
+	attrs["channel_id_set"] = attrs["channel_id_set"].SetOptional()
+	attrs["team_id"] = attrs["team_id"].SetOptional()
+	attrs["team_id_set"] = attrs["team_id_set"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DatabricksAppSlackConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DatabricksAppSlackConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabricksAppSlackConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DatabricksAppSlackConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"channel_id":     m.ChannelId,
+			"channel_id_set": m.ChannelIdSet,
+			"team_id":        m.TeamId,
+			"team_id_set":    m.TeamIdSet,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DatabricksAppSlackConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"channel_id":     types.StringType,
+			"channel_id_set": types.BoolType,
+			"team_id":        types.StringType,
+			"team_id_set":    types.BoolType,
+		},
+	}
+}
+
+// Microsoft Teams channel reached through the Databricks app. The app must
+// already be installed in the Microsoft 365 tenant and connected to this
+// Databricks workspace.
+type DatabricksAppTeamsConfig_SdkV2 struct {
+	// [Input-Only] Teams channel ID notifications are posted to.
+	ChannelId types.String `tfsdk:"channel_id"`
+	// [Output-Only] Whether channel ID is set.
+	ChannelIdSet types.Bool `tfsdk:"channel_id_set"`
+	// [Input-Only] Microsoft Entra group ID of the team that owns the channel.
+	TeamId types.String `tfsdk:"team_id"`
+	// [Output-Only] Whether team ID is set.
+	TeamIdSet types.Bool `tfsdk:"team_id_set"`
+	// [Input-Only] Microsoft Entra tenant ID of the Microsoft 365 tenant the
+	// app is installed in.
+	TenantId types.String `tfsdk:"tenant_id"`
+	// [Output-Only] Whether tenant ID is set.
+	TenantIdSet types.Bool `tfsdk:"tenant_id_set"`
+}
+
+func (to *DatabricksAppTeamsConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DatabricksAppTeamsConfig_SdkV2) {
+}
+
+func (to *DatabricksAppTeamsConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DatabricksAppTeamsConfig_SdkV2) {
+}
+
+func (m DatabricksAppTeamsConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["channel_id"] = attrs["channel_id"].SetOptional()
+	attrs["channel_id_set"] = attrs["channel_id_set"].SetOptional()
+	attrs["team_id"] = attrs["team_id"].SetOptional()
+	attrs["team_id_set"] = attrs["team_id_set"].SetOptional()
+	attrs["tenant_id"] = attrs["tenant_id"].SetOptional()
+	attrs["tenant_id_set"] = attrs["tenant_id_set"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DatabricksAppTeamsConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DatabricksAppTeamsConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabricksAppTeamsConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DatabricksAppTeamsConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"channel_id":     m.ChannelId,
+			"channel_id_set": m.ChannelIdSet,
+			"team_id":        m.TeamId,
+			"team_id_set":    m.TeamIdSet,
+			"tenant_id":      m.TenantId,
+			"tenant_id_set":  m.TenantIdSet,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DatabricksAppTeamsConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"channel_id":     types.StringType,
+			"channel_id_set": types.BoolType,
+			"team_id":        types.StringType,
+			"team_id_set":    types.BoolType,
+			"tenant_id":      types.StringType,
+			"tenant_id_set":  types.BoolType,
+		},
+	}
 }
 
 // This represents the setting configuration for the default namespace in the
@@ -17230,6 +17479,10 @@ type NetworkConnectivityConfiguration_SdkV2 struct {
 	// Your Databricks account ID. You can find your account ID in your
 	// Databricks accounts console.
 	AccountId types.String `tfsdk:"account_id"`
+	// The workspace to which charges for this network connectivity
+	// configuration are attributed. The workspace must be active and attached
+	// to this network connectivity configuration when set.
+	BillingWorkspaceId types.Int64 `tfsdk:"billing_workspace_id"`
 	// Time in epoch milliseconds when this object was created.
 	CreationTime types.Int64 `tfsdk:"creation_time"`
 	// The network connectivity rules that apply to network traffic from your
@@ -17275,6 +17528,7 @@ func (to *NetworkConnectivityConfiguration_SdkV2) SyncFieldsDuringRead(ctx conte
 
 func (m NetworkConnectivityConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetOptional()
+	attrs["billing_workspace_id"] = attrs["billing_workspace_id"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetOptional()
 	attrs["egress_config"] = attrs["egress_config"].SetOptional()
 	attrs["egress_config"] = attrs["egress_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -17307,6 +17561,7 @@ func (m NetworkConnectivityConfiguration_SdkV2) ToObjectValue(ctx context.Contex
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"account_id":                     m.AccountId,
+			"billing_workspace_id":           m.BillingWorkspaceId,
 			"creation_time":                  m.CreationTime,
 			"egress_config":                  m.EgressConfig,
 			"name":                           m.Name,
@@ -17320,8 +17575,9 @@ func (m NetworkConnectivityConfiguration_SdkV2) ToObjectValue(ctx context.Contex
 func (m NetworkConnectivityConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":    types.StringType,
-			"creation_time": types.Int64Type,
+			"account_id":           types.StringType,
+			"billing_workspace_id": types.Int64Type,
+			"creation_time":        types.Int64Type,
 			"egress_config": basetypes.ListType{
 				ElemType: NccEgressConfig_SdkV2{}.Type(ctx),
 			},
@@ -22067,6 +22323,113 @@ func (m *UpdateNccPrivateEndpointRuleRequest_SdkV2) SetPrivateEndpointRule(ctx c
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["private_endpoint_rule"]
 	m.PrivateEndpointRule = types.ListValueMust(t, vs)
+}
+
+type UpdateNetworkConnectivityConfigRequest_SdkV2 struct {
+	// The network connectivity configuration fields to update.
+	NetworkConnectivityConfig types.List `tfsdk:"network_connectivity_config"`
+	// Your Network Connectivity Configuration ID.
+	NetworkConnectivityConfigId types.String `tfsdk:"-"`
+	// Must contain at least one of `name` or `billing_workspace_id`.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateNetworkConnectivityConfigRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateNetworkConnectivityConfigRequest_SdkV2) {
+	if !from.NetworkConnectivityConfig.IsNull() && !from.NetworkConnectivityConfig.IsUnknown() {
+		if toNetworkConnectivityConfig, ok := to.GetNetworkConnectivityConfig(ctx); ok {
+			if fromNetworkConnectivityConfig, ok := from.GetNetworkConnectivityConfig(ctx); ok {
+				// Recursively sync the fields of NetworkConnectivityConfig
+				toNetworkConnectivityConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromNetworkConnectivityConfig)
+				to.SetNetworkConnectivityConfig(ctx, toNetworkConnectivityConfig)
+			}
+		}
+	}
+}
+
+func (to *UpdateNetworkConnectivityConfigRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateNetworkConnectivityConfigRequest_SdkV2) {
+	if !from.NetworkConnectivityConfig.IsNull() && !from.NetworkConnectivityConfig.IsUnknown() {
+		if toNetworkConnectivityConfig, ok := to.GetNetworkConnectivityConfig(ctx); ok {
+			if fromNetworkConnectivityConfig, ok := from.GetNetworkConnectivityConfig(ctx); ok {
+				toNetworkConnectivityConfig.SyncFieldsDuringRead(ctx, fromNetworkConnectivityConfig)
+				to.SetNetworkConnectivityConfig(ctx, toNetworkConnectivityConfig)
+			}
+		}
+	}
+}
+
+func (m UpdateNetworkConnectivityConfigRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["network_connectivity_config"] = attrs["network_connectivity_config"].SetRequired()
+	attrs["network_connectivity_config"] = attrs["network_connectivity_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateNetworkConnectivityConfigRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateNetworkConnectivityConfigRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"network_connectivity_config": reflect.TypeOf(NetworkConnectivityConfiguration_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateNetworkConnectivityConfigRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UpdateNetworkConnectivityConfigRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"network_connectivity_config":    m.NetworkConnectivityConfig,
+			"network_connectivity_config_id": m.NetworkConnectivityConfigId,
+			"update_mask":                    m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateNetworkConnectivityConfigRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"network_connectivity_config": basetypes.ListType{
+				ElemType: NetworkConnectivityConfiguration_SdkV2{}.Type(ctx),
+			},
+			"network_connectivity_config_id": types.StringType,
+			"update_mask":                    types.StringType,
+		},
+	}
+}
+
+// GetNetworkConnectivityConfig returns the value of the NetworkConnectivityConfig field in UpdateNetworkConnectivityConfigRequest_SdkV2 as
+// a NetworkConnectivityConfiguration_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateNetworkConnectivityConfigRequest_SdkV2) GetNetworkConnectivityConfig(ctx context.Context) (NetworkConnectivityConfiguration_SdkV2, bool) {
+	var e NetworkConnectivityConfiguration_SdkV2
+	if m.NetworkConnectivityConfig.IsNull() || m.NetworkConnectivityConfig.IsUnknown() {
+		return e, false
+	}
+	var v []NetworkConnectivityConfiguration_SdkV2
+	d := m.NetworkConnectivityConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNetworkConnectivityConfig sets the value of the NetworkConnectivityConfig field in UpdateNetworkConnectivityConfigRequest_SdkV2.
+func (m *UpdateNetworkConnectivityConfigRequest_SdkV2) SetNetworkConnectivityConfig(ctx context.Context, v NetworkConnectivityConfiguration_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["network_connectivity_config"]
+	m.NetworkConnectivityConfig = types.ListValueMust(t, vs)
 }
 
 type UpdateNetworkPolicyRequest_SdkV2 struct {

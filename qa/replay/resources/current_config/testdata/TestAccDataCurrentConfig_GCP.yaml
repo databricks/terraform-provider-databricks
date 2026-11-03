@@ -1,0 +1,22 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "GCP"
+  workspace_id: "12345"
+steps:
+  - name: "read_config"
+    config: |
+      data "databricks_current_config" "this" {
+      }
+    calls: []
+    state:
+      resources:
+        data.databricks_current_config.this:
+          attributes:
+            - path: ["cloud_type"]
+              equals: "gcp"
+            - path: ["is_account"]
+              equals: false
+destroy:
+  calls: []

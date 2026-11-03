@@ -1,0 +1,219 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_query" "this" {
+        warehouse_id = "warehouse-1"
+        display_name = "tf-replay1"
+        query_text   = "SELECT 1 AS p1, 2 as p2"
+      }
+
+      resource "databricks_alert" "alert" {
+        query_id     = databricks_query.this.id
+        display_name = "tf-alert-replay1"
+        condition {
+          op = "EQUAL"
+          operand {
+            column {
+              name = "p2"
+            }
+          }
+          threshold {
+            value {
+              double_value = 2
+            }
+          }
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/sql/queries"
+          body:
+            json:
+              auto_resolve_display_name: false
+              query:
+                display_name: "tf-replay1"
+                query_text: "SELECT 1 AS p1, 2 as p2"
+                warehouse_id: "warehouse-1"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              display_name: "tf-replay1"
+              id: "query-1"
+              owner_user_name: "tester@example.com"
+              query_text: "SELECT 1 AS p1, 2 as p2"
+              warehouse_id: "warehouse-1"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/sql/queries/query-1"
+          body: null
+        response: *response_1
+      - request:
+          method: "POST"
+          path: "/api/2.0/sql/alerts"
+          body:
+            json:
+              alert:
+                condition:
+                  op: "EQUAL"
+                  operand:
+                    column:
+                      name: "p2"
+                  threshold:
+                    value:
+                      double_value: 2
+                display_name: "tf-alert-replay1"
+                notify_on_ok: true
+                query_id: "query-1"
+              auto_resolve_display_name: false
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              condition:
+                op: "EQUAL"
+                operand:
+                  column:
+                    name: "p2"
+                threshold:
+                  value:
+                    double_value: 2
+              display_name: "tf-alert-replay1"
+              id: "alert-1"
+              notify_on_ok: true
+              owner_user_name: "tester@example.com"
+              query_id: "query-1"
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.0/sql/alerts/alert-1"
+          body: null
+        response: *response_2
+      - *get_1
+      - *get_2
+  - name: "update"
+    config: |
+      resource "databricks_query" "this" {
+        warehouse_id = "warehouse-1"
+        display_name = "tf-replay2"
+        query_text   = "SELECT 1 AS p1, 2 as p2"
+      }
+
+      resource "databricks_alert" "alert" {
+        query_id     = databricks_query.this.id
+        display_name = "tf-alert-replay2"
+        condition {
+          op = "GREATER_THAN"
+          operand {
+            column {
+              name = "p2"
+            }
+          }
+          threshold {
+            value {
+              double_value = 3
+            }
+          }
+        }
+      }
+    calls:
+      - *get_1
+      - *get_2
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/sql/queries/query-1"
+          body:
+            json:
+              auto_resolve_display_name: false
+              query:
+                display_name: "tf-replay2"
+                owner_user_name: "tester@example.com"
+                query_text: "SELECT 1 AS p1, 2 as p2"
+                warehouse_id: "warehouse-1"
+              update_mask: "display_name,query_text,warehouse_id,parameters"
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              display_name: "tf-replay2"
+              id: "query-1"
+              owner_user_name: "tester@example.com"
+              query_text: "SELECT 1 AS p1, 2 as p2"
+              warehouse_id: "warehouse-1"
+      - &get_3
+        request:
+          method: "GET"
+          path: "/api/2.0/sql/queries/query-1"
+          body: null
+        response: *response_3
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/sql/alerts/alert-1"
+          body:
+            json:
+              alert:
+                condition:
+                  op: "GREATER_THAN"
+                  operand:
+                    column:
+                      name: "p2"
+                  threshold:
+                    value:
+                      double_value: 3
+                display_name: "tf-alert-replay2"
+                notify_on_ok: true
+                owner_user_name: "tester@example.com"
+                query_id: "query-1"
+              auto_resolve_display_name: false
+              update_mask: "display_name,query_id,seconds_to_retrigger,condition,custom_body,custom_subject"
+        response: &response_4 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              condition:
+                op: "GREATER_THAN"
+                operand:
+                  column:
+                    name: "p2"
+                threshold:
+                  value:
+                    double_value: 3
+              display_name: "tf-alert-replay2"
+              id: "alert-1"
+              notify_on_ok: true
+              owner_user_name: "tester@example.com"
+              query_id: "query-1"
+      - &get_4
+        request:
+          method: "GET"
+          path: "/api/2.0/sql/alerts/alert-1"
+          body: null
+        response: *response_4
+      - *get_3
+      - *get_4
+destroy:
+  calls:
+    - *get_3
+    - *get_4
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/sql/alerts/alert-1"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/sql/queries/query-1"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

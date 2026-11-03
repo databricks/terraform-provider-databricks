@@ -8,6 +8,8 @@ subcategory: "Database Instances"
 
 This data source can be used to get a single Database Instance.
 
+For new workloads, Databricks recommends the `databricks_postgres_project` data source.
+
 
 ## Example Usage
 Referring to a Database Instance by name:

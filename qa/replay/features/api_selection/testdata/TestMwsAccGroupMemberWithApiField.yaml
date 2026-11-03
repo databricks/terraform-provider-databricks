@@ -1,0 +1,228 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_memberships
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_group" "root" {
+        display_name = "tf-replay"
+        api          = "account"
+      }
+      resource "databricks_group" "first" {
+        display_name = "tf-replay-first"
+        api          = "account"
+      }
+      resource "databricks_group_member" "rf" {
+        group_id  = databricks_group.root.id
+        member_id = databricks_group.first.id
+        api       = "account"
+      }
+      data "databricks_group" "members" {
+        display_name = databricks_group.root.display_name
+        recursive    = false
+        depends_on   = [databricks_group_member.rf]
+        api          = "account"
+      }
+      output "member_count" {
+        value = length(data.databricks_group.members.child_groups)
+      }
+    calls:
+      - request:
+          body:
+            json:
+              displayName: tf-replay-first
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+          method: POST
+          path: /api/2.0/accounts/replay-account/scim/v2/Groups
+        response: &response_1 # Inferred API response; not recorded.
+          body:
+            json:
+              displayName: tf-replay-first
+              id: '8202'
+              members: []
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+          status: 200
+      - request:
+          body:
+            json:
+              displayName: tf-replay
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+          method: POST
+          path: /api/2.0/accounts/replay-account/scim/v2/Groups
+        response: &response_2 # Inferred API response; not recorded.
+          body:
+            json:
+              displayName: tf-replay
+              id: '8201'
+              members: []
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+          status: 200
+      - &call_3
+        request:
+          body: null
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Groups/8202
+          query:
+            attributes: ['displayName,externalId,entitlements']
+        response: *response_1 # Inferred API response; not recorded.
+      - request:
+          body: null
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Groups/8201
+          query:
+            attributes: ['displayName,externalId,entitlements']
+        response: *response_2 # Inferred API response; not recorded.
+      - request:
+          body:
+            json:
+              Operations:
+                - op: add
+                  path: members
+                  value:
+                    - value: '8202'
+              schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp']
+          method: PATCH
+          path: /api/2.0/accounts/replay-account/scim/v2/Groups/8201
+        response: &response_4 # Inferred API response; not recorded.
+          body: null
+          status: 200
+      - request:
+          body: null
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Groups/8201
+          query:
+            attributes: [members]
+        response: &response_3 # Inferred API response; not recorded.
+          body:
+            json:
+              displayName: tf-replay
+              id: '8201'
+              members:
+                - $ref: Groups/8202
+                  display: tf-replay-first
+                  value: '8202'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+          status: 200
+      - &call_1
+        request:
+          body: null
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Groups
+          query:
+            attributes: [id]
+            filter: [displayName eq "tf-replay"]
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              Resources:
+                - displayName: tf-replay
+                  id: '8201'
+                  members:
+                    - $ref: Groups/8202
+                      display: tf-replay-first
+                      value: '8202'
+                  schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+              totalResults: 1
+          status: 200
+      - &call_2
+        request:
+          body: null
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Groups/8201
+          query:
+            attributes: ['displayName,members,roles,entitlements,externalId,groups']
+        response: *response_3 # Inferred API response; not recorded.
+      - *call_1
+      - *call_2
+      - &call_4
+        request:
+          body: null
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Groups/8201
+          query:
+            attributes: ['displayName,externalId,entitlements']
+        response: *response_3 # Inferred API response; not recorded.
+      - *call_3
+      - *call_1
+      - *call_2
+  - name: check_member_count
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_group" "root" {
+        display_name = "tf-replay"
+        api          = "account"
+      }
+      resource "databricks_group" "first" {
+        display_name = "tf-replay-first"
+        api          = "account"
+      }
+      resource "databricks_group_member" "rf" {
+        group_id  = databricks_group.root.id
+        member_id = databricks_group.first.id
+        api       = "account"
+      }
+      data "databricks_group" "members" {
+        display_name = databricks_group.root.display_name
+        recursive    = false
+        depends_on   = [databricks_group_member.rf]
+        api          = "account"
+      }
+      output "member_count" {
+        value = length(data.databricks_group.members.child_groups)
+      }
+    calls:
+      - *call_1
+      - *call_2
+      - *call_4
+      - *call_3
+      - *call_1
+      - *call_2
+    # A no-op plan exposes computed set values as scalar output assertions.
+    plan_only: true
+    plan:
+      expect: empty
+      outputs:
+        member_count:
+          after:
+            - path: []
+              equals: 1
+destroy:
+  calls:
+    - *call_3
+    - *call_4
+    - *call_1
+    - *call_2
+    - request:
+        body:
+          json:
+            Operations:
+              - op: remove
+                path: members[value eq "8202"]
+            schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp']
+        method: PATCH
+        path: /api/2.0/accounts/replay-account/scim/v2/Groups/8201
+      response: *response_4 # Inferred API response; not recorded.
+    - request:
+        body: null
+        method: DELETE
+        path: /api/2.0/accounts/replay-account/scim/v2/Groups/8201
+      response: *response_4 # Inferred API response; not recorded.
+    - request:
+        body: null
+        method: DELETE
+        path: /api/2.0/accounts/replay-account/scim/v2/Groups/8202
+      response: *response_4 # Inferred API response; not recorded.

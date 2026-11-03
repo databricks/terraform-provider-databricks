@@ -1,0 +1,68 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "AWS"
+  account_id: "replay-account"
+steps:
+  - name: "create_serverless_workspace"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_mws_workspaces" "this" {
+        account_id     = "replay-account"
+        workspace_name = "terra-replay1"
+        aws_region     = "us-east-1"
+        compute_mode   = "SERVERLESS"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/accounts/replay-account/workspaces"
+          body:
+            json:
+              account_id: "replay-account"
+              aws_region: "us-east-1"
+              compute_mode: "SERVERLESS"
+              effective_compute_mode: ""
+              is_no_public_ip_enabled: true
+              workspace_name: "terra-replay1"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              aws_region: "us-east-1"
+              compute_mode: "SERVERLESS"
+              deployment_name: "replay-workspace"
+              effective_compute_mode: "SERVERLESS"
+              workspace_id: 12345
+              workspace_name: "terra-replay1"
+              workspace_status: "RUNNING"
+      - &lookup_workspace_12345
+        request: {method: "GET", path: "/api/2.0/accounts/replay-account/workspaces/12345", body: null}
+        response: *response_1
+      - *lookup_workspace_12345
+      - *lookup_workspace_12345
+      - *lookup_workspace_12345
+      - *lookup_workspace_12345
+destroy:
+  calls:
+    - *lookup_workspace_12345
+    - *lookup_workspace_12345
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/accounts/replay-account/workspaces/12345"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request: {method: "GET", path: "/api/2.0/accounts/replay-account/workspaces/12345", body: null}
+      response: &response_2 # Inferred API response; not recorded.
+        status: 404
+        body:
+          json:
+            error_code: "RESOURCE_DOES_NOT_EXIST"
+            message: "Workspace deleted"

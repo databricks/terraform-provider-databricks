@@ -1,0 +1,117 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: enable_ip_access_lists
+    config: |
+      resource "databricks_workspace_conf" "this" {
+        custom_config = {
+          "enableIpAccessLists" : true
+        }
+      }
+    calls:
+      - request:
+          method: PATCH
+          path: /api/2.0/workspace-conf
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              enableIpAccessLists: 'true'
+        response: &response_1 # Inferred API response; not recorded.
+          body: null
+          status: 200
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/workspace-conf
+          query:
+            keys: [enableIpAccessLists]
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              enableIpAccessLists: 'true'
+          status: 200
+      - *call_1
+    state:
+      resources:
+        databricks_workspace_conf.this:
+          attributes:
+            - path: [custom_config, enableIpAccessLists]
+              equals: 'true'
+  - name: disable_ip_access_lists
+    config: |
+      resource "databricks_workspace_conf" "this" {
+        custom_config = {
+          "enableIpAccessLists" : "false"
+        }
+      }
+    calls:
+      - *call_1
+      - &call_3
+        request:
+          method: PATCH
+          path: /api/2.0/workspace-conf
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              enableIpAccessLists: 'false'
+        response: *response_1 # Inferred API response; not recorded.
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/workspace-conf
+          query:
+            keys: [enableIpAccessLists]
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              enableIpAccessLists: 'false'
+          status: 200
+      - *call_2
+    state:
+      resources:
+        databricks_workspace_conf.this:
+          attributes:
+            - path: [custom_config, enableIpAccessLists]
+              equals: 'false'
+  - name: reject_unknown_key
+    config: |
+      resource "databricks_workspace_conf" "this" {
+        custom_config = {
+          "enableIpAccessLissss" : "invalid"
+        }
+      }
+    calls:
+      - *call_2
+      - request:
+          method: PATCH
+          path: /api/2.0/workspace-conf
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              enableIpAccessLissss: invalid
+              enableIpAccessLists: 'false'
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              error_code: INVALID_PARAMETER_VALUE
+              message: 'Invalid keys: ["enableIpAccessLissss"]'
+          status: 400
+    expect_error: 'cannot update workspace conf: failed to set workspace conf because some\s+new keys are invalid:
+      enableIpAccessLissss'
+destroy:
+  calls:
+    - *call_2
+    - *call_3

@@ -1,0 +1,276 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_sql_query" "this" {
+        data_source_id = "datasource-1"
+        name           = "tf-replay1"
+        query          = "SELECT 1 AS p1, 2 as p2"
+      }
+
+      resource "databricks_permissions" "alert_usage" {
+        sql_alert_id = databricks_sql_alert.alert.id
+        access_control {
+          group_name       = "users"
+          permission_level = "CAN_RUN"
+        }
+      }
+
+      resource "databricks_sql_alert" "alert" {
+        query_id = databricks_sql_query.this.id
+        name     = "tf-alert-replay1"
+        options {
+          column = "p1"
+          op     = "=="
+          value  = "2"
+          muted  = false
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/preview/sql/queries"
+          body:
+            json:
+              data_source_id: "datasource-1"
+              description: ""
+              name: "tf-replay1"
+              query: "SELECT 1 AS p1, 2 as p2"
+              schedule: null
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              data_source_id: "datasource-1"
+              description: ""
+              id: "query-1"
+              name: "tf-replay1"
+              query: "SELECT 1 AS p1, 2 as p2"
+              schedule: null
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/preview/sql/queries/query-1"
+          body: null
+        response: *response_1
+      - request:
+          method: "POST"
+          path: "/api/2.0/preview/sql/alerts"
+          body:
+            json:
+              name: "tf-alert-replay1"
+              options:
+                column: "p1"
+                op: "=="
+                value: "2"
+              query_id: "query-1"
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              id: "alert-1"
+              name: "tf-alert-replay1"
+              options:
+                column: "p1"
+                op: "=="
+                value: "2"
+              query:
+                id: "query-1"
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.0/preview/sql/alerts/alert-1"
+          body: null
+        response: *response_2
+      - &get_3
+        request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Me"
+          query:
+            excludedAttributes: ["entitlements"]
+          body: null
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          headers:
+            "X-Databricks-Org-Id": "12345"
+          body:
+            json:
+              displayName: "Replay tester"
+              id: "100"
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              userName: "tester@example.com"
+      - request:
+          method: "PUT"
+          path: "/api/2.0/permissions/sql/alerts/alert-1"
+          body:
+            json:
+              access_control_list:
+                - group_name: "users"
+                  permission_level: "CAN_RUN"
+                - permission_level: "CAN_MANAGE"
+                  user_name: "tester@example.com"
+        response: &response_4 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              access_control_list:
+                - all_permissions:
+                    - inherited: false
+                      permission_level: "CAN_RUN"
+                  group_name: "users"
+                - all_permissions:
+                    - inherited: false
+                      permission_level: "CAN_MANAGE"
+                  user_name: "tester@example.com"
+              object_id: "/sql/alerts/alert-1"
+              object_type: "alert"
+      - *get_3
+      - &get_4
+        request:
+          method: "GET"
+          path: "/api/2.0/permissions/sql/alerts/alert-1"
+          body: null
+        response: *response_4
+      - *get_1
+      - *get_2
+      - *get_3
+      - *get_4
+  - name: "update_options"
+    config: |
+      resource "databricks_sql_query" "this" {
+        data_source_id = "datasource-1"
+        name           = "tf-replay2"
+        query          = "SELECT 1 AS p1, 2 as p2"
+      }
+
+      resource "databricks_permissions" "alert_usage" {
+        sql_alert_id = databricks_sql_alert.alert.id
+        access_control {
+          group_name       = "users"
+          permission_level = "CAN_RUN"
+        }
+      }
+
+      resource "databricks_sql_alert" "alert" {
+        query_id = databricks_sql_query.this.id
+        name     = "tf-alert-replay2"
+        options {
+          column = "p1"
+          op     = ">="
+          value  = "3"
+          muted  = false
+        }
+      }
+    calls:
+      - *get_1
+      - *get_2
+      - *get_3
+      - *get_4
+      - request:
+          method: "POST"
+          path: "/api/2.0/preview/sql/queries/query-1"
+          body:
+            json:
+              data_source_id: "datasource-1"
+              description: ""
+              id: "query-1"
+              name: "tf-replay2"
+              query: "SELECT 1 AS p1, 2 as p2"
+              schedule: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_5
+        request:
+          method: "GET"
+          path: "/api/2.0/preview/sql/queries/query-1"
+          body: null
+        response: &response_5 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              data_source_id: "datasource-1"
+              description: ""
+              id: "query-1"
+              name: "tf-replay2"
+              query: "SELECT 1 AS p1, 2 as p2"
+              schedule: null
+      - request:
+          method: "PUT"
+          path: "/api/2.0/preview/sql/alerts/alert-1"
+          body:
+            json:
+              name: "tf-alert-replay2"
+              options:
+                column: "p1"
+                op: ">="
+                value: "3"
+              query_id: "query-1"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_6
+        request:
+          method: "GET"
+          path: "/api/2.0/preview/sql/alerts/alert-1"
+          body: null
+        response: &response_6 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              id: "alert-1"
+              name: "tf-alert-replay2"
+              options:
+                column: "p1"
+                op: ">="
+                value: "3"
+              query:
+                id: "query-1"
+      - *get_5
+      - *get_6
+      - *get_3
+      - *get_4
+destroy:
+  calls:
+    - *get_5
+    - *get_6
+    - *get_3
+    - *get_4
+    - *get_4
+    - *get_3
+    - request:
+        method: "PUT"
+        path: "/api/2.0/permissions/sql/alerts/alert-1"
+        body:
+          json:
+            access_control_list:
+              - permission_level: "CAN_MANAGE"
+                user_name: "tester@example.com"
+      response: &response_7 # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            access_control_list:
+              - all_permissions:
+                  - inherited: false
+                    permission_level: "CAN_MANAGE"
+                user_name: "tester@example.com"
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/preview/sql/alerts/alert-1"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/preview/sql/queries/query-1"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

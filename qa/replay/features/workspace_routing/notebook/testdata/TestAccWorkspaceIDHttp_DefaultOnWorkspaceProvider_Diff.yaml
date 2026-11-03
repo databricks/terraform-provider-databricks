@@ -1,0 +1,22 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  workspace_id: "1001"
+  cloud: "AWS"
+steps:
+  - name: "create"
+    config: |
+      provider "databricks" {
+        workspace_id = "12345"
+      }
+
+      resource "databricks_notebook" "test" {
+        path = "/Shared/dwsid-test-replay"
+        content_base64 = "IyBEYXRhYnJpY2tzIG5vdGVib29rIHNvdXJjZQpwcmludCgnaGVsbG8nKQ=="
+        language = "PYTHON"
+      }
+    calls: []
+    expect_error: "workspace_id mismatch"
+destroy:
+  calls: []

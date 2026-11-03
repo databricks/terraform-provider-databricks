@@ -1886,13 +1886,17 @@ type CreateRoleRequest_SdkV2 struct {
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"-"`
 	// If true, update the role if it already exists instead of returning an
-	// error.
+	// error. This requires `role_id` to be set. Without `role_id`, the request
+	// follows the normal create path and fails if the role name already exists.
 	//
-	// When the role already exists, the provided `role` spec fully replaces the
-	// existing one: `membership_roles` is overwritten, not merged. Leaving
-	// `membership_roles` empty clears all of the role's existing memberships,
-	// including `DATABRICKS_SUPERUSER`. Always send the complete desired list
-	// of memberships when using this field.
+	// When the role already exists, only mutable fields are updated. Attributes
+	// omitted from the request retain their current values. Set an attribute
+	// explicitly to false to disable it. `identity_type`, `auth_method`, and
+	// `postgres_role` retain their existing values; supplied values for these
+	// fields are ignored. `membership_roles` is overwritten, not merged.
+	// Leaving `membership_roles` empty clears all of the role's existing
+	// memberships, including `DATABRICKS_SUPERUSER`. Always send the complete
+	// desired list of memberships when using this field.
 	ReplaceExisting types.Bool `tfsdk:"-"`
 	// The desired specification of a Role.
 	Role types.List `tfsdk:"role"`
@@ -8804,6 +8808,106 @@ func (m RequestedResource_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Request to reveal the current password for a password-authenticated Postgres
+// role.
+type RevealRolePasswordRequest_SdkV2 struct {
+	// The full resource path of the role whose password should be revealed.
+	// Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *RevealRolePasswordRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RevealRolePasswordRequest_SdkV2) {
+}
+
+func (to *RevealRolePasswordRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RevealRolePasswordRequest_SdkV2) {
+}
+
+func (m RevealRolePasswordRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RevealRolePasswordRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RevealRolePasswordRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RevealRolePasswordRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m RevealRolePasswordRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RevealRolePasswordRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+// Response containing the password for a password-authenticated Postgres role.
+type RevealRolePasswordResponse_SdkV2 struct {
+	// The current password for the Postgres role.
+	Password types.String `tfsdk:"password"`
+}
+
+func (to *RevealRolePasswordResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RevealRolePasswordResponse_SdkV2) {
+}
+
+func (to *RevealRolePasswordResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RevealRolePasswordResponse_SdkV2) {
+}
+
+func (m RevealRolePasswordResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["password"] = attrs["password"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RevealRolePasswordResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RevealRolePasswordResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RevealRolePasswordResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m RevealRolePasswordResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"password": m.Password,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RevealRolePasswordResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"password": types.StringType,
+		},
+	}
+}
+
 // Role represents a Postgres role within a Branch.
 type Role_SdkV2 struct {
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
@@ -9119,12 +9223,22 @@ type RoleRoleSpec_SdkV2 struct {
 	//
 	// NOTE: for the Databricks identity type GROUP, LAKEBASE_OAUTH_V1 is the
 	// default auth method (group can login as well).
+	//
+	// This field is set when the role is created and cannot be changed by
+	// UpdateRole. If provided in an UpdateRole request body, its value is
+	// ignored and the existing value is retained. Do not include this field as
+	// an explicit path in update_mask.
 	AuthMethod types.String `tfsdk:"auth_method"`
 	// The type of role. When specifying a managed-identity, the chosen role_id
 	// must be a valid:
 	//
 	// * application ID for SERVICE_PRINCIPAL * user email for USER * group name
 	// for GROUP
+	//
+	// This field is set when the role is created and cannot be changed by
+	// UpdateRole. If provided in an UpdateRole request body, its value is
+	// ignored and the existing value is retained. Do not include this field as
+	// an explicit path in update_mask.
 	IdentityType types.String `tfsdk:"identity_type"`
 	// An enum value for a standard role that this role is a member of.
 	MembershipRoles types.List `tfsdk:"membership_roles"`
@@ -9140,6 +9254,11 @@ type RoleRoleSpec_SdkV2 struct {
 	//
 	// 1. user email for IdentityType.USER 2. app ID for
 	// IdentityType.SERVICE_PRINCIPAL 2. group name for IdentityType.GROUP
+	//
+	// This field is set when the role is created and cannot be changed by
+	// UpdateRole. If provided in an UpdateRole request body, its value is
+	// ignored and the existing value is retained. Do not include this field as
+	// an explicit path in update_mask.
 	PostgresRole types.String `tfsdk:"postgres_role"`
 }
 
@@ -10193,8 +10312,7 @@ type SyncedTable_SdkV2 struct {
 	// "source_table_full_name" attribute.
 	Name types.String `tfsdk:"name"`
 	// Configuration details of the synced table, such as the source table,
-	// scheduling policy, etc. This attribute is specified at creation time and
-	// most fields are returned as is on subsequent queries.
+	// scheduling policy, etc.
 	Spec types.List `tfsdk:"spec"`
 	// Synced Table data synchronization status.
 	Status types.List `tfsdk:"status"`
@@ -11925,7 +12043,21 @@ type UpdateRoleRequest_SdkV2 struct {
 	// The role's `name` field is used to identify the role to update. Format:
 	// projects/{project_id}/branches/{branch_id}/roles/{role_id}
 	Role types.List `tfsdk:"role"`
-	// The list of fields to update.
+	// The list of fields to update. Supported fields are
+	// `spec.membership_roles`, `spec.attributes.createdb`,
+	// `spec.attributes.createrole`, and `spec.attributes.bypassrls`.
+	//
+	// `spec.identity_type`, `spec.auth_method`, and `spec.postgres_role` cannot
+	// be changed. Values supplied for these fields in the request body are
+	// ignored. Including one of these fields as an explicit path in update_mask
+	// returns an INVALID_PARAMETER_VALUE error. When `spec` is the only path in
+	// the mask, only the supplied mutable attributes are updated. `*` by
+	// itself, or `spec` combined with other supported paths, selects all
+	// supported mutable fields. For these masks, all three attributes
+	// (`createdb`, `createrole`, and `bypassrls`) must be supplied; omitting
+	// any returns an INVALID_PARAMETER_VALUE error. Each of these mask forms
+	// replaces `membership_roles`. Omitting it or supplying an empty list
+	// clears all memberships, including `DATABRICKS_SUPERUSER`.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

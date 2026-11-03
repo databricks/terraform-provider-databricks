@@ -1455,8 +1455,8 @@ func (m *Endpoint) SetThroughputInfo(ctx context.Context, v EndpointThroughputIn
 	m.ThroughputInfo = vs
 }
 
-// Scaling information for a Storage Optimized endpoint — current scaling
-// state and the requested QPS target the system is scaling toward.
+// Scaling information for a Standard endpoint: the current scaling state, the
+// requested QPS target, and the progress of an in-progress scaling change.
 type EndpointScalingInfo struct {
 	// The requested QPS target for the endpoint. Best-effort; the system does
 	// not guarantee this QPS will be achieved.

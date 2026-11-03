@@ -1,0 +1,262 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create
+    config: |
+      resource "databricks_user" "this" {
+        user_name = "job-user@example.com"
+      }
+      data "databricks_current_user" "me" {}
+      data "databricks_spark_version" "latest" {}
+      data "databricks_node_type" "smallest" {
+        local_disk = true
+      }
+
+      resource "databricks_notebook" "this" {
+        path     = "${data.databricks_current_user.me.home}/Terraformreplay"
+        language = "PYTHON"
+        content_base64 = base64encode(<<-EOT
+          # created from ${abspath(path.module)}
+          display(spark.range(10))
+          EOT
+        )
+      }
+
+      resource "databricks_job" "this" {
+        name = "replay"
+
+        job_cluster {
+          job_cluster_key = "j"
+          new_cluster {
+            num_workers   = 20
+            spark_version = data.databricks_spark_version.latest.id
+            node_type_id  = data.databricks_node_type.smallest.id
+          }
+        }
+
+        task {
+          task_key        = "c"
+          job_cluster_key = "j"
+          notebook_task {
+            notebook_path = databricks_notebook.this.path
+          }
+        }
+
+        run_as {
+          user_name = databricks_user.this.user_name
+        }
+      }
+    calls:
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          body: null
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: Replay tester
+              id: '100'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tester@example.com
+          headers:
+            X-Databricks-Org-Id: '12345'
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.1/clusters/spark-versions
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              versions:
+                - key: 17.3.x-scala2.13
+                  name: 17.3 LTS (includes Apache Spark 4.0.0, Scala 2.13)
+      - &call_3
+        request:
+          method: GET
+          path: /api/2.1/clusters/list-node-types
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              node_types:
+                - memory_mb: 30500
+                  node_instance_type:
+                    instance_type_id: i3.xlarge
+                    local_disk_size_gb: 950
+                    local_disks: 1
+                  node_type_id: i3.xlarge
+                  num_cores: 4
+      - request:
+          method: POST
+          path: /api/2.0/workspace/import
+          body:
+            json:
+              content: IyBjcmVhdGVkIGZyb20gL3RlcnJhZm9ybS9maXh0dXJlCmRpc3BsYXkoc3BhcmsucmFuZ2UoMTApKQo=
+              format: SOURCE
+              language: PYTHON
+              overwrite: true
+              path: /Users/tester@example.com/Terraformreplay
+          matchers:
+            json:
+              - path: [content]
+                type: any_string
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 100
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Users
+          body:
+            json:
+              active: true
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: job-user@example.com
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              displayName: job-user@example.com
+              id: '9501'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: job-user@example.com
+      - &call_4
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Users/9501
+          body: null
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+        response: *response_1 # Inferred API response; not recorded.
+      - request:
+          method: POST
+          path: /api/2.2/jobs/create
+          body:
+            json:
+              job_clusters:
+                - job_cluster_key: j
+                  new_cluster:
+                    node_type_id: i3.xlarge
+                    num_workers: 20
+                    spark_version: 17.3.x-scala2.13
+              max_concurrent_runs: 1
+              name: replay
+              queue:
+                enabled: false
+              run_as:
+                user_name: job-user@example.com
+              tasks:
+                - job_cluster_key: j
+                  notebook_task:
+                    notebook_path: /Users/tester@example.com/Terraformreplay
+                  task_key: c
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              job_id: 101
+      - &call_5
+        request:
+          method: GET
+          path: /api/2.2/jobs/get
+          body: null
+          query:
+            job_id: ['101']
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              creator_user_name: tester@example.com
+              job_id: 101
+              run_as_user_name: job-user@example.com
+              settings:
+                format: MULTI_TASK
+                job_clusters:
+                  - job_cluster_key: j
+                    new_cluster:
+                      node_type_id: i3.xlarge
+                      num_workers: 20
+                      spark_version: 17.3.x-scala2.13
+                max_concurrent_runs: 1
+                name: replay
+                queue:
+                  enabled: false
+                tasks:
+                  - job_cluster_key: j
+                    notebook_task:
+                      notebook_path: /Users/tester@example.com/Terraformreplay
+                    task_key: c
+      - *call_1
+      - *call_2
+      - *call_3
+      - *call_1
+      - *call_3
+      - *call_2
+      - *call_4
+      - &call_6
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          body: null
+          query:
+            excludedAttributes: [entitlements]
+        response: *response_2 # Inferred API response; not recorded.
+      - &call_7
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          body: null
+          query:
+            path: [/Users/tester@example.com/Terraformreplay]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              language: PYTHON
+              object_id: 200
+              object_type: NOTEBOOK
+              path: /Users/tester@example.com/Terraformreplay
+      - *call_5
+destroy:
+  calls:
+    - *call_2
+    - *call_1
+    - *call_3
+    - *call_4
+    - *call_6
+    - *call_7
+    - *call_5
+    - request:
+        method: POST
+        path: /api/2.2/jobs/delete
+        body:
+          json:
+            job_id: 101
+      response: &response_3 # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Users/9501
+        body: null
+      response: *response_3 # Inferred API response; not recorded.
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        body:
+          json:
+            path: /Users/tester@example.com/Terraformreplay
+      response: *response_3 # Inferred API response; not recorded.

@@ -113,7 +113,15 @@ type Group struct {
 	// Internal group ID of the group in Databricks.
 	GroupId types.String `tfsdk:"group_id"`
 	// Display name of the group.
-	GroupName      types.String `tfsdk:"group_name"`
+	GroupName types.String `tfsdk:"group_name"`
+	// The resource name of the group. The format depends on the API that
+	// returned it: - Account-scoped: accounts/{account_id}/groups/{group_id} -
+	// Workspace-scoped: groups/{group_id}
+	Name types.String `tfsdk:"name"`
+	// The resource name of the account that contains the group,
+	// `accounts/{account_id}`. Both the account-scoped and workspace-scoped
+	// APIs return it.
+	Parent         types.String `tfsdk:"parent"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
 
@@ -143,6 +151,8 @@ func (m Group) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"external_id": m.ExternalId,
 			"group_id":    m.GroupId,
 			"group_name":  m.GroupName,
+			"name":        m.Name,
+			"parent":      m.Parent,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -157,6 +167,8 @@ func (m Group) Type(ctx context.Context) attr.Type {
 			"external_id": types.StringType,
 			"group_id":    types.StringType,
 			"group_name":  types.StringType,
+			"name":        types.StringType,
+			"parent":      types.StringType,
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -181,11 +193,16 @@ func (to *Group) SyncFieldsDuringRead(ctx context.Context, from Group) {
 
 func (m Group) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["account_id"] = attrs["account_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["group_id"] = attrs["group_id"].SetComputed()
-	attrs["group_name"] = attrs["group_name"].SetOptional()
-
 	attrs["group_id"] = attrs["group_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 	attrs["provider_config"] = attrs["provider_config"].SetComputed()
 	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
@@ -219,10 +236,6 @@ func (r *GroupResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanR
 		return
 	}
 	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *GroupResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -241,7 +254,8 @@ func (r *GroupResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	createRequest := iamv2.CreateGroupProxyRequest{
-		Group: group,
+		Group:  group,
+		Parent: plan.Parent.ValueString(),
 	}
 
 	var namespace ProviderConfig
@@ -346,7 +360,7 @@ func (r *GroupResource) update(ctx context.Context, plan Group, diags *diag.Diag
 
 	updateRequest := iamv2.UpdateGroupProxyRequest{
 		Group:      group,
-		GroupId:    plan.GroupId.ValueString(),
+		Name:       plan.Name.ValueString(),
 		UpdateMask: "external_id,group_name",
 	}
 
@@ -444,13 +458,13 @@ func (r *GroupResource) ImportState(ctx context.Context, req resource.ImportStat
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
 			fmt.Sprintf(
-				"Expected import identifier with format: group_id. Got: %q",
+				"Expected import identifier with format: name. Got: %q",
 				req.ID,
 			),
 		)
 		return
 	}
 
-	groupId := parts[0]
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("group_id"), groupId)...)
+	name := parts[0]
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
 }

@@ -1,0 +1,527 @@
+# Placeholder API responses inferred from API models; not recorded.
+version: 1
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create_permissions
+    config: &fixture_50 |
+      resource "databricks_sql_endpoint" "this" {
+        name             = "replay"
+        cluster_size     = "2X-Small"
+
+        tags {
+          custom_tags {
+            key   = "Owner"
+            value = "eng-dev-ecosystem-team_at_databricks.com"
+          }
+        }
+      }
+
+      data "databricks_current_user" "me" {}
+      resource "databricks_group" "_0" {
+        display_name = "permissions-replay-0"
+      }
+      resource "databricks_permissions" "this" {
+        sql_endpoint_id = databricks_sql_endpoint.this.id
+        access_control {
+          group_name = databricks_group._0.display_name
+          permission_level = "CAN_USE"
+        }
+      }
+    calls:
+      - &get_Me_7 {request: {method: GET, path: /api/2.0/preview/scim/v2/Me, body: null}, response: &fixture_4 {
+          status: 200, body: {json: {active: true, displayName: Replay runner, groups: [{display: admins, value: '901'}],
+              id: '900', schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'], userName: 11111111-1111-4111-8111-000000000000}},
+          headers: {X-Databricks-Org-Id: '12345'}}}
+      - &post_Groups_51 {request: {method: POST, path: /api/2.0/preview/scim/v2/Groups, body: {json: {displayName: permissions-replay-0,
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group'], entitlements: [{}]}}}, response: &fixture_1 {
+          status: 200, body: {json: {id: '1000', displayName: permissions-replay-0, schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']}}}}
+      - &get_1000_8 {request: {method: GET, path: /api/2.0/preview/scim/v2/Groups/1000, body: null, query: &fixture_16 {
+            attributes: ['displayName,externalId,entitlements']}}, response: *fixture_1}
+      - request:
+          method: POST
+          path: /api/2.0/sql/warehouses
+          body:
+            json:
+              auto_stop_mins: 120
+              cluster_size: 2X-Small
+              enable_photon: true
+              max_num_clusters: 1
+              name: replay
+              spot_instance_policy: COST_OPTIMIZED
+              tags: &fixture_2
+                custom_tags:
+                  - key: Owner
+                    value: eng-dev-ecosystem-team_at_databricks.com
+        response:
+          status: 200
+          body:
+            json:
+              id: warehouse-1
+      - &get_warehouse_1_3
+        request:
+          method: GET
+          path: /api/2.0/sql/warehouses/warehouse-1
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              auto_stop_mins: 120
+              cluster_size: 2X-Small
+              enable_photon: true
+              enable_serverless_compute: false
+              id: warehouse-1
+              max_num_clusters: 1
+              min_num_clusters: 1
+              name: replay
+              odbc_params:
+                hostname: replay.cloud.databricks.com
+                path: /sql/1.0/warehouses/warehouse-1
+                port: 443
+                protocol: https
+              spot_instance_policy: COST_OPTIMIZED
+              state: RUNNING
+              tags: *fixture_2
+              creator_name: 11111111-1111-4111-8111-000000000000
+      - *get_warehouse_1_3
+      - &get_data_sources_9
+        request:
+          method: GET
+          path: /api/2.0/preview/sql/data_sources
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              - id: datasource-1
+                warehouse_id: warehouse-1
+              - id: datasource-2
+                warehouse_id: warehouse-2
+      - &get_Me_5 {request: {method: GET, path: /api/2.0/preview/scim/v2/Me, body: null, query: {excludedAttributes: [
+              entitlements]}}, response: *fixture_4}
+      - &put_warehouse_1_52
+        request:
+          method: PUT
+          path: /api/2.0/permissions/sql/warehouses/warehouse-1
+          body:
+            json:
+              access_control_list:
+                - &fixture_24 {group_name: permissions-replay-0, permission_level: CAN_USE}
+                - &fixture_46 {user_name: 11111111-1111-4111-8111-000000000000, permission_level: CAN_MANAGE}
+                - &fixture_47 {user_name: 11111111-1111-4111-8111-000000000000, permission_level: IS_OWNER}
+        response: &fixture_6
+          status: 200
+          body:
+            json:
+              object_id: /sql/warehouses/warehouse-1
+              object_type: warehouses
+              access_control_list:
+                - &fixture_28 {group_name: permissions-replay-0, all_permissions: [&fixture_26 {permission_level: CAN_USE,
+                      inherited: false}]}
+                - &fixture_48 {user_name: 11111111-1111-4111-8111-000000000000, all_permissions: [&fixture_27 {
+                      permission_level: CAN_MANAGE, inherited: false}]}
+                - &fixture_49 {user_name: 11111111-1111-4111-8111-000000000000, all_permissions: [&fixture_25 {
+                      permission_level: IS_OWNER, inherited: false}]}
+      - *get_Me_5
+      - &get_warehouse_1_10
+        request: &fixture_31
+          method: GET
+          path: /api/2.0/permissions/sql/warehouses/warehouse-1
+          body: null
+        response: *fixture_6
+      - *get_Me_7
+      - *get_Me_7
+      - *get_1000_8
+      - *get_warehouse_1_3
+      - *get_data_sources_9
+      - *get_Me_5
+      - *get_warehouse_1_10
+  - name: all_principal_types
+    config: |
+      resource "databricks_sql_endpoint" "this" {
+        name             = "replay"
+        cluster_size     = "2X-Small"
+
+        tags {
+          custom_tags {
+            key   = "Owner"
+            value = "eng-dev-ecosystem-team_at_databricks.com"
+          }
+        }
+      }
+
+      data "databricks_current_user" "me" {}
+      resource "databricks_service_principal" "_0" {
+        display_name = "permissions-replay-0"
+      }
+      resource "databricks_service_principal" "_1" {
+        display_name = "permissions-replay-1"
+      }
+      resource "databricks_service_principal" "_2" {
+        display_name = "permissions-replay-2"
+      }
+      resource "databricks_service_principal" "_3" {
+        display_name = "permissions-replay-3"
+      }
+      resource "databricks_group" "_0" {
+        display_name = "permissions-replay-0"
+      }
+      resource "databricks_group" "_1" {
+        display_name = "permissions-replay-1"
+      }
+      resource "databricks_group" "_2" {
+        display_name = "permissions-replay-2"
+      }
+      resource "databricks_group" "_3" {
+        display_name = "permissions-replay-3"
+      }
+      resource "databricks_user" "_0" {
+        user_name = "permissions-replay-0@databricks.com"
+      }
+      resource "databricks_user" "_1" {
+        user_name = "permissions-replay-1@databricks.com"
+      }
+      resource "databricks_user" "_2" {
+        user_name = "permissions-replay-2@databricks.com"
+      }
+      resource "databricks_user" "_3" {
+        user_name = "permissions-replay-3@databricks.com"
+      }
+      resource "databricks_permissions" "this" {
+        sql_endpoint_id = databricks_sql_endpoint.this.id
+        access_control {
+          service_principal_name = data.databricks_current_user.me.user_name
+          permission_level = "IS_OWNER"
+        }
+        access_control {
+          service_principal_name = databricks_service_principal._0.application_id
+          permission_level = "CAN_USE"
+        }
+        access_control {
+          service_principal_name = databricks_service_principal._1.application_id
+          permission_level = "CAN_MANAGE"
+        }
+        access_control {
+          service_principal_name = databricks_service_principal._2.application_id
+          permission_level = "CAN_MONITOR"
+        }
+        access_control {
+          service_principal_name = databricks_service_principal._3.application_id
+          permission_level = "CAN_VIEW"
+        }
+        access_control {
+          group_name = databricks_group._0.display_name
+          permission_level = "CAN_USE"
+        }
+        access_control {
+          group_name = databricks_group._1.display_name
+          permission_level = "CAN_MANAGE"
+        }
+        access_control {
+          group_name = databricks_group._2.display_name
+          permission_level = "CAN_MONITOR"
+        }
+        access_control {
+          group_name = databricks_group._3.display_name
+          permission_level = "CAN_VIEW"
+        }
+        access_control {
+          user_name = databricks_user._0.user_name
+          permission_level = "CAN_USE"
+        }
+        access_control {
+          user_name = databricks_user._1.user_name
+          permission_level = "CAN_MANAGE"
+        }
+        access_control {
+          user_name = databricks_user._2.user_name
+          permission_level = "CAN_MONITOR"
+        }
+        access_control {
+          user_name = databricks_user._3.user_name
+          permission_level = "CAN_VIEW"
+        }
+      }
+    calls:
+      - *get_Me_7
+      - *get_1000_8
+      - *get_warehouse_1_3
+      - *get_data_sources_9
+      - *get_Me_5
+      - *get_warehouse_1_10
+      - {request: {method: POST, path: /api/2.0/preview/scim/v2/ServicePrincipals, body: {json: {displayName: permissions-replay-0,
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal'], entitlements: [{}], active: true}}},
+        response: &fixture_11 {status: 200, body: {json: {id: '3000', displayName: permissions-replay-0, schemas: [
+                'urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal'], active: true, applicationId: 11111111-1111-4111-8111-000000000001}}}}
+      - &get_3000_33 {request: {method: GET, path: /api/2.0/preview/scim/v2/ServicePrincipals/3000, body: null,
+          query: &fixture_12 {attributes: ['userName,displayName,active,externalId,entitlements']}}, response: *fixture_11}
+      - {request: {method: POST, path: /api/2.0/preview/scim/v2/ServicePrincipals, body: {json: {displayName: permissions-replay-1,
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal'], entitlements: [{}], active: true}}},
+        response: &fixture_13 {status: 200, body: {json: {id: '3001', displayName: permissions-replay-1, schemas: [
+                'urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal'], active: true, applicationId: 11111111-1111-4111-8111-000000000002}}}}
+      - &get_3001_34 {request: {method: GET, path: /api/2.0/preview/scim/v2/ServicePrincipals/3001, body: null,
+          query: *fixture_12}, response: *fixture_13}
+      - {request: {method: POST, path: /api/2.0/preview/scim/v2/ServicePrincipals, body: {json: {displayName: permissions-replay-2,
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal'], entitlements: [{}], active: true}}},
+        response: &fixture_14 {status: 200, body: {json: {id: '3002', displayName: permissions-replay-2, schemas: [
+                'urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal'], active: true, applicationId: 11111111-1111-4111-8111-000000000003}}}}
+      - &get_3002_35 {request: {method: GET, path: /api/2.0/preview/scim/v2/ServicePrincipals/3002, body: null,
+          query: *fixture_12}, response: *fixture_14}
+      - {request: {method: POST, path: /api/2.0/preview/scim/v2/ServicePrincipals, body: {json: {displayName: permissions-replay-3,
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal'], entitlements: [{}], active: true}}},
+        response: &fixture_15 {status: 200, body: {json: {id: '3003', displayName: permissions-replay-3, schemas: [
+                'urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal'], active: true, applicationId: 11111111-1111-4111-8111-000000000004}}}}
+      - &get_3003_36 {request: {method: GET, path: /api/2.0/preview/scim/v2/ServicePrincipals/3003, body: null,
+          query: *fixture_12}, response: *fixture_15}
+      - {request: {method: POST, path: /api/2.0/preview/scim/v2/Groups, body: {json: {displayName: permissions-replay-1,
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group'], entitlements: [{}]}}}, response: &fixture_17 {
+          status: 200, body: {json: {id: '1001', displayName: permissions-replay-1, schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']}}}}
+      - &get_1001_37 {request: {method: GET, path: /api/2.0/preview/scim/v2/Groups/1001, body: null, query: *fixture_16},
+        response: *fixture_17}
+      - {request: {method: POST, path: /api/2.0/preview/scim/v2/Groups, body: {json: {displayName: permissions-replay-2,
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group'], entitlements: [{}]}}}, response: &fixture_18 {
+          status: 200, body: {json: {id: '1002', displayName: permissions-replay-2, schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']}}}}
+      - &get_1002_38 {request: {method: GET, path: /api/2.0/preview/scim/v2/Groups/1002, body: null, query: *fixture_16},
+        response: *fixture_18}
+      - {request: {method: POST, path: /api/2.0/preview/scim/v2/Groups, body: {json: {displayName: permissions-replay-3,
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group'], entitlements: [{}]}}}, response: &fixture_19 {
+          status: 200, body: {json: {id: '1003', displayName: permissions-replay-3, schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']}}}}
+      - &get_1003_39 {request: {method: GET, path: /api/2.0/preview/scim/v2/Groups/1003, body: null, query: *fixture_16},
+        response: *fixture_19}
+      - {request: {method: POST, path: /api/2.0/preview/scim/v2/Users, body: {json: {userName: permissions-replay-0@databricks.com,
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'], entitlements: [{}], active: true}}}, response: &fixture_20 {
+          status: 200, body: {json: {id: '2000', userName: permissions-replay-0@databricks.com, schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+              active: true}}}}
+      - &get_2000_40 {request: {method: GET, path: /api/2.0/preview/scim/v2/Users/2000, body: null, query: *fixture_12},
+        response: *fixture_20}
+      - {request: {method: POST, path: /api/2.0/preview/scim/v2/Users, body: {json: {userName: permissions-replay-1@databricks.com,
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'], entitlements: [{}], active: true}}}, response: &fixture_21 {
+          status: 200, body: {json: {id: '2001', userName: permissions-replay-1@databricks.com, schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+              active: true}}}}
+      - &get_2001_41 {request: {method: GET, path: /api/2.0/preview/scim/v2/Users/2001, body: null, query: *fixture_12},
+        response: *fixture_21}
+      - {request: {method: POST, path: /api/2.0/preview/scim/v2/Users, body: {json: {userName: permissions-replay-2@databricks.com,
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'], entitlements: [{}], active: true}}}, response: &fixture_22 {
+          status: 200, body: {json: {id: '2002', userName: permissions-replay-2@databricks.com, schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+              active: true}}}}
+      - &get_2002_42 {request: {method: GET, path: /api/2.0/preview/scim/v2/Users/2002, body: null, query: *fixture_12},
+        response: *fixture_22}
+      - {request: {method: POST, path: /api/2.0/preview/scim/v2/Users, body: {json: {userName: permissions-replay-3@databricks.com,
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'], entitlements: [{}], active: true}}}, response: &fixture_23 {
+          status: 200, body: {json: {id: '2003', userName: permissions-replay-3@databricks.com, schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+              active: true}}}}
+      - &get_2003_43 {request: {method: GET, path: /api/2.0/preview/scim/v2/Users/2003, body: null, query: *fixture_12},
+        response: *fixture_23}
+      - *get_Me_5
+      - request:
+          method: PUT
+          path: /api/2.0/permissions/sql/warehouses/warehouse-1
+          body:
+            json:
+              access_control_list:
+                - {permission_level: IS_OWNER, service_principal_name: 11111111-1111-4111-8111-000000000000}
+                - {group_name: permissions-replay-1, permission_level: CAN_MANAGE}
+                - {permission_level: CAN_MANAGE, service_principal_name: 11111111-1111-4111-8111-000000000002}
+                - {permission_level: CAN_MONITOR, service_principal_name: 11111111-1111-4111-8111-000000000003}
+                - {permission_level: CAN_MONITOR, user_name: permissions-replay-2@databricks.com}
+                - *fixture_24
+                - {group_name: permissions-replay-2, permission_level: CAN_MONITOR}
+                - {permission_level: CAN_VIEW, service_principal_name: 11111111-1111-4111-8111-000000000004}
+                - {permission_level: CAN_USE, user_name: permissions-replay-0@databricks.com}
+                - {permission_level: CAN_VIEW, user_name: permissions-replay-3@databricks.com}
+                - {permission_level: CAN_MANAGE, user_name: permissions-replay-1@databricks.com}
+                - {permission_level: CAN_USE, service_principal_name: 11111111-1111-4111-8111-000000000001}
+                - {group_name: permissions-replay-3, permission_level: CAN_VIEW}
+        response: &fixture_32
+          status: 200
+          body:
+            json:
+              object_id: /sql/warehouses/warehouse-1
+              object_type: warehouses
+              access_control_list:
+                - {service_principal_name: 11111111-1111-4111-8111-000000000000, all_permissions: [*fixture_25]}
+                - {service_principal_name: 11111111-1111-4111-8111-000000000001, all_permissions: [*fixture_26]}
+                - {service_principal_name: 11111111-1111-4111-8111-000000000002, all_permissions: [*fixture_27]}
+                - {service_principal_name: 11111111-1111-4111-8111-000000000003, all_permissions: [&fixture_29 {
+                      permission_level: CAN_MONITOR, inherited: false}]}
+                - {service_principal_name: 11111111-1111-4111-8111-000000000004, all_permissions: [&fixture_30 {
+                      permission_level: CAN_VIEW, inherited: false}]}
+                - *fixture_28
+                - {group_name: permissions-replay-1, all_permissions: [*fixture_27]}
+                - {group_name: permissions-replay-2, all_permissions: [*fixture_29]}
+                - {group_name: permissions-replay-3, all_permissions: [*fixture_30]}
+                - {user_name: permissions-replay-0@databricks.com, all_permissions: [*fixture_26]}
+                - {user_name: permissions-replay-1@databricks.com, all_permissions: [*fixture_27]}
+                - {user_name: permissions-replay-2@databricks.com, all_permissions: [*fixture_29]}
+                - {user_name: permissions-replay-3@databricks.com, all_permissions: [*fixture_30]}
+      - *get_Me_5
+      - &get_warehouse_1_44
+        request: *fixture_31
+        response: *fixture_32
+      - *get_Me_7
+      - *get_3000_33
+      - *get_3001_34
+      - *get_3002_35
+      - *get_3003_36
+      - *get_1000_8
+      - *get_1001_37
+      - *get_1002_38
+      - *get_1003_39
+      - *get_2000_40
+      - *get_2001_41
+      - *get_2002_42
+      - *get_2003_43
+      - *get_warehouse_1_3
+      - *get_data_sources_9
+      - *get_Me_5
+      - *get_warehouse_1_44
+      - *get_Me_7
+  - name: reject_removing_management
+    config: |
+      resource "databricks_sql_endpoint" "this" {
+        name             = "replay"
+        cluster_size     = "2X-Small"
+
+        tags {
+          custom_tags {
+            key   = "Owner"
+            value = "eng-dev-ecosystem-team_at_databricks.com"
+          }
+        }
+      }
+
+      data "databricks_current_user" "me" {}
+      resource "databricks_permissions" "this" {
+        sql_endpoint_id = databricks_sql_endpoint.this.id
+        access_control {
+          service_principal_name = data.databricks_current_user.me.user_name
+          permission_level = "CAN_USE"
+        }
+      }
+    expect_error: 'cannot remove management permissions for the current user for warehouses, allowed levels: CAN_MANAGE,
+      IS_OWNER'
+    calls:
+      - *get_Me_7
+      - *get_3000_33
+      - *get_3001_34
+      - *get_3002_35
+      - *get_3003_36
+      - *get_1000_8
+      - *get_1001_37
+      - *get_1002_38
+      - *get_1003_39
+      - *get_2000_40
+      - *get_2001_41
+      - *get_2002_42
+      - *get_2003_43
+      - *get_warehouse_1_3
+      - *get_data_sources_9
+      - *get_Me_5
+      - *get_warehouse_1_44
+      - {request: {method: DELETE, path: /api/2.0/preview/scim/v2/ServicePrincipals/3000, body: null}, response: &fixture_45 {
+          status: 200, body: null}}
+      - {request: {method: DELETE, path: /api/2.0/preview/scim/v2/ServicePrincipals/3001, body: null}, response: *fixture_45}
+      - {request: {method: DELETE, path: /api/2.0/preview/scim/v2/ServicePrincipals/3002, body: null}, response: *fixture_45}
+      - {request: {method: DELETE, path: /api/2.0/preview/scim/v2/ServicePrincipals/3003, body: null}, response: *fixture_45}
+      - &delete_1000_54 {request: {method: DELETE, path: /api/2.0/preview/scim/v2/Groups/1000, body: null}, response: *fixture_45}
+      - {request: {method: DELETE, path: /api/2.0/preview/scim/v2/Groups/1001, body: null}, response: *fixture_45}
+      - {request: {method: DELETE, path: /api/2.0/preview/scim/v2/Groups/1002, body: null}, response: *fixture_45}
+      - {request: {method: DELETE, path: /api/2.0/preview/scim/v2/Groups/1003, body: null}, response: *fixture_45}
+      - {request: {method: DELETE, path: /api/2.0/preview/scim/v2/Users/2000, body: null}, response: *fixture_45}
+      - {request: {method: DELETE, path: /api/2.0/preview/scim/v2/Users/2001, body: null}, response: *fixture_45}
+      - {request: {method: DELETE, path: /api/2.0/preview/scim/v2/Users/2002, body: null}, response: *fixture_45}
+      - {request: {method: DELETE, path: /api/2.0/preview/scim/v2/Users/2003, body: null}, response: *fixture_45}
+      - *get_Me_5
+  - name: remove_permissions
+    config: |
+      resource "databricks_sql_endpoint" "this" {
+        name             = "replay"
+        cluster_size     = "2X-Small"
+
+        tags {
+          custom_tags {
+            key   = "Owner"
+            value = "eng-dev-ecosystem-team_at_databricks.com"
+          }
+        }
+      }
+    calls:
+      - *get_warehouse_1_3
+      - *get_data_sources_9
+      - *get_Me_5
+      - *get_warehouse_1_44
+      - *get_warehouse_1_44
+      - *get_Me_5
+      - *get_warehouse_1_3
+      - &put_warehouse_1_53
+        request:
+          method: PUT
+          path: /api/2.0/permissions/sql/warehouses/warehouse-1
+          body:
+            json:
+              access_control_list:
+                - *fixture_46
+                - *fixture_47
+        response:
+          status: 200
+          body:
+            json:
+              object_id: /sql/warehouses/warehouse-1
+              object_type: warehouses
+              access_control_list:
+                - *fixture_48
+                - *fixture_49
+      - *get_warehouse_1_3
+      - *get_data_sources_9
+  - name: recreate_permissions_for_import
+    config: *fixture_50
+    calls:
+      - *get_Me_7
+      - *get_warehouse_1_3
+      - *get_data_sources_9
+      - *post_Groups_51
+      - *get_1000_8
+      - *get_Me_5
+      - *put_warehouse_1_52
+      - *get_Me_5
+      - *get_warehouse_1_10
+      - *get_Me_7
+      - *get_1000_8
+      - *get_warehouse_1_3
+      - *get_data_sources_9
+      - *get_Me_5
+      - *get_warehouse_1_10
+      - *get_Me_7
+  - name: import_legacy_alias
+    config: *fixture_50
+    import:
+      resource: databricks_permissions.this
+      id: /warehouses/warehouse-1
+      persist: false
+    calls:
+      - *get_Me_7
+      - *get_Me_5
+      - *get_warehouse_1_10
+      - *get_Me_5
+      - *get_warehouse_1_10
+destroy:
+  calls:
+    - *get_Me_7
+    - *get_warehouse_1_3
+    - *get_data_sources_9
+    - *get_1000_8
+    - *get_Me_5
+    - *get_warehouse_1_10
+    - *get_warehouse_1_10
+    - *get_Me_5
+    - *get_warehouse_1_3
+    - *put_warehouse_1_53
+    - *delete_1000_54
+    - request:
+        method: DELETE
+        path: /api/2.0/sql/warehouses/warehouse-1
+        body: null
+      response: *fixture_45

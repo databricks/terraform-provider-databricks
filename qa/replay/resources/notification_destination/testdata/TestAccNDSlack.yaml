@@ -1,0 +1,186 @@
+# Source: settings/notification_destination_test.go#TestAccNDSlack
+# All responses, including host metadata, are inferred, not recorded.
+# NotificationDestination/config payloads follow the SDK API models.
+# SDK checks of display name and destination type become provider-read state checks.
+# Changing fields within the same config type updates the destination in place.
+# GET returns *_set flags for input-only fields, not URLs/passwords. This exercises
+# the provider's preservation of those configured values without real secrets.
+version: 1
+host_metadata:
+  host_type: "workspace"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_notification_destination" "this" {
+        display_name = "Notification Destination - replay"
+        config {
+          slack {
+            url = "https://hooks.slack.com/services/replay-initial"
+          }
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/notification-destinations"
+          body:
+            json:
+              display_name: "Notification Destination - replay"
+              config:
+                slack:
+                  url: "https://hooks.slack.com/services/replay-initial"
+        response: # Inferred from the source scenario and notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - replay"
+              destination_type: "SLACK"
+              config:
+                slack:
+                  url_set: true
+      - request:
+          method: "GET"
+          path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+          body: null
+        response: # Inferred from the source scenario and notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - replay"
+              destination_type: "SLACK"
+              config:
+                slack:
+                  url_set: true
+      - request:
+          method: "GET"
+          path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+          body: null
+        response: # Inferred from the source scenario and notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - replay"
+              destination_type: "SLACK"
+              config:
+                slack:
+                  url_set: true
+    state:
+      resources:
+        databricks_notification_destination.this:
+          attributes:
+            - path:
+                - "display_name"
+              equals: "Notification Destination - replay"
+            - path:
+                - "destination_type"
+              equals: "SLACK"
+  - name: "change_config"
+    config: |
+      resource "databricks_notification_destination" "this" {
+        display_name = "Notification Destination - replay"
+        config {
+          slack {
+            url = "https://hooks.slack.com/services/replay-updated"
+          }
+        }
+      }
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+          body: null
+        response: # Inferred from the source scenario and notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - replay"
+              destination_type: "SLACK"
+              config:
+                slack:
+                  url_set: true
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+          body:
+            json:
+              display_name: "Notification Destination - replay"
+              config:
+                slack:
+                  url: "https://hooks.slack.com/services/replay-updated"
+                  url_set: true
+        response: # Inferred from the source scenario and notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - replay"
+              destination_type: "SLACK"
+              config:
+                slack:
+                  url_set: true
+      - request:
+          method: "GET"
+          path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+          body: null
+        response: # Inferred from the source scenario and notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - replay"
+              destination_type: "SLACK"
+              config:
+                slack:
+                  url_set: true
+      - request:
+          method: "GET"
+          path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+          body: null
+        response: # Inferred from the source scenario and notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - replay"
+              destination_type: "SLACK"
+              config:
+                slack:
+                  url_set: true
+    state:
+      resources:
+        databricks_notification_destination.this:
+          attributes:
+            - path:
+                - "display_name"
+              equals: "Notification Destination - replay"
+            - path:
+                - "destination_type"
+              equals: "SLACK"
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+        body: null
+      response: # Inferred from the source scenario and notification API model; not recorded.
+        status: 200
+        body:
+          json:
+            id: "00000000-0000-4000-8000-000000000001"
+            display_name: "Notification Destination - replay"
+            destination_type: "SLACK"
+            config:
+              slack:
+                url_set: true
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+        body: null
+      response: # Inferred from the source scenario and notification API model; not recorded.
+        status: 200
+        body: null

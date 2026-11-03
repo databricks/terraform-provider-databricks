@@ -1,0 +1,23 @@
+# Source: sharing/provider_provider_config_test.go#TestAccProvider_ProviderConfig_EmptyID
+# Generic provider_config validation; the resource is only a schema carrier.
+# Random names are fixed because replay has no shared server.
+# The original plan-only case fails in validation, before any apply or API call.
+version: 1
+# Dummy host metadata, not captured from a live workspace.
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: reject_empty_workspace_id
+    config: |
+      resource "databricks_provider" "this" {
+        name                 = "test-provider"
+        authentication_type  = "TOKEN"
+        recipient_profile_str = "{\"shareCredentialsVersion\":1,\"bearerToken\":\"token\",\"endpoint\":\"https://example.com\"}"
+        provider_config {
+          workspace_id = ""
+        }
+      }
+    expect_error: 'expected "provider_config.0.workspace_id" to not be an empty string'
+    calls: []
+destroy:
+  calls: []

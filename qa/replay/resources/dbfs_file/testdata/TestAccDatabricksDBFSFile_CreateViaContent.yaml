@@ -1,0 +1,135 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_dbfs_file" "this" {
+        content_base64 = base64encode("replay1")
+        path           = "/tmp/tf-test/replay1.bin"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/dbfs/create"
+          body:
+            json:
+              overwrite: true
+              path: "/tmp/tf-test/replay1.bin"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              handle: 100
+      - request:
+          method: "POST"
+          path: "/api/2.0/dbfs/add-block"
+          body:
+            json:
+              data: "cmVwbGF5MQ=="
+              handle: 100
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: "POST"
+          path: "/api/2.0/dbfs/close"
+          body:
+            json:
+              handle: 100
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/dbfs/get-status"
+          query:
+            path: ["/tmp/tf-test/replay1.bin"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              file_size: 7
+              is_dir: false
+              path: "/tmp/tf-test/replay1.bin"
+      - *get_1
+  - name: "replace_content_and_path"
+    config: |
+      resource "databricks_dbfs_file" "this" {
+        content_base64 = base64encode("replay2-changed")
+        path           = "/tmp/tf-test/replay2.bin"
+      }
+    calls:
+      - *get_1
+      - request:
+          method: "POST"
+          path: "/api/2.0/dbfs/delete"
+          body:
+            json:
+              path: "/tmp/tf-test/replay1.bin"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: "POST"
+          path: "/api/2.0/dbfs/create"
+          body:
+            json:
+              overwrite: true
+              path: "/tmp/tf-test/replay2.bin"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              handle: 101
+      - request:
+          method: "POST"
+          path: "/api/2.0/dbfs/add-block"
+          body:
+            json:
+              data: "cmVwbGF5Mi1jaGFuZ2Vk"
+              handle: 101
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: "POST"
+          path: "/api/2.0/dbfs/close"
+          body:
+            json:
+              handle: 101
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.0/dbfs/get-status"
+          query:
+            path: ["/tmp/tf-test/replay2.bin"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              file_size: 15
+              is_dir: false
+              path: "/tmp/tf-test/replay2.bin"
+      - *get_2
+destroy:
+  calls:
+    - *get_2
+    - request:
+        method: "POST"
+        path: "/api/2.0/dbfs/delete"
+        body:
+          json:
+            path: "/tmp/tf-test/replay2.bin"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

@@ -2,13 +2,23 @@
 subcategory: "Apps"
 ---
 # databricks_app_spaces Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/apps)
 
+This data source can be used to fetch the list of app spaces within the workspace.
+The list can then be accessed via the data object's `spaces` field.
 
 
 ## Example Usage
+Getting a list of all app spaces:
+
+```hcl
+data "databricks_app_spaces" "all" {}
+output "all_app_spaces" {
+  value = data.databricks_app_spaces.all.spaces
+}
+```
 
 
 ## Arguments
@@ -102,7 +112,7 @@ This data source exports a single attribute, `spaces`. It is a list of resources
 * `securable_full_name` (string)
 * `securable_kind` (string) - The securable kind from Unity Catalog.
   See https://docs.databricks.com/api/workspace/tables/get#securable_kind_manifest-securable_kind
-* `securable_type` (string) - Possible values are: `CONNECTION`, `FUNCTION`, `TABLE`, `VOLUME`
+* `securable_type` (string) - Possible values are: `CONNECTION`, `FUNCTION`, `MODEL_SERVICE`, `TABLE`, `VOLUME`
 
 ### SpaceStatus
 * `message` (string) - Message providing context about the current state

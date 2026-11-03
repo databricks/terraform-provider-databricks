@@ -1,0 +1,161 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+# Metadata fixtures are dummy account/workspace configuration.
+version: 1
+steps:
+  - name: "create"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+        workspace_id = "1001"
+      }
+
+      resource "databricks_directory" "test" {
+        path = "/Shared/dwsid-test-replay"
+        provider_config {
+          workspace_id = "1001"
+        }
+      }
+    calls:
+      - &metadata_account
+        request:
+          method: "GET"
+          path: "/.well-known/databricks-config"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              host_type: "account"
+              account_id: "replay-account"
+              cloud: "AWS"
+      - *metadata_account
+      - *metadata_account
+      - *metadata_account
+      - &metadata_workspace_1001
+        request:
+          method: "GET"
+          path: "/.well-known/databricks-config"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              host_type: "workspace"
+              workspace_id: "1001"
+              cloud: "AWS"
+      - &lookup_workspace_1001
+        request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/workspaces/1001"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              workspace_id: 1001
+              deployment_name: "replay-workspace-1001"
+              workspace_name: "replay-workspace-1001"
+              workspace_status: "RUNNING"
+      - request:
+          method: "POST"
+          path: "/api/2.0/workspace/mkdirs"
+          body:
+            json:
+              path: "/Shared/dwsid-test-replay"
+          headers:
+            "X-Databricks-Workspace-Id": "1001"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/workspace/get-status"
+          query:
+            path: ["/Shared/dwsid-test-replay"]
+          body: null
+          headers:
+            "X-Databricks-Workspace-Id": "1001"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              path: "/Shared/dwsid-test-replay"
+              object_type: "DIRECTORY"
+              object_id: 2001
+      - *metadata_account
+      - *metadata_account
+      - *metadata_account
+      - *metadata_account
+      - *metadata_workspace_1001
+      - *lookup_workspace_1001
+      - *get_1
+    state:
+      resources:
+        databricks_directory.test:
+          attributes:
+            - path: ["provider_config",0,"workspace_id"]
+              equals: "1001"
+  - name: "keep_workspace"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+        workspace_id = "1002"
+      }
+
+      resource "databricks_directory" "test" {
+        path = "/Shared/dwsid-test-replay"
+        provider_config {
+          workspace_id = "1001"
+        }
+      }
+    calls:
+      - *metadata_account
+      - *metadata_account
+      - *metadata_workspace_1001
+      - *lookup_workspace_1001
+      - *get_1
+      - *metadata_account
+      - *metadata_account
+      - *metadata_account
+      - *metadata_account
+      - *metadata_account
+      - *metadata_account
+      - *metadata_workspace_1001
+      - *lookup_workspace_1001
+      - *get_1
+    state:
+      resources:
+        databricks_directory.test:
+          attributes:
+            - path: ["provider_config",0,"workspace_id"]
+              equals: "1001"
+    plan:
+      changes:
+        databricks_directory.test:
+          actions: ["no-op"]
+destroy:
+  calls:
+    - *metadata_account
+    - *metadata_account
+    - *metadata_workspace_1001
+    - *lookup_workspace_1001
+    - *get_1
+    - *metadata_account
+    - *metadata_account
+    - *metadata_account
+    - *metadata_account
+    - *metadata_workspace_1001
+    - *lookup_workspace_1001
+    - request:
+        method: "POST"
+        path: "/api/2.0/workspace/delete"
+        body:
+          json:
+            path: "/Shared/dwsid-test-replay"
+        headers:
+          "X-Databricks-Workspace-Id": "1001"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

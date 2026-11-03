@@ -108,13 +108,12 @@ type FeatureData struct {
 	// The description of the feature.
 	Description types.String `tfsdk:"description"`
 	// The entity columns for the feature, used as aggregation keys and for
-	// query-time lookup.
+	// query-time lookup. Optional since entities are not set for RequestSource
+	// features or on-demand calculated features.
 	Entities types.List `tfsdk:"entities"`
 
 	FilterCondition types.String `tfsdk:"filter_condition"`
-	// The full three-part name (catalog, schema, name) of the feature. This is
-	// the feature's resource identifier; the catalog_name, schema_name, and
-	// name fields below are OUTPUT_ONLY decomposed views of this value.
+	// The full three-part name (catalog, schema, name) of the feature.
 	FullName types.String `tfsdk:"full_name"`
 	// The function by which the feature is computed.
 	Function types.Object `tfsdk:"function"`
@@ -138,7 +137,8 @@ type FeatureData struct {
 
 	TimeWindow types.Object `tfsdk:"time_window"`
 	// Column recording time, used for point-in-time joins, backfills, and
-	// aggregations.
+	// aggregations. Optional since a timeseries column is not set for
+	// RequestSource features or on-demand calculated features.
 	TimeseriesColumn   types.Object `tfsdk:"timeseries_column"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

@@ -353,10 +353,6 @@ func (r *DatabaseResource) ModifyPlan(ctx context.Context, req resource.ModifyPl
 		return
 	}
 	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *DatabaseResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

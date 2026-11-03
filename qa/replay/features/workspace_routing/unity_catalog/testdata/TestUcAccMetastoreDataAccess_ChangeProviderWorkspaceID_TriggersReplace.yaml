@@ -1,0 +1,125 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "AWS"
+  account_id: "replay-account"
+steps:
+  - name: "create"
+    config: |
+      provider "databricks" {
+        account_id   = "replay-account"
+        workspace_id = "12345"
+      }
+      resource "databricks_metastore_data_access" "wsid_test" {
+        metastore_id = "11111111-1111-1111-1111-111111111111"
+        name         = "wsid_da_replay"
+        api          = "workspace"
+        aws_iam_role {
+          role_arn = "arn:aws:iam::123456789012:role/replay-storage"
+        }
+        skip_validation = true
+      }
+    calls:
+      - &lookup_workspace_12345
+        request: {method: "GET", path: "/api/2.0/accounts/replay-account/workspaces/12345", body: null}
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              deployment_name: "replay-workspace-12345"
+              workspace_id: 12345
+              workspace_name: "replay-workspace-12345"
+              workspace_status: "RUNNING"
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/storage-credentials"
+          body:
+            json:
+              aws_iam_role:
+                role_arn: "arn:aws:iam::123456789012:role/replay-storage"
+              name: "wsid_da_replay"
+              skip_validation: true
+          headers:
+            "X-Databricks-Workspace-Id": "12345"
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              aws_iam_role:
+                external_id: "replay-external"
+                role_arn: "arn:aws:iam::123456789012:role/replay-storage"
+                unity_catalog_iam_arn: "arn:aws:iam::999999999999:role/unity-catalog"
+              id: "credential-1"
+              isolation_mode: "ISOLATION_MODE_OPEN"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "wsid_da_replay"
+              owner: "replay-admin"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/storage-credentials/wsid_da_replay"
+          body: null
+          headers:
+            "X-Databricks-Workspace-Id": "12345"
+        response: *response_2
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/metastore_summary"
+          body: null
+          headers:
+            "X-Databricks-Workspace-Id": "12345"
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              cloud: "aws"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "replay-metastore"
+              owner: "account users"
+              region: "us-east-1"
+      - *lookup_workspace_12345
+      - *get_1
+      - *get_2
+  - name: "plan_workspace_change"
+    config: |
+      provider "databricks" {
+        account_id   = "replay-account"
+        workspace_id = "67890"
+      }
+      resource "databricks_metastore_data_access" "wsid_test" {
+        metastore_id = "11111111-1111-1111-1111-111111111111"
+        name         = "wsid_da_replay"
+        api          = "workspace"
+        aws_iam_role {
+          role_arn = "arn:aws:iam::123456789012:role/replay-storage"
+        }
+        skip_validation = true
+      }
+    calls:
+      - *lookup_workspace_12345
+      - *get_1
+      - *get_2
+    plan_only: true
+    plan:
+      expect: "non_empty"
+      changes:
+        databricks_metastore_data_access.wsid_test:
+          actions: ["delete","create"]
+destroy:
+  calls:
+    - *lookup_workspace_12345
+    - *get_1
+    - *get_2
+    - *lookup_workspace_12345
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/storage-credentials/wsid_da_replay"
+        body: null
+        headers:
+          "X-Databricks-Workspace-Id": "12345"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

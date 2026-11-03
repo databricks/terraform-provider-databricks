@@ -118,8 +118,7 @@ type SyncedTable struct {
 	// "source_table_full_name" attribute.
 	Name types.String `tfsdk:"name"`
 	// Configuration details of the synced table, such as the source table,
-	// scheduling policy, etc. This attribute is specified at creation time and
-	// most fields are returned as is on subsequent queries.
+	// scheduling policy, etc.
 	Spec types.Object `tfsdk:"spec"`
 	// Synced Table data synchronization status.
 	Status types.Object `tfsdk:"status"`
@@ -341,10 +340,6 @@ func (r *SyncedTableResource) ModifyPlan(ctx context.Context, req resource.Modif
 		return
 	}
 	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *SyncedTableResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

@@ -1,0 +1,82 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "reject_workspace_id"
+    config: |
+      data "databricks_current_user" "me" {}
+      data "databricks_spark_version" "latest" {}
+      data "databricks_node_type" "smallest" {
+        local_disk = true
+      }
+
+      resource "databricks_notebook" "this" {
+        path     = "${data.databricks_current_user.me.home}/Terraformreplay"
+        language = "PYTHON"
+        content_base64 = base64encode(<<-EOT
+          # created from ${abspath(path.module)}
+          display(spark.range(10))
+          EOT
+        )
+      }
+
+      resource "databricks_job" "this" {
+        name = "replay"
+
+        provider_config { workspace_id = "" }
+
+        job_cluster {
+          job_cluster_key = "j"
+          new_cluster {
+            num_workers   = 0 // Setting it to zero intentionally to cover edge case.
+            spark_version = data.databricks_spark_version.latest.id
+            node_type_id  = data.databricks_node_type.smallest.id
+            custom_tags = {
+              "ResourceClass" = "SingleNode"
+            }
+            spark_conf = {
+              "spark.databricks.cluster.profile" : "singleNode"
+              "spark.master" : "local[*,4]"
+            }
+          }
+        }
+
+        task {
+          task_key = "a"
+
+          new_cluster {
+            num_workers   = 1
+            spark_version = data.databricks_spark_version.latest.id
+            node_type_id  = data.databricks_node_type.smallest.id
+          }
+
+          notebook_task {
+            notebook_path = databricks_notebook.this.path
+          }
+        }
+
+        task {
+          task_key = "b"
+
+          depends_on {
+            task_key = "a"
+          }
+
+          new_cluster {
+            num_workers   = 8
+            spark_version = data.databricks_spark_version.latest.id
+            node_type_id  = data.databricks_node_type.smallest.id
+          }
+
+          notebook_task {
+            notebook_path = databricks_notebook.this.path
+          }
+        }
+      }
+    calls: []
+    expect_error: "expected \"provider_config.0.workspace_id\" to not be an empty string"
+destroy:
+  calls: []

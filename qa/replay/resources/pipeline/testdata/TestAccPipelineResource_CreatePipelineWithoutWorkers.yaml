@@ -1,0 +1,199 @@
+# API responses are placeholders based on the API models, not recorded.
+version: 1
+host_metadata:
+  cloud: AWS
+  host_type: workspace
+  workspace_id: '12345'
+steps:
+- name: create_single_node_pipeline
+  config: |
+    locals {
+      name = "pipeline-acceptance-replay"
+    }
+    resource "databricks_pipeline" "this" {
+      name    = local.name
+      storage = "/test/${local.name}"
+
+      configuration = {
+        key1 = "value1"
+        key2 = "value2"
+      }
+
+      library {
+        notebook {
+          path = databricks_notebook.this.path
+        }
+      }
+
+
+      cluster {
+        instance_pool_id = "pool-1"
+        label            = "default"
+        num_workers      = 0
+        spark_conf = {
+          "spark.databricks.cluster.profile" = "singleNode"
+        }
+      }
+
+      continuous = false
+    }
+    resource "databricks_notebook" "this" {
+      content_base64 = base64encode("# replay\n")
+      path           = "/Shared/${local.name}"
+      language       = "SQL"
+    }
+  calls:
+  - request:
+      method: POST
+      path: /api/2.0/workspace/import
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          content: IyByZXBsYXkK
+          format: SOURCE
+          language: SQL
+          overwrite: true
+          path: /Shared/pipeline-acceptance-replay
+    response:
+      status: 200
+      body: null
+  - request:
+      method: POST
+      path: /api/2.0/pipelines
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          channel: CURRENT
+          clusters:
+          - instance_pool_id: pool-1
+            label: default
+            num_workers: 0
+            spark_conf:
+              spark.databricks.cluster.profile: singleNode
+          configuration:
+            key1: value1
+            key2: value2
+          edition: ADVANCED
+          libraries:
+          - notebook:
+              path: /Shared/pipeline-acceptance-replay
+          name: pipeline-acceptance-replay
+          storage: /test/pipeline-acceptance-replay
+    response:
+      status: 200
+      body:
+        json:
+          pipeline_id: pipeline-1
+  - &id001
+    request:
+      method: GET
+      path: /api/2.0/pipelines/pipeline-1
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          creator_user_name: tester@example.com
+          name: pipeline-acceptance-replay
+          pipeline_id: pipeline-1
+          spec:
+            channel: CURRENT
+            clusters:
+            - instance_pool_id: pool-1
+              label: default
+              num_workers: 0
+              spark_conf:
+                spark.databricks.cluster.profile: singleNode
+            configuration:
+              key1: value1
+              key2: value2
+            continuous: false
+            edition: ADVANCED
+            libraries:
+            - notebook:
+                path: /Shared/pipeline-acceptance-replay
+            name: pipeline-acceptance-replay
+            storage: /test/pipeline-acceptance-replay
+          state: IDLE
+  - *id001
+  - &id002
+    request:
+      method: GET
+      path: /api/2.0/preview/scim/v2/Me
+      query:
+        excludedAttributes:
+        - entitlements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      headers:
+        X-Databricks-Org-Id: '12345'
+      body:
+        json:
+          displayName: Replay tester
+          id: '100'
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:User
+          userName: tester@example.com
+  - &id003
+    request:
+      method: GET
+      path: /api/2.0/workspace/get-status
+      query:
+        path:
+        - /Shared/pipeline-acceptance-replay
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          language: SQL
+          object_id: 200
+          object_type: NOTEBOOK
+          path: /Shared/pipeline-acceptance-replay
+  - *id001
+destroy:
+  calls:
+  - *id002
+  - *id003
+  - *id001
+  - request:
+      method: DELETE
+      path: /api/2.0/pipelines/pipeline-1
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: GET
+      path: /api/2.0/pipelines/pipeline-1
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 404
+      body:
+        json:
+          error_code: RESOURCE_DOES_NOT_EXIST
+          message: Pipeline does not exist
+  - request:
+      method: POST
+      path: /api/2.0/workspace/delete
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          path: /Shared/pipeline-acceptance-replay
+    response:
+      status: 200
+      body: null

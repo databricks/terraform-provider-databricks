@@ -1,0 +1,131 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: before_conflicting_user
+    config: |
+      data "databricks_current_user" "me" {}
+    calls:
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              displayName: Replay tester
+              id: '100'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tester@example.com
+          status: 200
+      - *call_1
+      - *call_1
+  # The user already exists on the server; create conflicts and force adopts it.
+  - name: adopt_conflicting_user
+    config: |
+      resource "databricks_user" "this" {
+        user_name = "tf-replay@example.com"
+        force     = true
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Users
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              active: true
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-replay@example.com
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              error_code: RESOURCE_ALREADY_EXISTS
+              message: User with username tf-replay@example.com already exists.
+          status: 409
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Users
+          query:
+            excludedAttributes: [roles]
+            filter: [userName eq "tf-replay@example.com"]
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              Resources:
+                - active: true
+                  displayName: tf-replay@example.com
+                  entitlements: []
+                  externalId: ext-id-replay
+                  id: '101'
+                  schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+                  userName: tf-replay@example.com
+              totalResults: 1
+          status: 200
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Users/101
+          query:
+            attributes: ['groups,roles']
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: &response_1 # Inferred API response; not recorded.
+          body:
+            json:
+              active: true
+              displayName: tf-replay@example.com
+              entitlements: []
+              externalId: ext-id-replay
+              id: '101'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-replay@example.com
+          status: 200
+      - request:
+          method: PUT
+          path: /api/2.0/preview/scim/v2/Users/101
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              active: true
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-replay@example.com
+        response: &response_2 # Inferred API response; not recorded.
+          body: null
+          status: 200
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Users/101
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_1 # Inferred API response; not recorded.
+      - *call_2
+destroy:
+  calls:
+    - *call_2
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Users/101
+        headers:
+          X-Databricks-Workspace-Id: '12345'
+        body: null
+      response: *response_2 # Inferred API response; not recorded.

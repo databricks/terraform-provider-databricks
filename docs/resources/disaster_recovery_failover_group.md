@@ -75,11 +75,16 @@ In addition to the above arguments, the following attributes are exported:
 * `effective_primary_region` (string) - Current effective primary region. Replication flows FROM workspaces in this region.
   Changes after a successful failover
 * `etag` (string) - Opaque version string for optimistic locking. Server-generated and returned in responses
+* `has_replication_point_blocking_errors` (boolean) - True if errors currently block the replication point
+* `initial_replication_progress` (InitialReplicationProgress) - Initial replication progress of all in-scope assets. Set only when the FailoverGroup is in INITIAL_REPLICATION state
 * `name` (string) - Fully qualified resource name in the format
   accounts/{account_id}/failover-groups/{failover_group_id}
 * `replication_point` (string) - The latest point in time to which data has been replicated
 * `state` (string) - Aggregate state of the failover group. Possible values are: `ACTIVE`, `CREATING`, `CREATION_FAILED`, `DELETING`, `DELETION_FAILED`, `FAILING_OVER`, `FAILOVER_FAILED`, `INITIAL_REPLICATION`
 * `update_time` (string) - Time at which this failover group was last modified
+
+### InitialReplicationProgress
+* `completed` (integer) - Percent complete, 0-100
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

@@ -1,0 +1,244 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_recipient" "db2open" {
+        name = "replay-terraform-db2open-recipient"
+        comment = "made by terraform"
+        authentication_type = "TOKEN"
+        sharing_code = "replay-sharing-code"
+        owner = "account users"
+        ip_access_list {
+          allowed_ip_addresses = ["10.0.0.0/16"]
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/recipients"
+          body:
+            json:
+              authentication_type: "TOKEN"
+              comment: "made by terraform"
+              ip_access_list:
+                allowed_ip_addresses: ["10.0.0.0/16"]
+              name: "replay-terraform-db2open-recipient"
+              owner: "account users"
+              sharing_code: "replay-sharing-code"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              authentication_type: "TOKEN"
+              comment: "made by terraform"
+              id: "recipient-123"
+              ip_access_list:
+                allowed_ip_addresses: ["10.0.0.0/16"]
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "replay-terraform-db2open-recipient"
+              owner: "account users"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/recipients/replay-terraform-db2open-recipient"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              authentication_type: "TOKEN"
+              comment: "made by terraform"
+              id: "recipient-123"
+              ip_access_list:
+                allowed_ip_addresses: ["10.0.0.0/16"]
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "replay-terraform-db2open-recipient"
+              owner: "account users"
+      - *get_1
+  - name: "comment"
+    config: |
+      resource "databricks_recipient" "db2open" {
+        name = "replay-terraform-db2open-recipient"
+        comment = "made by terraform -- updated comment"
+        authentication_type = "TOKEN"
+        sharing_code = "replay-sharing-code"
+        owner = "account users"
+        ip_access_list {
+          allowed_ip_addresses = ["10.0.0.0/16"]
+        }
+      }
+    calls:
+      - *get_1
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/recipients/replay-terraform-db2open-recipient"
+          body:
+            json:
+              comment: "made by terraform -- updated comment"
+              ip_access_list:
+                allowed_ip_addresses: ["10.0.0.0/16"]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              authentication_type: "TOKEN"
+              comment: "made by terraform -- updated comment"
+              id: "recipient-123"
+              ip_access_list:
+                allowed_ip_addresses: ["10.0.0.0/16"]
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "replay-terraform-db2open-recipient"
+              owner: "account users"
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/recipients/replay-terraform-db2open-recipient"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              authentication_type: "TOKEN"
+              comment: "made by terraform -- updated comment"
+              id: "recipient-123"
+              ip_access_list:
+                allowed_ip_addresses: ["10.0.0.0/16"]
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "replay-terraform-db2open-recipient"
+              owner: "account users"
+      - *get_2
+  - name: "owner"
+    config: |
+      resource "databricks_recipient" "db2open" {
+        name = "replay-terraform-db2open-recipient"
+        comment = "made by terraform -- updated comment"
+        authentication_type = "TOKEN"
+        sharing_code = "replay-sharing-code"
+        owner = "data-engineers"
+        ip_access_list {
+          allowed_ip_addresses = ["10.0.0.0/16"]
+        }
+      }
+    calls:
+      - *get_2
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/recipients/replay-terraform-db2open-recipient"
+          body:
+            json:
+              owner: "data-engineers"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              authentication_type: "TOKEN"
+              comment: "made by terraform -- updated comment"
+              id: "recipient-123"
+              ip_access_list:
+                allowed_ip_addresses: ["10.0.0.0/16"]
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "replay-terraform-db2open-recipient"
+              owner: "data-engineers"
+      - &get_3
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/recipients/replay-terraform-db2open-recipient"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              authentication_type: "TOKEN"
+              comment: "made by terraform -- updated comment"
+              id: "recipient-123"
+              ip_access_list:
+                allowed_ip_addresses: ["10.0.0.0/16"]
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "replay-terraform-db2open-recipient"
+              owner: "data-engineers"
+      - *get_3
+  - name: "comment_and_owner"
+    config: |
+      resource "databricks_recipient" "db2open" {
+        name = "replay-terraform-db2open-recipient"
+        comment = "made by terraform -- updated comment 2"
+        authentication_type = "TOKEN"
+        sharing_code = "replay-sharing-code"
+        owner = "metastore-admins"
+        ip_access_list {
+          allowed_ip_addresses = ["10.0.0.0/16"]
+        }
+      }
+    calls:
+      - *get_3
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/recipients/replay-terraform-db2open-recipient"
+          body:
+            json:
+              owner: "metastore-admins"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              authentication_type: "TOKEN"
+              comment: "made by terraform -- updated comment"
+              id: "recipient-123"
+              ip_access_list:
+                allowed_ip_addresses: ["10.0.0.0/16"]
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "replay-terraform-db2open-recipient"
+              owner: "metastore-admins"
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/recipients/replay-terraform-db2open-recipient"
+          body:
+            json:
+              comment: "made by terraform -- updated comment 2"
+              ip_access_list:
+                allowed_ip_addresses: ["10.0.0.0/16"]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              authentication_type: "TOKEN"
+              comment: "made by terraform -- updated comment 2"
+              id: "recipient-123"
+              ip_access_list:
+                allowed_ip_addresses: ["10.0.0.0/16"]
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "replay-terraform-db2open-recipient"
+              owner: "metastore-admins"
+      - &get_4
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/recipients/replay-terraform-db2open-recipient"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              authentication_type: "TOKEN"
+              comment: "made by terraform -- updated comment 2"
+              id: "recipient-123"
+              ip_access_list:
+                allowed_ip_addresses: ["10.0.0.0/16"]
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "replay-terraform-db2open-recipient"
+              owner: "metastore-admins"
+      - *get_4
+destroy:
+  calls:
+    - *get_4
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/recipients/replay-terraform-db2open-recipient"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

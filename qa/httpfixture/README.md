@@ -5,10 +5,13 @@ transport. Call `StartStep(label)` before dispatch, then `Snapshot()` after
 requests finish. Concurrent calls retain dispatch order, without enabling
 ordered replay. Transport/body-read failures invalidate the entire recording.
 Bodies remain readable by the SDK; multipart boundaries are omitted, and binary
-content uses base64. Authentication and cookie headers are excluded. API
-payloads are retained in memory: the recorder must redact secrets and normalize
-profile-specific values before saving them. This transport does not load
-profiles, enable live requests, or write fixtures itself.
+content uses base64. Valid JSON is captured semantically only for declared
+`application/json` or `application/*+json` media types; other bodies retain exact
+bytes, including when the media type is missing or malformed. Response `Location`
+headers are retained for redirect replay. Authentication and cookie headers are
+excluded. API payloads are retained in memory: the recorder must redact secrets
+and normalize profile-specific values before saving them. This transport does
+not load profiles, enable live requests, or write fixtures itself.
 
 `NewHandler()` creates an empty handler for stateless request/response exchanges.
 `SetReusableFixtures(calls)` replaces the test-wide reusable fallbacks; `nil`

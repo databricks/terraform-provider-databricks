@@ -19,7 +19,7 @@ func captureRequest(req *http.Request) (Request, error) {
 		return Request{}, err
 	}
 	result := Request{Method: req.Method, Path: req.URL.EscapedPath(), Query: req.URL.Query(),
-		Headers: captureRequestHeaders(req.Header), Body: captureBody(body)}
+		Headers: captureRequestHeaders(req.Header), Body: captureBody(body, req.Header.Get("Content-Type"))}
 	mediaType, params, _ := mime.ParseMediaType(req.Header.Get("Content-Type"))
 	if mediaType == "multipart/form-data" {
 		parts, err := readMultipart(body, params["boundary"])
@@ -54,10 +54,10 @@ func captureRequestHeaders(headers http.Header) map[string]string {
 	return result
 }
 
-// Responses retain only headers that affect decoding, caching, or retry timing.
+// Responses retain only headers that affect decoding, redirects, caching, or retries.
 func captureHeaders(headers http.Header) map[string]string {
 	result := map[string]string{}
-	for _, name := range []string{"Content-Type", "Etag", "Last-Modified", "Retry-After"} {
+	for _, name := range []string{"Content-Type", "Location", "Etag", "Last-Modified", "Retry-After"} {
 		if value := headers.Get(name); value != "" {
 			result[name] = value
 		}
@@ -65,9 +65,14 @@ func captureHeaders(headers http.Header) map[string]string {
 	return result
 }
 
-func captureBody(data []byte) *Body {
+func captureBody(data []byte, contentType string) *Body {
 	if len(data) == 0 {
 		return nil
+	}
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil || !(mediaType == "application/json" ||
+		strings.HasPrefix(mediaType, "application/") && strings.HasSuffix(mediaType, "+json")) {
+		return literalCaptureBody(data)
 	}
 	decoder := json.NewDecoder(strings.NewReader(string(data)))
 	decoder.UseNumber()

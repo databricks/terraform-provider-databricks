@@ -94,7 +94,7 @@ func (c *CaptureTransport) exchange(req *http.Request) (Call, *http.Response, er
 		return Call{}, response, err
 	}
 	return Call{Request: request, Response: Response{
-		Status: response.StatusCode, Headers: captureHeaders(response.Header), Body: captureBody(body),
+		Status: response.StatusCode, Headers: captureHeaders(response.Header), Body: captureBody(body, response.Header.Get("Content-Type")),
 	}}, response, nil
 }
 

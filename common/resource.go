@@ -362,7 +362,9 @@ func (r Resource) ToResource() *schema.Resource {
 	if hasIdentity {
 		resource.Identity = workspaceResourceIdentity()
 		// Metastore-scoped resources move to another workspace in place, which
-		// changes the identity without replacing the resource.
+		// changes the identity without replacing the resource. MutableIdentity
+		// turns off the SDK check that the identity never changes, see
+		// https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/identity#mutable-identities
 		resource.ResourceBehavior.MutableIdentity = true
 		resource.Importer = importerWithIdentity(resource.Importer, isDual)
 	}

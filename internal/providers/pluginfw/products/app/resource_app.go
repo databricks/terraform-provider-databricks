@@ -121,9 +121,6 @@ type resourceApp struct {
 
 func (a resourceApp) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
-	// The identity holds the app name and the workspace ID, matching the
-	// generated resources, which mark it mutable.
-	resp.ResourceBehavior.MutableIdentity = true
 }
 
 func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

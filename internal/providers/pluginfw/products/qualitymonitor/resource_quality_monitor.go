@@ -87,6 +87,9 @@ func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.Meta
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
 	// The SDKv2 implementation records the resolved workspace ID in the identity
 	// and this one may not, so the identity can change when state moves over.
+	// MutableIdentity turns off the framework check that the identity never
+	// changes, see
+	// https://developer.hashicorp.com/terraform/plugin/framework/resources/identity#mutable-identities
 	resp.ResourceBehavior.MutableIdentity = true
 }
 

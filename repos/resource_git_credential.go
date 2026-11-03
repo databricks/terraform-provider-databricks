@@ -11,6 +11,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 )
@@ -34,7 +35,9 @@ func getPersonalAccessToken(d *schema.ResourceData) string {
 
 // suppressDefaultTokenWhenWriteOnly drops a `personal_access_token` sourced from the
 // environment (via DefaultFunc) when `personal_access_token_wo` is configured, so the
-// token is not persisted in state. Changes that clear the value are not suppressed.
+// token doesn't end up in the plan or state. Changes that clear the value are not
+// suppressed. A token already in state from before switching to the write-only token is
+// cleared by Read (see clearTokenWhenWriteOnly), so it's never replaced by the env value.
 func suppressDefaultTokenWhenWriteOnly(k, old, new string, d *schema.ResourceData) bool {
 	if new == "" {
 		return false
@@ -45,6 +48,15 @@ func suppressDefaultTokenWhenWriteOnly(k, old, new string, d *schema.ResourceDat
 	}
 	woValue, diags := d.GetRawConfigAt(cty.GetAttrPath("personal_access_token_wo"))
 	return !diags.HasError() && !woValue.IsNull()
+}
+
+// clearTokenWhenWriteOnly removes `personal_access_token` from state when the write-only
+// token is in use. `personal_access_token_wo_version` is required with, and only allowed
+// with, `personal_access_token_wo`, which conflicts with `personal_access_token`.
+func clearTokenWhenWriteOnly(d *schema.ResourceData) {
+	if _, ok := d.GetOk("personal_access_token_wo_version"); ok {
+		d.Set("personal_access_token", "")
+	}
 }
 
 type GitCredentialSchemaStruct struct {
@@ -78,6 +90,7 @@ func ResourceGitCredential() common.Resource {
 		s["personal_access_token_wo_version"] = &schema.Schema{
 			Type:         schema.TypeInt,
 			Optional:     true,
+			ValidateFunc: validation.IntAtLeast(1),
 			RequiredWith: []string{"personal_access_token_wo"},
 		}
 		common.NamespaceCustomizeSchemaMap(s)
@@ -148,6 +161,7 @@ func ResourceGitCredential() common.Resource {
 			}
 			d.Set("git_provider", resp.GitProvider)
 			d.Set("git_username", resp.GitUsername)
+			clearTokenWhenWriteOnly(d)
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

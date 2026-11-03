@@ -3,7 +3,6 @@ package repos_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"testing"
 
@@ -37,18 +36,29 @@ func TestAccGitCredentials(t *testing.T) {
 	})
 }
 
-func gitCredentialWriteOnlyTemplate(token string, version int) string {
+// Each git credential acceptance test uses its own Git provider, so the tests never update or
+// delete each other's credential, even in a workspace that allows only one credential per
+// provider. They don't set GITHUB_TOKEN & co: the provider runs in the test process and
+// acceptance tests run in parallel, so it would leak into other tests. The env var default
+// is covered by unit tests.
+func gitCredentialPlainTokenTemplate(gitProvider, token string) string {
 	return fmt.Sprintf(`resource "databricks_git_credential" "this" {
-		git_username                     = "test"
-		git_provider                     = "gitHub"
-		personal_access_token_wo         = "%s"
-		personal_access_token_wo_version = %d
-		force                            = true
-	}`, token, version)
+		git_username          = "test"
+		git_provider          = "%s"
+		personal_access_token = "%s"
+	}`, gitProvider, token)
 }
 
-// checkGitCredentialTokenNotInState verifies that neither the write-only token nor the
-// token sourced from the environment ends up in state.
+func gitCredentialWriteOnlyTemplate(gitProvider, token string, version int) string {
+	return fmt.Sprintf(`resource "databricks_git_credential" "this" {
+		git_username                     = "test"
+		git_provider                     = "%s"
+		personal_access_token_wo         = "%s"
+		personal_access_token_wo_version = %d
+	}`, gitProvider, token, version)
+}
+
+// checkGitCredentialTokenNotInState verifies that no token ends up in state.
 func checkGitCredentialTokenNotInState(version string) func(*terraform.State) error {
 	return func(s *terraform.State) error {
 		r, ok := s.RootModule().Resources["databricks_git_credential.this"]
@@ -56,7 +66,7 @@ func checkGitCredentialTokenNotInState(version string) func(*terraform.State) er
 			return fmt.Errorf("databricks_git_credential.this not found in state")
 		}
 		attrs := r.Primary.Attributes
-		if v := attrs["personal_access_token"]; v != "" {
+		if attrs["personal_access_token"] != "" {
 			return fmt.Errorf("personal_access_token must not be stored in state")
 		}
 		if attrs["personal_access_token_wo"] != "" {
@@ -71,24 +81,22 @@ func checkGitCredentialTokenNotInState(version string) func(*terraform.State) er
 }
 
 func TestAccGitCredentialsWriteOnly(t *testing.T) {
-	// The provider runs in-process, so this token is picked up by the `personal_access_token`
-	// default. It must be ignored when `personal_access_token_wo` is configured.
-	// t.Setenv can't be used, as acceptance tests run in parallel.
-	old, hadOld := os.LookupEnv("GITHUB_TOKEN")
-	t.Cleanup(func() {
-		if hadOld {
-			os.Setenv("GITHUB_TOKEN", old)
-		} else {
-			os.Unsetenv("GITHUB_TOKEN")
-		}
-	})
 	acceptance.WorkspaceLevel(t, acceptance.Step{
-		PreConfig: func() { os.Setenv("GITHUB_TOKEN", "token_from_env") },
-		Template:  gitCredentialWriteOnlyTemplate("write_only_token_v1", 1),
-		Check:     checkGitCredentialTokenNotInState("1"),
+		Template: gitCredentialWriteOnlyTemplate("gitLab", "write_only_token_v1", 1),
+		Check:    checkGitCredentialTokenNotInState("1"),
 	}, acceptance.Step{
 		// Bumping the version sends the new token without storing it
-		Template: gitCredentialWriteOnlyTemplate("write_only_token_v2", 2),
+		Template: gitCredentialWriteOnlyTemplate("gitLab", "write_only_token_v2", 2),
 		Check:    checkGitCredentialTokenNotInState("2"),
+	})
+}
+
+func TestAccGitCredentialsSwitchToWriteOnly(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: gitCredentialPlainTokenTemplate("bitbucketCloud", "plain_token"),
+	}, acceptance.Step{
+		// The token stored by the previous step must be removed from state
+		Template: gitCredentialWriteOnlyTemplate("bitbucketCloud", "write_only_token_v1", 1),
+		Check:    checkGitCredentialTokenNotInState("1"),
 	})
 }

@@ -628,7 +628,7 @@ func TestResourceGitCredential_WriteOnlyTokenSuppressesEnvDefault(t *testing.T) 
 		"personal_access_token_wo", "personal_access_token_wo_version"} {
 		r.Schema[k] = full[k]
 	}
-	plan := func(raw map[string]any) *terraform.InstanceDiff {
+	plan := func(prior map[string]string, raw map[string]any) *terraform.InstanceDiff {
 		// Mirror the gRPC shim, which exposes the raw configuration to DiffSuppressFunc.
 		vals := map[string]cty.Value{}
 		for k, v := range raw {
@@ -643,21 +643,81 @@ func TestResourceGitCredential_WriteOnlyTokenSuppressesEnvDefault(t *testing.T) 
 		require.NoError(t, err)
 		cfg := terraform.NewResourceConfigRaw(raw)
 		cfg.CtyValue = ctyVal
-		diff, err := r.Diff(context.Background(), &terraform.InstanceState{}, cfg, nil)
+		diff, err := r.Diff(context.Background(), &terraform.InstanceState{ID: "1", Attributes: prior}, cfg, nil)
 		require.NoError(t, err)
 		return diff
 	}
 
-	diff := plan(map[string]any{
+	writeOnlyConfig := map[string]any{
 		"git_provider":                     "gitHub",
 		"personal_access_token_wo":         "write-only-token",
 		"personal_access_token_wo_version": 1,
-	})
+	}
+	diff := plan(map[string]string{"git_provider": "gitHub"}, writeOnlyConfig)
 	assert.NotContains(t, diff.Attributes, "personal_access_token")
 
-	diff = plan(map[string]any{"git_provider": "gitHub"})
+	// Switching from `personal_access_token` to the write-only token: the env token must not be
+	// planned as the new value (Read clears the old token instead, see the Update test below)
+	diff = plan(map[string]string{"git_provider": "gitHub", "personal_access_token": "old-token"}, writeOnlyConfig)
+	assert.NotContains(t, diff.Attributes, "personal_access_token")
+
+	diff = plan(map[string]string{"git_provider": "gitHub"}, map[string]any{"git_provider": "gitHub"})
 	require.Contains(t, diff.Attributes, "personal_access_token")
 	assert.Equal(t, "from-env", diff.Attributes["personal_access_token"].New)
+}
+
+func TestResourceGitCredentialUpdate_SwitchToWriteOnlyTokenClearsOldToken(t *testing.T) {
+	for _, env := range []string{"", "token-from-env"} {
+		t.Run("GITHUB_TOKEN="+env, func(t *testing.T) {
+			t.Setenv("GITHUB_TOKEN", env)
+			t.Setenv("GITLAB_TOKEN", "")
+			t.Setenv("AZDO_PERSONAL_ACCESS_TOKEN", "")
+			credID := int64(121232342)
+			d, err := qa.ResourceFixture{
+				MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+					gmock := w.GetMockGitCredentialsAPI().EXPECT()
+					gmock.Update(mock.Anything, mock.MatchedBy(func(req workspace.UpdateCredentialsRequest) bool {
+						return req.CredentialId == credID && req.PersonalAccessToken == "write-only-token"
+					})).Return(nil)
+					gmock.Get(mock.Anything, workspace.GetCredentialsRequest{CredentialId: credID}).
+						Return(&workspace.GetCredentialsResponse{
+							CredentialId: credID,
+							GitProvider:  "gitHub",
+							GitUsername:  "test",
+						}, nil)
+				},
+				Resource: ResourceGitCredential(),
+				InstanceState: map[string]string{
+					"git_provider":          "gitHub",
+					"git_username":          "test",
+					"personal_access_token": "old-token",
+				},
+				State: map[string]any{
+					"git_provider":                     "gitHub",
+					"git_username":                     "test",
+					"personal_access_token_wo":         "write-only-token",
+					"personal_access_token_wo_version": 1,
+				},
+				ID:     "121232342",
+				Update: true,
+			}.Apply(t)
+			require.NoError(t, err)
+			assert.Equal(t, "", d.Get("personal_access_token"))
+		})
+	}
+}
+
+func TestResourceGitCredential_WriteOnlyTokenVersionMustBePositive(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Resource: ResourceGitCredential(),
+		State: map[string]any{
+			"git_provider":                     "gitHub",
+			"personal_access_token_wo":         "write-only-token",
+			"personal_access_token_wo_version": 0,
+		},
+		Create: true,
+	}.Apply(t)
+	assert.ErrorContains(t, err, "personal_access_token_wo_version")
 }
 
 func TestResourceGitCredentialPATIsSensitive(t *testing.T) {

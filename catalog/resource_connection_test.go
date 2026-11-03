@@ -712,14 +712,18 @@ func TestParseWriteOnlyOptions(t *testing.T) {
 	assert.NotContains(t, err.Error(), "s3cr3t")
 
 	for _, key := range []string{"pem_key_passphrase", "userProvidedServerCertificate", "client_private_key",
-		"client_certificate", "ssl_key", "kafka.ssl.keystore.password", "kafka.ssl.truststore.location",
+		"client_certificate", "ssl_key", "kafka.ssl.keystore.password", "refresh_token",
 		"ssl_keystore_key", "ssl_key_password", "ssl_keystore_certificate_chain", "ssl_truststore_certificates",
 		"schema_registry_api_key", "schema_registry_api_secret"} {
 		_, err = parseWriteOnlyOptions(fmt.Sprintf(`{%q:"value"}`, key))
 		assert.NoError(t, err, key)
 	}
 
-	for _, key := range []string{"host", "port", "base_path", "bootstrap_servers", "schema_registry_url"} {
+	// Ordinary settings, including ones that contain a credential word but aren't credentials
+	for _, key := range []string{"host", "port", "base_path", "bootstrap_servers", "schema_registry_url",
+		"token_endpoint", "trustServerCertificate", "trust_server_certificate", "ssl_truststore_type",
+		"ssl_keystore_type", "keystore_location", "kafka.ssl.truststore.location", "pem_private_key_expiration_epoch_sec",
+		"access_token_expiration"} {
 		_, err = parseWriteOnlyOptions(fmt.Sprintf(`{%q:"value"}`, key))
 		assert.ErrorContains(t, err, fmt.Sprintf(`option %q is not supported in `, key)+"`options_wo`")
 	}
@@ -906,4 +910,46 @@ func TestConnectionsCreate_WriteOnlyOptionsInvalidKey(t *testing.T) {
 		},
 	}.Apply(t)
 	assert.ErrorContains(t, err, "is not supported in `options_wo`")
+}
+
+func TestConnectionsRead_DetectsServerCertificateDrift(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockConnectionsAPI().EXPECT().GetByName(mock.Anything, "testConnectionName").Return(&catalog.ConnectionInfo{
+				Name:           "testConnectionName",
+				ConnectionType: catalog.ConnectionType("POSTGRESQL"),
+				FullName:       "testConnectionName",
+				MetastoreId:    "abc",
+				Options: map[string]string{
+					"host":                          "pg.test.com",
+					"userProvidedServerCertificate": "-----BEGIN CERTIFICATE-----\nchanged\n-----END CERTIFICATE-----",
+				},
+			}, nil)
+		},
+		Resource: ResourceConnection(),
+		Read:     true,
+		ID:       "abc|testConnectionName",
+		State: map[string]any{
+			"name":            "testConnectionName",
+			"connection_type": "POSTGRESQL",
+			"options": map[string]any{
+				"host":                          "pg.test.com",
+				"userProvidedServerCertificate": "-----BEGIN CERTIFICATE-----\noriginal\n-----END CERTIFICATE-----\n",
+			},
+		},
+	}.ApplyAndExpectData(t, map[string]any{
+		"options": map[string]any{
+			"host":                          "pg.test.com",
+			"userProvidedServerCertificate": "-----BEGIN CERTIFICATE-----\nchanged\n-----END CERTIFICATE-----",
+		},
+	})
+}
+
+func TestSuppressComputedFields(t *testing.T) {
+	pem := "-----BEGIN CERTIFICATE-----\nabc\n-----END CERTIFICATE-----"
+	assert.True(t, suppressComputedFields("options.access_token_expiration", "1", "2", nil))
+	assert.True(t, suppressComputedFields("options.userProvidedServerCertificate", pem, pem+"\n", nil))
+	assert.False(t, suppressComputedFields("options.userProvidedServerCertificate", pem,
+		"-----BEGIN CERTIFICATE-----\nxyz\n-----END CERTIFICATE-----\n", nil))
+	assert.False(t, suppressComputedFields("options.password", "p", "p ", nil))
 }

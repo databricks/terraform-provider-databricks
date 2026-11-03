@@ -11,7 +11,8 @@
 * Add `options_wo` and `options_wo_version` write-only attributes to `databricks_connection` resource ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 
 ### Bug Fixes
-* Treat `pem_key_passphrase`, `userProvidedServerCertificate`, `ssl_keystore_key`, `ssl_key_password`, `schema_registry_api_key` and `schema_registry_api_secret` options of `databricks_connection` as sensitive, preserving their configured values on read ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
+* Keep the configured values of the `pem_key_passphrase`, `ssl_keystore_key`, `ssl_key_password` and `schema_registry_api_secret` options of `databricks_connection`, which the API doesn't return, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
+* Ignore whitespace-only differences in PEM-encoded options of `databricks_connection`, such as `userProvidedServerCertificate`, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 
 ### Documentation
 

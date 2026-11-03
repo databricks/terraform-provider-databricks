@@ -18,18 +18,29 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
+// sensitiveOptions are options the API doesn't return, so Read keeps their values from state.
+// Options the API does return (such as certificates or `schema_registry_api_key`) must not be
+// listed, so changes made outside of Terraform are still detected.
 var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret",
 	"pem_private_key", "pem_key_passphrase", "OAuthPvtKey", "GoogleServiceAccountKeyJson", "bearer_token",
-	"userProvidedServerCertificate", "ssl_keystore_key", "ssl_key_password", "schema_registry_api_key",
-	"schema_registry_api_secret"}
+	"ssl_keystore_key", "ssl_key_password", "schema_registry_api_secret"}
 
-// writeOnlyOptionPattern matches option keys carrying credentials or key material (client
-// certificates, SSL keys, keystores, ...) that may be passed through `options_wo` in addition
-// to sensitiveOptions, so connection types with other key names are covered as well.
-var writeOnlyOptionPattern = regexp.MustCompile(`(?i)(password|passphrase|secret|token|api_?key|private_?key|pvt_?key|ssl_?key|certificate|keystore|truststore)`)
+// writeOnlyOptionPattern matches option keys that end in a credential or key-material name
+// (passwords, secrets, tokens, private keys, certificates), so those options of connection
+// types not covered by sensitiveOptions can be passed through `options_wo` as well. It's
+// anchored to the end of the key, so settings such as `token_endpoint`,
+// `ssl_truststore_type` or `keystore_location` don't match.
+var writeOnlyOptionPattern = regexp.MustCompile(
+	`(?i)(password|passphrase|secret|token|api_?key|private_?key|pvt_?key|ssl_?key|keystore_?key|certificates?|certificate_?chain)$`)
+
+// notWriteOnlyOptions are settings that match writeOnlyOptionPattern but aren't credentials.
+var notWriteOnlyOptions = []string{"trustservercertificate", "trust_server_certificate"}
 
 func isWriteOnlyOption(key string) bool {
-	return slices.Contains(sensitiveOptions, key) || writeOnlyOptionPattern.MatchString(key)
+	if slices.Contains(sensitiveOptions, key) {
+		return true
+	}
+	return writeOnlyOptionPattern.MatchString(key) && !slices.Contains(notWriteOnlyOptions, strings.ToLower(key))
 }
 
 var computedOptions = []string{"pem_private_key_expiration_epoch_sec", "access_token_expiration"}
@@ -40,6 +51,12 @@ func suppressComputedFields(k, old, new string, d *schema.ResourceData) bool {
 			log.Printf("[INFO] Suppressing diff on %s", k)
 			return true
 		}
+	}
+	// The API strips surrounding whitespace from some PEM-encoded options (such as
+	// `userProvidedServerCertificate`), while values read with file() usually end with a newline.
+	if strings.Contains(old, "-----BEGIN ") && strings.TrimSpace(old) == strings.TrimSpace(new) {
+		log.Printf("[INFO] Suppressing whitespace-only diff on %s", k)
+		return true
 	}
 	return false
 }
@@ -79,8 +96,9 @@ func parseWriteOnlyOptions(v string) (map[string]string, error) {
 	for key := range opts {
 		if !isWriteOnlyOption(key) {
 			return nil, fmt.Errorf("option %q is not supported in `options_wo`, set it in `options` instead. "+
-				"Supported are credential options, such as %s, or keys containing password, passphrase, secret, "+
-				"token, api_key, private_key, ssl_key, certificate, keystore or truststore", key, strings.Join(sensitiveOptions, ", "))
+				"Supported are credential options, such as %s, or keys ending in password, passphrase, secret, "+
+				"token, api_key, private_key, ssl_key, keystore_key, certificate(s) or certificate_chain",
+				key, strings.Join(sensitiveOptions, ", "))
 		}
 	}
 	return opts, nil

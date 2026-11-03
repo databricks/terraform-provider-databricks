@@ -7,6 +7,7 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+* Added `databricks_mws_private_access_settings` data source to read private access settings by ID or name ([#5948](https://github.com/databricks/terraform-provider-databricks/pull/5948)).
 
 * Add `databricks_app_slack` and `databricks_app_teams` configuration blocks to `databricks_notification_destination`, and accept `DATABRICKS_APP_SLACK` and `DATABRICKS_APP_TEAMS` as `type` in the `databricks_notification_destinations` data source ([#6131](https://github.com/databricks/terraform-provider-databricks/pull/6131)).
 

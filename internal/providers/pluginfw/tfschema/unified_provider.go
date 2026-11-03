@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -243,6 +244,8 @@ type UnifiedProviderClient interface {
 	// ValidateWorkspaceAccess validates that the workspace client for the given
 	// workspace_id is reachable. Returns diagnostics on failure.
 	ValidateWorkspaceAccess(ctx context.Context, workspaceID string) diag.Diagnostics
+	// HostTypeForTerraform returns the type of the provider's host.
+	HostTypeForTerraform() config.HostType
 }
 
 // WorkspaceDriftDetection compares the old (state) and new (config/provider)

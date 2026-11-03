@@ -35,6 +35,10 @@ const libraryDefaultInstallationTimeout = 30 * time.Minute
 
 var _ resource.ResourceWithConfigure = &LibraryResource{}
 
+// The SDKv2 databricks_library declares an identity, so this implementation
+// declares the same one for state to move between the two.
+var _ resource.ResourceWithIdentity = &LibraryResource{}
+
 func ResourceLibrary() resource.Resource {
 	return &LibraryResource{}
 }
@@ -99,6 +103,13 @@ type LibraryResource struct {
 
 func (r *LibraryResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
+	// The SDKv2 implementation uses a different id format and records the
+	// resolved workspace ID, so the identity can change when state moves over.
+	resp.ResourceBehavior.MutableIdentity = true
+}
+
+func (r *LibraryResource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+	resp.IdentitySchema = tfschema.WorkspaceResourceIdentitySchema()
 }
 
 func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -217,6 +228,7 @@ func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest
 	installedLib.ID = types.StringValue(libGoSDK.String())
 	installedLib.ProviderConfig = libraryTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, installedLib)...)
+	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, installedLib.ID.ValueString(), workspaceID)...)
 }
 
 func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -264,6 +276,7 @@ func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	installedLib.ProviderConfig = libraryTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, installedLib)...)
+	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, libraryTfSDK.ID.ValueString(), workspaceID)...)
 }
 
 func (r *LibraryResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

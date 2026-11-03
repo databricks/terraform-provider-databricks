@@ -153,6 +153,9 @@ type ShareResource struct {
 
 func (r *ShareResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
+	// The SDKv2 implementation records the resolved workspace ID in the identity
+	// and this one may not, so the identity can change when state moves over.
+	resp.ResourceBehavior.MutableIdentity = true
 }
 
 func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -282,6 +285,7 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, newState.Name.ValueString(), workspaceID)...)
 }
 
 func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -344,6 +348,7 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, newState.Name.ValueString(), workspaceID)...)
 }
 
 func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -458,6 +463,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, state.Name.ValueString(), workspaceID)...)
 }
 
 func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -494,7 +500,12 @@ func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 }
 
 func (r *ShareResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	if req.ID == "" {
+	importID, workspaceID, diags := tfschema.ResolveImportIdentity(ctx, r.Client, req)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if importID == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
 			"Expected non-empty share name. Got empty string.",
@@ -503,9 +514,10 @@ func (r *ShareResource) ImportState(ctx context.Context, req resource.ImportStat
 	}
 
 	// For databricks_share, the import ID is just the share name
-	shareName := req.ID
+	shareName := importID
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), shareName)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), shareName)...)
+	resp.Diagnostics.Append(tfschema.SetImportWorkspaceID_SdkV2(ctx, &resp.State, workspaceID)...)
 }
 
 type effectiveFieldsAction interface {

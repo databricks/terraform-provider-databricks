@@ -183,6 +183,10 @@ func (r Resource) ToResource() *schema.Resource {
 	_, hasProviderConfig := r.Schema["provider_config"]
 	isDual := r.IsDual
 	skipProviderConfigStatePopulation := r.SkipProviderConfigStatePopulation
+	isManaged := r.Create != nil || r.Update != nil || r.Delete != nil
+	// Workspace-level managed resources accept a resource identity on import, so
+	// account-level and unified-host providers can be told the workspace ID.
+	hasIdentity := hasProviderConfig && !skipProviderConfigStatePopulation && isManaged
 
 	var update func(ctx context.Context, d *schema.ResourceData,
 		m any) diag.Diagnostics
@@ -195,17 +199,23 @@ func (r Resource) ToResource() *schema.Resource {
 				err = nicerError(ctx, err, "update")
 				return diag.FromErr(err)
 			}
-			if r.CanSkipReadAfterCreateAndUpdate != nil && r.CanSkipReadAfterCreateAndUpdate(d) {
-				return nil
-			}
-			if err := recoverable(r.Read)(ctx, d, c); err != nil {
-				err = nicerError(ctx, err, "read")
-				return diag.FromErr(err)
+			if r.CanSkipReadAfterCreateAndUpdate == nil || !r.CanSkipReadAfterCreateAndUpdate(d) {
+				if err := recoverable(r.Read)(ctx, d, c); err != nil {
+					err = nicerError(ctx, err, "read")
+					return diag.FromErr(err)
+				}
 			}
 			// No post-Read hook needed for Update: provider_config.workspace_id is
 			// already in state from a previous Create, and r.Read() never touches it.
 			// If the workspace ID had changed, CustomizeDiff would have triggered
 			// ForceNew (destroy+create), so Update only runs when it's unchanged.
+			// The identity is still set, because state written before identity
+			// support has none, and Terraform rejects an update without one.
+			if hasIdentity {
+				if err := setWorkspaceResourceIdentity(d); err != nil {
+					return diag.FromErr(nicerError(ctx, err, "set identity for"))
+				}
+			}
 			return nil
 		}
 	} else {
@@ -231,7 +241,7 @@ func (r Resource) ToResource() *schema.Resource {
 		}
 	}
 	// Ignore missing for read for resources, but not for data sources.
-	ignoreMissingForRead := (r.Create != nil || r.Update != nil || r.Delete != nil)
+	ignoreMissingForRead := isManaged
 	generateReadFunc := func(ignoreMissing bool) func(ctx context.Context, d *schema.ResourceData,
 		m any) diag.Diagnostics {
 		return func(ctx context.Context, d *schema.ResourceData,
@@ -259,6 +269,11 @@ func (r Resource) ToResource() *schema.Resource {
 			if hasProviderConfig && d.Id() != "" && !skipProviderConfigStatePopulation && !(isDual && IsAccountLevel(d, c)) {
 				if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
 					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
+				}
+			}
+			if hasIdentity && d.Id() != "" {
+				if err := setWorkspaceResourceIdentity(d); err != nil {
+					return diag.FromErr(nicerError(ctx, err, "set identity for"))
 				}
 			}
 			return nil
@@ -294,6 +309,11 @@ func (r Resource) ToResource() *schema.Resource {
 						return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
 					}
 				}
+				if hasIdentity && d.Id() != "" {
+					if err := setWorkspaceResourceIdentity(d); err != nil {
+						return diag.FromErr(nicerError(ctx, err, "set identity for"))
+					}
+				}
 				return nil
 			}
 			if err = recoverable(r.Read)(ctx, d, c); err != nil {
@@ -308,6 +328,11 @@ func (r Resource) ToResource() *schema.Resource {
 			if hasProviderConfig && d.Id() != "" && !skipProviderConfigStatePopulation && !(isDual && IsAccountLevel(d, c)) {
 				if hookErr := populateProviderConfigInState(ctx, d, c); hookErr != nil {
 					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
+				}
+			}
+			if hasIdentity && d.Id() != "" {
+				if err := setWorkspaceResourceIdentity(d); err != nil {
+					return diag.FromErr(nicerError(ctx, err, "set identity for"))
 				}
 			}
 			return nil
@@ -343,6 +368,13 @@ func (r Resource) ToResource() *schema.Resource {
 				return []*schema.ResourceData{d}, err
 			},
 		}
+	}
+	if hasIdentity {
+		resource.Identity = workspaceResourceIdentity()
+		// Metastore-scoped resources move to another workspace in place, which
+		// changes the identity without replacing the resource.
+		resource.ResourceBehavior.MutableIdentity = true
+		resource.Importer = importerWithIdentity(resource.Importer, isDual)
 	}
 	return resource
 }

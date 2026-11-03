@@ -94,6 +94,11 @@ assertions may need manual updates before a refresh. Credential headers are excl
 known profile secrets/common secret payload fields are redacted. Review every
 generated diff for service-specific secrets before committing it.
 
+Same-host absolute response `Location` headers become relative URLs so redirects
+follow the local fixture server during replay. Escaped paths, queries and
+fragments are preserved. Cross-host redirects are outside the recorder's scope;
+the replay transport rejects destinations outside the fixture server.
+
 ## Test definition
 
 Use `version: 1`, optional `initial_state`, followed by `steps` and `destroy`.

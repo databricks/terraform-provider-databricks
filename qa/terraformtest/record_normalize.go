@@ -173,6 +173,9 @@ func (n *recordingNormalizer) transform(data []byte, toLive, redact bool) ([]byt
 }
 
 func (n *recordingNormalizer) visit(node *yaml.Node, key string, toLive, redact, inJSON bool) error {
+	if key == "response" && !inJSON && !toLive {
+		n.normalizeRedirectLocations(node)
+	}
 	if node.Kind == yaml.ScalarNode {
 		// A JSON property named base64 is ordinary data, not a body selector.
 		return n.scalar(node, key, toLive, redact, key == "base64" && !inJSON)
@@ -190,6 +193,40 @@ func (n *recordingNormalizer) visit(node *yaml.Node, key string, toLive, redact,
 		}
 	}
 	return nil
+}
+
+func (n *recordingNormalizer) normalizeRedirectLocations(response *yaml.Node) {
+	headers := yamlField(response, "headers")
+	if headers == nil || headers.Kind != yaml.MappingNode {
+		return
+	}
+	for i := 0; i+1 < len(headers.Content); i += 2 {
+		if strings.EqualFold(headers.Content[i].Value, "Location") {
+			location := headers.Content[i+1]
+			location.Value = n.relativeRedirectLocation(location.Value)
+		}
+	}
+}
+
+func (n *recordingNormalizer) relativeRedirectLocation(value string) string {
+	u, err := url.Parse(value)
+	if err != nil || u.Host == "" || !strings.EqualFold(u.Host, n.liveHost) ||
+		(u.Scheme != "" && u.Scheme != "http" && u.Scheme != "https") {
+		return value
+	}
+	// Replay chooses a new server origin; retain only the destination within it.
+	u.Scheme, u.Host, u.User = "", "", nil
+	if u.Path == "" {
+		u.Path = "/"
+	}
+	// A leading // would be parsed as another authority rather than a path.
+	if strings.HasPrefix(u.EscapedPath(), "//") {
+		u.Path = "/." + u.Path
+		if u.RawPath != "" {
+			u.RawPath = "/." + u.RawPath
+		}
+	}
+	return u.String()
 }
 
 func (n *recordingNormalizer) scalar(node *yaml.Node, key string, toLive, redact, binary bool) error {

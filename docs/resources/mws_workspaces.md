@@ -51,7 +51,7 @@ To get workspace running, you have to configure a couple of things:
 
 * [databricks_mws_credentials](mws_credentials.md) - You can share a credentials (cross-account IAM role) configuration ID with multiple workspaces. It is not required to create a new one for each workspace.
 * [databricks_mws_storage_configurations](mws_storage_configurations.md) - You can share a root S3 bucket with multiple workspaces in a single account. You do not have to create new ones for each workspace. If you share a root S3 bucket for multiple workspaces in an account, data on the root S3 bucket is partitioned into separate directories by workspace.
-* [databricks_mws_networks](mws_networks.md) - (optional, but recommended) You can share one [customer-managed VPC](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) with multiple workspaces in a single account. However, Databricks recommends using unique subnets and security groups for each workspace. If you plan to share one VPC with multiple workspaces, be sure to size your VPC and subnets accordingly. Because a Databricks [databricks_mws_networks](mws_networks.md) encapsulates this information, you cannot reuse it across workspaces.
+* [databricks_mws_networks](mws_networks.md) - (optional, but strongly recommended for classic workspaces) Without `network_id`, the workspace is created with a Databricks-managed VPC, which Databricks plans to deprecate. You can share one [customer-managed VPC](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) with multiple workspaces in a single account. However, Databricks recommends using unique subnets and security groups for each workspace. If you plan to share one VPC with multiple workspaces, be sure to size your VPC and subnets accordingly. Because a Databricks [databricks_mws_networks](mws_networks.md) encapsulates this information, you cannot reuse it across workspaces.
 * [databricks_mws_customer_managed_keys](mws_customer_managed_keys.md) - You can share a customer-managed key across workspaces.
 
 ```hcl
@@ -104,6 +104,8 @@ resource "databricks_mws_workspaces" "this" {
 ```
 
 ### Creating a workspace on AWS with Databricks-Managed VPC
+
+~> In a future release, Databricks plans to deprecate classic workspace creation with a Databricks-managed VPC, and new classic workspaces will require a [customer-managed VPC](https://docs.databricks.com/aws/en/security/network/classic/customer-managed-vpc). An existing workspace cannot be migrated from a Databricks-managed VPC to a customer-managed VPC, so for new workspaces use [databricks_mws_networks](mws_networks.md) with `network_id` as shown in [the example above](#creating-a-workspace-on-aws), or create a serverless workspace with `compute_mode = "SERVERLESS"`. The provider does not warn when `network_id` is omitted.
 
 ![VPCs](https://docs.databricks.com/_images/customer-managed-vpc.png)
 

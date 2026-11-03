@@ -116,7 +116,7 @@ func configureTerraform(t *testing.T) {
 // Cleanup always requires empty state, independently of optional step checks.
 func testSteps(t *testing.T, definition *testDefinition, handler stepHTTP) []resource.TestStep {
 	t.Helper()
-	steps := make([]resource.TestStep, 0, len(definition.Steps)+1)
+	var steps []resource.TestStep
 	cleanupConfig := `provider "databricks" {}`
 	cleanupSteps := definition.cleanupConfigSteps()
 	for i, s := range definition.Steps {

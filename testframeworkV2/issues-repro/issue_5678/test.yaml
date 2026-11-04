@@ -1,0 +1,90 @@
+# testframeworkV2 reproducer for GitHub issue #5678
+# https://github.com/databricks/terraform-provider-databricks/issues/5678
+#
+# Bug: state-incompatibility regression introduced by the v1.114.0 → v1.114.1
+# rollback sequence. v1.114.0's schema injected `provider_config { workspace_id }`
+# into resource state via PR #5492's post-Read hook + Optional+Computed marking;
+# v1.114.1 rolled back the schema bits but state still contains the field. On
+# v1.114.1's next plan, the state value going to null triggers ForceNew (because
+# the auto-ForceNew sweep in common.Resource.ToResource stamps ForceNew=true on
+# every non-Computed top-level field for resources without an Update method).
+# Result: "must be replaced" — plan succeeds (exit 0) but with a destructive diff
+# that, if applied, destroys + recreates every affected resource.
+#
+# Affected resources: 19 no-Update SDKv2 resources (databricks_token,
+# databricks_workspace_binding, databricks_catalog_workspace_binding, plus
+# 16 others — full list in commit 115199fc's body).
+#
+# Fix on `main` HEAD (NOT yet released): commit 115199fc skips provider_config
+# in the auto-ForceNew sweep AND synthesizes a no-op Update so InternalValidate
+# still passes via the has-Update branch. With this fix, plan on a polluted
+# state shows in-place update / no diff instead of forced replacement.
+#
+# ── FRAMEWORK LIMITATION (v1) ───────────────────────────────────────────────
+# This bug surfaces as a destructive PLAN DIFF, not a non-zero exit. v1
+# `error_regex` matches stderr only; `terraform plan` exits 0 even with a
+# destructive diff. So the assertion below is loose: each plan step asserts
+# "exits cleanly", and the destructive-vs-in-place difference between step 3
+# (v1.114.1, broken) and step 4 (local, fixed) is observable only by reading
+# the run-dir's plan logs.
+#
+# To verify manually after the test:
+#   - step_3_regression_v1_114_1.stdout.log SHOULD contain "must be replaced"
+#   - step_4_fixed_on_local.stdout.log SHOULD NOT — should show "No changes"
+#     or an in-place update
+#
+# A future framework v2 with a `plan_diff_match` matcher (against plan stdout)
+# could automate this assertion. Out of v1 scope.
+#
+# This test is plan-only after step 2 (no apply on v1.114.1) — does NOT
+# actually destroy the resource. Cleanup destroy at end uses last-successful
+# Apply step's version (v1.114.0), which can clean up a v1.114.0-created token.
+# ────────────────────────────────────────────────────────────────────────────
+
+name: issue_5678_provider_config_state_force_replace_regression
+profile: WORKSPACE_AWS                    # any workspace-level profile works (bug is cloud-agnostic)
+cleanup: true                             # destroy v1.114.0-created token at end
+
+requires:
+  cloud: any                              # state-level regression — cloud-agnostic
+  level: workspace                        # affected resources are workspace-level
+
+steps:
+  # Step 1: pre-regression baseline. v1.113.0 creates the token cleanly;
+  # state has no `provider_config` field (the schema didn't inject it yet).
+  - name: baseline_create_on_1_113_0
+    version: "1.113.0"
+    command: apply
+    expect: success
+
+  # Step 2: pollute the state. v1.114.0's post-Read hook (PR #5492) runs on
+  # refresh and writes provider_config{workspace_id="..."} into state. Apply
+  # itself is a no-op (resource is already there); the hook fires on the
+  # implicit refresh.
+  - name: pollute_state_with_v1_114_0
+    version: "1.114.0"
+    command: apply
+    expect: success
+
+  # Step 3: regression. v1.114.1 reads the polluted state, sees provider_config
+  # is Optional (not Computed), and computes the diff as workspace_id "..." → null
+  # → ForceNew. Plan exits 0 (terraform plan's success even with destructive
+  # diff), but the diff shows "must be replaced".
+  #
+  # We use `command: plan` (NOT apply) here so we don't actually destroy the
+  # token — the destructive behavior is documented in the plan log instead.
+  - name: regression_v1_114_1_shows_force_replace
+    version: "1.114.1"
+    command: plan
+    expect: success                       # plan exits 0 even with destructive diff
+    # Manual verification: step_3_*.stdout.log contains "must be replaced".
+
+  # Step 4: fixed_on_local. With the fix in 115199fc, provider_config is
+  # excluded from the auto-ForceNew sweep AND the resource gets a synthesized
+  # no-op Update. Plan should show "No changes" (or at most an in-place update),
+  # NOT a forced replacement.
+  - name: fixed_on_local
+    version: "local"
+    command: plan
+    expect: success
+    # Manual verification: step_4_*.stdout.log does NOT contain "must be replaced".

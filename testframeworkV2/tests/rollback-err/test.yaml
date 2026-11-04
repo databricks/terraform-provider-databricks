@@ -1,0 +1,50 @@
+# Regression-guard for the apply-then-downgrade sibling of issue #5678.
+#
+# When databricks_token is created with v1.113.0 then refreshed under
+# v1.114.0, v1.114.0's post-Read hook (common/resource.go::
+# populateProviderConfigInState) writes provider_config = [{workspace_id =
+# "<resolved>"}] to state. Rolling back to v1.113.0 then re-running plan
+# would diff the polluted state against the (provider_config-less) config
+# and v1.113.0's auto-ForceNew sweep would force-replace the token,
+# silently destroying and recreating it on apply.
+#
+# This fixture is a perpetual canary: it FAILS today (PR #5667 + #5492
+# revert chain on main means the bug is present in step 3 plan output)
+# and turns GREEN once a forward-rolled fix lands that prevents the
+# destructive plan diff.
+#
+# Step 3 asserts the rollback produces an EMPTY plan — i.e., no destructive
+# replacement, no in-place change. Today the assertion fails because plan
+# stdout contains "must be replaced" instead of "No changes". When a fix
+# lands and the rollback produces a clean plan, step 3 turns green.
+#
+# Step 3 is plan-only for safety: applying v1.113.0 against the polluted
+# state would silently DESTROY the real token. Test infrastructure should
+# not silently destroy real cloud resources.
+
+name: rollback_err_token_v1_113_v1_114_v1_113
+profile: WORKSPACE_AWS
+cleanup: true
+requires:
+  cloud: any
+  level: workspace
+
+steps:
+  - name: create_on_1_113_0
+    version: "1.113.0"
+    command: apply
+    expect: success
+
+  - name: refresh_pollutes_state_on_1_114_0
+    version: "1.114.0"
+    command: apply
+    expect: success
+
+  - name: rollback_to_1_113_0_must_not_force_replace
+    version: "1.113.0"
+    command: plan
+    expect: success
+    plan_match: 'No changes'    # plan stdout must contain "No changes."
+                                 # Today: fails (plan shows "must be replaced");
+                                 # passes once a forward-rolled fix prevents
+                                 # the destructive plan diff.

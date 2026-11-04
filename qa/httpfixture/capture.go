@@ -125,7 +125,9 @@ func (c *CaptureTransport) verify() error {
 }
 
 func readAndRestore(body *io.ReadCloser) ([]byte, error) {
-	if *body == nil {
+	// http.NoBody preserves bodyless HTTP/2 framing. An empty replacement reader
+	// would instead advertise an unknown-length body and can stall API reads.
+	if *body == nil || *body == http.NoBody {
 		return nil, nil
 	}
 	data, err := io.ReadAll(*body)

@@ -15,5 +15,9 @@
 - Review captured responses, text/base64 payloads and checkpoint data for secrets
   that automatic redaction cannot identify. Use nonsecret test inputs; do not
   commit credentials, tokens, private keys or sensitive user data.
+- Redaction can break replay; this is an accepted tradeoff. Follow
+  [the redaction authoring guide](AUTHORING.md#write-tests-that-survive-redaction)
+  to align matchers, nonsecret HCL inputs and assertions, then verify ordinary
+  replay. Never preserve a real secret or weaken redaction to make a test pass.
 - Preserve HCL, assertion intent and the test's ordering setting when refreshing
   HTTP data. Unexpected failures or incomplete cleanup must leave YAML untouched.

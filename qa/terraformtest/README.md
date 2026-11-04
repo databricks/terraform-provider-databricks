@@ -99,6 +99,23 @@ follow the local fixture server during replay. Escaped paths, queries and
 fragments are preserved. Cross-host redirects are outside the recorder's scope;
 the replay transport rejects destinations outside the fixture server.
 
+### Secret redaction and replay
+
+Captured requests and responses use `[REDACTED]` for known secrets, even when
+this changes a value needed for exact request matching, a state/plan assertion,
+or Terraform's configuration/state consistency checks. We accept this known
+tradeoff to keep secrets out of committed fixtures. A successful live lifecycle
+does not guarantee that its redacted capture will replay; a failed verification
+replay leaves the YAML unchanged.
+
+The person or agent writing or refreshing the test must make it work with
+redacted data. Use narrow `any_string` request matchers for incidental secret
+strings, or align nonsecret HCL inputs and expectations with the redacted values.
+HCL and assertions are not automatically rewritten, and response values remain
+literal. Never retain a real secret or weaken redaction to make replay pass.
+See [authoring tests with redacted values](AUTHORING.md#write-tests-that-survive-redaction)
+for examples and the record/replay checklist.
+
 ## Test definition
 
 Use `version: 1`, optional `initial_state`, followed by `steps` and `destroy`.

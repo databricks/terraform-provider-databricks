@@ -14479,6 +14479,10 @@ type IngestionDestination struct {
 	// The full three-part name (catalog, schema, name) of the Delta table to be
 	// created for ingestion.
 	DeltaTableName types.String `tfsdk:"delta_table_name"`
+	// The full three-part name (catalog, schema, name) of an existing view to
+	// use instead of creating a Delta table. The view is dropped when the
+	// Stream is deleted.
+	ViewName types.String `tfsdk:"view_name"`
 }
 
 func (to *IngestionDestination) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from IngestionDestination) {
@@ -14489,6 +14493,7 @@ func (to *IngestionDestination) SyncFieldsDuringRead(ctx context.Context, from I
 
 func (m IngestionDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["delta_table_name"] = attrs["delta_table_name"].SetOptional()
+	attrs["view_name"] = attrs["view_name"].SetOptional()
 
 	return attrs
 }
@@ -14512,6 +14517,7 @@ func (m IngestionDestination) ToObjectValue(ctx context.Context) basetypes.Objec
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"delta_table_name": m.DeltaTableName,
+			"view_name":        m.ViewName,
 		})
 }
 
@@ -14520,6 +14526,7 @@ func (m IngestionDestination) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"delta_table_name": types.StringType,
+			"view_name":        types.StringType,
 		},
 	}
 }
@@ -20551,6 +20558,11 @@ type MaterializationSet struct {
 	// the set with a materialized feature removed from this set will cause it
 	// to be deleted.
 	MaterializedFeatures types.List `tfsdk:"materialized_features"`
+	// Notification configuration around the materialization job or pipeline
+	// lifecycle. They are applied to every job and pipeline that materializes a
+	// feature in this set. Features which are materialized in the same pipeline
+	// will share the same notification.
+	Notifications types.Object `tfsdk:"notifications"`
 }
 
 func (to *MaterializationSet) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MaterializationSet) {
@@ -20570,6 +20582,15 @@ func (to *MaterializationSet) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 					}
 				}
 				to.SetMaterializedFeatures(ctx, toMaterializedFeatures)
+			}
+		}
+	}
+	if !from.Notifications.IsNull() && !from.Notifications.IsUnknown() {
+		if toNotifications, ok := to.GetNotifications(ctx); ok {
+			if fromNotifications, ok := from.GetNotifications(ctx); ok {
+				// Recursively sync the fields of Notifications
+				toNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromNotifications)
+				to.SetNotifications(ctx, toNotifications)
 			}
 		}
 	}
@@ -20594,12 +20615,21 @@ func (to *MaterializationSet) SyncFieldsDuringRead(ctx context.Context, from Mat
 			}
 		}
 	}
+	if !from.Notifications.IsNull() && !from.Notifications.IsUnknown() {
+		if toNotifications, ok := to.GetNotifications(ctx); ok {
+			if fromNotifications, ok := from.GetNotifications(ctx); ok {
+				toNotifications.SyncFieldsDuringRead(ctx, fromNotifications)
+				to.SetNotifications(ctx, toNotifications)
+			}
+		}
+	}
 }
 
 func (m MaterializationSet) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["materialization_set_id"] = attrs["materialization_set_id"].SetOptional()
 	attrs["materialization_set_id"] = attrs["materialization_set_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["materialized_features"] = attrs["materialized_features"].SetOptional()
+	attrs["notifications"] = attrs["notifications"].SetOptional()
 
 	return attrs
 }
@@ -20614,6 +20644,7 @@ func (m MaterializationSet) ApplySchemaCustomizations(attrs map[string]tfschema.
 func (m MaterializationSet) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"materialized_features": reflect.TypeOf(MaterializedFeature{}),
+		"notifications":         reflect.TypeOf(MaterializationNotifications{}),
 	}
 }
 
@@ -20626,6 +20657,7 @@ func (m MaterializationSet) ToObjectValue(ctx context.Context) basetypes.ObjectV
 		map[string]attr.Value{
 			"materialization_set_id": m.MaterializationSetId,
 			"materialized_features":  m.MaterializedFeatures,
+			"notifications":          m.Notifications,
 		})
 }
 
@@ -20637,6 +20669,7 @@ func (m MaterializationSet) Type(ctx context.Context) attr.Type {
 			"materialized_features": basetypes.ListType{
 				ElemType: MaterializedFeature{}.Type(ctx),
 			},
+			"notifications": MaterializationNotifications{}.Type(ctx),
 		},
 	}
 }
@@ -20665,6 +20698,31 @@ func (m *MaterializationSet) SetMaterializedFeatures(ctx context.Context, v []Ma
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["materialized_features"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.MaterializedFeatures = types.ListValueMust(t, vs)
+}
+
+// GetNotifications returns the value of the Notifications field in MaterializationSet as
+// a MaterializationNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializationSet) GetNotifications(ctx context.Context) (MaterializationNotifications, bool) {
+	var e MaterializationNotifications
+	if m.Notifications.IsNull() || m.Notifications.IsUnknown() {
+		return e, false
+	}
+	var v MaterializationNotifications
+	d := m.Notifications.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNotifications sets the value of the Notifications field in MaterializationSet.
+func (m *MaterializationSet) SetNotifications(ctx context.Context, v MaterializationNotifications) {
+	vs := v.ToObjectValue(ctx)
+	m.Notifications = vs
 }
 
 // What a partly failed DeleteMaterializationSet got through, attached to the

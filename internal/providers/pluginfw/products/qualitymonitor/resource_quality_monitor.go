@@ -30,6 +30,11 @@ const qualityMonitorDefaultProvisionTimeout = 15 * time.Minute
 
 var _ resource.ResourceWithConfigure = &QualityMonitorResource{}
 
+// The identity lets a monitor be imported through an account-level or
+// unified-host provider by passing the workspace ID. It matches the identity of
+// the SDKv2 databricks_quality_monitor, so state can move between the two.
+var _ resource.ResourceWithIdentity = &QualityMonitorResource{}
+
 func ResourceQualityMonitor() resource.Resource {
 	return &QualityMonitorResource{}
 }
@@ -80,6 +85,16 @@ type QualityMonitorResource struct {
 
 func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
+	// The SDKv2 implementation records the resolved workspace ID in the identity
+	// and this one may not, so the identity can change when state moves over.
+	// MutableIdentity turns off the framework check that the identity never
+	// changes, see
+	// https://developer.hashicorp.com/terraform/plugin/framework/resources/identity#mutable-identities
+	resp.ResourceBehavior.MutableIdentity = true
+}
+
+func (r *QualityMonitorResource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+	resp.IdentitySchema = tfschema.WorkspaceResourceIdentitySchema()
 }
 
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -113,7 +128,13 @@ func (d *QualityMonitorResource) Configure(ctx context.Context, req resource.Con
 }
 
 func (d *QualityMonitorResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("table_name"), req, resp)
+	importID, workspaceID, diags := tfschema.ResolveImportIdentity(ctx, d.Client, req)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("table_name"), importID)...)
+	resp.Diagnostics.Append(tfschema.SetImportWorkspaceID_SdkV2(ctx, &resp.State, workspaceID)...)
 }
 
 func (r *QualityMonitorResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
@@ -186,6 +207,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 	newMonitorInfoTfSDK.ProviderConfig = monitorInfoTfSDK.ProviderConfig
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
+	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, newMonitorInfoTfSDK.TableName.ValueString(), workspaceID)...)
 }
 
 func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -214,6 +236,9 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 	})
 	if err != nil {
 		if apierr.IsMissing(err) {
+			// Terraform requires an identity even when the resource is gone, and
+			// state written before identity support has none.
+			resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, monitorInfoTfSDK.TableName.ValueString(), workspaceID)...)
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -236,6 +261,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 
 	newMonitorInfoTfSDK.ProviderConfig = monitorInfoTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
+	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, newMonitorInfoTfSDK.TableName.ValueString(), workspaceID)...)
 }
 
 func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -297,6 +323,7 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 
 	newMonitorInfoTfSDK.ProviderConfig = monitorInfoTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
+	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, newMonitorInfoTfSDK.TableName.ValueString(), workspaceID)...)
 }
 
 func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

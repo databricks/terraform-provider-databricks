@@ -183,6 +183,19 @@ func (r Resource) ToResource() *schema.Resource {
 	_, hasProviderConfig := r.Schema["provider_config"]
 	isDual := r.IsDual
 	skipProviderConfigStatePopulation := r.SkipProviderConfigStatePopulation
+	isManaged := r.Create != nil || r.Update != nil || r.Delete != nil
+	// Workspace-level managed resources accept a resource identity on import, so
+	// account-level and unified-host providers can be told the workspace ID.
+	hasIdentity := hasProviderConfig && !skipProviderConfigStatePopulation && isManaged
+	setIdentityIfSupported := func(ctx context.Context, d *schema.ResourceData) diag.Diagnostics {
+		if !hasIdentity || d.Id() == "" {
+			return nil
+		}
+		if err := setWorkspaceResourceIdentity(d); err != nil {
+			return diag.FromErr(nicerError(ctx, err, "set identity for"))
+		}
+		return nil
+	}
 
 	var update func(ctx context.Context, d *schema.ResourceData,
 		m any) diag.Diagnostics
@@ -195,8 +208,10 @@ func (r Resource) ToResource() *schema.Resource {
 				err = nicerError(ctx, err, "update")
 				return diag.FromErr(err)
 			}
+			// State written before identity support has no identity, and Terraform
+			// rejects an update without one, so both paths set it.
 			if r.CanSkipReadAfterCreateAndUpdate != nil && r.CanSkipReadAfterCreateAndUpdate(d) {
-				return nil
+				return setIdentityIfSupported(ctx, d)
 			}
 			if err := recoverable(r.Read)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "read")
@@ -206,7 +221,7 @@ func (r Resource) ToResource() *schema.Resource {
 			// already in state from a previous Create, and r.Read() never touches it.
 			// If the workspace ID had changed, CustomizeDiff would have triggered
 			// ForceNew (destroy+create), so Update only runs when it's unchanged.
-			return nil
+			return setIdentityIfSupported(ctx, d)
 		}
 	} else {
 		// set ForceNew to all attributes with CRD
@@ -261,7 +276,7 @@ func (r Resource) ToResource() *schema.Resource {
 					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
 				}
 			}
-			return nil
+			return setIdentityIfSupported(ctx, d)
 		}
 	}
 	resource := &schema.Resource{
@@ -294,7 +309,7 @@ func (r Resource) ToResource() *schema.Resource {
 						return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
 					}
 				}
-				return nil
+				return setIdentityIfSupported(ctx, d)
 			}
 			if err = recoverable(r.Read)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "read")
@@ -310,7 +325,7 @@ func (r Resource) ToResource() *schema.Resource {
 					return diag.FromErr(nicerError(ctx, hookErr, "populate provider_config for"))
 				}
 			}
-			return nil
+			return setIdentityIfSupported(ctx, d)
 		}
 	}
 	if r.Delete != nil {
@@ -343,6 +358,15 @@ func (r Resource) ToResource() *schema.Resource {
 				return []*schema.ResourceData{d}, err
 			},
 		}
+	}
+	if hasIdentity {
+		resource.Identity = workspaceResourceIdentity()
+		// Metastore-scoped resources move to another workspace in place, which
+		// changes the identity without replacing the resource. MutableIdentity
+		// turns off the SDK check that the identity never changes, see
+		// https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/identity#mutable-identities
+		resource.ResourceBehavior.MutableIdentity = true
+		resource.Importer = importerWithIdentity(resource.Importer, isDual)
 	}
 	return resource
 }

@@ -55,9 +55,4 @@ jobs:
 
           Re-run the failed checks once the cache warming completes.
 
-          ### Replay tests
-
-          Add YAML replay tests for provider behavior changes. These run Terraform and the real provider against local HTTP fixtures without Databricks credentials. See [Writing YAML replay tests](https://github.com/databricks/terraform-provider-databricks/blob/main/qa/terraformtest/AUTHORING.md).
-
-          Existing live integration tests run nightly.
           "

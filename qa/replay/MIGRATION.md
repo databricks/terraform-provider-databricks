@@ -5,7 +5,7 @@ uses acceptance test prefixes or direct calls to `acceptance.*Level`. This is a
 migration baseline, not an exhaustive list of every indirect wrapper or hermetic
 Terraform test. Some inventoried cases already use local mocks.
 
-**537 copied; 8 pending.** Counts refer to original Go test functions, not
+**538 copied; 7 pending.** Counts refer to original Go test functions, not
 individual steps or cloud permutations. Copies preserve provider-owned behavior
 and meaningful assertions. Backend-only persistence checks are omitted; fixture
 requests verify what the provider sends. Unsupported provider behavior remains
@@ -123,7 +123,7 @@ the subject from the first HCL resource: it may be a prerequisite.
 | [permissions/resource_permissions_test.go](../../permissions/resource_permissions_test.go) | 0 | 1 |
 | [pipelines/data_pipelines_acc_test.go](../../pipelines/data_pipelines_acc_test.go) | 1 | 0 |
 | [pipelines/pipeline_provider_config_test.go](../../pipelines/pipeline_provider_config_test.go) | 1 | 0 |
-| [pipelines/pipeline_test.go](../../pipelines/pipeline_test.go) | 6 | 1 |
+| [pipelines/pipeline_test.go](../../pipelines/pipeline_test.go) | 7 | 0 |
 | [policies/cluster_policy_provider_config_test.go](../../policies/cluster_policy_provider_config_test.go) | 1 | 0 |
 | [pools/instance_pool_provider_config_test.go](../../pools/instance_pool_provider_config_test.go) | 1 | 0 |
 | [pools/resource_instance_pool_acc_test.go](../../pools/resource_instance_pool_acc_test.go) | 1 | 0 |
@@ -611,3 +611,16 @@ workspace-change scenario. Its final plan expects an in-place update, matching
 metastore-scoped routing support; the old replacement expectation is stale.
 This adds one source function: **537 copied / 8 pending**. The source integration
 test remains unchanged, and cleanup uses the last applied configuration.
+
+## Pipeline optimistic-concurrency timestamp
+
+The pipeline suite copies the remaining two-step timestamp scenario. It asserts
+that the update sends `expected_last_modified: 123456`, reads the new
+`last_modified: 123457`, and retains the configured precondition in state.
+Read preserves this input-only value because the GET response does not contain
+it. Notebook content is a small SQL comment; the pipeline's configuration,
+both cluster blocks, identity checks, and automatic destroy are retained.
+
+This adds one source function: **538 copied / 7 pending**. The remaining entries
+are five intentionally skipped scenarios and two already-hermetic tests.
+Original integration tests remain unchanged.

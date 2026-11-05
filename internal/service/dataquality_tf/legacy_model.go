@@ -2189,11 +2189,12 @@ func (m *Monitor_SdkV2) SetDataProfilingConfig(ctx context.Context, v DataProfil
 
 // Destination of the data quality monitoring notification.
 type NotificationDestination_SdkV2 struct {
-	// The notification-destination IDs (Slack / Teams / webhook) to send the
-	// notification to. The destinations must already exist in the workspace; a
-	// workspace admin creates them. A maximum of 25 destination IDs is
-	// supported. Only supported on schema monitors, via
-	// `anomaly_detection_config`; rejected on table monitors.
+	// The notification-destination IDs (Slack / Teams / webhook / Asana /
+	// ServiceNow / AWS EventBridge) to send the notification to. The
+	// destinations must already exist in the workspace; a workspace admin
+	// creates them. A maximum of 25 destination IDs is supported. Only
+	// supported on schema monitors, via `anomaly_detection_config`; rejected on
+	// table monitors.
 	DestinationIds types.List `tfsdk:"destination_ids"`
 	// The IDs of the workspace users to notify by email. A maximum of 25 user
 	// IDs is supported. Only supported on schema monitors, via

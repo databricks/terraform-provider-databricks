@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -1988,4 +1989,641 @@ func (m *AiParseDocumentResponseMetadata_SdkV2) SetFileMetadata(ctx context.Cont
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["file_metadata"]
 	m.FileMetadata = types.ListValueMust(t, vs)
+}
+
+// An asynchronous run of one AI function over a file of requests.
+type Batch_SdkV2 struct {
+	// Output only. Time the batch was created.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// The AI function to run for every request, for example `ai_extract`.
+	Endpoint types.String `tfsdk:"endpoint"`
+	// Path of the JSONL input file on a Unity Catalog volume. Each line is one
+	// request.
+	InputRef types.String `tfsdk:"input_ref"`
+	// ID of the batch, in the form `batch_<id>`. The service assigns it.
+	Name types.String `tfsdk:"name"`
+	// Path on a Unity Catalog volume to write the JSONL output to. When it is
+	// omitted, the output stays on Databricks-managed storage and a finished
+	// batch returns a short-lived download URL in this field instead.
+	OutputRef types.String `tfsdk:"output_ref"`
+	// Function options applied to every request in the batch, for example the
+	// extraction schema.
+	Params types.Map `tfsdk:"params"`
+	// Output only. Percentage of the requests that finished, from 0 to 100.
+	// Returned when one batch is read, not when batches are listed.
+	PercentComplete types.Float64 `tfsdk:"percent_complete"`
+	// Output only. Request counts. Returned when one batch is read, not when
+	// batches are listed.
+	RequestCounts types.List `tfsdk:"request_counts"`
+	// Output only. Status of the batch.
+	Status types.String `tfsdk:"status"`
+}
+
+func (to *Batch_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Batch_SdkV2) {
+	if !from.RequestCounts.IsNull() && !from.RequestCounts.IsUnknown() {
+		if toRequestCounts, ok := to.GetRequestCounts(ctx); ok {
+			if fromRequestCounts, ok := from.GetRequestCounts(ctx); ok {
+				// Recursively sync the fields of RequestCounts
+				toRequestCounts.SyncFieldsDuringCreateOrUpdate(ctx, fromRequestCounts)
+				to.SetRequestCounts(ctx, toRequestCounts)
+			}
+		}
+	}
+}
+
+func (to *Batch_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Batch_SdkV2) {
+	if !from.RequestCounts.IsNull() && !from.RequestCounts.IsUnknown() {
+		if toRequestCounts, ok := to.GetRequestCounts(ctx); ok {
+			if fromRequestCounts, ok := from.GetRequestCounts(ctx); ok {
+				toRequestCounts.SyncFieldsDuringRead(ctx, fromRequestCounts)
+				to.SetRequestCounts(ctx, toRequestCounts)
+			}
+		}
+	}
+}
+
+func (m Batch_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["endpoint"] = attrs["endpoint"].SetRequired()
+	attrs["input_ref"] = attrs["input_ref"].SetRequired()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["output_ref"] = attrs["output_ref"].SetOptional()
+	attrs["params"] = attrs["params"].SetOptional()
+	attrs["percent_complete"] = attrs["percent_complete"].SetComputed()
+	attrs["request_counts"] = attrs["request_counts"].SetComputed()
+	attrs["request_counts"] = attrs["request_counts"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["status"] = attrs["status"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Batch.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Batch_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"params":         reflect.TypeOf(types.Object{}),
+		"request_counts": reflect.TypeOf(BatchRequestCounts_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Batch_SdkV2
+// only implements ToObjectValue() and Type().
+func (m Batch_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"create_time":      m.CreateTime,
+			"endpoint":         m.Endpoint,
+			"input_ref":        m.InputRef,
+			"name":             m.Name,
+			"output_ref":       m.OutputRef,
+			"params":           m.Params,
+			"percent_complete": m.PercentComplete,
+			"request_counts":   m.RequestCounts,
+			"status":           m.Status,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Batch_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"endpoint":    types.StringType,
+			"input_ref":   types.StringType,
+			"name":        types.StringType,
+			"output_ref":  types.StringType,
+			"params": basetypes.MapType{
+				ElemType: jsontypes.NormalizedType{},
+			},
+			"percent_complete": types.Float64Type,
+			"request_counts": basetypes.ListType{
+				ElemType: BatchRequestCounts_SdkV2{}.Type(ctx),
+			},
+			"status": types.StringType,
+		},
+	}
+}
+
+// GetParams returns the value of the Params field in Batch_SdkV2 as
+// a map of string to types.Object values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Batch_SdkV2) GetParams(ctx context.Context) (map[string]types.Object, bool) {
+	if m.Params.IsNull() || m.Params.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.Object
+	d := m.Params.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParams sets the value of the Params field in Batch_SdkV2.
+func (m *Batch_SdkV2) SetParams(ctx context.Context, v map[string]types.Object) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["params"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Params = types.MapValueMust(t, vs)
+}
+
+// GetRequestCounts returns the value of the RequestCounts field in Batch_SdkV2 as
+// a BatchRequestCounts_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Batch_SdkV2) GetRequestCounts(ctx context.Context) (BatchRequestCounts_SdkV2, bool) {
+	var e BatchRequestCounts_SdkV2
+	if m.RequestCounts.IsNull() || m.RequestCounts.IsUnknown() {
+		return e, false
+	}
+	var v []BatchRequestCounts_SdkV2
+	d := m.RequestCounts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRequestCounts sets the value of the RequestCounts field in Batch_SdkV2.
+func (m *Batch_SdkV2) SetRequestCounts(ctx context.Context, v BatchRequestCounts_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["request_counts"]
+	m.RequestCounts = types.ListValueMust(t, vs)
+}
+
+// Counts of the requests in a batch.
+type BatchRequestCounts_SdkV2 struct {
+	// Output only. Number of requests that failed and will not be retried.
+	Failed types.Int64 `tfsdk:"failed"`
+	// Output only. Number of requests that finished successfully.
+	Succeeded types.Int64 `tfsdk:"succeeded"`
+	// Output only. Number of requests in the input file.
+	Total types.Int64 `tfsdk:"total"`
+}
+
+func (to *BatchRequestCounts_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BatchRequestCounts_SdkV2) {
+}
+
+func (to *BatchRequestCounts_SdkV2) SyncFieldsDuringRead(ctx context.Context, from BatchRequestCounts_SdkV2) {
+}
+
+func (m BatchRequestCounts_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["failed"] = attrs["failed"].SetComputed()
+	attrs["succeeded"] = attrs["succeeded"].SetComputed()
+	attrs["total"] = attrs["total"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in BatchRequestCounts.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m BatchRequestCounts_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, BatchRequestCounts_SdkV2
+// only implements ToObjectValue() and Type().
+func (m BatchRequestCounts_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"failed":    m.Failed,
+			"succeeded": m.Succeeded,
+			"total":     m.Total,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m BatchRequestCounts_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"failed":    types.Int64Type,
+			"succeeded": types.Int64Type,
+			"total":     types.Int64Type,
+		},
+	}
+}
+
+type CancelBatchRequest_SdkV2 struct {
+	// ID of the batch, in the form `batch_<id>`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *CancelBatchRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CancelBatchRequest_SdkV2) {
+}
+
+func (to *CancelBatchRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CancelBatchRequest_SdkV2) {
+}
+
+func (m CancelBatchRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelBatchRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CancelBatchRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelBatchRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CancelBatchRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CancelBatchRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type CancelBatchResponse_SdkV2 struct {
+}
+
+func (to *CancelBatchResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CancelBatchResponse_SdkV2) {
+}
+
+func (to *CancelBatchResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CancelBatchResponse_SdkV2) {
+}
+
+func (m CancelBatchResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelBatchResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CancelBatchResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelBatchResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CancelBatchResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CancelBatchResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+type CreateBatchRequest_SdkV2 struct {
+	// The batch to create.
+	Batch types.List `tfsdk:"batch"`
+}
+
+func (to *CreateBatchRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateBatchRequest_SdkV2) {
+	if !from.Batch.IsNull() && !from.Batch.IsUnknown() {
+		if toBatch, ok := to.GetBatch(ctx); ok {
+			if fromBatch, ok := from.GetBatch(ctx); ok {
+				// Recursively sync the fields of Batch
+				toBatch.SyncFieldsDuringCreateOrUpdate(ctx, fromBatch)
+				to.SetBatch(ctx, toBatch)
+			}
+		}
+	}
+}
+
+func (to *CreateBatchRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateBatchRequest_SdkV2) {
+	if !from.Batch.IsNull() && !from.Batch.IsUnknown() {
+		if toBatch, ok := to.GetBatch(ctx); ok {
+			if fromBatch, ok := from.GetBatch(ctx); ok {
+				toBatch.SyncFieldsDuringRead(ctx, fromBatch)
+				to.SetBatch(ctx, toBatch)
+			}
+		}
+	}
+}
+
+func (m CreateBatchRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["batch"] = attrs["batch"].SetRequired()
+	attrs["batch"] = attrs["batch"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateBatchRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateBatchRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"batch": reflect.TypeOf(Batch_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateBatchRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CreateBatchRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"batch": m.Batch,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateBatchRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"batch": basetypes.ListType{
+				ElemType: Batch_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetBatch returns the value of the Batch field in CreateBatchRequest_SdkV2 as
+// a Batch_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateBatchRequest_SdkV2) GetBatch(ctx context.Context) (Batch_SdkV2, bool) {
+	var e Batch_SdkV2
+	if m.Batch.IsNull() || m.Batch.IsUnknown() {
+		return e, false
+	}
+	var v []Batch_SdkV2
+	d := m.Batch.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBatch sets the value of the Batch field in CreateBatchRequest_SdkV2.
+func (m *CreateBatchRequest_SdkV2) SetBatch(ctx context.Context, v Batch_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["batch"]
+	m.Batch = types.ListValueMust(t, vs)
+}
+
+type GetBatchRequest_SdkV2 struct {
+	// ID of the batch, in the form `batch_<id>`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetBatchRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetBatchRequest_SdkV2) {
+}
+
+func (to *GetBatchRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetBatchRequest_SdkV2) {
+}
+
+func (m GetBatchRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetBatchRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetBatchRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetBatchRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetBatchRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetBatchRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type ListBatchesRequest_SdkV2 struct {
+	// Maximum number of batches to return in one page.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Page token from an earlier response. Omit it to read the first page.
+	PageToken types.String `tfsdk:"-"`
+}
+
+func (to *ListBatchesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListBatchesRequest_SdkV2) {
+}
+
+func (to *ListBatchesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListBatchesRequest_SdkV2) {
+}
+
+func (m ListBatchesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListBatchesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListBatchesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListBatchesRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListBatchesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListBatchesRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+type ListBatchesResponse_SdkV2 struct {
+	// The batches in this page.
+	Batches types.List `tfsdk:"batches"`
+	// Token that reads the next page. It is empty on the last page.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListBatchesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListBatchesResponse_SdkV2) {
+	if !from.Batches.IsNull() && !from.Batches.IsUnknown() && to.Batches.IsNull() && len(from.Batches.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Batches, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Batches = from.Batches
+	}
+	if !from.Batches.IsNull() && !from.Batches.IsUnknown() {
+		if toBatches, ok := to.GetBatches(ctx); ok {
+			if fromBatches, ok := from.GetBatches(ctx); ok {
+				// Recursively sync the fields of each Batches element by position.
+				for i := range toBatches {
+					if i < len(fromBatches) {
+						toBatches[i].SyncFieldsDuringCreateOrUpdate(ctx, fromBatches[i])
+					}
+				}
+				to.SetBatches(ctx, toBatches)
+			}
+		}
+	}
+}
+
+func (to *ListBatchesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListBatchesResponse_SdkV2) {
+	if !from.Batches.IsNull() && !from.Batches.IsUnknown() && to.Batches.IsNull() && len(from.Batches.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Batches, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Batches = from.Batches
+	}
+	if !from.Batches.IsNull() && !from.Batches.IsUnknown() {
+		if toBatches, ok := to.GetBatches(ctx); ok {
+			if fromBatches, ok := from.GetBatches(ctx); ok {
+				for i := range toBatches {
+					if i < len(fromBatches) {
+						toBatches[i].SyncFieldsDuringRead(ctx, fromBatches[i])
+					}
+				}
+				to.SetBatches(ctx, toBatches)
+			}
+		}
+	}
+}
+
+func (m ListBatchesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["batches"] = attrs["batches"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListBatchesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListBatchesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"batches": reflect.TypeOf(Batch_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListBatchesResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListBatchesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"batches":         m.Batches,
+			"next_page_token": m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListBatchesResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"batches": basetypes.ListType{
+				ElemType: Batch_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetBatches returns the value of the Batches field in ListBatchesResponse_SdkV2 as
+// a slice of Batch_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListBatchesResponse_SdkV2) GetBatches(ctx context.Context) ([]Batch_SdkV2, bool) {
+	if m.Batches.IsNull() || m.Batches.IsUnknown() {
+		return nil, false
+	}
+	var v []Batch_SdkV2
+	d := m.Batches.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBatches sets the value of the Batches field in ListBatchesResponse_SdkV2.
+func (m *ListBatchesResponse_SdkV2) SetBatches(ctx context.Context, v []Batch_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["batches"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Batches = types.ListValueMust(t, vs)
 }

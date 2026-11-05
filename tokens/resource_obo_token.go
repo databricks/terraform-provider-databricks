@@ -11,9 +11,15 @@ import (
 )
 
 type OboToken struct {
-	ApplicationID   string `json:"application_id"`
-	LifetimeSeconds int32  `json:"lifetime_seconds,omitempty"`
-	Comment         string `json:"comment,omitempty"`
+	ApplicationID   string   `json:"application_id"`
+	LifetimeSeconds int32    `json:"lifetime_seconds,omitempty"`
+	Comment         string   `json:"comment,omitempty"`
+	Scopes          []string `json:"scopes,omitempty" tf:"slice_set,computed,force_new"`
+}
+
+type oboTokenRequest struct {
+	OboToken
+	AutoscopeEnabled *bool `json:"autoscope_enabled,omitempty"`
 }
 
 func NewTokenManagementAPI(ctx context.Context, m any) TokenManagementAPI {
@@ -25,7 +31,7 @@ type TokenManagementAPI struct {
 	context context.Context
 }
 
-func (a TokenManagementAPI) CreateTokenOnBehalfOfServicePrincipal(request OboToken) (token TokenResponse, err error) {
+func (a TokenManagementAPI) CreateTokenOnBehalfOfServicePrincipal(request oboTokenRequest) (token TokenResponse, err error) {
 	err = a.client.Post(a.context, "/token-management/on-behalf-of/tokens", request, &token, a.client.AddWorkspaceIdHeader)
 	return
 }
@@ -48,6 +54,10 @@ func ResourceOboToken() common.Resource {
 				Computed:  true,
 				Sensitive: true,
 			}
+			m["autoscope_enabled"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			}
 			return m
 		})
 	common.AddNamespaceInSchema(oboTokenSchema)
@@ -62,8 +72,12 @@ func ResourceOboToken() common.Resource {
 			if err != nil {
 				return err
 			}
-			var request OboToken
-			common.DataToStructPointer(d, oboTokenSchema, &request)
+			var request oboTokenRequest
+			common.DataToStructPointer(d, oboTokenSchema, &request.OboToken)
+			if v, ok := d.GetOkExists("autoscope_enabled"); ok {
+				autoscopeEnabled := v.(bool)
+				request.AutoscopeEnabled = &autoscopeEnabled
+			}
 			ot, err := NewTokenManagementAPI(ctx, newClient).CreateTokenOnBehalfOfServicePrincipal(request)
 			if err != nil {
 				return err
@@ -93,6 +107,7 @@ func ResourceOboToken() common.Resource {
 			if d.Id() != "" {
 				// set comment only if token exists
 				d.Set("comment", ot.TokenInfo.Comment)
+				d.Set("scopes", ot.TokenInfo.Scopes)
 			}
 			return nil
 		},

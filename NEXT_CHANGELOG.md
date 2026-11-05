@@ -16,6 +16,8 @@
 
 * Add `databricks_app_slack` and `databricks_app_teams` configuration blocks to `databricks_notification_destination`, and accept `DATABRICKS_APP_SLACK` and `DATABRICKS_APP_TEAMS` as `type` in the `databricks_notification_destinations` data source ([#6131](https://github.com/databricks/terraform-provider-databricks/pull/6131)).
 
+* Add `scopes` and `autoscope_enabled` arguments to `databricks_obo_token` and `databricks_token` resources ([#6046](https://github.com/databricks/terraform-provider-databricks/issues/6046)).
+
 ### Bug Fixes
 
 * Fix data races when concurrent resource operations access the unified provider's client caches ([#6120](https://github.com/databricks/terraform-provider-databricks/pull/6120)).

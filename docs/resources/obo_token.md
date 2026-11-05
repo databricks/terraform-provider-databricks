@@ -74,6 +74,8 @@ The following arguments are required:
 * `application_id` - Application ID of [databricks_service_principal](service_principal.md#application_id) to create a PAT token for.
 * `lifetime_seconds` - (Integer, Optional) The number of seconds before the token expires. Token resource is re-created when it expires. If no lifetime is specified, the token remains valid indefinitely.
 * `comment` - (String, Optional) Comment that describes the purpose of the token.
+* `scopes` - (Optional) (Set of strings) [API scopes](https://docs.databricks.com/api/workspace/scopes) the token is restricted to, e.g. `["sql", "unity-catalog"]`. If not specified, the platform default applies. When set, the token is re-created if its scopes change outside Terraform, for example through autoscoping.
+* `autoscope_enabled` - (Optional) (Boolean) Whether Databricks may automatically adjust the token's scopes. If not specified, the platform default applies. Set to `false` to keep the token's scopes fixed.
 * `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
   * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 

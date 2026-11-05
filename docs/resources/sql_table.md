@@ -194,8 +194,7 @@ The following arguments are supported:
 
 ### `column` configuration block
 
-For table columns. These can be optional for external tables.
-Currently, changing the column definitions for a table will require dropping and re-creating the table
+For table columns. These can be optional for external tables. Adding fields to existing `STRUCT` columns is supported for tables, including structs nested in arrays or maps. Existing nested fields cannot be removed, reordered, renamed, or have their types changed. This operation is not supported for views.
 
 * `name` - User-visible name of column
 * `type` - Column type spec (with metadata) as SQL text. Not supported for `VIEW` table_type.

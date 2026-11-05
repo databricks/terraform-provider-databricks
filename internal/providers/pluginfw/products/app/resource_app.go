@@ -386,9 +386,24 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	response, err := w.Apps.Update(ctx, apps.UpdateAppRequest{App: appGoSdk, Name: app.Name.ValueString()})
+	updateWaiter, err := w.Apps.CreateUpdate(ctx, apps.AsyncUpdateAppRequest{
+		App:     &appGoSdk,
+		AppName: app.Name.ValueString(),
+		// The backend expands "*" to every updatable field, so fields it adds later are applied
+		// without a provider change. Unset fields are cleared or reset to their backend default.
+		UpdateMask: "*",
+	})
 	if err != nil {
 		resp.Diagnostics.AddError("failed to update app", err.Error())
+		return
+	}
+	if _, err := updateWaiter.Get(); err != nil {
+		resp.Diagnostics.AddError("error waiting for app update to succeed", err.Error())
+		return
+	}
+	response, err := w.Apps.GetByName(ctx, app.Name.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("failed to read app after update", err.Error())
 		return
 	}
 

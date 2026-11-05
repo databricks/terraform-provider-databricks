@@ -200,6 +200,43 @@ func TestAccAppResource_NoCompute(t *testing.T) {
 	})
 }
 
+func makeComputeSizeTemplate(description, computeSize string) string {
+	computeSizeLine := ""
+	if computeSize != "" {
+		computeSizeLine = fmt.Sprintf("compute_size = %q", computeSize)
+	}
+	return fmt.Sprintf(`
+	resource "databricks_app" "this" {
+		no_compute = true
+		name = "tf-{var.STICKY_RANDOM}"
+		description = %q
+		%s
+	}`, description, computeSizeLine)
+}
+
+func checkAppComputeSize(t *testing.T, expected string) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		assert.Equal(t, expected, s.RootModule().Resources["databricks_app.this"].Primary.Attributes["compute_size"])
+		return nil
+	}
+}
+
+// An omitted compute_size is only sent as unset when another field changes, because it is
+// Optional+Computed; the backend then resets it to MEDIUM.
+func TestAccAppResource_ComputeSize(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: makeComputeSizeTemplate("compute size app", "MEDIUM"),
+		Check:    checkAppComputeSize(t, "MEDIUM"),
+	}, acceptance.Step{
+		Template: makeComputeSizeTemplate("compute size app", "LARGE"),
+		Check:    checkAppComputeSize(t, "LARGE"),
+	}, acceptance.Step{
+		Template: makeComputeSizeTemplate("compute size app reset", ""),
+		Check:    checkAppComputeSize(t, "MEDIUM"),
+	})
+}
+
 // TestAccAppResource_EmptyUserApiScopes is a regression test for ES-1857512 / #4760:
 // setting user_api_scopes = [] (to disable OBO authorization) must not produce
 // "inconsistent result after apply" or a perpetual diff, even though the Apps API omits

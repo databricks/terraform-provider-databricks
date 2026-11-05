@@ -33,14 +33,14 @@ func TestRecordingRequiresExactSelectionAndRejectsCI(t *testing.T) {
 	require.NoError(t, recordingSelection("TestReplay", files, "", ""))
 }
 
-func TestBasicRecordingRejectsSetupBeforeLoadingProfile(t *testing.T) {
-	for _, setup := range []string{"initial_state: {checkpoint: missing.tfstate}\n", "recording: {environment_template: ''}\n"} {
+func TestRecordingRequiresInitialTemplateBeforeLoadingProfile(t *testing.T) {
+	for _, setup := range []string{"initial_state: {checkpoint: missing.tfstate}\n", "recording: {initial_state_template: 'provider \"databricks\" {}'}\n"} {
 		directory := t.TempDir()
 		original := minimalDefinition + setup
 		writeDiscoveryFile(t, directory, "One.yaml", original)
 		output, err := recorderSubprocess(t, directory, "missing-profile")
 		require.Error(t, err, output)
-		require.Contains(t, output, "basic recording does not support")
+		require.Contains(t, output, "requires")
 		after, err := os.ReadFile(filepath.Join(directory, "One.yaml"))
 		require.NoError(t, err)
 		require.Equal(t, original, string(after))

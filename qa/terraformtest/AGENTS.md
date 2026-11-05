@@ -21,3 +21,11 @@
   replay. Never preserve a real secret or weaken redaction to make a test pass.
 - Preserve HCL, assertion intent and the test's ordering setting when refreshing
   HTTP data. Unexpected failures or incomplete cleanup must leave YAML untouched.
+- Recording setup has two owners: `environment_template` uses separate state and
+  is cleaned up last; `initial_state_template` seeds the journey's own state.
+  Replay runs neither template. Generate checkpoints with Terraform from sanitized
+  fixture responses, never by editing a live checkpoint or private provider data.
+- Recording overwrites `checkpoints/<test_name>.tfstate` before updating the YAML.
+  If saving YAML fails, rerun recording.
+  Leave older checkpoint files in place. Preserve historical migration snapshots;
+  refresh generates state for the provider version in this checkout.

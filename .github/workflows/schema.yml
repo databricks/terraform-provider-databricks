@@ -283,8 +283,7 @@ jobs:
 
   # The squashed merge-queue commit has a different hash than the PR head, so the
   # PR's `status` check does not carry over. Post a synthetic success rather than
-  # re-run the classifier on the queue ref, mirroring the auto-approve job in
-  # integration-tests.yml:
+  # re-run the classifier on the queue ref:
   # * The classifier is a double provider build; it already ran on the PR, and
   #   the queue only squashes commits that each passed it.
   # * Its bypass reads github.event.pull_request.body, absent from the merge_group

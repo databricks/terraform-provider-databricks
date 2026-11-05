@@ -42,11 +42,10 @@ jobs:
       - name: Comment on PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           gh pr comment ${{ github.event.pull_request.number }} --body \
           "<!-- INTEGRATION_TESTS_MANUAL -->
-          ### Unit tests and CodeQL
+          ### Unit and replay tests, and CodeQL
 
           For fork and Dependabot PRs, the \`tests\` and \`Analyze (go)\` checks run offline against a pre-warmed Go module cache because these PRs cannot authenticate to the internal Go module proxy.
 
@@ -56,16 +55,9 @@ jobs:
 
           Re-run the failed checks once the cache warming completes.
 
-          ### Integration tests
+          ### Replay tests
 
-          Integration tests don't run automatically for external contributors; an authorized user can run them manually by following the instructions below:
+          Add YAML replay tests for provider behavior changes. These run Terraform and the real provider against local HTTP fixtures without Databricks credentials. See [Writing YAML replay tests](https://github.com/databricks/terraform-provider-databricks/blob/main/qa/terraformtest/AUTHORING.md).
 
-          Trigger:
-          [go/deco-tests-run/terraform](https://go/deco-tests-run/terraform)
-
-          Inputs:
-          * PR number: ${{github.event.pull_request.number}}
-          * Commit SHA: \`${{ env.COMMIT_SHA }}\`
-
-          Checks will be approved automatically on success.
+          Existing live integration tests run nightly.
           "

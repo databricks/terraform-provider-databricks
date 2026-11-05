@@ -39,6 +39,12 @@ func RunNative(t *testing.T, path string, configure func(*resource.TestCase, fun
 
 func runNative(t *testing.T, definition *testDefinition, configure func(*resource.TestCase, func(*config.Config) error)) {
 	t.Helper()
+	handler, host := replayBoundary(t, definition)
+	runTerraform(t, definition, handler, fixtureConfig(host), configure)
+}
+
+func replayBoundary(t *testing.T, definition *testDefinition) (*httpfixture.Handler, string) {
+	t.Helper()
 	handler := httpfixture.NewHandler()
 	handler.SetEnforceCallOrder(definition.EnforceCallOrder)
 	if err := handler.SetReusableFixtures(definition.metadataCalls()); err != nil {
@@ -51,7 +57,7 @@ func runNative(t *testing.T, definition *testDefinition, configure func(*resourc
 			t.Error(err)
 		}
 	})
-	runTerraform(t, definition, handler, fixtureConfig(server.URL), configure)
+	return handler, server.URL
 }
 
 // stepHTTP is shared by replay and recording. Terraform operations and checks
@@ -64,11 +70,17 @@ type stepHTTP interface {
 func runTerraform(t *testing.T, definition *testDefinition, handler stepHTTP, customize func(*config.Config) error, configure func(*resource.TestCase, func(*config.Config) error)) {
 	t.Helper()
 	configureTerraform(t)
-	steps := testSteps(t, definition, handler)
+	resource.Test(t, terraformCase(t, definition, handler, customize, configure))
+}
+
+// Building the native case separately lets recording observe a checkpoint at
+// a step boundary without changing Terraform execution or replay assertions.
+func terraformCase(t *testing.T, definition *testDefinition, handler stepHTTP, customize func(*config.Config) error, configure func(*resource.TestCase, func(*config.Config) error)) resource.TestCase {
+	t.Helper()
 	testCase := resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: ProviderFactories(customize),
-		Steps:                    steps,
+		Steps:                    testSteps(t, definition, handler),
 		ErrorCheck: func(err error) error {
 			// The testing framework attempts destroy after an interrupted lifecycle.
 			cleanupErr := handler.StartStep(stepLabel(len(definition.Steps), "destroy"), definition.Destroy.Calls)
@@ -83,7 +95,7 @@ func runTerraform(t *testing.T, definition *testDefinition, handler stepHTTP, cu
 	if configure != nil {
 		configure(&testCase, customize)
 	}
-	resource.Test(t, testCase)
+	return testCase
 }
 
 // configureTerraform disables implicit CLI downloads and optional extra

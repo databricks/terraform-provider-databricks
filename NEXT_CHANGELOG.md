@@ -22,7 +22,7 @@
 
 * Preserve `databricks_pipeline.expected_last_modified` during refresh to avoid post-apply drift ([#6133](https://github.com/databricks/terraform-provider-databricks/pull/6133)).
 
-* Keep the prior `tag` and `branch` in state when a `databricks_repo` update fails, so that the next plan shows the change again ([#PR_NUMBER](https://github.com/databricks/terraform-provider-databricks/pull/PR_NUMBER)).
+* Keep the prior `tag` and `branch` in state when a `databricks_repo` update fails, so that the next plan shows the change again ([#6164](https://github.com/databricks/terraform-provider-databricks/pull/6164)).
 
 ### Documentation
 

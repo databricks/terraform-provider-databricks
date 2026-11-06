@@ -360,13 +360,17 @@ func (ti *SqlTableInfo) getWrappedClusterKeys() string {
 	return "(`" + strings.Join(ti.ClusterKeys, "`,`") + "`)"
 }
 
-func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, statements []string, typestring string) []string {
+func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, statements []string, typestring string) ([]string, error) {
 	if len(ti.ColumnInfos) != len(oldti.ColumnInfos) {
 		statements = ti.addOrRemoveColumnStatements(oldti, statements, typestring)
 	} else {
-		statements = ti.alterExistingColumnStatements(oldti, statements, typestring)
+		var err error
+		statements, err = ti.alterExistingColumnStatements(oldti, statements, typestring)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return statements
+	return statements, nil
 }
 
 func (ti *SqlTableInfo) addOrRemoveColumnStatements(oldti *SqlTableInfo, statements []string, typestring string) []string {
@@ -410,11 +414,31 @@ func (ti *SqlTableInfo) addOrRemoveColumnStatements(oldti *SqlTableInfo, stateme
 	return statements
 }
 
-func (ti *SqlTableInfo) alterExistingColumnStatements(oldti *SqlTableInfo, statements []string, typestring string) []string {
+func (ti *SqlTableInfo) alterExistingColumnStatements(oldti *SqlTableInfo, statements []string, typestring string) ([]string, error) {
 	for i, ci := range ti.ColumnInfos {
 		oldCi := oldti.ColumnInfos[i]
 		if ci.Name != oldCi.Name {
 			statements = append(statements, fmt.Sprintf("ALTER %s %s RENAME COLUMN %s to %s", typestring, ti.SQLFullName(), oldCi.getWrappedColumnName(), ci.getWrappedColumnName()))
+		}
+		if getColumnType(oldCi.Type) != getColumnType(ci.Type) {
+			additions, err := nestedTypeAdditions(oldCi.Type, ci.Type, []string{ci.Name})
+			if err != nil || len(additions) == 0 {
+				if err != nil {
+					return nil, err
+				}
+				return nil, fmt.Errorf("changing the 'type' of an existing column is not supported")
+			}
+			if ti.TableType == "VIEW" {
+				return nil, fmt.Errorf("adding nested fields to a view is not supported")
+			}
+			for _, addition := range additions {
+				path := append(slices.Clone(addition.parentPath), addition.name)
+				wrappedPath := make([]string, len(path))
+				for i, part := range path {
+					wrappedPath[i] = wrapSqlIdentifier(part)
+				}
+				statements = append(statements, fmt.Sprintf("ALTER %s %s ADD COLUMNS (%s %s)", typestring, ti.SQLFullName(), strings.Join(wrappedPath, "."), addition.typeText))
+			}
 		}
 		if ci.Comment != oldCi.Comment {
 			if ti.TableType == "VIEW" {
@@ -436,7 +460,7 @@ func (ti *SqlTableInfo) alterExistingColumnStatements(oldti *SqlTableInfo, state
 			statements = append(statements, fmt.Sprintf("ALTER %s %s ALTER COLUMN %s %s NOT NULL", typestring, ti.SQLFullName(), ci.getWrappedColumnName(), keyWord))
 		}
 	}
-	return statements
+	return statements, nil
 }
 
 func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
@@ -480,7 +504,10 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TBLPROPERTIES (%s)", typestring, ti.SQLFullName(), ti.serializeProperties()))
 	}
 
-	statements = ti.getStatementsForColumnDiffs(oldti, statements, typestring)
+	statements, err := ti.getStatementsForColumnDiffs(oldti, statements, typestring)
+	if err != nil {
+		return nil, err
+	}
 
 	return statements, nil
 }
@@ -554,7 +581,7 @@ func columnChangesCustomizeDiff(d *schema.ResourceDiff, newTable *SqlTableInfo) 
 	newColumnInfos := newTable.ColumnInfos
 
 	if len(oldCols) == len(newColumnInfos) {
-		err := assertNoColumnTypeDiff(oldCols, newColumnInfos)
+		err := assertNoColumnTypeDiff(oldCols, newColumnInfos, newTable.TableType)
 		if err != nil {
 			return err
 		}
@@ -589,17 +616,324 @@ func getColumnType(columnType string) string {
 	return caseInsensitiveColumnType
 }
 
-func assertNoColumnTypeDiff(oldCols []interface{}, newColumnInfos []SqlColumnInfo) error {
+func assertNoColumnTypeDiff(oldCols []interface{}, newColumnInfos []SqlColumnInfo, tableType string) error {
 	for i, oldCol := range oldCols {
 		oldColMap := oldCol.(map[string]interface{})
 		if getColumnType(oldColMap["type"].(string)) != getColumnType(newColumnInfos[i].Type) {
-			return fmt.Errorf("changing the 'type' of an existing column is not supported")
+			additions, err := nestedTypeAdditions(oldColMap["type"].(string), newColumnInfos[i].Type, nil)
+			if err != nil || len(additions) == 0 {
+				return fmt.Errorf("changing the 'type' of an existing column is not supported")
+			}
+			if tableType == "VIEW" {
+				return fmt.Errorf("adding nested fields to a view is not supported")
+			}
 		}
 		if oldColMap["identity"].(string) != string(newColumnInfos[i].Identity) {
 			return fmt.Errorf("changing the 'identity' type of an existing column is not supported")
 		}
 	}
 	return nil
+}
+
+type nestedFieldAddition struct {
+	parentPath []string
+	name       string
+	typeText   string
+}
+
+type nestedType struct {
+	kind    string
+	raw     string
+	fields  []nestedTypeField
+	element *nestedType
+	key     *nestedType
+	value   *nestedType
+}
+
+type nestedTypeField struct {
+	name string
+	typ  *nestedType
+}
+
+type nestedTypeParser struct {
+	input string
+	pos   int
+}
+
+func parseNestedType(input string) (*nestedType, error) {
+	parser := &nestedTypeParser{input: input}
+	typ, err := parser.parseType()
+	if err != nil {
+		return nil, err
+	}
+	parser.skipSpaces()
+	if parser.pos != len(parser.input) {
+		return nil, fmt.Errorf("unexpected content in SQL type %q", input)
+	}
+	return typ, nil
+}
+
+func (p *nestedTypeParser) skipSpaces() {
+	for p.pos < len(p.input) && (p.input[p.pos] == ' ' || p.input[p.pos] == '\t' || p.input[p.pos] == '\n' || p.input[p.pos] == '\r') {
+		p.pos++
+	}
+}
+
+func (p *nestedTypeParser) consumeKeyword(keyword string) bool {
+	p.skipSpaces()
+	if len(p.input)-p.pos < len(keyword) || !strings.EqualFold(p.input[p.pos:p.pos+len(keyword)], keyword) {
+		return false
+	}
+	end := p.pos + len(keyword)
+	if end < len(p.input) {
+		c := p.input[end]
+		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' {
+			return false
+		}
+	}
+	p.pos = end
+	return true
+}
+
+func (p *nestedTypeParser) parseType() (*nestedType, error) {
+	p.skipSpaces()
+	start := p.pos
+	if p.consumeKeyword("struct") {
+		p.skipSpaces()
+		if p.pos < len(p.input) && p.input[p.pos] == '<' {
+			p.pos++
+			typ := &nestedType{kind: "struct"}
+			p.skipSpaces()
+			if p.pos < len(p.input) && p.input[p.pos] == '>' {
+				p.pos++
+				typ.raw = p.input[start:p.pos]
+				return typ, nil
+			}
+			for {
+				name, err := p.parseFieldName()
+				if err != nil {
+					return nil, err
+				}
+				p.skipSpaces()
+				if p.pos >= len(p.input) || p.input[p.pos] != ':' {
+					return nil, fmt.Errorf("expected ':' after nested field %q", name)
+				}
+				p.pos++
+				fieldType, err := p.parseType()
+				if err != nil {
+					return nil, err
+				}
+				typ.fields = append(typ.fields, nestedTypeField{name: name, typ: fieldType})
+				p.skipSpaces()
+				if p.pos >= len(p.input) {
+					return nil, fmt.Errorf("unterminated struct type %q", p.input)
+				}
+				if p.input[p.pos] == '>' {
+					p.pos++
+					typ.raw = p.input[start:p.pos]
+					return typ, nil
+				}
+				if p.input[p.pos] != ',' {
+					return nil, fmt.Errorf("expected ',' or '>' in struct type %q", p.input)
+				}
+				p.pos++
+			}
+		}
+		p.pos = start
+	}
+	if p.consumeKeyword("array") {
+		p.skipSpaces()
+		if p.pos < len(p.input) && p.input[p.pos] == '<' {
+			p.pos++
+			element, err := p.parseType()
+			if err != nil {
+				return nil, err
+			}
+			p.skipSpaces()
+			if p.pos >= len(p.input) || p.input[p.pos] != '>' {
+				return nil, fmt.Errorf("unterminated array type %q", p.input)
+			}
+			p.pos++
+			return &nestedType{kind: "array", element: element, raw: p.input[start:p.pos]}, nil
+		}
+		p.pos = start
+	}
+	if p.consumeKeyword("map") {
+		p.skipSpaces()
+		if p.pos < len(p.input) && p.input[p.pos] == '<' {
+			p.pos++
+			key, err := p.parseType()
+			if err != nil {
+				return nil, err
+			}
+			p.skipSpaces()
+			if p.pos >= len(p.input) || p.input[p.pos] != ',' {
+				return nil, fmt.Errorf("expected ',' in map type %q", p.input)
+			}
+			p.pos++
+			value, err := p.parseType()
+			if err != nil {
+				return nil, err
+			}
+			p.skipSpaces()
+			if p.pos >= len(p.input) || p.input[p.pos] != '>' {
+				return nil, fmt.Errorf("unterminated map type %q", p.input)
+			}
+			p.pos++
+			return &nestedType{kind: "map", key: key, value: value, raw: p.input[start:p.pos]}, nil
+		}
+		p.pos = start
+	}
+	return p.parseScalarType()
+}
+
+func (p *nestedTypeParser) parseFieldName() (string, error) {
+	p.skipSpaces()
+	if p.pos >= len(p.input) {
+		return "", fmt.Errorf("expected nested field name in SQL type %q", p.input)
+	}
+	if p.input[p.pos] == '`' {
+		p.pos++
+		var name strings.Builder
+		for p.pos < len(p.input) {
+			if p.input[p.pos] == '`' {
+				if p.pos+1 < len(p.input) && p.input[p.pos+1] == '`' {
+					name.WriteByte('`')
+					p.pos += 2
+					continue
+				}
+				p.pos++
+				return name.String(), nil
+			}
+			name.WriteByte(p.input[p.pos])
+			p.pos++
+		}
+		return "", fmt.Errorf("unterminated quoted field name in SQL type %q", p.input)
+	}
+	start := p.pos
+	for p.pos < len(p.input) && p.input[p.pos] != ':' {
+		p.pos++
+	}
+	if p.pos >= len(p.input) {
+		return "", fmt.Errorf("expected ':' after nested field name in SQL type %q", p.input)
+	}
+	return strings.TrimSpace(p.input[start:p.pos]), nil
+}
+
+func (p *nestedTypeParser) parseScalarType() (*nestedType, error) {
+	start := p.pos
+	angleDepth, parenDepth := 0, 0
+	for p.pos < len(p.input) {
+		switch p.input[p.pos] {
+		case '<':
+			angleDepth++
+		case '>':
+			if angleDepth == 0 && parenDepth == 0 {
+				goto done
+			}
+			angleDepth--
+		case '(':
+			parenDepth++
+		case ')':
+			parenDepth--
+		case ',':
+			if angleDepth == 0 && parenDepth == 0 {
+				goto done
+			}
+		}
+		p.pos++
+	}
+done:
+	raw := strings.TrimSpace(p.input[start:p.pos])
+	if raw == "" {
+		return nil, fmt.Errorf("expected SQL type in %q", p.input)
+	}
+	return &nestedType{kind: "scalar", raw: raw}, nil
+}
+
+func wrapSqlIdentifier(identifier string) string {
+	return "`" + strings.ReplaceAll(identifier, "`", "``") + "`"
+}
+
+func nestedTypeAdditions(oldType, newType string, parentPath []string) ([]nestedFieldAddition, error) {
+	oldParsed, err := parseNestedType(oldType)
+	if err != nil {
+		return nil, err
+	}
+	newParsed, err := parseNestedType(newType)
+	if err != nil {
+		return nil, err
+	}
+	var additions []nestedFieldAddition
+	if err := compareNestedTypes(oldParsed, newParsed, parentPath, &additions); err != nil {
+		return nil, err
+	}
+	return additions, nil
+}
+
+func compareNestedTypes(oldType, newType *nestedType, path []string, additions *[]nestedFieldAddition) error {
+	if oldType.kind != newType.kind {
+		return fmt.Errorf("incompatible nested SQL types")
+	}
+	switch oldType.kind {
+	case "scalar":
+		oldNormalized := strings.Join(strings.Fields(getColumnType(oldType.raw)), "")
+		newNormalized := strings.Join(strings.Fields(getColumnType(newType.raw)), "")
+		if oldNormalized != newNormalized {
+			return fmt.Errorf("incompatible nested SQL types")
+		}
+	case "struct":
+		if len(newType.fields) < len(oldType.fields) {
+			return fmt.Errorf("nested fields cannot be removed")
+		}
+		for i, oldField := range oldType.fields {
+			newField := newType.fields[i]
+			if oldField.name != newField.name {
+				return fmt.Errorf("nested fields cannot be reordered or renamed")
+			}
+			if err := compareNestedTypes(oldField.typ, newField.typ, append(slices.Clone(path), oldField.name), additions); err != nil {
+				return err
+			}
+		}
+		for _, field := range newType.fields[len(oldType.fields):] {
+			*additions = append(*additions, nestedFieldAddition{
+				parentPath: slices.Clone(path),
+				name:       field.name,
+				typeText:   field.typ.rawType(),
+			})
+		}
+	case "array":
+		return compareNestedTypes(oldType.element, newType.element, append(slices.Clone(path), "element"), additions)
+	case "map":
+		if err := compareNestedTypes(oldType.key, newType.key, append(slices.Clone(path), "key"), additions); err != nil {
+			return err
+		}
+		return compareNestedTypes(oldType.value, newType.value, append(slices.Clone(path), "value"), additions)
+	default:
+		return fmt.Errorf("unsupported nested SQL type %q", oldType.kind)
+	}
+	return nil
+}
+
+func (typ *nestedType) rawType() string {
+	if typ.raw != "" {
+		return typ.raw
+	}
+	switch typ.kind {
+	case "scalar":
+		return typ.raw
+	case "struct":
+		fields := make([]string, len(typ.fields))
+		for i, field := range typ.fields {
+			fields[i] = wrapSqlIdentifier(field.name) + ": " + field.typ.rawType()
+		}
+		return "STRUCT<" + strings.Join(fields, ", ") + ">"
+	case "array":
+		return "ARRAY<" + typ.element.rawType() + ">"
+	case "map":
+		return "MAP<" + typ.key.rawType() + ", " + typ.value.rawType() + ">"
+	}
+	return ""
 }
 
 // This function will throw if column addition or removal is happening together with column info field values.

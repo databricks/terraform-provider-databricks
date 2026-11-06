@@ -1225,6 +1225,79 @@ func TestResourceSqlTableUpdateTable_ColumnsTypeThrowsError(t *testing.T) {
 	)
 }
 
+func TestResourceSqlTableUpdateTable_AddNestedStructFields(t *testing.T) {
+	resourceSqlTableUpdateColumnHelper(t,
+		resourceSqlTableUpdateColumnTestMetaData{
+			oldColumns: []SqlColumnInfo{
+				{
+					Name:     "one",
+					Type:     "struct<name: string, address: struct<city: string>>",
+					Nullable: true,
+				},
+			},
+			newColumns: []SqlColumnInfo{
+				{
+					Name:     "one",
+					Type:     "struct<name: string, address: struct<city: string, zip: int>, active: boolean, metadata: struct<id: bigint>>",
+					Nullable: true,
+				},
+			},
+			allowedCommands: []string{
+				"ALTER TABLE `main`.`foo`.`bar` ADD COLUMNS (`one`.`address`.`zip` int)",
+				"ALTER TABLE `main`.`foo`.`bar` ADD COLUMNS (`one`.`active` boolean)",
+				"ALTER TABLE `main`.`foo`.`bar` ADD COLUMNS (`one`.`metadata` struct<id: bigint>)",
+			},
+		},
+	)
+}
+
+func TestResourceSqlTableUpdateTable_AddNestedStructFieldInArray(t *testing.T) {
+	resourceSqlTableUpdateColumnHelper(t,
+		resourceSqlTableUpdateColumnTestMetaData{
+			oldColumns: []SqlColumnInfo{
+				{
+					Name:     "items",
+					Type:     "array<struct<name: string>>",
+					Nullable: true,
+				},
+			},
+			newColumns: []SqlColumnInfo{
+				{
+					Name:     "items",
+					Type:     "array<struct<name: string, id: bigint>>",
+					Nullable: true,
+				},
+			},
+			allowedCommands: []string{
+				"ALTER TABLE `main`.`foo`.`bar` ADD COLUMNS (`items`.`element`.`id` bigint)",
+			},
+		},
+	)
+}
+
+func TestResourceSqlTableUpdateTable_NestedStructFieldTypeChangeThrowsError(t *testing.T) {
+	resourceSqlTableUpdateColumnHelper(t,
+		resourceSqlTableUpdateColumnTestMetaData{
+			oldColumns: []SqlColumnInfo{
+				{
+					Name:     "one",
+					Type:     "struct<name: string>",
+					Nullable: true,
+				},
+			},
+			newColumns: []SqlColumnInfo{
+				{
+					Name:     "one",
+					Type:     "struct<name: int>",
+					Nullable: true,
+				},
+			},
+			allowedCommands:  []string{},
+			expectedErrorMsg: "changing the 'type' of an existing column is not supported",
+		},
+	)
+}
+
 func TestResourceSqlTableUpdateTable_ColumnsTypeUpperLowerCaseThrowsError(t *testing.T) {
 	resourceSqlTableUpdateColumnHelper(t,
 		resourceSqlTableUpdateColumnTestMetaData{

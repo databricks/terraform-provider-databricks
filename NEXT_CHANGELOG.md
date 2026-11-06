@@ -14,6 +14,7 @@
 * Add resource and data source for `databricks_lakewatch_common_config`.
 * Add resource and data sources for `databricks_lakewatch_rule`.
 
+* Support append-only nested struct field additions in [databricks_sql_table](docs/resources/sql_table.md), including structs inside arrays and maps ([#6159](https://github.com/databricks/terraform-provider-databricks/pull/6159)).
 * Add `databricks_app_slack` and `databricks_app_teams` configuration blocks to `databricks_notification_destination`, and accept `DATABRICKS_APP_SLACK` and `DATABRICKS_APP_TEAMS` as `type` in the `databricks_notification_destinations` data source ([#6131](https://github.com/databricks/terraform-provider-databricks/pull/6131)).
 
 ### Bug Fixes

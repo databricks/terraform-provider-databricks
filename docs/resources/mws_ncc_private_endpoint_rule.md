@@ -5,11 +5,11 @@ subcategory: "Deployment"
 
 [API Documentation](https://docs.databricks.com/api/account/networkconnectivity)
 
-Allows you to create a private endpoint in a [Network Connectivity Config](mws_network_connectivity_config.md) that can be used to [configure private connectivity from serverless compute](https://learn.microsoft.com/en-us/azure/databricks/security/network/serverless-network-security/serverless-private-link).
+Allows you to create a private endpoint in a [Network Connectivity Config](mws_network_connectivity_config.md) that can be used to configure private connectivity from serverless compute ([AWS](https://docs.databricks.com/aws/en/security/network/serverless-network-security/pl-aws-resources), [Azure](https://learn.microsoft.com/en-us/azure/databricks/security/network/serverless-network-security/serverless-private-link)).
 
 -> This resource can only be used with an account-level provider!
 
--> This feature is available on Azure, and in Public Preview on AWS.
+-> This feature is available on AWS and Azure.
 
 ## Plugin Framework Opt-In
 
@@ -84,7 +84,7 @@ The following arguments are available:
   * On AWS: List of target resource FQDNs accessible via the VPC endpoint service. Only used by private endpoints towards a VPC endpoint service behind a customer-managed VPC endpoint service. Conflicts with `resource_names`.
 * `endpoint_service` - (AWS only) Example `com.amazonaws.vpce.us-east-1.vpce-svc-123abcc1298abc123`. The full target AWS endpoint service name that connects to the destination resources of the private endpoint. Change forces creation of a new resource.
 * `resource_names` - (AWS only) Only used by private endpoints towards AWS S3 service. List of globally unique S3 bucket names that will be accessed via the VPC endpoint. The bucket names must be in the same region as the NCC/endpoint service. Conflict with `domain_names`.
-* `enabled` - (AWS only) Activation status. Only used by private endpoints towards an AWS S3 service. Update this field to activate/deactivate this private endpoint to allow egress access from serverless compute resources. Can only be updated after a private endpoint rule towards an AWS S3 service is successfully created.
+* `enabled` - (AWS only) Activation status. Only used by private endpoints towards an AWS S3 service. Update this field to activate/deactivate this private endpoint to allow egress access from serverless compute resources. Can only be updated after a private endpoint rule towards an AWS S3 service is successfully created. Traffic keeps using the public path until this is set to `true`, so set it once the rule reaches `ESTABLISHED` and the bucket policy has been updated.
 
 ## Attribute Reference
 

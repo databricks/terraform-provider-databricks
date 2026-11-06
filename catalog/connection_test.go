@@ -7,6 +7,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func connectionTemplateWithOwner(host string, owner string) string {
@@ -128,5 +129,59 @@ func TestUcAccConnectionsSchemaLevelResourceFullLifecycle(t *testing.T) {
 		// (write-only bearer_token, server-managed auth_scheme) cannot match config on import.
 		ResourceName: "databricks_connection.this",
 		ImportState:  true,
+	})
+}
+
+func connectionWriteOnlyTemplate(password string, version int) string {
+	return fmt.Sprintf(`
+	resource "databricks_connection" "this" {
+		name            = "tf-test-connection-wo-{var.STICKY_RANDOM}"
+		connection_type = "MYSQL"
+		comment         = "write-only options test"
+		options = {
+			host = "test.mysql.database.azure.com"
+			port = "3306"
+		}
+		options_wo = jsonencode({
+			user     = "user"
+			password = "%s"
+		})
+		options_wo_version = %d
+	}
+	`, password, version)
+}
+
+// checkConnectionWriteOnlyOptionsNotInState verifies that options supplied through
+// `options_wo` are not stored in state, while regular options are.
+func checkConnectionWriteOnlyOptionsNotInState(version string) func(*terraform.State) error {
+	return func(s *terraform.State) error {
+		r, ok := s.RootModule().Resources["databricks_connection.this"]
+		if !ok {
+			return fmt.Errorf("databricks_connection.this not found in state")
+		}
+		attrs := r.Primary.Attributes
+		for _, key := range []string{"options.user", "options.password", "options_wo"} {
+			if attrs[key] != "" {
+				return fmt.Errorf("%s must not be stored in state", key)
+			}
+		}
+		if attrs["options.host"] != "test.mysql.database.azure.com" {
+			return fmt.Errorf("expected options.host to be stored in state")
+		}
+		if attrs["options_wo_version"] != version {
+			return fmt.Errorf("expected options_wo_version %s, got %s", version, attrs["options_wo_version"])
+		}
+		return nil
+	}
+}
+
+func TestUcAccConnectionsWriteOnlyOptions(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: connectionWriteOnlyTemplate("password_v1", 1),
+		Check:    checkConnectionWriteOnlyOptionsNotInState("1"),
+	}, acceptance.Step{
+		// Bumping the version re-sends the write-only options without storing them
+		Template: connectionWriteOnlyTemplate("password_v2", 2),
+		Check:    checkConnectionWriteOnlyOptionsNotInState("2"),
 	})
 }

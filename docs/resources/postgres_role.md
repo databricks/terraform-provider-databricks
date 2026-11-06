@@ -38,6 +38,17 @@ Roles exist within the Lakebase Autoscaling resource hierarchy:
 - **`LAKEBASE_OAUTH_V1`**: Default for managed identities (`USER`, `SERVICE_PRINCIPAL`, `GROUP`). The role logs in via Databricks OAuth.
 - **`NO_LOGIN`**: The role cannot be used for interactive access. Useful for roles that only hold privileges and serve as group targets.
 
+### Fields Fixed at Creation
+
+`spec.identity_type`, `spec.auth_method`, and `spec.postgres_role` are fixed when the role is
+created. Changing these fields in your Terraform configuration does not change their values on the
+existing role. Setting `replace_existing = true` adopts an existing role without changing these
+fixed values. You can still manage `spec.membership_roles` and the supported `spec.attributes`
+fields through Terraform.
+
+If you need different fixed values, define a new `databricks_postgres_role` resource with a
+different `role_id` and the desired settings.
+
 ### Attributes
 
 `spec.attributes` exposes a subset of Postgres role attributes:

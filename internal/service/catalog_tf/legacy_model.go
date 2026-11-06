@@ -41004,6 +41004,55 @@ func (m UnassignResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Request to restore a soft-deleted metastore by ID.
+type UndropMetastoreByIdRequest_SdkV2 struct {
+	// Required. Id of the metastore to undrop.
+	Id types.String `tfsdk:"id"`
+}
+
+func (to *UndropMetastoreByIdRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UndropMetastoreByIdRequest_SdkV2) {
+}
+
+func (to *UndropMetastoreByIdRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UndropMetastoreByIdRequest_SdkV2) {
+}
+
+func (m UndropMetastoreByIdRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UndropMetastoreByIdRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UndropMetastoreByIdRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UndropMetastoreByIdRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UndropMetastoreByIdRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"id": m.Id,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UndropMetastoreByIdRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"id": types.StringType,
+		},
+	}
+}
+
 type UpdateAccessRequestDestinationsRequest_SdkV2 struct {
 	// The access request destinations to assign to the securable. For each
 	// destination, a **destination_id** and **destination_type** must be

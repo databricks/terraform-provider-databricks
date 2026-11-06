@@ -710,7 +710,11 @@ func ResourceSqlTable() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			ti, err := NewSqlTablesAPI(ctx, c).getTable(d.Id())
+			wc, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			ti, err := NewSqlTablesAPI(ctx, wc).getTable(d.Id())
 			if err != nil {
 				return err
 			}
@@ -757,7 +761,11 @@ func ResourceSqlTable() common.Resource {
 			if err := newti.initCluster(ctx, d, c); err != nil {
 				return err
 			}
-			oldti, err := NewSqlTablesAPI(ctx, c).getTable(d.Id())
+			wc, err := c.DatabricksClientForUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			oldti, err := NewSqlTablesAPI(ctx, wc).getTable(d.Id())
 			if err != nil {
 				return err
 			}

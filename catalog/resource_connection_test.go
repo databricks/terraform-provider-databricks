@@ -743,26 +743,44 @@ func connectionSecretsPlan(configRef string, expected map[string]*terraform.Reso
 // unknownValue is how the plugin SDK represents a value that is unknown until apply.
 const unknownValue = "74D93920-ED26-11E3-AC10-0800200C9A66"
 
-// A reference that is unknown until apply must stay unknown in the plan.
-func TestConnectionSecretsUnknownReferenceStaysComputed(t *testing.T) {
-	connectionSecretsPlan(unknownValue, map[string]*terraform.ResourceAttrDiff{
-		"secrets.%":        {NewComputed: true},
-		"secrets.password": {Old: "main.default.mysql_pw", NewRemoved: true},
-	}).ApplyNoError(t)
-}
-
-func TestConnectionSecretsSameReferencePlansNoChanges(t *testing.T) {
-	connectionSecretsPlan("main.default.mysql_pw", map[string]*terraform.ResourceAttrDiff{}).ApplyNoError(t)
-}
-
-func TestConnectionSecretsCaseOnlyDifferenceIsSuppressed(t *testing.T) {
-	connectionSecretsPlan("Main.Default.MYSQL_PW", map[string]*terraform.ResourceAttrDiff{}).ApplyNoError(t)
-}
-
-func TestConnectionSecretsRepointPlansInPlaceUpdate(t *testing.T) {
-	connectionSecretsPlan("main.default.mysql_pw2", map[string]*terraform.ResourceAttrDiff{
-		"secrets.password": {Old: "main.default.mysql_pw", New: "main.default.mysql_pw2"},
-	}).ApplyNoError(t)
+func TestConnectionSecretsPlan(t *testing.T) {
+	testCases := []struct {
+		name         string
+		configRef    string
+		expectedDiff map[string]*terraform.ResourceAttrDiff
+	}{
+		{
+			"same reference plans no changes",
+			"main.default.mysql_pw",
+			map[string]*terraform.ResourceAttrDiff{},
+		},
+		{
+			"case-only difference is suppressed",
+			"Main.Default.MYSQL_PW",
+			map[string]*terraform.ResourceAttrDiff{},
+		},
+		{
+			"different secret plans an in-place update",
+			"main.default.mysql_pw2",
+			map[string]*terraform.ResourceAttrDiff{
+				"secrets.password": {Old: "main.default.mysql_pw", New: "main.default.mysql_pw2"},
+			},
+		},
+		{
+			// A reference that is unknown until apply must stay unknown in the plan.
+			"unknown reference stays computed",
+			unknownValue,
+			map[string]*terraform.ResourceAttrDiff{
+				"secrets.%":        {NewComputed: true},
+				"secrets.password": {Old: "main.default.mysql_pw", NewRemoved: true},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			connectionSecretsPlan(tc.configRef, tc.expectedDiff).ApplyNoError(t)
+		})
+	}
 }
 
 func mysqlConnectionWithSecret(secretRef string) *catalog.ConnectionInfo {

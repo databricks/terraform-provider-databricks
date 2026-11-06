@@ -23,6 +23,8 @@
 
 * Preserve `databricks_pipeline.expected_last_modified` during refresh to avoid post-apply drift ([#6133](https://github.com/databricks/terraform-provider-databricks/pull/6133)).
 
+* Fix `databricks_sql_table` read and update ignoring `provider_config.workspace_id` when the provider is configured at account level ([#6167](https://github.com/databricks/terraform-provider-databricks/pull/6167)).
+
 ### Documentation
 
 ### Exporter

@@ -45,6 +45,15 @@ func isWriteOnlyOption(key string) bool {
 
 var computedOptions = []string{"pem_private_key_expiration_epoch_sec", "access_token_expiration"}
 
+// suppressSecretNameCase ignores case-only differences in secret names, which UC stores
+// lowercased. The map's element count is left alone so an unknown map stays unknown.
+func suppressSecretNameCase(k, old, new string, d *schema.ResourceData) bool {
+	if strings.HasSuffix(k, ".%") {
+		return false
+	}
+	return common.EqualFoldDiffSuppress(k, old, new, d)
+}
+
 func suppressComputedFields(k, old, new string, d *schema.ResourceData) bool {
 	for _, option := range computedOptions {
 		if k == "options."+option {
@@ -131,9 +140,13 @@ func mergeWriteOnlyOptions(d *schema.ResourceData, options map[string]string) (m
 	if merged == nil {
 		merged = map[string]string{}
 	}
+	secrets, _ := d.Get("secrets").(map[string]any)
 	for key, value := range woOptions {
 		if _, ok := merged[key]; ok {
 			return nil, fmt.Errorf("option %q is set in both `options` and `options_wo`", key)
+		}
+		if _, ok := secrets[key]; ok {
+			return nil, fmt.Errorf("option %q is set in both `options_wo` and `secrets`", key)
 		}
 		merged[key] = value
 	}
@@ -180,6 +193,7 @@ func ResourceConnection() common.Resource {
 				ValidateFunc: validation.IntAtLeast(1),
 				RequiredWith: []string{"options_wo"},
 			}
+			common.CustomizeSchemaPath(m, "secrets").SetCustomSuppressDiff(suppressSecretNameCase)
 			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})

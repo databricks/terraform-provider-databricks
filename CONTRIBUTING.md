@@ -14,13 +14,11 @@
     - [Adding a new resource](#adding-a-new-resource)
     - [Adding a new data source](#adding-a-new-data-source)
     - [Migrating resource to plugin framework](#migrating-resource-to-plugin-framework)
-      - [SDKv2 Compatibility](#sdkv2-compatibility)
-      - [Plugin Framework Compatibility](#plugin-framework-compatibility)
     - [Code Organization](#code-organization)
     - [Code Conventions](#code-conventions)
   - [Debugging](#debugging)
   - [Adding a new resource](#adding-a-new-resource-1)
-  - [Integration Testing](#integration-testing)
+  - [Replay Testing](#replay-testing)
   - [Code conventions](#code-conventions-1)
   - [Linting](#linting)
   - [Developing with Visual Studio Code Devcontainers](#developing-with-visual-studio-code-devcontainers)
@@ -51,7 +49,7 @@ Code contributions—bug fixes, new development, test improvement — all follow
     git checkout -b new-branch-name
     ```
 
-1. Work on your new code. Write and run tests.
+1. Work on your new code. Write and run unit tests and [YAML replay tests](#replay-testing) for provider behavior changes.
 
 1. Commit your changes.
 
@@ -162,7 +160,7 @@ We are migrating the resource from SDKv2 to Plugin Framework provider and hence 
   - Make sure to set the user agent in all the CRUD methods.
   - In the `Metadata()`, use the method `GetDatabricksProductionName()`.
   - In the `Schema()` method, import the appropriate struct from the `internal/service/{package}_tf` package and use the `ResourceStructToSchema` method to convert the struct to schema. Use the struct that does not have the `_SdkV2` suffix. The schema for the struct is automatically generated and maintained within the `ApplySchemaCustomizations` method of that struct. If you need to customize the schema further, pass in a `CustomizableSchema` to `ResourceStructToSchema` and customize the schema there. If you need to use a manually crafted struct in place of the auto-generated one, you must implement the `ApplySchemaCustomizations` method in a similar way.
-3. Create a file with `resource_resource-name_acc_test.go` and add integration tests here.
+3. Add [YAML replay tests](#replay-testing) for the resource lifecycle in a dedicated fixture folder in the resource package.
 4. Create a file with `resource_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go`
 5. Add the resource under `internal/providers/pluginfw/pluginfw.go` in `Resources()` method. Please update the list so that it stays in alphabetically sorted order.
 6. Create a PR and send it for review.
@@ -170,7 +168,7 @@ We are migrating the resource from SDKv2 to Plugin Framework provider and hence 
 ### Adding a new data source
 1. Check if the directory for this particular datasource exists under `internal/providers/pluginfw/products`, if not create the directory eg: `cluster`, `volume` etc... Please note: Resources and Data sources are organized under the same package for that service.
 2. Create a file with `data_resource-name.go` and write the CRUD methods, schema for that data source. For reference, please take a look at existing data sources eg: `data_cluster.go`. Make sure to set the user agent in the READ method. In the `Metadata()`, if the resource is to be used as default, use the method `GetDatabricksProductionName()` else use `GetDatabricksStagingName()` which suffixes the name with `_pluginframework`.
-3. Create a file with `data_resource-name_acc_test.go` and add integration tests here.
+3. Add [YAML replay tests](#replay-testing) for the data source in a dedicated fixture folder in the data source package.
 4. Create a file with `data_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go`
 5. Add the resource under `internal/providers/pluginfw/pluginfw.go` in `DataSources()` method. Please update the list so that it stays in alphabetically sorted order.
 6. Create a PR and send it for review.
@@ -178,7 +176,7 @@ We are migrating the resource from SDKv2 to Plugin Framework provider and hence 
 ### Migrating resource to plugin framework
 There must not be any behaviour change or schema change when migrating a resource or data source to either Go SDK or Plugin Framework.
 - Please make sure there are no breaking differences due to changes in schema by running: `make diff-schema`.
-- Integration tests shouldn't require any major changes.
+- Cover provider behavior with [replay tests](#replay-testing), including provider implementation switches where needed.
 
 By default, `ResourceStructToSchema` will convert a `types.List` field to a `ListAttribute` or `ListNestedAttribute`. For resources or data sources migrated from the SDKv2, `ListNestedBlock` must be used for such fields. To do this, use the `_SdkV2` variant from the `internal/service/{package}_tf` package when defining the resource schema and when interacting with the plan, config and state. Additionally, in the `Schema()` method, call `cs.ConfigureAsSdkV2Compatible()` in the `ResourceStructToSchema` callback:
 ```go
@@ -199,71 +197,10 @@ type ResourceInfoExtended struct {
 
 ```
 
-- Add integration tests to verify that the resource is both SDKv2 and Plugin Framework compatible. Example:
-
-#### SDKv2 Compatibility
-```go
-func TestSDKv2Compatibility(t *testing.T) {
-	acceptance.WorkspaceLevel(t,
-		// Step 1: Create resource using plugin framework implementation
-		acceptance.Step{
-			Template: `
-                resource "databricks_some_resource" "this" {
-                    name = "abc"
-                }
-            `
-		},
-		// Step 2: Update the resource using SDKv2
-		acceptance.Step{
-			ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-				"databricks": func() (tfprotov6.ProviderServer, error) {
-					sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_some_resource"})
-					return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
-				},
-			},
-			Template: `
-                resource "databricks_some_resource" "this" {
-                    name = "abc"
-                }
-            `,
-		},
-	)
-}
-```
-
-#### Plugin Framework Compatibility
-```go
-func TestPluginFrameworkCompatibility(t *testing.T) {
-	acceptance.WorkspaceLevel(t,
-		// Step 1: Create the resource using SDKv2
-		acceptance.Step{
-			ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-				"databricks": func() (tfprotov6.ProviderServer, error) {
-					sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_some_resource"})
-					return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
-				},
-			},
-			Template: `
-                resource "databricks_some_resource" "this" {
-                    name = "abc"
-                }
-            `,
-		},
-		// Step 2: Update the resource using plugin framework implementation
-		acceptance.Step{
-			Template: `
-                resource "databricks_some_resource" "this" {
-                    name = "abc"
-                }
-            `
-		},
-
-	)
-}
-```
+- Add replay tests that switch between SDKv2 and Plugin Framework in both directions. Use [provider implementation selection](qa/terraformtest/README.md#provider-implementation-selection) to select the implementation per step; see the [provider migration examples](qa/replay/features/provider_migration).
 
 ### Code Organization
-Each resource and data source should be defined in package `internal/providers/plugnifw/products/<resource>`, e.g.: `internal/providers/plugnifw/products/volume` package will contain both resource, data sources and other utils specific to volumes. Tests (both unit and integration tests) will also remain in this package.
+Each resource and data source should be defined in package `internal/providers/plugnifw/products/<resource>`, e.g.: `internal/providers/plugnifw/products/volume` package will contain both resource, data sources and other utils specific to volumes. Unit tests and new replay tests also belong in this package.
 
 Note: Only Docs will stay under root docs/ directory.
 
@@ -467,67 +404,27 @@ func TestExampleResourceCreate(t *testing.T) {
 }
 ```
 
-*Write acceptance tests.* These are E2E tests which run terraform against the live cloud and Databricks APIs. For these, you can use the `Step` helpers defined in the `internal/acceptance` package. An example:
+*Write replay tests.* Cover the Terraform lifecycle with HCL and HTTP fixtures, including updates and cleanup. See [Replay Testing](#replay-testing) and the [authoring guide](qa/terraformtest/AUTHORING.md).
 
-```go
-func TestAccSecretAclResource(t *testing.T) {
- WorkspaceLevel(t, Step{
-  Template: `
-  resource "databricks_group" "ds" {
-   display_name = "data-scientists-{var.RANDOM}"
-  }
-  resource "databricks_secret_scope" "app" {
-   name = "app-{var.RANDOM}"
-  }
-  resource "databricks_secret_acl" "ds_can_read_app" {
-   principal = databricks_group.ds.display_name
-   permission = "READ"
-   scope = databricks_secret_scope.app.name
-  }`,
-  Check: func(s *terraform.State) error {
-   w := databricks.Must(databricks.NewWorkspaceClient())
+## Unit and Replay Testing on Forked Pull Requests
 
-   ctx := context.Background()
-   me, err := w.CurrentUser.Me(ctx)
-   require.NoError(t, err)
-
-   scope := s.RootModule().Resources["databricks_secret_scope.app"].Primary.ID
-   acls, err := w.Secrets.ListAclsByScope(ctx, scope)
-   require.NoError(t, err)
-   assert.Equal(t, 2, len(acls.Items))
-   m := map[string]string{}
-   for _, acl := range acls.Items {
-    m[acl.Principal] = string(acl.Permission)
-   }
-
-   group := s.RootModule().Resources["databricks_group.ds"].Primary.Attributes["display_name"]
-   require.Contains(t, m, group)
-   assert.Equal(t, "READ", m[group])
-   assert.Equal(t, "MANAGE", m[me.UserName])
-   return nil
-  },
- })
-}
-```
-
-## Unit Testing on Forked Pull Requests
-
-Unit tests run in CI on every PR. PRs opened from forks cannot authenticate to the internal Go module proxy, so CI resolves their Go modules offline from a dependency cache that the "Warm Go Cache" workflow pre-warms daily from the `main` branch.
+Unit and replay tests run in CI on every PR. PRs opened from forks cannot authenticate to the internal Go module proxy, so CI resolves their Go modules offline from a dependency cache that the "Warm Go Cache" workflow pre-warms daily from the `main` branch.
 
 If your PR changes `go.mod` or `go.sum`, the `tests` check will fail until a maintainer re-warms the cache for your PR (Actions -> Warm Go Cache -> Run workflow -> pr_number). Once the warming run completes, re-run the failed check.
 
-## Integration Testing
+## Replay Testing
 
-Integration tests are run as part of every PR made to the Databricks Terraform provider. Tests are run against AWS, Azure, and GCP infrastructure, in workspaces and accounts, and in Unity Catalog and non-Unity Catalog environments.
+Provider behavior changes should include YAML replay tests alongside unit tests. Replay runs real Terraform and the production provider against local HTTP fixtures, without Databricks credentials or live infrastructure. Cover the relevant create, read, update, import, or error behavior and include destroy fixtures for cleanup.
 
-Tests, where possible, should be entirely self-contained. They should not depend on external or preprovisioned resources, and they should not make changes to any existing resources.
+Add fixtures in a dedicated folder in the resource or data source package, with one Go discovery wrapper using an external test package. Follow [Writing YAML replay tests](qa/terraformtest/AUTHORING.md) for a complete example, fixture guidance, assertions, and recording instructions. The [YAML reference](qa/terraformtest/README.md) documents the supported fields.
 
-There is a default filter for tests based on the test name:
-- Tests beginning with `TestAcc` are run in non-UC workspace enviroments across all clouds.
-- Tests beginning with `TestMwsAcc` are run in non-UC account environments across all clouds.
-- Tests beginning with `TestUcAcc` are run in UC workspace and account enviroments across all clouds.
+Install Terraform on `PATH` (CI uses 1.13.5), or set `TF_ACC_TERRAFORM_PATH`. Run the affected package with `go test -short -v`; for example, to run an existing replay suite:
 
-In general, all PRs that affect the behavior of the provider should include at least an integration test to ensure that any assumptions made about the Databricks platform in the implementation of the feature are correct. Integration tests must be added in the same directory as the resource or data source being tested. The name of the file should be `<resource_name>_test.go` for resources or `data_<data_source_name>_test.go` for data sources.
+```bash
+go test -short -v ./qa/replay/resources/pipeline
+```
+
+Unit and replay tests run on PRs. Existing live integration tests remain for nightly runs against AWS, Azure, and GCP workspaces and accounts.
 
 ## Code conventions
 

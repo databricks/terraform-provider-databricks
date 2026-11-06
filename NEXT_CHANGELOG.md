@@ -7,6 +7,7 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+* `databricks_connection` now supports referencing Unity Catalog secrets through the `secrets` argument ([#6126](https://github.com/databricks/terraform-provider-databricks/pull/6126)).
 * Add resource and data sources for `databricks_lakewatch_datasource`.
 * Add resource and data source for `databricks_lakewatch_datasource_config`.
 * Add resource and data source for `databricks_lakewatch_rule_config`.

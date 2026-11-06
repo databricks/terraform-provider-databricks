@@ -211,6 +211,23 @@ resource "databricks_connection" "sftp" {
 }
 ```
 
+Create a MySQL connection that reads its password from an existing Unity Catalog secret
+
+```hcl
+resource "databricks_connection" "mysql_with_secret" {
+  name            = "mysql_connection"
+  connection_type = "MYSQL"
+  options = {
+    host = "test.mysql.database.azure.com"
+    port = "3306"
+    user = "user"
+  }
+  secrets = {
+    password = "main.default.mysql_password"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -219,10 +236,11 @@ The following arguments are supported:
 - `parent` - (Optional) Parent schema of a schema-level connection, in the format `schemas/{catalog}.{schema}`. When set, the connection is created inside that schema and its `full_name` becomes `{catalog}.{schema}.{name}`; when omitted, the connection is metastore-level. Change forces creation of a new resource.
 - `connection_type` - (Required) The type of connection. Possible values are: `BIGQUERY`, `CONFLUENCE`, `DATABRICKS`, `GA4_RAW_DATA`, `GITHUB`, `GLUE`, `HIVE_METASTORE`, `HTTP`, `HUBSPOT`, `META_MARKETING`, `MYSQL`, `ORACLE`, `OUTLOOK`, `POSTGRESQL`, `POWER_BI`, `REDSHIFT`, `SALESFORCE`, `SALESFORCE_DATA_CLOUD`, `SERVICENOW`, `SMARTSHEET`, `SNOWFLAKE`, `SQLDW`, `SQLSERVER`, `TERADATA`, `WORKDAY_RAAS`, or `ZENDESK`. For an up-to-date list of connection types and required options, see the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources). Change forces creation of a new resource.
 - `options` - (Required) A map of key-value properties attached to the securable. The required keys depend on the connection type, e.g. `host`, `port`, `user`, `password`, `authorization_endpoint`, `client_id`, `client_secret`, or `GoogleServiceAccountKeyJson`. Please consult the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources) for the required options. This field is sensitive.
-- `options_wo` - (Optional) Write-only, JSON-encoded map of credential options (use `jsonencode()`) that are merged into `options` when the connection is created or updated, but never stored in the Terraform state. Supported keys are `user`, `password`, `personalAccessToken`, `access_token`, `client_secret`, `pem_private_key`, `pem_key_passphrase`, `OAuthPvtKey`, `GoogleServiceAccountKeyJson`, `bearer_token`, `ssl_keystore_key`, `ssl_key_password`, `schema_registry_api_secret`, plus any key ending in `password`, `passphrase`, `secret`, `token`, `api_key`, `private_key`, `ssl_key`, `keystore_key`, `certificate`, `certificates` or `certificate_chain` (case-insensitive), e.g. `client_private_key`, `userProvidedServerCertificate` or `ssl_keystore_certificate_chain`. Other options, such as `host`, `token_endpoint` or `trustServerCertificate`, must be set in `options`. A key can't be set in both `options` and `options_wo`. Requires Terraform 1.11.0 or later and must be used together with `options_wo_version`.
+- `options_wo` - (Optional) Write-only, JSON-encoded map of credential options (use `jsonencode()`) that are merged into `options` when the connection is created or updated, but never stored in the Terraform state. Supported keys are `user`, `password`, `personalAccessToken`, `access_token`, `client_secret`, `pem_private_key`, `pem_key_passphrase`, `OAuthPvtKey`, `GoogleServiceAccountKeyJson`, `bearer_token`, `ssl_keystore_key`, `ssl_key_password`, `schema_registry_api_secret`, plus any key ending in `password`, `passphrase`, `secret`, `token`, `api_key`, `private_key`, `ssl_key`, `keystore_key`, `certificate`, `certificates` or `certificate_chain` (case-insensitive), e.g. `client_private_key`, `userProvidedServerCertificate` or `ssl_keystore_certificate_chain`. Other options, such as `host`, `token_endpoint` or `trustServerCertificate`, must be set in `options`. A key can't be set in both `options` and `options_wo`, or in both `options_wo` and `secrets`. Requires Terraform 1.11.0 or later and must be used together with `options_wo_version`.
 
   ~> Terraform can't detect changes made outside of Terraform to options set in `options_wo`, as their values aren't stored in the state. Changing `options_wo` alone doesn't show up in the plan either: increment `options_wo_version` to apply it.
 - `options_wo_version` - (Optional) Use together with `options_wo` to trigger an update. Increment this value (starting at 1) when an update to `options_wo` is required.
+- `secrets` - (Optional) A map of option names to Unity Catalog secret names in the format `{catalog}.{schema}.{secret}`. When the connection is used, each secret's value is supplied as the value of that option. A key can't appear in both `options` and `secrets`. The connection creator and owner need the `READ_SECRET` privilege on every referenced secret.
 - `comment` - (Optional) User-provided free-form text description. Change forces creation of a new resource.
 - `environment_settings` - (Optional) Connection environment settings. This block consists of the following fields:
   - `environment_version` - Environment version.

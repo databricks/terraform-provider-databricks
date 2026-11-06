@@ -497,6 +497,82 @@ func TestResourceReposUpdateSwitchToTag(t *testing.T) {
 	}.ApplyAndExpectData(t, map[string]any{"branch": ""})
 }
 
+// TestResourceReposUpdateErrorKeepsPriorState verifies that a failed checkout
+// does not save the requested tag or branch to state. Read cannot restore the
+// tag, because the API does not return it, so a saved value would hide the
+// failure from every later plan.
+func TestResourceReposUpdateErrorKeepsPriorState(t *testing.T) {
+	for name, tc := range map[string]struct {
+		instanceState map[string]string
+		config        map[string]any
+		request       map[string]any
+	}{
+		"tag": {
+			instanceState: map[string]string{"tag": "v0.1"},
+			config:        map[string]any{"tag": "v0.2"},
+			request:       map[string]any{"tag": "v0.2"},
+		},
+		"branch to tag": {
+			instanceState: map[string]string{"branch": "main"},
+			config:        map[string]any{"tag": "v0.2"},
+			request:       map[string]any{"tag": "v0.2"},
+		},
+		"branch": {
+			instanceState: map[string]string{"branch": "main"},
+			config:        map[string]any{"branch": "releases"},
+			request:       map[string]any{"branch": "releases"},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			instanceState := map[string]string{
+				"url":          "https://github.com/user/test.git",
+				"git_provider": "gitHub",
+				"path":         "/Repos/user@domain/test",
+				"commit_hash":  "1124323423abc23424",
+			}
+			for k, v := range tc.instanceState {
+				instanceState[k] = v
+			}
+			config := map[string]any{
+				"url":          "https://github.com/user/test.git",
+				"git_provider": "gitHub",
+				"path":         "/Repos/user@domain/test",
+			}
+			for k, v := range tc.config {
+				config[k] = v
+			}
+
+			d, err := qa.ResourceFixture{
+				Fixtures: []qa.HTTPFixture{
+					{
+						Method:          "PATCH",
+						Resource:        "/api/2.0/repos/121232342",
+						ExpectedRequest: tc.request,
+						Response: apierr.APIError{
+							ErrorCode: "BAD_REQUEST",
+							Message:   "Failed to access dbfs bucket for workspace 123",
+						},
+						Status: 400,
+					},
+				},
+				Resource:      ResourceRepo(),
+				InstanceState: instanceState,
+				State:         config,
+				ID:            "121232342",
+				Update:        true,
+			}.Apply(t)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "Failed to access dbfs bucket")
+
+			// d.State() is what the SDK saves to state after the error.
+			saved := d.State().Attributes
+			for _, k := range []string{"tag", "branch"} {
+				assert.Equal(t, tc.instanceState[k], saved[k], "%s in saved state", k)
+			}
+		})
+	}
+}
+
 func TestResourceReposUpdateSwitchToBranch(t *testing.T) {
 	resp := ReposInformation{
 		ID:           121232342,

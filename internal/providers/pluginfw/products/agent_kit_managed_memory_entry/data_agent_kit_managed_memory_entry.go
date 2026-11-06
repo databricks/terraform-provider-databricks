@@ -109,6 +109,7 @@ type ManagedMemoryEntryData struct {
 	Description types.String `tfsdk:"description"`
 	// Resource name in the form
 	// `memory-stores/{managed_memory_store_id}/entries/{managed_memory_entry_id}`.
+	// Required for updates; assigned by the service on creation.
 	Name types.String `tfsdk:"name"`
 	// Absolute, case-sensitive path identifying the entry within its actor and
 	// optional session. Paths must begin with `/` and must not contain empty,

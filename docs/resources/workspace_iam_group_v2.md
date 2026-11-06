@@ -2,7 +2,7 @@
 subcategory: "Identity and Access Management"
 ---
 # databricks_workspace_iam_group_v2 Resource
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/iamv2)
 
@@ -36,17 +36,22 @@ The following arguments are supported:
 In addition to the above arguments, the following attributes are exported:
 * `account_id` (string) - The parent account ID for group in Databricks
 * `group_id` (string) - Internal group ID of the group in Databricks
+* `name` (string) - The resource name of the group. The format depends on the API that returned it:
+  - Account-scoped: accounts/{account_id}/groups/{group_id}
+  - Workspace-scoped: groups/{group_id}
+* `parent` (string) - The resource name of the account that contains the group, `accounts/{account_id}`. Both the
+  account-scoped and workspace-scoped APIs return it
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = "group_id"
+  id = "name"
   to = databricks_workspace_iam_group_v2.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_workspace_iam_group_v2.this "group_id"
+terraform import databricks_workspace_iam_group_v2.this "name"
 ```

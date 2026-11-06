@@ -100,6 +100,9 @@ type WorkspaceIdentityDetailData struct {
 	// The type of assignment the principal has to the workspace (direct or
 	// indirect).
 	AssignmentType types.String `tfsdk:"assignment_type"`
+	// The resource name of the workspace identity detail. Format:
+	// principals/{principal_id}/workspace-identity-detail
+	Name types.String `tfsdk:"name"`
 	// The internal ID of the principal (user/sp/group) in Databricks.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
 	// The type of the principal (user/service principal/group).
@@ -133,6 +136,7 @@ func (m WorkspaceIdentityDetailData) ToObjectValue(ctx context.Context) basetype
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"assignment_type":           m.AssignmentType,
+			"name":                      m.Name,
 			"principal_id":              m.PrincipalId,
 			"principal_type":            m.PrincipalType,
 			"workspace_identity_status": m.WorkspaceIdentityStatus,
@@ -148,6 +152,7 @@ func (m WorkspaceIdentityDetailData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"assignment_type":           types.StringType,
+			"name":                      types.StringType,
 			"principal_id":              types.Int64Type,
 			"principal_type":            types.StringType,
 			"workspace_identity_status": types.StringType,
@@ -159,7 +164,8 @@ func (m WorkspaceIdentityDetailData) Type(ctx context.Context) attr.Type {
 
 func (m WorkspaceIdentityDetailData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["assignment_type"] = attrs["assignment_type"].SetComputed()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["principal_id"] = attrs["principal_id"].SetComputed()
 	attrs["principal_type"] = attrs["principal_type"].SetComputed()
 	attrs["workspace_identity_status"] = attrs["workspace_identity_status"].SetComputed()
 

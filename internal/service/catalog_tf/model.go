@@ -23118,7 +23118,8 @@ func (m *ListFunctionsResponse) SetFunctions(ctx context.Context, v []FunctionIn
 
 type ListMcpServicesRequest struct {
 	// Maximum number of MCP services to return. Defaults to 200 when unset or
-	// 0; the maximum is 200. Use `page_token` to retrieve additional pages.
+	// 0; the maximum is 1000 for `view = BASIC` and 200 for `view = FULL`. Use
+	// `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from the previous response.
 	PageToken types.String `tfsdk:"-"`
@@ -23492,7 +23493,8 @@ func (m *ListMetastoresResponse) SetMetastores(ctx context.Context, v []Metastor
 
 type ListModelProviderServicesRequest struct {
 	// Maximum number of provider services to return. Defaults to 200 when unset
-	// or 0; the maximum is 200. Use `page_token` to retrieve additional pages.
+	// or 0; the maximum is 1000 for `view = BASIC` and 200 for `view = FULL`.
+	// Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from the previous response.
 	PageToken types.String `tfsdk:"-"`
@@ -23683,7 +23685,8 @@ func (m *ListModelProviderServicesResponse) SetModelProviderServices(ctx context
 
 type ListModelServicesRequest struct {
 	// Maximum number of model services to return. Defaults to 200 when unset or
-	// 0; the maximum is 200. Use `page_token` to retrieve additional pages.
+	// 0; the maximum is 1000 for `view = BASIC` and 200 for `view = FULL`. Use
+	// `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token from the previous response.
 	PageToken types.String `tfsdk:"-"`
@@ -27555,9 +27558,11 @@ func (m *ModelProviderService) SetConfig(ctx context.Context, v ModelProviderSer
 // parameters, and unmanaged subpaths cross the trust boundary to the upstream
 // provider.
 type ModelProviderServiceConfig struct {
-	// When true, accepts any model exposed by the upstream provider; `targets`
-	// is not required and does not restrict routability. When false, only
-	// models listed in `targets` are routable. Defaults to false.
+	// When true, allows models from the provider's built-in model catalog in
+	// addition to explicit `targets`. When false, only models listed in
+	// `targets` are routable. Defaults to false. CUSTOM providers have no
+	// built-in model catalog and must leave this false and list their models in
+	// `targets`.
 	AllowAllTargets types.Bool `tfsdk:"allow_all_targets"`
 
 	AmazonBedrock types.Object `tfsdk:"amazon_bedrock"`
@@ -27611,8 +27616,9 @@ type ModelProviderServiceConfig struct {
 	// Each entry must include at least one `native_api_types` value. When
 	// `allow_all_targets` is false, at least one entry is required and model
 	// service destinations can reference only listed models. When
-	// `allow_all_targets` is true, any upstream model is routable; entries in
-	// this list provide API-type metadata without restricting other models.
+	// `allow_all_targets` is true, models from the provider's built-in model
+	// catalog are also routable. CUSTOM providers must explicitly list their
+	// models here and cannot enable `allow_all_targets`.
 	Targets types.List `tfsdk:"targets"`
 }
 
@@ -36052,7 +36058,7 @@ type ReadVolumeRequest struct {
 	// Whether to include volumes in the response for which the principal can
 	// only access selective metadata for
 	IncludeBrowse types.Bool `tfsdk:"-"`
-	// The three-level (fully qualified) name of the volume
+	// The fully qualified name of the volume.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -40114,6 +40120,55 @@ func (m UnassignResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m UnassignResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+// Request to restore a soft-deleted metastore by ID.
+type UndropMetastoreByIdRequest struct {
+	// Required. Id of the metastore to undrop.
+	Id types.String `tfsdk:"id"`
+}
+
+func (to *UndropMetastoreByIdRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UndropMetastoreByIdRequest) {
+}
+
+func (to *UndropMetastoreByIdRequest) SyncFieldsDuringRead(ctx context.Context, from UndropMetastoreByIdRequest) {
+}
+
+func (m UndropMetastoreByIdRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UndropMetastoreByIdRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UndropMetastoreByIdRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UndropMetastoreByIdRequest
+// only implements ToObjectValue() and Type().
+func (m UndropMetastoreByIdRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"id": m.Id,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UndropMetastoreByIdRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"id": types.StringType,
+		},
 	}
 }
 
@@ -45415,13 +45470,14 @@ func (m *UpdateWorkspaceBindingsResponse) SetBindings(ctx context.Context, v []W
 }
 
 type ValidateCredentialRequest struct {
+	// Deprecated: create a credential and pass its credential_name instead.
 	AwsIamRole types.Object `tfsdk:"aws_iam_role"`
-
+	// Deprecated: create a credential and pass its credential_name instead.
 	AzureManagedIdentity types.Object `tfsdk:"azure_managed_identity"`
 	// Required. The name of an existing credential or long-lived cloud
 	// credential to validate.
 	CredentialName types.String `tfsdk:"credential_name"`
-
+	// Deprecated: create a credential and pass its credential_name instead.
 	DatabricksGcpServiceAccount types.Object `tfsdk:"databricks_gcp_service_account"`
 	// The name of an existing external location to validate. Only applicable
 	// for storage credentials (purpose is **STORAGE**.)
@@ -45753,15 +45809,23 @@ func (m *ValidateCredentialResponse) SetResults(ctx context.Context, v []Credent
 }
 
 type ValidateStorageCredential struct {
-	// The AWS IAM role configuration.
+	// Deprecated: create a storage credential and pass its
+	// storage_credential_name instead. The AWS IAM role configuration.
 	AwsIamRole types.Object `tfsdk:"aws_iam_role"`
-	// The Azure managed identity configuration.
+	// Deprecated: create a storage credential and pass its
+	// storage_credential_name instead. The Azure managed identity
+	// configuration.
 	AzureManagedIdentity types.Object `tfsdk:"azure_managed_identity"`
-	// The Azure service principal configuration.
+	// Deprecated: create a storage credential and pass its
+	// storage_credential_name instead. The Azure service principal
+	// configuration.
 	AzureServicePrincipal types.Object `tfsdk:"azure_service_principal"`
-	// The Cloudflare API token configuration.
+	// Deprecated: create a storage credential and pass its
+	// storage_credential_name instead. The Cloudflare API token configuration.
 	CloudflareApiToken types.Object `tfsdk:"cloudflare_api_token"`
-	// The Databricks created GCP service account configuration.
+	// Deprecated: create a storage credential and pass its
+	// storage_credential_name instead. The Databricks created GCP service
+	// account configuration.
 	DatabricksGcpServiceAccount types.Object `tfsdk:"databricks_gcp_service_account"`
 	// The name of an existing external location to validate.
 	ExternalLocationName types.String `tfsdk:"external_location_name"`

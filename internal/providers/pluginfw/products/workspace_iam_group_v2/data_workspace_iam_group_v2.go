@@ -104,7 +104,15 @@ type GroupData struct {
 	// Internal group ID of the group in Databricks.
 	GroupId types.String `tfsdk:"group_id"`
 	// Display name of the group.
-	GroupName          types.String `tfsdk:"group_name"`
+	GroupName types.String `tfsdk:"group_name"`
+	// The resource name of the group. The format depends on the API that
+	// returned it: - Account-scoped: accounts/{account_id}/groups/{group_id} -
+	// Workspace-scoped: groups/{group_id}
+	Name types.String `tfsdk:"name"`
+	// The resource name of the account that contains the group,
+	// `accounts/{account_id}`. Both the account-scoped and workspace-scoped
+	// APIs return it.
+	Parent             types.String `tfsdk:"parent"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
@@ -135,6 +143,8 @@ func (m GroupData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"external_id": m.ExternalId,
 			"group_id":    m.GroupId,
 			"group_name":  m.GroupName,
+			"name":        m.Name,
+			"parent":      m.Parent,
 
 			"provider_config": m.ProviderConfigData,
 		},
@@ -150,6 +160,8 @@ func (m GroupData) Type(ctx context.Context) attr.Type {
 			"external_id": types.StringType,
 			"group_id":    types.StringType,
 			"group_name":  types.StringType,
+			"name":        types.StringType,
+			"parent":      types.StringType,
 
 			"provider_config": ProviderConfigData{}.Type(ctx),
 		},
@@ -159,8 +171,10 @@ func (m GroupData) Type(ctx context.Context) attr.Type {
 func (m GroupData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["external_id"] = attrs["external_id"].SetComputed()
-	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["group_id"] = attrs["group_id"].SetComputed()
 	attrs["group_name"] = attrs["group_name"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 

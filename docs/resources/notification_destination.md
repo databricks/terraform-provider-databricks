@@ -35,6 +35,33 @@ resource "databricks_notification_destination" "ndresource" {
   }
 }
 ```
+`Databricks app in Slack` notification destination (the Databricks app must already be installed in your Slack workspace and connected to your Databricks workspace):
+
+```hcl
+resource "databricks_notification_destination" "ndresource" {
+  display_name = "Notification Destination"
+  config {
+    databricks_app_slack {
+      team_id    = "T0123456789"
+      channel_id = "C0123456789"
+    }
+  }
+}
+```
+`Databricks app in Microsoft Teams` notification destination (the Databricks app must already be installed in your Microsoft 365 tenant and connected to your Databricks workspace):
+
+```hcl
+resource "databricks_notification_destination" "ndresource" {
+  display_name = "Notification Destination"
+  config {
+    databricks_app_teams {
+      tenant_id  = "00000000-0000-0000-0000-000000000000"
+      team_id    = "00000000-0000-0000-0000-000000000000"
+      channel_id = "19:abc123@thread.tacv2"
+    }
+  }
+}
+```
 `PagerDuty` notification destination:
 
 ```hcl
@@ -87,6 +114,13 @@ The following arguments are supported:
     * `url` - (Optional) The Slack webhook URL.
     * `channel_id`  - (Optional) Slack channel ID for notifications.
     * `oauth_token` - (Optional) OAuth token for Slack authentication.
+  * `databricks_app_slack` - The configuration for a Slack channel reached through the Databricks app. The app must already be installed in the Slack workspace and connected to the Databricks workspace. It must contain the following:
+    * `team_id` - (Optional) Slack workspace (team) ID the Databricks app is installed in.
+    * `channel_id` - (Optional) Slack channel ID notifications are posted to.
+  * `databricks_app_teams` - The configuration for a Microsoft Teams channel reached through the Databricks app. The app must already be installed in the Microsoft 365 tenant and connected to the Databricks workspace. It must contain the following:
+    * `tenant_id` - (Optional) Microsoft Entra tenant ID of the Microsoft 365 tenant the app is installed in.
+    * `team_id` - (Optional) Microsoft Entra group ID of the team that owns the channel.
+    * `channel_id` - (Optional) Teams channel ID notifications are posted to.
   * `pagerduty` - The PagerDuty configuration of the Notification Destination. It must contain the following:
     * `integration_key` - (Required) The PagerDuty integration key.
   * `microsoft_teams` - The Microsoft Teams configuration of the Notification Destination. It must contain the following:

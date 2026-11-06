@@ -18,6 +18,13 @@ logic, API response conversion, defaults, retries/polling, and cleanup. Use only
 the HCL fields needed to exercise it. Do not turn each test into an exhaustive
 resource schema or Terraform-internals test.
 
+Verify that the provider sends the correct data and handles representative API
+responses. Omit SDK readback assertions whose only purpose is to check that the
+backend persisted a preceding request. HTTP fixtures already check that request;
+reading a handwritten response back does not validate the service. Keep checks
+of provider-derived values and API-to-state conversion when those are the behavior
+under test. Model out-of-band changes with later refresh responses.
+
 ## Add a test
 
 Use a dedicated fixture folder in the resource's package, for example
@@ -167,6 +174,16 @@ the proposed resources, but initial-state or earlier applied resources still
 require destroy fixtures. Plan-only state checks inspect the refreshed prior
 state, not the unapplied planned values.
 
+Use an [import step](README.md#import-steps) to exercise the provider's importer.
+Always choose `import.persist` explicitly. Use `false` to verify import against a
+previously created resource in separate, discarded state; enable `import.verify`
+and ignore only attributes outside the comparison. Use `true` with an explicit
+ID to adopt a remote resource into the journey, then plan, update, and destroy it
+normally. No create step is needed when fixtures describe an existing resource.
+An initial-state snapshot alone does not exercise the importer. Examples show
+[group import and update](testdata/imports/group.yaml) and
+[separate-state app verification](testdata/imports/app_verification.yaml).
+
 HashiCorp's [resource state-check guide](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests/state-checks/resource)
 focuses state checks on computed attributes. Follow that default: check IDs,
 provider-derived values, data-source outputs, and unconfigured optional/computed
@@ -231,6 +248,79 @@ after an interrupted apply can have a different transcript. Missing cleanup
 fixtures fail too. Empty Terraform state plus consumed DELETE fixtures verifies
 the replayed cleanup flow, not the state of an independently simulated service.
 
+## Write tests that survive redaction
+
+The recorder redacts known secrets in both HTTP requests and responses, including
+secret-named fields containing fake test values. `[REDACTED]` is a literal string,
+not a wildcard. A live run can pass while replay fails because its outgoing
+request still contains the HCL value, or because a redacted response no longer
+matches an assertion or a configured value. This is an accepted tradeoff: keeping
+secrets out of fixtures takes priority over replaying every capture unchanged.
+The test author, including an agent updating a test, must resolve these mismatches.
+
+Choose the approach that preserves the behavior under test:
+
+- For an incidental secret string in a request, keep the redacted sample and add
+  `any_string` only at that field. It checks presence and string type while
+  allowing the nonsecret HCL input to differ. For example, a secret-write request
+  can use:
+
+  ```yaml
+  request:
+    method: POST
+    path: /api/2.0/secrets/put
+    body:
+      json:
+        scope: fixture-scope
+        key: fixture-key
+        string_value: "[REDACTED]"
+    matchers:
+      json:
+        - path: [string_value]
+          type: any_string
+  ```
+
+  Keep `scope`, `key`, and other behavior-specific fields exact. Header and query
+  string matchers are also supported; JSON matchers require `body.json`, not
+  text, base64, or multipart bodies. Matchers apply only to outgoing requests;
+  they do not change responses, HCL, or plan/state checks.
+- When exact equality matters, use a nonsecret HCL input matching the fixture's
+  redacted value, such as `string_value = "[REDACTED]"`, and align relevant
+  request/response samples and plan/state `equals` checks. This also avoids a
+  configured-value consistency failure if the provider reads the redacted value
+  back into state. For secret-read responses, preserve the API's encoding: the
+  `/secrets/get` response contains base64-encoded `[REDACTED]`, and the decoded
+  value is `[REDACTED]`. Live checks execute too; an expectation of `[REDACTED]`
+  must also hold during recording. If the scenario cannot satisfy both modes,
+  choose a secret-free scenario or test that behavior separately.
+
+Before recording, add any needed matchers to the existing YAML and use fake
+inputs in HCL and local files. The recorder preserves matching annotations but
+does not invent them or rewrite HCL and assertions. If verification replay fails,
+the source stays unchanged: adjust those inputs, matchers, or expectations and
+record again. Never restore the original secret or disable redaction to fix a
+failure, and do not mask fields that define the regression being tested.
+
+After recording, review the whole diff for secrets, including text/base64
+payloads, local files, and checkpoints; automatic redaction cannot identify every
+service-specific secret. Then unset `TEST_RECORDER_PROFILE_NAME` and run the same
+exact test path with `-count=1` to verify ordinary replay succeeds. Submit only
+secret-free fixtures with passing replay.
+
+## Test local files and uploads
+
+Keep tiny inputs next to the YAML, such as `assets/script.py` containing only
+`# comment`. Use the step's [`files` map](README.md#local-input-files) to stage
+it, and pass `abspath("${path.module}/script.py")` to a provider's `source` field.
+Change its mapping in a later step to test an update without changing the HCL.
+Omitted mappings keep their previous contents through destroy.
+
+Use `body.text` for exact text, `body.base64` for binary bytes, and
+[`body.multipart`](../httpfixture/README.md#files-and-non-json-bodies) for uploads.
+Keep content exact; multipart boundaries and part order are transport details
+and are ignored. The [workspace-file showcase](testdata/files/workspace_file.yaml)
+exercises staging, upload, replacement, and cleanup with comment-only inputs.
+
 ## Current limits
 
 The [format reference](README.md#mvp-scope) lists unsupported features. Recording,
@@ -281,3 +371,18 @@ handle environment and initial-state templates with separate cleanup ownership.
 The repository ignores `*.tfstate` by default to protect ordinary local state.
 After reviewing a fixture for secrets, add that exact checkpoint explicitly with
 `git add -f path/to/checkpoint.tfstate`; do not relax the global ignore rule.
+
+## Native Go checks and provider selection
+
+Use YAML for ordinary lifecycles. For a case that needs per-step provider
+factories or a Go check, `RunNative(t, path, configure)` loads one fixture file
+and lets Go customize its HashiCorp `resource.TestCase` before execution. It
+supplies a config customizer that retains the runner's local HTTP boundary and
+isolated authentication. Apply it to every custom provider and SDK client;
+keep the generated step and cleanup hooks so fixtures are verified and destroy
+still requires empty state.
+
+See `qa/replay/features/provider_migration/replay_test.go` for factory switches
+and `qa/replay/resources/mws_workspaces/native_test.go` for SDK checks and an
+explicit local workspace-host alias. Native fixture files are registered by
+their Go wrappers; do not also discover them through the ordinary YAML wrapper.

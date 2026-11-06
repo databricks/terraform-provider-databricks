@@ -2,7 +2,7 @@
 subcategory: "Identity and Access Management"
 ---
 # databricks_workspace_iam_user_v2 Resource
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/iamv2)
 
@@ -47,18 +47,23 @@ The following arguments are supported:
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 * `account_id` (string) - The accountId parent of the user in Databricks
+* `name` (string) - The resource name of the user. The format depends on the API that returned it:
+  - Account-scoped: accounts/{account_id}/users/{user_id}
+  - Workspace-scoped: users/{user_id}
+* `parent` (string) - The resource name of the account that contains the user, `accounts/{account_id}`. Both the
+  account-scoped and workspace-scoped APIs return it
 * `user_id` (string) - Internal userId of the user in Databricks
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = "user_id"
+  id = "name"
   to = databricks_workspace_iam_user_v2.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_workspace_iam_user_v2.this "user_id"
+terraform import databricks_workspace_iam_user_v2.this "name"
 ```

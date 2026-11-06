@@ -1,0 +1,1131 @@
+# API responses are placeholders based on the API models, not recorded.
+version: 1
+host_metadata:
+  account_id: replay-account
+  cloud: AWS
+  host_type: account
+steps:
+- name: create_with_original_identity
+  config: |
+    provider "databricks" {
+      account_id = "replay-account"
+    }
+    resource "databricks_mws_credentials" "this" {
+      account_id       = "replay-account"
+      credentials_name = "creds-test-replay"
+      role_arn         = "arn:aws:iam::123456789012:role/replay-crossaccount"
+    }
+
+    resource "databricks_mws_customer_managed_keys" "this" {
+      account_id = "replay-account"
+      use_cases  = ["MANAGED_SERVICES"]
+      aws_key_info {
+        key_arn   = "arn:aws:kms:us-east-1:123456789012:key/replay-key"
+        key_alias = "alias/replay"
+      }
+    }
+
+    resource "databricks_mws_storage_configurations" "this" {
+      account_id                 = "replay-account"
+      storage_configuration_name = "terraform-replay"
+      bucket_name                = "terraform-replay"
+    }
+
+    resource "databricks_mws_networks" "my_network" {
+      account_id         = "replay-account"
+      network_name       = "network-test-replay"
+      vpc_id             = "vpc-11111111"
+      subnet_ids         = ["subnet-11111111", "subnet-99999999"]
+      security_group_ids = ["sg-99999999"]
+    }
+    resource "databricks_mws_workspaces" "this" {
+      account_id                               = "replay-account"
+      workspace_name                           = "terra-replay"
+      aws_region                               = "us-east-1"
+      network_id                               = databricks_mws_networks.my_network.network_id
+      credentials_id                           = databricks_mws_credentials.this.credentials_id
+      storage_configuration_id                 = databricks_mws_storage_configurations.this.storage_configuration_id
+      managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
+      custom_tags                              = { randomkey = "randomvalue" }
+      token { comment = "Test replay" }
+    }
+    resource "databricks_service_principal" "this" {
+      display_name             = "tf-new-sp-replay"
+      disable_as_user_deletion = false
+    }
+    resource "databricks_service_principal_role" "this" {
+      service_principal_id = databricks_service_principal.this.id
+      role                 = "account_admin"
+    }
+    resource "databricks_service_principal_secret" "this" {
+      service_principal_id = databricks_service_principal.this.id
+    }
+  calls:
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/storage-configurations
+      headers:
+        Authorization: Bearer fixture-token
+      body:
+        json:
+          root_bucket_info:
+            bucket_name: terraform-replay
+          storage_configuration_name: terraform-replay
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          creation_time: 1700000000000
+          root_bucket_info:
+            bucket_name: terraform-replay
+          storage_configuration_id: storage-123
+          storage_configuration_name: terraform-replay
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/credentials
+      headers:
+        Authorization: Bearer fixture-token
+      body:
+        json:
+          aws_credentials:
+            sts_role:
+              role_arn: arn:aws:iam::123456789012:role/replay-crossaccount
+          credentials_name: creds-test-replay
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          aws_credentials:
+            sts_role:
+              role_arn: arn:aws:iam::123456789012:role/replay-crossaccount
+          creation_time: 1700000000000
+          credentials_id: credentials-123
+          credentials_name: creds-test-replay
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/customer-managed-keys
+      headers:
+        Authorization: Bearer fixture-token
+      body:
+        json:
+          account_id: replay-account
+          aws_key_info:
+            key_alias: alias/replay
+            key_arn: arn:aws:kms:us-east-1:123456789012:key/replay-key
+          use_cases:
+          - MANAGED_SERVICES
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          aws_key_info:
+            key_alias: alias/replay
+            key_arn: arn:aws:kms:us-east-1:123456789012:key/replay-key
+          creation_time: 1700000000000
+          customer_managed_key_id: key-123
+          use_cases:
+          - MANAGED_SERVICES
+  - &id003
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/storage-configurations/storage-123
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          creation_time: 1700000000000
+          root_bucket_info:
+            bucket_name: terraform-replay
+          storage_configuration_id: storage-123
+          storage_configuration_name: terraform-replay
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/networks
+      headers:
+        Authorization: Bearer fixture-token
+      body:
+        json:
+          account_id: replay-account
+          network_name: network-test-replay
+          security_group_ids:
+          - sg-99999999
+          subnet_ids:
+          - subnet-99999999
+          - subnet-11111111
+          vpc_id: vpc-11111111
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          network_id: network-123
+          network_name: network-test-replay
+          security_group_ids:
+          - sg-99999999
+          subnet_ids:
+          - subnet-99999999
+          - subnet-11111111
+          vpc_id: vpc-11111111
+          vpc_status: VALID
+  - &id005
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/credentials/credentials-123
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          aws_credentials:
+            sts_role:
+              role_arn: arn:aws:iam::123456789012:role/replay-crossaccount
+          creation_time: 1700000000000
+          credentials_id: credentials-123
+          credentials_name: creds-test-replay
+  - &id004
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/customer-managed-keys/key-123
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          aws_key_info:
+            key_alias: alias/replay
+            key_arn: arn:aws:kms:us-east-1:123456789012:key/replay-key
+          creation_time: 1700000000000
+          customer_managed_key_id: key-123
+          use_cases:
+          - MANAGED_SERVICES
+  - &id006
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/networks/network-123
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          network_id: network-123
+          network_name: network-test-replay
+          security_group_ids:
+          - sg-99999999
+          subnet_ids:
+          - subnet-99999999
+          - subnet-11111111
+          vpc_id: vpc-11111111
+          vpc_status: VALID
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals
+      headers:
+        Authorization: Bearer fixture-token
+      body:
+        json:
+          active: true
+          displayName: tf-new-sp-replay
+          entitlements:
+          - {}
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal
+    response:
+      status: 200
+      body:
+        json:
+          active: true
+          applicationId: 11111111-1111-4111-8111-111111111111
+          displayName: tf-new-sp-replay
+          id: '93001'
+          roles:
+          - value: account_admin
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal
+  - &id007
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/93001
+      query:
+        attributes:
+        - userName,displayName,active,externalId,entitlements
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          active: true
+          applicationId: 11111111-1111-4111-8111-111111111111
+          displayName: tf-new-sp-replay
+          id: '93001'
+          roles:
+          - value: account_admin
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal
+  - request:
+      method: PATCH
+      path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/93001
+      headers:
+        Authorization: Bearer fixture-token
+      body:
+        json:
+          Operations:
+          - op: add
+            path: roles
+            value:
+            - value: account_admin
+          schemas:
+          - urn:ietf:params:scim:api:messages:2.0:PatchOp
+    response:
+      status: 200
+      body:
+        json:
+          active: true
+          applicationId: 11111111-1111-4111-8111-111111111111
+          displayName: tf-new-sp-replay
+          id: '93001'
+          roles:
+          - value: account_admin
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal
+  - &id008
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/93001
+      query:
+        attributes:
+        - roles
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          active: true
+          applicationId: 11111111-1111-4111-8111-111111111111
+          displayName: tf-new-sp-replay
+          id: '93001'
+          roles:
+          - value: account_admin
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/servicePrincipals/93001/credentials/secrets
+      headers:
+        Authorization: Bearer fixture-token
+      body:
+        json: {}
+    response:
+      status: 200
+      body:
+        json:
+          id: secret-1
+          secret: dummy-client-secret
+          secret_hash: dummy-secret-hash
+          status: ACTIVE
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/workspaces
+      headers:
+        Authorization: Bearer fixture-token
+      body:
+        json:
+          account_id: replay-account
+          aws_region: us-east-1
+          credentials_id: credentials-123
+          custom_tags:
+            randomkey: randomvalue
+          effective_compute_mode: ''
+          is_no_public_ip_enabled: true
+          managed_services_customer_managed_key_id: key-123
+          network_id: network-123
+          storage_configuration_id: storage-123
+          workspace_name: terra-replay
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          aws_region: us-east-1
+          credentials_id: credentials-123
+          custom_tags:
+            randomkey: randomvalue
+          deployment_name: replay-workspace
+          is_no_public_ip_enabled: true
+          managed_services_customer_managed_key_id: key-123
+          network_id: network-123
+          storage_configuration_id: storage-123
+          workspace_id: 12345
+          workspace_name: terra-replay
+          workspace_status: RUNNING
+          workspace_url: http://workspace.replay.invalid
+  - &id001
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/workspaces/12345
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          aws_region: us-east-1
+          credentials_id: credentials-123
+          custom_tags:
+            randomkey: randomvalue
+          deployment_name: replay-workspace
+          is_no_public_ip_enabled: true
+          managed_services_customer_managed_key_id: key-123
+          network_id: network-123
+          storage_configuration_id: storage-123
+          workspace_id: 12345
+          workspace_name: terra-replay
+          workspace_status: RUNNING
+          workspace_url: http://workspace.replay.invalid
+  - &id002
+    request:
+      method: GET
+      path: /api/2.0/preview/scim/v2/Me
+      query:
+        excludedAttributes:
+        - entitlements
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          id: '100'
+          userName: replay@example.com
+  - &id021
+    request:
+      method: POST
+      path: /api/2.0/token/create
+      headers:
+        Authorization: Bearer fixture-token
+      body:
+        json:
+          comment: Test replay
+          lifetime_seconds: 2592000.0
+    response:
+      status: 200
+      body:
+        json:
+          token_info:
+            comment: Test replay
+            creation_time: 1700000000000
+            token_id: token-1
+          token_value: dummy-token-value-1
+  - *id001
+  - *id001
+  - *id002
+  - &id009
+    request:
+      method: GET
+      path: /api/2.0/token/list
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          token_infos:
+          - comment: Test replay
+            creation_time: 1700000000000
+            token_id: token-1
+  - *id003
+  - *id004
+  - *id005
+  - *id006
+  - *id007
+  - *id008
+  - &id020
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/servicePrincipals/93001/credentials/secrets
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          secrets:
+          - id: secret-1
+            secret: dummy-client-secret
+            secret_hash: dummy-secret-hash
+            status: ACTIVE
+  - *id001
+  - *id001
+  - *id002
+  - *id009
+- name: retain_inaccessible_token
+  config: |
+    provider "databricks" {
+      account_id = "replay-account"
+    }
+    resource "databricks_mws_credentials" "this" {
+      account_id       = "replay-account"
+      credentials_name = "creds-test-replay"
+      role_arn         = "arn:aws:iam::123456789012:role/replay-crossaccount"
+    }
+
+    resource "databricks_mws_customer_managed_keys" "this" {
+      account_id = "replay-account"
+      use_cases  = ["MANAGED_SERVICES"]
+      aws_key_info {
+        key_arn   = "arn:aws:kms:us-east-1:123456789012:key/replay-key"
+        key_alias = "alias/replay"
+      }
+    }
+
+    resource "databricks_mws_storage_configurations" "this" {
+      account_id                 = "replay-account"
+      storage_configuration_name = "terraform-replay"
+      bucket_name                = "terraform-replay"
+    }
+
+    resource "databricks_mws_networks" "my_network" {
+      account_id         = "replay-account"
+      network_name       = "network-test-replay"
+      vpc_id             = "vpc-11111111"
+      subnet_ids         = ["subnet-11111111", "subnet-99999999"]
+      security_group_ids = ["sg-99999999"]
+    }
+    resource "databricks_mws_workspaces" "this" {
+      account_id                               = "replay-account"
+      workspace_name                           = "terra-replay"
+      aws_region                               = "us-east-1"
+      network_id                               = databricks_mws_networks.my_network.network_id
+      credentials_id                           = databricks_mws_credentials.this.credentials_id
+      storage_configuration_id                 = databricks_mws_storage_configurations.this.storage_configuration_id
+      managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
+      custom_tags                              = { randomkey = "randomvalue" }
+      token { comment = "Test replay" }
+    }
+    resource "databricks_service_principal" "this" {
+      display_name             = "tf-new-sp-replay"
+      disable_as_user_deletion = false
+    }
+    resource "databricks_service_principal_role" "this" {
+      service_principal_id = databricks_service_principal.this.id
+      role                 = "account_admin"
+    }
+    resource "databricks_service_principal_secret" "this" {
+      service_principal_id = databricks_service_principal.this.id
+    }
+  calls:
+  - &id012
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/storage-configurations/storage-123
+      headers:
+        Authorization: Bearer fixture-service-principal-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          creation_time: 1700000000000
+          root_bucket_info:
+            bucket_name: terraform-replay
+          storage_configuration_id: storage-123
+          storage_configuration_name: terraform-replay
+  - &id011
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/credentials/credentials-123
+      headers:
+        Authorization: Bearer fixture-service-principal-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          aws_credentials:
+            sts_role:
+              role_arn: arn:aws:iam::123456789012:role/replay-crossaccount
+          creation_time: 1700000000000
+          credentials_id: credentials-123
+          credentials_name: creds-test-replay
+  - &id013
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/customer-managed-keys/key-123
+      headers:
+        Authorization: Bearer fixture-service-principal-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          aws_key_info:
+            key_alias: alias/replay
+            key_arn: arn:aws:kms:us-east-1:123456789012:key/replay-key
+          creation_time: 1700000000000
+          customer_managed_key_id: key-123
+          use_cases:
+          - MANAGED_SERVICES
+  - &id015
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/networks/network-123
+      headers:
+        Authorization: Bearer fixture-service-principal-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          network_id: network-123
+          network_name: network-test-replay
+          security_group_ids:
+          - sg-99999999
+          subnet_ids:
+          - subnet-99999999
+          - subnet-11111111
+          vpc_id: vpc-11111111
+          vpc_status: VALID
+  - &id014
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/93001
+      query:
+        attributes:
+        - userName,displayName,active,externalId,entitlements
+      headers:
+        Authorization: Bearer fixture-service-principal-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          active: true
+          applicationId: 11111111-1111-4111-8111-111111111111
+          displayName: tf-new-sp-replay
+          id: '93001'
+          roles:
+          - value: account_admin
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal
+  - &id016
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/93001
+      query:
+        attributes:
+        - roles
+      headers:
+        Authorization: Bearer fixture-service-principal-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          active: true
+          applicationId: 11111111-1111-4111-8111-111111111111
+          displayName: tf-new-sp-replay
+          id: '93001'
+          roles:
+          - value: account_admin
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal
+  - &id017
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/servicePrincipals/93001/credentials/secrets
+      headers:
+        Authorization: Bearer fixture-service-principal-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          secrets:
+          - id: secret-1
+            secret: dummy-client-secret
+            secret_hash: dummy-secret-hash
+            status: ACTIVE
+  - &id010
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/workspaces/12345
+      headers:
+        Authorization: Bearer fixture-service-principal-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          aws_region: us-east-1
+          credentials_id: credentials-123
+          custom_tags:
+            randomkey: randomvalue
+          deployment_name: replay-workspace
+          is_no_public_ip_enabled: true
+          managed_services_customer_managed_key_id: key-123
+          network_id: network-123
+          storage_configuration_id: storage-123
+          workspace_id: 12345
+          workspace_name: terra-replay
+          workspace_status: RUNNING
+          workspace_url: http://workspace.replay.invalid
+  - *id010
+  - &id018
+    request:
+      method: GET
+      path: /api/2.0/preview/scim/v2/Me
+      query:
+        excludedAttributes:
+        - entitlements
+      headers:
+        Authorization: Bearer fixture-service-principal-token
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          id: '100'
+          userName: replay@example.com
+  - &id019
+    request:
+      method: GET
+      path: /api/2.0/token/list
+      headers:
+        Authorization: Bearer fixture-service-principal-token
+      body: null
+    response:
+      status: 401
+      body:
+        json:
+          error_code: UNAUTHENTICATED
+          message: Principal is not authorized in workspace
+  - *id011
+  - *id012
+  - *id013
+  - *id014
+  - *id015
+  - *id016
+  - *id017
+  - *id010
+  - *id010
+  - *id018
+  - *id019
+- name: remove_inaccessible_token
+  config: |
+    provider "databricks" {
+      account_id = "replay-account"
+    }
+    resource "databricks_mws_credentials" "this" {
+      account_id       = "replay-account"
+      credentials_name = "creds-test-replay"
+      role_arn         = "arn:aws:iam::123456789012:role/replay-crossaccount"
+    }
+
+    resource "databricks_mws_customer_managed_keys" "this" {
+      account_id = "replay-account"
+      use_cases  = ["MANAGED_SERVICES"]
+      aws_key_info {
+        key_arn   = "arn:aws:kms:us-east-1:123456789012:key/replay-key"
+        key_alias = "alias/replay"
+      }
+    }
+
+    resource "databricks_mws_storage_configurations" "this" {
+      account_id                 = "replay-account"
+      storage_configuration_name = "terraform-replay"
+      bucket_name                = "terraform-replay"
+    }
+
+    resource "databricks_mws_networks" "my_network" {
+      account_id         = "replay-account"
+      network_name       = "network-test-replay"
+      vpc_id             = "vpc-11111111"
+      subnet_ids         = ["subnet-11111111", "subnet-99999999"]
+      security_group_ids = ["sg-99999999"]
+    }
+    resource "databricks_mws_workspaces" "this" {
+      account_id                               = "replay-account"
+      workspace_name                           = "terra-replay"
+      aws_region                               = "us-east-1"
+      network_id                               = databricks_mws_networks.my_network.network_id
+      credentials_id                           = databricks_mws_credentials.this.credentials_id
+      storage_configuration_id                 = databricks_mws_storage_configurations.this.storage_configuration_id
+      managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
+      custom_tags                              = { randomkey = "randomvalue" }
+    }
+    resource "databricks_service_principal" "this" {
+      display_name             = "tf-new-sp-replay"
+      disable_as_user_deletion = false
+    }
+    resource "databricks_service_principal_role" "this" {
+      service_principal_id = databricks_service_principal.this.id
+      role                 = "account_admin"
+    }
+    resource "databricks_service_principal_secret" "this" {
+      service_principal_id = databricks_service_principal.this.id
+    }
+  calls:
+  - *id012
+  - *id011
+  - *id013
+  - *id015
+  - *id014
+  - *id016
+  - *id017
+  - *id010
+  - *id010
+  - *id018
+  - *id019
+  - request:
+      method: POST
+      path: /api/2.0/token/delete
+      headers:
+        Authorization: Bearer fixture-service-principal-token
+      body:
+        json:
+          token_id: token-1
+    response:
+      status: 401
+      body:
+        json:
+          error_code: UNAUTHENTICATED
+          message: Principal is not authorized in workspace
+  - *id010
+  - *id010
+  - *id018
+  - *id012
+  - *id014
+  - *id011
+  - *id013
+  - *id015
+  - *id016
+  - *id017
+  - *id010
+  - *id010
+  - *id018
+- name: reject_new_token
+  config: |
+    provider "databricks" {
+      account_id = "replay-account"
+    }
+    resource "databricks_mws_credentials" "this" {
+      account_id       = "replay-account"
+      credentials_name = "creds-test-replay"
+      role_arn         = "arn:aws:iam::123456789012:role/replay-crossaccount"
+    }
+
+    resource "databricks_mws_customer_managed_keys" "this" {
+      account_id = "replay-account"
+      use_cases  = ["MANAGED_SERVICES"]
+      aws_key_info {
+        key_arn   = "arn:aws:kms:us-east-1:123456789012:key/replay-key"
+        key_alias = "alias/replay"
+      }
+    }
+
+    resource "databricks_mws_storage_configurations" "this" {
+      account_id                 = "replay-account"
+      storage_configuration_name = "terraform-replay"
+      bucket_name                = "terraform-replay"
+    }
+
+    resource "databricks_mws_networks" "my_network" {
+      account_id         = "replay-account"
+      network_name       = "network-test-replay"
+      vpc_id             = "vpc-11111111"
+      subnet_ids         = ["subnet-11111111", "subnet-99999999"]
+      security_group_ids = ["sg-99999999"]
+    }
+    resource "databricks_mws_workspaces" "this" {
+      account_id                               = "replay-account"
+      workspace_name                           = "terra-replay"
+      aws_region                               = "us-east-1"
+      network_id                               = databricks_mws_networks.my_network.network_id
+      credentials_id                           = databricks_mws_credentials.this.credentials_id
+      storage_configuration_id                 = databricks_mws_storage_configurations.this.storage_configuration_id
+      managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
+      custom_tags                              = { randomkey = "randomvalue" }
+      token { comment = "Test replay" }
+    }
+    resource "databricks_service_principal" "this" {
+      display_name             = "tf-new-sp-replay"
+      disable_as_user_deletion = false
+    }
+    resource "databricks_service_principal_role" "this" {
+      service_principal_id = databricks_service_principal.this.id
+      role                 = "account_admin"
+    }
+    resource "databricks_service_principal_secret" "this" {
+      service_principal_id = databricks_service_principal.this.id
+    }
+  calls:
+  - *id012
+  - *id014
+  - *id015
+  - *id011
+  - *id013
+  - *id016
+  - *id017
+  - *id010
+  - *id010
+  - *id018
+  - request:
+      method: POST
+      path: /api/2.0/token/create
+      headers:
+        Authorization: Bearer fixture-service-principal-token
+      body:
+        json:
+          comment: Test replay
+          lifetime_seconds: 2592000.0
+    response:
+      status: 401
+      body:
+        json:
+          error_code: UNAUTHENTICATED
+          message: Principal is not authorized in workspace
+  expect_error: '(?s)cannot create token: the principal used by Databricks\s+\(client ID .*\) is not authorized
+    to create a token in this workspace'
+- name: restore_original_identity
+  config: |
+    provider "databricks" {
+      account_id = "replay-account"
+    }
+    resource "databricks_mws_credentials" "this" {
+      account_id       = "replay-account"
+      credentials_name = "creds-test-replay"
+      role_arn         = "arn:aws:iam::123456789012:role/replay-crossaccount"
+    }
+
+    resource "databricks_mws_customer_managed_keys" "this" {
+      account_id = "replay-account"
+      use_cases  = ["MANAGED_SERVICES"]
+      aws_key_info {
+        key_arn   = "arn:aws:kms:us-east-1:123456789012:key/replay-key"
+        key_alias = "alias/replay"
+      }
+    }
+
+    resource "databricks_mws_storage_configurations" "this" {
+      account_id                 = "replay-account"
+      storage_configuration_name = "terraform-replay"
+      bucket_name                = "terraform-replay"
+    }
+
+    resource "databricks_mws_networks" "my_network" {
+      account_id         = "replay-account"
+      network_name       = "network-test-replay"
+      vpc_id             = "vpc-11111111"
+      subnet_ids         = ["subnet-11111111", "subnet-99999999"]
+      security_group_ids = ["sg-99999999"]
+    }
+    resource "databricks_mws_workspaces" "this" {
+      account_id                               = "replay-account"
+      workspace_name                           = "terra-replay"
+      aws_region                               = "us-east-1"
+      network_id                               = databricks_mws_networks.my_network.network_id
+      credentials_id                           = databricks_mws_credentials.this.credentials_id
+      storage_configuration_id                 = databricks_mws_storage_configurations.this.storage_configuration_id
+      managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
+      custom_tags                              = { randomkey = "randomvalue" }
+    }
+    resource "databricks_service_principal" "this" {
+      display_name             = "tf-new-sp-replay"
+      disable_as_user_deletion = false
+    }
+    resource "databricks_service_principal_role" "this" {
+      service_principal_id = databricks_service_principal.this.id
+      role                 = "account_admin"
+    }
+    resource "databricks_service_principal_secret" "this" {
+      service_principal_id = databricks_service_principal.this.id
+    }
+  calls:
+  - *id003
+  - *id005
+  - *id007
+  - *id004
+  - *id006
+  - *id008
+  - *id020
+  - *id001
+  - *id001
+  - *id002
+  - *id009
+  - *id021
+  - request:
+      method: POST
+      path: /api/2.0/token/delete
+      headers:
+        Authorization: Bearer fixture-token
+      body:
+        json:
+          token_id: token-1
+    response:
+      status: 200
+      body: null
+  - *id001
+  - *id001
+  - *id002
+  - *id003
+  - *id005
+  - *id006
+  - *id004
+  - *id007
+  - *id008
+  - *id020
+  - *id001
+  - *id001
+  - *id002
+destroy:
+  calls:
+  - *id004
+  - *id003
+  - *id006
+  - *id005
+  - *id007
+  - *id008
+  - *id020
+  - *id001
+  - *id001
+  - *id002
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/servicePrincipals/93001/credentials/secrets/secret-1
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: PATCH
+      path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/93001
+      headers:
+        Authorization: Bearer fixture-token
+      body:
+        json:
+          Operations:
+          - op: remove
+            path: roles[value eq "account_admin"]
+          schemas:
+          - urn:ietf:params:scim:api:messages:2.0:PatchOp
+    response:
+      status: 200
+      body:
+        json:
+          active: true
+          applicationId: 11111111-1111-4111-8111-111111111111
+          displayName: tf-new-sp-replay
+          id: '93001'
+          roles:
+          - value: account_admin
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/workspaces/12345
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/workspaces/12345
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 404
+      body:
+        json:
+          error_code: RESOURCE_DOES_NOT_EXIST
+          message: Workspace deleted
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/storage-configurations/storage-123
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/credentials/credentials-123
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/networks/network-123
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/customer-managed-keys/key-123
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/93001
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/networks/network-123
+      headers:
+        Authorization: Bearer fixture-token
+      body: null
+    response:
+      status: 404
+      body:
+        json:
+          error_code: RESOURCE_DOES_NOT_EXIST
+          message: Network not found

@@ -9,9 +9,11 @@ steps:
     config: |
       resource "databricks_notebook" "this" {
         provider_config { workspace_id = "" }
-        source = "acceptance/testdata/acc-test-update1.ipynb"
+        source = abspath("${path.module}/notebook.ipynb")
         path   = "/Shared/provider-test/jupiter_replay"
       }
+    files:
+      notebook.ipynb: ../../../testdata/files/notebook.ipynb
     calls: []
     expect_error: "expected \"provider_config.0.workspace_id\" to not be an empty string"
 destroy:

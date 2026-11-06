@@ -114,6 +114,8 @@ type Sandbox struct {
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Human-readable display label for the sandbox. At most 256 characters.
 	DisplayName types.String `tfsdk:"display_name"`
+	// Metadata associated with the sandbox.
+	Metadata types.Object `tfsdk:"metadata"`
 	// The sandbox resource name, in the form `sandboxes/{sandbox_id}`. Derived
 	// from `sandbox_id`; any value supplied in a create or update request body
 	// is ignored.
@@ -140,6 +142,7 @@ type Sandbox struct {
 // (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF SDK values.
 func (m Sandbox) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"metadata":        reflect.TypeOf(sandbox_tf.SandboxMetadata{}),
 		"spec":            reflect.TypeOf(sandbox_tf.SandboxSpec{}),
 		"status":          reflect.TypeOf(sandbox_tf.SandboxStatus{}),
 		"provider_config": reflect.TypeOf(ProviderConfig{}),
@@ -157,6 +160,7 @@ func (m Sandbox) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"create_time": m.CreateTime,
 			"display_name": m.DisplayName,
+			"metadata":     m.Metadata,
 			"name":         m.Name,
 			"sandbox_id":   m.SandboxId,
 			"spec":         m.Spec,
@@ -174,6 +178,7 @@ func (m Sandbox) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"create_time": timetypes.RFC3339{}.Type(ctx),
 			"display_name": types.StringType,
+			"metadata":     sandbox_tf.SandboxMetadata{}.Type(ctx),
 			"name":         types.StringType,
 			"sandbox_id":   types.StringType,
 			"spec":         sandbox_tf.SandboxSpec{}.Type(ctx),
@@ -189,6 +194,15 @@ func (m Sandbox) Type(ctx context.Context) attr.Type {
 // including both embedded model fields and additional fields. This method is called
 // during create and update.
 func (to *Sandbox) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sandbox) {
+	if !from.Metadata.IsNull() && !from.Metadata.IsUnknown() {
+		if toMetadata, ok := to.GetMetadata(ctx); ok {
+			if fromMetadata, ok := from.GetMetadata(ctx); ok {
+				// Recursively sync the fields of Metadata
+				toMetadata.SyncFieldsDuringCreateOrUpdate(ctx, fromMetadata)
+				to.SetMetadata(ctx, toMetadata)
+			}
+		}
+	}
 	if !from.SandboxId.IsUnknown() {
 		to.SandboxId = from.SandboxId
 	}
@@ -218,6 +232,14 @@ func (to *Sandbox) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sand
 // including both embedded model fields and additional fields. This method is called
 // during read.
 func (to *Sandbox) SyncFieldsDuringRead(ctx context.Context, from Sandbox) {
+	if !from.Metadata.IsNull() && !from.Metadata.IsUnknown() {
+		if toMetadata, ok := to.GetMetadata(ctx); ok {
+			if fromMetadata, ok := from.GetMetadata(ctx); ok {
+				toMetadata.SyncFieldsDuringRead(ctx, fromMetadata)
+				to.SetMetadata(ctx, toMetadata)
+			}
+		}
+	}
 	if !from.SandboxId.IsUnknown() {
 		to.SandboxId = from.SandboxId
 	}
@@ -244,6 +266,7 @@ func (to *Sandbox) SyncFieldsDuringRead(ctx context.Context, from Sandbox) {
 func (m Sandbox) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["metadata"] = attrs["metadata"].SetOptional()
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["status"] = attrs["status"].SetComputed()
@@ -258,6 +281,31 @@ func (m Sandbox) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["provider_config"] = attrs["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
 
 	return attrs
+}
+
+// GetMetadata returns the value of the Metadata field in Sandbox as
+// a sandbox_tf.SandboxMetadata value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Sandbox) GetMetadata(ctx context.Context) (sandbox_tf.SandboxMetadata, bool) {
+	var e sandbox_tf.SandboxMetadata
+	if m.Metadata.IsNull() || m.Metadata.IsUnknown() {
+		return e, false
+	}
+	var v sandbox_tf.SandboxMetadata
+	d := m.Metadata.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMetadata sets the value of the Metadata field in Sandbox.
+func (m *Sandbox) SetMetadata(ctx context.Context, v sandbox_tf.SandboxMetadata) {
+	vs := v.ToObjectValue(ctx)
+	m.Metadata = vs
 }
 
 // GetSpec returns the value of the Spec field in Sandbox as
@@ -461,7 +509,7 @@ func (r *SandboxResource) update(ctx context.Context, plan Sandbox, diags *diag.
 	updateRequest := sandbox.UpdateSandboxRequest{
 		Sandbox:    sandboxModel,
 		Name:       plan.Name.ValueString(),
-		UpdateMask: *fieldmask.New(strings.Split("display_name,spec", ",")),
+		UpdateMask: *fieldmask.New(strings.Split("display_name,metadata,spec", ",")),
 	}
 
 	var namespace ProviderConfig

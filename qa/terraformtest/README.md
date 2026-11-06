@@ -35,6 +35,14 @@ Plugin Framework resources.
 Install Terraform on `PATH`, or set `TF_ACC_TERRAFORM_PATH` to its executable.
 The normal GitHub Actions tests job installs Terraform 1.13.5 with its wrapper
 disabled so the test runner can invoke the CLI directly.
+
+CI runs lint, four non-replay shards, and eight replay shards in separate jobs.
+The fixed matrix uses `.github/scripts/select_test_packages.py` to discover Go
+packages, balancing non-replay shards by Go source size and replay shards by YAML
+fixture count. New packages are included automatically, and packages without
+tests stay in the non-replay coverage report. Each test job uploads its coverage
+report, and the required `tests` check waits for every job to succeed.
+
 These hermetic tests run in the normal Go test suite, including `-short`;
 they do not require `TF_ACC`, live credentials, or `CLOUD_ENV`. The runner
 does not download Terraform. Client configuration ignores ambient credential
@@ -42,10 +50,126 @@ profiles and environment defaults; SDK HTTP traffic is restricted to the
 test's local fixture server. Do not use `t.Parallel`: Terraform CLI discovery is
 configured through process environment variables.
 
+## Refresh HTTP fixtures
+
+Set `TEST_RECORDER_PROFILE_NAME` to a profile in `~/.databrickscfg` (or
+`DATABRICKS_CONFIG_FILE`) and select one exact, anchored test path:
+
+```sh
+TEST_RECORDER_PROFILE_NAME=my-dev-profile \
+  go test ./qa/replay/resources/spark_version -count=1 \
+  -run '^TestSparkVersion$/^TestAccSparkVersion$'
+```
+
+The existing [Spark-version test](../replay/resources/spark_version/testdata/TestAccSparkVersion.yaml)
+lists available runtimes without creating or deleting live resources. Its fixtures
+were refreshed from Databricks using a workspace-host profile; its hostname is
+anonymized.
+Use the wrapper name in your own suite.
+
+Recording makes real API calls and destroys the resources it manages. It
+is rejected in CI, with broad selection, or with Terraform debug logging enabled.
+Ordinary replay remains hermetic regardless of ambient Databricks credentials.
+Recording an `initial_state` requires its setup template before loading a
+profile or making requests; see below.
+
+HCL and existing checks still execute. HTTP calls are captured per step,
+including destroy. A local replay verifies the captured data before saving;
+unexpected failures, failed cleanup or failed replay leave the source untouched.
+The recorder writes the finished YAML atomically and refuses concurrent edits.
+It refreshes calls and reusable host metadata, keeping HCL, checks, comments
+outside refreshed fields, matcher annotations, and `enforce_call_order` choices.
+An annotation that cannot be associated with a new call fails refresh instead
+of being discarded. Capture order alone does not enable ordered replay.
+
+The profile supplies host, authentication and real workspace/account IDs. Use
+stable replay IDs in `host_metadata` and literal provider fields; these must
+agree. Unified-host tests must set stable `account_id` and `workspace_id` in the
+provider HCL so replay has the same routing information without a profile.
+Those two known IDs are mapped in both directions, preserving numeric versus
+string JSON values. The profile's host is mapped to `example.databricks.com`
+in captured metadata and payloads, and restored for recording. URL schemes and
+paths are preserved; unrelated hosts are unchanged. Other IDs and author-selected
+assertions may need manual updates before a refresh. Credential headers are excluded and
+known profile secrets/common secret payload fields are redacted. Review every
+generated diff for service-specific secrets before committing it.
+
+Same-host absolute response `Location` headers become relative URLs so redirects
+follow the local fixture server during replay. Escaped paths, queries and
+fragments are preserved. Cross-host redirects are outside the recorder's scope;
+the replay transport rejects destinations outside the fixture server.
+
+### Secret redaction and replay
+
+Captured requests and responses use `[REDACTED]` for known secrets, even when
+this changes a value needed for exact request matching, a state/plan assertion,
+or Terraform's configuration/state consistency checks. We accept this known
+tradeoff to keep secrets out of committed fixtures. A successful live lifecycle
+does not guarantee that its redacted capture will replay; a failed verification
+replay leaves the YAML unchanged.
+
+The person or agent writing or refreshing the test must make it work with
+redacted data. Use narrow `any_string` request matchers for incidental secret
+strings, or align nonsecret HCL inputs and expectations with the redacted values.
+HCL and assertions are not automatically rewritten, and response values remain
+literal. Never retain a real secret or weaken redaction to make replay pass.
+See [authoring tests with redacted values](AUTHORING.md#write-tests-that-survive-redaction)
+for examples and the record/replay checklist.
+
+### Recording setup and initial state
+
+For `example.yaml`:
+
+```yaml
+recording:
+  environment_template: |
+    resource "databricks_group" "background" {
+      display_name = "Background group"
+    }
+  initial_state_template: |
+    resource "databricks_group" "this" {
+      display_name = "Original group"
+    }
+initial_state:
+  checkpoint: checkpoints/example.tfstate
+# steps and destroy follow as usual
+```
+
+Both templates are optional and run only during recording. Environment resources
+live in separate Terraform state: test steps cannot delete them, and the recorder
+cleans them up after the tested journey, including on failure. Use this for
+resources read by data sources. Resources in `initial_state_template` belong to
+the test's state and its mandatory destroy. Initial setup uses files declared
+by the first step. An initial-state template requires `initial_state.checkpoint`,
+and recording an initial state requires the template.
+
+Recording creates initial resources through Terraform, then executes the steps
+and cleanup. After cleanup, a local replay of the sanitized setup transcript
+generates a genuine Terraform checkpoint; no state JSON is constructed or edited.
+A replay starting from that checkpoint must pass before files are saved. Replay
+runs neither recording template: it reads only the saved checkpoint and fixtures.
+
+Recording writes `checkpoints/<test_name>.tfstate` beside the YAML, using its
+filename without the extension as the test name. Refresh overwrites that checkpoint
+and updates the YAML reference; older checkpoint files are left in place. The
+checkpoint is written first. If saving the YAML fails, rerun recording to refresh
+both files. Regeneration uses the provider version in this checkout; preserve
+historical migration checkpoints rather than refreshing them routinely.
+
+The [rejected-update example](testdata/initial_state/rejected_update.yaml) creates
+a group for its initial state, checks a reserved-name validation error, and
+destroys the group. Refresh its fixtures and checkpoint with:
+
+```sh
+TEST_RECORDER_PROFILE_NAME=my-dev-profile \
+  go test ./qa/terraformtest -count=1 \
+  -run '^TestInitialStateReplay$/^rejected_update$'
+```
+
 ## Test definition
 
 Use `version: 1`, optional `initial_state`, followed by `steps` and `destroy`.
-Each step has a human `name`, literal HCL under `config`, `calls`, and optional
+Apply and plan steps have a human `name`, literal HCL under `config`, `calls`, and optional
 `state` expectations. State persists across steps. Destroy always runs using
 the last successful configuration;
 its HTTP exchanges belong under `destroy.calls`, and empty state is always
@@ -56,6 +180,8 @@ Each exchange contains `request` and `response`. Requests specify `method`,
 and `body`. Responses specify an explicit HTTP `status`, optional `headers`,
 and `body`. Use `body: null` for no HTTP body and `body: {json: null}` for JSON
 null. Other JSON values go under `body.json`; IDs are literal, without substitution.
+Non-JSON payloads use `body.text`, `body.base64`, or request-only
+`body.multipart`; see the [payload reference](../httpfixture/README.md#files-and-non-json-bodies).
 
 Optional `request.matchers` annotations allow selected volatile strings to
 vary without ignoring their presence or type. For example:
@@ -157,13 +283,86 @@ Destroy always requires an empty resource inventory, including data sources in
 child modules. This is enforced by the engine; `destroy` accepts only `calls`,
 with no configurable final-state assertion.
 
-## MVP scope
+## Schema validation
 
-Tests use handwritten fixtures and start with empty Terraform state unless an
-initial checkpoint is supplied. YAML has strict field validation: recording/setup
-templates and strict attribute matching are not yet supported. Unsupported fields fail
-before any Terraform operations. The step/call/state layout is kept stable
-so these capabilities can be added independently.
+Unknown fields fail before Terraform operations. Strict attribute matching is
+not supported; state assertions check only the selected paths.
+
+## Local input files
+
+A step's optional `files` map copies checked-in inputs into Terraform's isolated
+working directory. Map each destination filename to a source path relative to
+the YAML file:
+
+```yaml
+files:
+  script.py: assets/script.py
+config: |
+  resource "databricks_workspace_file" "this" {
+    source = abspath("${path.module}/script.py")
+    path   = "/Shared/script.py"
+  }
+```
+
+Use `abspath` for filenames passed to the provider: the provider runs in the Go
+test process, whose current directory differs from Terraform's. Terraform's
+own `file("${path.module}/script.py")` function can read relative paths normally.
+No path substitution is performed by the runner.
+
+Files persist through subsequent steps and destroy; mapping the same destination
+again replaces its contents before that step. Sources for every step are loaded
+before replay begins, so missing files fail before any apply. Original inputs
+are never modified. Initial-state checkpoints and local inputs can be combined.
+
+Destinations are top-level filenames because HashiCorp's `ConfigDirectory` API
+does not copy nested directories. Terraform configuration, variable, state, and
+framework filenames are reserved. Source paths may point into shared fixture
+folders. File permissions are not preserved; these inputs are data, not scripts
+executed by the runner. Keep them minimal, such as a comment-only Python file.
+
+The [workspace-file example](testdata/files/workspace_file.yaml) creates a file,
+changes its contents, and destroys it, with exact multipart upload expectations.
+
+## Provider implementation selection
+
+Each step can select a resource implementation by Terraform resource type:
+
+```yaml
+steps:
+  - name: create_legacy_share
+    provider_implementations:
+      databricks_share: sdkv2
+    config: |
+      resource "databricks_share" "this" {
+        name = "example"
+      }
+    # calls omitted
+  - name: adopt_framework_share
+    provider_implementations:
+      databricks_share: plugin_framework
+    config: |
+      resource "databricks_share" "this" {
+        name = "example"
+      }
+    # calls omitted
+```
+
+Values are `sdkv2` or `plugin_framework`. Keys name resource types, such as
+`databricks_share`; every instance of that type uses the selected implementation.
+Multiple resource types can select different implementations in the same step.
+Unlisted resource types and all data sources use the production mux defaults.
+Each step declares its own selection; an omitted map uses production defaults.
+Invalid values and unavailable implementations fail instead of silently using
+another implementation. This does not add an implementation that the provider
+no longer ships.
+
+Steps share ordinary Terraform state, including across implementation switches.
+Destroy uses the selection retained with its cleanup configuration. Failed
+updates, discarded imports, and plan-only steps following an apply leave that
+selection unchanged. An import step can explicitly select its implementation.
+Provider selection also works with initial checkpoints and local input files.
+These settings are passed to provider constructors without changing process-wide
+rollout environment variables.
 
 ## Expected errors
 
@@ -190,8 +389,7 @@ still use ordinary HTTP fixtures. Unexpected calls and unused fixtures fail
 independently, even if their resulting diagnostic matches `expect_error`.
 Later steps still run after an expected failure.
 
-Automatic destroy remains mandatory and uses the last step without an expected
-error, so an invalid final configuration cannot prevent cleanup. If all steps
+Automatic destroy remains mandatory and uses the last successful apply configuration, so an invalid final configuration cannot prevent cleanup. If all steps
 expect errors, cleanup uses an empty default provider configuration. Tests that
 partially create resources before failing must still supply destroy fixtures.
 Provider aliases or routing that exist only in an expected-error configuration
@@ -200,6 +398,77 @@ are not available to that fallback cleanup configuration.
 State checks on expected-error steps are rejected: HashiCorp skips post-apply
 checks when an operation fails. Add a subsequent successful step to inspect
 state instead. Invalid or empty error patterns fail before Terraform runs.
+
+## Import steps
+
+An `import` step runs `terraform import` through HashiCorp's test framework,
+using ordinary HTTP fixtures. Every import must explicitly set `persist`:
+
+- `persist: false` imports into separate, empty state and discards it afterward.
+  Later steps and destroy use the journey's original state. This exercises the
+  importer without adopting the resource into the journey.
+- `persist: true` imports into the journey's current state. Later steps can use
+  or update the resource, and automatic destroy cleans it up alongside existing
+  resources. Terraform rejects an address that is already managed.
+
+```yaml
+- name: verify_catalog_import
+  import:
+    resource: databricks_catalog.test
+    persist: false
+    verify: true
+    ignore: [updated_at, updated_by]
+  calls:
+    # GET requests made by the importer and Terraform's import refresh.
+```
+
+`resource` is the Terraform instance address. A persistent import requires a
+literal `id`. A nonpersistent import can omit `id` to use the resource's prior
+state ID; without prior state, it also requires an explicit ID. Composite IDs
+and alternate formats are literal strings, with no interpolation or state-editing
+expressions. The first import step requires `config`; subsequent imports may
+omit it to reuse the last successful lifecycle configuration.
+
+For example, a resource already present remotely can be adopted as the first
+step without a create step or a checkpoint:
+
+```yaml
+- name: import_existing_group
+  config: |
+    resource "databricks_group" "this" {
+      display_name = "Example group"
+    }
+  import:
+    resource: databricks_group.this
+    id: group-id
+    persist: true
+  calls:
+    # Supply the importer's GET responses for group-id.
+```
+
+With `persist: false`, optional `verify: true` compares the imported attributes
+against prior state using HashiCorp's strict import verification. `verify`
+defaults to false. Verification requires prior state from an apply or checkpoint.
+Optional `ignore` lists excluded attribute prefixes in HashiCorp's flattened
+notation, such as `updated_at` or `options.bearer_token`. Use narrow prefixes:
+`name` also matches other attributes beginning with `name`.
+`identifier_attribute` selects the attribute used to match prior and imported
+instances; it defaults to `id`. Both fields require `verify: true`.
+
+Persistent imports use ordinary state or plan assertions in a following step;
+`import.verify` is reserved for the separate-state comparison. Native import
+skips ordinary `plan`, `plan_only`, and `state` checks, so those fields are rejected
+on import steps. `expect_error` is supported with verification disabled.
+Unexpected and unused HTTP calls fail independently of expected errors.
+
+A successful persistent import retains its configuration for subsequent imports
+and cleanup. A nonpersistent import leaves the lifecycle configuration unchanged.
+Local input files and initial checkpoints work with both modes. Plan-based import
+blocks are not exposed as a YAML operation.
+
+Examples cover [group import followed by update](testdata/imports/group.yaml),
+[app import by name](testdata/imports/app_by_name.yaml), and
+[separate-state verification](testdata/imports/app_verification.yaml).
 
 ## Initial state
 
@@ -320,26 +589,13 @@ Complete examples are in [testdata/plans](testdata/plans). They exercise
 checkpoint update/apply, empty and nonempty previews, multiple resource instances,
 known/unknown outputs, and automatic cleanup.
 
-## Constraints for future recording
+## Recording limitations
 
-Recording is not implemented. These replay contracts must survive capture and
-refresh:
+Existing plan and state expectations remain assertions; recording does not
+refresh their values or add new assertion paths. Keep checks focused on the
+behavior under test, and adjust server-generated IDs manually when necessary.
 
-- Keep every consumable exchange, including retries and repeated reads, in
-  request-dispatch order. Assign sequence numbers before sending requests;
-  response-completion order can differ under concurrency. Do not infer resource
-  ownership from HTTP calls. Identical concurrent signatures with different
-  responses remain ambiguous under FIFO replay and need explicit handling.
-- Preserve whole-step boundaries, including all native consistency plans and
-  destroy. Capture plan expectations at the same saved-plan hooks as replay:
-  pre-apply for apply steps, post-refresh for plan-only steps.
-- Preserve author-selected paths, omitted assertions, explicit empty maps, and
-  unknown versus null. Do not turn partial assertions into whole-state snapshots
-  or silently change `enforce_call_order` while refreshing fixtures.
-- Capture reusable host metadata separately from consumable calls. Keep setup
-  and background-environment cleanup outside the test transcript; initial-state
-  resources belong to test destroy. Generate matching checkpoints and calls
-  together without editing opaque checkpoint JSON or reusing stale live IDs.
-- Decide retries/polling, secret and volatile-value handling before enabling
-  live capture. Recording must be explicit, single-test, unavailable in CI, and
-  must never be activated by a replay failure.
+Identical concurrent request signatures with different responses remain
+ambiguous under FIFO replay. Recording preserves dispatch order, but does not
+infer resource ownership or enable ordered replay. Review these scenarios
+before relying on a refreshed transcript.

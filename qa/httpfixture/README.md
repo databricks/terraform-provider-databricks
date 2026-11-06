@@ -1,5 +1,19 @@
 # HTTP fixture replay
 
+`NewCaptureTransport(base)` collects the same exchange format from an HTTP
+transport. Call `StartStep(label)` before dispatch, then `Snapshot()` after
+requests finish. Concurrent calls retain dispatch order, without enabling
+ordered replay. Transport/body-read failures invalidate the entire recording.
+Bodies remain readable by the SDK; multipart boundaries are omitted, and binary
+content uses base64. Valid JSON is captured semantically only for declared
+`application/json` or `application/*+json` media types; other bodies retain exact
+bytes, including when the media type is missing or malformed. Response `Location`
+headers are retained verbatim; the recorder must normalize same-host absolute
+redirects before replay. Authentication and cookie headers are excluded. API
+payloads are retained in memory: the recorder must redact secrets and normalize
+profile-specific values before saving them. This transport does not load
+profiles, enable live requests, or write fixtures itself.
+
 `NewHandler()` creates an empty handler for stateless request/response exchanges.
 `SetReusableFixtures(calls)` replaces the test-wide reusable fallbacks; `nil`
 clears them. Invalid replacements leave the old fixtures intact. Replacing
@@ -74,3 +88,42 @@ clear consumption or failures. Reusable fallbacks remain outside ordering,
 but cannot bypass an out-of-order matching consumable call.
 Test-wide reusable exchanges are intended for invariant client initialization,
 such as host metadata; they are not required to be consumed.
+
+## Files and non-JSON bodies
+
+A non-null body selects exactly one representation:
+
+```yaml
+body:
+  text: |
+    # comment
+# Or: body: {base64: "AP8K"} for the bytes 00 ff 0a.
+```
+
+`json` compares parsed JSON; `text` and `base64` compare exact bytes, including
+whitespace. An empty text/binary body matches zero bytes. Use base64 for bytes
+that cannot be represented as UTF-8. Responses support these same three modes,
+with default content types `application/json`, `text/plain; charset=utf-8`, and
+`application/octet-stream`, respectively. Explicit response headers override them.
+
+Multipart requests describe the decoded form rather than its random boundary:
+
+```yaml
+body:
+  multipart:
+    - name: path
+      body: {text: /Shared/script.py}
+    - name: content
+      filename: content
+      headers: {Content-Type: application/octet-stream}
+      body:
+        text: |
+          # comment
+```
+
+Every part needs a name and a `body.text` or `body.base64`. Matchers compare
+names, filenames, bytes, multiplicity, and explicitly listed part headers.
+Additional part headers are ignored. Part order and the transport boundary are
+ignored; missing or extra parts fail. The request must use `multipart/form-data`.
+Multipart responses and JSON matchers on non-JSON bodies are unsupported.
+Header and query matchers work with every body representation.

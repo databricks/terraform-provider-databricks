@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
 
 func TestInitialStateReplay(t *testing.T) {
@@ -73,7 +74,7 @@ func TestCheckpointSeedPreservesBytesAndOnlyRunsOnFirstStep(t *testing.T) {
 	d, err := loadDefinition("testdata/initial_state/group_update.yaml")
 	require.NoError(t, err)
 	testCase := resource.TestCase{
-		ProtoV6ProviderFactories: providerFactories("http://127.0.0.1"),
+		ProtoV6ProviderFactories: ProviderFactories(fixtureConfig("http://127.0.0.1")),
 		Steps: []resource.TestStep{
 			{Config: d.Steps[0].Config},
 			{Config: `provider "databricks" {}`},
@@ -113,7 +114,7 @@ func TestCheckpointConfigKeepsExplicitProviderRequirements(t *testing.T) {
 		require.Equal(t, 1, strings.Count(hcl, "terraform {"))
 	}
 	_, err := checkpointConfig(`resource "databricks_group" {`)
-	require.ErrorContains(t, err, "initial_state step configuration")
+	require.ErrorContains(t, err, "directory step configuration")
 }
 
 func TestInitialCheckpointRejectsAlternateBackends(t *testing.T) {
@@ -127,13 +128,13 @@ func TestInitialCheckpointRejectsAlternateBackends(t *testing.T) {
 
 func TestInitialStateRequiresDestroyFixtures(t *testing.T) {
 	directory := t.TempDir()
-	contents, err := os.ReadFile("testdata/initial_state/rejected_update.yaml")
+	d, err := loadDefinition("testdata/initial_state/rejected_update.yaml")
 	require.NoError(t, err)
-	checkpoint, err := os.ReadFile("testdata/initial_state/checkpoints/group.tfstate")
+	writeDiscoveryFile(t, directory, d.InitialState.Checkpoint, string(d.checkpoint))
+	d.Destroy.Calls = nil
+	fixture, err := yaml.Marshal(d)
 	require.NoError(t, err)
-	writeDiscoveryFile(t, directory, "checkpoints/group.tfstate", string(checkpoint))
-	fixture := strings.Split(string(contents), "destroy:\n")[0] + "destroy: {calls: []}\n"
-	writeDiscoveryFile(t, directory, "MissingCleanup.yaml", fixture)
+	writeDiscoveryFile(t, directory, "MissingCleanup.yaml", string(fixture))
 	output, err := discoverySubprocess(t, directory, "^TestDirectoryRunnerHelper$")
 	require.Error(t, err, output)
 	require.Contains(t, output, "step 2 (destroy): unexpected HTTP call")

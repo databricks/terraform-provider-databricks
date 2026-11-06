@@ -7063,7 +7063,8 @@ type PtServedModel_SdkV2 struct {
 	// to external_model.name, with '.' and ':' replaced with '-', and if not
 	// specified for other entities, it defaults to entity_name-entity_version.
 	Name types.String `tfsdk:"name"`
-	// The number of model units to be provisioned.
+	// The number of model units to be provisioned. Dedicated inference requires
+	// positive fixed capacity and does not support scale-to-zero.
 	ProvisionedModelUnits types.Int64 `tfsdk:"provisioned_model_units"`
 }
 

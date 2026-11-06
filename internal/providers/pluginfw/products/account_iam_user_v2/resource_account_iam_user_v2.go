@@ -50,6 +50,14 @@ type User struct {
 	ExternalId types.String `tfsdk:"external_id"`
 
 	FullName types.Object `tfsdk:"full_name"`
+	// The resource name of the user. The format depends on the API that
+	// returned it: - Account-scoped: accounts/{account_id}/users/{user_id} -
+	// Workspace-scoped: users/{user_id}
+	Name types.String `tfsdk:"name"`
+	// The resource name of the account that contains the user,
+	// `accounts/{account_id}`. Both the account-scoped and workspace-scoped
+	// APIs return it.
+	Parent types.String `tfsdk:"parent"`
 	// Internal userId of the user in Databricks.
 	UserId types.String `tfsdk:"user_id"`
 	// Username/email of the user.
@@ -82,6 +90,8 @@ func (m User) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"account_user_status": m.AccountUserStatus,
 			"external_id":         m.ExternalId,
 			"full_name":           m.FullName,
+			"name":                m.Name,
+			"parent":              m.Parent,
 			"user_id":             m.UserId,
 			"username":            m.Username,
 		},
@@ -96,6 +106,8 @@ func (m User) Type(ctx context.Context) attr.Type {
 			"account_user_status": types.StringType,
 			"external_id":         types.StringType,
 			"full_name":           iamv2_tf.UserFullName{}.Type(ctx),
+			"name":                types.StringType,
+			"parent":              types.StringType,
 			"user_id":             types.StringType,
 			"username":            types.StringType,
 		},
@@ -133,14 +145,19 @@ func (to *User) SyncFieldsDuringRead(ctx context.Context, from User) {
 
 func (m User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["account_id"] = attrs["account_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["account_user_status"] = attrs["account_user_status"].SetRequired()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetRequired()
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["user_id"] = attrs["user_id"].SetComputed()
+	attrs["user_id"] = attrs["user_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["username"] = attrs["username"].SetRequired()
 	attrs["username"] = attrs["username"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
-	attrs["user_id"] = attrs["user_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	return attrs
 }
 
@@ -202,7 +219,8 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	createRequest := iamv2.CreateUserRequest{
-		User: user,
+		User:   user,
+		Parent: plan.Parent.ValueString(),
 	}
 
 	client, clientDiags := r.Client.GetAccountClient()
@@ -286,7 +304,7 @@ func (r *UserResource) update(ctx context.Context, plan User, diags *diag.Diagno
 
 	updateRequest := iamv2.UpdateUserRequest{
 		User:       user,
-		UserId:     plan.UserId.ValueString(),
+		Name:       plan.Name.ValueString(),
 		UpdateMask: "account_user_status,external_id,full_name",
 	}
 
@@ -368,13 +386,13 @@ func (r *UserResource) ImportState(ctx context.Context, req resource.ImportState
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
 			fmt.Sprintf(
-				"Expected import identifier with format: user_id. Got: %q",
+				"Expected import identifier with format: name. Got: %q",
 				req.ID,
 			),
 		)
 		return
 	}
 
-	userId := parts[0]
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_id"), userId)...)
+	name := parts[0]
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
 }

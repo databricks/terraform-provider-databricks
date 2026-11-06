@@ -2,7 +2,7 @@
 subcategory: "Identity and Access Management"
 ---
 # databricks_account_iam_user_v2 Resource
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/account/iamv2)
 
@@ -18,6 +18,7 @@ Creates an account-level user. When AIM is enabled, the user cannot be created w
 
 ```hcl
 resource "databricks_account_iam_user_v2" "this" {
+  parent              = "accounts/00000000-0000-0000-0000-000000000000"
   username            = "jane.doe@example.com"
   account_user_status = "ACTIVE"
 
@@ -33,6 +34,8 @@ resource "databricks_account_iam_user_v2" "this" {
 The following arguments are supported:
 * `account_user_status` (string, required) - The activity status of a user in a Databricks account. Possible values are: `ACTIVE`, `INACTIVE`
 * `full_name` (UserFullName, required)
+* `parent` (string, required) - The resource name of the account that contains the user, `accounts/{account_id}`. Both the
+  account-scoped and workspace-scoped APIs return it
 * `username` (string, required) - Username/email of the user
 * `external_id` (string, optional) - ExternalId of the user in the customer's IdP
 
@@ -43,18 +46,21 @@ The following arguments are supported:
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 * `account_id` (string) - The accountId parent of the user in Databricks
+* `name` (string) - The resource name of the user. The format depends on the API that returned it:
+  - Account-scoped: accounts/{account_id}/users/{user_id}
+  - Workspace-scoped: users/{user_id}
 * `user_id` (string) - Internal userId of the user in Databricks
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = "user_id"
+  id = "name"
   to = databricks_account_iam_user_v2.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_account_iam_user_v2.this "user_id"
+terraform import databricks_account_iam_user_v2.this "name"
 ```

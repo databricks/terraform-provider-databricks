@@ -2,7 +2,7 @@
 subcategory: "Identity and Access Management"
 ---
 # databricks_workspace_iam_service_principals_v2 Data Source
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/iamv2)
 
@@ -25,6 +25,8 @@ The following arguments are supported:
 * `filter` (string, optional) - Optional. Allows filtering service principals by application id or external id
 * `page_size` (integer, optional) - The maximum number of SPs to return. The service may return fewer than this value.
   If not provided, defaults to 1000, which is also the maximum allowed. Requests for more than the maximum are clamped to 1000
+* `parent` (string, optional) - The resource name of the account to list service principals in, `accounts/{account_id}`. Optional:
+  defaults to the account of the calling workspace, and any other account is rejected
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -39,4 +41,9 @@ This data source exports a single attribute, `service_principals`. It is a list 
   afterwards; when omitted, the server generates one
 * `display_name` (string) - Display name of the service principal
 * `external_id` (string) - ExternalId of the service principal in the customer's IdP
+* `name` (string) - The resource name of the service principal. The format depends on the API that returned it:
+  - Account-scoped: accounts/{account_id}/service-principals/{service_principal_id}
+  - Workspace-scoped: service-principals/{service_principal_id}
+* `parent` (string) - The resource name of the account that contains the service principal,
+  `accounts/{account_id}`. Both the account-scoped and workspace-scoped APIs return it
 * `service_principal_id` (string) - Internal service principal ID of the service principal in Databricks

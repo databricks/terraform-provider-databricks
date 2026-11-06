@@ -38,6 +38,17 @@ Roles exist within the Lakebase Autoscaling resource hierarchy:
 - **`LAKEBASE_OAUTH_V1`**: Default for managed identities (`USER`, `SERVICE_PRINCIPAL`, `GROUP`). The role logs in via Databricks OAuth.
 - **`NO_LOGIN`**: The role cannot be used for interactive access. Useful for roles that only hold privileges and serve as group targets.
 
+### Fields Fixed at Creation
+
+`spec.identity_type`, `spec.auth_method`, and `spec.postgres_role` are fixed when the role is
+created. Changing these fields in your Terraform configuration does not change their values on the
+existing role. Setting `replace_existing = true` adopts an existing role without changing these
+fixed values. You can still manage `spec.membership_roles` and the supported `spec.attributes`
+fields through Terraform.
+
+If you need different fixed values, define a new `databricks_postgres_role` resource with a
+different `role_id` and the desired settings.
+
 ### Attributes
 
 `spec.attributes` exposes a subset of Postgres role attributes:
@@ -247,13 +258,18 @@ The following arguments are supported:
 * `parent` (string, required) - The Branch where this Role exists.
   Format: projects/{project_id}/branches/{branch_id}
 * `replace_existing` (boolean, optional) - If true, update the role if it already exists instead of returning an
-  error.
+  error. This requires `role_id` to be set. Without `role_id`, the request
+  follows the normal create path and fails if the role name already exists.
   
-  When the role already exists, the provided `role` spec fully replaces the
-  existing one: `membership_roles` is overwritten, not merged. Leaving
+  When the role already exists, only mutable fields are updated.
+  Attributes omitted from the request retain their current values.
+  Set an attribute explicitly to false to disable it.
+  `identity_type`, `auth_method`, and `postgres_role` retain their
+  existing values; supplied values for these fields are ignored.
+  `membership_roles` is overwritten, not merged. Leaving
   `membership_roles` empty clears all of the role's existing memberships,
-  including `DATABRICKS_SUPERUSER`. Always send the complete desired list of
-  memberships when using this field
+  including `DATABRICKS_SUPERUSER`. Always send the complete desired list
+  of memberships when using this field
 * `spec` (RoleRoleSpec, optional) - The spec contains the role configuration, including identity type, authentication method, and role attributes
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
@@ -286,13 +302,23 @@ The following arguments are supported:
   * For the regular postgres roles, authentication based on postgres passwords is used.
   
   NOTE: for the Databricks identity type GROUP, LAKEBASE_OAUTH_V1
-  is the default auth method (group can login as well). Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
+  is the default auth method (group can login as well).
+  
+  This field is set when the role is created and cannot be changed by
+  UpdateRole. If provided in an UpdateRole request body, its value is
+  ignored and the existing value is retained. Do not include this field
+  as an explicit path in update_mask. Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
 * `identity_type` (string, optional) - The type of role.
   When specifying a managed-identity, the chosen role_id must be a valid:
   
   * application ID for SERVICE_PRINCIPAL
   * user email for USER
-  * group name for GROUP. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
+  * group name for GROUP
+  
+  This field is set when the role is created and cannot be changed by
+  UpdateRole. If provided in an UpdateRole request body, its value is
+  ignored and the existing value is retained. Do not include this field
+  as an explicit path in update_mask. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
 * `membership_roles` (list of string, optional) - An enum value for a standard role that this role is a member of
 * `postgres_role` (string, optional) - The name of the Postgres role.
   
@@ -307,6 +333,11 @@ The following arguments are supported:
   1. user email for IdentityType.USER
   2. app ID for IdentityType.SERVICE_PRINCIPAL
   2. group name for IdentityType.GROUP
+  
+  This field is set when the role is created and cannot be changed by
+  UpdateRole. If provided in an UpdateRole request body, its value is
+  ignored and the existing value is retained. Do not include this field
+  as an explicit path in update_mask
 
 ### RoleRoleStatus
 * `attributes` (RoleAttributes, optional) - The PG role attributes associated with the role

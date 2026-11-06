@@ -68,7 +68,7 @@ This data source exports a single attribute, `endpoints`. It is a list of resour
 
 ### EndpointStatus
 * `message` (string) - Human-readable detail about the endpoint's current state or the reason for a state transition
-* `state` (string) - Current lifecycle state of the endpoint. See `State` for the meaning of each value. Possible values are: `DELETED`, `OFFLINE`, `ONLINE`, `PROVISIONING`, `RED_STATE`, `YELLOW_STATE`
+* `state` (string) - Current lifecycle state of the endpoint. See `State` for the meaning of each value. Possible values are: `DELETED`, `OFFLINE`, `ONLINE`, `PROVISIONING`, `RED_STATE`, `STARTING`, `STOPPED`, `STOPPING`, `YELLOW_STATE`
 
 ### EndpointThroughputInfo
 * `change_request_message` (string) - Additional information about the throughput change request

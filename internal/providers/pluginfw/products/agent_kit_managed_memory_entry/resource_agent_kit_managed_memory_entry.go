@@ -122,6 +122,7 @@ type ManagedMemoryEntry struct {
 	ManagedMemoryEntryId types.String `tfsdk:"managed_memory_entry_id"`
 	// Resource name in the form
 	// `memory-stores/{managed_memory_store_id}/entries/{managed_memory_entry_id}`.
+	// Required for updates; assigned by the service on creation.
 	Name types.String `tfsdk:"name"`
 	// Memory store that will contain the entry, in the form
 	// `memory-stores/{managed_memory_store_id}`.

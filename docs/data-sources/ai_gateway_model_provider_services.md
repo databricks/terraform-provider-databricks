@@ -26,7 +26,8 @@ output "model_provider_services" {
 ## Arguments
 The following arguments are supported:
 * `page_size` (integer, optional) - Maximum number of provider services to return. Defaults to 200 when unset or
-  0; the maximum is 200. Use `page_token` to retrieve additional pages
+  0; the maximum is 1000 for `view = BASIC` and 200 for `view = FULL`. Use
+  `page_token` to retrieve additional pages
 * `parent` (string, optional) - Parent schema to list within, in the form
   `schemas/{catalog}.{schema}`. Required. Each `{...}` component is capped at
   255 characters individually
@@ -78,9 +79,10 @@ This data source exports a single attribute, `model_provider_services`. It is a 
   inference table is created, this field cannot be changed
 
 ### ModelProviderServiceConfig
-* `allow_all_targets` (boolean) - When true, accepts any model exposed by the upstream provider; `targets`
-  is not required and does not restrict routability. When false, only
-  models listed in `targets` are routable. Defaults to false
+* `allow_all_targets` (boolean) - When true, allows models from the provider's built-in model catalog in
+  addition to explicit `targets`. When false, only models listed in `targets`
+  are routable. Defaults to false. CUSTOM providers have no built-in model
+  catalog and must leave this false and list their models in `targets`
 * `amazon_bedrock` (ModelProviderServiceConfigAmazonBedrockProviderConfig)
 * `anthropic` (ModelProviderServiceConfigAnthropicProviderConfig)
 * `azure_openai` (ModelProviderServiceConfigAzureOpenAiProviderConfig)
@@ -117,8 +119,9 @@ This data source exports a single attribute, `model_provider_services`. It is a 
   entry must include at least one `native_api_types` value. When
   `allow_all_targets` is false, at least one entry is required and model
   service destinations can reference only listed models. When
-  `allow_all_targets` is true, any upstream model is routable; entries in
-  this list provide API-type metadata without restricting other models
+  `allow_all_targets` is true, models from the provider's built-in model
+  catalog are also routable. CUSTOM providers must explicitly list their
+  models here and cannot enable `allow_all_targets`
 
 ### ModelProviderServiceConfigAmazonBedrockProviderConfig
 * `direct` (ModelProviderServiceConfigAmazonBedrockProviderDirectConfig) - Amazon Bedrock region and authentication configuration

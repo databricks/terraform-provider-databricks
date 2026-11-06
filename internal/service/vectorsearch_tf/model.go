@@ -5313,6 +5313,102 @@ func (m *ScanVectorIndexResponse) SetData(ctx context.Context, v []Struct) {
 	m.Data = types.ListValueMust(t, vs)
 }
 
+type StartEndpointRequest struct {
+	// Name of the AI Search endpoint
+	EndpointName types.String `tfsdk:"-"`
+}
+
+func (to *StartEndpointRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StartEndpointRequest) {
+}
+
+func (to *StartEndpointRequest) SyncFieldsDuringRead(ctx context.Context, from StartEndpointRequest) {
+}
+
+func (m StartEndpointRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StartEndpointRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StartEndpointRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StartEndpointRequest
+// only implements ToObjectValue() and Type().
+func (m StartEndpointRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"endpoint_name": m.EndpointName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StartEndpointRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"endpoint_name": types.StringType,
+		},
+	}
+}
+
+type StopEndpointRequest struct {
+	// Name of the AI Search endpoint
+	EndpointName types.String `tfsdk:"-"`
+}
+
+func (to *StopEndpointRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StopEndpointRequest) {
+}
+
+func (to *StopEndpointRequest) SyncFieldsDuringRead(ctx context.Context, from StopEndpointRequest) {
+}
+
+func (m StopEndpointRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StopEndpointRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StopEndpointRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StopEndpointRequest
+// only implements ToObjectValue() and Type().
+func (m StopEndpointRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"endpoint_name": m.EndpointName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StopEndpointRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"endpoint_name": types.StringType,
+		},
+	}
+}
+
 type Struct struct {
 	// Data entry, corresponding to a row in a vector index.
 	Fields types.List `tfsdk:"fields"`

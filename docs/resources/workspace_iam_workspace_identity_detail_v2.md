@@ -2,7 +2,7 @@
 subcategory: "Identity and Access Management"
 ---
 # databricks_workspace_iam_workspace_identity_detail_v2 Resource
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/iamv2)
 

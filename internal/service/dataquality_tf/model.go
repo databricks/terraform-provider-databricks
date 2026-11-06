@@ -834,6 +834,7 @@ func (to *DataProfilingConfig) SyncFieldsDuringRead(ctx context.Context, from Da
 
 func (m DataProfilingConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["assets_dir"] = attrs["assets_dir"].SetOptional()
+	attrs["assets_dir"] = attrs["assets_dir"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["baseline_table_name"] = attrs["baseline_table_name"].SetOptional()
 	attrs["custom_metrics"] = attrs["custom_metrics"].SetOptional()
 	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()

@@ -5897,7 +5897,7 @@ func (m *CreateWebhookResponse_SdkV2) SetWebhook(ctx context.Context, v Registry
 	m.Webhook = types.ListValueMust(t, vs)
 }
 
-// A cron-based schedule trigger for the materialization pipeline.
+// A cron-based schedule trigger for batch materialization.
 type CronSchedule_SdkV2 struct {
 	// The cron expression defining the schedule (e.g., "0 0 * * *" for daily at
 	// midnight). The schedule is interpreted in timezone_id (defaults to UTC).
@@ -22124,9 +22124,9 @@ func (m *MaterializationNotifications_SdkV2) SetOnSuccess(ctx context.Context, v
 type MaterializationSet_SdkV2 struct {
 	// Server-assigned unique identifier for the materialization set.
 	MaterializationSetId types.String `tfsdk:"materialization_set_id"`
-	// The materialized features in this set. Order is not significant. Updating
-	// the set with a materialized feature removed from this set will cause it
-	// to be deleted.
+	// The materialized features in this set. Order is not significant. An
+	// `UpdateMaterializationSet` request with `materialized_features` or `*` in
+	// its update mask deletes omitted materialized features.
 	MaterializedFeatures types.List `tfsdk:"materialized_features"`
 	// Notification configuration around the materialization job or pipeline
 	// lifecycle. They are applied to every job and pipeline that materializes a
@@ -22675,16 +22675,14 @@ func (m *MaterializationSetOperationMetadata_SdkV2) SetUpdateProgress(ctx contex
 	m.UpdateProgress = types.ListValueMust(t, vs)
 }
 
-// What a partly failed UpdateMaterializationSet got through, attached to the
-// error so a caller can tell which materialized feature members already changed
-// and which ones did not and why it failed.
+// Progress and outcomes of an `UpdateMaterializationSet` operation.
 type MaterializationSetUpdateProgress_SdkV2 struct {
-	// Materialized feature members that were deleted from the materialization
-	// set.
+	// IDs of materialized features that were deleted.
 	DeletedMaterializedFeatureIds types.List `tfsdk:"deleted_materialized_feature_ids"`
-	// Materialized feature members that could not be updated, one entry each.
+	// Materialized features that could not be updated or deleted, one entry
+	// each.
 	FailedMaterializedFeatures types.List `tfsdk:"failed_materialized_features"`
-	// Materialized feature members whose mutable state was updated.
+	// IDs of materialized features whose mutable state was updated.
 	UpdatedMaterializedFeatureIds types.List `tfsdk:"updated_materialized_feature_ids"`
 }
 
@@ -23034,7 +23032,7 @@ type MaterializedFeature_SdkV2 struct {
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 
 	CronSchedule types.String `tfsdk:"cron_schedule"`
-	// A cron-based schedule trigger for the materialization pipeline.
+	// A cron-based schedule trigger for batch materialization.
 	CronScheduleTrigger types.List `tfsdk:"cron_schedule_trigger"`
 	// The full name of the feature in Unity Catalog.
 	FeatureName types.String `tfsdk:"feature_name"`
@@ -23078,7 +23076,8 @@ type MaterializedFeature_SdkV2 struct {
 	// The fully qualified Unity Catalog path to the table containing the
 	// materialized feature (Delta table or Lakebase table). Output only.
 	TableName types.String `tfsdk:"table_name"`
-	// A trigger that fires when the upstream source table changes.
+	// A trigger that starts batch materialization when the upstream source
+	// table changes.
 	TableTrigger types.List `tfsdk:"table_trigger"`
 	// Custom tags to associate with this materialization. They are applied to
 	// the materialization job (for batch features) or pipeline (for streaming
@@ -33682,8 +33681,8 @@ func (m SumFunction_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// A trigger that fires when the feature's source table changes: a
-// DeltaTableSource's table, or an SdpSource's input_tables.
+// A trigger that starts batch materialization when the feature's source table
+// changes: a DeltaTableSource's table, or an SdpSource's input_tables.
 type TableTrigger_SdkV2 struct {
 	// Which source table updates trigger a materialization run. If not set, any
 	// source table update triggers a run.
@@ -35357,8 +35356,11 @@ func (m *UpdateKafkaConfigRequest_SdkV2) SetKafkaConfig(ctx context.Context, v K
 }
 
 type UpdateMaterializationSetRequest_SdkV2 struct {
-	// The desired state of the updated materialization set.
-	// materialization_set_id selects the set.
+	// The desired state of the materialization set. `materialization_set_id`
+	// identifies the set.
+	//
+	// A request that changes pause settings must request the same `paused`
+	// value for all retained members with a cron schedule or table trigger.
 	MaterializationSet types.List `tfsdk:"materialization_set"`
 	// Server-assigned unique identifier for the materialization set.
 	MaterializationSetId types.String `tfsdk:"-"`
@@ -35368,7 +35370,18 @@ type UpdateMaterializationSetRequest_SdkV2 struct {
 	// checked against the rest of the request. Omit it and each request updates
 	// independently.
 	RequestId types.String `tfsdk:"-"`
-	// The fields to update. Only 'materialized_features' or '*' is supported.
+	// The fields to update, relative to the materialization set. Supported
+	// values are `materialized_features` and `*`.
+	//
+	// The `materialized_features` mask updates retained members and deletes
+	// omitted materialized features. The `*` mask selects all fields of the set
+	// and follows the same membership rules. Adding members is not supported.
+	//
+	// To change pause settings without changing membership, include every
+	// member of the set. An omitted `paused` is reset to `false`.
+	//
+	// Fields outside the mask are unchanged. Trigger types and settings other
+	// than `paused` must remain unchanged.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

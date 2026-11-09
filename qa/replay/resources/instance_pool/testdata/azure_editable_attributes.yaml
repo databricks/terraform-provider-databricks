@@ -1,0 +1,198 @@
+# API responses are inferred from the API models, not recorded.
+version: 1
+host_metadata:
+  host_type: workspace
+  cloud: AZURE
+  workspace_id: '12345'
+steps:
+  - name: create_with_fallback
+    config: |
+      resource "databricks_instance_pool" "this" {
+        instance_pool_name                    = "editable-pool"
+        node_type_id                          = "Standard_DS3_v2"
+        idle_instance_autotermination_minutes = 10
+        max_capacity                          = 1
+        azure_attributes {
+          availability = "SPOT_WITH_FALLBACK_AZURE"
+        }
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/instance-pools/create
+          body:
+            json:
+              instance_pool_name: editable-pool
+              node_type_id: Standard_DS3_v2
+              idle_instance_autotermination_minutes: 10
+              max_capacity: 1
+              enable_elastic_disk: true
+              custom_tags: null
+              azure_attributes: &id001
+                availability: SPOT_WITH_FALLBACK_AZURE
+                spot_bid_max_price: -1.0
+        response:
+          status: 200
+          body:
+            json:
+              instance_pool_id: pool-1
+      - &id002
+        request:
+          method: GET
+          path: /api/2.0/instance-pools/get
+          query:
+            instance_pool_id:
+              - pool-1
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              instance_pool_name: editable-pool
+              node_type_id: Standard_DS3_v2
+              idle_instance_autotermination_minutes: 10
+              max_capacity: 1
+              enable_elastic_disk: true
+              custom_tags: null
+              azure_attributes: *id001
+              instance_pool_id: pool-1
+              min_idle_instances: 0
+      - *id002
+  - name: edit_cloud_attributes
+    config: |
+      resource "databricks_instance_pool" "this" {
+        instance_pool_name                    = "editable-pool"
+        node_type_id                          = "Standard_DS3_v2"
+        idle_instance_autotermination_minutes = 10
+        max_capacity                          = 1
+        azure_attributes {
+          availability       = "ON_DEMAND_AZURE"
+          spot_bid_max_price = 0.0
+        }
+      }
+    calls:
+      - *id002
+      - request:
+          method: POST
+          path: /api/2.0/instance-pools/edit
+          body:
+            json:
+              instance_pool_name: editable-pool
+              node_type_id: Standard_DS3_v2
+              idle_instance_autotermination_minutes: 10
+              max_capacity: 1
+              enable_elastic_disk: true
+              custom_tags: null
+              azure_attributes: &id003
+                availability: ON_DEMAND_AZURE
+                spot_bid_max_price: 0.0
+              instance_pool_id: pool-1
+        response:
+          status: 200
+          body: null
+      - &id004
+        request:
+          method: GET
+          path: /api/2.0/instance-pools/get
+          query:
+            instance_pool_id:
+              - pool-1
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              instance_pool_name: editable-pool
+              node_type_id: Standard_DS3_v2
+              idle_instance_autotermination_minutes: 10
+              max_capacity: 1
+              enable_elastic_disk: true
+              custom_tags: null
+              azure_attributes: *id003
+              instance_pool_id: pool-1
+              min_idle_instances: 0
+      - *id004
+    plan:
+      changes:
+        databricks_instance_pool.this:
+          actions: [update]
+          after:
+            - path: [azure_attributes, 0, availability]
+              equals: ON_DEMAND_AZURE
+            - path: [azure_attributes, 0, spot_bid_max_price]
+              equals: 0.0
+  - name: edit_back_to_fallback
+    config: |
+      resource "databricks_instance_pool" "this" {
+        instance_pool_name                    = "editable-pool"
+        node_type_id                          = "Standard_DS3_v2"
+        idle_instance_autotermination_minutes = 10
+        max_capacity                          = 1
+        azure_attributes {
+          availability       = "SPOT_WITH_FALLBACK_AZURE"
+          spot_bid_max_price = 0.25
+        }
+      }
+    calls:
+      - *id004
+      - request:
+          method: POST
+          path: /api/2.0/instance-pools/edit
+          body:
+            json:
+              instance_pool_name: editable-pool
+              node_type_id: Standard_DS3_v2
+              idle_instance_autotermination_minutes: 10
+              max_capacity: 1
+              enable_elastic_disk: true
+              custom_tags: null
+              azure_attributes: &id005
+                availability: SPOT_WITH_FALLBACK_AZURE
+                spot_bid_max_price: 0.25
+              instance_pool_id: pool-1
+        response:
+          status: 200
+          body: null
+      - &id006
+        request:
+          method: GET
+          path: /api/2.0/instance-pools/get
+          query:
+            instance_pool_id:
+              - pool-1
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              instance_pool_name: editable-pool
+              node_type_id: Standard_DS3_v2
+              idle_instance_autotermination_minutes: 10
+              max_capacity: 1
+              enable_elastic_disk: true
+              custom_tags: null
+              azure_attributes: *id005
+              instance_pool_id: pool-1
+              min_idle_instances: 0
+      - *id006
+    plan:
+      changes:
+        databricks_instance_pool.this:
+          actions: [update]
+          after:
+            - path: [azure_attributes, 0, availability]
+              equals: SPOT_WITH_FALLBACK_AZURE
+            - path: [azure_attributes, 0, spot_bid_max_price]
+              equals: 0.25
+destroy:
+  calls:
+    - *id006
+    - request:
+        method: POST
+        path: /api/2.0/instance-pools/delete
+        body:
+          json:
+            instance_pool_id: pool-1
+      response:
+        status: 200
+        body: null

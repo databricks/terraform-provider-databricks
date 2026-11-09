@@ -1,0 +1,205 @@
+# API responses are inferred from the API models, not recorded.
+version: 1
+host_metadata:
+  host_type: workspace
+  cloud: GCP
+  workspace_id: '12345'
+steps:
+  - name: create_with_fallback
+    config: |
+      resource "databricks_instance_pool" "this" {
+        instance_pool_name                    = "editable-pool"
+        node_type_id                          = "n1-standard-4"
+        idle_instance_autotermination_minutes = 10
+        max_capacity                          = 1
+        gcp_attributes {
+          gcp_availability = "PREEMPTIBLE_WITH_FALLBACK_GCP"
+          zone_id          = "auto"
+          local_ssd_count  = 1
+        }
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/instance-pools/create
+          body:
+            json:
+              instance_pool_name: editable-pool
+              node_type_id: n1-standard-4
+              idle_instance_autotermination_minutes: 10
+              max_capacity: 1
+              enable_elastic_disk: true
+              custom_tags: null
+              gcp_attributes: &id001
+                gcp_availability: PREEMPTIBLE_WITH_FALLBACK_GCP
+                zone_id: auto
+                local_ssd_count: 1
+        response:
+          status: 200
+          body:
+            json:
+              instance_pool_id: pool-1
+      - &id002
+        request:
+          method: GET
+          path: /api/2.0/instance-pools/get
+          query:
+            instance_pool_id:
+              - pool-1
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              instance_pool_name: editable-pool
+              node_type_id: n1-standard-4
+              idle_instance_autotermination_minutes: 10
+              max_capacity: 1
+              enable_elastic_disk: true
+              custom_tags: null
+              gcp_attributes: *id001
+              instance_pool_id: pool-1
+              min_idle_instances: 0
+      - *id002
+  - name: edit_cloud_attributes
+    config: |
+      resource "databricks_instance_pool" "this" {
+        instance_pool_name                    = "editable-pool"
+        node_type_id                          = "n1-standard-4"
+        idle_instance_autotermination_minutes = 10
+        max_capacity                          = 1
+        gcp_attributes {
+          gcp_availability = "ON_DEMAND_GCP"
+          zone_id          = "us-central1-a"
+          local_ssd_count  = 1
+        }
+      }
+    calls:
+      - *id002
+      - request:
+          method: POST
+          path: /api/2.0/instance-pools/edit
+          body:
+            json:
+              instance_pool_name: editable-pool
+              node_type_id: n1-standard-4
+              idle_instance_autotermination_minutes: 10
+              max_capacity: 1
+              enable_elastic_disk: true
+              custom_tags: null
+              gcp_attributes: &id003
+                gcp_availability: ON_DEMAND_GCP
+                zone_id: us-central1-a
+                local_ssd_count: 1
+              instance_pool_id: pool-1
+        response:
+          status: 200
+          body: null
+      - &id004
+        request:
+          method: GET
+          path: /api/2.0/instance-pools/get
+          query:
+            instance_pool_id:
+              - pool-1
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              instance_pool_name: editable-pool
+              node_type_id: n1-standard-4
+              idle_instance_autotermination_minutes: 10
+              max_capacity: 1
+              enable_elastic_disk: true
+              custom_tags: null
+              gcp_attributes: *id003
+              instance_pool_id: pool-1
+              min_idle_instances: 0
+      - *id004
+    plan:
+      changes:
+        databricks_instance_pool.this:
+          actions: [update]
+          after:
+            - path: [gcp_attributes, 0, gcp_availability]
+              equals: ON_DEMAND_GCP
+            - path: [gcp_attributes, 0, zone_id]
+              equals: us-central1-a
+  - name: edit_back_to_fallback
+    config: |
+      resource "databricks_instance_pool" "this" {
+        instance_pool_name                    = "editable-pool"
+        node_type_id                          = "n1-standard-4"
+        idle_instance_autotermination_minutes = 10
+        max_capacity                          = 1
+        gcp_attributes {
+          gcp_availability = "PREEMPTIBLE_WITH_FALLBACK_GCP"
+          zone_id          = "auto"
+          local_ssd_count  = 1
+        }
+      }
+    calls:
+      - *id004
+      - request:
+          method: POST
+          path: /api/2.0/instance-pools/edit
+          body:
+            json:
+              instance_pool_name: editable-pool
+              node_type_id: n1-standard-4
+              idle_instance_autotermination_minutes: 10
+              max_capacity: 1
+              enable_elastic_disk: true
+              custom_tags: null
+              gcp_attributes: &id005
+                gcp_availability: PREEMPTIBLE_WITH_FALLBACK_GCP
+                zone_id: auto
+                local_ssd_count: 1
+              instance_pool_id: pool-1
+        response:
+          status: 200
+          body: null
+      - &id006
+        request:
+          method: GET
+          path: /api/2.0/instance-pools/get
+          query:
+            instance_pool_id:
+              - pool-1
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              instance_pool_name: editable-pool
+              node_type_id: n1-standard-4
+              idle_instance_autotermination_minutes: 10
+              max_capacity: 1
+              enable_elastic_disk: true
+              custom_tags: null
+              gcp_attributes: *id005
+              instance_pool_id: pool-1
+              min_idle_instances: 0
+      - *id006
+    plan:
+      changes:
+        databricks_instance_pool.this:
+          actions: [update]
+          after:
+            - path: [gcp_attributes, 0, gcp_availability]
+              equals: PREEMPTIBLE_WITH_FALLBACK_GCP
+            - path: [gcp_attributes, 0, zone_id]
+              equals: auto
+destroy:
+  calls:
+    - *id006
+    - request:
+        method: POST
+        path: /api/2.0/instance-pools/delete
+        body:
+          json:
+            instance_pool_id: pool-1
+      response:
+        status: 200
+        body: null

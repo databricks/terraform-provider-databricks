@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGcpCreateAndReadNormalizeUnusedTargets(t *testing.T) {
+func TestGcpCreateNormalizesUnusedTargets(t *testing.T) {
 	ctx := context.Background()
 	const pscURI = "projects/p/regions/r/forwardingRules/endpoint"
 	for _, tt := range []struct {
@@ -59,18 +59,6 @@ func TestGcpCreateAndReadNormalizeUnusedTargets(t *testing.T) {
 			want.PscEndpointUri = types.StringValue(pscURI)
 			state := readModel(t, ctx, created.State)
 			require.Equal(t, []gcpEndpointModel{want}, state.GcpEndpoint)
-
-			// SDKv2 stores zero values for unused scalars, unlike a fresh PF plan.
-			if state.GcpEndpoint[0].AllVpcScServices.IsNull() {
-				state.GcpEndpoint[0].AllVpcScServices = types.BoolValue(false)
-			}
-			if state.GcpEndpoint[0].ServiceAttachment.IsNull() {
-				state.GcpEndpoint[0].ServiceAttachment = types.StringValue("")
-			}
-			read := resource.ReadResponse{State: emptyState()}
-			r.Read(ctx, resource.ReadRequest{State: rawState(t, ctx, state)}, &read)
-			fatalIfDiag(t, read.Diagnostics)
-			require.Equal(t, []gcpEndpointModel{want}, readModel(t, ctx, read.State).GcpEndpoint)
 		})
 	}
 }

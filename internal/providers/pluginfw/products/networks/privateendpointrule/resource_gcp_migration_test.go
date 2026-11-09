@@ -2,7 +2,6 @@ package privateendpointrule
 
 import (
 	"context"
-	"os"
 	"strings"
 	"testing"
 
@@ -26,9 +25,6 @@ import (
 // A local Terraform CLI exercises real plan/apply/state handling; only the
 // account API is mocked so these tests need neither preview access nor cloud resources.
 func TestGcpTerraformProviderHandoff(t *testing.T) {
-	if os.Getenv("TF_ACC_TERRAFORM_PATH") == "" {
-		t.Skip("set TF_ACC_TERRAFORM_PATH to an installed Terraform CLI to run offline lifecycle tests")
-	}
 	const pscURI = "projects/p/regions/r/forwardingRules/endpoint"
 	for _, first := range []string{"SDKv2", "Plugin Framework"} {
 		for _, tt := range []struct {

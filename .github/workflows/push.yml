@@ -72,6 +72,8 @@ jobs:
           # which interferes with the test suite.
           unset ACTIONS_ID_TOKEN_REQUEST_URL
           unset ACTIONS_ID_TOKEN_REQUEST_TOKEN
+          # Migration tests use the installed CLI; fail rather than download one implicitly.
+          CHECKPOINT_DISABLE=1 terraform version
           make test
 
       - name: Publish test coverage

@@ -104,8 +104,9 @@ func ResourceMwsNccPrivateEndpointRule() common.Resource {
 				return err
 			}
 
-			// Updatable fields require update_mask to be set. GCP service
-			// attachments are ForceNew, so only first-party target changes reach Update.
+			// Changes to service_attachment force resource replacement, so they never reach Update.
+			// Only changes to all_vpc_sc_services or google_api_endpoints add gcp_endpoint
+			// to the update mask.
 			updateMask := []string{}
 			updatePrivateEndpointRule := settings.UpdatePrivateEndpointRule{}
 

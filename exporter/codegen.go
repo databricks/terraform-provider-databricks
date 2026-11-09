@@ -363,15 +363,15 @@ func (ic *importContext) referenceSubstitutions(d reference, path []string, valu
 		lookup.Regexp = nil
 		var subs []substitution
 		for _, idx := range d.Regexp.FindAllStringSubmatchIndex(value, -1) {
-			if len(idx) < 4 || idx[2] < 0 {
+			start, end, captured, ok := multiMatchCapture(d, value, idx)
+			if !ok {
 				continue
 			}
-			captured := value[idx[2]:idx[3]]
 			_, traversal, _ := ic.Find(captured, attr, lookup, origResource, origPath)
 			if traversal == nil {
 				continue
 			}
-			subs = append(subs, substitution{Start: idx[2], End: idx[3], Inner: hclwrite.TokensForTraversal(traversal)})
+			subs = append(subs, substitution{Start: start, End: end, Inner: hclwrite.TokensForTraversal(traversal)})
 		}
 		return subs
 	}
@@ -379,6 +379,18 @@ func (ic *importContext) referenceSubstitutions(d reference, path []string, valu
 		return []substitution{sub}
 	}
 	return nil
+}
+
+// multiMatchCapture returns the span to substitute and the value to look up for a single
+// match of a MultiMatch reference.
+func multiMatchCapture(d reference, value string, idx []int) (start, end int, lookupValue string, ok bool) {
+	if d.MultiMatchCaptureFunc != nil {
+		return d.MultiMatchCaptureFunc(value, idx)
+	}
+	if len(idx) < 4 || idx[2] < 0 {
+		return 0, 0, "", false
+	}
+	return idx[2], idx[3], value[idx[2]:idx[3]], true
 }
 
 // referenceSubstitution computes, for a single reference and value, the span of

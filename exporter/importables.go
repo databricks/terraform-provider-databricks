@@ -58,10 +58,10 @@ var (
 	policyInitScriptWorkspaceRegex = regexp.MustCompile(`"init_scripts\.\d+\.workspace\.destination":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
 	policyInitScriptVolumesRegex   = regexp.MustCompile(`"init_scripts\.\d+\.volumes\.destination":\s*\{[^}]*"(?:value|defaultValue)":\s*"([^"]+)"`)
 	globIncludeDirectoryRegex      = regexp.MustCompile(`^(/.+)/\*\*$`)
-	// dataClassificationParentRegex captures the catalog name from the `parent`
-	// field of databricks_data_classification_catalog_config (format `catalogs/{name}`).
-	dataClassificationParentRegex = regexp.MustCompile(`^catalogs/([^/]+)$`)
-	fileExtensionLanguageMapping  = map[string]string{
+	// catalogParentRegex captures the catalog name from the `parent` field of per-catalog
+	// resources, such as databricks_data_classification_catalog_config (format `catalogs/{name}`).
+	catalogParentRegex           = regexp.MustCompile(`^catalogs/([^/]+)$`)
+	fileExtensionLanguageMapping = map[string]string{
 		"SCALA":  ".scala",
 		"PYTHON": ".py",
 		"SQL":    ".sql",
@@ -2070,7 +2070,119 @@ var resourcesMap map[string]importable = map[string]importable{
 		// function of databricks_catalog when a data classification config exists.
 		Depends: []reference{
 			{Path: "parent", Resource: "databricks_catalog", MatchType: MatchRegexp,
-				Regexp: dataClassificationParentRegex},
+				Regexp: catalogParentRegex},
+		},
+	},
+	// Lakewatch resources are bound to catalogs, so they have no List function and are
+	// emitted from the Import function of databricks_catalog.
+	"databricks_lakewatch_alert_config": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "lakewatch",
+		NameUnified:     lakewatchConfigNameUnified("alert_config"),
+		Depends: []reference{
+			{Path: "parent", Resource: "databricks_catalog", MatchType: MatchRegexp, Regexp: catalogParentRegex},
+		},
+	},
+	"databricks_lakewatch_common_config": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "lakewatch",
+		NameUnified:     lakewatchConfigNameUnified("common_config"),
+		Import:          importLakewatchCommonConfig,
+		Depends: []reference{
+			{Path: "parent", Resource: "databricks_catalog", MatchType: MatchRegexp, Regexp: catalogParentRegex},
+			{Path: "custom_content_pack_path", Resource: "databricks_volume", Match: "volume_path",
+				MatchType: MatchLongestPrefix},
+			{Path: "custom_presets_path", Resource: "databricks_volume", Match: "volume_path",
+				MatchType: MatchLongestPrefix},
+		},
+	},
+	"databricks_lakewatch_datasource_config": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "lakewatch",
+		NameUnified:     lakewatchConfigNameUnified("datasource_config"),
+		Import:          importLakewatchFolderConfig,
+		Depends: []reference{
+			{Path: "parent", Resource: "databricks_catalog", MatchType: MatchRegexp, Regexp: catalogParentRegex},
+			{Path: "default_folder", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: isMatchingLakewatchDefaultFolder, SkipDirectLookup: true},
+		},
+	},
+	"databricks_lakewatch_rule_config": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "lakewatch",
+		NameUnified:     lakewatchConfigNameUnified("rule_config"),
+		Import:          importLakewatchFolderConfig,
+		Depends: []reference{
+			{Path: "parent", Resource: "databricks_catalog", MatchType: MatchRegexp, Regexp: catalogParentRegex},
+			{Path: "default_folder", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: isMatchingLakewatchDefaultFolder, SkipDirectLookup: true},
+		},
+	},
+	"databricks_lakewatch_rule": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "lakewatch",
+		NameUnified:     lakewatchObjectNameUnified("rule_name"),
+		Import:          importLakewatchRule,
+		Depends: []reference{
+			{Path: "catalog_name", Resource: "databricks_catalog"},
+			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog_name", "schema_name"),
+				SkipDirectLookup:     true},
+			// Three-part names in the query are replaced with references to schemas
+			{Path: "batch.sql.query", Resource: "databricks_schema", ContinueMatch: true, MultiMatch: true,
+				MatchType: MatchRegexp, Regexp: sqlTableReferenceRegex, MultiMatchCaptureFunc: sqlSchemaNameCapture},
+			{Path: "batch.sql.default_catalog_name", Resource: "databricks_catalog"},
+			{Path: "batch.sql.default_schema_name", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: createIsMatchingCatalogAndSchema("default_catalog_name", "default_schema_name"),
+				SkipDirectLookup:     true},
+			{Path: "batch.warehouse_id", Resource: "databricks_sql_endpoint"},
+			{Path: "batch.custom.notebook", Resource: "databricks_notebook"},
+			{Path: "batch.custom.notebook", Resource: "databricks_notebook", Match: "workspace_path"},
+			{Path: "run_as_principal", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "run_as_principal", Resource: "databricks_service_principal", Match: "application_id"},
+		},
+	},
+	"databricks_lakewatch_datasource": {
+		WorkspaceLevel:  true,
+		PluginFramework: true,
+		Service:         "lakewatch",
+		NameUnified:     lakewatchObjectNameUnified("datasource_name"),
+		Import:          importLakewatchDatasource,
+		Depends: []reference{
+			{Path: "catalog_name", Resource: "databricks_catalog"},
+			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog_name", "schema_name"),
+				SkipDirectLookup:     true},
+			{Path: "warehouse_id", Resource: "databricks_sql_endpoint"},
+			{Path: "run_as_principal", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "run_as_principal", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "autoloader.raw_table.catalog_name", Resource: "databricks_catalog"},
+			{Path: "autoloader.raw_table.schema_name", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog_name", "schema_name"),
+				SkipDirectLookup:     true},
+			{Path: "parsers.target_table.catalog_name", Resource: "databricks_catalog"},
+			{Path: "parsers.target_table.schema_name", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog_name", "schema_name"),
+				SkipDirectLookup:     true},
+			{Path: "existing_table.catalog", Resource: "databricks_catalog"},
+			{Path: "existing_table.schema", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog", "schema"),
+				SkipDirectLookup:     true},
+			{Path: "existing_table.name", Resource: "databricks_sql_table", Match: "name",
+				IsValidApproximation: createIsMatchingCatalogAndSchemaAndTable("catalog", "schema", "name"),
+				SkipDirectLookup:     true},
+			{Path: "autoloader.location", Resource: "databricks_volume", Match: "volume_path",
+				MatchType: MatchLongestPrefix},
+			{Path: "autoloader.location", Resource: "databricks_external_location", Match: "url",
+				MatchType: MatchLongestPrefix},
+			{Path: "autoloader.aws_secret_scope", Resource: "databricks_secret_scope"},
+			{Path: "autoloader.service_credentials", Resource: "databricks_credential"},
+			{Path: "unity_catalog_connection.connection_name", Resource: "databricks_connection", Match: "name"},
 		},
 	},
 	"databricks_storage_credential": {

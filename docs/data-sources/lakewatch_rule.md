@@ -63,9 +63,9 @@ The following attributes are exported:
   of up to 512 characters each is supported. Requests exceeding these limits are rejected
 * `rule_id` (string) - Unity Catalog securable UUID of the rule, and the last segment of `name`. Never changes,
   including when the rule's catalog or schema is renamed
-* `rule_name` (string) - Name of the rule within its Unity Catalog schema. Required. Cannot be changed after
-  creation. Reads return the value as supplied; the current UC name is reported in
-  `effective_rule_name`
+* `rule_name` (string) - Name of the rule within its Unity Catalog schema. Required on create; can be updated
+  within the same catalog and schema. Get synchronizes this field with the current Unity Catalog
+  name, also reported in `effective_rule_name`
 * `run_as_principal` (string) - The principal whose identity this rule's job runs as, given as a
   user email or service-principal application ID. When supplied on
   create/update, Lakewatch resolves the principal, records it on the rule, and

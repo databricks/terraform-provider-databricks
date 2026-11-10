@@ -316,7 +316,7 @@ The following arguments are supported:
 * `input_tables` (list of string, optional) - The full three-part names of the tables the pipeline reads from. Required to materialize this
   feature with a TableTrigger, which starts a run when these tables update. Each table must exist
   when the feature is created. Feature Store doesn't confirm that the pipeline reads from these
-  tables. At most 100 tables
+  tables. At most 25 tables
 * `output_table` (string, optional) - The full three-part (catalog, schema, table) name of the pipeline's output table to read from.
   The table doesn't need to exist until the pipeline first runs. Required
 * `pipeline_id` (string, optional) - The ID of the Spark Declarative Pipeline that Feature Store runs to produce this source, before
@@ -415,6 +415,7 @@ In addition to the above arguments, the following attributes are exported:
 * `created_at` (string) - Time at which this feature was created
 * `created_by` (string) - Username of the feature creator
 * `name` (string) - Name of the feature, extracted from the full three-part name (catalog.schema.name)
+* `output_type_text` (string) - Output type in Databricks SQL DDL (e.g., "BIGINT", "DECIMAL(10,2)", "ARRAY<STRING>", "STRUCT<name:STRING>")
 * `schema_name` (string) - Name of parent schema relative to its parent catalog
 
 ### SdpSource

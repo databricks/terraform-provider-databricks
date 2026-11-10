@@ -196,6 +196,157 @@ func (m Adlsgen2Info_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Compute products allowed by a policy and their product-specific constraints.
+// At least one product must be set.
+type AllowedComputeProducts_SdkV2 struct {
+	// Constraints for serverless automated compute. Absence disallows automated
+	// compute.
+	Automated types.List `tfsdk:"automated"`
+	// Constraints for Lakebase instances. Absence disallows Lakebase.
+	Lakebase types.List `tfsdk:"lakebase"`
+}
+
+func (to *AllowedComputeProducts_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AllowedComputeProducts_SdkV2) {
+	if !from.Automated.IsNull() && !from.Automated.IsUnknown() {
+		if toAutomated, ok := to.GetAutomated(ctx); ok {
+			if fromAutomated, ok := from.GetAutomated(ctx); ok {
+				// Recursively sync the fields of Automated
+				toAutomated.SyncFieldsDuringCreateOrUpdate(ctx, fromAutomated)
+				to.SetAutomated(ctx, toAutomated)
+			}
+		}
+	}
+	if !from.Lakebase.IsNull() && !from.Lakebase.IsUnknown() {
+		if toLakebase, ok := to.GetLakebase(ctx); ok {
+			if fromLakebase, ok := from.GetLakebase(ctx); ok {
+				// Recursively sync the fields of Lakebase
+				toLakebase.SyncFieldsDuringCreateOrUpdate(ctx, fromLakebase)
+				to.SetLakebase(ctx, toLakebase)
+			}
+		}
+	}
+}
+
+func (to *AllowedComputeProducts_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AllowedComputeProducts_SdkV2) {
+	if !from.Automated.IsNull() && !from.Automated.IsUnknown() {
+		if toAutomated, ok := to.GetAutomated(ctx); ok {
+			if fromAutomated, ok := from.GetAutomated(ctx); ok {
+				toAutomated.SyncFieldsDuringRead(ctx, fromAutomated)
+				to.SetAutomated(ctx, toAutomated)
+			}
+		}
+	}
+	if !from.Lakebase.IsNull() && !from.Lakebase.IsUnknown() {
+		if toLakebase, ok := to.GetLakebase(ctx); ok {
+			if fromLakebase, ok := from.GetLakebase(ctx); ok {
+				toLakebase.SyncFieldsDuringRead(ctx, fromLakebase)
+				to.SetLakebase(ctx, toLakebase)
+			}
+		}
+	}
+}
+
+func (m AllowedComputeProducts_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["automated"] = attrs["automated"].SetOptional()
+	attrs["automated"] = attrs["automated"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["lakebase"] = attrs["lakebase"].SetOptional()
+	attrs["lakebase"] = attrs["lakebase"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AllowedComputeProducts.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AllowedComputeProducts_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"automated": reflect.TypeOf(AutomatedConstraints_SdkV2{}),
+		"lakebase":  reflect.TypeOf(LakebaseConstraints_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AllowedComputeProducts_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AllowedComputeProducts_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"automated": m.Automated,
+			"lakebase":  m.Lakebase,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AllowedComputeProducts_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"automated": basetypes.ListType{
+				ElemType: AutomatedConstraints_SdkV2{}.Type(ctx),
+			},
+			"lakebase": basetypes.ListType{
+				ElemType: LakebaseConstraints_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetAutomated returns the value of the Automated field in AllowedComputeProducts_SdkV2 as
+// a AutomatedConstraints_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AllowedComputeProducts_SdkV2) GetAutomated(ctx context.Context) (AutomatedConstraints_SdkV2, bool) {
+	var e AutomatedConstraints_SdkV2
+	if m.Automated.IsNull() || m.Automated.IsUnknown() {
+		return e, false
+	}
+	var v []AutomatedConstraints_SdkV2
+	d := m.Automated.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAutomated sets the value of the Automated field in AllowedComputeProducts_SdkV2.
+func (m *AllowedComputeProducts_SdkV2) SetAutomated(ctx context.Context, v AutomatedConstraints_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["automated"]
+	m.Automated = types.ListValueMust(t, vs)
+}
+
+// GetLakebase returns the value of the Lakebase field in AllowedComputeProducts_SdkV2 as
+// a LakebaseConstraints_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AllowedComputeProducts_SdkV2) GetLakebase(ctx context.Context) (LakebaseConstraints_SdkV2, bool) {
+	var e LakebaseConstraints_SdkV2
+	if m.Lakebase.IsNull() || m.Lakebase.IsUnknown() {
+		return e, false
+	}
+	var v []LakebaseConstraints_SdkV2
+	d := m.Lakebase.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLakebase sets the value of the Lakebase field in AllowedComputeProducts_SdkV2.
+func (m *AllowedComputeProducts_SdkV2) SetLakebase(ctx context.Context, v LakebaseConstraints_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["lakebase"]
+	m.Lakebase = types.ListValueMust(t, vs)
+}
+
 type AutoScale_SdkV2 struct {
 	// The maximum number of workers to which the cluster can scale up when
 	// overloaded. Note that `max_workers` must be strictly greater than
@@ -251,6 +402,103 @@ func (m AutoScale_SdkV2) Type(ctx context.Context) attr.Type {
 			"min_workers": types.Int64Type,
 		},
 	}
+}
+
+// Constraints applied to serverless automated workloads by a compute policy.
+type AutomatedConstraints_SdkV2 struct {
+	// Maximum per-workload Spark executor allocation. Absence imposes no limit.
+	PerWorkloadMax types.List `tfsdk:"per_workload_max"`
+}
+
+func (to *AutomatedConstraints_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AutomatedConstraints_SdkV2) {
+	if !from.PerWorkloadMax.IsNull() && !from.PerWorkloadMax.IsUnknown() {
+		if toPerWorkloadMax, ok := to.GetPerWorkloadMax(ctx); ok {
+			if fromPerWorkloadMax, ok := from.GetPerWorkloadMax(ctx); ok {
+				// Recursively sync the fields of PerWorkloadMax
+				toPerWorkloadMax.SyncFieldsDuringCreateOrUpdate(ctx, fromPerWorkloadMax)
+				to.SetPerWorkloadMax(ctx, toPerWorkloadMax)
+			}
+		}
+	}
+}
+
+func (to *AutomatedConstraints_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AutomatedConstraints_SdkV2) {
+	if !from.PerWorkloadMax.IsNull() && !from.PerWorkloadMax.IsUnknown() {
+		if toPerWorkloadMax, ok := to.GetPerWorkloadMax(ctx); ok {
+			if fromPerWorkloadMax, ok := from.GetPerWorkloadMax(ctx); ok {
+				toPerWorkloadMax.SyncFieldsDuringRead(ctx, fromPerWorkloadMax)
+				to.SetPerWorkloadMax(ctx, toPerWorkloadMax)
+			}
+		}
+	}
+}
+
+func (m AutomatedConstraints_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["per_workload_max"] = attrs["per_workload_max"].SetOptional()
+	attrs["per_workload_max"] = attrs["per_workload_max"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AutomatedConstraints.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AutomatedConstraints_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"per_workload_max": reflect.TypeOf(RateLimitConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AutomatedConstraints_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AutomatedConstraints_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"per_workload_max": m.PerWorkloadMax,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AutomatedConstraints_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"per_workload_max": basetypes.ListType{
+				ElemType: RateLimitConfig_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetPerWorkloadMax returns the value of the PerWorkloadMax field in AutomatedConstraints_SdkV2 as
+// a RateLimitConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AutomatedConstraints_SdkV2) GetPerWorkloadMax(ctx context.Context) (RateLimitConfig_SdkV2, bool) {
+	var e RateLimitConfig_SdkV2
+	if m.PerWorkloadMax.IsNull() || m.PerWorkloadMax.IsUnknown() {
+		return e, false
+	}
+	var v []RateLimitConfig_SdkV2
+	d := m.PerWorkloadMax.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPerWorkloadMax sets the value of the PerWorkloadMax field in AutomatedConstraints_SdkV2.
+func (m *AutomatedConstraints_SdkV2) SetPerWorkloadMax(ctx context.Context, v RateLimitConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["per_workload_max"]
+	m.PerWorkloadMax = types.ListValueMust(t, vs)
 }
 
 // Attributes set during cluster creation which are related to Amazon Web
@@ -6400,6 +6648,175 @@ func (m *CommandStatusResponse_SdkV2) SetResults(ctx context.Context, v Results_
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
 	m.Results = types.ListValueMust(t, vs)
+}
+
+// A compute policy resource. A workspace-scoped policy that allows one or more
+// compute products, each with product-specific constraints.
+type ComputePolicy_SdkV2 struct {
+	// The compute products allowed by this policy and their constraints. At
+	// least one product must be set.
+	AllowedComputeProducts types.List `tfsdk:"allowed_compute_products"`
+	// Whether the calling user has manage permission on this compute policy.
+	// Manage includes use, so can_use is also true whenever this is true.
+	CanManage types.Bool `tfsdk:"can_manage"`
+	// Whether the calling user has use permission on this compute policy.
+	CanUse types.Bool `tfsdk:"can_use"`
+	// The unique identifier of the compute policy (UUID). Server-assigned on
+	// create.
+	ComputePolicyId types.String `tfsdk:"compute_policy_id"`
+	// The creation timestamp.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// The display name of the compute policy.
+	DisplayName types.String `tfsdk:"display_name"`
+	// Whether this is the workspace default policy for its single allowed
+	// compute product. Default policies are system-provisioned and cannot be
+	// deleted or renamed.
+	IsDefault types.Bool `tfsdk:"is_default"`
+	// User-defined key/value tags on the compute policy, provided at creation
+	// and validated. unified-tagging is the system of record for tag
+	// assignments.
+	Tags types.Map `tfsdk:"tags"`
+}
+
+func (to *ComputePolicy_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ComputePolicy_SdkV2) {
+	if !from.AllowedComputeProducts.IsNull() && !from.AllowedComputeProducts.IsUnknown() {
+		if toAllowedComputeProducts, ok := to.GetAllowedComputeProducts(ctx); ok {
+			if fromAllowedComputeProducts, ok := from.GetAllowedComputeProducts(ctx); ok {
+				// Recursively sync the fields of AllowedComputeProducts
+				toAllowedComputeProducts.SyncFieldsDuringCreateOrUpdate(ctx, fromAllowedComputeProducts)
+				to.SetAllowedComputeProducts(ctx, toAllowedComputeProducts)
+			}
+		}
+	}
+}
+
+func (to *ComputePolicy_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ComputePolicy_SdkV2) {
+	if !from.AllowedComputeProducts.IsNull() && !from.AllowedComputeProducts.IsUnknown() {
+		if toAllowedComputeProducts, ok := to.GetAllowedComputeProducts(ctx); ok {
+			if fromAllowedComputeProducts, ok := from.GetAllowedComputeProducts(ctx); ok {
+				toAllowedComputeProducts.SyncFieldsDuringRead(ctx, fromAllowedComputeProducts)
+				to.SetAllowedComputeProducts(ctx, toAllowedComputeProducts)
+			}
+		}
+	}
+}
+
+func (m ComputePolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allowed_compute_products"] = attrs["allowed_compute_products"].SetOptional()
+	attrs["allowed_compute_products"] = attrs["allowed_compute_products"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["can_manage"] = attrs["can_manage"].SetComputed()
+	attrs["can_use"] = attrs["can_use"].SetComputed()
+	attrs["compute_policy_id"] = attrs["compute_policy_id"].SetOptional()
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["is_default"] = attrs["is_default"].SetComputed()
+	attrs["tags"] = attrs["tags"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ComputePolicy.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ComputePolicy_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"allowed_compute_products": reflect.TypeOf(AllowedComputeProducts_SdkV2{}),
+		"tags":                     reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ComputePolicy_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ComputePolicy_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allowed_compute_products": m.AllowedComputeProducts,
+			"can_manage":               m.CanManage,
+			"can_use":                  m.CanUse,
+			"compute_policy_id":        m.ComputePolicyId,
+			"create_time":              m.CreateTime,
+			"display_name":             m.DisplayName,
+			"is_default":               m.IsDefault,
+			"tags":                     m.Tags,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ComputePolicy_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allowed_compute_products": basetypes.ListType{
+				ElemType: AllowedComputeProducts_SdkV2{}.Type(ctx),
+			},
+			"can_manage":        types.BoolType,
+			"can_use":           types.BoolType,
+			"compute_policy_id": types.StringType,
+			"create_time":       timetypes.RFC3339{}.Type(ctx),
+			"display_name":      types.StringType,
+			"is_default":        types.BoolType,
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetAllowedComputeProducts returns the value of the AllowedComputeProducts field in ComputePolicy_SdkV2 as
+// a AllowedComputeProducts_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ComputePolicy_SdkV2) GetAllowedComputeProducts(ctx context.Context) (AllowedComputeProducts_SdkV2, bool) {
+	var e AllowedComputeProducts_SdkV2
+	if m.AllowedComputeProducts.IsNull() || m.AllowedComputeProducts.IsUnknown() {
+		return e, false
+	}
+	var v []AllowedComputeProducts_SdkV2
+	d := m.AllowedComputeProducts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAllowedComputeProducts sets the value of the AllowedComputeProducts field in ComputePolicy_SdkV2.
+func (m *ComputePolicy_SdkV2) SetAllowedComputeProducts(ctx context.Context, v AllowedComputeProducts_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["allowed_compute_products"]
+	m.AllowedComputeProducts = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in ComputePolicy_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ComputePolicy_SdkV2) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if m.Tags.IsNull() || m.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in ComputePolicy_SdkV2.
+func (m *ComputePolicy_SdkV2) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Tags = types.MapValueMust(t, vs)
 }
 
 type ContextStatusRequest_SdkV2 struct {
@@ -18302,6 +18719,61 @@ func (m InstanceProfile_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Constraints applied to Lakebase instances by a compute policy.
+type LakebaseConstraints_SdkV2 struct {
+	// Maximum capacity units permitted per instance. Absence imposes no limit.
+	MaxCapacityUnitsPerInstance types.Int64 `tfsdk:"max_capacity_units_per_instance"`
+	// Maximum idle time in minutes before scale-to-zero. Absence imposes no
+	// requirement.
+	MaxIdleMinutesBeforeScaleToZero types.Int64 `tfsdk:"max_idle_minutes_before_scale_to_zero"`
+}
+
+func (to *LakebaseConstraints_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LakebaseConstraints_SdkV2) {
+}
+
+func (to *LakebaseConstraints_SdkV2) SyncFieldsDuringRead(ctx context.Context, from LakebaseConstraints_SdkV2) {
+}
+
+func (m LakebaseConstraints_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["max_capacity_units_per_instance"] = attrs["max_capacity_units_per_instance"].SetOptional()
+	attrs["max_idle_minutes_before_scale_to_zero"] = attrs["max_idle_minutes_before_scale_to_zero"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LakebaseConstraints.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m LakebaseConstraints_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LakebaseConstraints_SdkV2
+// only implements ToObjectValue() and Type().
+func (m LakebaseConstraints_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"max_capacity_units_per_instance":       m.MaxCapacityUnitsPerInstance,
+			"max_idle_minutes_before_scale_to_zero": m.MaxIdleMinutesBeforeScaleToZero,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m LakebaseConstraints_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"max_capacity_units_per_instance":       types.Int64Type,
+			"max_idle_minutes_before_scale_to_zero": types.Int64Type,
+		},
+	}
+}
+
 type Library_SdkV2 struct {
 	// Specification of a CRAN library to be installed as part of the library
 	Cran types.List `tfsdk:"cran"`
@@ -19682,6 +20154,181 @@ func (m ListClustersSortBy_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type ListComputePoliciesRequest_SdkV2 struct {
+	// Maximum number of policies to return per response. Unset or zero defaults
+	// to 100. The server caps requests above 150.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Token for cursor-based pagination.
+	PageToken types.String `tfsdk:"-"`
+}
+
+func (to *ListComputePoliciesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListComputePoliciesRequest_SdkV2) {
+}
+
+func (to *ListComputePoliciesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListComputePoliciesRequest_SdkV2) {
+}
+
+func (m ListComputePoliciesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListComputePoliciesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListComputePoliciesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListComputePoliciesRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListComputePoliciesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListComputePoliciesRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+// Response for listing compute policies.
+type ListComputePoliciesResponse_SdkV2 struct {
+	// The list of compute policies.
+	ComputePolicies types.List `tfsdk:"compute_policies"`
+	// Token for the next page of results. Empty if no more results.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListComputePoliciesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListComputePoliciesResponse_SdkV2) {
+	if !from.ComputePolicies.IsNull() && !from.ComputePolicies.IsUnknown() && to.ComputePolicies.IsNull() && len(from.ComputePolicies.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ComputePolicies, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ComputePolicies = from.ComputePolicies
+	}
+	if !from.ComputePolicies.IsNull() && !from.ComputePolicies.IsUnknown() {
+		if toComputePolicies, ok := to.GetComputePolicies(ctx); ok {
+			if fromComputePolicies, ok := from.GetComputePolicies(ctx); ok {
+				// Recursively sync the fields of each ComputePolicies element by position.
+				for i := range toComputePolicies {
+					if i < len(fromComputePolicies) {
+						toComputePolicies[i].SyncFieldsDuringCreateOrUpdate(ctx, fromComputePolicies[i])
+					}
+				}
+				to.SetComputePolicies(ctx, toComputePolicies)
+			}
+		}
+	}
+}
+
+func (to *ListComputePoliciesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListComputePoliciesResponse_SdkV2) {
+	if !from.ComputePolicies.IsNull() && !from.ComputePolicies.IsUnknown() && to.ComputePolicies.IsNull() && len(from.ComputePolicies.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ComputePolicies, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ComputePolicies = from.ComputePolicies
+	}
+	if !from.ComputePolicies.IsNull() && !from.ComputePolicies.IsUnknown() {
+		if toComputePolicies, ok := to.GetComputePolicies(ctx); ok {
+			if fromComputePolicies, ok := from.GetComputePolicies(ctx); ok {
+				for i := range toComputePolicies {
+					if i < len(fromComputePolicies) {
+						toComputePolicies[i].SyncFieldsDuringRead(ctx, fromComputePolicies[i])
+					}
+				}
+				to.SetComputePolicies(ctx, toComputePolicies)
+			}
+		}
+	}
+}
+
+func (m ListComputePoliciesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["compute_policies"] = attrs["compute_policies"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListComputePoliciesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListComputePoliciesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"compute_policies": reflect.TypeOf(ComputePolicy_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListComputePoliciesResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListComputePoliciesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"compute_policies": m.ComputePolicies,
+			"next_page_token":  m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListComputePoliciesResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"compute_policies": basetypes.ListType{
+				ElemType: ComputePolicy_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetComputePolicies returns the value of the ComputePolicies field in ListComputePoliciesResponse_SdkV2 as
+// a slice of ComputePolicy_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListComputePoliciesResponse_SdkV2) GetComputePolicies(ctx context.Context) ([]ComputePolicy_SdkV2, bool) {
+	if m.ComputePolicies.IsNull() || m.ComputePolicies.IsUnknown() {
+		return nil, false
+	}
+	var v []ComputePolicy_SdkV2
+	d := m.ComputePolicies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetComputePolicies sets the value of the ComputePolicies field in ListComputePoliciesResponse_SdkV2.
+func (m *ListComputePoliciesResponse_SdkV2) SetComputePolicies(ctx context.Context, v []ComputePolicy_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["compute_policies"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ComputePolicies = types.ListValueMust(t, vs)
+}
+
 type ListGlobalInitScriptsRequest_SdkV2 struct {
 }
 
@@ -20591,6 +21238,182 @@ func (m *ListPolicyFamiliesResponse_SdkV2) SetPolicyFamilies(ctx context.Context
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["policy_families"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.PolicyFamilies = types.ListValueMust(t, vs)
+}
+
+type ListServerlessComputesRequest_SdkV2 struct {
+	// Maximum number of computes to return per response. Unset or zero defaults
+	// to 100. The server caps requests above 150 to bound per-request RBAC
+	// fan-out.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Token for cursor-based pagination.
+	PageToken types.String `tfsdk:"-"`
+}
+
+func (to *ListServerlessComputesRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListServerlessComputesRequest_SdkV2) {
+}
+
+func (to *ListServerlessComputesRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListServerlessComputesRequest_SdkV2) {
+}
+
+func (m ListServerlessComputesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListServerlessComputesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListServerlessComputesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListServerlessComputesRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListServerlessComputesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListServerlessComputesRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+// Response for listing serverless computes.
+type ListServerlessComputesResponse_SdkV2 struct {
+	// Token for the next page of results. Empty if no more results.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// The list of serverless computes.
+	ServerlessComputes types.List `tfsdk:"serverless_computes"`
+}
+
+func (to *ListServerlessComputesResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListServerlessComputesResponse_SdkV2) {
+	if !from.ServerlessComputes.IsNull() && !from.ServerlessComputes.IsUnknown() && to.ServerlessComputes.IsNull() && len(from.ServerlessComputes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ServerlessComputes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ServerlessComputes = from.ServerlessComputes
+	}
+	if !from.ServerlessComputes.IsNull() && !from.ServerlessComputes.IsUnknown() {
+		if toServerlessComputes, ok := to.GetServerlessComputes(ctx); ok {
+			if fromServerlessComputes, ok := from.GetServerlessComputes(ctx); ok {
+				// Recursively sync the fields of each ServerlessComputes element by position.
+				for i := range toServerlessComputes {
+					if i < len(fromServerlessComputes) {
+						toServerlessComputes[i].SyncFieldsDuringCreateOrUpdate(ctx, fromServerlessComputes[i])
+					}
+				}
+				to.SetServerlessComputes(ctx, toServerlessComputes)
+			}
+		}
+	}
+}
+
+func (to *ListServerlessComputesResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListServerlessComputesResponse_SdkV2) {
+	if !from.ServerlessComputes.IsNull() && !from.ServerlessComputes.IsUnknown() && to.ServerlessComputes.IsNull() && len(from.ServerlessComputes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ServerlessComputes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ServerlessComputes = from.ServerlessComputes
+	}
+	if !from.ServerlessComputes.IsNull() && !from.ServerlessComputes.IsUnknown() {
+		if toServerlessComputes, ok := to.GetServerlessComputes(ctx); ok {
+			if fromServerlessComputes, ok := from.GetServerlessComputes(ctx); ok {
+				for i := range toServerlessComputes {
+					if i < len(fromServerlessComputes) {
+						toServerlessComputes[i].SyncFieldsDuringRead(ctx, fromServerlessComputes[i])
+					}
+				}
+				to.SetServerlessComputes(ctx, toServerlessComputes)
+			}
+		}
+	}
+}
+
+func (m ListServerlessComputesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["serverless_computes"] = attrs["serverless_computes"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListServerlessComputesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListServerlessComputesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"serverless_computes": reflect.TypeOf(ServerlessCompute_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListServerlessComputesResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListServerlessComputesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token":     m.NextPageToken,
+			"serverless_computes": m.ServerlessComputes,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListServerlessComputesResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"serverless_computes": basetypes.ListType{
+				ElemType: ServerlessCompute_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetServerlessComputes returns the value of the ServerlessComputes field in ListServerlessComputesResponse_SdkV2 as
+// a slice of ServerlessCompute_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListServerlessComputesResponse_SdkV2) GetServerlessComputes(ctx context.Context) ([]ServerlessCompute_SdkV2, bool) {
+	if m.ServerlessComputes.IsNull() || m.ServerlessComputes.IsUnknown() {
+		return nil, false
+	}
+	var v []ServerlessCompute_SdkV2
+	d := m.ServerlessComputes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetServerlessComputes sets the value of the ServerlessComputes field in ListServerlessComputesResponse_SdkV2.
+func (m *ListServerlessComputesResponse_SdkV2) SetServerlessComputes(ctx context.Context, v []ServerlessCompute_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["serverless_computes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ServerlessComputes = types.ListValueMust(t, vs)
 }
 
 type ListZonesRequest_SdkV2 struct {
@@ -22100,6 +22923,61 @@ func (m RCranLibrary_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Rate-limit configuration for serverless compute workloads.
+type RateLimitConfig_SdkV2 struct {
+	TShirtSize types.String `tfsdk:"t_shirt_size"`
+	// Proto enum name of t_shirt_size (e.g. T_SHIRT_SIZE_SMALL). Output-only;
+	// derived on read so a minting client that does not know a new enum value
+	// can still put the name on the cost-control token.
+	TShirtSizeName types.String `tfsdk:"t_shirt_size_name"`
+}
+
+func (to *RateLimitConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RateLimitConfig_SdkV2) {
+}
+
+func (to *RateLimitConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RateLimitConfig_SdkV2) {
+}
+
+func (m RateLimitConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["t_shirt_size"] = attrs["t_shirt_size"].SetOptional()
+	attrs["t_shirt_size_name"] = attrs["t_shirt_size_name"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RateLimitConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RateLimitConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RateLimitConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m RateLimitConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"t_shirt_size":      m.TShirtSize,
+			"t_shirt_size_name": m.TShirtSizeName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RateLimitConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"t_shirt_size":      types.StringType,
+			"t_shirt_size_name": types.StringType,
+		},
+	}
+}
+
 type RemoveInstanceProfile_SdkV2 struct {
 	// The ARN of the instance profile to remove. This field is required.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
@@ -22719,6 +23597,83 @@ func (m S3StorageInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"endpoint":          types.StringType,
 			"kms_key":           types.StringType,
 			"region":            types.StringType,
+		},
+	}
+}
+
+// A serverless compute resource.
+type ServerlessCompute_SdkV2 struct {
+	// Whether the calling user has ManageServerlessComputePermission on this
+	// compute.
+	CanManage types.Bool `tfsdk:"can_manage"`
+	// Whether the calling user has UseServerlessComputePermission on this
+	// compute.
+	CanUse types.Bool `tfsdk:"can_use"`
+	// The creation timestamp.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// Whether this is the workspace default compute for its compute_type.
+	// Default computes are system-provisioned and cannot be deleted or renamed.
+	IsDefault types.Bool `tfsdk:"is_default"`
+	// The display name of the serverless compute.
+	Name types.String `tfsdk:"name"`
+	// The unique identifier of the serverless compute (UUID).
+	ServerlessComputeId types.String `tfsdk:"serverless_compute_id"`
+}
+
+func (to *ServerlessCompute_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ServerlessCompute_SdkV2) {
+}
+
+func (to *ServerlessCompute_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ServerlessCompute_SdkV2) {
+}
+
+func (m ServerlessCompute_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["can_manage"] = attrs["can_manage"].SetComputed()
+	attrs["can_use"] = attrs["can_use"].SetComputed()
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["is_default"] = attrs["is_default"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["serverless_compute_id"] = attrs["serverless_compute_id"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServerlessCompute.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ServerlessCompute_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ServerlessCompute_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ServerlessCompute_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"can_manage":            m.CanManage,
+			"can_use":               m.CanUse,
+			"create_time":           m.CreateTime,
+			"is_default":            m.IsDefault,
+			"name":                  m.Name,
+			"serverless_compute_id": m.ServerlessComputeId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ServerlessCompute_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"can_manage":            types.BoolType,
+			"can_use":               types.BoolType,
+			"create_time":           timetypes.RFC3339{}.Type(ctx),
+			"is_default":            types.BoolType,
+			"name":                  types.StringType,
+			"serverless_compute_id": types.StringType,
 		},
 	}
 }

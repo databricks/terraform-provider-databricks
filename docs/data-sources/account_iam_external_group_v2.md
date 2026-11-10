@@ -27,18 +27,16 @@ data "databricks_account_iam_external_group_v2" "example" {
 
 ## Arguments
 The following arguments are supported:
-* `name` (string, required) - The resource name of the external group. The format depends on the API that
-  returned it:
-  - Account-scoped: accounts/{account_id}/external-groups/{external_group_id}
-  - Workspace-scoped: external-groups/{external_group_id}
+* `name` (string, required) - The resource name of the external group, in one of these formats:
+  - Account APIs: `accounts/{account_id}/external-groups/{external_group_id}`
+  - Workspace APIs: `external-groups/{external_group_id}`
 
 ## Attributes
 The following attributes are exported:
-* `account_id` (string) - The parent account ID, from Databricks
-* `display_name` (string) - Display name of the group from the customer's IdP
-* `external_group_id` (string) - The external ID of the group in the customer's IdP
-* `internal_id` (string) - Internal groupId of the group in Databricks
-* `name` (string) - The resource name of the external group. The format depends on the API that
-  returned it:
-  - Account-scoped: accounts/{account_id}/external-groups/{external_group_id}
-  - Workspace-scoped: external-groups/{external_group_id}
+* `account_id` (string) - The ID of the account that contains the group
+* `display_name` (string) - The name of the group, from your IdP. It's the same as the group's `group_name`
+* `external_group_id` (string) - The ID of the group in your IdP
+* `internal_id` (string) - The Databricks ID of the group. Use it as the `group_id` in the group APIs
+* `name` (string) - The resource name of the external group, in one of these formats:
+  - Account APIs: `accounts/{account_id}/external-groups/{external_group_id}`
+  - Workspace APIs: `external-groups/{external_group_id}`

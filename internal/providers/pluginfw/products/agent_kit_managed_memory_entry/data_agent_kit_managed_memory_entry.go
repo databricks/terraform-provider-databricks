@@ -119,7 +119,9 @@ type ManagedMemoryEntryData struct {
 	// When omitted, the entry applies across the actor's sessions.
 	SessionId types.String `tfsdk:"session_id"`
 	// Which writer created this entry. Caller sets this on Create; immutable
-	// after creation.
+	// after creation. While the workspace's default-source-type rollout flag is
+	// on, omitted or UNSPECIFIED is stored as AGENT. While it is off, omitted
+	// is stored unset and UNSPECIFIED as UNSPECIFIED.
 	SourceType types.String `tfsdk:"source_type"`
 	// Time when the entry was last updated.
 	UpdateTime         timetypes.RFC3339 `tfsdk:"update_time"`

@@ -18,9 +18,9 @@ The following arguments are supported:
   `effective_catalog_name`
 * `fidelity` (string, required) - Signal quality for this rule. Possible values are: `FIDELITY_DEVELOPMENT`, `FIDELITY_HIGH`, `FIDELITY_INVESTIGATIVE`, `FIDELITY_MEDIUM`
 * `output` (RuleOutput, required) - What to record in each signal
-* `rule_name` (string, required) - Name of the rule within its Unity Catalog schema. Required. Cannot be changed after
-  creation. Reads return the value as supplied; the current UC name is reported in
-  `effective_rule_name`
+* `rule_name` (string, required) - Name of the rule within its Unity Catalog schema. Required on create; can be updated
+  within the same catalog and schema. Get synchronizes this field with the current Unity Catalog
+  name, also reported in `effective_rule_name`
 * `schedule` (RuleSchedule, required) - When the rule executes
 * `schema_name` (string, required) - Name of the Unity Catalog schema that contains the rule. Required. Cannot be changed after
   creation. Reads return the value as supplied; the schema's current name is reported in

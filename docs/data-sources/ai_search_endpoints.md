@@ -62,9 +62,21 @@ This data source exports a single attribute, `endpoints`. It is a list of resour
 * `value` (string) - [Optional] Value field for an AI Search endpoint tag
 
 ### EndpointScalingInfo
+* `delayed_reason` (string) - Reason the in-progress scaling change is delayed. When set, `estimated_completion_time` is
+  unset. Unset when the change is not delayed or no scaling change is in progress. Possible values are: `CAPACITY_UNAVAILABLE`, `SCALE_DOWN_BLOCKED`, `TAKING_LONGER_THAN_EXPECTED`
+* `estimated_completion_time` (string) - Estimated time at which the in-progress scaling change will complete. The estimate may
+  change as the scaling change progresses. Unset when no scaling change is in progress,
+  when no estimate is available, or when the change is delayed (see `delayed_reason`)
+* `index_initialization_percentage` (integer) - Percentage of index initialization completed, from 0 to 100. Set only during the
+  `INITIALIZING_INDEX` phase; unset in other phases or when progress is not available
+* `phase` (string) - Current phase of the in-progress scaling change. Unset when no scaling change is in
+  progress or the phase is not available. Possible values are: `ADJUSTING_CAPACITY`, `ESTIMATING`, `INITIALIZING_INDEX`
 * `requested_target_qps` (integer) - The requested QPS target for the endpoint. Best-effort; the system does not
   guarantee this QPS will be achieved
 * `state` (string) - The current state of the scaling change request. Possible values are: `SCALING_CHANGE_APPLIED`, `SCALING_CHANGE_IN_PROGRESS`, `SCALING_CHANGE_UNSPECIFIED`
+* `target_qps_change_allowed_after_time` (string) - Earliest time a new Target QPS change is accepted. Set only while a scaling change is in
+  progress, the change lock is on, and the endpoint has a recorded last throughput change; may
+  be in the past once the lock has expired
 
 ### EndpointStatus
 * `message` (string) - Human-readable detail about the endpoint's current state or the reason for a state transition

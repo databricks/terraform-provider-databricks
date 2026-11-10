@@ -26,10 +26,10 @@ import (
 )
 
 type CreateDirectGroupMemberProxyRequest struct {
-	// Required. The group membership to create.
+	// The member to add. Set its `principal_id`.
 	DirectGroupMember types.Object `tfsdk:"direct_group_member"`
-	// The parent resource name of the group to add the member to. Format:
-	// groups/{group_id}
+	// The resource name of the group to add the member to, in the format
+	// `groups/{group_id}`.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -124,10 +124,10 @@ func (m *CreateDirectGroupMemberProxyRequest) SetDirectGroupMember(ctx context.C
 }
 
 type CreateDirectGroupMemberRequest struct {
-	// Required. The direct group member to be added to the group.
+	// The member to add. Set its `principal_id`.
 	DirectGroupMember types.Object `tfsdk:"direct_group_member"`
-	// The parent resource name of the group to add the member to. Format:
-	// accounts/{account_id}/groups/{group_id}
+	// The resource name of the group to add the member to, in the format
+	// `accounts/{account_id}/groups/{group_id}`.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -222,11 +222,11 @@ func (m *CreateDirectGroupMemberRequest) SetDirectGroupMember(ctx context.Contex
 }
 
 type CreateGroupProxyRequest struct {
-	// Required. Group to be created in Databricks
+	// The group to create.
 	Group types.Object `tfsdk:"group"`
-	// The resource name of the account to create the group in,
-	// `accounts/{account_id}`. Optional: defaults to the account of the calling
-	// workspace, and any other account is rejected.
+	// The resource name of the account to create the group in, in the format
+	// `accounts/{account_id}`. Defaults to the account that contains this
+	// workspace. Any other account is rejected.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -321,10 +321,10 @@ func (m *CreateGroupProxyRequest) SetGroup(ctx context.Context, v Group) {
 }
 
 type CreateGroupRequest struct {
-	// Required. Group to be created in Databricks
+	// The group to create.
 	Group types.Object `tfsdk:"group"`
-	// The parent resource name of the account in which to create the group.
-	// Format: accounts/{account_id}
+	// The resource name of the account to create the group in, in the format
+	// `accounts/{account_id}`.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -419,15 +419,15 @@ func (m *CreateGroupRequest) SetGroup(ctx context.Context, v Group) {
 }
 
 type CreateIdentityVisibilityFilterRequest struct {
-	// Required. The filter to create. Set `principal_type` to `GROUP` and
-	// specify exactly one of `exact`, `prefix`, or `regex`. The server assigns
-	// the resource name; any supplied `name` is ignored.
+	// The filter to create. Set `principal_type` to `GROUP` and exactly one of
+	// `exact`, `prefix`, or `regex`. Databricks sets `name`, so any value you
+	// set is ignored.
 	IdentityVisibilityFilter types.Object `tfsdk:"identity_visibility_filter"`
-	// Optional. The ID to use for the filter, which becomes the final component
-	// of its resource name. If not specified or empty, the server generates
-	// one. Must not contain `/`.
+	// The ID to give the filter, which becomes the last part of its resource
+	// name. If you leave it empty, Databricks generates one. It can't contain
+	// `/`.
 	IdentityVisibilityFilterId types.String `tfsdk:"-"`
-	// Required. The parent account. Format: accounts/{account_id}
+	// The resource name of the account, in the format `accounts/{account_id}`.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -525,11 +525,11 @@ func (m *CreateIdentityVisibilityFilterRequest) SetIdentityVisibilityFilter(ctx 
 }
 
 type CreateServicePrincipalProxyRequest struct {
-	// The resource name of the account to create the service principal in,
-	// `accounts/{account_id}`. Optional: defaults to the account of the calling
-	// workspace, and any other account is rejected.
+	// The resource name of the account to create the service principal in, in
+	// the format `accounts/{account_id}`. Defaults to the account that contains
+	// this workspace. Any other account is rejected.
 	Parent types.String `tfsdk:"-"`
-	// Required. Service principal to be created in Databricks
+	// The service principal to create.
 	ServicePrincipal types.Object `tfsdk:"service_principal"`
 }
 
@@ -624,10 +624,10 @@ func (m *CreateServicePrincipalProxyRequest) SetServicePrincipal(ctx context.Con
 }
 
 type CreateServicePrincipalRequest struct {
-	// The parent resource name of the account in which to create the service
-	// principal. Format: accounts/{account_id}
+	// The resource name of the account to create the service principal in, in
+	// the format `accounts/{account_id}`.
 	Parent types.String `tfsdk:"-"`
-	// Required. Service principal to be created in Databricks
+	// The service principal to create.
 	ServicePrincipal types.Object `tfsdk:"service_principal"`
 }
 
@@ -722,11 +722,11 @@ func (m *CreateServicePrincipalRequest) SetServicePrincipal(ctx context.Context,
 }
 
 type CreateUserProxyRequest struct {
-	// The resource name of the account to create the user in,
-	// `accounts/{account_id}`. Optional: defaults to the account of the calling
-	// workspace, and any other account is rejected.
+	// The resource name of the account to create the user in, in the format
+	// `accounts/{account_id}`. Defaults to the account that contains this
+	// workspace. Any other account is rejected.
 	Parent types.String `tfsdk:"-"`
-	// Required. User to be created in Databricks
+	// The user to create.
 	User types.Object `tfsdk:"user"`
 }
 
@@ -821,10 +821,10 @@ func (m *CreateUserProxyRequest) SetUser(ctx context.Context, v User) {
 }
 
 type CreateUserRequest struct {
-	// The parent resource name of the account in which to create the user.
-	// Format: accounts/{account_id}
+	// The resource name of the account to create the user in, in the format
+	// `accounts/{account_id}`.
 	Parent types.String `tfsdk:"-"`
-	// Required. User to be created in Databricks
+	// The user to create.
 	User types.Object `tfsdk:"user"`
 }
 
@@ -1110,11 +1110,11 @@ func (m *CreateWorkspaceAssignmentDetailRequest) SetWorkspaceAssignmentDetail(ct
 }
 
 type CreateWorkspaceAssignmentProxyRequest struct {
-	// The resource name of the workspace to assign the principal to,
-	// `accounts/{account_id}/workspaces/{workspace_id}`. Optional: defaults to
-	// the calling workspace, and any other workspace is rejected.
+	// The resource name of the workspace, in the format
+	// `accounts/{account_id}/workspaces/{workspace_id}`. Defaults to this
+	// workspace. Any other workspace is rejected.
 	Parent types.String `tfsdk:"-"`
-	// Required. Workspace assignment to be created in Databricks.
+	// The assignment to create. Set its `principal_id` and `entitlements`.
 	WorkspaceAssignment types.Object `tfsdk:"workspace_assignment"`
 }
 
@@ -1209,10 +1209,10 @@ func (m *CreateWorkspaceAssignmentProxyRequest) SetWorkspaceAssignment(ctx conte
 }
 
 type CreateWorkspaceAssignmentRequest struct {
-	// The parent resource name of the workspace to assign the principal to.
-	// Format: accounts/{account_id}/workspaces/{workspace_id}
+	// The resource name of the workspace, in the format
+	// `accounts/{account_id}/workspaces/{workspace_id}`.
 	Parent types.String `tfsdk:"-"`
-	// Required. Workspace assignment to be created in Databricks.
+	// The assignment to create. Set its `principal_id` and `entitlements`.
 	WorkspaceAssignment types.Object `tfsdk:"workspace_assignment"`
 }
 
@@ -1307,8 +1307,8 @@ func (m *CreateWorkspaceAssignmentRequest) SetWorkspaceAssignment(ctx context.Co
 }
 
 type DeleteDirectGroupMemberProxyRequest struct {
-	// The resource name of the group membership. Format:
-	// groups/{group_id}/direct-members/{principal_id}
+	// The resource name of the membership, in the format
+	// `groups/{group_id}/direct-members/{principal_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1356,8 +1356,8 @@ func (m DeleteDirectGroupMemberProxyRequest) Type(ctx context.Context) attr.Type
 }
 
 type DeleteDirectGroupMemberRequest struct {
-	// The resource name of the group membership. Format:
-	// accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}
+	// The resource name of the membership, in the format
+	// `accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1405,7 +1405,7 @@ func (m DeleteDirectGroupMemberRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteGroupProxyRequest struct {
-	// The resource name of the group. Format: groups/{group_id}
+	// The resource name of the group, in the format `groups/{group_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1453,8 +1453,8 @@ func (m DeleteGroupProxyRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteGroupRequest struct {
-	// The resource name of the group. Format:
-	// accounts/{account_id}/groups/{group_id}
+	// The resource name of the group, in the format
+	// `accounts/{account_id}/groups/{group_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1502,8 +1502,8 @@ func (m DeleteGroupRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteIdentityVisibilityFilterRequest struct {
-	// Required. The resource name of the filter. Format:
-	// accounts/{account_id}/identity-visibility-filters/{identity_visibility_filter_id}
+	// The resource name of the filter, in the format
+	// `accounts/{account_id}/identity-visibility-filters/{identity_visibility_filter_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1551,8 +1551,8 @@ func (m DeleteIdentityVisibilityFilterRequest) Type(ctx context.Context) attr.Ty
 }
 
 type DeleteServicePrincipalProxyRequest struct {
-	// The resource name of the service principal. Format:
-	// service-principals/{service_principal_id}
+	// The resource name of the service principal, in the format
+	// `service-principals/{service_principal_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1600,8 +1600,8 @@ func (m DeleteServicePrincipalProxyRequest) Type(ctx context.Context) attr.Type 
 }
 
 type DeleteServicePrincipalRequest struct {
-	// The resource name of the service principal. Format:
-	// accounts/{account_id}/service-principals/{service_principal_id}
+	// The resource name of the service principal, in the format
+	// `accounts/{account_id}/service-principals/{service_principal_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1649,7 +1649,7 @@ func (m DeleteServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteUserProxyRequest struct {
-	// The resource name of the user. Format: users/{user_id}
+	// The resource name of the user, in the format `users/{user_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1697,8 +1697,8 @@ func (m DeleteUserProxyRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteUserRequest struct {
-	// The resource name of the user. Format:
-	// accounts/{account_id}/users/{user_id}
+	// The resource name of the user, in the format
+	// `accounts/{account_id}/users/{user_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1850,8 +1850,8 @@ func (m DeleteWorkspaceAssignmentDetailRequest) Type(ctx context.Context) attr.T
 }
 
 type DeleteWorkspaceAssignmentProxyRequest struct {
-	// The resource name of the workspace assignment. Format:
-	// workspace-assignments/{principal_id}
+	// The resource name of the assignment, in the format
+	// `workspace-assignments/{principal_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1899,8 +1899,8 @@ func (m DeleteWorkspaceAssignmentProxyRequest) Type(ctx context.Context) attr.Ty
 }
 
 type DeleteWorkspaceAssignmentRequest struct {
-	// The resource name of the workspace assignment. Format:
-	// accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}
+	// The resource name of the assignment, in the format
+	// `accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1947,30 +1947,28 @@ func (m DeleteWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Represents a principal that is a direct member of a group, with its source of
-// membership.
+// A user, service principal, or group that's a direct member of a group.
 type DirectGroupMember struct {
-	// Display name of the principal.
+	// The member's display name.
 	DisplayName types.String `tfsdk:"display_name"`
-	// The external ID of the principal in the customer's IdP.
+	// The ID of the member in your identity provider (IdP).
 	ExternalId types.String `tfsdk:"external_id"`
-	// The internal ID of the group this member belongs to.
+	// The Databricks ID of the group.
 	GroupId types.Int64 `tfsdk:"group_id"`
-	// The source of group membership (internal or from identity provider).
+	// Where the membership comes from.
 	MembershipSource types.String `tfsdk:"membership_source"`
-	// The resource name of the group membership. The format depends on the API
-	// that returned it: - Account-scoped:
-	// accounts/{account_id}/groups/{group_id}/direct-members/{principal_id} -
-	// Workspace-scoped: groups/{group_id}/direct-members/{principal_id}
+	// The resource name of the membership, in one of these formats: - Account
+	// APIs:
+	// `accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}` -
+	// Workspace APIs: `groups/{group_id}/direct-members/{principal_id}`
 	Name types.String `tfsdk:"name"`
-	// The resource name of the group that contains the membership. The format
-	// depends on the API that returned it: - Account-scoped:
-	// accounts/{account_id}/groups/{group_id} - Workspace-scoped:
-	// groups/{group_id}
+	// The resource name of the group, in one of these formats: - Account APIs:
+	// `accounts/{account_id}/groups/{group_id}` - Workspace APIs:
+	// `groups/{group_id}`
 	Parent types.String `tfsdk:"parent"`
-	// Internal ID of the principal in Databricks.
+	// The Databricks ID of the member.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
-	// The type of the principal (user/service principal/group).
+	// Whether the member is a user, service principal, or group.
 	PrincipalType types.String `tfsdk:"principal_type"`
 }
 
@@ -2040,11 +2038,9 @@ func (m DirectGroupMember) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// An exact-match rule that matches a group's external ID from the identity
-// provider.
+// A rule that matches a group by its ID in your identity provider (IdP).
 type ExactMatchRule struct {
-	// The identity provider's external ID for the group to match. This is not
-	// the Databricks group ID. The value must be non-empty and is matched
+	// The ID of the group in your IdP, not its Databricks ID. It's matched
 	// exactly, including case.
 	ExternalId types.String `tfsdk:"external_id"`
 }
@@ -2093,23 +2089,25 @@ func (m ExactMatchRule) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// An external group from the customer's Identity Provider, resolved into
-// Databricks. This is a read-only resource keyed by the IdP external ID. The
-// Get method may trigger an idempotent sync from the customer's IdP to
-// provision or refresh the group's data in Databricks.
+// A group from your identity provider (IdP), identified by its ID in your IdP.
+// This resource is read-only. Getting an external group syncs its name and
+// parent groups from your IdP, and adds it to your account if it isn't already
+// there. If your account has group visibility filters, the group must match
+// them.
 type ExternalGroup struct {
-	// The parent account ID, from Databricks.
+	// The ID of the account that contains the group.
 	AccountId types.String `tfsdk:"account_id"`
-	// Display name of the group from the customer's IdP.
+	// The name of the group, from your IdP. It's the same as the group's
+	// `group_name`.
 	DisplayName types.String `tfsdk:"display_name"`
-	// The external ID of the group in the customer's IdP.
+	// The ID of the group in your IdP.
 	ExternalGroupId types.String `tfsdk:"external_group_id"`
-	// Internal groupId of the group in Databricks.
+	// The Databricks ID of the group. Use it as the `group_id` in the group
+	// APIs.
 	InternalId types.String `tfsdk:"internal_id"`
-	// The resource name of the external group. The format depends on the API
-	// that returned it: - Account-scoped:
-	// accounts/{account_id}/external-groups/{external_group_id} -
-	// Workspace-scoped: external-groups/{external_group_id}
+	// The resource name of the external group, in one of these formats: -
+	// Account APIs: `accounts/{account_id}/external-groups/{external_group_id}`
+	// - Workspace APIs: `external-groups/{external_group_id}`
 	Name types.String `tfsdk:"name"`
 }
 
@@ -2168,28 +2166,30 @@ func (m ExternalGroup) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// An external service principal from the customer's Identity Provider, resolved
-// into Databricks. This is a read-only resource keyed by the IdP external ID.
-// The Get method may trigger an idempotent sync from the customer's IdP to
-// provision or refresh the service principal's data in Databricks.
+// A service principal from your identity provider (IdP), identified by its ID
+// in your IdP. This resource is read-only and requires Microsoft Entra ID as
+// your IdP. Getting an external service principal syncs its details and group
+// memberships from your IdP, and adds it to your account if it isn't already
+// there.
 type ExternalServicePrincipal struct {
-	// The parent account ID, from Databricks.
+	// The ID of the account that contains the service principal.
 	AccountId types.String `tfsdk:"account_id"`
-	// The activity status of the service principal in the Databricks account.
+	// Whether the service principal is active in the account.
 	AccountSpStatus types.String `tfsdk:"account_sp_status"`
-	// Application ID of the service principal, from the customer's IdP.
+	// The service principal's application ID, from your IdP.
 	ApplicationId types.String `tfsdk:"application_id"`
-	// Display name of the service principal, from the customer's IdP.
+	// The service principal's display name, from your IdP.
 	DisplayName types.String `tfsdk:"display_name"`
-	// The external ID of the service principal in the customer's IdP.
+	// The ID of the service principal in your IdP.
 	ExternalServicePrincipalId types.String `tfsdk:"external_service_principal_id"`
-	// Internal servicePrincipalId of the service principal in Databricks.
+	// The Databricks ID of the service principal. Use it as the
+	// `service_principal_id` in the service principal APIs.
 	InternalId types.String `tfsdk:"internal_id"`
-	// The resource name of the external service principal. The format depends
-	// on the API that returned it: - Account-scoped:
-	// accounts/{account_id}/external-service-principals/{external_service_principal_id}
-	// - Workspace-scoped:
-	// external-service-principals/{external_service_principal_id}
+	// The resource name of the external service principal, in one of these
+	// formats: - Account APIs:
+	// `accounts/{account_id}/external-service-principals/{external_service_principal_id}`
+	// - Workspace APIs:
+	// `external-service-principals/{external_service_principal_id}`
 	Name types.String `tfsdk:"name"`
 }
 
@@ -2254,31 +2254,28 @@ func (m ExternalServicePrincipal) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// An external user from the customer's Identity Provider, resolved into
-// Databricks. This is a read-only resource that allows customers to look up
-// external user identities by their IdP external ID and retrieve the
-// corresponding Databricks internal ID and metadata. The Get method may trigger
-// an idempotent sync from the customer's IdP to provision or refresh the user's
-// data in Databricks.
+// A user from your identity provider (IdP), identified by their ID in your IdP.
+// This resource is read-only. Getting an external user syncs the user's details
+// and group memberships from your IdP, and adds the user to your account if
+// they aren't already there.
 type ExternalUser struct {
-	// The parent account ID, from Databricks.
+	// The ID of the account that contains the user.
 	AccountId types.String `tfsdk:"account_id"`
-	// The activity status of the user in the Databricks account.
+	// Whether the user is active in the account.
 	AccountUserStatus types.String `tfsdk:"account_user_status"`
-	// Display name of the user from the customer's IdP.
+	// The user's given and family names from your IdP, separated by a space.
 	DisplayName types.String `tfsdk:"display_name"`
-	// The external ID of the user in the customer's IdP.
+	// The ID of the user in your IdP.
 	ExternalUserId types.String `tfsdk:"external_user_id"`
-	// The full name of the user, from the customer's IdP.
+	// The user's name, from your IdP.
 	FullName types.Object `tfsdk:"full_name"`
-	// Internal userId of the user in Databricks.
+	// The Databricks ID of the user. Use it as the `user_id` in the user APIs.
 	InternalId types.String `tfsdk:"internal_id"`
-	// The resource name of the external user. The format depends on the API
-	// that returned it: - Account-scoped:
-	// accounts/{account_id}/external-users/{external_user_id} -
-	// Workspace-scoped: external-users/{external_user_id}
+	// The resource name of the external user, in one of these formats: -
+	// Account APIs: `accounts/{account_id}/external-users/{external_user_id}` -
+	// Workspace APIs: `external-users/{external_user_id}`
 	Name types.String `tfsdk:"name"`
-	// Username/email of the user, from Databricks.
+	// The user's username, which is their email address.
 	Username types.String `tfsdk:"username"`
 }
 
@@ -2390,11 +2387,11 @@ func (m *ExternalUser) SetFullName(ctx context.Context, v FullName) {
 	m.FullName = vs
 }
 
-// The full name of a user.
+// A user's name, from your identity provider (IdP).
 type FullName struct {
-	// The family (last) name of the user, from the customer's IdP.
+	// The user's family (last) name.
 	FamilyName types.String `tfsdk:"family_name"`
-	// The given (first) name of the user, from the customer's IdP.
+	// The user's given (first) name.
 	GivenName types.String `tfsdk:"given_name"`
 }
 
@@ -2445,8 +2442,8 @@ func (m FullName) Type(ctx context.Context) attr.Type {
 }
 
 type GetDirectGroupMemberProxyRequest struct {
-	// The resource name of the group membership. Format:
-	// groups/{group_id}/direct-members/{principal_id}
+	// The resource name of the membership, in the format
+	// `groups/{group_id}/direct-members/{principal_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2494,8 +2491,8 @@ func (m GetDirectGroupMemberProxyRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetDirectGroupMemberRequest struct {
-	// The resource name of the group membership. Format:
-	// accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}
+	// The resource name of the membership, in the format
+	// `accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2543,8 +2540,8 @@ func (m GetDirectGroupMemberRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetExternalGroupProxyRequest struct {
-	// Required. The resource name of the external group. Format:
-	// external-groups/{external_group_id}
+	// The resource name of the external group, in the format
+	// `external-groups/{external_group_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2592,8 +2589,8 @@ func (m GetExternalGroupProxyRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetExternalGroupRequest struct {
-	// Required. The resource name of the external group. Format:
-	// accounts/{account_id}/external-groups/{external_group_id}
+	// The resource name of the external group, in the format
+	// `accounts/{account_id}/external-groups/{external_group_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2641,8 +2638,8 @@ func (m GetExternalGroupRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetExternalServicePrincipalProxyRequest struct {
-	// Required. The resource name of the external service principal. Format:
-	// external-service-principals/{external_service_principal_id}
+	// The resource name of the external service principal, in the format
+	// `external-service-principals/{external_service_principal_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2690,8 +2687,8 @@ func (m GetExternalServicePrincipalProxyRequest) Type(ctx context.Context) attr.
 }
 
 type GetExternalServicePrincipalRequest struct {
-	// Required. The resource name of the external service principal. Format:
-	// accounts/{account_id}/external-service-principals/{external_service_principal_id}
+	// The resource name of the external service principal, in the format
+	// `accounts/{account_id}/external-service-principals/{external_service_principal_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2739,8 +2736,8 @@ func (m GetExternalServicePrincipalRequest) Type(ctx context.Context) attr.Type 
 }
 
 type GetExternalUserProxyRequest struct {
-	// Required. The resource name of the external user. Format:
-	// external-users/{external_user_id}
+	// The resource name of the external user, in the format
+	// `external-users/{external_user_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2788,8 +2785,8 @@ func (m GetExternalUserProxyRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetExternalUserRequest struct {
-	// Required. The resource name of the external user. Format:
-	// accounts/{account_id}/external-users/{external_user_id}
+	// The resource name of the external user, in the format
+	// `accounts/{account_id}/external-users/{external_user_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2837,7 +2834,7 @@ func (m GetExternalUserRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetGroupProxyRequest struct {
-	// The resource name of the group. Format: groups/{group_id}
+	// The resource name of the group, in the format `groups/{group_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2885,8 +2882,8 @@ func (m GetGroupProxyRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetGroupRequest struct {
-	// The resource name of the group. Format:
-	// accounts/{account_id}/groups/{group_id}
+	// The resource name of the group, in the format
+	// `accounts/{account_id}/groups/{group_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2934,8 +2931,8 @@ func (m GetGroupRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetIdentityVisibilityFilterRequest struct {
-	// Required. The resource name of the filter. Format:
-	// accounts/{account_id}/identity-visibility-filters/{identity_visibility_filter_id}
+	// The resource name of the filter, in the format
+	// `accounts/{account_id}/identity-visibility-filters/{identity_visibility_filter_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2983,8 +2980,8 @@ func (m GetIdentityVisibilityFilterRequest) Type(ctx context.Context) attr.Type 
 }
 
 type GetServicePrincipalProxyRequest struct {
-	// The resource name of the service principal. Format:
-	// service-principals/{service_principal_id}
+	// The resource name of the service principal, in the format
+	// `service-principals/{service_principal_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -3032,8 +3029,8 @@ func (m GetServicePrincipalProxyRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetServicePrincipalRequest struct {
-	// The resource name of the service principal. Format:
-	// accounts/{account_id}/service-principals/{service_principal_id}
+	// The resource name of the service principal, in the format
+	// `accounts/{account_id}/service-principals/{service_principal_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -3081,7 +3078,7 @@ func (m GetServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetUserProxyRequest struct {
-	// The resource name of the user. Format: users/{user_id}
+	// The resource name of the user, in the format `users/{user_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -3129,8 +3126,8 @@ func (m GetUserProxyRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetUserRequest struct {
-	// The resource name of the user. Format:
-	// accounts/{account_id}/users/{user_id}
+	// The resource name of the user, in the format
+	// `accounts/{account_id}/users/{user_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -3391,8 +3388,8 @@ func (m GetWorkspaceAssignmentDetailRequest) Type(ctx context.Context) attr.Type
 }
 
 type GetWorkspaceAssignmentProxyRequest struct {
-	// The resource name of the workspace assignment. Format:
-	// workspace-assignments/{principal_id}
+	// The resource name of the assignment, in the format
+	// `workspace-assignments/{principal_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -3440,8 +3437,8 @@ func (m GetWorkspaceAssignmentProxyRequest) Type(ctx context.Context) attr.Type 
 }
 
 type GetWorkspaceAssignmentRequest struct {
-	// The resource name of the workspace assignment. Format:
-	// accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}
+	// The resource name of the assignment, in the format
+	// `accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -3489,8 +3486,8 @@ func (m GetWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetWorkspaceIdentityDetailRequest struct {
-	// The resource name of the workspace identity detail. Format:
-	// principals/{principal_id}/workspace-identity-detail
+	// The resource name of the workspace identity detail, in the format
+	// `principals/{principal_id}/workspace-identity-detail`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -3537,23 +3534,22 @@ func (m GetWorkspaceIdentityDetailRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// The details of a Group resource.
+// A group in your Databricks account.
 type Group struct {
-	// The parent account ID for group in Databricks.
+	// The ID of the account that contains the group.
 	AccountId types.String `tfsdk:"account_id"`
-	// ExternalId of the group in the customer's IdP.
+	// The ID of the group in your identity provider (IdP).
 	ExternalId types.String `tfsdk:"external_id"`
-	// Internal group ID of the group in Databricks.
+	// The Databricks ID of the group.
 	GroupId types.String `tfsdk:"group_id"`
-	// Display name of the group.
+	// The name of the group.
 	GroupName types.String `tfsdk:"group_name"`
-	// The resource name of the group. The format depends on the API that
-	// returned it: - Account-scoped: accounts/{account_id}/groups/{group_id} -
-	// Workspace-scoped: groups/{group_id}
+	// The resource name of the group, in one of these formats: - Account APIs:
+	// `accounts/{account_id}/groups/{group_id}` - Workspace APIs:
+	// `groups/{group_id}`
 	Name types.String `tfsdk:"name"`
-	// The resource name of the account that contains the group,
-	// `accounts/{account_id}`. Both the account-scoped and workspace-scoped
-	// APIs return it.
+	// The resource name of the account that contains the group, in the format
+	// `accounts/{account_id}`. Workspace APIs return the same format.
 	Parent types.String `tfsdk:"parent"`
 }
 
@@ -3618,31 +3614,30 @@ func (m Group) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// An account-level rule that controls which identity provider groups are
-// discoverable in directory search and group pickers when automatic identity
-// management is enabled. Filters apply across all workspaces in the account.
+// An account-level rule that controls which groups from your identity provider
+// (IdP) can be found in directory search and group pickers when automatic
+// identity management is on. Filters apply to every workspace in the account.
 //
-// If no group filters are configured, all groups are visible. Otherwise, a
-// group is visible if it or any of its transitive parent groups matches at
-// least one rule. A group is also visible if it or any transitive parent group
-// is already provisioned in the account. Local Databricks groups remain visible
-// regardless of the filters.
+// If you have no group filters, all groups are visible. Otherwise, a group is
+// visible if it or any of its parent groups matches at least one filter. A
+// group is also visible if it or any of its parent groups is already in your
+// account. Local Databricks groups are always visible.
 //
-// Only group filters can be created. Filters do not change provisioning or
-// sign-in for users and service principals. Filters are immutable: to change a
-// rule, delete it and create a new one.
+// You can only create group filters. Filters don't affect provisioning or
+// sign-in for users and service principals. You can't change a filter: to
+// change a rule, delete it and create a new one.
 type IdentityVisibilityFilter struct {
-	// Exact match on the group's external ID from the identity provider.
+	// Matches a group by its ID in your IdP.
 	Exact types.Object `tfsdk:"exact"`
-	// The resource name of the identity-visibility filter. Format:
-	// accounts/{account_id}/identity-visibility-filters/{identity_visibility_filter_id}
+	// The resource name of the filter, in the format
+	// `accounts/{account_id}/identity-visibility-filters/{identity_visibility_filter_id}`.
 	Name types.String `tfsdk:"name"`
-	// Case-sensitive starts-with match on the group's display name.
+	// Matches groups whose display name starts with a prefix.
 	Prefix types.Object `tfsdk:"prefix"`
-	// The type of principal this rule applies to. Set to `GROUP` when creating
-	// a filter. Other principal types are not supported for creation.
+	// The type of principal the filter applies to. Set it to `GROUP`. Other
+	// types aren't supported.
 	PrincipalType types.String `tfsdk:"principal_type"`
-	// Full, case-sensitive RE2 match on the identity's display name.
+	// Matches groups whose display name matches a regular expression.
 	Regex types.Object `tfsdk:"regex"`
 }
 
@@ -3835,15 +3830,12 @@ func (m *IdentityVisibilityFilter) SetRegex(ctx context.Context, v RegexMatchRul
 }
 
 type ListDirectGroupMembersProxyRequest struct {
-	// The maximum number of members to return. The service may return fewer
-	// than this value. If not provided, defaults to 1000, which is also the
-	// maximum allowed. Requests for more than the maximum are clamped to 1000.
+	// The maximum number of members to return, up to 1000. The default is 1000.
+	// A page can contain fewer members.
 	PageSize types.Int64 `tfsdk:"-"`
-	// A page token from a previous list call. Provide this to retrieve the
-	// subsequent page.
+	// The `next_page_token` from a previous response, to get the next page.
 	PageToken types.String `tfsdk:"-"`
-	// The parent resource name of the group whose direct members to list.
-	// Format: groups/{group_id}
+	// The resource name of the group, in the format `groups/{group_id}`.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -3897,15 +3889,13 @@ func (m ListDirectGroupMembersProxyRequest) Type(ctx context.Context) attr.Type 
 }
 
 type ListDirectGroupMembersRequest struct {
-	// The maximum number of members to return. The service may return fewer
-	// than this value. If not provided, defaults to 1000, which is also the
-	// maximum allowed. Requests for more than the maximum are clamped to 1000.
+	// The maximum number of members to return, up to 1000. The default is 1000.
+	// A page can contain fewer members.
 	PageSize types.Int64 `tfsdk:"-"`
-	// A page token, received from a previous ListDirectGroupMembers call.
-	// Provide this to retrieve the subsequent page.
+	// The `next_page_token` from a previous response, to get the next page.
 	PageToken types.String `tfsdk:"-"`
-	// The parent resource name of the group whose direct members to list.
-	// Format: accounts/{account_id}/groups/{group_id}
+	// The resource name of the group, in the format
+	// `accounts/{account_id}/groups/{group_id}`.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -3958,12 +3948,11 @@ func (m ListDirectGroupMembersRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Response message for listing direct group members.
+// A page of direct members of a group.
 type ListDirectGroupMembersResponse struct {
-	// The list of direct group members with their membership source type.
+	// The members on this page.
 	DirectGroupMembers types.List `tfsdk:"direct_group_members"`
-	// A token, which can be sent as page_token to retrieve the next page. If
-	// this field is omitted, there are no subsequent pages.
+	// The token for the next page. Not set on the last page.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -4081,18 +4070,17 @@ func (m *ListDirectGroupMembersResponse) SetDirectGroupMembers(ctx context.Conte
 }
 
 type ListGroupsProxyRequest struct {
-	// Optional. Allows filtering groups by group name or external id.
+	// Filters groups by `group_name` or `external_id`, for example `group_name
+	// eq "Data engineers"`. Put the value in quotes.
 	Filter types.String `tfsdk:"-"`
-	// The maximum number of groups to return. The service may return fewer than
-	// this value. If not provided, defaults to 1000, which is also the maximum
-	// allowed. Requests for more than the maximum are clamped to 1000.
+	// The maximum number of groups to return, up to 1000. The default is 1000.
+	// A page can contain fewer groups.
 	PageSize types.Int64 `tfsdk:"-"`
-	// A page token, received from a previous ListGroups call. Provide this to
-	// retrieve the subsequent page.
+	// The `next_page_token` from a previous response, to get the next page.
 	PageToken types.String `tfsdk:"-"`
-	// The resource name of the account to list groups in,
-	// `accounts/{account_id}`. Optional: defaults to the account of the calling
-	// workspace, and any other account is rejected.
+	// The resource name of the account to list groups in, in the format
+	// `accounts/{account_id}`. Defaults to the account that contains this
+	// workspace. Any other account is rejected.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -4149,17 +4137,16 @@ func (m ListGroupsProxyRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListGroupsRequest struct {
-	// Optional. Allows filtering groups by group name or external id.
+	// Filters groups by `group_name` or `external_id`, for example `group_name
+	// eq "Data engineers"`. Put the value in quotes.
 	Filter types.String `tfsdk:"-"`
-	// The maximum number of groups to return. The service may return fewer than
-	// this value. If not provided, defaults to 1000, which is also the maximum
-	// allowed. Requests for more than the maximum are clamped to 1000.
+	// The maximum number of groups to return, up to 1000. The default is 1000.
+	// A page can contain fewer groups.
 	PageSize types.Int64 `tfsdk:"-"`
-	// A page token, received from a previous ListGroups call. Provide this to
-	// retrieve the subsequent page.
+	// The `next_page_token` from a previous response, to get the next page.
 	PageToken types.String `tfsdk:"-"`
-	// The parent resource name of the account whose groups to list. Format:
-	// accounts/{account_id}
+	// The resource name of the account to list groups in, in the format
+	// `accounts/{account_id}`.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -4215,11 +4202,11 @@ func (m ListGroupsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Response message containing a page of groups in the account.
+// A page of groups.
 type ListGroupsResponse struct {
+	// The groups on this page.
 	Groups types.List `tfsdk:"groups"`
-	// A token, which can be sent as page_token to retrieve the next page. If
-	// this field is omitted, there are no subsequent pages.
+	// The token for the next page. Not set on the last page.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -4337,14 +4324,12 @@ func (m *ListGroupsResponse) SetGroups(ctx context.Context, v []Group) {
 }
 
 type ListIdentityVisibilityFiltersRequest struct {
-	// The maximum number of filters to return. The service may return fewer
-	// than this value. If omitted or non-positive, defaults to 100. Values
-	// above 1000 are reduced to 1000.
+	// The maximum number of filters to return, up to 1000. The default is 100.
+	// A page can contain fewer filters.
 	PageSize types.Int64 `tfsdk:"-"`
-	// A page token, received from a previous ListIdentityVisibilityFilters
-	// call. Provide this to retrieve the subsequent page.
+	// The `next_page_token` from a previous response, to get the next page.
 	PageToken types.String `tfsdk:"-"`
-	// Required. The parent account. Format: accounts/{account_id}
+	// The resource name of the account, in the format `accounts/{account_id}`.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -4397,14 +4382,11 @@ func (m ListIdentityVisibilityFiltersRequest) Type(ctx context.Context) attr.Typ
 	}
 }
 
-// Response message containing a page of identity-visibility filters in the
-// account.
+// A page of group visibility filters.
 type ListIdentityVisibilityFiltersResponse struct {
-	// The filters in this page. These are filter rules, not the groups matched
-	// by the rules.
+	// The filters on this page. These are the rules, not the groups they match.
 	IdentityVisibilityFilters types.List `tfsdk:"identity_visibility_filters"`
-	// A token, which can be sent as page_token to retrieve the next page. If
-	// omitted, there are no subsequent pages.
+	// The token for the next page. Not set on the last page.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -4522,19 +4504,17 @@ func (m *ListIdentityVisibilityFiltersResponse) SetIdentityVisibilityFilters(ctx
 }
 
 type ListServicePrincipalsProxyRequest struct {
-	// Optional. Allows filtering service principals by application id or
-	// external id.
+	// Filters service principals by `application_id` or `external_id`, for
+	// example `application_id eq "<application-id>"`. Put the value in quotes.
 	Filter types.String `tfsdk:"-"`
-	// The maximum number of SPs to return. The service may return fewer than
-	// this value. If not provided, defaults to 1000, which is also the maximum
-	// allowed. Requests for more than the maximum are clamped to 1000.
+	// The maximum number of service principals to return, up to 1000. The
+	// default is 1000. A page can contain fewer service principals.
 	PageSize types.Int64 `tfsdk:"-"`
-	// A page token, received from a previous ListServicePrincipals call.
-	// Provide this to retrieve the subsequent page.
+	// The `next_page_token` from a previous response, to get the next page.
 	PageToken types.String `tfsdk:"-"`
-	// The resource name of the account to list service principals in,
-	// `accounts/{account_id}`. Optional: defaults to the account of the calling
-	// workspace, and any other account is rejected.
+	// The resource name of the account to list service principals in, in the
+	// format `accounts/{account_id}`. Defaults to the account that contains
+	// this workspace. Any other account is rejected.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -4591,19 +4571,16 @@ func (m ListServicePrincipalsProxyRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListServicePrincipalsRequest struct {
-	// Optional. Allows filtering service principals by application id or
-	// external id.
+	// Filters service principals by `application_id` or `external_id`, for
+	// example `application_id eq "<application-id>"`. Put the value in quotes.
 	Filter types.String `tfsdk:"-"`
-	// The maximum number of service principals to return. The service may
-	// return fewer than this value. If not provided, defaults to 1000, which is
-	// also the maximum allowed. Requests for more than the maximum are clamped
-	// to 1000.
+	// The maximum number of service principals to return, up to 1000. The
+	// default is 1000. A page can contain fewer service principals.
 	PageSize types.Int64 `tfsdk:"-"`
-	// A page token, received from a previous ListServicePrincipals call.
-	// Provide this to retrieve the subsequent page.
+	// The `next_page_token` from a previous response, to get the next page.
 	PageToken types.String `tfsdk:"-"`
-	// The parent resource name of the account whose service principals to list.
-	// Format: accounts/{account_id}
+	// The resource name of the account to list service principals in, in the
+	// format `accounts/{account_id}`.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -4659,12 +4636,11 @@ func (m ListServicePrincipalsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Response message containing a page of service principals in the account.
+// A page of service principals.
 type ListServicePrincipalsResponse struct {
-	// A token, which can be sent as page_token to retrieve the next page. If
-	// this field is omitted, there are no subsequent pages.
+	// The token for the next page. Not set on the last page.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-
+	// The service principals on this page.
 	ServicePrincipals types.List `tfsdk:"service_principals"`
 }
 
@@ -4782,16 +4758,13 @@ func (m *ListServicePrincipalsResponse) SetServicePrincipals(ctx context.Context
 }
 
 type ListTransitiveParentGroupsProxyRequest struct {
-	// The maximum number of parent groups to return. The service may return
-	// fewer than this value. If not provided, defaults to 1000, which is also
-	// the maximum allowed. Requests for more than the maximum are clamped to
-	// 1000.
+	// The maximum number of groups to return, up to 1000. The default is 1000.
+	// A page can contain fewer groups.
 	PageSize types.Int64 `tfsdk:"-"`
-	// A page token, received from a previous ListTransitiveParentGroups call.
-	// Provide this to retrieve the subsequent page.
+	// The `next_page_token` from a previous response, to get the next page.
 	PageToken types.String `tfsdk:"-"`
-	// The parent resource name of the principal whose transitive parent groups
-	// to list. Format: principals/{principal_id}
+	// The user, service principal, or group whose parent groups to list, in the
+	// format `principals/{principal_id}`.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -4845,16 +4818,13 @@ func (m ListTransitiveParentGroupsProxyRequest) Type(ctx context.Context) attr.T
 }
 
 type ListTransitiveParentGroupsRequest struct {
-	// The maximum number of parent groups to return. The service may return
-	// fewer than this value. If not provided, defaults to 1000, which is also
-	// the maximum allowed. Requests for more than the maximum are clamped to
-	// 1000.
+	// The maximum number of groups to return, up to 1000. The default is 1000.
+	// A page can contain fewer groups.
 	PageSize types.Int64 `tfsdk:"-"`
-	// A page token, received from a previous ListTransitiveParentGroups call.
-	// Provide this to retrieve the subsequent page.
+	// The `next_page_token` from a previous response, to get the next page.
 	PageToken types.String `tfsdk:"-"`
-	// The parent resource name of the principal whose transitive parent groups
-	// to list. Format: accounts/{account_id}/principals/{principal_id}
+	// The user, service principal, or group whose parent groups to list, in the
+	// format `accounts/{account_id}/principals/{principal_id}`.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -4907,12 +4877,11 @@ func (m ListTransitiveParentGroupsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Response message for listing all transitive parent groups of a principal.
+// A page of the groups a principal belongs to.
 type ListTransitiveParentGroupsResponse struct {
-	// A token, which can be sent as page_token to retrieve the next page. If
-	// this field is omitted, there are no subsequent pages.
+	// The token for the next page. Not set on the last page.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-	// The list of transitive parent groups.
+	// The groups on this page.
 	TransitiveParentGroups types.List `tfsdk:"transitive_parent_groups"`
 }
 
@@ -5030,18 +4999,17 @@ func (m *ListTransitiveParentGroupsResponse) SetTransitiveParentGroups(ctx conte
 }
 
 type ListUsersProxyRequest struct {
-	// Optional. Allows filtering users by username or external id.
+	// Filters users by `username` or `external_id`, for example `username eq
+	// "someone@example.com"`. Put the value in quotes.
 	Filter types.String `tfsdk:"-"`
-	// The maximum number of users to return. The service may return fewer than
-	// this value. If not provided, defaults to 1000, which is also the maximum
-	// allowed. Requests for more than the maximum are clamped to 1000.
+	// The maximum number of users to return, up to 1000. The default is 1000. A
+	// page can contain fewer users.
 	PageSize types.Int64 `tfsdk:"-"`
-	// A page token, received from a previous ListUsers call. Provide this to
-	// retrieve the subsequent page.
+	// The `next_page_token` from a previous response, to get the next page.
 	PageToken types.String `tfsdk:"-"`
-	// The resource name of the account to list users in,
-	// `accounts/{account_id}`. Optional: defaults to the account of the calling
-	// workspace, and any other account is rejected.
+	// The resource name of the account to list users in, in the format
+	// `accounts/{account_id}`. Defaults to the account that contains this
+	// workspace. Any other account is rejected.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -5098,17 +5066,16 @@ func (m ListUsersProxyRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListUsersRequest struct {
-	// Optional. Allows filtering users by username or external id.
+	// Filters users by `username` or `external_id`, for example `username eq
+	// "someone@example.com"`. Put the value in quotes.
 	Filter types.String `tfsdk:"-"`
-	// The maximum number of users to return. The service may return fewer than
-	// this value. If not provided, defaults to 1000, which is also the maximum
-	// allowed. Requests for more than the maximum are clamped to 1000.
+	// The maximum number of users to return, up to 1000. The default is 1000. A
+	// page can contain fewer users.
 	PageSize types.Int64 `tfsdk:"-"`
-	// A page token, received from a previous ListUsers call. Provide this to
-	// retrieve the subsequent page.
+	// The `next_page_token` from a previous response, to get the next page.
 	PageToken types.String `tfsdk:"-"`
-	// The parent resource name of the account whose users to list. Format:
-	// accounts/{account_id}
+	// The resource name of the account to list users in, in the format
+	// `accounts/{account_id}`.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -5164,11 +5131,11 @@ func (m ListUsersRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A page of users.
 type ListUsersResponse struct {
-	// A token, which can be sent as page_token to retrieve the next page. If
-	// this field is omitted, there are no subsequent pages.
+	// The token for the next page. Not set on the last page.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-
+	// The users on this page.
 	Users types.List `tfsdk:"users"`
 }
 
@@ -5529,17 +5496,14 @@ func (m *ListWorkspaceAssignmentDetailsResponse) SetWorkspaceAssignmentDetails(c
 }
 
 type ListWorkspaceAssignmentsProxyRequest struct {
-	// The maximum number of workspace assignments to return. The service may
-	// return fewer than this value. If not provided, defaults to 1000, which is
-	// also the maximum allowed. Requests for more than the maximum are clamped
-	// to 1000.
+	// The maximum number of assignments to return, up to 1000. The default is
+	// 1000. A page can contain fewer assignments.
 	PageSize types.Int64 `tfsdk:"-"`
-	// A page token from a previous list call. Provide this to retrieve the
-	// subsequent page.
+	// The `next_page_token` from a previous response, to get the next page.
 	PageToken types.String `tfsdk:"-"`
-	// The resource name of the workspace to list assignments of,
-	// `accounts/{account_id}/workspaces/{workspace_id}`. Optional: defaults to
-	// the calling workspace, and any other workspace is rejected.
+	// The resource name of the workspace, in the format
+	// `accounts/{account_id}/workspaces/{workspace_id}`. Defaults to this
+	// workspace. Any other workspace is rejected.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -5593,16 +5557,13 @@ func (m ListWorkspaceAssignmentsProxyRequest) Type(ctx context.Context) attr.Typ
 }
 
 type ListWorkspaceAssignmentsRequest struct {
-	// The maximum number of workspace assignments to return. The service may
-	// return fewer than this value. If not provided, defaults to 1000, which is
-	// also the maximum allowed. Requests for more than the maximum are clamped
-	// to 1000.
+	// The maximum number of assignments to return, up to 1000. The default is
+	// 1000. A page can contain fewer assignments.
 	PageSize types.Int64 `tfsdk:"-"`
-	// A page token, received from a previous ListWorkspaceAssignments call.
-	// Provide this to retrieve the subsequent page.
+	// The `next_page_token` from a previous response, to get the next page.
 	PageToken types.String `tfsdk:"-"`
-	// The parent resource name of the workspace whose assignments to list.
-	// Format: accounts/{account_id}/workspaces/{workspace_id}
+	// The resource name of the workspace, in the format
+	// `accounts/{account_id}/workspaces/{workspace_id}`.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -5655,12 +5616,11 @@ func (m ListWorkspaceAssignmentsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Response message for listing workspace assignments.
+// A page of workspace assignments.
 type ListWorkspaceAssignmentsResponse struct {
-	// A token, which can be sent as page_token to retrieve the next page. If
-	// this field is omitted, there are no subsequent pages.
+	// The token for the next page. Not set on the last page.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-
+	// The assignments on this page.
 	WorkspaceAssignments types.List `tfsdk:"workspace_assignments"`
 }
 
@@ -5777,13 +5737,11 @@ func (m *ListWorkspaceAssignmentsResponse) SetWorkspaceAssignments(ctx context.C
 	m.WorkspaceAssignments = types.ListValueMust(t, vs)
 }
 
-// A starts-with rule that matches groups whose display name begins with a
-// specified prefix. Matching is case-sensitive. For example, the prefix `data-`
-// matches `data-platform`.
+// A rule that matches groups whose display name starts with a prefix. Matching
+// is case-sensitive. For example, the prefix `data-` matches `data-platform`.
 type PrefixMatchRule struct {
-	// The display-name prefix to match. Must contain at least one
-	// non-whitespace character. Leading and trailing whitespace are preserved,
-	// and matching is case-sensitive.
+	// The prefix to match. It must contain at least one non-whitespace
+	// character. Leading and trailing spaces are kept.
 	DisplayNamePrefix types.String `tfsdk:"display_name_prefix"`
 }
 
@@ -5831,11 +5789,12 @@ func (m PrefixMatchRule) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// A rule that matches an identity whose complete display name matches an RE2
-// regular expression. Matching is case-sensitive. Use .* explicitly when
-// substring matching is desired.
+// A rule that matches groups whose whole display name matches an RE2 regular
+// expression. Matching is case-sensitive. To match part of a name, add `.*`,
+// for example `.*-admins`.
 type RegexMatchRule struct {
-	// The RE2 regular expression matched against the complete display name.
+	// The RE2 regular expression to match against the whole display name. At
+	// most 255 characters.
 	DisplayNameRegex types.String `tfsdk:"display_name_regex"`
 }
 
@@ -5882,11 +5841,9 @@ func (m RegexMatchRule) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Request message for resolving a group with the given external ID from the
-// customer's IdP into Databricks. Will resolve metadata such as the group's
-// name and inherited parent groups.
+// Request to resolve a group by its ID in your identity provider (IdP).
 type ResolveGroupProxyRequest struct {
-	// Required. The external ID of the group in the customer's IdP.
+	// The ID of the group in your IdP.
 	ExternalId types.String `tfsdk:"external_id"`
 }
 
@@ -5933,11 +5890,9 @@ func (m ResolveGroupProxyRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Request message for resolving a group with the given external ID from the
-// customer's IdP into Databricks. Will resolve metadata such as the group's
-// name and inherited parent groups.
+// Request to resolve a group by its ID in your identity provider (IdP).
 type ResolveGroupRequest struct {
-	// Required. The external ID of the group in the customer's IdP.
+	// The ID of the group in your IdP.
 	ExternalId types.String `tfsdk:"external_id"`
 }
 
@@ -5985,8 +5940,9 @@ func (m ResolveGroupRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The response to resolving a group.
 type ResolveGroupResponse struct {
-	// The group that was resolved.
+	// The resolved group.
 	Group types.Object `tfsdk:"group"`
 }
 
@@ -6077,11 +6033,10 @@ func (m *ResolveGroupResponse) SetGroup(ctx context.Context, v Group) {
 	m.Group = vs
 }
 
-// Request message for resolving a service principal with the given external ID
-// from the customer's IdP into Databricks. Will resolve metadata such as the
-// service principal's display name, status, and inherited parent groups.
+// Request to resolve a service principal by its ID in your identity provider
+// (IdP).
 type ResolveServicePrincipalProxyRequest struct {
-	// Required. The external ID of the service principal in the customer's IdP.
+	// The ID of the service principal in your IdP.
 	ExternalId types.String `tfsdk:"external_id"`
 }
 
@@ -6128,11 +6083,10 @@ func (m ResolveServicePrincipalProxyRequest) Type(ctx context.Context) attr.Type
 	}
 }
 
-// Request message for resolving a service principal with the given external ID
-// from the customer's IdP into Databricks. Will resolve metadata such as the
-// service principal's display name, status, and inherited parent groups.
+// Request to resolve a service principal by its ID in your identity provider
+// (IdP).
 type ResolveServicePrincipalRequest struct {
-	// Required. The external ID of the service principal in the customer's IdP.
+	// The ID of the service principal in your IdP.
 	ExternalId types.String `tfsdk:"external_id"`
 }
 
@@ -6180,8 +6134,9 @@ func (m ResolveServicePrincipalRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The response to resolving a service principal.
 type ResolveServicePrincipalResponse struct {
-	// The service principal that was resolved.
+	// The resolved service principal.
 	ServicePrincipal types.Object `tfsdk:"service_principal"`
 }
 
@@ -6272,11 +6227,9 @@ func (m *ResolveServicePrincipalResponse) SetServicePrincipal(ctx context.Contex
 	m.ServicePrincipal = vs
 }
 
-// Request message for resolving a user with the given external ID from the
-// customer's IdP into Databricks. Will resolve metadata such as the user's
-// display name, status, and inherited parent groups.
+// Request to resolve a user by their ID in your identity provider (IdP).
 type ResolveUserProxyRequest struct {
-	// Required. The external ID of the user in the customer's IdP.
+	// The ID of the user in your IdP.
 	ExternalId types.String `tfsdk:"external_id"`
 }
 
@@ -6323,11 +6276,9 @@ func (m ResolveUserProxyRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Request message for resolving a user with the given external ID from the
-// customer's IdP into Databricks. Will resolve metadata such as the user's
-// display name, status, and inherited parent groups.
+// Request to resolve a user by their ID in your identity provider (IdP).
 type ResolveUserRequest struct {
-	// Required. The external ID of the user in the customer's IdP.
+	// The ID of the user in your IdP.
 	ExternalId types.String `tfsdk:"external_id"`
 }
 
@@ -6375,8 +6326,9 @@ func (m ResolveUserRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The response to resolving a user.
 type ResolveUserResponse struct {
-	// The user that was resolved.
+	// The resolved user.
 	User types.Object `tfsdk:"user"`
 }
 
@@ -6467,29 +6419,30 @@ func (m *ResolveUserResponse) SetUser(ctx context.Context, v User) {
 	m.User = vs
 }
 
-// The details of a ServicePrincipal resource.
+// A service principal in your Databricks account.
 type ServicePrincipal struct {
-	// The parent account ID for the service principal in Databricks.
+	// The ID of the account that contains the service principal.
 	AccountId types.String `tfsdk:"account_id"`
-	// The activity status of a service principal in a Databricks account.
+	// Whether the service principal is active in the account.
 	AccountSpStatus types.String `tfsdk:"account_sp_status"`
-	// Application ID of the service principal. Set at creation time and cannot
-	// be changed afterwards; when omitted, the server generates one.
+	// The service principal's application ID, a UUID. If you don't set it when
+	// you create the service principal, Databricks generates one. It must be
+	// unique in the account and can't be changed.
 	ApplicationId types.String `tfsdk:"application_id"`
-	// Display name of the service principal.
+	// The service principal's display name.
 	DisplayName types.String `tfsdk:"display_name"`
-	// ExternalId of the service principal in the customer's IdP.
+	// The ID of the service principal in your identity provider (IdP).
 	ExternalId types.String `tfsdk:"external_id"`
-	// The resource name of the service principal. The format depends on the API
-	// that returned it: - Account-scoped:
-	// accounts/{account_id}/service-principals/{service_principal_id} -
-	// Workspace-scoped: service-principals/{service_principal_id}
+	// The resource name of the service principal, in one of these formats: -
+	// Account APIs:
+	// `accounts/{account_id}/service-principals/{service_principal_id}` -
+	// Workspace APIs: `service-principals/{service_principal_id}`
 	Name types.String `tfsdk:"name"`
-	// The resource name of the account that contains the service principal,
-	// `accounts/{account_id}`. Both the account-scoped and workspace-scoped
-	// APIs return it.
+	// The resource name of the account that contains the service principal, in
+	// the format `accounts/{account_id}`. Workspace APIs return the same
+	// format.
 	Parent types.String `tfsdk:"parent"`
-	// Internal service principal ID of the service principal in Databricks.
+	// The Databricks ID of the service principal.
 	ServicePrincipalId types.String `tfsdk:"service_principal_id"`
 }
 
@@ -6561,19 +6514,20 @@ func (m ServicePrincipal) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Represents a group that is a transitive parent of a principal.
+// A group that a principal belongs to, either directly or through another
+// group.
 type TransitiveParentGroup struct {
-	// The parent account ID for group in Databricks.
+	// The ID of the account that contains the group.
 	AccountId types.String `tfsdk:"account_id"`
-	// ExternalId of the group in the customer's IdP.
+	// The ID of the group in your identity provider (IdP).
 	ExternalId types.String `tfsdk:"external_id"`
-	// Internal group ID of the group in Databricks.
+	// The Databricks ID of the group.
 	GroupId types.String `tfsdk:"group_id"`
-	// The resource name of the transitive parent group. The format depends on
-	// the API that returned it: - Account-scoped:
-	// accounts/{account_id}/principals/{principal_id}/transitive-parent-groups/{group_id}
-	// - Workspace-scoped:
-	// principals/{principal_id}/transitive-parent-groups/{group_id}
+	// The resource name of the parent group, in one of these formats: - Account
+	// APIs:
+	// `accounts/{account_id}/principals/{principal_id}/transitive-parent-groups/{group_id}`
+	// - Workspace APIs:
+	// `principals/{principal_id}/transitive-parent-groups/{group_id}`
 	Name types.String `tfsdk:"name"`
 }
 
@@ -6630,13 +6584,14 @@ func (m TransitiveParentGroup) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateGroupProxyRequest struct {
-	// Required. Group to be updated in Databricks
+	// The group to update. Its `name` identifies the group.
 	Group types.Object `tfsdk:"group"`
-	// The resource name of the group. The format depends on the API that
-	// returned it: - Account-scoped: accounts/{account_id}/groups/{group_id} -
-	// Workspace-scoped: groups/{group_id}
+	// The resource name of the group, in one of these formats: - Account APIs:
+	// `accounts/{account_id}/groups/{group_id}` - Workspace APIs:
+	// `groups/{group_id}`
 	Name types.String `tfsdk:"-"`
-	// Required. The list of fields to update.
+	// The fields to update, separated by commas. You can update `group_name`
+	// and `external_id`.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -6734,13 +6689,14 @@ func (m *UpdateGroupProxyRequest) SetGroup(ctx context.Context, v Group) {
 }
 
 type UpdateGroupRequest struct {
-	// Required. Group to be updated in Databricks
+	// The group to update. Its `name` identifies the group.
 	Group types.Object `tfsdk:"group"`
-	// The resource name of the group. The format depends on the API that
-	// returned it: - Account-scoped: accounts/{account_id}/groups/{group_id} -
-	// Workspace-scoped: groups/{group_id}
+	// The resource name of the group, in one of these formats: - Account APIs:
+	// `accounts/{account_id}/groups/{group_id}` - Workspace APIs:
+	// `groups/{group_id}`
 	Name types.String `tfsdk:"-"`
-	// Required. The list of fields to update.
+	// The fields to update, separated by commas. You can update `group_name`
+	// and `external_id`.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -6838,14 +6794,16 @@ func (m *UpdateGroupRequest) SetGroup(ctx context.Context, v Group) {
 }
 
 type UpdateServicePrincipalProxyRequest struct {
-	// The resource name of the service principal. The format depends on the API
-	// that returned it: - Account-scoped:
-	// accounts/{account_id}/service-principals/{service_principal_id} -
-	// Workspace-scoped: service-principals/{service_principal_id}
+	// The resource name of the service principal, in one of these formats: -
+	// Account APIs:
+	// `accounts/{account_id}/service-principals/{service_principal_id}` -
+	// Workspace APIs: `service-principals/{service_principal_id}`
 	Name types.String `tfsdk:"-"`
-	// Required. Service principal to be updated in Databricks
+	// The service principal to update. Its `name` identifies the service
+	// principal.
 	ServicePrincipal types.Object `tfsdk:"service_principal"`
-	// Required. The list of fields to update.
+	// The fields to update, separated by commas. You can update `display_name`,
+	// `account_sp_status`, and `external_id`.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -6943,14 +6901,16 @@ func (m *UpdateServicePrincipalProxyRequest) SetServicePrincipal(ctx context.Con
 }
 
 type UpdateServicePrincipalRequest struct {
-	// The resource name of the service principal. The format depends on the API
-	// that returned it: - Account-scoped:
-	// accounts/{account_id}/service-principals/{service_principal_id} -
-	// Workspace-scoped: service-principals/{service_principal_id}
+	// The resource name of the service principal, in one of these formats: -
+	// Account APIs:
+	// `accounts/{account_id}/service-principals/{service_principal_id}` -
+	// Workspace APIs: `service-principals/{service_principal_id}`
 	Name types.String `tfsdk:"-"`
-	// Required. Service Principal to be updated in Databricks
+	// The service principal to update. Its `name` identifies the service
+	// principal.
 	ServicePrincipal types.Object `tfsdk:"service_principal"`
-	// Required. The list of fields to update.
+	// The fields to update, separated by commas. You can update `display_name`,
+	// `account_sp_status`, and `external_id`.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -7048,13 +7008,15 @@ func (m *UpdateServicePrincipalRequest) SetServicePrincipal(ctx context.Context,
 }
 
 type UpdateUserProxyRequest struct {
-	// The resource name of the user. The format depends on the API that
-	// returned it: - Account-scoped: accounts/{account_id}/users/{user_id} -
-	// Workspace-scoped: users/{user_id}
+	// The resource name of the user, in one of these formats: - Account APIs:
+	// `accounts/{account_id}/users/{user_id}` - Workspace APIs:
+	// `users/{user_id}`
 	Name types.String `tfsdk:"-"`
-	// Required. The list of fields to update.
+	// The fields to update, separated by commas. You can update
+	// `full_name.given_name`, `full_name.family_name`, `account_user_status`,
+	// and `external_id`.
 	UpdateMask types.String `tfsdk:"-"`
-	// Required. User to be updated in Databricks
+	// The user to update. Its `name` identifies the user.
 	User types.Object `tfsdk:"user"`
 }
 
@@ -7152,13 +7114,15 @@ func (m *UpdateUserProxyRequest) SetUser(ctx context.Context, v User) {
 }
 
 type UpdateUserRequest struct {
-	// The resource name of the user. The format depends on the API that
-	// returned it: - Account-scoped: accounts/{account_id}/users/{user_id} -
-	// Workspace-scoped: users/{user_id}
+	// The resource name of the user, in one of these formats: - Account APIs:
+	// `accounts/{account_id}/users/{user_id}` - Workspace APIs:
+	// `users/{user_id}`
 	Name types.String `tfsdk:"-"`
-	// Required. The list of fields to update.
+	// The fields to update, separated by commas. You can update
+	// `full_name.given_name`, `full_name.family_name`, `account_user_status`,
+	// and `external_id`.
 	UpdateMask types.String `tfsdk:"-"`
-	// Required. User to be updated in Databricks
+	// The user to update. Its `name` identifies the user.
 	User types.Object `tfsdk:"user"`
 }
 
@@ -7467,14 +7431,14 @@ func (m *UpdateWorkspaceAssignmentDetailRequest) SetWorkspaceAssignmentDetail(ct
 }
 
 type UpdateWorkspaceAssignmentProxyRequest struct {
-	// The resource name of the workspace assignment. The format depends on the
-	// API that returned it: - Account-scoped:
-	// accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}
-	// - Workspace-scoped: workspace-assignments/{principal_id}
+	// The resource name of the assignment, in one of these formats: - Account
+	// APIs:
+	// `accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}`
+	// - Workspace APIs: `workspace-assignments/{principal_id}`
 	Name types.String `tfsdk:"-"`
-	// Required. The list of fields to update.
+	// The fields to update. The only supported field is `entitlements`.
 	UpdateMask types.String `tfsdk:"-"`
-	// Required. Workspace assignment to be updated in Databricks.
+	// The assignment to update. Its `name` identifies the assignment.
 	WorkspaceAssignment types.Object `tfsdk:"workspace_assignment"`
 }
 
@@ -7572,14 +7536,14 @@ func (m *UpdateWorkspaceAssignmentProxyRequest) SetWorkspaceAssignment(ctx conte
 }
 
 type UpdateWorkspaceAssignmentRequest struct {
-	// The resource name of the workspace assignment. The format depends on the
-	// API that returned it: - Account-scoped:
-	// accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}
-	// - Workspace-scoped: workspace-assignments/{principal_id}
+	// The resource name of the assignment, in one of these formats: - Account
+	// APIs:
+	// `accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}`
+	// - Workspace APIs: `workspace-assignments/{principal_id}`
 	Name types.String `tfsdk:"-"`
-	// Required. The list of fields to update.
+	// The fields to update. The only supported field is `entitlements`.
 	UpdateMask types.String `tfsdk:"-"`
-	// Required. Workspace assignment to be updated in Databricks.
+	// The assignment to update. Its `name` identifies the assignment.
 	WorkspaceAssignment types.Object `tfsdk:"workspace_assignment"`
 }
 
@@ -7677,12 +7641,14 @@ func (m *UpdateWorkspaceAssignmentRequest) SetWorkspaceAssignment(ctx context.Co
 }
 
 type UpdateWorkspaceIdentityDetailRequest struct {
-	// The resource name of the workspace identity detail. Format:
-	// principals/{principal_id}/workspace-identity-detail
+	// The resource name of the workspace identity detail, in the format
+	// `principals/{principal_id}/workspace-identity-detail`.
 	Name types.String `tfsdk:"-"`
-	// Required. The list of fields to update.
+	// The fields to update. The only supported field is
+	// `workspace_identity_status`.
 	UpdateMask types.String `tfsdk:"-"`
-	// Required. Workspace identity detail to be updated in Databricks.
+	// The workspace identity detail to update. Its `name` identifies the
+	// principal.
 	WorkspaceIdentityDetail types.Object `tfsdk:"workspace_identity_detail"`
 }
 
@@ -7779,27 +7745,28 @@ func (m *UpdateWorkspaceIdentityDetailRequest) SetWorkspaceIdentityDetail(ctx co
 	m.WorkspaceIdentityDetail = vs
 }
 
-// The details of a User resource.
+// A user in your Databricks account.
 type User struct {
-	// The accountId parent of the user in Databricks.
+	// The ID of the account that contains the user.
 	AccountId types.String `tfsdk:"account_id"`
-	// The activity status of a user in a Databricks account.
+	// Whether the user is active in the account. New users are active unless
+	// you set this to `INACTIVE`.
 	AccountUserStatus types.String `tfsdk:"account_user_status"`
-	// ExternalId of the user in the customer's IdP.
+	// The ID of the user in your identity provider (IdP).
 	ExternalId types.String `tfsdk:"external_id"`
-
+	// The user's name.
 	FullName types.Object `tfsdk:"full_name"`
-	// The resource name of the user. The format depends on the API that
-	// returned it: - Account-scoped: accounts/{account_id}/users/{user_id} -
-	// Workspace-scoped: users/{user_id}
+	// The resource name of the user, in one of these formats: - Account APIs:
+	// `accounts/{account_id}/users/{user_id}` - Workspace APIs:
+	// `users/{user_id}`
 	Name types.String `tfsdk:"name"`
-	// The resource name of the account that contains the user,
-	// `accounts/{account_id}`. Both the account-scoped and workspace-scoped
-	// APIs return it.
+	// The resource name of the account that contains the user, in the format
+	// `accounts/{account_id}`. Workspace APIs return the same format.
 	Parent types.String `tfsdk:"parent"`
-	// Internal userId of the user in Databricks.
+	// The Databricks ID of the user.
 	UserId types.String `tfsdk:"user_id"`
-	// Username/email of the user.
+	// The user's username, which is their email address. It can't be changed
+	// after the user is created.
 	Username types.String `tfsdk:"username"`
 }
 
@@ -7915,9 +7882,11 @@ func (m *User) SetFullName(ctx context.Context, v UserFullName) {
 	m.FullName = vs
 }
 
+// A user's name.
 type UserFullName struct {
+	// The user's family (last) name.
 	FamilyName types.String `tfsdk:"family_name"`
-
+	// The user's given (first) name.
 	GivenName types.String `tfsdk:"given_name"`
 }
 
@@ -8096,59 +8065,46 @@ func (m *WorkspaceAccessDetail) SetPermissions(ctx context.Context, v []types.St
 	m.Permissions = types.ListValueMust(t, vs)
 }
 
-// The direct assignment of a provisioned account-level principal (user, service
-// principal, or group) to a workspace, together with the entitlements that
-// assignment grants in the workspace.
+// A principal's direct assignment to a workspace, and the entitlements it
+// grants there.
 //
-// This resource covers only principals assigned directly to the workspace.
-// Principals that inherit workspace access through a group are not represented
-// here. See WorkspaceAccessDetail and WorkspaceIdentityDetail for the
-// effective, direct-or-indirect view. Creating the resource assigns the
-// principal to the workspace, and deleting it removes the assignment.
+// Only principals assigned directly to the workspace have an assignment. A
+// principal that gets access only through a group doesn't. Creating an
+// assignment gives the principal access to the workspace, and deleting it
+// removes that direct access. These APIs replace managing workspace assignments
+// through SCIM and the permission assignment APIs. They require a workspace
+// with identity federation enabled. You can't assign, change, or unassign
+// principals that Databricks manages.
 //
-// `entitlements` is the only client-settable field. It holds the entitlements
-// granted directly on this assignment, including any the principal also holds
-// through a group. `effective_entitlements` is the read-only union of those and
-// any granted through group membership.
-//
-// A direct assignment always carries at least one directly-assigned
-// entitlement, because the assignment is what grants it. Create and update both
-// reject an empty `entitlements` set. To remove a principal's assignment
-// entirely, delete the resource.
-//
-// This resource replaces workspace assignment previously managed through the
-// workspace SCIM and permission-assignment APIs, and is intended for account
-// and workspace admins.
+// `entitlements` is the only field you set. `effective_entitlements` also
+// includes the entitlements the principal gets through its groups. An
+// assignment must grant at least one entitlement. To remove a principal's
+// direct access, delete the assignment.
 type WorkspaceAssignment struct {
-	// The account ID parent of the workspace where the principal is assigned
+	// The ID of the account that contains the workspace.
 	AccountId types.String `tfsdk:"account_id"`
-	// Every entitlement the principal holds in this workspace, whether granted
-	// directly or through group membership. Get responses populate this field.
-	// List responses leave it empty.
+	// Every entitlement the principal has in the workspace, granted directly or
+	// through a group. List responses leave it empty.
 	EffectiveEntitlements types.Set `tfsdk:"effective_entitlements"`
-	// Entitlements granted directly to the principal on this workspace. This is
-	// the only client-settable field. Create and update manage exactly this
-	// set, including entitlements the principal also holds through a group.
-	// List responses leave this field empty. Get a single principal to read its
-	// entitlements.
+	// The entitlements granted directly by this assignment. Create and update
+	// set exactly this list, even if the principal also gets some of these
+	// entitlements through a group. List responses leave it empty.
 	Entitlements types.Set `tfsdk:"entitlements"`
-	// The resource name of the workspace assignment. The format depends on the
-	// API that returned it: - Account-scoped:
-	// accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}
-	// - Workspace-scoped: workspace-assignments/{principal_id}
+	// The resource name of the assignment, in one of these formats: - Account
+	// APIs:
+	// `accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}`
+	// - Workspace APIs: `workspace-assignments/{principal_id}`
 	Name types.String `tfsdk:"name"`
-	// The resource name of the workspace that contains the assignment,
-	// `accounts/{account_id}/workspaces/{workspace_id}`. Both the
-	// account-scoped and workspace-scoped APIs return it.
+	// The resource name of the workspace, in the format
+	// `accounts/{account_id}/workspaces/{workspace_id}`. Workspace APIs return
+	// the same format.
 	Parent types.String `tfsdk:"parent"`
-	// The internal ID of the principal (user/sp/group) in Databricks. Set when
-	// the assignment is created and cannot be changed afterwards; to assign a
-	// different principal, create a new assignment.
+	// The Databricks ID of the assigned user, service principal, or group. It
+	// can't be changed after the assignment is created.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
-	// The type of the principal (user/service principal/group) that is
-	// assigned.
+	// Whether the assigned principal is a user, service principal, or group.
 	PrincipalType types.String `tfsdk:"principal_type"`
-	// The workspace ID where the principal is assigned.
+	// The ID of the workspace.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
@@ -8488,20 +8444,22 @@ func (m *WorkspaceAssignmentDetail) SetEntitlements(ctx context.Context, v []typ
 	m.Entitlements = types.SetValueMust(t, vs)
 }
 
-// The details of a directly or indirectly assigned principal's details in a
-// workspace.
+// A user, service principal, or group's status in a workspace, and whether it
+// has access to the workspace directly or through a group. Update it to
+// activate or deactivate a user or service principal in the workspace.
 type WorkspaceIdentityDetail struct {
-	// The type of assignment the principal has to the workspace (direct or
-	// indirect).
+	// Whether the principal is assigned to the workspace directly or has access
+	// through a group.
 	AssignmentType types.String `tfsdk:"assignment_type"`
-	// The resource name of the workspace identity detail. Format:
-	// principals/{principal_id}/workspace-identity-detail
+	// The resource name of the workspace identity detail, in the format
+	// `principals/{principal_id}/workspace-identity-detail`.
 	Name types.String `tfsdk:"name"`
-	// The internal ID of the principal (user/sp/group) in Databricks.
+	// The Databricks ID of the user, service principal, or group.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
-	// The type of the principal (user/service principal/group).
+	// Whether the principal is a user, service principal, or group.
 	PrincipalType types.String `tfsdk:"principal_type"`
-	// The activity status of an identity in a Databricks workspace.
+	// Whether the principal is active in the workspace. Groups are always
+	// `ACTIVE`.
 	WorkspaceIdentityStatus types.String `tfsdk:"workspace_identity_status"`
 }
 

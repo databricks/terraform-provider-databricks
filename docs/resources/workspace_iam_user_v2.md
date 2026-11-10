@@ -31,28 +31,30 @@ resource "databricks_workspace_iam_user_v2" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `account_user_status` (string, required) - The activity status of a user in a Databricks account. Possible values are: `ACTIVE`, `INACTIVE`
-* `full_name` (UserFullName, required)
-* `username` (string, required) - Username/email of the user
-* `external_id` (string, optional) - ExternalId of the user in the customer's IdP
+* `account_user_status` (string, required) - Whether the user is active in the account. New users are active unless you set this to
+  `INACTIVE`. Possible values are: `ACTIVE`, `INACTIVE`
+* `full_name` (UserFullName, required) - The user's name
+* `username` (string, required) - The user's username, which is their email address. It can't be changed after the user is
+  created
+* `external_id` (string, optional) - The ID of the user in your identity provider (IdP)
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
 * `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### UserFullName
-* `family_name` (string, optional)
-* `given_name` (string, optional)
+* `family_name` (string, optional) - The user's family (last) name
+* `given_name` (string, optional) - The user's given (first) name
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `account_id` (string) - The accountId parent of the user in Databricks
-* `name` (string) - The resource name of the user. The format depends on the API that returned it:
-  - Account-scoped: accounts/{account_id}/users/{user_id}
-  - Workspace-scoped: users/{user_id}
-* `parent` (string) - The resource name of the account that contains the user, `accounts/{account_id}`. Both the
-  account-scoped and workspace-scoped APIs return it
-* `user_id` (string) - Internal userId of the user in Databricks
+* `account_id` (string) - The ID of the account that contains the user
+* `name` (string) - The resource name of the user, in one of these formats:
+  - Account APIs: `accounts/{account_id}/users/{user_id}`
+  - Workspace APIs: `users/{user_id}`
+* `parent` (string) - The resource name of the account that contains the user, in the format
+  `accounts/{account_id}`. Workspace APIs return the same format
+* `user_id` (string) - The Databricks ID of the user
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

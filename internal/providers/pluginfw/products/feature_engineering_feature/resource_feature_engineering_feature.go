@@ -142,6 +142,9 @@ type Feature struct {
 	// Name of the feature, extracted from the full three-part name
 	// (catalog.schema.name).
 	Name types.String `tfsdk:"name"`
+	// Output type in Databricks SQL DDL (e.g., "BIGINT", "DECIMAL(10,2)",
+	// "ARRAY<STRING>", "STRUCT<name:STRING>").
+	OutputTypeText types.String `tfsdk:"output_type_text"`
 	// Name of parent schema relative to its parent catalog.
 	SchemaName types.String `tfsdk:"schema_name"`
 	// The data source of the feature.
@@ -195,6 +198,7 @@ func (m Feature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"inputs":            m.Inputs,
 			"lineage_context":   m.LineageContext,
 			"name":              m.Name,
+			"output_type_text":  m.OutputTypeText,
 			"schema_name":       m.SchemaName,
 			"source":            m.Source,
 			"time_window":       m.TimeWindow,
@@ -224,6 +228,7 @@ func (m Feature) Type(ctx context.Context) attr.Type {
 			},
 			"lineage_context":   ml_tf.LineageContext{}.Type(ctx),
 			"name":              types.StringType,
+			"output_type_text":  types.StringType,
 			"schema_name":       types.StringType,
 			"source":            ml_tf.DataSource{}.Type(ctx),
 			"time_window":       ml_tf.TimeWindow{}.Type(ctx),
@@ -412,6 +417,7 @@ func (m Feature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["lineage_context"] = attrs["lineage_context"].SetComputed()
 	attrs["lineage_context"] = attrs["lineage_context"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
+	attrs["output_type_text"] = attrs["output_type_text"].SetComputed()
 	attrs["schema_name"] = attrs["schema_name"].SetComputed()
 	attrs["source"] = attrs["source"].SetRequired()
 	attrs["source"] = attrs["source"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)

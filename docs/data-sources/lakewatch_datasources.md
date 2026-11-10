@@ -51,8 +51,8 @@ This data source exports a single attribute, `datasources`. It is a list of reso
 * `datasource_id` (string) - Unity Catalog securable ID (a UUID) of the datasource. It never changes, including when the
   datasource is renamed in Unity Catalog, and is the final segment of `name`
 * `datasource_name` (string) - Name of the datasource in Unity Catalog, unique within its schema. Required on create and
-  cannot be changed afterward. Reads return the value as supplied; the datasource's current
-  Unity Catalog name, which reflects renames, is reported in `effective_datasource_name`
+  can be updated within the same catalog and schema. Get synchronizes this field with the
+  current Unity Catalog name, also reported in `effective_datasource_name`
 * `description` (string) - Free-form description of the datasource
 * `effective_catalog_name` (string) - Current name of the Unity Catalog catalog that contains the datasource, which reflects
   catalog renames without a change to `catalog_name`. Populated on get, create, and update
@@ -103,8 +103,8 @@ This data source exports a single attribute, `datasources`. It is a list of reso
   `etag` for optimistic concurrency control
 * `warehouse_id` (string) - ID of the SQL warehouse that runs the checks Lakewatch performs to validate a create or update
   request, such as source and destination access checks. Required and non-blank on every create
-  and update request; there is no default warehouse. The requester must be able to use the
-  warehouse. Used only for those checks: it is not stored, is not returned on reads, and does
+  and update request except a rename-only PATCH; there is no default warehouse. The requester
+  must be able to use the warehouse. It is not stored, is not returned on reads, and does
   not affect the compute that runs the ingestion job
 
 ### AutoLoader

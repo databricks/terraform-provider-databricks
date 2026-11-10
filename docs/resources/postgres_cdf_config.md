@@ -12,7 +12,7 @@ This resource uses Lakebase Autoscaling Terraform semantics. For complete detail
 
 ### Overview
 
-A Postgres CDF (Change Data Feed) configuration replicates the tables of a single Postgres schema into a Unity Catalog schema. There is one CDF configuration per Postgres schema per database. The configuration is immutable once created: changing the catalog, schema, or source Postgres schema requires replacing the resource.
+A Postgres CDF (Change Data Feed) configuration replicates the tables of a single Postgres schema into a Unity Catalog schema. There is one CDF configuration per Postgres schema per database. The configuration is immutable once created: changing the catalog, schema, source Postgres schema, or service principal requires replacing the resource.
 
 ### Hierarchy Context
 
@@ -20,6 +20,14 @@ CDF configurations exist within the Lakebase Autoscaling resource hierarchy:
 - A **CDF configuration** belongs to a **database** within a **branch** and **project**
 - Each configuration replicates exactly one Postgres schema (`postgres_schema`) into one Unity Catalog schema (`catalog` + `schema`)
 - The `cdf_config_id` forms the final segment of the resource name; it defaults to the Postgres schema name when omitted
+
+### Run as a service principal
+
+Set `service_principal` to the application ID of a service principal to run the CDF configuration as that service principal instead of as your own identity. You need the Service Principal User role on the service principal. The service principal needs `USE CATALOG` on `catalog`, and `USE SCHEMA` and `CREATE TABLE` on `schema`.
+
+Adding, changing, or removing `service_principal` replaces the resource. Terraform deletes the CDF configuration, then creates a new one that runs as the new identity. The new configuration can have the same `name` and `cdf_config_id` as the old one, but it is a different configuration:
+- The delete keeps the replicated Delta tables at their last synced state. They keep their owner and are no longer updated.
+- The new configuration writes to new Delta tables. If the old tables still exist, the new tables get a numeric suffix, for example `lb_<table>_history_1`.
 
 ### Use Cases
 
@@ -76,6 +84,10 @@ The following arguments are supported:
   parent database. Set at creation; the CdfConfig is immutable
 * `schema` (string, required) - The Unity Catalog schema that replicated tables are written into.
   Set at creation; the CdfConfig is immutable
+* `service_principal` (string, optional) - The service principal (application id) whose identity authorizes this
+  change data feed's ongoing writes to Unity Catalog. When unset, writes are
+  authorized as the creating identity. Changing it requires a new CdfConfig,
+  which writes to new Delta tables
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig

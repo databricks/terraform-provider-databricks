@@ -17,19 +17,14 @@ The following arguments are supported:
   cannot be changed afterward. Reads return the value as supplied; the catalog's current name
   is reported in `effective_catalog_name`
 * `datasource_name` (string, required) - Name of the datasource in Unity Catalog, unique within its schema. Required on create and
-  cannot be changed afterward. Reads return the value as supplied; the datasource's current
-  Unity Catalog name, which reflects renames, is reported in `effective_datasource_name`
+  can be updated within the same catalog and schema. Get synchronizes this field with the
+  current Unity Catalog name, also reported in `effective_datasource_name`
 * `schedule` (Schedule, required) - Schedule on which the datasource's ingestion job runs. A datasource cannot be paused, so a
   request that sets `schedule.enabled` to `false` is rejected. Continuous schedules are not
   supported for Unity Catalog connection datasources
 * `schema_name` (string, required) - Name of the Unity Catalog schema that contains the datasource. Required on create and
   cannot be changed afterward. Reads return the value as supplied; the schema's current name
   is reported in `effective_schema_name`
-* `warehouse_id` (string, required) - ID of the SQL warehouse that runs the checks Lakewatch performs to validate a create or update
-  request, such as source and destination access checks. Required and non-blank on every create
-  and update request; there is no default warehouse. The requester must be able to use the
-  warehouse. Used only for those checks: it is not stored, is not returned on reads, and does
-  not affect the compute that runs the ingestion job
 * `annotations` (object, optional) - Free-form key-value annotations on the datasource, managed by the client
 * `autoloader` (AutoLoader, optional)
 * `compute_mode` (string, optional) - Compute mode for the datasource's ingestion job. If unset, the `default_compute_mode` of
@@ -49,6 +44,11 @@ The following arguments are supported:
   requester; a mask that omits it keeps the current identity. Reads return the value as
   supplied; the identity the datasource runs as is reported in `effective_run_as_principal`
 * `unity_catalog_connection` (UnityCatalogConnection, optional)
+* `warehouse_id` (string, optional) - ID of the SQL warehouse that runs the checks Lakewatch performs to validate a create or update
+  request, such as source and destination access checks. Required and non-blank on every create
+  and update request except a rename-only PATCH; there is no default warehouse. The requester
+  must be able to use the warehouse. It is not stored, is not returned on reads, and does
+  not affect the compute that runs the ingestion job
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig

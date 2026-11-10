@@ -109,35 +109,30 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 
 // WorkspaceAssignment extends the main model with additional fields.
 type WorkspaceAssignment struct {
-	// The account ID parent of the workspace where the principal is assigned
+	// The ID of the account that contains the workspace.
 	AccountId types.String `tfsdk:"account_id"`
-	// Every entitlement the principal holds in this workspace, whether granted
-	// directly or through group membership. Get responses populate this field.
-	// List responses leave it empty.
+	// Every entitlement the principal has in the workspace, granted directly or
+	// through a group. List responses leave it empty.
 	EffectiveEntitlements types.Set `tfsdk:"effective_entitlements"`
-	// Entitlements granted directly to the principal on this workspace. This is
-	// the only client-settable field. Create and update manage exactly this
-	// set, including entitlements the principal also holds through a group.
-	// List responses leave this field empty. Get a single principal to read its
-	// entitlements.
+	// The entitlements granted directly by this assignment. Create and update
+	// set exactly this list, even if the principal also gets some of these
+	// entitlements through a group. List responses leave it empty.
 	Entitlements types.Set `tfsdk:"entitlements"`
-	// The resource name of the workspace assignment. The format depends on the
-	// API that returned it: - Account-scoped:
-	// accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}
-	// - Workspace-scoped: workspace-assignments/{principal_id}
+	// The resource name of the assignment, in one of these formats: - Account
+	// APIs:
+	// `accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}`
+	// - Workspace APIs: `workspace-assignments/{principal_id}`
 	Name types.String `tfsdk:"name"`
-	// The resource name of the workspace that contains the assignment,
-	// `accounts/{account_id}/workspaces/{workspace_id}`. Both the
-	// account-scoped and workspace-scoped APIs return it.
+	// The resource name of the workspace, in the format
+	// `accounts/{account_id}/workspaces/{workspace_id}`. Workspace APIs return
+	// the same format.
 	Parent types.String `tfsdk:"parent"`
-	// The internal ID of the principal (user/sp/group) in Databricks. Set when
-	// the assignment is created and cannot be changed afterwards; to assign a
-	// different principal, create a new assignment.
+	// The Databricks ID of the assigned user, service principal, or group. It
+	// can't be changed after the assignment is created.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
-	// The type of the principal (user/service principal/group) that is
-	// assigned.
+	// Whether the assigned principal is a user, service principal, or group.
 	PrincipalType types.String `tfsdk:"principal_type"`
-	// The workspace ID where the principal is assigned.
+	// The ID of the workspace.
 	WorkspaceId    types.Int64  `tfsdk:"workspace_id"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }

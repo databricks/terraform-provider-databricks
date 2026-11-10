@@ -78,10 +78,14 @@ This data source exports a single attribute, `roles`. It is a list of resources,
   NOTE: for the Databricks identity type GROUP, LAKEBASE_OAUTH_V1
   is the default auth method (group can login as well).
   
-  This field is set when the role is created and cannot be changed by
-  UpdateRole. If provided in an UpdateRole request body, its value is
-  ignored and the existing value is retained. Do not include this field
-  as an explicit path in update_mask. Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
+  This field is set when the role is created and cannot be changed.
+  When replacing an existing role with replace_existing=true, omit this
+  field or supply its current value. A differing value returns
+  INVALID_PARAMETER_VALUE and rejects the entire request, including changes
+  to mutable fields.
+  With `*` or masks containing only mutable fields, supplied values are ignored.
+  Including this field as an explicit path in update_mask returns
+  INVALID_PARAMETER_VALUE. Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
 * `identity_type` (string) - The type of role.
   When specifying a managed-identity, the chosen role_id must be a valid:
   
@@ -89,10 +93,14 @@ This data source exports a single attribute, `roles`. It is a list of resources,
   * user email for USER
   * group name for GROUP
   
-  This field is set when the role is created and cannot be changed by
-  UpdateRole. If provided in an UpdateRole request body, its value is
-  ignored and the existing value is retained. Do not include this field
-  as an explicit path in update_mask. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
+  This field is set when the role is created and cannot be changed.
+  When replacing an existing role with replace_existing=true, omit this
+  field or supply its current value. A differing value returns
+  INVALID_PARAMETER_VALUE and rejects the entire request, including changes
+  to mutable fields.
+  With `*` or masks containing only mutable fields, supplied values are ignored.
+  Including this field as an explicit path in update_mask returns
+  INVALID_PARAMETER_VALUE. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
 * `membership_roles` (list of string) - An enum value for a standard role that this role is a member of
 * `postgres_role` (string) - The name of the Postgres role.
   
@@ -108,10 +116,14 @@ This data source exports a single attribute, `roles`. It is a list of resources,
   2. app ID for IdentityType.SERVICE_PRINCIPAL
   2. group name for IdentityType.GROUP
   
-  This field is set when the role is created and cannot be changed by
-  UpdateRole. If provided in an UpdateRole request body, its value is
-  ignored and the existing value is retained. Do not include this field
-  as an explicit path in update_mask
+  This field is set when the role is created and cannot be changed.
+  When replacing an existing role with replace_existing=true, omit this
+  field or supply its current value. A differing value returns
+  INVALID_PARAMETER_VALUE and rejects the entire request, including changes
+  to mutable fields.
+  With `*` or masks containing only mutable fields, supplied values are ignored.
+  Including this field as an explicit path in update_mask returns
+  INVALID_PARAMETER_VALUE
 
 ### RoleRoleStatus
 * `attributes` (RoleAttributes) - The PG role attributes associated with the role

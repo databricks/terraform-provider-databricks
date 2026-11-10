@@ -183,9 +183,10 @@ type Rule struct {
 	// Unity Catalog securable UUID of the rule, and the last segment of `name`.
 	// Never changes, including when the rule's catalog or schema is renamed.
 	RuleId types.String `tfsdk:"rule_id"`
-	// Name of the rule within its Unity Catalog schema. Required. Cannot be
-	// changed after creation. Reads return the value as supplied; the current
-	// UC name is reported in `effective_rule_name`.
+	// Name of the rule within its Unity Catalog schema. Required on create; can
+	// be updated within the same catalog and schema. Get synchronizes this
+	// field with the current Unity Catalog name, also reported in
+	// `effective_rule_name`.
 	RuleName types.String `tfsdk:"rule_name"`
 	// The principal whose identity this rule's job runs as, given as a user
 	// email or service-principal application ID. When supplied on
@@ -609,7 +610,6 @@ func (m Rule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["references"] = attrs["references"].SetOptional()
 	attrs["rule_id"] = attrs["rule_id"].SetComputed()
 	attrs["rule_name"] = attrs["rule_name"].SetRequired()
-	attrs["rule_name"] = attrs["rule_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["run_as_principal"] = attrs["run_as_principal"].SetOptional()
 	attrs["runbook"] = attrs["runbook"].SetOptional()
 	attrs["schedule"] = attrs["schedule"].SetRequired()
@@ -1084,7 +1084,7 @@ func (r *RuleResource) update(ctx context.Context, plan Rule, diags *diag.Diagno
 	updateRequest := lakewatch.UpdateRuleRequest{
 		Rule:       rule,
 		Name:       plan.Name.ValueString(),
-		UpdateMask: *fieldmask.New(strings.Split("annotations,batch,category,deduplication,deduplication_time_window,description,fidelity,mitre,objective,output,references,run_as_principal,runbook,schedule,severity,suppress_until_time,timerange", ",")),
+		UpdateMask: *fieldmask.New(strings.Split("annotations,batch,category,deduplication,deduplication_time_window,description,fidelity,mitre,objective,output,references,rule_name,run_as_principal,runbook,schedule,severity,suppress_until_time,timerange", ",")),
 	}
 
 	var namespace ProviderConfig

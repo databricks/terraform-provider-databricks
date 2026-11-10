@@ -45,6 +45,7 @@ The following attributes are exported:
   Users should not manually set this field as incorrect values may lead to inaccurate lineage tracking or unexpected behavior.
   This field will be set by feature-engineering client and should be left unset by SDK and terraform users
 * `name` (string) - Name of the feature, extracted from the full three-part name (catalog.schema.name)
+* `output_type_text` (string) - Output type in Databricks SQL DDL (e.g., "BIGINT", "DECIMAL(10,2)", "ARRAY<STRING>", "STRUCT<name:STRING>")
 * `schema_name` (string) - Name of parent schema relative to its parent catalog
 * `source` (DataSource) - The data source of the feature
 * `time_window` (TimeWindow, deprecated)
@@ -250,7 +251,7 @@ The following attributes are exported:
 * `input_tables` (list of string) - The full three-part names of the tables the pipeline reads from. Required to materialize this
   feature with a TableTrigger, which starts a run when these tables update. Each table must exist
   when the feature is created. Feature Store doesn't confirm that the pipeline reads from these
-  tables. At most 100 tables
+  tables. At most 25 tables
 * `output_table` (string) - The full three-part (catalog, schema, table) name of the pipeline's output table to read from.
   The table doesn't need to exist until the pipeline first runs. Required
 * `pipeline_id` (string) - The ID of the Spark Declarative Pipeline that Feature Store runs to produce this source, before

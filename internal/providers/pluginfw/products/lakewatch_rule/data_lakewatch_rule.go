@@ -172,9 +172,10 @@ type RuleData struct {
 	// Unity Catalog securable UUID of the rule, and the last segment of `name`.
 	// Never changes, including when the rule's catalog or schema is renamed.
 	RuleId types.String `tfsdk:"rule_id"`
-	// Name of the rule within its Unity Catalog schema. Required. Cannot be
-	// changed after creation. Reads return the value as supplied; the current
-	// UC name is reported in `effective_rule_name`.
+	// Name of the rule within its Unity Catalog schema. Required on create; can
+	// be updated within the same catalog and schema. Get synchronizes this
+	// field with the current Unity Catalog name, also reported in
+	// `effective_rule_name`.
 	RuleName types.String `tfsdk:"rule_name"`
 	// The principal whose identity this rule's job runs as, given as a user
 	// email or service-principal application ID. When supplied on

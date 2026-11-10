@@ -94,9 +94,7 @@ The following arguments are supported:
 
 ### ModelServiceConfigExternalModelConfig
 * `model_provider_service` (string, required) - Resource name of the governed ModelProviderService that owns provider
-  auth and provider-specific configuration. The referenced
-  ModelProviderService also carries the provider type, so this message
-  does not surface it directly.
+  auth and provider-specific configuration.
   Format: `model-provider-services/{catalog}.{schema}.{model_provider_service}`.
   Each `{...}` component is capped at 255 characters individually
 * `target` (ModelProviderServiceConfigModelTargetConfig, required) - Routing target for the destination: the provider-side model selected from

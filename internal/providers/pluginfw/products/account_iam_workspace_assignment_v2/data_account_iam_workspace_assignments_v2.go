@@ -28,13 +28,11 @@ func DataSourceWorkspaceAssignments() datasource.DataSource {
 // WorkspaceAssignmentsData extends the main model with additional fields.
 type WorkspaceAssignmentsData struct {
 	AccountIamV2 types.List `tfsdk:"workspace_assignments"`
-	// The maximum number of workspace assignments to return. The service may
-	// return fewer than this value. If not provided, defaults to 1000, which is
-	// also the maximum allowed. Requests for more than the maximum are clamped
-	// to 1000.
+	// The maximum number of assignments to return, up to 1000. The default is
+	// 1000. A page can contain fewer assignments.
 	PageSize types.Int64 `tfsdk:"page_size"`
-	// The parent resource name of the workspace whose assignments to list.
-	// Format: accounts/{account_id}/workspaces/{workspace_id}
+	// The resource name of the workspace, in the format
+	// `accounts/{account_id}/workspaces/{workspace_id}`.
 	Parent types.String `tfsdk:"parent"`
 }
 

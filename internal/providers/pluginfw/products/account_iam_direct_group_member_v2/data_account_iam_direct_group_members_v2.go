@@ -28,12 +28,11 @@ func DataSourceDirectGroupMembers() datasource.DataSource {
 // DirectGroupMembersData extends the main model with additional fields.
 type DirectGroupMembersData struct {
 	AccountIamV2 types.List `tfsdk:"direct_group_members"`
-	// The maximum number of members to return. The service may return fewer
-	// than this value. If not provided, defaults to 1000, which is also the
-	// maximum allowed. Requests for more than the maximum are clamped to 1000.
+	// The maximum number of members to return, up to 1000. The default is 1000.
+	// A page can contain fewer members.
 	PageSize types.Int64 `tfsdk:"page_size"`
-	// The parent resource name of the group whose direct members to list.
-	// Format: accounts/{account_id}/groups/{group_id}
+	// The resource name of the group, in the format
+	// `accounts/{account_id}/groups/{group_id}`.
 	Parent types.String `tfsdk:"parent"`
 }
 

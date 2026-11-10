@@ -32154,9 +32154,7 @@ func (m *ModelServiceConfigDestinationConfig_SdkV2) SetProvisionedThroughputConf
 // platform resolves the provider at invocation time.
 type ModelServiceConfigExternalModelConfig_SdkV2 struct {
 	// Resource name of the governed ModelProviderService that owns provider
-	// auth and provider-specific configuration. The referenced
-	// ModelProviderService also carries the provider type, so this message does
-	// not surface it directly. Format:
+	// auth and provider-specific configuration. Format:
 	// `model-provider-services/{catalog}.{schema}.{model_provider_service}`.
 	// Each `{...}` component is capped at 255 characters individually.
 	ModelProviderService types.String `tfsdk:"model_provider_service"`

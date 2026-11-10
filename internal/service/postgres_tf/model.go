@@ -27,6 +27,697 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+// Request to acknowledge assessment warnings.
+type AcknowledgeAssessmentWarningsRequest struct {
+	// Required. The assessment resource name, in the format
+	// `migrations/{migration}/assessments/{assessment}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *AcknowledgeAssessmentWarningsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AcknowledgeAssessmentWarningsRequest) {
+}
+
+func (to *AcknowledgeAssessmentWarningsRequest) SyncFieldsDuringRead(ctx context.Context, from AcknowledgeAssessmentWarningsRequest) {
+}
+
+func (m AcknowledgeAssessmentWarningsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AcknowledgeAssessmentWarningsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AcknowledgeAssessmentWarningsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AcknowledgeAssessmentWarningsRequest
+// only implements ToObjectValue() and Type().
+func (m AcknowledgeAssessmentWarningsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AcknowledgeAssessmentWarningsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+// Response produced after assessment warnings are acknowledged.
+type AcknowledgeAssessmentWarningsResponse struct {
+	// The assessment after its warnings are acknowledged.
+	Assessment types.Object `tfsdk:"assessment"`
+}
+
+func (to *AcknowledgeAssessmentWarningsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AcknowledgeAssessmentWarningsResponse) {
+	if !from.Assessment.IsNull() && !from.Assessment.IsUnknown() {
+		if toAssessment, ok := to.GetAssessment(ctx); ok {
+			if fromAssessment, ok := from.GetAssessment(ctx); ok {
+				// Recursively sync the fields of Assessment
+				toAssessment.SyncFieldsDuringCreateOrUpdate(ctx, fromAssessment)
+				to.SetAssessment(ctx, toAssessment)
+			}
+		}
+	}
+}
+
+func (to *AcknowledgeAssessmentWarningsResponse) SyncFieldsDuringRead(ctx context.Context, from AcknowledgeAssessmentWarningsResponse) {
+	if !from.Assessment.IsNull() && !from.Assessment.IsUnknown() {
+		if toAssessment, ok := to.GetAssessment(ctx); ok {
+			if fromAssessment, ok := from.GetAssessment(ctx); ok {
+				toAssessment.SyncFieldsDuringRead(ctx, fromAssessment)
+				to.SetAssessment(ctx, toAssessment)
+			}
+		}
+	}
+}
+
+func (m AcknowledgeAssessmentWarningsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["assessment"] = attrs["assessment"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AcknowledgeAssessmentWarningsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AcknowledgeAssessmentWarningsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"assessment": reflect.TypeOf(Assessment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AcknowledgeAssessmentWarningsResponse
+// only implements ToObjectValue() and Type().
+func (m AcknowledgeAssessmentWarningsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"assessment": m.Assessment,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AcknowledgeAssessmentWarningsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"assessment": Assessment{}.Type(ctx),
+		},
+	}
+}
+
+// GetAssessment returns the value of the Assessment field in AcknowledgeAssessmentWarningsResponse as
+// a Assessment value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AcknowledgeAssessmentWarningsResponse) GetAssessment(ctx context.Context) (Assessment, bool) {
+	var e Assessment
+	if m.Assessment.IsNull() || m.Assessment.IsUnknown() {
+		return e, false
+	}
+	var v Assessment
+	d := m.Assessment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAssessment sets the value of the Assessment field in AcknowledgeAssessmentWarningsResponse.
+func (m *AcknowledgeAssessmentWarningsResponse) SetAssessment(ctx context.Context, v Assessment) {
+	vs := v.ToObjectValue(ctx)
+	m.Assessment = vs
+}
+
+// Request to assess a migration.
+type AssessMigrationRequest struct {
+	// Required. The migration resource name, in the format
+	// `migrations/{migration}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *AssessMigrationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AssessMigrationRequest) {
+}
+
+func (to *AssessMigrationRequest) SyncFieldsDuringRead(ctx context.Context, from AssessMigrationRequest) {
+}
+
+func (m AssessMigrationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AssessMigrationRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AssessMigrationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AssessMigrationRequest
+// only implements ToObjectValue() and Type().
+func (m AssessMigrationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AssessMigrationRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+// Response produced after an assessment run is created.
+type AssessMigrationResponse struct {
+	// The assessment run created for the migration.
+	Assessment types.Object `tfsdk:"assessment"`
+}
+
+func (to *AssessMigrationResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AssessMigrationResponse) {
+	if !from.Assessment.IsNull() && !from.Assessment.IsUnknown() {
+		if toAssessment, ok := to.GetAssessment(ctx); ok {
+			if fromAssessment, ok := from.GetAssessment(ctx); ok {
+				// Recursively sync the fields of Assessment
+				toAssessment.SyncFieldsDuringCreateOrUpdate(ctx, fromAssessment)
+				to.SetAssessment(ctx, toAssessment)
+			}
+		}
+	}
+}
+
+func (to *AssessMigrationResponse) SyncFieldsDuringRead(ctx context.Context, from AssessMigrationResponse) {
+	if !from.Assessment.IsNull() && !from.Assessment.IsUnknown() {
+		if toAssessment, ok := to.GetAssessment(ctx); ok {
+			if fromAssessment, ok := from.GetAssessment(ctx); ok {
+				toAssessment.SyncFieldsDuringRead(ctx, fromAssessment)
+				to.SetAssessment(ctx, toAssessment)
+			}
+		}
+	}
+}
+
+func (m AssessMigrationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["assessment"] = attrs["assessment"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AssessMigrationResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AssessMigrationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"assessment": reflect.TypeOf(Assessment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AssessMigrationResponse
+// only implements ToObjectValue() and Type().
+func (m AssessMigrationResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"assessment": m.Assessment,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AssessMigrationResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"assessment": Assessment{}.Type(ctx),
+		},
+	}
+}
+
+// GetAssessment returns the value of the Assessment field in AssessMigrationResponse as
+// a Assessment value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AssessMigrationResponse) GetAssessment(ctx context.Context) (Assessment, bool) {
+	var e Assessment
+	if m.Assessment.IsNull() || m.Assessment.IsUnknown() {
+		return e, false
+	}
+	var v Assessment
+	d := m.Assessment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAssessment sets the value of the Assessment field in AssessMigrationResponse.
+func (m *AssessMigrationResponse) SetAssessment(ctx context.Context, v Assessment) {
+	vs := v.ToObjectValue(ctx)
+	m.Assessment = vs
+}
+
+// A server-managed assessment of a migration's source configuration. Completed
+// check results are immutable.
+type Assessment struct {
+	// Output-only. Results of the checks performed by this assessment.
+	Checks types.List `tfsdk:"checks"`
+	// Output-only. The time when the assessment completed.
+	CompleteTime timetypes.RFC3339 `tfsdk:"complete_time"`
+	// Output-only. The time when the assessment started.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// Output-only. The time when the assessment expires.
+	ExpireTime timetypes.RFC3339 `tfsdk:"expire_time"`
+	// The assessment resource name, in the format
+	// `migrations/{migration}/assessments/{assessment}`.
+	Name types.String `tfsdk:"name"`
+	// Output-only. The aggregate assessment state.
+	State types.String `tfsdk:"state"`
+}
+
+func (to *Assessment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Assessment) {
+	if !from.Checks.IsNull() && !from.Checks.IsUnknown() && to.Checks.IsNull() && len(from.Checks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Checks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Checks = from.Checks
+	}
+	if !from.Checks.IsNull() && !from.Checks.IsUnknown() {
+		if toChecks, ok := to.GetChecks(ctx); ok {
+			if fromChecks, ok := from.GetChecks(ctx); ok {
+				// Recursively sync the fields of each Checks element by position.
+				for i := range toChecks {
+					if i < len(fromChecks) {
+						toChecks[i].SyncFieldsDuringCreateOrUpdate(ctx, fromChecks[i])
+					}
+				}
+				to.SetChecks(ctx, toChecks)
+			}
+		}
+	}
+}
+
+func (to *Assessment) SyncFieldsDuringRead(ctx context.Context, from Assessment) {
+	if !from.Checks.IsNull() && !from.Checks.IsUnknown() && to.Checks.IsNull() && len(from.Checks.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Checks, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Checks = from.Checks
+	}
+	if !from.Checks.IsNull() && !from.Checks.IsUnknown() {
+		if toChecks, ok := to.GetChecks(ctx); ok {
+			if fromChecks, ok := from.GetChecks(ctx); ok {
+				for i := range toChecks {
+					if i < len(fromChecks) {
+						toChecks[i].SyncFieldsDuringRead(ctx, fromChecks[i])
+					}
+				}
+				to.SetChecks(ctx, toChecks)
+			}
+		}
+	}
+}
+
+func (m Assessment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["checks"] = attrs["checks"].SetComputed()
+	attrs["complete_time"] = attrs["complete_time"].SetComputed()
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["expire_time"] = attrs["expire_time"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["state"] = attrs["state"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Assessment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Assessment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"checks": reflect.TypeOf(AssessmentCheck{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Assessment
+// only implements ToObjectValue() and Type().
+func (m Assessment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"checks":        m.Checks,
+			"complete_time": m.CompleteTime,
+			"create_time":   m.CreateTime,
+			"expire_time":   m.ExpireTime,
+			"name":          m.Name,
+			"state":         m.State,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Assessment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"checks": basetypes.ListType{
+				ElemType: AssessmentCheck{}.Type(ctx),
+			},
+			"complete_time": timetypes.RFC3339{}.Type(ctx),
+			"create_time":   timetypes.RFC3339{}.Type(ctx),
+			"expire_time":   timetypes.RFC3339{}.Type(ctx),
+			"name":          types.StringType,
+			"state":         types.StringType,
+		},
+	}
+}
+
+// GetChecks returns the value of the Checks field in Assessment as
+// a slice of AssessmentCheck values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Assessment) GetChecks(ctx context.Context) ([]AssessmentCheck, bool) {
+	if m.Checks.IsNull() || m.Checks.IsUnknown() {
+		return nil, false
+	}
+	var v []AssessmentCheck
+	d := m.Checks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetChecks sets the value of the Checks field in Assessment.
+func (m *Assessment) SetChecks(ctx context.Context, v []AssessmentCheck) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["checks"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Checks = types.ListValueMust(t, vs)
+}
+
+// The result of one assessment check.
+type AssessmentCheck struct {
+	// Output-only. Whether this result blocks migration from starting.
+	BlocksMigration types.Bool `tfsdk:"blocks_migration"`
+	// Output-only. Stable identifier of the check.
+	CheckId types.String `tfsdk:"check_id"`
+	// Output-only. The source database the check evaluated. Unset for checks
+	// that assess the whole source server rather than a single database.
+	Database types.String `tfsdk:"database"`
+	// Output-only. Measurements observed by this check. Absent when
+	// unavailable.
+	Details types.Object `tfsdk:"details"`
+	// Output-only. Explanation of the result.
+	Reason types.String `tfsdk:"reason"`
+	// Output-only. The check verdict.
+	Verdict types.String `tfsdk:"verdict"`
+}
+
+func (to *AssessmentCheck) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AssessmentCheck) {
+	if !from.Details.IsNull() && !from.Details.IsUnknown() {
+		if toDetails, ok := to.GetDetails(ctx); ok {
+			if fromDetails, ok := from.GetDetails(ctx); ok {
+				// Recursively sync the fields of Details
+				toDetails.SyncFieldsDuringCreateOrUpdate(ctx, fromDetails)
+				to.SetDetails(ctx, toDetails)
+			}
+		}
+	}
+}
+
+func (to *AssessmentCheck) SyncFieldsDuringRead(ctx context.Context, from AssessmentCheck) {
+	if !from.Details.IsNull() && !from.Details.IsUnknown() {
+		if toDetails, ok := to.GetDetails(ctx); ok {
+			if fromDetails, ok := from.GetDetails(ctx); ok {
+				toDetails.SyncFieldsDuringRead(ctx, fromDetails)
+				to.SetDetails(ctx, toDetails)
+			}
+		}
+	}
+}
+
+func (m AssessmentCheck) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["blocks_migration"] = attrs["blocks_migration"].SetComputed()
+	attrs["check_id"] = attrs["check_id"].SetComputed()
+	attrs["database"] = attrs["database"].SetComputed()
+	attrs["details"] = attrs["details"].SetComputed()
+	attrs["reason"] = attrs["reason"].SetComputed()
+	attrs["verdict"] = attrs["verdict"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AssessmentCheck.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AssessmentCheck) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"details": reflect.TypeOf(AssessmentCheckDetails{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AssessmentCheck
+// only implements ToObjectValue() and Type().
+func (m AssessmentCheck) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"blocks_migration": m.BlocksMigration,
+			"check_id":         m.CheckId,
+			"database":         m.Database,
+			"details":          m.Details,
+			"reason":           m.Reason,
+			"verdict":          m.Verdict,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AssessmentCheck) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"blocks_migration": types.BoolType,
+			"check_id":         types.StringType,
+			"database":         types.StringType,
+			"details":          AssessmentCheckDetails{}.Type(ctx),
+			"reason":           types.StringType,
+			"verdict":          types.StringType,
+		},
+	}
+}
+
+// GetDetails returns the value of the Details field in AssessmentCheck as
+// a AssessmentCheckDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AssessmentCheck) GetDetails(ctx context.Context) (AssessmentCheckDetails, bool) {
+	var e AssessmentCheckDetails
+	if m.Details.IsNull() || m.Details.IsUnknown() {
+		return e, false
+	}
+	var v AssessmentCheckDetails
+	d := m.Details.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDetails sets the value of the Details field in AssessmentCheck.
+func (m *AssessmentCheck) SetDetails(ctx context.Context, v AssessmentCheckDetails) {
+	vs := v.ToObjectValue(ctx)
+	m.Details = vs
+}
+
+// Measurements observed when an assessment check ran. Unset for older
+// assessments.
+type AssessmentCheckDetails struct {
+	// Output-only. Physical size of the source database observed by this check.
+	DatabaseSize types.Object `tfsdk:"database_size"`
+	// Output-only. Age of the oldest source transaction observed by this check.
+	LongTransaction types.Object `tfsdk:"long_transaction"`
+}
+
+func (to *AssessmentCheckDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AssessmentCheckDetails) {
+	if !from.DatabaseSize.IsNull() && !from.DatabaseSize.IsUnknown() {
+		if toDatabaseSize, ok := to.GetDatabaseSize(ctx); ok {
+			if fromDatabaseSize, ok := from.GetDatabaseSize(ctx); ok {
+				// Recursively sync the fields of DatabaseSize
+				toDatabaseSize.SyncFieldsDuringCreateOrUpdate(ctx, fromDatabaseSize)
+				to.SetDatabaseSize(ctx, toDatabaseSize)
+			}
+		}
+	}
+	if !from.LongTransaction.IsNull() && !from.LongTransaction.IsUnknown() {
+		if toLongTransaction, ok := to.GetLongTransaction(ctx); ok {
+			if fromLongTransaction, ok := from.GetLongTransaction(ctx); ok {
+				// Recursively sync the fields of LongTransaction
+				toLongTransaction.SyncFieldsDuringCreateOrUpdate(ctx, fromLongTransaction)
+				to.SetLongTransaction(ctx, toLongTransaction)
+			}
+		}
+	}
+}
+
+func (to *AssessmentCheckDetails) SyncFieldsDuringRead(ctx context.Context, from AssessmentCheckDetails) {
+	if !from.DatabaseSize.IsNull() && !from.DatabaseSize.IsUnknown() {
+		if toDatabaseSize, ok := to.GetDatabaseSize(ctx); ok {
+			if fromDatabaseSize, ok := from.GetDatabaseSize(ctx); ok {
+				toDatabaseSize.SyncFieldsDuringRead(ctx, fromDatabaseSize)
+				to.SetDatabaseSize(ctx, toDatabaseSize)
+			}
+		}
+	}
+	if !from.LongTransaction.IsNull() && !from.LongTransaction.IsUnknown() {
+		if toLongTransaction, ok := to.GetLongTransaction(ctx); ok {
+			if fromLongTransaction, ok := from.GetLongTransaction(ctx); ok {
+				toLongTransaction.SyncFieldsDuringRead(ctx, fromLongTransaction)
+				to.SetLongTransaction(ctx, toLongTransaction)
+			}
+		}
+	}
+}
+
+func (m AssessmentCheckDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["database_size"] = attrs["database_size"].SetComputed()
+	attrs["long_transaction"] = attrs["long_transaction"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AssessmentCheckDetails.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AssessmentCheckDetails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"database_size":    reflect.TypeOf(DatabaseSizeDetails{}),
+		"long_transaction": reflect.TypeOf(LongTransactionDetails{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AssessmentCheckDetails
+// only implements ToObjectValue() and Type().
+func (m AssessmentCheckDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"database_size":    m.DatabaseSize,
+			"long_transaction": m.LongTransaction,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AssessmentCheckDetails) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"database_size":    DatabaseSizeDetails{}.Type(ctx),
+			"long_transaction": LongTransactionDetails{}.Type(ctx),
+		},
+	}
+}
+
+// GetDatabaseSize returns the value of the DatabaseSize field in AssessmentCheckDetails as
+// a DatabaseSizeDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AssessmentCheckDetails) GetDatabaseSize(ctx context.Context) (DatabaseSizeDetails, bool) {
+	var e DatabaseSizeDetails
+	if m.DatabaseSize.IsNull() || m.DatabaseSize.IsUnknown() {
+		return e, false
+	}
+	var v DatabaseSizeDetails
+	d := m.DatabaseSize.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDatabaseSize sets the value of the DatabaseSize field in AssessmentCheckDetails.
+func (m *AssessmentCheckDetails) SetDatabaseSize(ctx context.Context, v DatabaseSizeDetails) {
+	vs := v.ToObjectValue(ctx)
+	m.DatabaseSize = vs
+}
+
+// GetLongTransaction returns the value of the LongTransaction field in AssessmentCheckDetails as
+// a LongTransactionDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AssessmentCheckDetails) GetLongTransaction(ctx context.Context) (LongTransactionDetails, bool) {
+	var e LongTransactionDetails
+	if m.LongTransaction.IsNull() || m.LongTransaction.IsUnknown() {
+		return e, false
+	}
+	var v LongTransactionDetails
+	d := m.LongTransaction.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLongTransaction sets the value of the LongTransaction field in AssessmentCheckDetails.
+func (m *AssessmentCheckDetails) SetLongTransaction(ctx context.Context, v LongTransactionDetails) {
+	vs := v.ToObjectValue(ctx)
+	m.LongTransaction = vs
+}
+
 type Branch struct {
 	// The part of the name, chosen by the user when the resource was created.
 	BranchId types.String `tfsdk:"branch_id"`
@@ -866,6 +1557,11 @@ type CdfConfig struct {
 	// The Unity Catalog schema that replicated tables are written into. Set at
 	// creation; the CdfConfig is immutable.
 	Schema types.String `tfsdk:"schema"`
+	// The service principal (application id) whose identity authorizes this
+	// change data feed's ongoing writes to Unity Catalog. When unset, writes
+	// are authorized as the creating identity. Changing it requires a new
+	// CdfConfig, which writes to new Delta tables.
+	ServicePrincipal types.String `tfsdk:"service_principal"`
 }
 
 func (to *CdfConfig) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CdfConfig) {
@@ -884,6 +1580,8 @@ func (m CdfConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["postgres_schema"] = attrs["postgres_schema"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["schema"] = attrs["schema"].SetRequired()
 	attrs["schema"] = attrs["schema"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["service_principal"] = attrs["service_principal"].SetOptional()
+	attrs["service_principal"] = attrs["service_principal"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -906,12 +1604,13 @@ func (m CdfConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"catalog":         m.Catalog,
-			"cdf_config_id":   m.CdfConfigId,
-			"create_time":     m.CreateTime,
-			"name":            m.Name,
-			"postgres_schema": m.PostgresSchema,
-			"schema":          m.Schema,
+			"catalog":           m.Catalog,
+			"cdf_config_id":     m.CdfConfigId,
+			"create_time":       m.CreateTime,
+			"name":              m.Name,
+			"postgres_schema":   m.PostgresSchema,
+			"schema":            m.Schema,
+			"service_principal": m.ServicePrincipal,
 		})
 }
 
@@ -919,12 +1618,13 @@ func (m CdfConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m CdfConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"catalog":         types.StringType,
-			"cdf_config_id":   types.StringType,
-			"create_time":     timetypes.RFC3339{}.Type(ctx),
-			"name":            types.StringType,
-			"postgres_schema": types.StringType,
-			"schema":          types.StringType,
+			"catalog":           types.StringType,
+			"cdf_config_id":     types.StringType,
+			"create_time":       timetypes.RFC3339{}.Type(ctx),
+			"name":              types.StringType,
+			"postgres_schema":   types.StringType,
+			"schema":            types.StringType,
+			"service_principal": types.StringType,
 		},
 	}
 }
@@ -1736,6 +2436,106 @@ func (m *CreateEndpointRequest) SetEndpoint(ctx context.Context, v Endpoint) {
 	m.Endpoint = vs
 }
 
+type CreateMigrationRequest struct {
+	// Required. The migration to create.
+	Migration types.Object `tfsdk:"migration"`
+	// Required. The ID to use for the migration. It becomes the final component
+	// of the resource name (`migrations/{migration_id}`). It must be 1-63
+	// characters long, start with a lowercase letter, and contain only
+	// lowercase letters, numbers, and hyphens.
+	MigrationId types.String `tfsdk:"-"`
+}
+
+func (to *CreateMigrationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateMigrationRequest) {
+	if !from.Migration.IsNull() && !from.Migration.IsUnknown() {
+		if toMigration, ok := to.GetMigration(ctx); ok {
+			if fromMigration, ok := from.GetMigration(ctx); ok {
+				// Recursively sync the fields of Migration
+				toMigration.SyncFieldsDuringCreateOrUpdate(ctx, fromMigration)
+				to.SetMigration(ctx, toMigration)
+			}
+		}
+	}
+}
+
+func (to *CreateMigrationRequest) SyncFieldsDuringRead(ctx context.Context, from CreateMigrationRequest) {
+	if !from.Migration.IsNull() && !from.Migration.IsUnknown() {
+		if toMigration, ok := to.GetMigration(ctx); ok {
+			if fromMigration, ok := from.GetMigration(ctx); ok {
+				toMigration.SyncFieldsDuringRead(ctx, fromMigration)
+				to.SetMigration(ctx, toMigration)
+			}
+		}
+	}
+}
+
+func (m CreateMigrationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["migration"] = attrs["migration"].SetRequired()
+	attrs["migration_id"] = attrs["migration_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateMigrationRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateMigrationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"migration": reflect.TypeOf(Migration{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateMigrationRequest
+// only implements ToObjectValue() and Type().
+func (m CreateMigrationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"migration":    m.Migration,
+			"migration_id": m.MigrationId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateMigrationRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"migration":    Migration{}.Type(ctx),
+			"migration_id": types.StringType,
+		},
+	}
+}
+
+// GetMigration returns the value of the Migration field in CreateMigrationRequest as
+// a Migration value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateMigrationRequest) GetMigration(ctx context.Context) (Migration, bool) {
+	var e Migration
+	if m.Migration.IsNull() || m.Migration.IsUnknown() {
+		return e, false
+	}
+	var v Migration
+	d := m.Migration.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMigration sets the value of the Migration field in CreateMigrationRequest.
+func (m *CreateMigrationRequest) SetMigration(ctx context.Context, v Migration) {
+	vs := v.ToObjectValue(ctx)
+	m.Migration = vs
+}
+
 type CreateProjectRequest struct {
 	// The Project to create.
 	Project types.Object `tfsdk:"project"`
@@ -1847,11 +2647,13 @@ type CreateRoleRequest struct {
 	// When the role already exists, only mutable fields are updated. Attributes
 	// omitted from the request retain their current values. Set an attribute
 	// explicitly to false to disable it. `identity_type`, `auth_method`, and
-	// `postgres_role` retain their existing values; supplied values for these
-	// fields are ignored. `membership_roles` is overwritten, not merged.
-	// Leaving `membership_roles` empty clears all of the role's existing
-	// memberships, including `DATABRICKS_SUPERUSER`. Always send the complete
-	// desired list of memberships when using this field.
+	// `postgres_role` retain their existing values. Omit these fields or supply
+	// their current values. A differing supplied value returns
+	// INVALID_PARAMETER_VALUE and rejects the entire request, including changes
+	// to mutable fields. `membership_roles` is overwritten, not merged. Leaving
+	// `membership_roles` empty clears all of the role's existing memberships,
+	// including `DATABRICKS_SUPERUSER`. Always send the complete desired list
+	// of memberships when using this field.
 	ReplaceExisting types.Bool `tfsdk:"-"`
 	// The desired specification of a Role.
 	Role types.Object `tfsdk:"role"`
@@ -3288,6 +4090,67 @@ func (m DatabaseDatabaseStatus) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A mapping between one source and target database.
+type DatabaseMapping struct {
+	// Output-only. The resolved target PostgreSQL database name. Equal to
+	// `target_database` when provided; otherwise equal to `source_database`.
+	EffectiveTargetDatabase types.String `tfsdk:"effective_target_database"`
+	// Required. The exact PostgreSQL database name on the source server.
+	SourceDatabase types.String `tfsdk:"source_database"`
+	// The PostgreSQL database name to create on the target branch. When
+	// omitted, the source database name is preserved.
+	TargetDatabase types.String `tfsdk:"target_database"`
+}
+
+func (to *DatabaseMapping) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DatabaseMapping) {
+}
+
+func (to *DatabaseMapping) SyncFieldsDuringRead(ctx context.Context, from DatabaseMapping) {
+}
+
+func (m DatabaseMapping) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["effective_target_database"] = attrs["effective_target_database"].SetComputed()
+	attrs["source_database"] = attrs["source_database"].SetRequired()
+	attrs["target_database"] = attrs["target_database"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DatabaseMapping.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DatabaseMapping) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseMapping
+// only implements ToObjectValue() and Type().
+func (m DatabaseMapping) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"effective_target_database": m.EffectiveTargetDatabase,
+			"source_database":           m.SourceDatabase,
+			"target_database":           m.TargetDatabase,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DatabaseMapping) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"effective_target_database": types.StringType,
+			"source_database":           types.StringType,
+			"target_database":           types.StringType,
+		},
+	}
+}
+
 type DatabaseOperationMetadata struct {
 }
 
@@ -3326,6 +4189,57 @@ func (m DatabaseOperationMetadata) ToObjectValue(ctx context.Context) basetypes.
 func (m DatabaseOperationMetadata) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+// Physical database size, including indexes and bloat; not a dump archive size
+// estimate.
+type DatabaseSizeDetails struct {
+	// Size reported by pg_database_size, in bytes. Zero is a measured empty
+	// size.
+	SizeBytes types.Int64 `tfsdk:"size_bytes"`
+}
+
+func (to *DatabaseSizeDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DatabaseSizeDetails) {
+}
+
+func (to *DatabaseSizeDetails) SyncFieldsDuringRead(ctx context.Context, from DatabaseSizeDetails) {
+}
+
+func (m DatabaseSizeDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["size_bytes"] = attrs["size_bytes"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DatabaseSizeDetails.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DatabaseSizeDetails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabaseSizeDetails
+// only implements ToObjectValue() and Type().
+func (m DatabaseSizeDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"size_bytes": m.SizeBytes,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DatabaseSizeDetails) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"size_bytes": types.Int64Type,
+		},
 	}
 }
 
@@ -3734,6 +4648,55 @@ func (m DeleteEndpointRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 
 // Type implements basetypes.ObjectValuable.
 func (m DeleteEndpointRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type DeleteMigrationRequest struct {
+	// Required. The migration resource name, in the format
+	// `migrations/{migration}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteMigrationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteMigrationRequest) {
+}
+
+func (to *DeleteMigrationRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteMigrationRequest) {
+}
+
+func (m DeleteMigrationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteMigrationRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteMigrationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteMigrationRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteMigrationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteMigrationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -4942,6 +5905,12 @@ type GenerateDatabaseCredentialRequest struct {
 	// Timestamp in UTC of when this credential should expire. Must be at least
 	// 300 seconds (5 minutes) and at most 1 hour from the current time.
 	ExpireTime timetypes.RFC3339 `tfsdk:"expire_time"`
+	// The display name of a `Databricks` workspace group. When set, the
+	// returned credential is scoped to this group, so the caller connects
+	// directly as the group's Postgres role. The caller must be a member of the
+	// group. When omitted, the credential is scoped to the caller's own
+	// identity.
+	GroupName types.String `tfsdk:"group_name"`
 	// The requested time-to-live for the generated credential token. Must be at
 	// least 300 seconds (5 minutes) and at most 3600 seconds (1 hour).
 	Ttl timetypes.GoDuration `tfsdk:"ttl"`
@@ -4994,6 +5963,7 @@ func (m GenerateDatabaseCredentialRequest) ApplySchemaCustomizations(attrs map[s
 	attrs["claims"] = attrs["claims"].SetOptional()
 	attrs["endpoint"] = attrs["endpoint"].SetRequired()
 	attrs["expire_time"] = attrs["expire_time"].SetOptional()
+	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["ttl"] = attrs["ttl"].SetOptional()
 
 	return attrs
@@ -5022,6 +5992,7 @@ func (m GenerateDatabaseCredentialRequest) ToObjectValue(ctx context.Context) ba
 			"claims":      m.Claims,
 			"endpoint":    m.Endpoint,
 			"expire_time": m.ExpireTime,
+			"group_name":  m.GroupName,
 			"ttl":         m.Ttl,
 		})
 }
@@ -5035,6 +6006,7 @@ func (m GenerateDatabaseCredentialRequest) Type(ctx context.Context) attr.Type {
 			},
 			"endpoint":    types.StringType,
 			"expire_time": timetypes.RFC3339{}.Type(ctx),
+			"group_name":  types.StringType,
 			"ttl":         timetypes.GoDuration{}.Type(ctx),
 		},
 	}
@@ -5064,6 +6036,55 @@ func (m *GenerateDatabaseCredentialRequest) SetClaims(ctx context.Context, v []R
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["claims"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Claims = types.ListValueMust(t, vs)
+}
+
+type GetAssessmentRequest struct {
+	// Required. The assessment resource name, in the format
+	// `migrations/{migration}/assessments/{assessment}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetAssessmentRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetAssessmentRequest) {
+}
+
+func (to *GetAssessmentRequest) SyncFieldsDuringRead(ctx context.Context, from GetAssessmentRequest) {
+}
+
+func (m GetAssessmentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAssessmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetAssessmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetAssessmentRequest
+// only implements ToObjectValue() and Type().
+func (m GetAssessmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetAssessmentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
 }
 
 type GetBranchRequest struct {
@@ -5403,6 +6424,55 @@ func (m GetEndpointRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 
 // Type implements basetypes.ObjectValuable.
 func (m GetEndpointRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type GetMigrationRequest struct {
+	// Required. The migration resource name, in the format
+	// `migrations/{migration}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetMigrationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetMigrationRequest) {
+}
+
+func (to *GetMigrationRequest) SyncFieldsDuringRead(ctx context.Context, from GetMigrationRequest) {
+}
+
+func (m GetMigrationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetMigrationRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetMigrationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetMigrationRequest
+// only implements ToObjectValue() and Type().
+func (m GetMigrationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetMigrationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -5869,6 +6939,188 @@ func (m *InitialEndpointSpec) GetGroup(ctx context.Context) (EndpointGroupSpec, 
 func (m *InitialEndpointSpec) SetGroup(ctx context.Context, v EndpointGroupSpec) {
 	vs := v.ToObjectValue(ctx)
 	m.Group = vs
+}
+
+type ListAssessmentsRequest struct {
+	// The maximum number of assessments to return. The server default is 100;
+	// values above 1000 are capped to 1000.
+	PageSize types.Int64 `tfsdk:"-"`
+	// A page token from a previous call.
+	PageToken types.String `tfsdk:"-"`
+	// Required. The parent migration resource name, in the format
+	// `migrations/{migration}`.
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *ListAssessmentsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListAssessmentsRequest) {
+}
+
+func (to *ListAssessmentsRequest) SyncFieldsDuringRead(ctx context.Context, from ListAssessmentsRequest) {
+}
+
+func (m ListAssessmentsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAssessmentsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListAssessmentsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListAssessmentsRequest
+// only implements ToObjectValue() and Type().
+func (m ListAssessmentsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListAssessmentsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+		},
+	}
+}
+
+// Response to list assessments.
+type ListAssessmentsResponse struct {
+	// Assessment runs ordered from newest to oldest.
+	Assessments types.List `tfsdk:"assessments"`
+	// A token for retrieving the next page. Empty when there are no more
+	// results.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListAssessmentsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListAssessmentsResponse) {
+	if !from.Assessments.IsNull() && !from.Assessments.IsUnknown() && to.Assessments.IsNull() && len(from.Assessments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Assessments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Assessments = from.Assessments
+	}
+	if !from.Assessments.IsNull() && !from.Assessments.IsUnknown() {
+		if toAssessments, ok := to.GetAssessments(ctx); ok {
+			if fromAssessments, ok := from.GetAssessments(ctx); ok {
+				// Recursively sync the fields of each Assessments element by position.
+				for i := range toAssessments {
+					if i < len(fromAssessments) {
+						toAssessments[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAssessments[i])
+					}
+				}
+				to.SetAssessments(ctx, toAssessments)
+			}
+		}
+	}
+}
+
+func (to *ListAssessmentsResponse) SyncFieldsDuringRead(ctx context.Context, from ListAssessmentsResponse) {
+	if !from.Assessments.IsNull() && !from.Assessments.IsUnknown() && to.Assessments.IsNull() && len(from.Assessments.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Assessments, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Assessments = from.Assessments
+	}
+	if !from.Assessments.IsNull() && !from.Assessments.IsUnknown() {
+		if toAssessments, ok := to.GetAssessments(ctx); ok {
+			if fromAssessments, ok := from.GetAssessments(ctx); ok {
+				for i := range toAssessments {
+					if i < len(fromAssessments) {
+						toAssessments[i].SyncFieldsDuringRead(ctx, fromAssessments[i])
+					}
+				}
+				to.SetAssessments(ctx, toAssessments)
+			}
+		}
+	}
+}
+
+func (m ListAssessmentsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["assessments"] = attrs["assessments"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAssessmentsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListAssessmentsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"assessments": reflect.TypeOf(Assessment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListAssessmentsResponse
+// only implements ToObjectValue() and Type().
+func (m ListAssessmentsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"assessments":     m.Assessments,
+			"next_page_token": m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListAssessmentsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"assessments": basetypes.ListType{
+				ElemType: Assessment{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetAssessments returns the value of the Assessments field in ListAssessmentsResponse as
+// a slice of Assessment values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListAssessmentsResponse) GetAssessments(ctx context.Context) ([]Assessment, bool) {
+	if m.Assessments.IsNull() || m.Assessments.IsUnknown() {
+		return nil, false
+	}
+	var v []Assessment
+	d := m.Assessments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAssessments sets the value of the Assessments field in ListAssessmentsResponse.
+func (m *ListAssessmentsResponse) SetAssessments(ctx context.Context, v []Assessment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["assessments"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Assessments = types.ListValueMust(t, vs)
 }
 
 type ListBranchesRequest struct {
@@ -6782,6 +8034,188 @@ func (m *ListEndpointsResponse) SetEndpoints(ctx context.Context, v []Endpoint) 
 	m.Endpoints = types.ListValueMust(t, vs)
 }
 
+type ListMigrationsRequest struct {
+	// The maximum number of migrations to return. The server default is 100;
+	// values above 1000 are capped to 1000.
+	PageSize types.Int64 `tfsdk:"-"`
+	// A page token from a previous call.
+	PageToken types.String `tfsdk:"-"`
+	// Whether to include soft-deleted migrations in the response. Hard-deleted
+	// and already-purged migrations are never returned.
+	ShowDeleted types.Bool `tfsdk:"-"`
+}
+
+func (to *ListMigrationsRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListMigrationsRequest) {
+}
+
+func (to *ListMigrationsRequest) SyncFieldsDuringRead(ctx context.Context, from ListMigrationsRequest) {
+}
+
+func (m ListMigrationsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["show_deleted"] = attrs["show_deleted"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListMigrationsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListMigrationsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListMigrationsRequest
+// only implements ToObjectValue() and Type().
+func (m ListMigrationsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":    m.PageSize,
+			"page_token":   m.PageToken,
+			"show_deleted": m.ShowDeleted,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListMigrationsRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":    types.Int64Type,
+			"page_token":   types.StringType,
+			"show_deleted": types.BoolType,
+		},
+	}
+}
+
+// Response to list migrations.
+type ListMigrationsResponse struct {
+	// Migrations visible to the caller.
+	Migrations types.List `tfsdk:"migrations"`
+	// A token for retrieving the next page. Empty when there are no more
+	// results.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListMigrationsResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListMigrationsResponse) {
+	if !from.Migrations.IsNull() && !from.Migrations.IsUnknown() && to.Migrations.IsNull() && len(from.Migrations.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Migrations, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Migrations = from.Migrations
+	}
+	if !from.Migrations.IsNull() && !from.Migrations.IsUnknown() {
+		if toMigrations, ok := to.GetMigrations(ctx); ok {
+			if fromMigrations, ok := from.GetMigrations(ctx); ok {
+				// Recursively sync the fields of each Migrations element by position.
+				for i := range toMigrations {
+					if i < len(fromMigrations) {
+						toMigrations[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMigrations[i])
+					}
+				}
+				to.SetMigrations(ctx, toMigrations)
+			}
+		}
+	}
+}
+
+func (to *ListMigrationsResponse) SyncFieldsDuringRead(ctx context.Context, from ListMigrationsResponse) {
+	if !from.Migrations.IsNull() && !from.Migrations.IsUnknown() && to.Migrations.IsNull() && len(from.Migrations.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Migrations, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Migrations = from.Migrations
+	}
+	if !from.Migrations.IsNull() && !from.Migrations.IsUnknown() {
+		if toMigrations, ok := to.GetMigrations(ctx); ok {
+			if fromMigrations, ok := from.GetMigrations(ctx); ok {
+				for i := range toMigrations {
+					if i < len(fromMigrations) {
+						toMigrations[i].SyncFieldsDuringRead(ctx, fromMigrations[i])
+					}
+				}
+				to.SetMigrations(ctx, toMigrations)
+			}
+		}
+	}
+}
+
+func (m ListMigrationsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["migrations"] = attrs["migrations"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListMigrationsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListMigrationsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"migrations": reflect.TypeOf(Migration{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListMigrationsResponse
+// only implements ToObjectValue() and Type().
+func (m ListMigrationsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"migrations":      m.Migrations,
+			"next_page_token": m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListMigrationsResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"migrations": basetypes.ListType{
+				ElemType: Migration{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetMigrations returns the value of the Migrations field in ListMigrationsResponse as
+// a slice of Migration values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListMigrationsResponse) GetMigrations(ctx context.Context) ([]Migration, bool) {
+	if m.Migrations.IsNull() || m.Migrations.IsUnknown() {
+		return nil, false
+	}
+	var v []Migration
+	d := m.Migrations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMigrations sets the value of the Migrations field in ListMigrationsResponse.
+func (m *ListMigrationsResponse) SetMigrations(ctx context.Context, v []Migration) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["migrations"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Migrations = types.ListValueMust(t, vs)
+}
+
 type ListProjectsRequest struct {
 	// Upper bound for items returned. Cannot be negative. The maximum value is
 	// 100.
@@ -7321,6 +8755,359 @@ func (m *ListSnapshotsResponse) SetSnapshots(ctx context.Context, v []Snapshot) 
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["snapshots"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Snapshots = types.ListValueMust(t, vs)
+}
+
+// Oldest active source transaction at assessment time.
+type LongTransactionDetails struct {
+	// Age of the oldest active transaction when assessed. Zero when none is
+	// active.
+	OldestTransactionAge timetypes.GoDuration `tfsdk:"oldest_transaction_age"`
+}
+
+func (to *LongTransactionDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from LongTransactionDetails) {
+}
+
+func (to *LongTransactionDetails) SyncFieldsDuringRead(ctx context.Context, from LongTransactionDetails) {
+}
+
+func (m LongTransactionDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["oldest_transaction_age"] = attrs["oldest_transaction_age"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LongTransactionDetails.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m LongTransactionDetails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LongTransactionDetails
+// only implements ToObjectValue() and Type().
+func (m LongTransactionDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"oldest_transaction_age": m.OldestTransactionAge,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m LongTransactionDetails) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"oldest_transaction_age": timetypes.GoDuration{}.Type(ctx),
+		},
+	}
+}
+
+// A managed migration of PostgreSQL databases into a Lakebase branch.
+type Migration struct {
+	// Output-only. The time when the migration was created.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// Required. Mappings from source databases to target databases.
+	DatabaseMappings types.List `tfsdk:"database_mappings"`
+	// Output-only. The time when the migration was soft-deleted. Empty if the
+	// migration is active.
+	DeleteTime timetypes.RFC3339 `tfsdk:"delete_time"`
+	// Output-only. The current error preventing migration progress, if any.
+	Error types.Object `tfsdk:"error"`
+	// Required. Immutable. The intended migration mode, selected when the
+	// migration is created.
+	MigrationType types.String `tfsdk:"migration_type"`
+	// The migration resource name, in the format `migrations/{migration}`.
+	Name types.String `tfsdk:"name"`
+	// Output-only. The time when the soft-deleted migration is scheduled for
+	// permanent deletion. Empty if the migration is active or permanent
+	// deletion is not scheduled.
+	PurgeTime timetypes.RFC3339 `tfsdk:"purge_time"`
+	// Required. The name of the Unity Catalog connection (a UC securable name,
+	// such as `my_postgres_connection`) used to connect to the source
+	// PostgreSQL server.
+	SourceConnection types.String `tfsdk:"source_connection"`
+	// Output-only. The authoritative migration lifecycle state.
+	State types.String `tfsdk:"state"`
+	// The Lakebase branch receiving the migrated databases, in the format
+	// `projects/{project_id}/branches/{branch_id}`. May be omitted during
+	// assessment, but must be set before the migration starts, and may be
+	// changed until then.
+	TargetBranch types.String `tfsdk:"target_branch"`
+	// Output-only. The time when the migration was last updated.
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
+}
+
+func (to *Migration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Migration) {
+	if !from.DatabaseMappings.IsNull() && !from.DatabaseMappings.IsUnknown() {
+		if toDatabaseMappings, ok := to.GetDatabaseMappings(ctx); ok {
+			if fromDatabaseMappings, ok := from.GetDatabaseMappings(ctx); ok {
+				// Recursively sync the fields of each DatabaseMappings element by position.
+				for i := range toDatabaseMappings {
+					if i < len(fromDatabaseMappings) {
+						toDatabaseMappings[i].SyncFieldsDuringCreateOrUpdate(ctx, fromDatabaseMappings[i])
+					}
+				}
+				to.SetDatabaseMappings(ctx, toDatabaseMappings)
+			}
+		}
+	}
+	if !from.Error.IsNull() && !from.Error.IsUnknown() {
+		if toError, ok := to.GetError(ctx); ok {
+			if fromError, ok := from.GetError(ctx); ok {
+				// Recursively sync the fields of Error
+				toError.SyncFieldsDuringCreateOrUpdate(ctx, fromError)
+				to.SetError(ctx, toError)
+			}
+		}
+	}
+}
+
+func (to *Migration) SyncFieldsDuringRead(ctx context.Context, from Migration) {
+	if !from.DatabaseMappings.IsNull() && !from.DatabaseMappings.IsUnknown() {
+		if toDatabaseMappings, ok := to.GetDatabaseMappings(ctx); ok {
+			if fromDatabaseMappings, ok := from.GetDatabaseMappings(ctx); ok {
+				for i := range toDatabaseMappings {
+					if i < len(fromDatabaseMappings) {
+						toDatabaseMappings[i].SyncFieldsDuringRead(ctx, fromDatabaseMappings[i])
+					}
+				}
+				to.SetDatabaseMappings(ctx, toDatabaseMappings)
+			}
+		}
+	}
+	if !from.Error.IsNull() && !from.Error.IsUnknown() {
+		if toError, ok := to.GetError(ctx); ok {
+			if fromError, ok := from.GetError(ctx); ok {
+				toError.SyncFieldsDuringRead(ctx, fromError)
+				to.SetError(ctx, toError)
+			}
+		}
+	}
+}
+
+func (m Migration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["database_mappings"] = attrs["database_mappings"].SetRequired()
+	attrs["delete_time"] = attrs["delete_time"].SetComputed()
+	attrs["error"] = attrs["error"].SetComputed()
+	attrs["migration_type"] = attrs["migration_type"].SetRequired()
+	attrs["migration_type"] = attrs["migration_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["purge_time"] = attrs["purge_time"].SetComputed()
+	attrs["source_connection"] = attrs["source_connection"].SetRequired()
+	attrs["state"] = attrs["state"].SetComputed()
+	attrs["target_branch"] = attrs["target_branch"].SetOptional()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Migration.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Migration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"database_mappings": reflect.TypeOf(DatabaseMapping{}),
+		"error":             reflect.TypeOf(MigrationError{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Migration
+// only implements ToObjectValue() and Type().
+func (m Migration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"create_time":       m.CreateTime,
+			"database_mappings": m.DatabaseMappings,
+			"delete_time":       m.DeleteTime,
+			"error":             m.Error,
+			"migration_type":    m.MigrationType,
+			"name":              m.Name,
+			"purge_time":        m.PurgeTime,
+			"source_connection": m.SourceConnection,
+			"state":             m.State,
+			"target_branch":     m.TargetBranch,
+			"update_time":       m.UpdateTime,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Migration) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"create_time": timetypes.RFC3339{}.Type(ctx),
+			"database_mappings": basetypes.ListType{
+				ElemType: DatabaseMapping{}.Type(ctx),
+			},
+			"delete_time":       timetypes.RFC3339{}.Type(ctx),
+			"error":             MigrationError{}.Type(ctx),
+			"migration_type":    types.StringType,
+			"name":              types.StringType,
+			"purge_time":        timetypes.RFC3339{}.Type(ctx),
+			"source_connection": types.StringType,
+			"state":             types.StringType,
+			"target_branch":     types.StringType,
+			"update_time":       timetypes.RFC3339{}.Type(ctx),
+		},
+	}
+}
+
+// GetDatabaseMappings returns the value of the DatabaseMappings field in Migration as
+// a slice of DatabaseMapping values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Migration) GetDatabaseMappings(ctx context.Context) ([]DatabaseMapping, bool) {
+	if m.DatabaseMappings.IsNull() || m.DatabaseMappings.IsUnknown() {
+		return nil, false
+	}
+	var v []DatabaseMapping
+	d := m.DatabaseMappings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDatabaseMappings sets the value of the DatabaseMappings field in Migration.
+func (m *Migration) SetDatabaseMappings(ctx context.Context, v []DatabaseMapping) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["database_mappings"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.DatabaseMappings = types.ListValueMust(t, vs)
+}
+
+// GetError returns the value of the Error field in Migration as
+// a MigrationError value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Migration) GetError(ctx context.Context) (MigrationError, bool) {
+	var e MigrationError
+	if m.Error.IsNull() || m.Error.IsUnknown() {
+		return e, false
+	}
+	var v MigrationError
+	d := m.Error.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetError sets the value of the Error field in Migration.
+func (m *Migration) SetError(ctx context.Context, v MigrationError) {
+	vs := v.ToObjectValue(ctx)
+	m.Error = vs
+}
+
+// An error that prevents migration progress.
+type MigrationError struct {
+	// A stable machine-readable error code.
+	Code types.String `tfsdk:"code"`
+	// A concise explanation of the failure.
+	Message types.String `tfsdk:"message"`
+}
+
+func (to *MigrationError) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MigrationError) {
+}
+
+func (to *MigrationError) SyncFieldsDuringRead(ctx context.Context, from MigrationError) {
+}
+
+func (m MigrationError) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["code"] = attrs["code"].SetComputed()
+	attrs["message"] = attrs["message"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MigrationError.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m MigrationError) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MigrationError
+// only implements ToObjectValue() and Type().
+func (m MigrationError) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"code":    m.Code,
+			"message": m.Message,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m MigrationError) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"code":    types.StringType,
+			"message": types.StringType,
+		},
+	}
+}
+
+// Metadata for a long-running operation that applies an action to a migration.
+type MigrationOperationMetadata struct {
+}
+
+func (to *MigrationOperationMetadata) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MigrationOperationMetadata) {
+}
+
+func (to *MigrationOperationMetadata) SyncFieldsDuringRead(ctx context.Context, from MigrationOperationMetadata) {
+}
+
+func (m MigrationOperationMetadata) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MigrationOperationMetadata.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m MigrationOperationMetadata) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MigrationOperationMetadata
+// only implements ToObjectValue() and Type().
+func (m MigrationOperationMetadata) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m MigrationOperationMetadata) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Take a snapshot once per month, on the configured day at the configured hour.
@@ -9083,10 +10870,13 @@ type RoleRoleSpec struct {
 	// NOTE: for the Databricks identity type GROUP, LAKEBASE_OAUTH_V1 is the
 	// default auth method (group can login as well).
 	//
-	// This field is set when the role is created and cannot be changed by
-	// UpdateRole. If provided in an UpdateRole request body, its value is
-	// ignored and the existing value is retained. Do not include this field as
-	// an explicit path in update_mask.
+	// This field is set when the role is created and cannot be changed. When
+	// replacing an existing role with replace_existing=true, omit this field or
+	// supply its current value. A differing value returns
+	// INVALID_PARAMETER_VALUE and rejects the entire request, including changes
+	// to mutable fields. With `*` or masks containing only mutable fields,
+	// supplied values are ignored. Including this field as an explicit path in
+	// update_mask returns INVALID_PARAMETER_VALUE.
 	AuthMethod types.String `tfsdk:"auth_method"`
 	// The type of role. When specifying a managed-identity, the chosen role_id
 	// must be a valid:
@@ -9094,10 +10884,13 @@ type RoleRoleSpec struct {
 	// * application ID for SERVICE_PRINCIPAL * user email for USER * group name
 	// for GROUP
 	//
-	// This field is set when the role is created and cannot be changed by
-	// UpdateRole. If provided in an UpdateRole request body, its value is
-	// ignored and the existing value is retained. Do not include this field as
-	// an explicit path in update_mask.
+	// This field is set when the role is created and cannot be changed. When
+	// replacing an existing role with replace_existing=true, omit this field or
+	// supply its current value. A differing value returns
+	// INVALID_PARAMETER_VALUE and rejects the entire request, including changes
+	// to mutable fields. With `*` or masks containing only mutable fields,
+	// supplied values are ignored. Including this field as an explicit path in
+	// update_mask returns INVALID_PARAMETER_VALUE.
 	IdentityType types.String `tfsdk:"identity_type"`
 	// An enum value for a standard role that this role is a member of.
 	MembershipRoles types.List `tfsdk:"membership_roles"`
@@ -9114,10 +10907,13 @@ type RoleRoleSpec struct {
 	// 1. user email for IdentityType.USER 2. app ID for
 	// IdentityType.SERVICE_PRINCIPAL 2. group name for IdentityType.GROUP
 	//
-	// This field is set when the role is created and cannot be changed by
-	// UpdateRole. If provided in an UpdateRole request body, its value is
-	// ignored and the existing value is retained. Do not include this field as
-	// an explicit path in update_mask.
+	// This field is set when the role is created and cannot be changed. When
+	// replacing an existing role with replace_existing=true, omit this field or
+	// supply its current value. A differing value returns
+	// INVALID_PARAMETER_VALUE and rejects the entire request, including changes
+	// to mutable fields. With `*` or masks containing only mutable fields,
+	// supplied values are ignored. Including this field as an explicit path in
+	// update_mask returns INVALID_PARAMETER_VALUE.
 	PostgresRole types.String `tfsdk:"postgres_role"`
 }
 
@@ -10130,6 +11926,149 @@ func (m SnapshotStatus) Type(ctx context.Context) attr.Type {
 			"source_branch":   types.StringType,
 		},
 	}
+}
+
+// Request to start a migration.
+type StartMigrationRequest struct {
+	// Required. The migration resource name, in the format
+	// `migrations/{migration}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *StartMigrationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StartMigrationRequest) {
+}
+
+func (to *StartMigrationRequest) SyncFieldsDuringRead(ctx context.Context, from StartMigrationRequest) {
+}
+
+func (m StartMigrationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StartMigrationRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StartMigrationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StartMigrationRequest
+// only implements ToObjectValue() and Type().
+func (m StartMigrationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StartMigrationRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+// Response produced after migration preparation has started.
+type StartMigrationResponse struct {
+	// The migration after the start action is applied.
+	Migration types.Object `tfsdk:"migration"`
+}
+
+func (to *StartMigrationResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StartMigrationResponse) {
+	if !from.Migration.IsNull() && !from.Migration.IsUnknown() {
+		if toMigration, ok := to.GetMigration(ctx); ok {
+			if fromMigration, ok := from.GetMigration(ctx); ok {
+				// Recursively sync the fields of Migration
+				toMigration.SyncFieldsDuringCreateOrUpdate(ctx, fromMigration)
+				to.SetMigration(ctx, toMigration)
+			}
+		}
+	}
+}
+
+func (to *StartMigrationResponse) SyncFieldsDuringRead(ctx context.Context, from StartMigrationResponse) {
+	if !from.Migration.IsNull() && !from.Migration.IsUnknown() {
+		if toMigration, ok := to.GetMigration(ctx); ok {
+			if fromMigration, ok := from.GetMigration(ctx); ok {
+				toMigration.SyncFieldsDuringRead(ctx, fromMigration)
+				to.SetMigration(ctx, toMigration)
+			}
+		}
+	}
+}
+
+func (m StartMigrationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["migration"] = attrs["migration"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StartMigrationResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StartMigrationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"migration": reflect.TypeOf(Migration{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StartMigrationResponse
+// only implements ToObjectValue() and Type().
+func (m StartMigrationResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"migration": m.Migration,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StartMigrationResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"migration": Migration{}.Type(ctx),
+		},
+	}
+}
+
+// GetMigration returns the value of the Migration field in StartMigrationResponse as
+// a Migration value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *StartMigrationResponse) GetMigration(ctx context.Context) (Migration, bool) {
+	var e Migration
+	if m.Migration.IsNull() || m.Migration.IsUnknown() {
+		return e, false
+	}
+	var v Migration
+	d := m.Migration.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMigration sets the value of the Migration field in StartMigrationResponse.
+func (m *StartMigrationResponse) SetMigration(ctx context.Context, v Migration) {
+	vs := v.ToObjectValue(ctx)
+	m.Migration = vs
 }
 
 type SyncedTable struct {
@@ -11241,6 +13180,149 @@ func (m UndeleteBranchRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Request to restore a soft-deleted migration before it is permanently purged.
+type UndeleteMigrationRequest struct {
+	// Required. The migration resource name, in the format
+	// `migrations/{migration}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *UndeleteMigrationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UndeleteMigrationRequest) {
+}
+
+func (to *UndeleteMigrationRequest) SyncFieldsDuringRead(ctx context.Context, from UndeleteMigrationRequest) {
+}
+
+func (m UndeleteMigrationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UndeleteMigrationRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UndeleteMigrationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UndeleteMigrationRequest
+// only implements ToObjectValue() and Type().
+func (m UndeleteMigrationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UndeleteMigrationRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+// Response produced after a soft-deleted migration is restored.
+type UndeleteMigrationResponse struct {
+	// The restored migration.
+	Migration types.Object `tfsdk:"migration"`
+}
+
+func (to *UndeleteMigrationResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UndeleteMigrationResponse) {
+	if !from.Migration.IsNull() && !from.Migration.IsUnknown() {
+		if toMigration, ok := to.GetMigration(ctx); ok {
+			if fromMigration, ok := from.GetMigration(ctx); ok {
+				// Recursively sync the fields of Migration
+				toMigration.SyncFieldsDuringCreateOrUpdate(ctx, fromMigration)
+				to.SetMigration(ctx, toMigration)
+			}
+		}
+	}
+}
+
+func (to *UndeleteMigrationResponse) SyncFieldsDuringRead(ctx context.Context, from UndeleteMigrationResponse) {
+	if !from.Migration.IsNull() && !from.Migration.IsUnknown() {
+		if toMigration, ok := to.GetMigration(ctx); ok {
+			if fromMigration, ok := from.GetMigration(ctx); ok {
+				toMigration.SyncFieldsDuringRead(ctx, fromMigration)
+				to.SetMigration(ctx, toMigration)
+			}
+		}
+	}
+}
+
+func (m UndeleteMigrationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["migration"] = attrs["migration"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UndeleteMigrationResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UndeleteMigrationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"migration": reflect.TypeOf(Migration{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UndeleteMigrationResponse
+// only implements ToObjectValue() and Type().
+func (m UndeleteMigrationResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"migration": m.Migration,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UndeleteMigrationResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"migration": Migration{}.Type(ctx),
+		},
+	}
+}
+
+// GetMigration returns the value of the Migration field in UndeleteMigrationResponse as
+// a Migration value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UndeleteMigrationResponse) GetMigration(ctx context.Context) (Migration, bool) {
+	var e Migration
+	if m.Migration.IsNull() || m.Migration.IsUnknown() {
+		return e, false
+	}
+	var v Migration
+	d := m.Migration.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMigration sets the value of the Migration field in UndeleteMigrationResponse.
+func (m *UndeleteMigrationResponse) SetMigration(ctx context.Context, v Migration) {
+	vs := v.ToObjectValue(ctx)
+	m.Migration = vs
+}
+
 // Request to restore a soft-deleted project within its retention period.
 type UndeleteProjectRequest struct {
 	// The full resource path of the project to undelete. Format:
@@ -11715,6 +13797,108 @@ func (m *UpdateEndpointRequest) SetEndpoint(ctx context.Context, v Endpoint) {
 	m.Endpoint = vs
 }
 
+type UpdateMigrationRequest struct {
+	// Required. The migration containing the user-owned fields to update.
+	Migration types.Object `tfsdk:"migration"`
+	// The migration resource name, in the format `migrations/{migration}`.
+	Name types.String `tfsdk:"-"`
+	// Required. The fields to update.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateMigrationRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateMigrationRequest) {
+	if !from.Migration.IsNull() && !from.Migration.IsUnknown() {
+		if toMigration, ok := to.GetMigration(ctx); ok {
+			if fromMigration, ok := from.GetMigration(ctx); ok {
+				// Recursively sync the fields of Migration
+				toMigration.SyncFieldsDuringCreateOrUpdate(ctx, fromMigration)
+				to.SetMigration(ctx, toMigration)
+			}
+		}
+	}
+}
+
+func (to *UpdateMigrationRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateMigrationRequest) {
+	if !from.Migration.IsNull() && !from.Migration.IsUnknown() {
+		if toMigration, ok := to.GetMigration(ctx); ok {
+			if fromMigration, ok := from.GetMigration(ctx); ok {
+				toMigration.SyncFieldsDuringRead(ctx, fromMigration)
+				to.SetMigration(ctx, toMigration)
+			}
+		}
+	}
+}
+
+func (m UpdateMigrationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["migration"] = attrs["migration"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateMigrationRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateMigrationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"migration": reflect.TypeOf(Migration{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateMigrationRequest
+// only implements ToObjectValue() and Type().
+func (m UpdateMigrationRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"migration":   m.Migration,
+			"name":        m.Name,
+			"update_mask": m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateMigrationRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"migration":   Migration{}.Type(ctx),
+			"name":        types.StringType,
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetMigration returns the value of the Migration field in UpdateMigrationRequest as
+// a Migration value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateMigrationRequest) GetMigration(ctx context.Context) (Migration, bool) {
+	var e Migration
+	if m.Migration.IsNull() || m.Migration.IsUnknown() {
+		return e, false
+	}
+	var v Migration
+	d := m.Migration.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMigration sets the value of the Migration field in UpdateMigrationRequest.
+func (m *UpdateMigrationRequest) SetMigration(ctx context.Context, v Migration) {
+	vs := v.ToObjectValue(ctx)
+	m.Migration = vs
+}
+
 type UpdateProjectRequest struct {
 	// Output only. The full resource path of the project. Format:
 	// projects/{project_id}
@@ -11835,16 +14019,14 @@ type UpdateRoleRequest struct {
 	// `spec.attributes.createrole`, and `spec.attributes.bypassrls`.
 	//
 	// `spec.identity_type`, `spec.auth_method`, and `spec.postgres_role` cannot
-	// be changed. Values supplied for these fields in the request body are
-	// ignored. Including one of these fields as an explicit path in update_mask
-	// returns an INVALID_PARAMETER_VALUE error. When `spec` is the only path in
-	// the mask, only the supplied mutable attributes are updated. `*` by
-	// itself, or `spec` combined with other supported paths, selects all
-	// supported mutable fields. For these masks, all three attributes
-	// (`createdb`, `createrole`, and `bypassrls`) must be supplied; omitting
-	// any returns an INVALID_PARAMETER_VALUE error. Each of these mask forms
-	// replaces `membership_roles`. Omitting it or supplying an empty list
-	// clears all memberships, including `DATABRICKS_SUPERUSER`.
+	// be changed. Including an immutable field as an explicit path in
+	// update_mask returns INVALID_PARAMETER_VALUE. With `*` or masks containing
+	// only mutable fields, supplied values for these immutable fields are
+	// ignored. `*` by itself selects all supported mutable fields. For this
+	// mask, all three attributes (`createdb`, `createrole`, and `bypassrls`)
+	// must be supplied; omitting any returns an INVALID_PARAMETER_VALUE error.
+	// The `*` mask replaces `membership_roles`. Omitting it or supplying an
+	// empty list clears all memberships, including `DATABRICKS_SUPERUSER`.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

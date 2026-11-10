@@ -5747,6 +5747,14 @@ type CronSchedule struct {
 	CronExpression types.String `tfsdk:"cron_expression"`
 	// How the schedule is determined. Defaults to MANUAL when unset.
 	Mode types.String `tfsdk:"mode"`
+	// Whether automatic materialization is paused. Defaults to `false`.
+	// Supported only for materializations in a materialization set. Use the
+	// `UpdateMaterializationSet` API to pause or resume the set.
+	//
+	// Pausing does not cancel running or queued runs. Runs can still be
+	// triggered through the `TriggerMaterializationSet` API. Resuming does not
+	// submit a run. Creating a paused materialization skips its initial run.
+	Paused types.Bool `tfsdk:"paused"`
 	// A Java timezone ID. The schedule is resolved with respect to this
 	// timezone. Defaults to UTC when omitted. Can only be configured for MANUAL
 	// schedules; DERIVED schedules are always aligned to UTC.
@@ -5762,6 +5770,7 @@ func (to *CronSchedule) SyncFieldsDuringRead(ctx context.Context, from CronSched
 func (m CronSchedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["cron_expression"] = attrs["cron_expression"].SetOptional()
 	attrs["mode"] = attrs["mode"].SetOptional()
+	attrs["paused"] = attrs["paused"].SetOptional()
 	attrs["timezone_id"] = attrs["timezone_id"].SetOptional()
 
 	return attrs
@@ -5787,6 +5796,7 @@ func (m CronSchedule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"cron_expression": m.CronExpression,
 			"mode":            m.Mode,
+			"paused":          m.Paused,
 			"timezone_id":     m.TimezoneId,
 		})
 }
@@ -5797,6 +5807,7 @@ func (m CronSchedule) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"cron_expression": types.StringType,
 			"mode":            types.StringType,
+			"paused":          types.BoolType,
 			"timezone_id":     types.StringType,
 		},
 	}
@@ -9876,6 +9887,51 @@ func (m *ExperimentTraceLocation) SetUcTraceLocation(ctx context.Context, v UcTr
 	m.UcTraceLocation = vs
 }
 
+// A trigger that disables automatic materialization, including the initial run
+// at creation. Runs are instead triggered through the
+// `TriggerMaterializationSet` API. Supported only for batch materializations in
+// a materialization set.
+type ExternalTrigger struct {
+}
+
+func (to *ExternalTrigger) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExternalTrigger) {
+}
+
+func (to *ExternalTrigger) SyncFieldsDuringRead(ctx context.Context, from ExternalTrigger) {
+}
+
+func (m ExternalTrigger) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalTrigger.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ExternalTrigger) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalTrigger
+// only implements ToObjectValue() and Type().
+func (m ExternalTrigger) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ExternalTrigger) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type Feature struct {
 	// Name of parent catalog.
 	CatalogName types.String `tfsdk:"catalog_name"`
@@ -9908,6 +9964,9 @@ type Feature struct {
 	// Name of the feature, extracted from the full three-part name
 	// (catalog.schema.name).
 	Name types.String `tfsdk:"name"`
+	// Output type in Databricks SQL DDL (e.g., "BIGINT", "DECIMAL(10,2)",
+	// "ARRAY<STRING>", "STRUCT<name:STRING>").
+	OutputTypeText types.String `tfsdk:"output_type_text"`
 	// Name of parent schema relative to its parent catalog.
 	SchemaName types.String `tfsdk:"schema_name"`
 	// The data source of the feature.
@@ -10088,6 +10147,7 @@ func (m Feature) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["lineage_context"] = attrs["lineage_context"].SetComputed()
 	attrs["lineage_context"] = attrs["lineage_context"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetComputed()
+	attrs["output_type_text"] = attrs["output_type_text"].SetComputed()
 	attrs["schema_name"] = attrs["schema_name"].SetComputed()
 	attrs["source"] = attrs["source"].SetRequired()
 	attrs["source"] = attrs["source"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
@@ -10136,6 +10196,7 @@ func (m Feature) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"inputs":            m.Inputs,
 			"lineage_context":   m.LineageContext,
 			"name":              m.Name,
+			"output_type_text":  m.OutputTypeText,
 			"schema_name":       m.SchemaName,
 			"source":            m.Source,
 			"time_window":       m.TimeWindow,
@@ -10162,6 +10223,7 @@ func (m Feature) Type(ctx context.Context) attr.Type {
 			},
 			"lineage_context":   LineageContext{}.Type(ctx),
 			"name":              types.StringType,
+			"output_type_text":  types.StringType,
 			"schema_name":       types.StringType,
 			"source":            DataSource{}.Type(ctx),
 			"time_window":       TimeWindow{}.Type(ctx),
@@ -10349,7 +10411,8 @@ func (m *Feature) SetTimeseriesColumn(ctx context.Context, v TimeseriesColumn) {
 
 // A Python UDF that computes a feature.
 type FeatureFunction struct {
-	// Bindings of the UDF's parameters to features.
+	// Bindings of the UDF's parameters to features. Order is not significant,
+	// and GetFeatureSpec can return them in a different order.
 	InputBindings types.List `tfsdk:"input_bindings"`
 	// Output name of the feature that the UDF computes.
 	Output types.String `tfsdk:"output"`
@@ -11055,7 +11118,8 @@ func (m *FeatureList) SetFeatures(ctx context.Context, v []LinkedFeature) {
 
 // Features to look up from a feature table.
 type FeatureLookup struct {
-	// Default values for features.
+	// Default values for features. Order is not significant, and GetFeatureSpec
+	// can return them in a different order.
 	DefaultValues types.List `tfsdk:"default_values"`
 	// Names of the features to look up, or empty to look up every feature in
 	// the table.
@@ -11065,6 +11129,8 @@ type FeatureLookup struct {
 	// Keys to use when joining with the feature table.
 	LookupKeys types.List `tfsdk:"lookup_keys"`
 	// Output names for features, in place of their names in the feature table.
+	// Order is not significant, and GetFeatureSpec can return them in a
+	// different order.
 	RenameOutputs types.List `tfsdk:"rename_outputs"`
 	// Three-part name of the feature table.
 	Table types.String `tfsdk:"table"`
@@ -11430,7 +11496,8 @@ func (m FeatureReference) Type(ctx context.Context) attr.Type {
 
 // A named set of features to serve, stored as a Unity Catalog function.
 type FeatureSpec struct {
-	// Output names of columns to leave out of the feature spec.
+	// Output names of columns to leave out of the feature spec. Order is not
+	// significant, and GetFeatureSpec can return them in a different order.
 	ExcludeColumns types.List `tfsdk:"exclude_columns"`
 	// Extra pip requirements to install in the serving container, in addition
 	// to the defaults and those resolved from the features.
@@ -21760,6 +21827,153 @@ func (m *MaterializationNotifications) SetOnSuccess(ctx context.Context, v Mater
 	m.OnSuccess = vs
 }
 
+// Progress of a requested run, which may materialize multiple members of the
+// set.
+type MaterializationRunProgress struct {
+	// The failure, including a failure to submit the run. Present when `state`
+	// is `FAILED`.
+	Error types.Object `tfsdk:"error"`
+	// IDs of the materialized features assigned to this run when the operation
+	// was created.
+	MaterializedFeatureIds types.List `tfsdk:"materialized_feature_ids"`
+	// Current state of the requested run.
+	State types.String `tfsdk:"state"`
+}
+
+func (to *MaterializationRunProgress) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MaterializationRunProgress) {
+	if !from.Error.IsNull() && !from.Error.IsUnknown() {
+		if toError, ok := to.GetError(ctx); ok {
+			if fromError, ok := from.GetError(ctx); ok {
+				// Recursively sync the fields of Error
+				toError.SyncFieldsDuringCreateOrUpdate(ctx, fromError)
+				to.SetError(ctx, toError)
+			}
+		}
+	}
+	if !from.MaterializedFeatureIds.IsNull() && !from.MaterializedFeatureIds.IsUnknown() && to.MaterializedFeatureIds.IsNull() && len(from.MaterializedFeatureIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for MaterializedFeatureIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.MaterializedFeatureIds = from.MaterializedFeatureIds
+	}
+}
+
+func (to *MaterializationRunProgress) SyncFieldsDuringRead(ctx context.Context, from MaterializationRunProgress) {
+	if !from.Error.IsNull() && !from.Error.IsUnknown() {
+		if toError, ok := to.GetError(ctx); ok {
+			if fromError, ok := from.GetError(ctx); ok {
+				toError.SyncFieldsDuringRead(ctx, fromError)
+				to.SetError(ctx, toError)
+			}
+		}
+	}
+	if !from.MaterializedFeatureIds.IsNull() && !from.MaterializedFeatureIds.IsUnknown() && to.MaterializedFeatureIds.IsNull() && len(from.MaterializedFeatureIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for MaterializedFeatureIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.MaterializedFeatureIds = from.MaterializedFeatureIds
+	}
+}
+
+func (m MaterializationRunProgress) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["error"] = attrs["error"].SetComputed()
+	attrs["materialized_feature_ids"] = attrs["materialized_feature_ids"].SetComputed()
+	attrs["state"] = attrs["state"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MaterializationRunProgress.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m MaterializationRunProgress) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"error":                    reflect.TypeOf(DatabricksServiceExceptionWithDetailsProto{}),
+		"materialized_feature_ids": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MaterializationRunProgress
+// only implements ToObjectValue() and Type().
+func (m MaterializationRunProgress) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"error":                    m.Error,
+			"materialized_feature_ids": m.MaterializedFeatureIds,
+			"state":                    m.State,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m MaterializationRunProgress) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"error": DatabricksServiceExceptionWithDetailsProto{}.Type(ctx),
+			"materialized_feature_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"state": types.StringType,
+		},
+	}
+}
+
+// GetError returns the value of the Error field in MaterializationRunProgress as
+// a DatabricksServiceExceptionWithDetailsProto value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializationRunProgress) GetError(ctx context.Context) (DatabricksServiceExceptionWithDetailsProto, bool) {
+	var e DatabricksServiceExceptionWithDetailsProto
+	if m.Error.IsNull() || m.Error.IsUnknown() {
+		return e, false
+	}
+	var v DatabricksServiceExceptionWithDetailsProto
+	d := m.Error.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetError sets the value of the Error field in MaterializationRunProgress.
+func (m *MaterializationRunProgress) SetError(ctx context.Context, v DatabricksServiceExceptionWithDetailsProto) {
+	vs := v.ToObjectValue(ctx)
+	m.Error = vs
+}
+
+// GetMaterializedFeatureIds returns the value of the MaterializedFeatureIds field in MaterializationRunProgress as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializationRunProgress) GetMaterializedFeatureIds(ctx context.Context) ([]types.String, bool) {
+	if m.MaterializedFeatureIds.IsNull() || m.MaterializedFeatureIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.MaterializedFeatureIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMaterializedFeatureIds sets the value of the MaterializedFeatureIds field in MaterializationRunProgress.
+func (m *MaterializationRunProgress) SetMaterializedFeatureIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["materialized_feature_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.MaterializedFeatureIds = types.ListValueMust(t, vs)
+}
+
 // A group of materialized features created and managed as a single unit.
 type MaterializationSet struct {
 	// Server-assigned unique identifier for the materialization set.
@@ -22113,6 +22327,8 @@ type MaterializationSetOperationMetadata struct {
 	MaterializationSetId types.String `tfsdk:"materialization_set_id"`
 	// Current state of the operation.
 	State types.String `tfsdk:"state"`
+	// Set by a `TriggerMaterializationSet` operation.
+	TriggerProgress types.Object `tfsdk:"trigger_progress"`
 	// Set by an `UpdateMaterializationSet` operation.
 	UpdateProgress types.Object `tfsdk:"update_progress"`
 }
@@ -22132,6 +22348,15 @@ func (to *MaterializationSetOperationMetadata) SyncFieldsDuringCreateOrUpdate(ct
 		// If a user specified a non-Null, empty list for FeatureFullNames, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FeatureFullNames = from.FeatureFullNames
+	}
+	if !from.TriggerProgress.IsNull() && !from.TriggerProgress.IsUnknown() {
+		if toTriggerProgress, ok := to.GetTriggerProgress(ctx); ok {
+			if fromTriggerProgress, ok := from.GetTriggerProgress(ctx); ok {
+				// Recursively sync the fields of TriggerProgress
+				toTriggerProgress.SyncFieldsDuringCreateOrUpdate(ctx, fromTriggerProgress)
+				to.SetTriggerProgress(ctx, toTriggerProgress)
+			}
+		}
 	}
 	if !from.UpdateProgress.IsNull() && !from.UpdateProgress.IsUnknown() {
 		if toUpdateProgress, ok := to.GetUpdateProgress(ctx); ok {
@@ -22159,6 +22384,14 @@ func (to *MaterializationSetOperationMetadata) SyncFieldsDuringRead(ctx context.
 		// set the resulting resource state to the empty list to match the planned value.
 		to.FeatureFullNames = from.FeatureFullNames
 	}
+	if !from.TriggerProgress.IsNull() && !from.TriggerProgress.IsUnknown() {
+		if toTriggerProgress, ok := to.GetTriggerProgress(ctx); ok {
+			if fromTriggerProgress, ok := from.GetTriggerProgress(ctx); ok {
+				toTriggerProgress.SyncFieldsDuringRead(ctx, fromTriggerProgress)
+				to.SetTriggerProgress(ctx, toTriggerProgress)
+			}
+		}
+	}
 	if !from.UpdateProgress.IsNull() && !from.UpdateProgress.IsUnknown() {
 		if toUpdateProgress, ok := to.GetUpdateProgress(ctx); ok {
 			if fromUpdateProgress, ok := from.GetUpdateProgress(ctx); ok {
@@ -22175,6 +22408,7 @@ func (m MaterializationSetOperationMetadata) ApplySchemaCustomizations(attrs map
 	attrs["feature_full_names"] = attrs["feature_full_names"].SetComputed()
 	attrs["materialization_set_id"] = attrs["materialization_set_id"].SetComputed()
 	attrs["state"] = attrs["state"].SetComputed()
+	attrs["trigger_progress"] = attrs["trigger_progress"].SetComputed()
 	attrs["update_progress"] = attrs["update_progress"].SetComputed()
 
 	return attrs
@@ -22191,6 +22425,7 @@ func (m MaterializationSetOperationMetadata) GetComplexFieldTypes(ctx context.Co
 	return map[string]reflect.Type{
 		"deletion_progress":  reflect.TypeOf(MaterializationSetDeletionProgress{}),
 		"feature_full_names": reflect.TypeOf(types.String{}),
+		"trigger_progress":   reflect.TypeOf(MaterializationSetTriggerProgress{}),
 		"update_progress":    reflect.TypeOf(MaterializationSetUpdateProgress{}),
 	}
 }
@@ -22207,6 +22442,7 @@ func (m MaterializationSetOperationMetadata) ToObjectValue(ctx context.Context) 
 			"feature_full_names":     m.FeatureFullNames,
 			"materialization_set_id": m.MaterializationSetId,
 			"state":                  m.State,
+			"trigger_progress":       m.TriggerProgress,
 			"update_progress":        m.UpdateProgress,
 		})
 }
@@ -22222,6 +22458,7 @@ func (m MaterializationSetOperationMetadata) Type(ctx context.Context) attr.Type
 			},
 			"materialization_set_id": types.StringType,
 			"state":                  types.StringType,
+			"trigger_progress":       MaterializationSetTriggerProgress{}.Type(ctx),
 			"update_progress":        MaterializationSetUpdateProgress{}.Type(ctx),
 		},
 	}
@@ -22278,6 +22515,31 @@ func (m *MaterializationSetOperationMetadata) SetFeatureFullNames(ctx context.Co
 	m.FeatureFullNames = types.ListValueMust(t, vs)
 }
 
+// GetTriggerProgress returns the value of the TriggerProgress field in MaterializationSetOperationMetadata as
+// a MaterializationSetTriggerProgress value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializationSetOperationMetadata) GetTriggerProgress(ctx context.Context) (MaterializationSetTriggerProgress, bool) {
+	var e MaterializationSetTriggerProgress
+	if m.TriggerProgress.IsNull() || m.TriggerProgress.IsUnknown() {
+		return e, false
+	}
+	var v MaterializationSetTriggerProgress
+	d := m.TriggerProgress.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTriggerProgress sets the value of the TriggerProgress field in MaterializationSetOperationMetadata.
+func (m *MaterializationSetOperationMetadata) SetTriggerProgress(ctx context.Context, v MaterializationSetTriggerProgress) {
+	vs := v.ToObjectValue(ctx)
+	m.TriggerProgress = vs
+}
+
 // GetUpdateProgress returns the value of the UpdateProgress field in MaterializationSetOperationMetadata as
 // a MaterializationSetUpdateProgress value.
 // If the field is unknown or null, the boolean return value is false.
@@ -22301,6 +22563,128 @@ func (m *MaterializationSetOperationMetadata) GetUpdateProgress(ctx context.Cont
 func (m *MaterializationSetOperationMetadata) SetUpdateProgress(ctx context.Context, v MaterializationSetUpdateProgress) {
 	vs := v.ToObjectValue(ctx)
 	m.UpdateProgress = vs
+}
+
+// Progress and outcomes of the runs requested by `TriggerMaterializationSet`.
+// Entries remain available after the operation finishes.
+//
+// Once all requested runs have finished, the operation fails if any run failed.
+// Otherwise, it is cancelled if any run was cancelled, and succeeds if all runs
+// succeeded.
+type MaterializationSetTriggerProgress struct {
+	// One entry per requested run, including runs that fail or are cancelled
+	// before submission.
+	Runs types.List `tfsdk:"runs"`
+}
+
+func (to *MaterializationSetTriggerProgress) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MaterializationSetTriggerProgress) {
+	if !from.Runs.IsNull() && !from.Runs.IsUnknown() && to.Runs.IsNull() && len(from.Runs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Runs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Runs = from.Runs
+	}
+	if !from.Runs.IsNull() && !from.Runs.IsUnknown() {
+		if toRuns, ok := to.GetRuns(ctx); ok {
+			if fromRuns, ok := from.GetRuns(ctx); ok {
+				// Recursively sync the fields of each Runs element by position.
+				for i := range toRuns {
+					if i < len(fromRuns) {
+						toRuns[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRuns[i])
+					}
+				}
+				to.SetRuns(ctx, toRuns)
+			}
+		}
+	}
+}
+
+func (to *MaterializationSetTriggerProgress) SyncFieldsDuringRead(ctx context.Context, from MaterializationSetTriggerProgress) {
+	if !from.Runs.IsNull() && !from.Runs.IsUnknown() && to.Runs.IsNull() && len(from.Runs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Runs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Runs = from.Runs
+	}
+	if !from.Runs.IsNull() && !from.Runs.IsUnknown() {
+		if toRuns, ok := to.GetRuns(ctx); ok {
+			if fromRuns, ok := from.GetRuns(ctx); ok {
+				for i := range toRuns {
+					if i < len(fromRuns) {
+						toRuns[i].SyncFieldsDuringRead(ctx, fromRuns[i])
+					}
+				}
+				to.SetRuns(ctx, toRuns)
+			}
+		}
+	}
+}
+
+func (m MaterializationSetTriggerProgress) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["runs"] = attrs["runs"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MaterializationSetTriggerProgress.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m MaterializationSetTriggerProgress) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"runs": reflect.TypeOf(MaterializationRunProgress{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MaterializationSetTriggerProgress
+// only implements ToObjectValue() and Type().
+func (m MaterializationSetTriggerProgress) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"runs": m.Runs,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m MaterializationSetTriggerProgress) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"runs": basetypes.ListType{
+				ElemType: MaterializationRunProgress{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetRuns returns the value of the Runs field in MaterializationSetTriggerProgress as
+// a slice of MaterializationRunProgress values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializationSetTriggerProgress) GetRuns(ctx context.Context) ([]MaterializationRunProgress, bool) {
+	if m.Runs.IsNull() || m.Runs.IsUnknown() {
+		return nil, false
+	}
+	var v []MaterializationRunProgress
+	d := m.Runs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRuns sets the value of the Runs field in MaterializationSetTriggerProgress.
+func (m *MaterializationSetTriggerProgress) SetRuns(ctx context.Context, v []MaterializationRunProgress) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["runs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Runs = types.ListValueMust(t, vs)
 }
 
 // Progress and outcomes of an `UpdateMaterializationSet` operation.
@@ -22662,6 +23046,11 @@ type MaterializedFeature struct {
 	CronSchedule types.String `tfsdk:"cron_schedule"`
 	// A cron-based schedule trigger for batch materialization.
 	CronScheduleTrigger types.Object `tfsdk:"cron_schedule_trigger"`
+	// A trigger that disables automatic materialization, including the initial
+	// run at creation. Runs are instead triggered through the
+	// `TriggerMaterializationSet` API. Supported only for batch
+	// materializations in a materialization set.
+	ExternalTrigger types.Object `tfsdk:"external_trigger"`
 	// The full name of the feature in Unity Catalog.
 	FeatureName types.String `tfsdk:"feature_name"`
 	// True if this is an online materialized feature. False if it is an offline
@@ -22729,6 +23118,15 @@ func (to *MaterializedFeature) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 			}
 		}
 	}
+	if !from.ExternalTrigger.IsNull() && !from.ExternalTrigger.IsUnknown() {
+		if toExternalTrigger, ok := to.GetExternalTrigger(ctx); ok {
+			if fromExternalTrigger, ok := from.GetExternalTrigger(ctx); ok {
+				// Recursively sync the fields of ExternalTrigger
+				toExternalTrigger.SyncFieldsDuringCreateOrUpdate(ctx, fromExternalTrigger)
+				to.SetExternalTrigger(ctx, toExternalTrigger)
+			}
+		}
+	}
 	if !from.Notifications.IsNull() && !from.Notifications.IsUnknown() {
 		if toNotifications, ok := to.GetNotifications(ctx); ok {
 			if fromNotifications, ok := from.GetNotifications(ctx); ok {
@@ -22789,6 +23187,14 @@ func (to *MaterializedFeature) SyncFieldsDuringRead(ctx context.Context, from Ma
 			}
 		}
 	}
+	if !from.ExternalTrigger.IsNull() && !from.ExternalTrigger.IsUnknown() {
+		if toExternalTrigger, ok := to.GetExternalTrigger(ctx); ok {
+			if fromExternalTrigger, ok := from.GetExternalTrigger(ctx); ok {
+				toExternalTrigger.SyncFieldsDuringRead(ctx, fromExternalTrigger)
+				to.SetExternalTrigger(ctx, toExternalTrigger)
+			}
+		}
+	}
 	if !from.Notifications.IsNull() && !from.Notifications.IsUnknown() {
 		if toNotifications, ok := to.GetNotifications(ctx); ok {
 			if fromNotifications, ok := from.GetNotifications(ctx); ok {
@@ -22839,6 +23245,7 @@ func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["cron_schedule"] = attrs["cron_schedule"].SetOptional()
 	attrs["cron_schedule_trigger"] = attrs["cron_schedule_trigger"].SetOptional()
+	attrs["external_trigger"] = attrs["external_trigger"].SetOptional()
 	attrs["feature_name"] = attrs["feature_name"].SetRequired()
 	attrs["is_online"] = attrs["is_online"].SetComputed()
 	attrs["job_id"] = attrs["job_id"].SetComputed()
@@ -22874,6 +23281,7 @@ func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema
 func (m MaterializedFeature) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"cron_schedule_trigger": reflect.TypeOf(CronSchedule{}),
+		"external_trigger":      reflect.TypeOf(ExternalTrigger{}),
 		"notifications":         reflect.TypeOf(MaterializationNotifications{}),
 		"offline_store_config":  reflect.TypeOf(OfflineStoreConfig{}),
 		"online_store_config":   reflect.TypeOf(OnlineStoreConfig{}),
@@ -22893,6 +23301,7 @@ func (m MaterializedFeature) ToObjectValue(ctx context.Context) basetypes.Object
 			"budget_policy_id":          m.BudgetPolicyId,
 			"cron_schedule":             m.CronSchedule,
 			"cron_schedule_trigger":     m.CronScheduleTrigger,
+			"external_trigger":          m.ExternalTrigger,
 			"feature_name":              m.FeatureName,
 			"is_online":                 m.IsOnline,
 			"job_id":                    m.JobId,
@@ -22919,6 +23328,7 @@ func (m MaterializedFeature) Type(ctx context.Context) attr.Type {
 			"budget_policy_id":          types.StringType,
 			"cron_schedule":             types.StringType,
 			"cron_schedule_trigger":     CronSchedule{}.Type(ctx),
+			"external_trigger":          ExternalTrigger{}.Type(ctx),
 			"feature_name":              types.StringType,
 			"is_online":                 types.BoolType,
 			"job_id":                    types.Int64Type,
@@ -22964,6 +23374,31 @@ func (m *MaterializedFeature) GetCronScheduleTrigger(ctx context.Context) (CronS
 func (m *MaterializedFeature) SetCronScheduleTrigger(ctx context.Context, v CronSchedule) {
 	vs := v.ToObjectValue(ctx)
 	m.CronScheduleTrigger = vs
+}
+
+// GetExternalTrigger returns the value of the ExternalTrigger field in MaterializedFeature as
+// a ExternalTrigger value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *MaterializedFeature) GetExternalTrigger(ctx context.Context) (ExternalTrigger, bool) {
+	var e ExternalTrigger
+	if m.ExternalTrigger.IsNull() || m.ExternalTrigger.IsUnknown() {
+		return e, false
+	}
+	var v ExternalTrigger
+	d := m.ExternalTrigger.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExternalTrigger sets the value of the ExternalTrigger field in MaterializedFeature.
+func (m *MaterializedFeature) SetExternalTrigger(ctx context.Context, v ExternalTrigger) {
+	vs := v.ToObjectValue(ctx)
+	m.ExternalTrigger = vs
 }
 
 // GetNotifications returns the value of the Notifications field in MaterializedFeature as
@@ -29113,7 +29548,7 @@ type SdpSource struct {
 	// to materialize this feature with a TableTrigger, which starts a run when
 	// these tables update. Each table must exist when the feature is created.
 	// Feature Store doesn't confirm that the pipeline reads from these tables.
-	// At most 100 tables.
+	// At most 25 tables.
 	InputTables types.List `tfsdk:"input_tables"`
 	// The full three-part (catalog, schema, table) name of the pipeline's
 	// output table to read from. The table doesn't need to exist until the
@@ -33173,6 +33608,14 @@ type TableTrigger struct {
 	// tumbling window uses half its window_duration, clamped to between 5
 	// minutes and 1 hour. Other features have no minimum.
 	MinTimeBetweenTriggers timetypes.GoDuration `tfsdk:"min_time_between_triggers"`
+	// Whether automatic materialization is paused. Defaults to `false`.
+	// Supported only for materializations in a materialization set. Use the
+	// `UpdateMaterializationSet` API to pause or resume the set.
+	//
+	// Pausing does not cancel running or queued runs. Runs can still be
+	// triggered through the `TriggerMaterializationSet` API. Resuming does not
+	// submit a run. Creating a paused materialization skips its initial run.
+	Paused types.Bool `tfsdk:"paused"`
 	// How long the source table must go without updates before a run starts, so
 	// a series of updates settles before the run. If not set, a run starts as
 	// soon as the source table updates.
@@ -33188,6 +33631,7 @@ func (to *TableTrigger) SyncFieldsDuringRead(ctx context.Context, from TableTrig
 func (m TableTrigger) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["condition"] = attrs["condition"].SetOptional()
 	attrs["min_time_between_triggers"] = attrs["min_time_between_triggers"].SetOptional()
+	attrs["paused"] = attrs["paused"].SetOptional()
 	attrs["wait_after_last_change"] = attrs["wait_after_last_change"].SetOptional()
 
 	return attrs
@@ -33213,6 +33657,7 @@ func (m TableTrigger) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"condition":                 m.Condition,
 			"min_time_between_triggers": m.MinTimeBetweenTriggers,
+			"paused":                    m.Paused,
 			"wait_after_last_change":    m.WaitAfterLastChange,
 		})
 }
@@ -33223,6 +33668,7 @@ func (m TableTrigger) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"condition":                 types.StringType,
 			"min_time_between_triggers": timetypes.GoDuration{}.Type(ctx),
+			"paused":                    types.BoolType,
 			"wait_after_last_change":    timetypes.GoDuration{}.Type(ctx),
 		},
 	}
@@ -33981,6 +34427,105 @@ func (m *TransitionStageResponse) GetModelVersionDatabricks(ctx context.Context)
 func (m *TransitionStageResponse) SetModelVersionDatabricks(ctx context.Context, v ModelVersionDatabricks) {
 	vs := v.ToObjectValue(ctx)
 	m.ModelVersionDatabricks = vs
+}
+
+// Request to trigger materialization for a materialization set.
+type TriggerMaterializationSetRequest struct {
+	// The ID of the materialization set to trigger.
+	MaterializationSetId types.String `tfsdk:"-"`
+	// Idempotency token in UUID format. Reusing it returns the original
+	// operation without starting additional runs, even if the request differs
+	// or the operation has finished. If omitted, each request triggers
+	// independently.
+	RequestId types.String `tfsdk:"request_id"`
+}
+
+func (to *TriggerMaterializationSetRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TriggerMaterializationSetRequest) {
+}
+
+func (to *TriggerMaterializationSetRequest) SyncFieldsDuringRead(ctx context.Context, from TriggerMaterializationSetRequest) {
+}
+
+func (m TriggerMaterializationSetRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["request_id"] = attrs["request_id"].SetOptional()
+	attrs["materialization_set_id"] = attrs["materialization_set_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TriggerMaterializationSetRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TriggerMaterializationSetRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TriggerMaterializationSetRequest
+// only implements ToObjectValue() and Type().
+func (m TriggerMaterializationSetRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"materialization_set_id": m.MaterializationSetId,
+			"request_id":             m.RequestId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TriggerMaterializationSetRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"materialization_set_id": types.StringType,
+			"request_id":             types.StringType,
+		},
+	}
+}
+
+// Result of a successful `TriggerMaterializationSet` operation.
+type TriggerMaterializationSetResponse struct {
+}
+
+func (to *TriggerMaterializationSetResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TriggerMaterializationSetResponse) {
+}
+
+func (to *TriggerMaterializationSetResponse) SyncFieldsDuringRead(ctx context.Context, from TriggerMaterializationSetResponse) {
+}
+
+func (m TriggerMaterializationSetResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TriggerMaterializationSetResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TriggerMaterializationSetResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TriggerMaterializationSetResponse
+// only implements ToObjectValue() and Type().
+func (m TriggerMaterializationSetResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TriggerMaterializationSetResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type TumblingWindow struct {

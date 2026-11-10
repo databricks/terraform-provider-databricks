@@ -97,18 +97,19 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // ExternalGroupData extends the main model with additional fields.
 type ExternalGroupData struct {
-	// The parent account ID, from Databricks.
+	// The ID of the account that contains the group.
 	AccountId types.String `tfsdk:"account_id"`
-	// Display name of the group from the customer's IdP.
+	// The name of the group, from your IdP. It's the same as the group's
+	// `group_name`.
 	DisplayName types.String `tfsdk:"display_name"`
-	// The external ID of the group in the customer's IdP.
+	// The ID of the group in your IdP.
 	ExternalGroupId types.String `tfsdk:"external_group_id"`
-	// Internal groupId of the group in Databricks.
+	// The Databricks ID of the group. Use it as the `group_id` in the group
+	// APIs.
 	InternalId types.String `tfsdk:"internal_id"`
-	// The resource name of the external group. The format depends on the API
-	// that returned it: - Account-scoped:
-	// accounts/{account_id}/external-groups/{external_group_id} -
-	// Workspace-scoped: external-groups/{external_group_id}
+	// The resource name of the external group, in one of these formats: -
+	// Account APIs: `accounts/{account_id}/external-groups/{external_group_id}`
+	// - Workspace APIs: `external-groups/{external_group_id}`
 	Name               types.String `tfsdk:"name"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

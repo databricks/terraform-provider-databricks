@@ -18232,15 +18232,37 @@ func (m *ResolvedValues) SetSqlTask(ctx context.Context, v ResolvedParamPairValu
 
 // Resolved values for an AI Function task's Delta table input.
 type ResolvedValuesAiFunctionTaskResolvedValues struct {
+	// The Delta table source with any upstream-task references (such as
+	// `{{tasks.<task_key>.values.output_table_name}}`) in the table name
+	// replaced by concrete values before the run.
+	DeltaTable types.Object `tfsdk:"delta_table"`
 }
 
 func (to *ResolvedValuesAiFunctionTaskResolvedValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResolvedValuesAiFunctionTaskResolvedValues) {
+	if !from.DeltaTable.IsNull() && !from.DeltaTable.IsUnknown() {
+		if toDeltaTable, ok := to.GetDeltaTable(ctx); ok {
+			if fromDeltaTable, ok := from.GetDeltaTable(ctx); ok {
+				// Recursively sync the fields of DeltaTable
+				toDeltaTable.SyncFieldsDuringCreateOrUpdate(ctx, fromDeltaTable)
+				to.SetDeltaTable(ctx, toDeltaTable)
+			}
+		}
+	}
 }
 
 func (to *ResolvedValuesAiFunctionTaskResolvedValues) SyncFieldsDuringRead(ctx context.Context, from ResolvedValuesAiFunctionTaskResolvedValues) {
+	if !from.DeltaTable.IsNull() && !from.DeltaTable.IsUnknown() {
+		if toDeltaTable, ok := to.GetDeltaTable(ctx); ok {
+			if fromDeltaTable, ok := from.GetDeltaTable(ctx); ok {
+				toDeltaTable.SyncFieldsDuringRead(ctx, fromDeltaTable)
+				to.SetDeltaTable(ctx, toDeltaTable)
+			}
+		}
+	}
 }
 
 func (m ResolvedValuesAiFunctionTaskResolvedValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delta_table"] = attrs["delta_table"].SetOptional()
 
 	return attrs
 }
@@ -18253,7 +18275,9 @@ func (m ResolvedValuesAiFunctionTaskResolvedValues) ApplySchemaCustomizations(at
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ResolvedValuesAiFunctionTaskResolvedValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"delta_table": reflect.TypeOf(DeltaTableSource{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -18262,14 +18286,43 @@ func (m ResolvedValuesAiFunctionTaskResolvedValues) GetComplexFieldTypes(ctx con
 func (m ResolvedValuesAiFunctionTaskResolvedValues) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+			"delta_table": m.DeltaTable,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ResolvedValuesAiFunctionTaskResolvedValues) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
+		AttrTypes: map[string]attr.Type{
+			"delta_table": DeltaTableSource{}.Type(ctx),
+		},
 	}
+}
+
+// GetDeltaTable returns the value of the DeltaTable field in ResolvedValuesAiFunctionTaskResolvedValues as
+// a DeltaTableSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ResolvedValuesAiFunctionTaskResolvedValues) GetDeltaTable(ctx context.Context) (DeltaTableSource, bool) {
+	var e DeltaTableSource
+	if m.DeltaTable.IsNull() || m.DeltaTable.IsUnknown() {
+		return e, false
+	}
+	var v DeltaTableSource
+	d := m.DeltaTable.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDeltaTable sets the value of the DeltaTable field in ResolvedValuesAiFunctionTaskResolvedValues.
+func (m *ResolvedValuesAiFunctionTaskResolvedValues) SetDeltaTable(ctx context.Context, v DeltaTableSource) {
+	vs := v.ToObjectValue(ctx)
+	m.DeltaTable = vs
 }
 
 // Resolved values for an AiRuntimeTask after dynamic-value substitution, so
@@ -24752,15 +24805,15 @@ func (m SqlConditionConfiguration) Type(ctx context.Context) attr.Type {
 
 // SQL condition evaluation details captured at the time the run was triggered
 type SqlConditionRunInfoDetails struct {
-	// Whether the last condition evaluation was satisfied (query returned
-	// truthy result).
+	// Whether the last condition evaluation was satisfied. For
+	// QUERY_RETURNS_ROWS, the query returned at least one row. For
+	// RESULT_VALUE_CHANGES, the result value changed.
 	ConditionEvaluationSatisfied types.Bool `tfsdk:"condition_evaluation_satisfied"`
-	// The ID of the SQL session, used by the UI to track session context. Set
-	// for the QUERY_RETURNS_ROWS trigger mode.
+	// The ID of the SQL session of the condition evaluation. Not set by current
+	// evaluations. Use condition_evaluation_sql_statement_id instead.
 	ConditionEvaluationSqlSessionId types.String `tfsdk:"condition_evaluation_sql_session_id"`
-	// The SQL statement ID of the condition evaluation, set when the condition
-	// is evaluated by running a single SQL statement (the RESULT_VALUE_CHANGES
-	// trigger mode). The UI uses it to link to the query execution details.
+	// The SQL statement ID of the condition evaluation. Set for both the
+	// QUERY_RETURNS_ROWS and RESULT_VALUE_CHANGES trigger modes.
 	ConditionEvaluationSqlStatementId types.String `tfsdk:"condition_evaluation_sql_statement_id"`
 }
 
@@ -24814,15 +24867,16 @@ func (m SqlConditionRunInfoDetails) Type(ctx context.Context) attr.Type {
 }
 
 type SqlConditionState struct {
-	// Whether the last condition evaluation was satisfied (query returned
-	// truthy result).
+	// Whether the last condition evaluation was satisfied. For
+	// QUERY_RETURNS_ROWS, the query returned at least one row. For
+	// RESULT_VALUE_CHANGES, the result value changed.
 	LatestConditionEvaluationSatisfied types.Bool `tfsdk:"latest_condition_evaluation_satisfied"`
-	// The ID of the SQL session, used by UI to track session context. Populated
-	// for QUERY_RETURNS_ROWS, which executes the query through Redash.
+	// The ID of the SQL session of the latest condition evaluation. Not set by
+	// current evaluations. Use latest_condition_evaluation_sql_statement_id
+	// instead.
 	LatestConditionEvaluationSqlSessionId types.String `tfsdk:"latest_condition_evaluation_sql_session_id"`
-	// The SEA statement ID of the SQL statement executed for the latest
-	// condition evaluation. Populated for RESULT_VALUE_CHANGES, which executes
-	// the query through the SQL execution API.
+	// The ID of the SQL statement executed for the latest condition evaluation.
+	// Populated for both QUERY_RETURNS_ROWS and RESULT_VALUE_CHANGES.
 	LatestConditionEvaluationSqlStatementId types.String `tfsdk:"latest_condition_evaluation_sql_statement_id"`
 }
 

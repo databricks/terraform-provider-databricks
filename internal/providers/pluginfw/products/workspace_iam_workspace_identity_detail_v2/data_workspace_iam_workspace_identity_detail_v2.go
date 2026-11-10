@@ -97,17 +97,18 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // WorkspaceIdentityDetailData extends the main model with additional fields.
 type WorkspaceIdentityDetailData struct {
-	// The type of assignment the principal has to the workspace (direct or
-	// indirect).
+	// Whether the principal is assigned to the workspace directly or has access
+	// through a group.
 	AssignmentType types.String `tfsdk:"assignment_type"`
-	// The resource name of the workspace identity detail. Format:
-	// principals/{principal_id}/workspace-identity-detail
+	// The resource name of the workspace identity detail, in the format
+	// `principals/{principal_id}/workspace-identity-detail`.
 	Name types.String `tfsdk:"name"`
-	// The internal ID of the principal (user/sp/group) in Databricks.
+	// The Databricks ID of the user, service principal, or group.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
-	// The type of the principal (user/service principal/group).
+	// Whether the principal is a user, service principal, or group.
 	PrincipalType types.String `tfsdk:"principal_type"`
-	// The activity status of an identity in a Databricks workspace.
+	// Whether the principal is active in the workspace. Groups are always
+	// `ACTIVE`.
 	WorkspaceIdentityStatus types.String `tfsdk:"workspace_identity_status"`
 	ProviderConfigData      types.Object `tfsdk:"provider_config"`
 }

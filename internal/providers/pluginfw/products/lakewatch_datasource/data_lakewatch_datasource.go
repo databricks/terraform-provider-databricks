@@ -125,9 +125,9 @@ type DatasourceData struct {
 	// final segment of `name`.
 	DatasourceId types.String `tfsdk:"datasource_id"`
 	// Name of the datasource in Unity Catalog, unique within its schema.
-	// Required on create and cannot be changed afterward. Reads return the
-	// value as supplied; the datasource's current Unity Catalog name, which
-	// reflects renames, is reported in `effective_datasource_name`.
+	// Required on create and can be updated within the same catalog and schema.
+	// Get synchronizes this field with the current Unity Catalog name, also
+	// reported in `effective_datasource_name`.
 	DatasourceName types.String `tfsdk:"datasource_name"`
 	// Free-form description of the datasource.
 	Description types.String `tfsdk:"description"`
@@ -206,10 +206,10 @@ type DatasourceData struct {
 	Version types.Int64 `tfsdk:"version"`
 	// ID of the SQL warehouse that runs the checks Lakewatch performs to
 	// validate a create or update request, such as source and destination
-	// access checks. Required and non-blank on every create and update request;
-	// there is no default warehouse. The requester must be able to use the
-	// warehouse. Used only for those checks: it is not stored, is not returned
-	// on reads, and does not affect the compute that runs the ingestion job.
+	// access checks. Required and non-blank on every create and update request
+	// except a rename-only PATCH; there is no default warehouse. The requester
+	// must be able to use the warehouse. It is not stored, is not returned on
+	// reads, and does not affect the compute that runs the ingestion job.
 	WarehouseId        types.String `tfsdk:"warehouse_id"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

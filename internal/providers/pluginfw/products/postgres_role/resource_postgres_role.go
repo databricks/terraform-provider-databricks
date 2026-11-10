@@ -125,11 +125,13 @@ type Role struct {
 	// When the role already exists, only mutable fields are updated. Attributes
 	// omitted from the request retain their current values. Set an attribute
 	// explicitly to false to disable it. `identity_type`, `auth_method`, and
-	// `postgres_role` retain their existing values; supplied values for these
-	// fields are ignored. `membership_roles` is overwritten, not merged.
-	// Leaving `membership_roles` empty clears all of the role's existing
-	// memberships, including `DATABRICKS_SUPERUSER`. Always send the complete
-	// desired list of memberships when using this field.
+	// `postgres_role` retain their existing values. Omit these fields or supply
+	// their current values. A differing supplied value returns
+	// INVALID_PARAMETER_VALUE and rejects the entire request, including changes
+	// to mutable fields. `membership_roles` is overwritten, not merged. Leaving
+	// `membership_roles` empty clears all of the role's existing memberships,
+	// including `DATABRICKS_SUPERUSER`. Always send the complete desired list
+	// of memberships when using this field.
 	ReplaceExisting types.Bool `tfsdk:"replace_existing"`
 	// The part of the name, chosen by the user when the resource was created.
 	RoleId types.String `tfsdk:"role_id"`

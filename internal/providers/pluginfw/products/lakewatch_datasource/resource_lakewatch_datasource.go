@@ -136,9 +136,9 @@ type Datasource struct {
 	// final segment of `name`.
 	DatasourceId types.String `tfsdk:"datasource_id"`
 	// Name of the datasource in Unity Catalog, unique within its schema.
-	// Required on create and cannot be changed afterward. Reads return the
-	// value as supplied; the datasource's current Unity Catalog name, which
-	// reflects renames, is reported in `effective_datasource_name`.
+	// Required on create and can be updated within the same catalog and schema.
+	// Get synchronizes this field with the current Unity Catalog name, also
+	// reported in `effective_datasource_name`.
 	DatasourceName types.String `tfsdk:"datasource_name"`
 	// Free-form description of the datasource.
 	Description types.String `tfsdk:"description"`
@@ -217,10 +217,10 @@ type Datasource struct {
 	Version types.Int64 `tfsdk:"version"`
 	// ID of the SQL warehouse that runs the checks Lakewatch performs to
 	// validate a create or update request, such as source and destination
-	// access checks. Required and non-blank on every create and update request;
-	// there is no default warehouse. The requester must be able to use the
-	// warehouse. Used only for those checks: it is not stored, is not returned
-	// on reads, and does not affect the compute that runs the ingestion job.
+	// access checks. Required and non-blank on every create and update request
+	// except a rename-only PATCH; there is no default warehouse. The requester
+	// must be able to use the warehouse. It is not stored, is not returned on
+	// reads, and does not affect the compute that runs the ingestion job.
 	WarehouseId    types.String `tfsdk:"warehouse_id"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
@@ -541,7 +541,6 @@ func (m Datasource) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["datasource_id"] = attrs["datasource_id"].SetComputed()
 	attrs["datasource_name"] = attrs["datasource_name"].SetRequired()
-	attrs["datasource_name"] = attrs["datasource_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["effective_catalog_name"] = attrs["effective_catalog_name"].SetComputed()
 	attrs["effective_datasource_name"] = attrs["effective_datasource_name"].SetComputed()
@@ -561,7 +560,9 @@ func (m Datasource) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updated_by"] = attrs["updated_by"].SetComputed()
 	attrs["version"] = attrs["version"].SetComputed()
-	attrs["warehouse_id"] = attrs["warehouse_id"].SetRequired()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetComputed()
+	attrs["warehouse_id"] = attrs["warehouse_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -973,7 +974,7 @@ func (r *DatasourceResource) update(ctx context.Context, plan Datasource, diags 
 	updateRequest := lakewatch.UpdateDatasourceRequest{
 		Datasource: datasource,
 		Name:       plan.Name.ValueString(),
-		UpdateMask: *fieldmask.New(strings.Split("annotations,autoloader,compute_mode,description,existing_table,parsers,run_as_principal,schedule,unity_catalog_connection,warehouse_id", ",")),
+		UpdateMask: *fieldmask.New(strings.Split("annotations,autoloader,compute_mode,datasource_name,description,existing_table,parsers,run_as_principal,schedule,unity_catalog_connection,warehouse_id", ",")),
 	}
 
 	var namespace ProviderConfig

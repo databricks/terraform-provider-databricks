@@ -1104,9 +1104,9 @@ type Datasource_SdkV2 struct {
 	// final segment of `name`.
 	DatasourceId types.String `tfsdk:"datasource_id"`
 	// Name of the datasource in Unity Catalog, unique within its schema.
-	// Required on create and cannot be changed afterward. Reads return the
-	// value as supplied; the datasource's current Unity Catalog name, which
-	// reflects renames, is reported in `effective_datasource_name`.
+	// Required on create and can be updated within the same catalog and schema.
+	// Get synchronizes this field with the current Unity Catalog name, also
+	// reported in `effective_datasource_name`.
 	DatasourceName types.String `tfsdk:"datasource_name"`
 	// Free-form description of the datasource.
 	Description types.String `tfsdk:"description"`
@@ -1185,10 +1185,10 @@ type Datasource_SdkV2 struct {
 	Version types.Int64 `tfsdk:"version"`
 	// ID of the SQL warehouse that runs the checks Lakewatch performs to
 	// validate a create or update request, such as source and destination
-	// access checks. Required and non-blank on every create and update request;
-	// there is no default warehouse. The requester must be able to use the
-	// warehouse. Used only for those checks: it is not stored, is not returned
-	// on reads, and does not affect the compute that runs the ingestion job.
+	// access checks. Required and non-blank on every create and update request
+	// except a rename-only PATCH; there is no default warehouse. The requester
+	// must be able to use the warehouse. It is not stored, is not returned on
+	// reads, and does not affect the compute that runs the ingestion job.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
@@ -1392,7 +1392,6 @@ func (m Datasource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["created_by"] = attrs["created_by"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["datasource_id"] = attrs["datasource_id"].SetComputed()
 	attrs["datasource_name"] = attrs["datasource_name"].SetRequired()
-	attrs["datasource_name"] = attrs["datasource_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["effective_catalog_name"] = attrs["effective_catalog_name"].SetComputed()
 	attrs["effective_datasource_name"] = attrs["effective_datasource_name"].SetComputed()
@@ -1418,7 +1417,9 @@ func (m Datasource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["updated_by"] = attrs["updated_by"].SetComputed()
 	attrs["updated_by"] = attrs["updated_by"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["version"] = attrs["version"].SetComputed()
-	attrs["warehouse_id"] = attrs["warehouse_id"].SetRequired()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetComputed()
+	attrs["warehouse_id"] = attrs["warehouse_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -3990,9 +3991,10 @@ type Rule_SdkV2 struct {
 	// Unity Catalog securable UUID of the rule, and the last segment of `name`.
 	// Never changes, including when the rule's catalog or schema is renamed.
 	RuleId types.String `tfsdk:"rule_id"`
-	// Name of the rule within its Unity Catalog schema. Required. Cannot be
-	// changed after creation. Reads return the value as supplied; the current
-	// UC name is reported in `effective_rule_name`.
+	// Name of the rule within its Unity Catalog schema. Required on create; can
+	// be updated within the same catalog and schema. Get synchronizes this
+	// field with the current Unity Catalog name, also reported in
+	// `effective_rule_name`.
 	RuleName types.String `tfsdk:"rule_name"`
 	// The principal whose identity this rule's job runs as, given as a user
 	// email or service-principal application ID. When supplied on
@@ -4280,7 +4282,6 @@ func (m Rule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["references"] = attrs["references"].SetOptional()
 	attrs["rule_id"] = attrs["rule_id"].SetComputed()
 	attrs["rule_name"] = attrs["rule_name"].SetRequired()
-	attrs["rule_name"] = attrs["rule_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["run_as_principal"] = attrs["run_as_principal"].SetOptional()
 	attrs["runbook"] = attrs["runbook"].SetOptional()
 	attrs["schedule"] = attrs["schedule"].SetRequired()

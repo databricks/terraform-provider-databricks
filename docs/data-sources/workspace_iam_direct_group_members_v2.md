@@ -23,10 +23,9 @@ data "databricks_workspace_iam_direct_group_members_v2" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `parent` (string, required) - The parent resource name of the group whose direct members to list.
-  Format: groups/{group_id}
-* `page_size` (integer, optional) - The maximum number of members to return. The service may return fewer than this value.
-  If not provided, defaults to 1000, which is also the maximum allowed. Requests for more than the maximum are clamped to 1000
+* `parent` (string, required) - The resource name of the group, in the format `groups/{group_id}`
+* `page_size` (integer, optional) - The maximum number of members to return, up to 1000. The default is 1000. A page can contain
+  fewer members
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -35,16 +34,15 @@ The following arguments are supported:
 
 ## Attributes
 This data source exports a single attribute, `direct_group_members`. It is a list of resources, each with the following attributes:
-* `display_name` (string) - Display name of the principal
-* `external_id` (string) - The external ID of the principal in the customer's IdP
-* `group_id` (integer) - The internal ID of the group this member belongs to
-* `membership_source` (string) - The source of group membership (internal or from identity provider). Possible values are: `IDENTITY_PROVIDER`, `INTERNAL`
-* `name` (string) - The resource name of the group membership. The format depends on the API that returned it:
-  - Account-scoped: accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}
-  - Workspace-scoped: groups/{group_id}/direct-members/{principal_id}
-* `parent` (string) - The resource name of the group that contains the membership. The format depends on the API
-  that returned it:
-  - Account-scoped: accounts/{account_id}/groups/{group_id}
-  - Workspace-scoped: groups/{group_id}
-* `principal_id` (integer) - Internal ID of the principal in Databricks
-* `principal_type` (string) - The type of the principal (user/service principal/group). Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
+* `display_name` (string) - The member's display name
+* `external_id` (string) - The ID of the member in your identity provider (IdP)
+* `group_id` (integer) - The Databricks ID of the group
+* `membership_source` (string) - Where the membership comes from. Possible values are: `IDENTITY_PROVIDER`, `INTERNAL`
+* `name` (string) - The resource name of the membership, in one of these formats:
+  - Account APIs: `accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}`
+  - Workspace APIs: `groups/{group_id}/direct-members/{principal_id}`
+* `parent` (string) - The resource name of the group, in one of these formats:
+  - Account APIs: `accounts/{account_id}/groups/{group_id}`
+  - Workspace APIs: `groups/{group_id}`
+* `principal_id` (integer) - The Databricks ID of the member
+* `principal_type` (string) - Whether the member is a user, service principal, or group. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`

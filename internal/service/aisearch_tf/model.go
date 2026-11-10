@@ -1458,11 +1458,32 @@ func (m *Endpoint) SetThroughputInfo(ctx context.Context, v EndpointThroughputIn
 // Scaling information for a Standard endpoint: the current scaling state, the
 // requested QPS target, and the progress of an in-progress scaling change.
 type EndpointScalingInfo struct {
+	// Reason the in-progress scaling change is delayed. When set,
+	// `estimated_completion_time` is unset. Unset when the change is not
+	// delayed or no scaling change is in progress.
+	DelayedReason types.String `tfsdk:"delayed_reason"`
+	// Estimated time at which the in-progress scaling change will complete. The
+	// estimate may change as the scaling change progresses. Unset when no
+	// scaling change is in progress, when no estimate is available, or when the
+	// change is delayed (see `delayed_reason`).
+	EstimatedCompletionTime timetypes.RFC3339 `tfsdk:"estimated_completion_time"`
+	// Percentage of index initialization completed, from 0 to 100. Set only
+	// during the `INITIALIZING_INDEX` phase; unset in other phases or when
+	// progress is not available.
+	IndexInitializationPercentage types.Int64 `tfsdk:"index_initialization_percentage"`
+	// Current phase of the in-progress scaling change. Unset when no scaling
+	// change is in progress or the phase is not available.
+	Phase types.String `tfsdk:"phase"`
 	// The requested QPS target for the endpoint. Best-effort; the system does
 	// not guarantee this QPS will be achieved.
 	RequestedTargetQps types.Int64 `tfsdk:"requested_target_qps"`
 	// The current state of the scaling change request.
 	State types.String `tfsdk:"state"`
+	// Earliest time a new Target QPS change is accepted. Set only while a
+	// scaling change is in progress, the change lock is on, and the endpoint
+	// has a recorded last throughput change; may be in the past once the lock
+	// has expired.
+	TargetQpsChangeAllowedAfterTime timetypes.RFC3339 `tfsdk:"target_qps_change_allowed_after_time"`
 }
 
 func (to *EndpointScalingInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointScalingInfo) {
@@ -1472,8 +1493,13 @@ func (to *EndpointScalingInfo) SyncFieldsDuringRead(ctx context.Context, from En
 }
 
 func (m EndpointScalingInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delayed_reason"] = attrs["delayed_reason"].SetComputed()
+	attrs["estimated_completion_time"] = attrs["estimated_completion_time"].SetComputed()
+	attrs["index_initialization_percentage"] = attrs["index_initialization_percentage"].SetComputed()
+	attrs["phase"] = attrs["phase"].SetComputed()
 	attrs["requested_target_qps"] = attrs["requested_target_qps"].SetOptional()
 	attrs["state"] = attrs["state"].SetComputed()
+	attrs["target_qps_change_allowed_after_time"] = attrs["target_qps_change_allowed_after_time"].SetComputed()
 
 	return attrs
 }
@@ -1496,8 +1522,13 @@ func (m EndpointScalingInfo) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"requested_target_qps": m.RequestedTargetQps,
-			"state":                m.State,
+			"delayed_reason":                       m.DelayedReason,
+			"estimated_completion_time":            m.EstimatedCompletionTime,
+			"index_initialization_percentage":      m.IndexInitializationPercentage,
+			"phase":                                m.Phase,
+			"requested_target_qps":                 m.RequestedTargetQps,
+			"state":                                m.State,
+			"target_qps_change_allowed_after_time": m.TargetQpsChangeAllowedAfterTime,
 		})
 }
 
@@ -1505,8 +1536,13 @@ func (m EndpointScalingInfo) ToObjectValue(ctx context.Context) basetypes.Object
 func (m EndpointScalingInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"requested_target_qps": types.Int64Type,
-			"state":                types.StringType,
+			"delayed_reason":                       types.StringType,
+			"estimated_completion_time":            timetypes.RFC3339{}.Type(ctx),
+			"index_initialization_percentage":      types.Int64Type,
+			"phase":                                types.StringType,
+			"requested_target_qps":                 types.Int64Type,
+			"state":                                types.StringType,
+			"target_qps_change_allowed_after_time": timetypes.RFC3339{}.Type(ctx),
 		},
 	}
 }

@@ -117,24 +117,155 @@ func TestDataSourceExperimentByNameNotFound(t *testing.T) {
 	}.ExpectError(t, "Node /Users/databricks/non-existent-experiment does not exist.")
 }
 
-func TestDataSourceExperimentByNameInvalidPath(t *testing.T) {
-	experimentName := "invalid_path"
-
+func TestDataSourceExperimentByShortName(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			api := w.GetMockExperimentsAPI()
-			api.EXPECT().GetByName(mock.Anything, ml.GetByNameRequest{
-				ExperimentName: experimentName,
+			api.EXPECT().SearchExperimentsAll(mock.Anything, ml.SearchExperiments{
+				Filter: "name LIKE '%/my-experiment'",
+			}).Return([]ml.Experiment{
+				{
+					Name:         "/Users/databricks/another-my-experiment",
+					ExperimentId: "1111111111",
+				},
+				{
+					Name:             "/Users/databricks/my-experiment",
+					ExperimentId:     "1234567890",
+					ArtifactLocation: "dbfs:/databricks/mlflow-tracking/1234567890",
+					LifecycleStage:   "active",
+				},
+			}, nil)
+		},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceExperiment(),
+		ID:          ".",
+		HCL:         `name = "my-experiment"`,
+	}.ApplyAndExpectData(t, map[string]interface{}{
+		"id":                "1234567890",
+		"artifact_location": "dbfs:/databricks/mlflow-tracking/1234567890",
+		"experiment_id":     "1234567890",
+		"lifecycle_stage":   "active",
+		"name":              "/Users/databricks/my-experiment",
+	})
+}
+
+func TestDataSourceExperimentByRelativePath(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockExperimentsAPI()
+			api.EXPECT().SearchExperimentsAll(mock.Anything, ml.SearchExperiments{
+				Filter: "name LIKE '%/team/my-experiment'",
+			}).Return([]ml.Experiment{
+				{
+					Name:         "/Shared/team/my-experiment",
+					ExperimentId: "1234567890",
+				},
+			}, nil)
+		},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceExperiment(),
+		ID:          ".",
+		HCL:         `name = "team/my-experiment"`,
+	}.ApplyAndExpectData(t, map[string]interface{}{
+		"id":   "1234567890",
+		"name": "/Shared/team/my-experiment",
+	})
+}
+
+func TestDataSourceExperimentByShortNameEscapesFilter(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockExperimentsAPI()
+			api.EXPECT().SearchExperimentsAll(mock.Anything, ml.SearchExperiments{
+				Filter: "name LIKE '%/joe_s _100__ experiment'",
+			}).Return([]ml.Experiment{
+				{
+					Name:         "/Users/databricks/joe-s [100]] experiment",
+					ExperimentId: "1111111111",
+				},
+				{
+					Name:         `/Users/databricks/joe's "100%" experiment`,
+					ExperimentId: "1234567890",
+				},
+			}, nil)
+		},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceExperiment(),
+		ID:          ".",
+		HCL:         `name = "joe's \"100%\" experiment"`,
+	}.ApplyAndExpectData(t, map[string]interface{}{
+		"id":   "1234567890",
+		"name": `/Users/databricks/joe's "100%" experiment`,
+	})
+}
+
+func TestDataSourceExperimentByShortNameNotFound(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockExperimentsAPI()
+			api.EXPECT().SearchExperimentsAll(mock.Anything, ml.SearchExperiments{
+				Filter: "name LIKE '%/my_experiment'",
+			}).Return([]ml.Experiment{
+				{
+					Name:         "/Users/databricks/my-experiment",
+					ExperimentId: "1234567890",
+				},
+			}, nil)
+		},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceExperiment(),
+		ID:          ".",
+		HCL:         `name = "my_experiment"`,
+	}.ExpectError(t, "experiment with name 'my_experiment' does not exist")
+}
+
+func TestDataSourceExperimentByShortNameAmbiguous(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockExperimentsAPI()
+			api.EXPECT().SearchExperimentsAll(mock.Anything, ml.SearchExperiments{
+				Filter: "name LIKE '%/my-experiment'",
+			}).Return([]ml.Experiment{
+				{
+					Name:         "/Users/second@example.com/my-experiment",
+					ExperimentId: "2222222222",
+				},
+				{
+					Name:         "/Users/first@example.com/my-experiment",
+					ExperimentId: "1111111111",
+				},
+			}, nil)
+		},
+		Read:        true,
+		NonWritable: true,
+		Resource:    DataSourceExperiment(),
+		ID:          ".",
+		HCL:         `name = "my-experiment"`,
+	}.ExpectError(t, "there are 2 experiments with name 'my-experiment': "+
+		"/Users/first@example.com/my-experiment, /Users/second@example.com/my-experiment. "+
+		"Use the full path of the experiment instead")
+}
+
+func TestDataSourceExperimentByShortNameSearchError(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockExperimentsAPI()
+			api.EXPECT().SearchExperimentsAll(mock.Anything, ml.SearchExperiments{
+				Filter: "name LIKE '%/my-experiment'",
 			}).Return(nil, &apierr.APIError{
-				ErrorCode:  "RESOURCE_DOES_NOT_EXIST",
-				Message:    "Got an invalid experiment name 'invalid_path'. An experiment name must be an absolute path within the Databricks workspace, e.g. '/Users/<some-username>/my-experiment'.",
-				StatusCode: 404,
+				ErrorCode:  "PERMISSION_DENIED",
+				Message:    "Permission denied",
+				StatusCode: 403,
 			})
 		},
 		Read:        true,
 		NonWritable: true,
 		Resource:    DataSourceExperiment(),
 		ID:          ".",
-		HCL:         fmt.Sprintf(`name = "%s"`, experimentName),
-	}.ExpectError(t, "Got an invalid experiment name 'invalid_path'. An experiment name must be an absolute path within the Databricks workspace, e.g. '/Users/<some-username>/my-experiment'.")
+		HCL:         `name = "my-experiment"`,
+	}.ExpectError(t, "Permission denied")
 }

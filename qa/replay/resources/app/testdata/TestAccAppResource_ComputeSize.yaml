@@ -1,0 +1,190 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create_medium"
+    config: |
+      resource "databricks_app" "this" {
+        no_compute   = true
+        name         = "tf-replay"
+        description  = "compute size app"
+        compute_size = "MEDIUM"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/apps"
+          query:
+            no_compute: ["true"]
+          body:
+            json:
+              compute_size: "MEDIUM"
+              description: "compute size app"
+              name: "tf-replay"
+        response: &medium_app # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              compute_size: "MEDIUM"
+              compute_status:
+                state: "STOPPED"
+              create_time: "2026-01-01T00:00:00Z"
+              description: "compute size app"
+              name: "tf-replay"
+              update_time: "2026-01-01T00:00:00Z"
+      - &get_medium
+        request:
+          method: "GET"
+          path: "/api/2.0/apps/tf-replay"
+          body: null
+        response: *medium_app
+      - *get_medium
+    state:
+      resources:
+        databricks_app.this:
+          attributes:
+            - path: ["compute_size"]
+              equals: "MEDIUM"
+  - name: "update_large"
+    config: |
+      resource "databricks_app" "this" {
+        no_compute   = true
+        name         = "tf-replay"
+        description  = "compute size app"
+        compute_size = "LARGE"
+      }
+    calls:
+      - *get_medium
+      - request:
+          method: "POST"
+          path: "/api/2.0/apps/tf-replay/update"
+          body:
+            json:
+              app:
+                compute_size: "LARGE"
+                create_time: "2026-01-01T00:00:00Z"
+                description: "compute size app"
+                name: "tf-replay"
+              update_mask: "*"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              compute_size: "LARGE"
+              description: "compute size app"
+              status:
+                state: "IN_PROGRESS"
+                message: "App is updating."
+      - request:
+          method: "GET"
+          path: "/api/2.0/apps/tf-replay/update"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              compute_size: "LARGE"
+              description: "compute size app"
+              status:
+                state: "SUCCEEDED"
+                message: "App update succeeded."
+      - &get_large
+        request:
+          method: "GET"
+          path: "/api/2.0/apps/tf-replay"
+          body: null
+        response: &large_app # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              compute_size: "LARGE"
+              compute_status:
+                state: "STOPPED"
+              create_time: "2026-01-01T00:00:00Z"
+              description: "compute size app"
+              name: "tf-replay"
+              update_time: "2026-01-02T00:00:00Z"
+      - *get_large
+    state:
+      resources:
+        databricks_app.this:
+          attributes:
+            - path: ["compute_size"]
+              equals: "LARGE"
+  # compute_size is Optional+Computed, so omitting it only reaches the API when another field
+  # changes; the request then leaves it unset and the backend resets it to MEDIUM.
+  - name: "omit_compute_size"
+    config: |
+      resource "databricks_app" "this" {
+        no_compute  = true
+        name        = "tf-replay"
+        description = "compute size app reset"
+      }
+    calls:
+      - *get_large
+      - request:
+          method: "POST"
+          path: "/api/2.0/apps/tf-replay/update"
+          body:
+            json:
+              app:
+                create_time: "2026-01-01T00:00:00Z"
+                description: "compute size app reset"
+                name: "tf-replay"
+              update_mask: "*"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              compute_size: "MEDIUM"
+              description: "compute size app reset"
+              status:
+                state: "IN_PROGRESS"
+                message: "App is updating."
+      - request:
+          method: "GET"
+          path: "/api/2.0/apps/tf-replay/update"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              compute_size: "MEDIUM"
+              description: "compute size app reset"
+              status:
+                state: "SUCCEEDED"
+                message: "App update succeeded."
+      - &get_reset
+        request:
+          method: "GET"
+          path: "/api/2.0/apps/tf-replay"
+          body: null
+        response: &reset_app # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              compute_size: "MEDIUM"
+              compute_status:
+                state: "STOPPED"
+              create_time: "2026-01-01T00:00:00Z"
+              description: "compute size app reset"
+              name: "tf-replay"
+              update_time: "2026-01-03T00:00:00Z"
+      - *get_reset
+    state:
+      resources:
+        databricks_app.this:
+          attributes:
+            - path: ["compute_size"]
+              equals: "MEDIUM"
+destroy:
+  calls:
+    - *get_reset
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/apps/tf-replay"
+        body: null
+      response: *reset_app

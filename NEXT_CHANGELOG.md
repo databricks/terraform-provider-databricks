@@ -4,6 +4,15 @@
 
 ### Important Changes
 
+* `databricks_app` now updates apps through the asynchronous Apps update API ([#6151](https://github.com/databricks/terraform-provider-databricks/pull/6151)).
+  The synchronous update API ignored `compute_size`, `compute_min_instances`, and
+  `compute_max_instances`, so changes to them never took effect; they are now applied. As
+  before, an update replaces the app's updatable fields with the configuration, so fields
+  omitted from it are cleared. That now also covers the fields the synchronous API skipped: an
+  omitted `compute_size` resets to `MEDIUM`, omitted `compute_min_instances` and
+  `compute_max_instances` disable horizontal scaling, and an omitted `git_source` clears the
+  app's default git source. Updates now wait for the app update to reach `SUCCEEDED`.
+
 ### Breaking Changes
 
 ### New Features and Improvements

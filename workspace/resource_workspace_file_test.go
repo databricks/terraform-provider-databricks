@@ -147,6 +147,69 @@ func TestResourceWorkspaceFileCreate_DirectoryDoesntExist(t *testing.T) {
 	})
 }
 
+func TestResourceWorkspaceFileCreate_DirectoryCreatedConcurrently(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
+			workspaceAPI.Upload(mock.Anything, dummyWorkspaceFilePath,
+				bytes.NewReader(dummyWorkspaceFilePayloadBinary),
+				mock.AnythingOfType("func(*workspace.Import)")).Return(&apierr.APIError{
+				ErrorCode:  "RESOURCE_DOES_NOT_EXIST",
+				Message:    "The parent folder (/foo) does not exist.",
+				StatusCode: 404,
+			}).Once()
+			// Another resource created the parent folder after the upload failed.
+			workspaceAPI.GetStatusByPath(mock.Anything, "/foo").Return(&ws_api.ObjectInfo{
+				ObjectType: ws_api.ObjectTypeDirectory,
+				Path:       "/foo",
+			}, nil).Once()
+			workspaceAPI.Upload(mock.Anything, dummyWorkspaceFilePath,
+				bytes.NewReader(dummyWorkspaceFilePayloadBinary),
+				mock.AnythingOfType("func(*workspace.Import)")).Return(nil).Once()
+			workspaceAPI.GetStatusByPath(mock.Anything, dummyWorkspaceFilePath).
+				Return(&ws_api.ObjectInfo{
+					ObjectId:   4567,
+					ObjectType: ws_api.ObjectTypeFile,
+					Path:       dummyWorkspaceFilePath,
+				}, nil)
+		},
+		Resource: ResourceWorkspaceFile(),
+		State: map[string]any{
+			"content_base64": dummyWorkspaceFilePayloadBase64,
+			"path":           dummyWorkspaceFilePath,
+		},
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": dummyWorkspaceFilePath,
+	})
+}
+
+func TestResourceWorkspaceFileCreate_ErrorIsNotRetriedWhenDirectoryExists(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			workspaceAPI := w.GetMockWorkspaceAPI().EXPECT()
+			workspaceAPI.Upload(mock.Anything, dummyWorkspaceFilePath,
+				bytes.NewReader(dummyWorkspaceFilePayloadBinary),
+				mock.AnythingOfType("func(*workspace.Import)")).Return(&apierr.APIError{
+				ErrorCode:  "PERMISSION_DENIED",
+				Message:    "Permission denied",
+				StatusCode: 403,
+			}).Once()
+			workspaceAPI.GetStatusByPath(mock.Anything, "/foo").Return(&ws_api.ObjectInfo{
+				ObjectType: ws_api.ObjectTypeDirectory,
+				Path:       "/foo",
+			}, nil).Once()
+		},
+		Resource: ResourceWorkspaceFile(),
+		State: map[string]any{
+			"content_base64": dummyWorkspaceFilePayloadBase64,
+			"path":           dummyWorkspaceFilePath,
+		},
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Permission denied")
+}
+
 func TestResourceWorkspaceFileCreate_DirectoryCreateError(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

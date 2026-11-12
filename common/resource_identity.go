@@ -54,15 +54,44 @@ func importerWithIdentity(inner *schema.ResourceImporter, isDual bool) *schema.R
 					return nil, err
 				}
 			}
-			if inner.StateContext != nil {
-				return inner.StateContext(ctx, d, m)
+			imported, err := runImporter(ctx, inner, d, m)
+			if err != nil {
+				return nil, err
 			}
-			if inner.State != nil {
-				return inner.State(d, m)
+			for _, r := range imported {
+				if err := syncImportedIdentityID(r); err != nil {
+					return nil, err
+				}
 			}
-			return []*schema.ResourceData{d}, nil
+			return imported, nil
 		},
 	}
+}
+
+func runImporter(ctx context.Context, inner *schema.ResourceImporter, d *schema.ResourceData, m any) ([]*schema.ResourceData, error) {
+	if inner.StateContext != nil {
+		return inner.StateContext(ctx, d, m)
+	}
+	if inner.State != nil {
+		return inner.State(d, m)
+	}
+	return []*schema.ResourceData{d}, nil
+}
+
+// syncImportedIdentityID sets identity.id to the final resource ID when the
+// import identity set one and the wrapped importer rewrote d.Id(). The SDK
+// returns the imported identity before Read runs, so it must match the ID.
+// It mutates d.
+func syncImportedIdentityID(d *schema.ResourceData) error {
+	identity, err := d.Identity()
+	if err != nil {
+		// No identity schema on d, as in applyImportIdentity.
+		return nil
+	}
+	if id, _ := identity.Get(identityIDKey).(string); id == "" || id == d.Id() {
+		return nil
+	}
+	return identity.Set(identityIDKey, d.Id())
 }
 
 // applyImportIdentity sets the resource ID from the identity when importing by

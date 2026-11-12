@@ -3,6 +3,7 @@ package common
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/config"
@@ -101,11 +102,19 @@ func requireImportWorkspaceID(d *schema.ResourceData, c *DatabricksClient) error
 	if c.Config.WorkspaceID != "" || c.HostTypeForTerraform() == config.WorkspaceHost {
 		return nil
 	}
-	return fmt.Errorf("cannot import the resource with ID %q: the provider is configured for an account-level "+
+	return errors.New(MissingImportWorkspaceIDMessage(d.Id()))
+}
+
+// MissingImportWorkspaceIDMessage explains how to import a workspace-level
+// resource through an account-level or unified-host provider. SDKv2 and Plugin
+// Framework resources share it so both give the same advice.
+func MissingImportWorkspaceIDMessage(importID string) string {
+	return fmt.Sprintf("cannot import the resource with ID %q: the provider is configured for an account-level "+
 		"or unified host, so the import needs the ID of the workspace that contains the resource. "+
 		"Terraform does not pass provider_config to the provider during import. Use an import block "+
-		"with identity = { id = %q, workspace_id = \"<workspace ID>\" } instead of id (requires Terraform 1.12 or later)",
-		d.Id(), d.Id())
+		"with identity = { id = %q, workspace_id = \"<workspace ID>\" } instead of id (requires Terraform 1.12 or later), "+
+		"or import through a provider configured with workspace_id = \"<workspace ID>\"",
+		importID, importID)
 }
 
 // setWorkspaceResourceIdentity sets the identity from the resource ID and

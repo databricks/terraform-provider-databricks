@@ -3,9 +3,9 @@ package tfschema
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -71,12 +71,7 @@ func ResolveImportIdentity(ctx context.Context, client UnifiedProviderClient, re
 	if workspaceID != "" || client.GetProviderWorkspaceID() != "" || client.HostTypeForTerraform() == config.WorkspaceHost {
 		return importID, workspaceID, diags
 	}
-	diags.AddError("Missing workspace ID for import", fmt.Sprintf(
-		"Cannot import the resource with ID %q: the provider is configured for an account-level or unified host, "+
-			"so the import needs the ID of the workspace that contains the resource. Terraform does not pass "+
-			"provider_config to the provider during import. Use an import block with "+
-			"identity = { id = %q, workspace_id = \"<workspace ID>\" } instead of id (requires Terraform 1.12 or later).",
-		importID, importID))
+	diags.AddError("Missing workspace ID for import", common.MissingImportWorkspaceIDMessage(importID))
 	return "", "", diags
 }
 

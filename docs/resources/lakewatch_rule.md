@@ -53,7 +53,8 @@ The following arguments are supported:
   supplied; the identity the rule runs as is reported in
   `effective_run_as_principal`
 * `runbook` (string, optional) - Long-form operational guidance carried from the authored rule metadata. Supports up to 4096
-  characters. Requests exceeding this limit are rejected
+  characters. Requests exceeding this limit are rejected. Supports Markdown; analysts and the
+  investigation agent follow it when triaging this rule's alerts
 * `suppress_until_time` (string, optional) - If set, this rule's signals do not open new alerts until the given time
 * `timerange` (RuleTimeRange, optional) - Time-range configuration for batch rules. If unset, the execution time range is extended by
   a fixed `15m` lookback

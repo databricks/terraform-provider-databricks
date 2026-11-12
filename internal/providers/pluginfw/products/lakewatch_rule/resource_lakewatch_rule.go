@@ -205,7 +205,8 @@ type Rule struct {
 	RunAsPrincipal types.String `tfsdk:"run_as_principal"`
 	// Long-form operational guidance carried from the authored rule metadata.
 	// Supports up to 4096 characters. Requests exceeding this limit are
-	// rejected.
+	// rejected. Supports Markdown; analysts and the investigation agent follow
+	// it when triaging this rule's alerts.
 	Runbook types.String `tfsdk:"runbook"`
 	// When the rule executes.
 	Schedule types.Object `tfsdk:"schedule"`

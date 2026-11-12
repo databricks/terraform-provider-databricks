@@ -683,16 +683,6 @@ func (m CloudWatchLogsEnvelope_SdkV2) Type(ctx context.Context) attr.Type {
 // Catch-all per-catalog config — settings that don't belong to any one
 // resource family. Singleton. Name format: `catalogs/{catalog}/commonConfig`.
 type CommonConfig_SdkV2 struct {
-	// UC volume path holding user-authored custom content packs, e.g.
-	// `/Volumes/{catalog}/{schema}/{volume}`. User-provided with no default:
-	// when unset, custom content packs are unavailable (referencing one is
-	// rejected) and only built-in content packs apply.
-	CustomContentPackPath types.String `tfsdk:"custom_content_pack_path"`
-	// UC volume path holding user-authored custom presets, e.g.
-	// `/Volumes/{catalog}/{schema}/{volume}`. User-provided with no default:
-	// when unset, custom presets are unavailable and only built-in presets
-	// apply.
-	CustomPresetsPath types.String `tfsdk:"custom_presets_path"`
 	// Opaque entity tag for optimistic concurrency. Returned on every read;
 	// pass it back as the Update request's `etag` to make the update
 	// conditional on the resource being unchanged.
@@ -735,8 +725,6 @@ func (to *CommonConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Com
 }
 
 func (m CommonConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["custom_content_pack_path"] = attrs["custom_content_pack_path"].SetOptional()
-	attrs["custom_presets_path"] = attrs["custom_presets_path"].SetOptional()
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["per_resource_permissions_enabled"] = attrs["per_resource_permissions_enabled"].SetOptional()
@@ -768,8 +756,6 @@ func (m CommonConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"custom_content_pack_path":         m.CustomContentPackPath,
-			"custom_presets_path":              m.CustomPresetsPath,
 			"etag":                             m.Etag,
 			"name":                             m.Name,
 			"per_resource_permissions_enabled": m.PerResourcePermissionsEnabled,
@@ -783,8 +769,6 @@ func (m CommonConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (m CommonConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"custom_content_pack_path":         types.StringType,
-			"custom_presets_path":              types.StringType,
 			"etag":                             types.StringType,
 			"name":                             types.StringType,
 			"per_resource_permissions_enabled": types.BoolType,
@@ -4013,7 +3997,8 @@ type Rule_SdkV2 struct {
 	RunAsPrincipal types.String `tfsdk:"run_as_principal"`
 	// Long-form operational guidance carried from the authored rule metadata.
 	// Supports up to 4096 characters. Requests exceeding this limit are
-	// rejected.
+	// rejected. Supports Markdown; analysts and the investigation agent follow
+	// it when triaging this rule's alerts.
 	Runbook types.String `tfsdk:"runbook"`
 	// When the rule executes.
 	Schedule types.List `tfsdk:"schedule"`

@@ -744,10 +744,6 @@ type Branch struct {
 }
 
 func (to *Branch) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Branch) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -769,10 +765,6 @@ func (to *Branch) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Branc
 }
 
 func (to *Branch) SyncFieldsDuringRead(ctx context.Context, from Branch) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -797,8 +789,6 @@ func (m Branch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBui
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -981,9 +971,33 @@ type BranchSpec struct {
 }
 
 func (to *BranchSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BranchSpec) {
+	if !from.SourceBranch.IsUnknown() && !from.SourceBranch.IsNull() {
+		// SourceBranch is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranch = from.SourceBranch
+	}
+	if !from.SourceBranchLsn.IsUnknown() && !from.SourceBranchLsn.IsNull() {
+		// SourceBranchLsn is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranchLsn = from.SourceBranchLsn
+	}
+	if !from.SourceBranchTime.IsUnknown() && !from.SourceBranchTime.IsNull() {
+		// SourceBranchTime is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranchTime = from.SourceBranchTime
+	}
 }
 
 func (to *BranchSpec) SyncFieldsDuringRead(ctx context.Context, from BranchSpec) {
+	if !from.SourceBranch.IsUnknown() && !from.SourceBranch.IsNull() {
+		// SourceBranch is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranch = from.SourceBranch
+	}
+	if !from.SourceBranchLsn.IsUnknown() && !from.SourceBranchLsn.IsNull() {
+		// SourceBranchLsn is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranchLsn = from.SourceBranchLsn
+	}
+	if !from.SourceBranchTime.IsUnknown() && !from.SourceBranchTime.IsNull() {
+		// SourceBranchTime is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranchTime = from.SourceBranchTime
+	}
 }
 
 func (m BranchSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -992,10 +1006,16 @@ func (m BranchSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["no_expiry"] = attrs["no_expiry"].SetOptional()
 	attrs["source_branch"] = attrs["source_branch"].SetOptional()
 	attrs["source_branch"] = attrs["source_branch"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["source_branch"] = attrs["source_branch"].SetComputed()
+	attrs["source_branch"] = attrs["source_branch"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["source_branch_lsn"] = attrs["source_branch_lsn"].SetOptional()
 	attrs["source_branch_lsn"] = attrs["source_branch_lsn"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["source_branch_lsn"] = attrs["source_branch_lsn"].SetComputed()
+	attrs["source_branch_lsn"] = attrs["source_branch_lsn"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["source_branch_time"] = attrs["source_branch_time"].SetOptional()
 	attrs["source_branch_time"] = attrs["source_branch_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["source_branch_time"] = attrs["source_branch_time"].SetComputed()
+	attrs["source_branch_time"] = attrs["source_branch_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["source_snapshot"] = attrs["source_snapshot"].SetOptional()
 	attrs["source_snapshot"] = attrs["source_snapshot"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["ttl"] = attrs["ttl"].SetOptional()
@@ -3755,10 +3775,6 @@ type Database struct {
 }
 
 func (to *Database) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Database) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -3780,10 +3796,6 @@ func (to *Database) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Dat
 }
 
 func (to *Database) SyncFieldsDuringRead(ctx context.Context, from Database) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -3808,8 +3820,6 @@ func (m Database) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 
@@ -4994,10 +5004,6 @@ type Endpoint struct {
 }
 
 func (to *Endpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Endpoint) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -5019,10 +5025,6 @@ func (to *Endpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from End
 }
 
 func (to *Endpoint) SyncFieldsDuringRead(ctx context.Context, from Endpoint) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -5047,8 +5049,6 @@ func (m Endpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -9422,10 +9422,6 @@ func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Proj
 			}
 		}
 	}
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -9471,10 +9467,6 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 			}
 		}
 	}
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -9506,8 +9498,6 @@ func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["project_id"] = attrs["project_id"].SetComputed()
 	attrs["purge_time"] = attrs["purge_time"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -9929,6 +9919,10 @@ func (to *ProjectSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 			}
 		}
 	}
+	if !from.PgVersion.IsUnknown() && !from.PgVersion.IsNull() {
+		// PgVersion is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.PgVersion = from.PgVersion
+	}
 }
 
 func (to *ProjectSpec) SyncFieldsDuringRead(ctx context.Context, from ProjectSpec) {
@@ -9958,6 +9952,10 @@ func (to *ProjectSpec) SyncFieldsDuringRead(ctx context.Context, from ProjectSpe
 			}
 		}
 	}
+	if !from.PgVersion.IsUnknown() && !from.PgVersion.IsNull() {
+		// PgVersion is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.PgVersion = from.PgVersion
+	}
 }
 
 func (m ProjectSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9970,6 +9968,8 @@ func (m ProjectSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["history_retention_duration"] = attrs["history_retention_duration"].SetOptional()
 	attrs["pg_version"] = attrs["pg_version"].SetOptional()
 	attrs["pg_version"] = attrs["pg_version"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["pg_version"] = attrs["pg_version"].SetComputed()
+	attrs["pg_version"] = attrs["pg_version"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -10584,10 +10584,6 @@ type Role struct {
 }
 
 func (to *Role) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Role) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -10609,10 +10605,6 @@ func (to *Role) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Role) {
 }
 
 func (to *Role) SyncFieldsDuringRead(ctx context.Context, from Role) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -10637,8 +10629,6 @@ func (m Role) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["role_id"] = attrs["role_id"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 
@@ -10927,11 +10917,23 @@ func (to *RoleRoleSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 			}
 		}
 	}
+	if !from.AuthMethod.IsUnknown() && !from.AuthMethod.IsNull() {
+		// AuthMethod is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.AuthMethod = from.AuthMethod
+	}
+	if !from.IdentityType.IsUnknown() && !from.IdentityType.IsNull() {
+		// IdentityType is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.IdentityType = from.IdentityType
+	}
 	if !from.MembershipRoles.IsNull() && !from.MembershipRoles.IsUnknown() && to.MembershipRoles.IsNull() && len(from.MembershipRoles.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for MembershipRoles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.MembershipRoles = from.MembershipRoles
+	}
+	if !from.PostgresRole.IsUnknown() && !from.PostgresRole.IsNull() {
+		// PostgresRole is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.PostgresRole = from.PostgresRole
 	}
 }
 
@@ -10944,20 +10946,38 @@ func (to *RoleRoleSpec) SyncFieldsDuringRead(ctx context.Context, from RoleRoleS
 			}
 		}
 	}
+	if !from.AuthMethod.IsUnknown() && !from.AuthMethod.IsNull() {
+		// AuthMethod is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.AuthMethod = from.AuthMethod
+	}
+	if !from.IdentityType.IsUnknown() && !from.IdentityType.IsNull() {
+		// IdentityType is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.IdentityType = from.IdentityType
+	}
 	if !from.MembershipRoles.IsNull() && !from.MembershipRoles.IsUnknown() && to.MembershipRoles.IsNull() && len(from.MembershipRoles.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for MembershipRoles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.MembershipRoles = from.MembershipRoles
 	}
+	if !from.PostgresRole.IsUnknown() && !from.PostgresRole.IsNull() {
+		// PostgresRole is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.PostgresRole = from.PostgresRole
+	}
 }
 
 func (m RoleRoleSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["attributes"] = attrs["attributes"].SetOptional()
 	attrs["auth_method"] = attrs["auth_method"].SetOptional()
+	attrs["auth_method"] = attrs["auth_method"].SetComputed()
+	attrs["auth_method"] = attrs["auth_method"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["identity_type"] = attrs["identity_type"].SetOptional()
+	attrs["identity_type"] = attrs["identity_type"].SetComputed()
+	attrs["identity_type"] = attrs["identity_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["membership_roles"] = attrs["membership_roles"].SetOptional()
 	attrs["postgres_role"] = attrs["postgres_role"].SetOptional()
+	attrs["postgres_role"] = attrs["postgres_role"].SetComputed()
+	attrs["postgres_role"] = attrs["postgres_role"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }

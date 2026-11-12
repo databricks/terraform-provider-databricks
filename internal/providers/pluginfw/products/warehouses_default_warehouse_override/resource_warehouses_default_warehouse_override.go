@@ -282,6 +282,9 @@ func (r *DefaultWarehouseOverrideResource) Create(ctx context.Context, req resou
 		return
 	}
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *DefaultWarehouseOverrideResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -394,6 +397,9 @@ func (r *DefaultWarehouseOverrideResource) Update(ctx context.Context, req resou
 	}
 
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *DefaultWarehouseOverrideResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

@@ -4194,8 +4194,12 @@ func (m *CreateLoggedModelResponse) SetModel(ctx context.Context, v LoggedModel)
 }
 
 type CreateMaterializationSetRequest struct {
-	// The materialization set to create. Supply materialization_set_id to
-	// choose the identifier; leave it unset to have one assigned.
+	// The materialization set to create. Set `materialization_set_id` to choose
+	// the identifier, or omit it to have one assigned.
+	//
+	// Members with a cron schedule or table trigger must request the same
+	// `paused` value. An omitted `paused` defaults to `false`. A set can be
+	// created paused only if all members are batch materializations.
 	MaterializationSet types.Object `tfsdk:"materialization_set"`
 	// Idempotency token for the request. A second request carrying a token that
 	// has already been used returns the operation the first one created,
@@ -21685,8 +21689,8 @@ func (m *MaterializationFailureNotification) SetEmailAddresses(ctx context.Conte
 	m.EmailAddresses = types.ListValueMust(t, vs)
 }
 
-// Notifications for the jobs and pipelines that materialize the features in a
-// set, one field per trigger.
+// Notifications for the jobs and pipelines that materialize features, one field
+// per trigger.
 type MaterializationNotifications struct {
 	// Who to notify when a run fails, and on which attempts.
 	OnFailure types.Object `tfsdk:"on_failure"`
@@ -23070,8 +23074,9 @@ type MaterializedFeature struct {
 	MaterializationSetId types.String `tfsdk:"materialization_set_id"`
 	// Server-assigned unique identifier for the materialized feature.
 	MaterializedFeatureId types.String `tfsdk:"materialized_feature_id"`
-	// Notification configuration for the jobs and pipelines that materialize
-	// this feature.
+	// Notification configuration around the lifecycle of the job or pipeline
+	// that materializes this feature. Features which are materialized in the
+	// same pipeline will share the same notification.
 	Notifications types.Object `tfsdk:"notifications"`
 	// Destination for writing feature values to an offline Delta table. The
 	// resulting table is returned as `table_name`.
@@ -23254,7 +23259,7 @@ func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["materialization_set_id"] = attrs["materialization_set_id"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetOptional()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["notifications"] = attrs["notifications"].SetComputed()
+	attrs["notifications"] = attrs["notifications"].SetOptional()
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetOptional()
 	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetComputed()

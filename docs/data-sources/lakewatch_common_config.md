@@ -21,13 +21,6 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `custom_content_pack_path` (string) - UC volume path holding user-authored custom content packs, e.g.
-  `/Volumes/{catalog}/{schema}/{volume}`. User-provided with no default:
-  when unset, custom content packs are unavailable (referencing one is
-  rejected) and only built-in content packs apply
-* `custom_presets_path` (string) - UC volume path holding user-authored custom presets, e.g.
-  `/Volumes/{catalog}/{schema}/{volume}`. User-provided with no default:
-  when unset, custom presets are unavailable and only built-in presets apply
 * `etag` (string) - Opaque entity tag for optimistic concurrency. Returned on every read;
   pass it back as the Update request's `etag` to make the update
   conditional on the resource being unchanged

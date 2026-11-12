@@ -90,7 +90,8 @@ This data source exports a single attribute, `rules`. It is a list of resources,
   supplied; the identity the rule runs as is reported in
   `effective_run_as_principal`
 * `runbook` (string) - Long-form operational guidance carried from the authored rule metadata. Supports up to 4096
-  characters. Requests exceeding this limit are rejected
+  characters. Requests exceeding this limit are rejected. Supports Markdown; analysts and the
+  investigation agent follow it when triaging this rule's alerts
 * `schedule` (RuleSchedule) - When the rule executes
 * `schema_name` (string) - Name of the Unity Catalog schema that contains the rule. Required. Cannot be changed after
   creation. Reads return the value as supplied; the schema's current name is reported in

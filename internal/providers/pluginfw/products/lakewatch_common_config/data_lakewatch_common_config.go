@@ -99,16 +99,6 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // CommonConfigData extends the main model with additional fields.
 type CommonConfigData struct {
-	// UC volume path holding user-authored custom content packs, e.g.
-	// `/Volumes/{catalog}/{schema}/{volume}`. User-provided with no default:
-	// when unset, custom content packs are unavailable (referencing one is
-	// rejected) and only built-in content packs apply.
-	CustomContentPackPath types.String `tfsdk:"custom_content_pack_path"`
-	// UC volume path holding user-authored custom presets, e.g.
-	// `/Volumes/{catalog}/{schema}/{volume}`. User-provided with no default:
-	// when unset, custom presets are unavailable and only built-in presets
-	// apply.
-	CustomPresetsPath types.String `tfsdk:"custom_presets_path"`
 	// Opaque entity tag for optimistic concurrency. Returned on every read;
 	// pass it back as the Update request's `etag` to make the update
 	// conditional on the resource being unchanged.
@@ -152,8 +142,6 @@ func (m CommonConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"custom_content_pack_path":         m.CustomContentPackPath,
-			"custom_presets_path":              m.CustomPresetsPath,
 			"etag":                             m.Etag,
 			"name":                             m.Name,
 			"per_resource_permissions_enabled": m.PerResourcePermissionsEnabled,
@@ -171,8 +159,6 @@ func (m CommonConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (m CommonConfigData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"custom_content_pack_path":         types.StringType,
-			"custom_presets_path":              types.StringType,
 			"etag":                             types.StringType,
 			"name":                             types.StringType,
 			"per_resource_permissions_enabled": types.BoolType,
@@ -186,8 +172,6 @@ func (m CommonConfigData) Type(ctx context.Context) attr.Type {
 }
 
 func (m CommonConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["custom_content_pack_path"] = attrs["custom_content_pack_path"].SetComputed()
-	attrs["custom_presets_path"] = attrs["custom_presets_path"].SetComputed()
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["per_resource_permissions_enabled"] = attrs["per_resource_permissions_enabled"].SetComputed()

@@ -479,6 +479,7 @@ internal/providers/pluginfw/tfschema/block_builder.go linguist-generated=true
 internal/providers/pluginfw/tfschema/bool_attribute.go linguist-generated=true
 internal/providers/pluginfw/tfschema/customizable_schema.go linguist-generated=true
 internal/providers/pluginfw/tfschema/float64_attribute.go linguist-generated=true
+internal/providers/pluginfw/tfschema/imported_create_fields.go linguist-generated=true
 internal/providers/pluginfw/tfschema/int64_attribute.go linguist-generated=true
 internal/providers/pluginfw/tfschema/list_attribute.go linguist-generated=true
 internal/providers/pluginfw/tfschema/list_nested_attribute.go linguist-generated=true

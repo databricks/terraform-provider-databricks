@@ -109,16 +109,6 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 
 // CommonConfig extends the main model with additional fields.
 type CommonConfig struct {
-	// UC volume path holding user-authored custom content packs, e.g.
-	// `/Volumes/{catalog}/{schema}/{volume}`. User-provided with no default:
-	// when unset, custom content packs are unavailable (referencing one is
-	// rejected) and only built-in content packs apply.
-	CustomContentPackPath types.String `tfsdk:"custom_content_pack_path"`
-	// UC volume path holding user-authored custom presets, e.g.
-	// `/Volumes/{catalog}/{schema}/{volume}`. User-provided with no default:
-	// when unset, custom presets are unavailable and only built-in presets
-	// apply.
-	CustomPresetsPath types.String `tfsdk:"custom_presets_path"`
 	// Opaque entity tag for optimistic concurrency. Returned on every read;
 	// pass it back as the Update request's `etag` to make the update
 	// conditional on the resource being unchanged.
@@ -163,9 +153,7 @@ func (m CommonConfig) GetComplexFieldTypes(ctx context.Context) map[string]refle
 func (m CommonConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{"custom_content_pack_path": m.CustomContentPackPath,
-			"custom_presets_path":              m.CustomPresetsPath,
-			"etag":                             m.Etag,
+		map[string]attr.Value{"etag": m.Etag,
 			"name":                             m.Name,
 			"parent":                           m.Parent,
 			"per_resource_permissions_enabled": m.PerResourcePermissionsEnabled,
@@ -182,9 +170,7 @@ func (m CommonConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 // and contains additional fields.
 func (m CommonConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{"custom_content_pack_path": types.StringType,
-			"custom_presets_path":              types.StringType,
-			"etag":                             types.StringType,
+		AttrTypes: map[string]attr.Type{"etag": types.StringType,
 			"name":                             types.StringType,
 			"parent":                           types.StringType,
 			"per_resource_permissions_enabled": types.BoolType,
@@ -238,8 +224,6 @@ func (to *CommonConfig) SyncFieldsDuringRead(ctx context.Context, from CommonCon
 }
 
 func (m CommonConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["custom_content_pack_path"] = attrs["custom_content_pack_path"].SetOptional()
-	attrs["custom_presets_path"] = attrs["custom_presets_path"].SetOptional()
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["per_resource_permissions_enabled"] = attrs["per_resource_permissions_enabled"].SetOptional()
@@ -393,7 +377,7 @@ func (r *CommonConfigResource) update(ctx context.Context, plan CommonConfig, di
 	updateRequest := lakewatch.UpdateCommonConfigRequest{
 		CommonConfig: common_config,
 		Name:         plan.Name.ValueString(),
-		UpdateMask:   *fieldmask.New(strings.Split("custom_content_pack_path,custom_presets_path,per_resource_permissions_enabled", ",")),
+		UpdateMask:   *fieldmask.New(strings.Split("per_resource_permissions_enabled", ",")),
 	}
 
 	var namespace ProviderConfig

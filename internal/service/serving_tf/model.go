@@ -6921,6 +6921,10 @@ type PtServedModel struct {
 	// The number of model units to be provisioned. Dedicated inference requires
 	// positive fixed capacity and does not support scale-to-zero.
 	ProvisionedModelUnits types.Int64 `tfsdk:"provisioned_model_units"`
+	// Commitment term to purchase for this served entity; its presence marks
+	// the entity as reserved (vs on-demand) PT. Valid on create and on update
+	// (purchases a commitment for a scale-up).
+	PtTerm types.String `tfsdk:"pt_term"`
 }
 
 func (to *PtServedModel) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from PtServedModel) {
@@ -6935,6 +6939,7 @@ func (m PtServedModel) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["entity_version"] = attrs["entity_version"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["provisioned_model_units"] = attrs["provisioned_model_units"].SetRequired()
+	attrs["pt_term"] = attrs["pt_term"].SetOptional()
 
 	return attrs
 }
@@ -6962,6 +6967,7 @@ func (m PtServedModel) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"entity_version":          m.EntityVersion,
 			"name":                    m.Name,
 			"provisioned_model_units": m.ProvisionedModelUnits,
+			"pt_term":                 m.PtTerm,
 		})
 }
 
@@ -6974,6 +6980,7 @@ func (m PtServedModel) Type(ctx context.Context) attr.Type {
 			"entity_version":          types.StringType,
 			"name":                    types.StringType,
 			"provisioned_model_units": types.Int64Type,
+			"pt_term":                 types.StringType,
 		},
 	}
 }

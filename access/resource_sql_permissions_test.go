@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -541,6 +542,143 @@ func TestResourceSqlPermissions_Delete(t *testing.T) {
 
 func TestResourceSqlPermissions_CornerCases(t *testing.T) {
 	qa.ResourceCornerCases(t, ResourceSqlPermissions(), qa.CornerCaseID("database/foo"))
+}
+
+var warehouseShowGrantFixture = qa.HTTPFixture{
+	Method:   "POST",
+	Resource: "/api/2.0/sql/statements",
+	ExpectedRequest: sql.ExecuteStatementRequest{
+		Statement:     "SHOW GRANT ON TABLE `default`.`foo`",
+		WaitTimeout:   "50s",
+		WarehouseId:   "wh1",
+		OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
+	},
+	Response: sql.StatementResponse{
+		StatementId: "stmt1",
+		Status:      &sql.StatementStatus{State: "SUCCEEDED"},
+		Result: &sql.ResultData{
+			DataArray: [][]string{
+				{"users", "SELECT", "table", "`default`.`foo`"},
+				{"users", "READ", "table", "`default`.`foo`"},
+				{"interns", "DENIED_SELECT", "table", "`default`.`foo`"},
+			},
+		},
+	},
+}
+
+func TestResourceSqlPermissions_ReadWarehouse(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{warehouseShowGrantFixture},
+		HCL: `
+		table        = "foo"
+		warehouse_id = "wh1"
+		`,
+		Resource: ResourceSqlPermissions(),
+		Read:     true,
+		New:      true,
+		ID:       "table/default.foo",
+	}.ApplyNoError(t)
+}
+
+var warehouseShowGrantEmpty = qa.HTTPFixture{
+	Method:   "POST",
+	Resource: "/api/2.0/sql/statements",
+	ExpectedRequest: sql.ExecuteStatementRequest{
+		Statement:     "SHOW GRANT ON TABLE `default`.`foo`",
+		WaitTimeout:   "50s",
+		WarehouseId:   "wh1",
+		OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
+	},
+	Response: sql.StatementResponse{
+		StatementId: "stmt1",
+		Status:      &sql.StatementStatus{State: "SUCCEEDED"},
+	},
+}
+
+func TestResourceSqlPermissions_CreateWarehouse(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			// 1. SHOW GRANT during revoke phase (returns existing grant for users)
+			warehouseShowGrantFixture,
+			// 2. REVOKE existing grant
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/sql/statements",
+				ExpectedRequest: sql.ExecuteStatementRequest{
+					Statement:     "REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `users`",
+					WaitTimeout:   "50s",
+					WarehouseId:   "wh1",
+					OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
+				},
+				Response: sql.StatementResponse{
+					StatementId: "stmt2",
+					Status:      &sql.StatementStatus{State: "SUCCEEDED"},
+				},
+			},
+			// 3. GRANT new privilege
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/sql/statements",
+				ExpectedRequest: sql.ExecuteStatementRequest{
+					Statement:     "GRANT MODIFY, SELECT ON TABLE `default`.`foo` TO `serge@example.com`",
+					WaitTimeout:   "50s",
+					WarehouseId:   "wh1",
+					OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
+				},
+				Response: sql.StatementResponse{
+					StatementId: "stmt3",
+					Status:      &sql.StatementStatus{State: "SUCCEEDED"},
+				},
+			},
+			// 4. SHOW GRANT for the post-create Read
+			warehouseShowGrantEmpty,
+		},
+		HCL: `
+		table        = "foo"
+		warehouse_id = "wh1"
+		privilege_assignments {
+			principal  = "serge@example.com"
+			privileges = ["SELECT", "MODIFY"]
+		}
+		`,
+		Resource: ResourceSqlPermissions(),
+		Create:   true,
+	}.ApplyNoError(t)
+}
+
+func TestResourceSqlPermissions_DeleteWarehouse(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			// 1. SHOW GRANT to find grants to revoke
+			warehouseShowGrantFixture,
+			// 2. REVOKE for users
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/sql/statements",
+				ExpectedRequest: sql.ExecuteStatementRequest{
+					Statement:     "REVOKE ALL PRIVILEGES ON TABLE `default`.`foo` FROM `users`",
+					WaitTimeout:   "50s",
+					WarehouseId:   "wh1",
+					OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
+				},
+				Response: sql.StatementResponse{
+					StatementId: "stmt2",
+					Status:      &sql.StatementStatus{State: "SUCCEEDED"},
+				},
+			},
+		},
+		HCL: `
+		table        = "foo"
+		warehouse_id = "wh1"
+		privilege_assignments {
+			principal  = "serge@example.com"
+			privileges = ["SELECT"]
+		}
+		`,
+		Resource: ResourceSqlPermissions(),
+		Delete:   true,
+		ID:       "table/default.foo",
+	}.ApplyNoError(t)
 }
 
 func TestResourceSqlPermissions_NoUpdateAnyFile(t *testing.T) {

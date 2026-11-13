@@ -186,6 +186,7 @@ const (
 )
 
 type valueTransformFunc func(string) string
+type multiMatchCaptureFunc func(value string, match []int) (start, end int, lookupValue string, ok bool)
 type isValidAproximationFunc func(ic *importContext, res *resource, sr *resourceApproximation, origPath string) bool
 
 type reference struct {
@@ -216,6 +217,11 @@ type reference struct {
 	// objects, such as multiple `{{secrets/scope/key}}` tokens inside a cluster
 	// policy definition. Only supported on the ContinueMatch (combine) path.
 	MultiMatch bool
+	// MultiMatchCaptureFunc, if set for a MultiMatch reference, computes from a regexp match
+	// (as returned by FindAllStringSubmatchIndex) the span of the value to substitute and the
+	// value to look up in the target resources. It returns ok=false to skip the match. By
+	// default, the first capture group is used for both.
+	MultiMatchCaptureFunc multiMatchCaptureFunc
 	// true if given reference denote a reference to a generated file
 	File bool
 	// regular expression (if MatchType == "regexp") must define a group that will be used to extract value to match

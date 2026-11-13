@@ -97,6 +97,11 @@ func importUcCatalog(ic *importContext, r *resource) error {
 	// Emit data classification catalog config if configured
 	ic.emitDataClassificationCatalogConfig(cat.Name)
 
+	// Emit Lakewatch rules, datasources & configurations bound to the catalog
+	if cat.ConnectionName == "" && cat.ShareName == "" {
+		ic.emitLakewatchResources(cat.Name)
+	}
+
 	return nil
 }
 
@@ -522,9 +527,9 @@ func createIsMatchingCatalogAndSchemaAndTable(catalog_name_attr, schema_name_att
 			new_catalog_name_attr = prefix + catalog_name_attr
 			new_schema_name_attr = prefix + schema_name_attr
 		}
-		res_catalog_name := res.Data.Get(new_catalog_name_attr).(string)
-		res_schema_name := res.Data.Get(new_schema_name_attr).(string)
-		res_table_name := res.Data.Get(origPath).(string)
+		res_catalog_name := resourceGetString(res, new_catalog_name_attr)
+		res_schema_name := resourceGetString(res, new_schema_name_attr)
+		res_table_name := resourceGetString(res, origPath)
 		// In some cases catalog or schema name could be empty, like, in non-UC DLT pipelines, so we need to skip it
 		if res_catalog_name == "" || res_schema_name == "" || res_table_name == "" {
 			return false

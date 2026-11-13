@@ -10,16 +10,18 @@ import (
 )
 
 // isKnownScimError reports whether the API sent one of messages as its error message.
-// Each SDK formats that message into its error differently, so for API errors it is
-// read from the response body with the existing client's precedence: error, message,
-// then a SCIM detail. A detail with a scimType doesn't match, because the existing
-// client puts the scimType before the detail. Other errors, and API errors whose body
-// isn't a JSON object, compare err.Error(), which is the existing client's message for
-// both SDKs because the sdk-go bridge returns the existing client's errors.
+// It first compares err.Error(), as the existing client's errors always were. Each SDK
+// formats the message into its error differently, so it then reads the message from an
+// API error's JSON body with the existing client's precedence: error, message, then a
+// SCIM detail. A detail with a scimType doesn't match, because the existing client puts
+// the scimType before the detail.
 func isKnownScimError(err error, messages []string) bool {
+	if slices.Contains(messages, err.Error()) {
+		return true
+	}
 	body, ok := apiErrorBody(err)
 	if !ok {
-		return slices.Contains(messages, err.Error())
+		return false
 	}
 	var e struct {
 		Error    string `json:"error"`
@@ -28,7 +30,7 @@ func isKnownScimError(err error, messages []string) bool {
 		ScimType string `json:"scimType"`
 	}
 	if json.Unmarshal(body, &e) != nil {
-		return slices.Contains(messages, err.Error())
+		return false
 	}
 	switch {
 	case e.Error != "":

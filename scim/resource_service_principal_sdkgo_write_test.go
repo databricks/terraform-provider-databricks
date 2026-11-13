@@ -105,16 +105,23 @@ func sdkGoAPIError(body string) error {
 }
 
 func TestIsKnownScimError(t *testing.T) {
-	known := "Service principal with application ID abc already exists."
+	known := []string{
+		"Service principal with application ID abc already exists.",
+		"User with email abc already exists in this account",
+	}
 	for name, tc := range map[string]struct {
 		body     string
 		expected bool
+		// The existing client parses text bodies and trims SCIM details, which sdk-go
+		// doesn't. sdk-go errors reach the resource as the existing client's errors,
+		// so only those are checked for these bodies.
+		classicOnly bool
 	}{
 		"known_detail": {
-			body: `{"detail": "` + known + `", "status": "409"}`, expected: true,
+			body: `{"detail": "` + known[0] + `", "status": "409"}`, expected: true,
 		},
 		"known_detail_with_scim_type": {
-			body:     `{"detail": "` + known + `", "scimType": "uniqueness"}`,
+			body:     `{"detail": "` + known[0] + `", "scimType": "uniqueness"}`,
 			expected: false,
 		},
 		"other_detail": {
@@ -122,47 +129,51 @@ func TestIsKnownScimError(t *testing.T) {
 			expected: false,
 		},
 		"known_message": {
-			body: `{"message": "` + known + `"}`, expected: true,
+			body: `{"message": "` + known[1] + `"}`, expected: true,
 		},
 		"message_before_detail": {
-			body: `{"message": "Conflict.", "detail": "` + known + `"}`, expected: false,
+			body:     `{"message": "Conflict.", "detail": "` + known[0] + `"}`,
+			expected: false,
 		},
 		"known_api_1_2_error": {
-			body: `{"error": "` + known + `", "message": "Conflict."}`, expected: true,
+			body: `{"error": "` + known[0] + `", "message": "Conflict."}`, expected: true,
 		},
-		"not_json": {
-			body: `<html>` + known + `</html>`, expected: false,
+		"known_detail_with_trailing_space": {
+			body:     `{"detail": "` + known[0] + ` "}`,
+			expected: true, classicOnly: true,
+		},
+		"known_plain_text": {
+			body:     "RESOURCE_ALREADY_EXISTS: " + known[0],
+			expected: true, classicOnly: true,
+		},
+		"plain_text_with_scim_type": {
+			body:     "RESOURCE_ALREADY_EXISTS: uniqueness " + known[0],
+			expected: false,
+		},
+		"known_html": {
+			body:     "<html><pre>" + known[1] + "</pre></html>",
+			expected: true, classicOnly: true,
+		},
+		// The HTML parser trims the final period.
+		"html_without_final_period": {
+			body: "<html><pre>" + known[0] + "</pre></html>", expected: false,
+		},
+		"not_a_known_message": {
+			body: "<html>" + known[0] + "</html>", expected: false,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			classic := classicAPIError(t, tc.body)
-			assert.Equal(t, tc.expected, isKnownScimError(classic, []string{known}),
+			assert.Equal(t, tc.expected, isKnownScimError(classic, known),
 				"classic error %q", classic)
+			if tc.classicOnly {
+				return
+			}
 			sdkGo := fmt.Errorf("cannot create: %w", sdkGoAPIError(tc.body))
-			assert.Equal(t, tc.expected, isKnownScimError(sdkGo, []string{known}),
+			assert.Equal(t, tc.expected, isKnownScimError(sdkGo, known),
 				"sdk-go error %q", sdkGo)
 		})
 	}
-	assert.True(t, isKnownScimError(fmt.Errorf("%s", known), []string{known}))
-	assert.False(t, isKnownScimError(fmt.Errorf("uniqueness %s", known), []string{known}))
-}
-
-// The existing client also parses text and HTML error bodies into a message. sdk-go
-// errors reach the resource as the existing client's errors, so they match the same way.
-func TestIsKnownScimErrorComparesTextBodiesAsTheExistingClientParsesThem(t *testing.T) {
-	known := []string{
-		"Service principal with application ID abc already exists.",
-		"User with email abc already exists in this account",
-	}
-	for body, expected := range map[string]bool{
-		"RESOURCE_CONFLICT: " + known[0]:            true,
-		"RESOURCE_CONFLICT: uniqueness " + known[0]: false,
-		"<html><pre>" + known[1] + "</pre></html>":  true,
-		// The HTML parser trims the final period.
-		"<html><pre>" + known[0] + "</pre></html>": false,
-		"Service principal already exists.":        false,
-	} {
-		err := classicAPIError(t, body)
-		assert.Equal(t, expected, isKnownScimError(err, known), "error %q", err)
-	}
+	assert.True(t, isKnownScimError(fmt.Errorf("%s", known[0]), known))
+	assert.False(t, isKnownScimError(fmt.Errorf("uniqueness %s", known[0]), known))
 }

@@ -25,6 +25,7 @@
 * Ignore whitespace-only differences in PEM-encoded options of `databricks_connection`, such as `userProvidedServerCertificate`, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 
 ### Documentation
+* Fixed the formatting of databricks mws_network_connectivity_config terraform resource
 
 ### Exporter
 

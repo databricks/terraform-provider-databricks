@@ -1,0 +1,192 @@
+# Pins renames and comment clearing. A rename PATCH carries new_name and the unchanged
+# comment, the ID becomes the new full name, and later calls use it. Clearing comment
+# sends "comment": "". API responses are inferred from the Unity Catalog API contract,
+# not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_comment
+    config: &config_created |
+      resource "databricks_volume" "this" {
+        name         = "original_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "first comment"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay", "name": "original_volume",
+                   "volume_type": "MANAGED", "comment": "first comment"}
+        response:
+          status: 200
+          body:
+            json: &original {"catalog_name": "main", "schema_name": "replay",
+                             "name": "original_volume",
+                             "full_name": "main.replay.original_volume",
+                             "volume_type": "MANAGED", "comment": "first comment",
+                             "owner": "replay-admin@example.com",
+                             "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000005",
+                             "metastore_id": "11111111-1111-1111-1111-111111111111",
+                             "volume_id": "00000000-0000-4000-8000-000000000005"}
+      - &read_original
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.original_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *original
+      - *read_original
+  - name: plan_after_create_is_empty
+    plan_only: true
+    config: *config_created
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_original
+  - name: rename_sends_new_name_and_moves_id
+    config: &config_renamed |
+      resource "databricks_volume" "this" {
+        name         = "renamed_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "first comment"
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [name]
+              equals: original_volume
+          after:
+            - path: [name]
+              equals: renamed_volume
+    calls:
+      - *read_original
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.original_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"comment": "first comment", "new_name": "renamed_volume"}
+        response:
+          status: 200
+          body:
+            json: &renamed {"catalog_name": "main", "schema_name": "replay",
+                            "name": "renamed_volume",
+                            "full_name": "main.replay.renamed_volume",
+                            "volume_type": "MANAGED", "comment": "first comment",
+                            "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000005",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000005"}
+      - &read_renamed
+        request: &read_renamed_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.renamed_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *renamed
+      - *read_renamed
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.renamed_volume
+            - path: [volume_path]
+              equals: /Volumes/main/replay/renamed_volume
+  - name: plan_after_rename_is_empty
+    plan_only: true
+    config: *config_renamed
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_renamed
+  - name: clear_comment_sends_empty_comment_to_new_name
+    config: &config_cleared |
+      resource "databricks_volume" "this" {
+        name         = "renamed_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - *read_renamed
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.renamed_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"comment": ""}
+        response:
+          status: 200
+          body:
+            json: &cleared {"catalog_name": "main", "schema_name": "replay",
+                            "name": "renamed_volume",
+                            "full_name": "main.replay.renamed_volume",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000005",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000005"}
+      - &read_cleared
+        request: *read_renamed_request
+        response:
+          status: 200
+          body:
+            json: *cleared
+      - *read_cleared
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [comment]
+              equals: ""
+  - name: plan_after_clearing_comment_is_empty
+    plan_only: true
+    config: *config_cleared
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_cleared
+destroy:
+  calls:
+    - *read_cleared
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.renamed_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

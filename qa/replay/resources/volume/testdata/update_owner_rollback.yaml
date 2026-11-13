@@ -1,0 +1,222 @@
+# Pins an owner change made together with a comment change. The owner PATCH comes
+# first, then a PATCH without owner. When that second PATCH fails, a PATCH restores the
+# old owner and apply fails with the second PATCH's error; when the restoring PATCH
+# fails too, apply fails with the exact owner-rollback message. API responses are
+# inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_owner_and_comment
+    config: &config_created |
+      resource "databricks_volume" "this" {
+        name         = "rollback_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "first comment"
+        owner        = "data-engineers"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay", "name": "rollback_volume",
+                   "volume_type": "MANAGED", "comment": "first comment"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay", "name": "rollback_volume",
+                   "full_name": "main.replay.rollback_volume", "volume_type": "MANAGED",
+                   "comment": "first comment", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000006",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000006"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.rollback_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"comment": "first comment", "owner": "data-engineers"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "rollback_volume",
+                            "full_name": "main.replay.rollback_volume",
+                            "volume_type": "MANAGED", "comment": "first comment",
+                            "owner": "data-engineers",
+                            "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000006",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000006"}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.rollback_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+  - name: plan_after_create_is_empty
+    plan_only: true
+    config: *config_created
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_created
+  - name: failed_update_rolls_back_owner
+    config: &config_updated |
+      resource "databricks_volume" "this" {
+        name         = "rollback_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "second comment"
+        owner        = "analysts"
+      }
+    expect_error: 'Error: cannot update volume: Comment exceeds the maximum length\.'
+    calls:
+      - *read_created
+      - &owner_patch
+        request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.rollback_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "analysts"}
+        response:
+          status: 200
+          body:
+            json: &owner_changed {"catalog_name": "main", "schema_name": "replay",
+                                  "name": "rollback_volume",
+                                  "full_name": "main.replay.rollback_volume",
+                                  "volume_type": "MANAGED", "comment": "first comment",
+                                  "owner": "analysts",
+                                  "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000006",
+                                  "metastore_id": "11111111-1111-1111-1111-111111111111",
+                                  "volume_id": "00000000-0000-4000-8000-000000000006"}
+      - request: &comment_patch_request
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.rollback_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"comment": "second comment"}
+        response:
+          status: 400
+          body:
+            json: {"error_code": "INVALID_PARAMETER_VALUE",
+                   "message": "Comment exceeds the maximum length."}
+      - request: &rollback_patch_request
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.rollback_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "data-engineers"}
+        response:
+          status: 200
+          body:
+            json: *created
+  - name: plan_after_rollback_shows_update
+    plan_only: true
+    config: *config_updated
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [owner]
+              equals: data-engineers
+            - path: [comment]
+              equals: first comment
+          after:
+            - path: [owner]
+              equals: analysts
+            - path: [comment]
+              equals: second comment
+    calls:
+      - *read_created
+  - name: failed_rollback_fails_with_owner_rollback_error
+    config: *config_updated
+    expect_error: 'Error: cannot update volume: User does not have MODIFY on Volume
+      ''main\.replay\.rollback_volume''\.\. Owner rollback also failed: User does not
+      have MANAGE on Volume ''main\.replay\.rollback_volume''\.\. Owner of this resource
+      was updated but other fields couldn''t be updated and owner couldn''t be rolled
+      back\.\s+As a result, the owner of this resource is updated to analysts but other
+      attributes aren''t\. To revert the owner change, please manually change the owner
+      to data-engineers\.\s+You can also use the databricks cli
+      \(https://docs\.databricks\.com/en/dev-tools/cli/install\.html\) to update the
+      owner\.'
+    calls:
+      - *read_created
+      - *owner_patch
+      - request: *comment_patch_request
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "User does not have MODIFY on Volume 'main.replay.rollback_volume'."}
+      - request: *rollback_patch_request
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "User does not have MANAGE on Volume 'main.replay.rollback_volume'."}
+  - name: plan_after_failed_rollback_shows_comment_update
+    plan_only: true
+    config: *config_updated
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [owner]
+              equals: analysts
+            - path: [comment]
+              equals: first comment
+          after:
+            - path: [owner]
+              equals: analysts
+            - path: [comment]
+              equals: second comment
+    calls:
+      - &read_owner_changed
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: *owner_changed
+destroy:
+  calls:
+    - *read_owner_changed
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.rollback_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

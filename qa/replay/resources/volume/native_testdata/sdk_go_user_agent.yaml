@@ -1,9 +1,8 @@
 # Supplies volume calls for TestVolumeSdkGoUserAgent, which checks their User-Agent in Go
-# with reads and writes through sdk-go uc/volumes/v1. It has the requests of
-# volume/native_testdata/user_agent.yaml, except that the volume POST, GET and PATCH
-# requests carry no Accept header, which an empty header expectation pins, and the PATCH
-# body also carries full_name_arg, the full name in its path. API responses are inferred
-# from the Unity Catalog API contract, not recorded.
+# with reads and writes through sdk-go uc/volumes/v1. The POST, PATCH and GETs carry no
+# Accept header, and the PATCH body also carries full_name_arg, the full name in its
+# path. API responses are inferred from the Unity Catalog API contract, not recorded. An
+# empty header expectation matches only requests without that header.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -66,8 +65,8 @@ steps:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.user_agent_volume
           headers:
-            X-Databricks-Workspace-Id: "12345"
             Accept: ""
+            X-Databricks-Workspace-Id: "12345"
           body: null
         response:
           status: 200

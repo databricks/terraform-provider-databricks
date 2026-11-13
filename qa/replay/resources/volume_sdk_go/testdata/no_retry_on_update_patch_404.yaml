@@ -1,13 +1,13 @@
-# Runs volume/testdata/no_retry_on_404_patch_and_delete.yaml with databricks_volume on
-# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST, GET
-# and PATCH requests carry no Accept header, which an empty header expectation pins. Each
+# Runs volume/testdata/no_retry_on_update_patch_404.yaml with databricks_volume on sdk-go
+# uc/volumes/v1 in every step, and expects the same behavior. The volume POST, GET and
+# PATCH requests carry no Accept header, which an empty header expectation pins. Each
 # PATCH body also carries full_name_arg, the full name in its path, because sdk-go
 # serializes the path field into the body. The original's description:
 #
-# Pins that the classic SDK client sends a PATCH or a DELETE answered 404 exactly once.
-# The rejected update PATCH is reported as an error, while the DELETE's 404 counts as the
-# volume already being gone, so destroy succeeds. API responses are inferred from the
-# Unity Catalog API contract, not recorded.
+# Pins that the classic SDK client sends an update PATCH answered 404 exactly once and
+# reports it as an error, without removing the volume from state. delete.yaml covers a
+# DELETE answered 404, which the provider treats as already gone. API responses are
+# inferred from the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -81,7 +81,7 @@ steps:
           body:
             json: {"full_name_arg": "main.replay.retry_volume",
                    "comment": "second"}
-        response: &not_found
+        response:
           status: 404
           body:
             json: {"error_code": "NOT_FOUND", "message": "Volume not found by fixture"}
@@ -95,4 +95,7 @@ destroy:
         headers:
           X-Databricks-Workspace-Id: "12345"
         body: null
-      response: *not_found
+      response:
+        status: 200
+        body:
+          json: {}

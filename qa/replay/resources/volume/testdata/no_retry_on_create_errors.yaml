@@ -1,8 +1,9 @@
 # Pins that the classic SDK client sends the create POST exactly once and reports the API
-# message for statuses it does not retry: 400, 401, 403, 409, 500, 502 and 504. None of
-# the messages match a transient error pattern. A 504 is not retried either, because the
-# provider's client replaces the SDK default that would retry it. API responses are
-# inferred from the Unity Catalog API contract, not recorded.
+# message for statuses it does not retry: 401, 403, 409, 500, 502 and 504.
+# create_errors.yaml covers 400 the same way. None of the messages match a transient
+# error pattern. A 504 is not retried either, because the provider's client replaces the
+# SDK default that would retry it. API responses are inferred from the Unity Catalog API
+# contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -10,7 +11,7 @@ host_metadata:
   cloud: AWS
   workspace_id: "12345"
 steps:
-  - name: create_400_is_not_retried
+  - name: create_401_is_not_retried
     config: &config |
       resource "databricks_volume" "this" {
         name         = "retry_volume"
@@ -18,7 +19,7 @@ steps:
         schema_name  = "replay"
         volume_type  = "MANAGED"
       }
-    expect_error: '(?s)cannot\s+create\s+volume:\s+Invalid\s+volume\s+name\s+from\s+fixture'
+    expect_error: '(?s)cannot\s+create\s+volume:\s+Credential\s+was\s+not\s+sent\s+by\s+fixture'
     calls:
       - request: &create
           method: POST
@@ -29,16 +30,6 @@ steps:
           body:
             json: {"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
                    "volume_type": "MANAGED"}
-        response:
-          status: 400
-          body:
-            json: {"error_code": "INVALID_PARAMETER_VALUE",
-                   "message": "Invalid volume name from fixture"}
-  - name: create_401_is_not_retried
-    config: *config
-    expect_error: '(?s)cannot\s+create\s+volume:\s+Credential\s+was\s+not\s+sent\s+by\s+fixture'
-    calls:
-      - request: *create
         response:
           status: 401
           body:

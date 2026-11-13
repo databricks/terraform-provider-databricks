@@ -12,7 +12,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	sdkcommon "github.com/databricks/databricks-sdk-go/common"
+	"github.com/databricks/databricks-sdk-go/logger"
 	sdkapierr "github.com/databricks/sdk-go/core/apierr"
 	"golang.org/x/time/rate"
 )
@@ -22,9 +24,16 @@ import (
 // the messages stay the same. req is the last request sent, if any.
 func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	req *http.Request) error {
-	// http.Client wraps transport failures in a url.Error the classic client never adds.
+	// http.Client wraps transport failures in a url.Error, which the classic client
+	// doesn't add to these.
 	if visitorErr, ok := errors.AsType[*visitorError](err); ok {
 		return visitorErr
+	}
+	if bodyErr, ok := errors.AsType[*responseBodyError](err); ok {
+		return bodyErr
+	}
+	if classicErr, ok := errors.AsType[*apierr.APIError](err); ok {
+		return classicErr
 	}
 	apiErr, ok := errors.AsType[*sdkapierr.APIError](err)
 	if !ok || apiErr.HTTPStatusCode() < 0 {
@@ -93,12 +102,14 @@ func (b *sdkGoBridge) isRetriable(ctx context.Context, err error) bool {
 	if _, ok := errors.AsType[*url.Error](err); ok {
 		for _, transient := range classicRetryableURLErrors {
 			if strings.Contains(message, transient) {
+				logger.Debugf(ctx, "Attempting retry because of IO error: %s", err)
 				return true
 			}
 		}
 	}
 	for _, transient := range b.httpConfig.TransientErrors {
 		if strings.Contains(message, transient) {
+			logger.Debugf(ctx, "Attempting retry because of %#v", transient)
 			return true
 		}
 	}
@@ -128,10 +139,13 @@ func (b *sdkGoBridge) newRetrier(ctx context.Context,
 func (r *classicRetrier) IsRetriable(err error) (time.Duration, bool) {
 	classic := r.bridge.classicError(r.ctx, err, r.attempt.request)
 	if !r.bridge.isRetriable(r.ctx, classic) {
+		logger.Debugf(r.ctx, "non-retriable error: %s", classic)
 		return 0, false
 	}
 	r.retries++
 	wait := r.bridge.retry.Backoff(r.retries)
+	logger.Tracef(r.ctx, "%s. Sleeping %s", strings.TrimSuffix(classic.Error(), "."),
+		wait.Round(time.Millisecond))
 	// The classic client also stops when the deadline passes during the backoff.
 	if !r.deadline.IsZero() && time.Now().Add(wait).After(r.deadline) {
 		return 0, false

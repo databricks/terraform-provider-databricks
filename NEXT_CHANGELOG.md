@@ -19,8 +19,7 @@
 * Add the `USE_SDK_GO_RESOURCES` environment variable, which makes the listed resources read through the modular `github.com/databricks/sdk-go` clients ([#6185](https://github.com/databricks/terraform-provider-databricks/pull/6185)).
 
   `USE_SDK_GO_RESOURCES=databricks_service_principal` makes `databricks_service_principal` read through the `github.com/databricks/sdk-go/scim` v1 client; its writes stay on the existing client. It is unset by default, and an unknown resource name fails provider configuration.
-
-  `USE_SDK_GO_RESOURCES=databricks_volume` makes `databricks_volume` read and write through the `github.com/databricks/sdk-go/uc/volumes` v1 client ([#6189](https://github.com/databricks/terraform-provider-databricks/pull/6189), [#6190](https://github.com/databricks/terraform-provider-databricks/pull/6190)).
+* `USE_SDK_GO_RESOURCES` now accepts `databricks_volume`, which then reads and writes through the `github.com/databricks/sdk-go/uc/volumes` v1 client ([#6189](https://github.com/databricks/terraform-provider-databricks/pull/6189), [#6190](https://github.com/databricks/terraform-provider-databricks/pull/6190)).
 * Add resource and data sources for `databricks_assume_group_restricted_sharing_group`.
 * Add `personal_access_token_wo` and `personal_access_token_wo_version` write-only attributes to `databricks_git_credential` resource ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 * Add `options_wo` and `options_wo_version` write-only attributes to `databricks_connection` resource ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).

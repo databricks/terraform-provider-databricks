@@ -193,6 +193,8 @@ The following arguments are available:
 
 ### filter Configuration Block (Optional)
 
+Changing any field in this block forces replacement of the budget, because the Budgets API rejects in-place filter changes. Replacement creates a new budget; review accumulated usage and alert behavior before applying.
+
 * `workspace_id` - (Optional) Filter by workspace ID (if empty, include usage all usage for this account). Consists of the following fields:
   * `operator` - (Required, String Enum) The operator to use for the filter. (Enum: `IN`)
   * `values` - (Required, List of numbers) The values to filter by.

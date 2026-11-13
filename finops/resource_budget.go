@@ -12,6 +12,20 @@ import (
 
 func ResourceBudget() common.Resource {
 	s := common.StructToSchema(billing.BudgetConfiguration{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		// SDKv2 does not propagate ForceNew through nested resource blocks.
+		for _, path := range [][]string{
+			{"filter"},
+			{"filter", "workspace_id"},
+			{"filter", "workspace_id", "operator"},
+			{"filter", "workspace_id", "values"},
+			{"filter", "tags"},
+			{"filter", "tags", "key"},
+			{"filter", "tags", "value"},
+			{"filter", "tags", "value", "operator"},
+			{"filter", "tags", "value", "values"},
+		} {
+			common.CustomizeSchemaPath(m, path...).SetForceNew()
+		}
 		common.CustomizeSchemaPath(m, "display_name").SetValidateFunc(validation.StringLenBetween(1, 128))
 		for _, p := range []string{"account_id", "budget_configuration_id", "create_time", "update_time"} {
 			common.CustomizeSchemaPath(m, p).SetComputed()

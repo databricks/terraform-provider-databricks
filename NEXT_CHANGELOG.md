@@ -24,6 +24,10 @@
 * Keep the configured values of the `pem_key_passphrase`, `ssl_keystore_key`, `ssl_key_password` and `schema_registry_api_secret` options of `databricks_connection`, which the API doesn't return, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 * Ignore whitespace-only differences in PEM-encoded options of `databricks_connection`, such as `userProvidedServerCertificate`, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 
+* Require replacement of `databricks_budget` when its filter changes ([#6091](https://github.com/databricks/terraform-provider-databricks/pull/6091)).
+
+  Replacement creates a new budget; accumulated usage and alert behavior should be reviewed before applying.
+
 ### Documentation
 
 ### Exporter

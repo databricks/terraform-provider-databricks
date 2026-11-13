@@ -1,0 +1,86 @@
+# Pins that the classic SDK client sends the create POST exactly once and reports the API
+# message for statuses it does not retry: 401, 403, 409, 500, 502 and 504.
+# create_errors.yaml covers 400 the same way. None of the messages match a transient
+# error pattern. A 504 is not retried either, because the provider's client replaces the
+# SDK default that would retry it. API responses are inferred from the Unity Catalog API
+# contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_401_is_not_retried
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "retry_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    expect_error: '(?s)cannot\s+create\s+volume:\s+Credential\s+was\s+not\s+sent\s+by\s+fixture'
+    calls:
+      - request: &create
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
+                   "volume_type": "MANAGED"}
+        response:
+          status: 401
+          body:
+            json: {"error_code": "UNAUTHENTICATED",
+                   "message": "Credential was not sent by fixture"}
+  - name: create_403_is_not_retried
+    config: *config
+    expect_error: '(?s)cannot\s+create\s+volume:\s+User\s+lacks\s+CREATE\s+VOLUME\s+in\s+fixture'
+    calls:
+      - request: *create
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "User lacks CREATE VOLUME in fixture"}
+  - name: create_409_is_not_retried
+    config: *config
+    expect_error: '(?s)cannot\s+create\s+volume:\s+Volume\s+already\s+exists\s+in\s+fixture'
+    calls:
+      - request: *create
+        response:
+          status: 409
+          body:
+            json: {"error_code": "RESOURCE_ALREADY_EXISTS",
+                   "message": "Volume already exists in fixture"}
+  - name: create_500_is_not_retried
+    config: *config
+    expect_error: '(?s)cannot\s+create\s+volume:\s+Internal\s+error\s+from\s+fixture'
+    calls:
+      - request: *create
+        response:
+          status: 500
+          body:
+            json: {"error_code": "INTERNAL_ERROR", "message": "Internal error from fixture"}
+  - name: create_502_is_not_retried
+    config: *config
+    expect_error: '(?s)cannot\s+create\s+volume:\s+Bad\s+gateway\s+from\s+fixture'
+    calls:
+      - request: *create
+        response:
+          status: 502
+          body:
+            json: {"error_code": "BAD_GATEWAY", "message": "Bad gateway from fixture"}
+  - name: create_504_is_not_retried
+    config: *config
+    expect_error: '(?s)cannot\s+create\s+volume:\s+Gateway\s+timeout\s+from\s+fixture'
+    calls:
+      - request: *create
+        response:
+          status: 504
+          body:
+            json: {"error_code": "DEADLINE_EXCEEDED", "message": "Gateway timeout from fixture"}
+destroy:
+  calls: []

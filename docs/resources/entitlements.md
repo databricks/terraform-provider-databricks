@@ -94,6 +94,18 @@ Alternatively, when using `terraform` version 1.4 or earlier, import using the `
 terraform import databricks_entitlements.me user/<user-id>
 ```
 
+When using an account-level provider, Terraform does not pass `provider_config` to the provider during import, so pass the workspace ID in the resource identity instead of `id`. This requires Terraform 1.12 or later, and does not work with the `terraform import` command:
+
+```hcl
+import {
+  to = databricks_entitlements.me
+  identity = {
+    id           = "user/<user-id>"
+    workspace_id = "<workspace-id>"
+  }
+}
+```
+
 ## Related Resources
 
 The following resources are often used in the same context:

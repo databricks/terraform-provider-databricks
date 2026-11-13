@@ -121,6 +121,11 @@ type resourceApp struct {
 
 func (a resourceApp) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
+	// State without provider_config can store an identity with an empty
+	// workspace_id that a later Read resolves, so the identity can change in
+	// place. MutableIdentity turns off the framework check that it never changes, see
+	// https://developer.hashicorp.com/terraform/plugin/framework/resources/identity#mutable-identities
+	resp.ResourceBehavior.MutableIdentity = true
 }
 
 func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -268,6 +273,10 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 	// If the user relies on the provider-level workspace_id, this resolves the
 	// unknown value to the effective workspace ID.
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, a.client, app.ProviderConfig, &resp.State)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.SetWorkspaceResourceIdentity(ctx, resp.Identity, app.Name.ValueString(), resp.State)...)
 }
 
 // This is copied from the retries package of the databricks-sdk-go. It should be made public,
@@ -331,6 +340,9 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 	appGoSdk, err := w.Apps.GetByName(ctx, app.Name.ValueString())
 	if err != nil {
 		if apierr.IsMissing(err) {
+			// Terraform requires an identity even when the resource is gone, and
+			// state written before identity support has none.
+			resp.Diagnostics.Append(tfschema.SetWorkspaceResourceIdentity(ctx, resp.Identity, app.Name.ValueString(), req.State)...)
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -357,6 +369,10 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 	// During normal refresh, provider_config is in prior state and was copied above.
 	// During import (no prior state), this resolves the effective workspace ID.
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, a.client, app.ProviderConfig, &resp.State)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(tfschema.SetWorkspaceResourceIdentity(ctx, resp.Identity, app.Name.ValueString(), resp.State)...)
 }
 
 func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -422,6 +438,12 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	// is already in state from a previous Create, and if the workspace ID had changed,
 	// ModifyPlan would have triggered RequiresReplace (destroy+create), so Update only
 	// runs when it's unchanged.
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// State written before identity support has no identity, and Terraform
+	// rejects an update that returns none.
+	resp.Diagnostics.Append(tfschema.SetWorkspaceResourceIdentity(ctx, resp.Identity, app.Name.ValueString(), resp.State)...)
 }
 
 func (a *resourceApp) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -454,8 +476,21 @@ func (a *resourceApp) Delete(ctx context.Context, req resource.DeleteRequest, re
 }
 
 func (a *resourceApp) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+	importID, workspaceID, diags := tfschema.ResolveImportIdentity(ctx, a.client, req)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), importID)...)
+	resp.Diagnostics.Append(tfschema.SetImportWorkspaceID(ctx, &resp.State, workspaceID)...)
+}
+
+// The identity lets an app be imported through an account-level or
+// unified-host provider by passing the workspace ID.
+func (a *resourceApp) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+	resp.IdentitySchema = tfschema.WorkspaceResourceIdentitySchema()
 }
 
 var _ resource.ResourceWithConfigure = &resourceApp{}
 var _ resource.ResourceWithImportState = &resourceApp{}
+var _ resource.ResourceWithIdentity = &resourceApp{}

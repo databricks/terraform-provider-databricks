@@ -6,9 +6,14 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -180,5 +185,42 @@ func TestReadLibrary_FoundDuringRefresh(t *testing.T) {
 		assert.False(t, diags.HasError())
 		assert.NotNil(t, result)
 		assert.Equal(t, "test-cluster", result.ClusterId.ValueString())
+	})
+}
+
+// Read stores a null id in state, so the identity must come from the library
+// itself. Otherwise the identity id is empty from the second refresh on.
+func TestLibraryRead_IdentityUsesLibraryWithNullID(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=test-cluster",
+			ReuseRequest: true,
+			Response: compute.ClusterLibraryStatuses{
+				ClusterId: "test-cluster",
+				LibraryStatuses: []compute.LibraryFullStatus{
+					{Status: "INSTALLED", Library: &compute.Library{Jar: "foo.jar"}},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		r := &LibraryResource{Client: client}
+		var schemaResp resource.SchemaResponse
+		r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+		state := tfsdk.State{Schema: schemaResp.Schema, Raw: tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil)}
+		require.False(t, state.SetAttribute(ctx, path.Root("cluster_id"), "test-cluster").HasError())
+		require.False(t, state.SetAttribute(ctx, path.Root("jar"), "foo.jar").HasError())
+		identitySchema := tfschema.WorkspaceResourceIdentitySchema()
+		resp := resource.ReadResponse{
+			State:    state,
+			Identity: &tfsdk.ResourceIdentity{Schema: identitySchema, Raw: tftypes.NewValue(identitySchema.Type().TerraformType(ctx), nil)},
+		}
+
+		r.Read(ctx, resource.ReadRequest{State: state}, &resp)
+
+		require.False(t, resp.Diagnostics.HasError(), "%v", resp.Diagnostics)
+		var id types.String
+		require.False(t, resp.Identity.GetAttribute(ctx, path.Root("id"), &id).HasError())
+		assert.Equal(t, compute.Library{Jar: "foo.jar"}.String(), id.ValueString())
 	})
 }

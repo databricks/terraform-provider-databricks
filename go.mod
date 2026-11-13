@@ -4,6 +4,10 @@ go 1.26.10
 
 require (
 	github.com/databricks/databricks-sdk-go v0.199.0
+	github.com/databricks/sdk-go/auth v0.2.0
+	github.com/databricks/sdk-go/core v0.1.0
+	github.com/databricks/sdk-go/options v0.3.0
+	github.com/databricks/sdk-go/scim v0.6.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-cty v1.5.0
@@ -22,6 +26,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/zclconf/go-cty v1.17.0
 	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546
+	golang.org/x/time v0.14.0
 	google.golang.org/api v0.267.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -95,7 +100,6 @@ require (
 	golang.org/x/telemetry v0.0.0-20260409153401-be6f6cb8b1fa // indirect
 	golang.org/x/term v0.43.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
-	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.44.1-0.20260420230617-19499e7caabc // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260203192932-546029d2fa20 // indirect

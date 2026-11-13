@@ -38,8 +38,8 @@ var disableLegacyAccess = workspaceSetting[settings.DisableLegacyAccess]{
 			Etag: etag,
 		})
 		if err != nil {
-			return "", err
+			return ignoreIrreversibleSettingDelete(ctx, "databricks_disable_legacy_access_setting", etag, err)
 		}
-		return res.Etag, err
+		return res.Etag, nil
 	},
 }

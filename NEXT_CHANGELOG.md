@@ -21,6 +21,7 @@
 * Add `options_wo` and `options_wo_version` write-only attributes to `databricks_connection` resource ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 
 ### Bug Fixes
+* Fix `terraform destroy` failing for `databricks_disable_legacy_dbfs_setting` and `databricks_disable_legacy_access_setting` on workspaces where the setting can't be reverted. The resource is now removed from the state with a warning, and the setting is left unchanged ([#6155](https://github.com/databricks/terraform-provider-databricks/issues/6155)).
 * Keep the configured values of the `pem_key_passphrase`, `ssl_keystore_key`, `ssl_key_password` and `schema_registry_api_secret` options of `databricks_connection`, which the API doesn't return, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 * Ignore whitespace-only differences in PEM-encoded options of `databricks_connection`, such as `userProvidedServerCertificate`, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 

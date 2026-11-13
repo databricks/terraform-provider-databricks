@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -35,6 +36,27 @@ func retryOnEtagError[Req, Resp any](f func(req Req) (Resp, error), firstReq Req
 	}
 	updateReq(&req, etag)
 	return f(req)
+}
+
+// isIrreversibleSettingError reports whether a delete was refused because the setting can't be
+// reverted for this workspace. The backend returns PERMISSION_DENIED with this message; other
+// PERMISSION_DENIED errors (e.g. a caller who isn't a workspace admin) don't match.
+func isIrreversibleSettingError(err error) bool {
+	var apiErr *apierr.APIError
+	return errors.Is(err, apierr.ErrPermissionDenied) && errors.As(err, &apiErr) &&
+		strings.Contains(apiErr.Message, "cannot be modified or deleted")
+}
+
+// ignoreIrreversibleSettingDelete turns a refused delete of an irreversible setting into a
+// successful one, so the resource is removed from state, and logs a warning. The setting stays
+// as is in the workspace. Other errors are returned unchanged.
+func ignoreIrreversibleSettingDelete(ctx context.Context, resourceName string, etag string, err error) (string, error) {
+	if !isIrreversibleSettingError(err) {
+		return "", err
+	}
+	tflog.Warn(ctx, fmt.Sprintf("%s can't be reverted for this workspace, so it was only removed "+
+		"from the Terraform state and the setting is unchanged: %s", resourceName, err))
+	return etag, nil
 }
 
 func isRetriableError(err error, retriableErrors []error) bool {

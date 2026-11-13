@@ -28,7 +28,7 @@ The following arguments are supported:
 * `severity` (string, required) - Free-form severity label, such as `Informational`, `Medium`, `High`, or
   `Critical`
 * `annotations` (object, optional) - Free-form client-managed key/value annotations
-* `batch` (RuleInputBatch, optional) - Batch SQL rule input
+* `batch` (RuleInputBatch, optional) - Scheduled detection (also known as batch detection) input
 * `category` (string, optional) - Free-form rule category
 * `content_resource_id` (string, optional) - Immutable UUIDv4 identifying the authored content resource installed as this rule
 * `deduplication` (string, optional) - Signal deduplication mode. Possible values are: `DEDUPLICATION_DEFAULT`, `DEDUPLICATION_DISABLED`, `DEDUPLICATION_ENABLED`
@@ -53,10 +53,11 @@ The following arguments are supported:
   supplied; the identity the rule runs as is reported in
   `effective_run_as_principal`
 * `runbook` (string, optional) - Long-form operational guidance carried from the authored rule metadata. Supports up to 4096
-  characters. Requests exceeding this limit are rejected
+  characters. Requests exceeding this limit are rejected. Supports Markdown; analysts and the
+  investigation agent follow it when triaging this rule's alerts
 * `suppress_until_time` (string, optional) - If set, this rule's signals do not open new alerts until the given time
-* `timerange` (RuleTimeRange, optional) - Time-range configuration for batch rules. If unset, the execution time range is extended by
-  a fixed `15m` lookback
+* `timerange` (RuleTimeRange, optional) - Time-range configuration for scheduled detections. If unset, the execution time range is
+  extended by a fixed `15m` lookback
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -72,7 +73,7 @@ The following arguments are supported:
 * `custom` (RuleInputCustomNotebook, optional) - Custom-notebook user function. The output is used as input data for the
   rule
 * `sql` (RuleInputBatchSql, optional) - SQL query evaluated as the rule input
-* `warehouse_id` (string, optional) - SQL warehouse used to run this batch rule
+* `warehouse_id` (string, optional) - SQL warehouse that runs this scheduled detection
 
 ### RuleInputBatchSql
 * `query` (string, required) - SQL query evaluated as the rule input
@@ -108,8 +109,6 @@ The following arguments are supported:
 * `at_least_every` (string, optional) - Defines the minimum cadence as a duration string. It may contain components
   for days, hours, minutes, and seconds (e.g. `5d`, `5d3h`, `3d2h5m12s`,
   `12m16s`)
-* `continuous` (boolean, optional) - Runs the rule continuously. Detection rules do not accept it: batch rules reject it, and
-  streaming rules run continuously without it
 * `cron_expression` (string, optional) - Defines the schedule using a Quartz cron expression
 * `enabled` (boolean, optional) - Sets whether the job is scheduled to run. Defaults to true
 
@@ -117,13 +116,13 @@ The following arguments are supported:
 * `extend_lookback` (string, optional) - Extends the start of the execution time range by a compact duration with integer
   days, hours, minutes, and seconds in that order, such as `1h30m` or `15m`.
   Zero duration disables extension. Unset or empty uses a fixed `15m` at execution
-  time. Only the start moves; the end is unchanged. Has no effect on batch SQL
-  that does not use `IN_TIMERANGE`. Values must fit signed 64-bit microseconds
+  time. Only the start moves; the end is unchanged. Has no effect on a detection
+  query that does not use `IN_TIMERANGE`. Values must fit signed 64-bit microseconds
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 * `compute_workspace_id` (string) - ID of the workspace whose compute runs this rule's jobs and owns its
-  associated resources, such as the SQL warehouse a scheduled rule runs on.
+  associated resources, such as the SQL warehouse a scheduled detection runs on.
   Server-assigned; a rule's warehouse can only be changed from this workspace
 * `create_time` (string) - Time the rule was created
 * `created_by` (Principal) - Principal that created the rule

@@ -744,10 +744,6 @@ type Branch struct {
 }
 
 func (to *Branch) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Branch) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -769,10 +765,6 @@ func (to *Branch) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Branc
 }
 
 func (to *Branch) SyncFieldsDuringRead(ctx context.Context, from Branch) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -797,8 +789,6 @@ func (m Branch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBui
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -981,9 +971,33 @@ type BranchSpec struct {
 }
 
 func (to *BranchSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BranchSpec) {
+	if !from.SourceBranch.IsUnknown() && !from.SourceBranch.IsNull() {
+		// SourceBranch is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranch = from.SourceBranch
+	}
+	if !from.SourceBranchLsn.IsUnknown() && !from.SourceBranchLsn.IsNull() {
+		// SourceBranchLsn is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranchLsn = from.SourceBranchLsn
+	}
+	if !from.SourceBranchTime.IsUnknown() && !from.SourceBranchTime.IsNull() {
+		// SourceBranchTime is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranchTime = from.SourceBranchTime
+	}
 }
 
 func (to *BranchSpec) SyncFieldsDuringRead(ctx context.Context, from BranchSpec) {
+	if !from.SourceBranch.IsUnknown() && !from.SourceBranch.IsNull() {
+		// SourceBranch is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranch = from.SourceBranch
+	}
+	if !from.SourceBranchLsn.IsUnknown() && !from.SourceBranchLsn.IsNull() {
+		// SourceBranchLsn is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranchLsn = from.SourceBranchLsn
+	}
+	if !from.SourceBranchTime.IsUnknown() && !from.SourceBranchTime.IsNull() {
+		// SourceBranchTime is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranchTime = from.SourceBranchTime
+	}
 }
 
 func (m BranchSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -992,10 +1006,16 @@ func (m BranchSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["no_expiry"] = attrs["no_expiry"].SetOptional()
 	attrs["source_branch"] = attrs["source_branch"].SetOptional()
 	attrs["source_branch"] = attrs["source_branch"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["source_branch"] = attrs["source_branch"].SetComputed()
+	attrs["source_branch"] = attrs["source_branch"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["source_branch_lsn"] = attrs["source_branch_lsn"].SetOptional()
 	attrs["source_branch_lsn"] = attrs["source_branch_lsn"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["source_branch_lsn"] = attrs["source_branch_lsn"].SetComputed()
+	attrs["source_branch_lsn"] = attrs["source_branch_lsn"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["source_branch_time"] = attrs["source_branch_time"].SetOptional()
 	attrs["source_branch_time"] = attrs["source_branch_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["source_branch_time"] = attrs["source_branch_time"].SetComputed()
+	attrs["source_branch_time"] = attrs["source_branch_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["source_snapshot"] = attrs["source_snapshot"].SetOptional()
 	attrs["source_snapshot"] = attrs["source_snapshot"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["ttl"] = attrs["ttl"].SetOptional()
@@ -2189,9 +2209,8 @@ func (m *CreateDataApiRequest) SetDataApi(ctx context.Context, v DataApi) {
 type CreateDatabaseRequest struct {
 	// The desired specification of a Database.
 	Database types.Object `tfsdk:"database"`
-	// The ID to use for the Database, which will become the final component of
-	// the database's resource name. This ID becomes the database name in
-	// postgres.
+	// The ID used to identify and manage the Database resource through the API.
+	// The Postgres database name is specified in `spec.postgres_database`.
 	//
 	// This value should be 4-63 characters, and only use characters available
 	// in DNS names, as defined by RFC-1123
@@ -2657,8 +2676,8 @@ type CreateRoleRequest struct {
 	ReplaceExisting types.Bool `tfsdk:"-"`
 	// The desired specification of a Role.
 	Role types.Object `tfsdk:"role"`
-	// The ID to use for the Role, which will become the final component of the
-	// role's resource name. This ID becomes the role in Postgres.
+	// The ID used to identify and manage the Role resource through the API. The
+	// Postgres role name is specified in `spec.postgres_role`.
 	//
 	// This value should be 4-63 characters, and valid characters are lowercase
 	// letters, numbers, and hyphens, as defined by RFC 1123.
@@ -3755,10 +3774,6 @@ type Database struct {
 }
 
 func (to *Database) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Database) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -3780,10 +3795,6 @@ func (to *Database) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Dat
 }
 
 func (to *Database) SyncFieldsDuringRead(ctx context.Context, from Database) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -3808,8 +3819,6 @@ func (m Database) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 
@@ -3981,7 +3990,7 @@ type DatabaseDatabaseSpec struct {
 	// To change the owner, pass valid existing Role name when updating the
 	// Database
 	//
-	// A database always has an owner.
+	// Required when creating the Database.
 	Role types.String `tfsdk:"role"`
 }
 
@@ -4609,6 +4618,10 @@ func (m DeleteDatabaseRequest) Type(ctx context.Context) attr.Type {
 type DeleteEndpointRequest struct {
 	// The full resource path of the endpoint to delete. Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
+	//
+	// Read-write endpoints currently cannot be deleted directly. Their deletion
+	// is managed by the parent branch. To avoid compute costs, set `disabled`
+	// to `true` on the endpoint.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -4994,10 +5007,6 @@ type Endpoint struct {
 }
 
 func (to *Endpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Endpoint) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -5019,10 +5028,6 @@ func (to *Endpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from End
 }
 
 func (to *Endpoint) SyncFieldsDuringRead(ctx context.Context, from Endpoint) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -5047,8 +5052,6 @@ func (m Endpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -9422,10 +9425,6 @@ func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Proj
 			}
 		}
 	}
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -9471,10 +9470,6 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 			}
 		}
 	}
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -9506,8 +9501,6 @@ func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["project_id"] = attrs["project_id"].SetComputed()
 	attrs["purge_time"] = attrs["purge_time"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -9929,6 +9922,10 @@ func (to *ProjectSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 			}
 		}
 	}
+	if !from.PgVersion.IsUnknown() && !from.PgVersion.IsNull() {
+		// PgVersion is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.PgVersion = from.PgVersion
+	}
 }
 
 func (to *ProjectSpec) SyncFieldsDuringRead(ctx context.Context, from ProjectSpec) {
@@ -9958,6 +9955,10 @@ func (to *ProjectSpec) SyncFieldsDuringRead(ctx context.Context, from ProjectSpe
 			}
 		}
 	}
+	if !from.PgVersion.IsUnknown() && !from.PgVersion.IsNull() {
+		// PgVersion is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.PgVersion = from.PgVersion
+	}
 }
 
 func (m ProjectSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9970,6 +9971,8 @@ func (m ProjectSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["history_retention_duration"] = attrs["history_retention_duration"].SetOptional()
 	attrs["pg_version"] = attrs["pg_version"].SetOptional()
 	attrs["pg_version"] = attrs["pg_version"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["pg_version"] = attrs["pg_version"].SetComputed()
+	attrs["pg_version"] = attrs["pg_version"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -10584,10 +10587,6 @@ type Role struct {
 }
 
 func (to *Role) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Role) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -10609,10 +10608,6 @@ func (to *Role) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Role) {
 }
 
 func (to *Role) SyncFieldsDuringRead(ctx context.Context, from Role) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -10637,8 +10632,6 @@ func (m Role) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["role_id"] = attrs["role_id"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 
@@ -10857,10 +10850,9 @@ type RoleRoleSpec struct {
 	// `postgres_role`). No static password exists for roles using this method.
 	// * PG_PASSWORD_SCRAM_SHA_256: the role authenticates with a Postgres
 	// password verified server-side using the SCRAM-SHA-256 mechanism. Lakebase
-	// generates a password for the role. * NO_LOGIN: the role cannot open a
-	// Postgres session at all. Useful for roles that exist only to own objects
-	// or to aggregate privileges that are then granted to other, loginable
-	// roles.
+	// generates a password for the role.
+	//
+	// NO_LOGIN is not currently supported for Role creation.
 	//
 	// If auth_method is left unspecified, a meaningful authentication method is
 	// derived from the identity_type: * For the managed identities, OAUTH is
@@ -10870,29 +10862,20 @@ type RoleRoleSpec struct {
 	// NOTE: for the Databricks identity type GROUP, LAKEBASE_OAUTH_V1 is the
 	// default auth method (group can login as well).
 	//
-	// This field is set when the role is created and cannot be changed. When
-	// replacing an existing role with replace_existing=true, omit this field or
-	// supply its current value. A differing value returns
-	// INVALID_PARAMETER_VALUE and rejects the entire request, including changes
-	// to mutable fields. With `*` or masks containing only mutable fields,
-	// supplied values are ignored. Including this field as an explicit path in
-	// update_mask returns INVALID_PARAMETER_VALUE.
+	// This value cannot be changed after creation.
 	AuthMethod types.String `tfsdk:"auth_method"`
-	// The type of role. When specifying a managed-identity, the chosen role_id
-	// must be a valid:
+	// The type of role. When specifying a managed-identity, the chosen
+	// postgres_role must be a valid:
 	//
 	// * application ID for SERVICE_PRINCIPAL * user email for USER * group name
 	// for GROUP
 	//
-	// This field is set when the role is created and cannot be changed. When
-	// replacing an existing role with replace_existing=true, omit this field or
-	// supply its current value. A differing value returns
-	// INVALID_PARAMETER_VALUE and rejects the entire request, including changes
-	// to mutable fields. With `*` or masks containing only mutable fields,
-	// supplied values are ignored. Including this field as an explicit path in
-	// update_mask returns INVALID_PARAMETER_VALUE.
+	// This value cannot be changed after creation.
 	IdentityType types.String `tfsdk:"identity_type"`
-	// An enum value for a standard role that this role is a member of.
+	// An enum value for a standard role that this role is a member of. When
+	// selected in update_mask, this field replaces all existing memberships. An
+	// empty or omitted list clears all memberships, including
+	// DATABRICKS_SUPERUSER.
 	MembershipRoles types.List `tfsdk:"membership_roles"`
 	// The name of the Postgres role.
 	//
@@ -10907,13 +10890,7 @@ type RoleRoleSpec struct {
 	// 1. user email for IdentityType.USER 2. app ID for
 	// IdentityType.SERVICE_PRINCIPAL 2. group name for IdentityType.GROUP
 	//
-	// This field is set when the role is created and cannot be changed. When
-	// replacing an existing role with replace_existing=true, omit this field or
-	// supply its current value. A differing value returns
-	// INVALID_PARAMETER_VALUE and rejects the entire request, including changes
-	// to mutable fields. With `*` or masks containing only mutable fields,
-	// supplied values are ignored. Including this field as an explicit path in
-	// update_mask returns INVALID_PARAMETER_VALUE.
+	// This value cannot be changed after creation.
 	PostgresRole types.String `tfsdk:"postgres_role"`
 }
 
@@ -10927,11 +10904,23 @@ func (to *RoleRoleSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 			}
 		}
 	}
+	if !from.AuthMethod.IsUnknown() && !from.AuthMethod.IsNull() {
+		// AuthMethod is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.AuthMethod = from.AuthMethod
+	}
+	if !from.IdentityType.IsUnknown() && !from.IdentityType.IsNull() {
+		// IdentityType is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.IdentityType = from.IdentityType
+	}
 	if !from.MembershipRoles.IsNull() && !from.MembershipRoles.IsUnknown() && to.MembershipRoles.IsNull() && len(from.MembershipRoles.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for MembershipRoles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.MembershipRoles = from.MembershipRoles
+	}
+	if !from.PostgresRole.IsUnknown() && !from.PostgresRole.IsNull() {
+		// PostgresRole is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.PostgresRole = from.PostgresRole
 	}
 }
 
@@ -10944,20 +10933,38 @@ func (to *RoleRoleSpec) SyncFieldsDuringRead(ctx context.Context, from RoleRoleS
 			}
 		}
 	}
+	if !from.AuthMethod.IsUnknown() && !from.AuthMethod.IsNull() {
+		// AuthMethod is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.AuthMethod = from.AuthMethod
+	}
+	if !from.IdentityType.IsUnknown() && !from.IdentityType.IsNull() {
+		// IdentityType is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.IdentityType = from.IdentityType
+	}
 	if !from.MembershipRoles.IsNull() && !from.MembershipRoles.IsUnknown() && to.MembershipRoles.IsNull() && len(from.MembershipRoles.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for MembershipRoles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.MembershipRoles = from.MembershipRoles
 	}
+	if !from.PostgresRole.IsUnknown() && !from.PostgresRole.IsNull() {
+		// PostgresRole is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.PostgresRole = from.PostgresRole
+	}
 }
 
 func (m RoleRoleSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["attributes"] = attrs["attributes"].SetOptional()
 	attrs["auth_method"] = attrs["auth_method"].SetOptional()
+	attrs["auth_method"] = attrs["auth_method"].SetComputed()
+	attrs["auth_method"] = attrs["auth_method"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["identity_type"] = attrs["identity_type"].SetOptional()
+	attrs["identity_type"] = attrs["identity_type"].SetComputed()
+	attrs["identity_type"] = attrs["identity_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["membership_roles"] = attrs["membership_roles"].SetOptional()
 	attrs["postgres_role"] = attrs["postgres_role"].SetOptional()
+	attrs["postgres_role"] = attrs["postgres_role"].SetComputed()
+	attrs["postgres_role"] = attrs["postgres_role"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }

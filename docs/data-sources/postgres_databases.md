@@ -63,7 +63,7 @@ This data source exports a single attribute, `databases`. It is a list of resour
   
   To change the owner, pass valid existing Role name when updating the Database
   
-  A database always has an owner
+  Required when creating the Database
 
 ### DatabaseDatabaseStatus
 * `database_id` (string) - Part of the resource name

@@ -4310,8 +4310,12 @@ func (m *CreateLoggedModelResponse_SdkV2) SetModel(ctx context.Context, v Logged
 }
 
 type CreateMaterializationSetRequest_SdkV2 struct {
-	// The materialization set to create. Supply materialization_set_id to
-	// choose the identifier; leave it unset to have one assigned.
+	// The materialization set to create. Set `materialization_set_id` to choose
+	// the identifier, or omit it to have one assigned.
+	//
+	// Members with a cron schedule or table trigger must request the same
+	// `paused` value. An omitted `paused` defaults to `false`. A set can be
+	// created paused only if all members are batch materializations.
 	MaterializationSet types.List `tfsdk:"materialization_set"`
 	// Idempotency token for the request. A second request carrying a token that
 	// has already been used returns the operation the first one created,
@@ -8729,19 +8733,17 @@ type DeltaTableSource_SdkV2 struct {
 	DataframeSchema types.String `tfsdk:"dataframe_schema"`
 
 	EntityColumns types.List `tfsdk:"entity_columns"`
-	// Single WHERE clause to filter delta table before applying
-	// transformations. Will be row-wise evaluated, so should only include
-	// conditionals and projections.
+	// A single WHERE clause to filter the Delta table before applying
+	// transformations. The predicate is evaluated for each row.
 	FilterCondition types.String `tfsdk:"filter_condition"`
 	// The full three-part (catalog, schema, table) name of the Delta table.
 	FullName types.String `tfsdk:"full_name"`
 
 	TimeseriesColumn types.String `tfsdk:"timeseries_column"`
-	// A single SQL SELECT expression applied after filter_condition. Should
-	// contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c
-	// FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a +
-	// col_b AS col_c") If transformation_sql is not provided, all columns of
-	// the delta table are present in the DataSource dataframe.
+	// A single SQL SELECT expression applied after filter_condition. The
+	// expression must contain all required columns (e.g., "*, col_a + col_b AS
+	// col_c"). If transformation_sql is not provided, all columns of the delta
+	// table are present in the DataSource dataframe.
 	TransformationSql types.String `tfsdk:"transformation_sql"`
 }
 
@@ -22037,8 +22039,8 @@ func (m *MaterializationFailureNotification_SdkV2) SetEmailAddresses(ctx context
 	m.EmailAddresses = types.ListValueMust(t, vs)
 }
 
-// Notifications for the jobs and pipelines that materialize the features in a
-// set, one field per trigger.
+// Notifications for the jobs and pipelines that materialize features, one field
+// per trigger.
 type MaterializationNotifications_SdkV2 struct {
 	// Who to notify when a run fails, and on which attempts.
 	OnFailure types.List `tfsdk:"on_failure"`
@@ -23450,8 +23452,9 @@ type MaterializedFeature_SdkV2 struct {
 	MaterializationSetId types.String `tfsdk:"materialization_set_id"`
 	// Server-assigned unique identifier for the materialized feature.
 	MaterializedFeatureId types.String `tfsdk:"materialized_feature_id"`
-	// Notification configuration for the jobs and pipelines that materialize
-	// this feature.
+	// Notification configuration around the lifecycle of the job or pipeline
+	// that materializes this feature. Features which are materialized in the
+	// same pipeline will share the same notification.
 	Notifications types.List `tfsdk:"notifications"`
 	// Destination for writing feature values to an offline Delta table. The
 	// resulting table is returned as `table_name`.
@@ -23636,7 +23639,7 @@ func (m MaterializedFeature_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["materialization_set_id"] = attrs["materialization_set_id"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetOptional()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["notifications"] = attrs["notifications"].SetComputed()
+	attrs["notifications"] = attrs["notifications"].SetOptional()
 	attrs["notifications"] = attrs["notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetOptional()
 	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)

@@ -24,6 +24,8 @@
 * Keep the configured values of the `pem_key_passphrase`, `ssl_keystore_key`, `ssl_key_password` and `schema_registry_api_secret` options of `databricks_connection`, which the API doesn't return, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 * Ignore whitespace-only differences in PEM-encoded options of `databricks_connection`, such as `userProvidedServerCertificate`, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 
+* Fix `databricks_sql_table` read and update ignoring `provider_config.workspace_id` when the provider is configured at account level ([#6167](https://github.com/databricks/terraform-provider-databricks/pull/6167)).
+
 ### Documentation
 
 ### Exporter

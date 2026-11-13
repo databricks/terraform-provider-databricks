@@ -24,6 +24,8 @@
 * Keep the configured values of the `pem_key_passphrase`, `ssl_keystore_key`, `ssl_key_password` and `schema_registry_api_secret` options of `databricks_connection`, which the API doesn't return, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 * Ignore whitespace-only differences in PEM-encoded options of `databricks_connection`, such as `userProvidedServerCertificate`, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 
+* Fix `databricks_pipeline` so that `photon`, `serverless`, `continuous` and `development` set to `false` are sent in the create/update request if specified ([#5806](https://github.com/databricks/terraform-provider-databricks/pull/5806)).
+
 ### Documentation
 
 ### Exporter

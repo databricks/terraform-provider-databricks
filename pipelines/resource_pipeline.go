@@ -21,6 +21,12 @@ import (
 // DefaultTimeout is the default amount of time that Terraform will wait when creating, updating and deleting pipelines.
 const DefaultTimeout = 20 * time.Minute
 
+// booleanForceSendFields are optional boolean fields whose zero value (false)
+// is meaningful and must be sent to the platform. Without ForceSendFields the
+// Go SDK omits them, so an explicit `photon = false` (etc.) would be dropped
+// and the platform would apply its own default instead.
+var booleanForceSendFields = []string{"photon", "serverless", "continuous", "development"}
+
 func adjustForceSendFields(clusterList *[]pipelines.PipelineCluster) {
 	for i := range *clusterList {
 		cluster := &((*clusterList)[i])
@@ -39,6 +45,7 @@ func Create(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	var createPipelineRequest createPipelineRequestStruct
 	common.DataToStructPointer(d, pipelineSchema, &createPipelineRequest)
 	adjustForceSendFields(&createPipelineRequest.Clusters)
+	common.SetForceSendFields(&createPipelineRequest.CreatePipeline, d, booleanForceSendFields)
 
 	createdPipeline, err := w.Pipelines.Create(ctx, createPipelineRequest.CreatePipeline)
 	if err != nil {
@@ -71,6 +78,7 @@ func Update(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	common.DataToStructPointer(d, pipelineSchema, &updatePipelineRequest)
 	updatePipelineRequest.EditPipeline.PipelineId = d.Id()
 	adjustForceSendFields(&updatePipelineRequest.Clusters)
+	common.SetForceSendFields(&updatePipelineRequest.EditPipeline, d, booleanForceSendFields)
 	err := w.Pipelines.Update(ctx, updatePipelineRequest.EditPipeline)
 	if err != nil {
 		return err

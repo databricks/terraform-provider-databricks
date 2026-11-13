@@ -1,9 +1,10 @@
 # Runs read_errors with reads through sdk-go uc/volumes/v1. A 403 and a 500 with a
-# non-JSON body fail with the existing diagnostics and keep the volume in state; a 404
-# removes it, and the same apply recreates it. The GETs carry no Accept header, which the
-# existing client sends. Writes stay on the existing path. API responses are inferred from
-# the Unity Catalog API contract, not recorded. An empty header expectation matches only
-# requests without that header.
+# non-JSON body fail with the existing diagnostics and keep the volume in state, and so
+# does a 200 whose body can't be decoded, without the existing client's request and
+# response dump; a 404 removes the volume, and the same apply recreates it. The GETs carry
+# no Accept header, which the existing client sends. Writes stay on the existing path. API
+# responses are inferred from the Unity Catalog API contract, not recorded. An empty
+# header expectation matches only requests without that header.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -107,6 +108,34 @@ steps:
           body:
             text: upstream connect error or disconnect/reset before headers
   - name: state_kept_after_500
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.read_errors_volume
+    calls:
+      - *read_created
+  - name: refresh_answered_200_with_undecodable_body_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: failed to unmarshal response body: invalid
+      character ''o'' in literal null \(expecting ''u''\)'
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            text: not json
+  - name: state_kept_after_undecodable_body
     sdk_implementations:
       databricks_volume: sdk_go
     plan_only: true

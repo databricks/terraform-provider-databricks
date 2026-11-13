@@ -227,3 +227,13 @@ func TestSdkGoVolumesClientEscapesReservedCharactersInNames(t *testing.T) {
 		})
 	}
 }
+
+// An empty 200 body fails to decode through sdk-go, while the existing client reads it as
+// a volume without fields.
+func TestSdkGoVolumesClientRejectsEmptySuccessBody(t *testing.T) {
+	r := readVolumeBothWays(t, respond(http.StatusOK, ""))
+	assert.EqualError(t, r.err,
+		"failed to unmarshal response body: unexpected end of JSON input")
+	assert.NoError(t, r.classicErr)
+	assert.Equal(t, r.classicCalls, r.calls)
+}

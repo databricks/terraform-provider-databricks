@@ -351,3 +351,52 @@ func TestDeleteDisableLegacyAccessWithConflict(t *testing.T) {
 		etagAttrName: "etag3",
 	})
 }
+
+func TestDeleteDisableLegacyAccessIrreversible(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockDisableLegacyAccessAPI().EXPECT().Delete(mock.Anything, settings.DeleteDisableLegacyAccessRequest{
+				Etag: "etag1",
+			}).Return(nil, &apierr.APIError{
+				ErrorCode:  "PERMISSION_DENIED",
+				StatusCode: 403,
+				Message:    "This setting cannot be modified or deleted for this workspace.",
+			})
+		},
+		Resource: testDisableLegacyAccess,
+		HCL: `
+			disable_legacy_access {
+				value = "true"
+			}
+			etag = "etag1"
+		`,
+		Delete: true,
+		ID:     defaultSettingId,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":         defaultSettingId,
+		etagAttrName: "etag1",
+	})
+}
+
+func TestDeleteDisableLegacyAccessPermissionDenied(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockDisableLegacyAccessAPI().EXPECT().Delete(mock.Anything, settings.DeleteDisableLegacyAccessRequest{
+				Etag: "etag1",
+			}).Return(nil, &apierr.APIError{
+				ErrorCode:  "PERMISSION_DENIED",
+				StatusCode: 403,
+				Message:    "Only workspace admins can modify this setting.",
+			})
+		},
+		Resource: testDisableLegacyAccess,
+		HCL: `
+			disable_legacy_access {
+				value = "true"
+			}
+			etag = "etag1"
+		`,
+		Delete: true,
+		ID:     defaultSettingId,
+	}.ExpectError(t, "Only workspace admins can modify this setting.")
+}

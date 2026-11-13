@@ -16,6 +16,8 @@ The `databricks_disable_legacy_access_setting` resource allows you to disable le
 
 -> It may take 5 minutes to take effect and requires a restart of clusters and SQL warehouses.
 
+~> On some workspaces this setting can't be reverted once it's enabled. In that case, deleting the resource (or running `terraform destroy`) only removes it from the Terraform state and leaves the setting unchanged in the workspace; the provider logs a warning. To manage the setting again, apply the resource again or import it.
+
 ~> Please also set the default namespace using [databricks_default_namespace_setting](default_namespace_setting.md) to any value other than `hive_metastore` to avoid potential issues.
 
 ## Example Usage

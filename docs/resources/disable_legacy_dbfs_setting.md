@@ -10,6 +10,8 @@ The `databricks_disable_legacy_dbfs_setting` resource allows you to disable lega
 
 -> This resource can only be used with a workspace-level provider!
 
+~> On some workspaces this setting can't be reverted once it's enabled. In that case, deleting the resource (or running `terraform destroy`) only removes it from the Terraform state and leaves the setting unchanged in the workspace; the provider logs a warning. To manage the setting again, apply the resource again or import it.
+
 Disabling legacy DBFS has the following implications:
 
 1. Access to DBFS root and DBFS mounts is disallowed (as well as the creation of new mounts). 

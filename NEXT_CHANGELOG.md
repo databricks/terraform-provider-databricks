@@ -24,6 +24,8 @@
 * Keep the configured values of the `pem_key_passphrase`, `ssl_keystore_key`, `ssl_key_password` and `schema_registry_api_secret` options of `databricks_connection`, which the API doesn't return, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 * Ignore whitespace-only differences in PEM-encoded options of `databricks_connection`, such as `userProvidedServerCertificate`, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 
+* Keep the prior `tag` and `branch` in state when a `databricks_repo` update fails, so that the next plan shows the change again ([#6164](https://github.com/databricks/terraform-provider-databricks/pull/6164)).
+
 ### Documentation
 
 ### Exporter

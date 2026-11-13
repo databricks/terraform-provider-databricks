@@ -1,0 +1,75 @@
+# testframeworkV2 reproducer for GitHub issue #5672
+# https://github.com/databricks/terraform-provider-databricks/issues/5672
+#
+# Bug: `data.databricks_mws_workspaces` on an account-level provider with no
+# workspace_id fails in v1.114.0 with:
+#   cannot populate provider_config for mws workspaces: failed to resolve
+#   workspace_id: failed to get the workspace_id: strconv.ParseInt: parsing
+#   "": invalid syntax
+#
+# Root cause: PR #5492 added a post-Read hook in common/resource.go that
+# resolves+writes provider_config.workspace_id whenever provider_config is in
+# the schema and IsDual isn't set. databricks_mws_workspaces used the legacy
+# common.DataResource helper (which injects provider_config) without IsDual,
+# so the hook fired against the account host and blew up at strconv.ParseInt.
+#
+# Fix path:
+#   v1.114.1: rollback retag — same git source SHA as v1.113.0; the released
+#             binary was independently rebuilt by goreleaser, so binary SHAs
+#             differ.
+#   PR #5667: migrate databricks_mws_workspaces from common.DataResource to
+#             common.AccountData. AccountData doesn't inject provider_config,
+#             so the hook never runs. The fix is on `main` (current branch),
+#             not in any released tag yet.
+
+name: issue_5672_mws_workspaces_account_provider_config_regression
+profile: ACCOUNT_AWS                 # ~/.databrickscfg section name; any account-level profile works
+cleanup: true                        # no-op since all steps are plan-only
+
+requires:
+  cloud: any                         # bug fires on AWS, Azure, and GCP. The outer error wraps a
+                                     # cloud-specific inner failure:
+                                     #   AWS/OAuth M2M: "Unable to load OAuth Config"
+                                     #   GCP/google_service_account: 'strconv.ParseInt: parsing "": invalid syntax'
+  level: account                     # account-host-only is the actual constraint
+
+steps:
+  # Step 1: pre-regression baseline.
+  - name: passes_on_1_113_0
+    version: "1.113.0"
+    command: plan
+    expect: success
+
+  # Step 2: regression. Plan refresh of data.databricks_mws_workspaces.all
+  # triggers the post-Read provider_config hook against the account host,
+  # which calls CurrentWorkspaceID → GET /scim/v2/Me → fails (auth-method-specific
+  # inner error). The outer wrapper "cannot populate provider_config for mws
+  # workspaces: failed to resolve workspace_id" is identical across clouds.
+  #
+  # Regex chosen to match the cloud-portable outer pattern (AWS + GCP both
+  # reproduce). The schema also supports `error_substring` for tests that
+  # want a literal byte match.
+  - name: fails_on_1_114_0
+    version: "1.114.0"
+    command: plan
+    expect: failure
+    error_regex: 'cannot populate provider_config for mws workspaces.*failed to resolve workspace_id'
+
+  # Step 3: v1.114.1 is a rollback retag — same git source SHA as v1.113.0
+  # (binary SHAs differ from independent rebuild). Proves the rollback worked,
+  # but does NOT prove the real code fix (which only landed on `main`).
+  - name: fixed_on_1_114_1
+    version: "1.114.1"
+    command: plan
+    expect: success
+
+  # Step 4: validates the framework's local-build pipeline. As of 2026-05-08
+  # main has reverted PR #5667 + PR #5492 + related (commits cc89a814,
+  # f4aebfc2, 8a4e64ab, 0d2c487e, 20108fee, a20971ad, c707a744), so the
+  # source under `local` is now equivalent to v1.113.0 for this code path.
+  # Step 4 passes for the same reason step 1 does, and will graduate to a
+  # true regression-proof step once the next forward-rolled fix lands on main.
+  - name: fixed_on_local
+    version: "local"
+    command: plan
+    expect: success

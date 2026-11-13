@@ -6,9 +6,13 @@ import (
 	"log"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/useragent"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/stretchr/testify/assert"
 )
@@ -96,6 +100,16 @@ func TestConfigure(t *testing.T) {
 				assert.Equal(t, "1234567890", dc.Config.WorkspaceID, "workspace_id should be set when provided")
 			},
 		},
+		{
+			name: "user_agent_extra can be set in provider config",
+			config: map[string]tftypes.Value{
+				"user_agent_extra": tftypes.NewValue(tftypes.String, "pluginfw-config-test/0.0.1"),
+			},
+			validateResourceData: func(dc *common.DatabricksClient) {
+				assert.Contains(t, useragent.FromContext(context.Background()), "pluginfw-config-test/0.0.1",
+					"user_agent_extra products should be appended to the user agent")
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -135,6 +149,52 @@ func TestConfigure(t *testing.T) {
 			client, ok := resp.ResourceData.(*common.DatabricksClient)
 			assert.True(t, ok, "ResourceData should be a DatabricksClient")
 			tc.validateResourceData(client)
+		})
+	}
+}
+
+func TestConfigure_InvalidUserAgentExtra(t *testing.T) {
+	p := GetDatabricksProviderPluginFramework()
+
+	schema := providerSchemaPluginFramework()
+	schemaTfType := schema.Type().TerraformType(context.Background()).(tftypes.Object)
+	schemaTfType.OptionalAttributes = map[string]struct{}{}
+	for attr := range schemaTfType.AttributeTypes {
+		schemaTfType.OptionalAttributes[attr] = struct{}{}
+	}
+	req := provider.ConfigureRequest{
+		Config: tfsdk.Config{
+			Raw: tftypes.NewValue(schemaTfType, map[string]tftypes.Value{
+				"user_agent_extra": tftypes.NewValue(tftypes.String, "not a valid (product)"),
+			}),
+			Schema: schema,
+		},
+	}
+	resp := &provider.ConfigureResponse{}
+
+	p.Configure(context.Background(), req, resp)
+
+	assert.True(t, resp.Diagnostics.HasError(), "invalid user_agent_extra should return an error")
+}
+
+func TestUserAgentExtraValidator(t *testing.T) {
+	testCases := []struct {
+		name    string
+		value   types.String
+		wantErr bool
+	}{
+		{name: "valid", value: types.StringValue("databricks-sra/1.2.0 my-project/0.0.1")},
+		{name: "invalid", value: types.StringValue("not a valid (product)"), wantErr: true},
+		{name: "missing version", value: types.StringValue("databricks-sra"), wantErr: true},
+		{name: "null", value: types.StringNull()},
+		{name: "unknown", value: types.StringUnknown()},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := validator.StringRequest{Path: path.Root("user_agent_extra"), ConfigValue: tc.value}
+			resp := &validator.StringResponse{}
+			userAgentExtraValidator{}.ValidateString(context.Background(), req, resp)
+			assert.Equal(t, tc.wantErr, resp.Diagnostics.HasError())
 		})
 	}
 }

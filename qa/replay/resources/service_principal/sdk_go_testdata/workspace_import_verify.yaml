@@ -1,8 +1,9 @@
-# Runs workspace_import_verify with reads through sdk-go scim/v1: importing into
-# separate state reads the service principal twice and matches the created state. The
-# GETs carry no attributes query, Accept or Content-Type header. API responses are
-# inferred from the SCIM API contract, not recorded. An empty header expectation
-# matches only requests without that header.
+# Runs workspace_import_verify with reads and writes through sdk-go scim/v1: importing
+# into separate state reads the service principal twice and matches the created state. The
+# GETs carry no attributes query, Accept or Content-Type header. Writes send Content-Type
+# application/json and no Accept header. API responses are inferred from the SCIM API
+# contract, not recorded. An empty header expectation matches only requests without that
+# header.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -24,8 +25,9 @@ steps:
           method: POST
           path: /api/2.0/preview/scim/v2/ServicePrincipals
           headers:
-            Content-Type: application/scim+json; charset=utf-8
+            Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
             json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
                    "displayName": "SPN import", "active": true,

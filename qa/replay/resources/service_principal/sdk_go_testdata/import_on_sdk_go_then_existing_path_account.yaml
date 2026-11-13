@@ -1,0 +1,171 @@
+# Imports an account-level service principal on AWS through sdk-go scim/v1, then plans,
+# updates and deactivates it through the existing SCIM client. The imported state gives an
+# empty existing-path plan and keeps its ID, application ID and external ID. The sdk-go
+# requests carry no Accept header, the GETs no attributes query or Content-Type header,
+# and the writes send Content-Type application/json. API responses are inferred from the
+# SCIM API contract, not recorded. An empty header expectation matches only requests
+# without that header.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: import_on_sdk_go
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: &config_imported |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN existing"
+        external_id  = "external-201"
+      }
+    import:
+      resource: databricks_service_principal.this
+      id: "201"
+      persist: true
+    calls:
+      - &sdk_go_read
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: ""
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN existing", "active": true,
+                   "externalId": "external-201",
+                   "roles": [{"type": "direct",
+                              "value": "arn:aws:iam::123456789012:instance-profile/sp"}]}
+      - *sdk_go_read
+  - name: plan_on_existing_path_after_import_is_empty
+    sdk_implementations:
+      databricks_service_principal: classic
+    plan_only: true
+    config: *config_imported
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_service_principal.this:
+          attributes:
+            - path: [id]
+              equals: "201"
+            - path: [application_id]
+              equals: 00000000-0000-4000-8000-000000000001
+            - path: [external_id]
+              equals: external-201
+    calls:
+      - &existing_read_existing
+        request: &existing_read_request
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          headers:
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN existing", "active": true,
+                   "externalId": "external-201"}
+  - name: update_on_existing_path
+    sdk_implementations:
+      databricks_service_principal: classic
+    config: &config_updated |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN adopted"
+        external_id  = "external-201"
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_service_principal.this:
+          actions: [update]
+    calls:
+      - *existing_read_existing
+      - request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["groups,roles"]
+          headers:
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201",
+                   "roles": [{"type": "direct",
+                              "value": "arn:aws:iam::123456789012:instance-profile/sp"}]}
+      - request:
+          method: PUT
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN adopted", "active": true,
+                   "externalId": "external-201", "entitlements": [{}],
+                   "roles": [{"type": "direct",
+                              "value": "arn:aws:iam::123456789012:instance-profile/sp"}]}
+        response:
+          status: 200
+          body: null
+      - &existing_read_updated
+        request: *existing_read_request
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN adopted", "active": true,
+                   "externalId": "external-201"}
+      - *existing_read_updated
+  - name: plan_on_existing_path_after_update_is_empty
+    sdk_implementations:
+      databricks_service_principal: classic
+    plan_only: true
+    config: *config_updated
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *existing_read_updated
+# Destroy on the existing path keeps the account-level default: a deactivating PATCH.
+destroy:
+  calls:
+    - *existing_read_updated
+    - request:
+        method: PATCH
+        path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+        headers:
+          Content-Type: application/scim+json; charset=utf-8
+          X-Databricks-Workspace-Id: ""
+        body:
+          json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+                 "Operations": [{"op": "replace", "path": "active",
+                                 "value": [{"value": "false"}]}]}
+      response:
+        status: 200
+        body: null

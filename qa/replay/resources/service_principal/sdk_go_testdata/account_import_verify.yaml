@@ -1,9 +1,12 @@
-# Runs account_import_verify with reads through sdk-go scim/v1: importing into separate
-# state reads the service principal twice. sdk-go's AccountServicePrincipal has no
-# entitlements, so unlike the existing path import leaves allow_cluster_create unset
+# Runs account_import_verify with reads and writes through sdk-go scim/v1: importing into
+# separate state reads the service principal twice. sdk-go's AccountServicePrincipal has
+# no entitlements, so unlike the existing path import leaves allow_cluster_create unset
 # although the response lists it. The GETs carry no attributes query, Accept or
-# Content-Type header. API responses are inferred from the SCIM API contract, not
-# recorded. An empty header expectation matches only requests without that header.
+# Content-Type header. Writes send Content-Type application/json and no Accept header,
+# PATCH bodies also carry the ID, and account-level POST bodies have no schemas,
+# entitlements or groups, which the account-level scim/v1 model doesn't have. API
+# responses are inferred from the SCIM API contract, not recorded. An empty header
+# expectation matches only requests without that header.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -29,13 +32,12 @@ steps:
           method: POST
           path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals
           headers:
-            Content-Type: application/scim+json; charset=utf-8
+            Content-Type: application/json
             X-Databricks-Workspace-Id: ""
+            Accept: ""
           body:
-            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
-                   "displayName": "SPN import", "active": true,
-                   "externalId": "external-201",
-                   "entitlements": [{"value": "allow-cluster-create"}]}
+            json: {"displayName": "SPN import", "active": true,
+                   "externalId": "external-201"}
         response:
           status: 201
           body:
@@ -82,10 +84,12 @@ destroy:
         method: PATCH
         path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
         headers:
-          Content-Type: application/scim+json; charset=utf-8
+          Content-Type: application/json
           X-Databricks-Workspace-Id: ""
+          Accept: ""
         body:
-          json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+          json: {"id": "201",
+                 "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
                  "Operations": [{"op": "replace", "path": "active",
                                  "value": [{"value": "false"}]}]}
       response:

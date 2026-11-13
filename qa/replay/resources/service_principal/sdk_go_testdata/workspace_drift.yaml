@@ -1,8 +1,10 @@
-# Runs workspace_drift with reads through sdk-go scim/v1. The GETs carry no attributes
-# query, Accept or Content-Type header, so the API returns the full object, and the read
-# before the PUT gets the same drifted object as the refresh. The planned update and the
-# PUT match the existing path. API responses are inferred from the SCIM API contract, not
-# recorded. An empty header expectation matches only requests without that header.
+# Runs workspace_drift with reads and writes through sdk-go scim/v1. The GETs carry no
+# attributes query, Accept or Content-Type header, so the API returns the full object, and
+# the read before the PUT gets the same drifted object as the refresh. The planned update
+# matches the existing path. Writes send Content-Type application/json and no Accept
+# header, and PUT bodies also carry the ID. API responses are inferred from the SCIM API
+# contract, not recorded. An empty header expectation matches only requests without that
+# header.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -23,8 +25,9 @@ steps:
           method: POST
           path: /api/2.0/preview/scim/v2/ServicePrincipals
           headers:
-            Content-Type: application/scim+json; charset=utf-8
+            Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
             json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
                    "displayName": "SPN drift", "active": true,
@@ -117,10 +120,12 @@ steps:
           method: PUT
           path: /api/2.0/preview/scim/v2/ServicePrincipals/201
           headers:
-            Content-Type: application/scim+json; charset=utf-8
+            Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
-            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+            json: {"id": "201",
+                   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
                    "displayName": "SPN drift", "active": true,
                    "entitlements": [{"value": "allow-cluster-create"}]}
         response:

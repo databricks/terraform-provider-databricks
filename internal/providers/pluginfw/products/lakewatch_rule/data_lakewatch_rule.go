@@ -101,7 +101,7 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 type RuleData struct {
 	// Free-form client-managed key/value annotations.
 	Annotations types.Map `tfsdk:"annotations"`
-	// Batch SQL rule input.
+	// Scheduled detection (also known as batch detection) input.
 	Batch types.Object `tfsdk:"batch"`
 	// Name of the Unity Catalog catalog that contains the rule. Required.
 	// Cannot be changed after creation. Reads return the value as supplied; the
@@ -110,9 +110,9 @@ type RuleData struct {
 	// Free-form rule category.
 	Category types.String `tfsdk:"category"`
 	// ID of the workspace whose compute runs this rule's jobs and owns its
-	// associated resources, such as the SQL warehouse a scheduled rule runs on.
-	// Server-assigned; a rule's warehouse can only be changed from this
-	// workspace.
+	// associated resources, such as the SQL warehouse a scheduled detection
+	// runs on. Server-assigned; a rule's warehouse can only be changed from
+	// this workspace.
 	ComputeWorkspaceId types.String `tfsdk:"compute_workspace_id"`
 	// Immutable UUIDv4 identifying the authored content resource installed as
 	// this rule.
@@ -210,8 +210,8 @@ type RuleData struct {
 	Status types.Object `tfsdk:"status"`
 	// If set, this rule's signals do not open new alerts until the given time.
 	SuppressUntilTime timetypes.RFC3339 `tfsdk:"suppress_until_time"`
-	// Time-range configuration for batch rules. If unset, the execution time
-	// range is extended by a fixed `15m` lookback.
+	// Time-range configuration for scheduled detections. If unset, the
+	// execution time range is extended by a fixed `15m` lookback.
 	Timerange types.Object `tfsdk:"timerange"`
 	// Time the rule was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`

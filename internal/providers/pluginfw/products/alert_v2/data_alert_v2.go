@@ -100,11 +100,13 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 type AlertV2Data struct {
 	// The timestamp indicating when the alert was created.
 	CreateTime types.String `tfsdk:"create_time"`
-	// Custom description for the alert. Interpreted according to
-	// `custom_template_format`.
+	// Custom description for the alert, used as the notification body.
+	// Interpreted according to `custom_template_format`. The available template
+	// variables are listed at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/create#notification-templates.
 	CustomDescription types.String `tfsdk:"custom_description"`
-	// Custom summary for the alert. Interpreted according to
-	// `custom_template_format`.
+	// Custom summary for the alert, used as the notification subject.
+	// Interpreted according to `custom_template_format`.
 	CustomSummary types.String `tfsdk:"custom_summary"`
 	// The format used to interpret the `custom_summary` and
 	// `custom_description` templates.
@@ -124,11 +126,13 @@ type AlertV2Data struct {
 	// output-only field that shows the resolved run-as identity after applying
 	// permissions and defaults.
 	EffectiveRunAs types.Object `tfsdk:"effective_run_as"`
-
+	// Condition evaluated against the query result, and who is notified when it
+	// is met.
 	Evaluation types.Object `tfsdk:"evaluation"`
 	// The canonical identifier of the alert to retrieve information about.
 	Id types.String `tfsdk:"id"`
-	// Indicates whether the query is trashed.
+	// Indicates whether the alert is active (`ACTIVE`) or has been moved to the
+	// trash (`DELETED`).
 	LifecycleState types.String `tfsdk:"lifecycle_state"`
 	// The owner's username. This field is set to "Unavailable" if the user has
 	// been deleted.
@@ -163,13 +167,13 @@ type AlertV2Data struct {
 	// the `servicePrincipal/user` role. If not specified, the alert will run as
 	// the request user.
 	RunAs types.Object `tfsdk:"run_as"`
-	// The run as username or application ID of service principal. On Create and
-	// Update, this field can be set to application ID of an active service
-	// principal. Setting this field requires the servicePrincipal/user role.
 	// Deprecated: Use `run_as` field instead. This field will be removed in a
-	// future release.
+	// future release. The run as username or application ID of service
+	// principal. On Create and Update, this field can be set to application ID
+	// of an active service principal. Setting this field requires the
+	// servicePrincipal/user role.
 	RunAsUserName types.String `tfsdk:"run_as_user_name"`
-
+	// Schedule on which the alert runs its query and evaluates the condition.
 	Schedule types.Object `tfsdk:"schedule"`
 	// The timestamp indicating when the alert was updated.
 	UpdateTime types.String `tfsdk:"update_time"`

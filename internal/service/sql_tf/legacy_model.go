@@ -1079,14 +1079,19 @@ func (m AlertStatementParameter_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A SQL alert. An alert runs a query on a schedule, evaluates the result
+// against a condition, and notifies users or notification destinations when the
+// condition is met.
 type AlertV2_SdkV2 struct {
 	// The timestamp indicating when the alert was created.
 	CreateTime types.String `tfsdk:"create_time"`
-	// Custom description for the alert. Interpreted according to
-	// `custom_template_format`.
+	// Custom description for the alert, used as the notification body.
+	// Interpreted according to `custom_template_format`. The available template
+	// variables are listed at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/create#notification-templates.
 	CustomDescription types.String `tfsdk:"custom_description"`
-	// Custom summary for the alert. Interpreted according to
-	// `custom_template_format`.
+	// Custom summary for the alert, used as the notification subject.
+	// Interpreted according to `custom_template_format`.
 	CustomSummary types.String `tfsdk:"custom_summary"`
 	// The format used to interpret the `custom_summary` and
 	// `custom_description` templates.
@@ -1106,11 +1111,13 @@ type AlertV2_SdkV2 struct {
 	// output-only field that shows the resolved run-as identity after applying
 	// permissions and defaults.
 	EffectiveRunAs types.List `tfsdk:"effective_run_as"`
-
+	// Condition evaluated against the query result, and who is notified when it
+	// is met.
 	Evaluation types.List `tfsdk:"evaluation"`
 	// The canonical identifier of the alert to retrieve information about.
 	Id types.String `tfsdk:"id"`
-	// Indicates whether the query is trashed.
+	// Indicates whether the alert is active (`ACTIVE`) or has been moved to the
+	// trash (`DELETED`).
 	LifecycleState types.String `tfsdk:"lifecycle_state"`
 	// The owner's username. This field is set to "Unavailable" if the user has
 	// been deleted.
@@ -1145,13 +1152,13 @@ type AlertV2_SdkV2 struct {
 	// the `servicePrincipal/user` role. If not specified, the alert will run as
 	// the request user.
 	RunAs types.List `tfsdk:"run_as"`
-	// The run as username or application ID of service principal. On Create and
-	// Update, this field can be set to application ID of an active service
-	// principal. Setting this field requires the servicePrincipal/user role.
 	// Deprecated: Use `run_as` field instead. This field will be removed in a
-	// future release.
+	// future release. The run as username or application ID of service
+	// principal. On Create and Update, this field can be set to application ID
+	// of an active service principal. Setting this field requires the
+	// servicePrincipal/user role.
 	RunAsUserName types.String `tfsdk:"run_as_user_name"`
-
+	// Schedule on which the alert runs its query and evaluates the condition.
 	Schedule types.List `tfsdk:"schedule"`
 	// The timestamp indicating when the alert was updated.
 	UpdateTime types.String `tfsdk:"update_time"`
@@ -1484,10 +1491,13 @@ func (m *AlertV2_SdkV2) SetSchedule(ctx context.Context, v CronSchedule_SdkV2) {
 }
 
 type AlertV2Evaluation_SdkV2 struct {
-	// Operator used for comparison in alert evaluation.
+	// Operator used for comparison in alert evaluation. The alert is triggered
+	// when the comparison of the source value with the threshold is true.
+	// `IS_NULL` and `IS_NOT_NULL` take no threshold.
 	ComparisonOperator types.String `tfsdk:"comparison_operator"`
-	// Alert state if result is empty. Please avoid setting this field to be
-	// `UNKNOWN` because `UNKNOWN` state is planned to be deprecated.
+	// Alert state if result is empty. If not set, an empty result sets the
+	// state to `ERROR`. Please avoid setting this field to be `UNKNOWN` because
+	// `UNKNOWN` state is planned to be deprecated.
 	EmptyResultState types.String `tfsdk:"empty_result_state"`
 	// Timestamp of the last evaluation.
 	LastEvaluatedAt types.String `tfsdk:"last_evaluated_at"`
@@ -1495,9 +1505,12 @@ type AlertV2Evaluation_SdkV2 struct {
 	Notification types.List `tfsdk:"notification"`
 	// Source column from result to use to evaluate alert
 	Source types.List `tfsdk:"source"`
-	// Latest state of alert evaluation.
+	// Latest state of alert evaluation: `TRIGGERED` when the condition was met,
+	// `OK` when it was not, and `ERROR` when the evaluation failed.
 	State types.String `tfsdk:"state"`
-	// Threshold to user for alert evaluation, can be a column or a value.
+	// Threshold to compare the source column against, either another column or
+	// a fixed value. Not needed when `comparison_operator` is `IS_NULL` or
+	// `IS_NOT_NULL`.
 	Threshold types.List `tfsdk:"threshold"`
 }
 
@@ -1716,7 +1729,7 @@ type AlertV2Notification_SdkV2 struct {
 	// retrigger for notification purposes.
 	RetriggerSeconds          types.Int64 `tfsdk:"retrigger_seconds"`
 	EffectiveRetriggerSeconds types.Int64 `tfsdk:"effective_retrigger_seconds"`
-
+	// Users and notification destinations that receive notifications.
 	Subscriptions types.Set `tfsdk:"subscriptions"`
 }
 
@@ -1828,8 +1841,9 @@ func (m *AlertV2Notification_SdkV2) SetSubscriptions(ctx context.Context, v []Al
 }
 
 type AlertV2Operand_SdkV2 struct {
+	// Compare the source against another column of the query result.
 	Column types.List `tfsdk:"column"`
-
+	// Compare the source against a fixed value.
 	Value types.List `tfsdk:"value"`
 }
 
@@ -1975,11 +1989,14 @@ func (m *AlertV2Operand_SdkV2) SetValue(ctx context.Context, v AlertV2OperandVal
 }
 
 type AlertV2OperandColumn_SdkV2 struct {
-	// If not set, the behavior is equivalent to using `First row` in the UI.
+	// Aggregation applied to the column across all rows of the query result:
+	// `SUM`, `COUNT`, `COUNT_DISTINCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` or
+	// `STDDEV`. If not set, the value in the first row is used, which is
+	// equivalent to using `First row` in the UI.
 	Aggregation types.String `tfsdk:"aggregation"`
-
+	// Label for the column in notifications. Defaults to `name`.
 	Display types.String `tfsdk:"display"`
-
+	// Name of the column in the query result.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -2033,10 +2050,11 @@ func (m AlertV2OperandColumn_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type AlertV2OperandValue_SdkV2 struct {
+	// Boolean threshold, for boolean columns.
 	BoolValue types.Bool `tfsdk:"bool_value"`
-
+	// Numeric threshold, for numeric columns.
 	DoubleValue types.Float64 `tfsdk:"double_value"`
-
+	// String threshold, for string or timestamp columns.
 	StringValue types.String `tfsdk:"string_value"`
 }
 
@@ -2145,8 +2163,10 @@ func (m AlertV2RunAs_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type AlertV2Subscription_SdkV2 struct {
+	// ID of the notification destination to notify, as returned by the
+	// Notification Destinations API.
 	DestinationId types.String `tfsdk:"destination_id"`
-
+	// Email address of the workspace user to notify.
 	UserEmail types.String `tfsdk:"user_email"`
 }
 
@@ -4135,10 +4155,11 @@ func (m *CreateWidget_SdkV2) SetOptions(ctx context.Context, v WidgetOptions_Sdk
 }
 
 type CronSchedule_SdkV2 struct {
-	// Indicate whether this schedule is paused or not.
+	// Indicates whether this schedule is paused. While paused, the alert is not
+	// evaluated.
 	PauseStatus types.String `tfsdk:"pause_status"`
 	// A cron expression using quartz syntax that specifies the schedule for
-	// this pipeline. Should use the quartz format described here:
+	// this alert. Should use the quartz format described here:
 	// http://www.quartz-scheduler.org/documentation/quartz-2.1.7/tutorials/tutorial-lesson-06.html
 	QuartzCronSchedule types.String `tfsdk:"quartz_cron_schedule"`
 	// A Java timezone id. The schedule will be resolved using this timezone.
@@ -7645,6 +7666,7 @@ func (m GetAlertRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetAlertV2Request_SdkV2 struct {
+	// ID of the alert to retrieve, as returned in the alert's `id` field.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -10533,8 +10555,11 @@ func (m *ListAlertsResponseAlert_SdkV2) SetCondition(ctx context.Context, v Aler
 }
 
 type ListAlertsV2Request_SdkV2 struct {
+	// Maximum number of alerts to return per page. Values above 100 are coerced
+	// to 100.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Page token returned as `next_page_token` by a previous call. Omit it to
+	// retrieve the first page.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -17568,6 +17593,7 @@ func (m TrashAlertRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type TrashAlertV2Request_SdkV2 struct {
+	// ID of the alert to move to the trash.
 	Id types.String `tfsdk:"-"`
 	// Whether to permanently delete the alert. If not set, the alert will only
 	// be soft deleted.
@@ -17934,17 +17960,10 @@ type UpdateAlertV2Request_SdkV2 struct {
 	Alert types.List `tfsdk:"alert"`
 	// The canonical identifier of the alert to retrieve information about.
 	Id types.String `tfsdk:"-"`
-	// The field mask must be a single string, with multiple fields separated by
-	// commas (no spaces). The field path is relative to the resource object,
-	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
-	// Specification of elements in sequence or map fields is not allowed, as
-	// only the entire collection field can be specified. Field names must
-	// exactly match the resource field names.
-	//
-	// A field mask of `*` indicates full replacement. It’s recommended to
-	// always explicitly list the fields being updated and avoid using `*`
-	// wildcards, as it can lead to unintended results if the API changes in the
-	// future.
+	// Comma-separated list of the alert fields to update, for example
+	// `display_name,query_text` or `schedule.pause_status`. Only the listed
+	// fields are changed; all other fields keep their current values.
+	// `parent_path` cannot be updated.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

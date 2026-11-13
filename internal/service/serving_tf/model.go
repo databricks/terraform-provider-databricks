@@ -1325,7 +1325,7 @@ type AutoCaptureConfigOutput struct {
 	// The name of the schema in Unity Catalog. NOTE: On update, you cannot
 	// change the schema name if the inference table is already enabled.
 	SchemaName types.String `tfsdk:"schema_name"`
-
+	// The state of the inference table.
 	State types.Object `tfsdk:"state"`
 	// The prefix of the table in Unity Catalog. NOTE: On update, you cannot
 	// change the prefix name if the inference table is already enabled.
@@ -1432,6 +1432,7 @@ func (m *AutoCaptureConfigOutput) SetState(ctx context.Context, v AutoCaptureSta
 }
 
 type AutoCaptureState struct {
+	// The payload table that stores the logged requests and responses.
 	PayloadTable types.Object `tfsdk:"payload_table"`
 }
 
@@ -2099,7 +2100,7 @@ type CreateServingEndpoint struct {
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// The core config of the serving endpoint.
 	Config types.Object `tfsdk:"config"`
-
+	// The description of the serving endpoint.
 	Description types.String `tfsdk:"description"`
 	// Email notification settings.
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
@@ -2959,6 +2960,7 @@ func (m *DataframeSplitInput) SetIndex(ctx context.Context, v []types.Int64) {
 }
 
 type DeleteServingEndpointRequest struct {
+	// The name of the serving endpoint to delete.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -4026,7 +4028,8 @@ type EndpointPendingConfig struct {
 	// (Deprecated, use served_entities instead) The list of served models
 	// belonging to the last issued update to the serving endpoint.
 	ServedModels types.List `tfsdk:"served_models"`
-	// The timestamp when the update to the pending config started.
+	// The timestamp when the update to the pending config started, in
+	// milliseconds since the Unix epoch.
 	StartTime types.Int64 `tfsdk:"start_time"`
 	// The traffic config defining how invocations to the serving endpoint
 	// should be routed.
@@ -4424,6 +4427,7 @@ func (m EndpointTag) Type(ctx context.Context) attr.Type {
 }
 
 type EndpointTags struct {
+	// The tags attached to the serving endpoint after the update.
 	Tags types.List `tfsdk:"tags"`
 }
 
@@ -5328,12 +5332,13 @@ func (m FallbackConfig) Type(ctx context.Context) attr.Type {
 // All fields are not sensitive as they are hard-coded in the system and made
 // available to customers.
 type FoundationModel struct {
+	// A description of the foundation model.
 	Description types.String `tfsdk:"description"`
-
+	// The human-readable display name of the foundation model.
 	DisplayName types.String `tfsdk:"display_name"`
-
+	// The URL of the Databricks documentation page for the foundation model.
 	Docs types.String `tfsdk:"docs"`
-
+	// The name of the foundation model.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -6679,10 +6684,12 @@ func (m *PatchTelemetryConfigRequest) SetTelemetryConfig(ctx context.Context, v 
 }
 
 type PayloadTable struct {
+	// The name of the payload table within the configured catalog and schema.
 	Name types.String `tfsdk:"name"`
-
+	// The status of the payload table. One of PENDING, READY, FAILED or
+	// DISABLED.
 	Status types.String `tfsdk:"status"`
-
+	// More information about the status of the payload table, if available.
 	StatusMessage types.String `tfsdk:"status_message"`
 }
 
@@ -6738,7 +6745,7 @@ func (m PayloadTable) Type(ctx context.Context) attr.Type {
 type PtEndpointCoreConfig struct {
 	// The list of served entities under the serving endpoint config.
 	ServedEntities types.List `tfsdk:"served_entities"`
-
+	// The traffic configuration associated with the serving endpoint config.
 	TrafficConfig types.Object `tfsdk:"traffic_config"`
 }
 
@@ -6910,7 +6917,7 @@ type PtServedModel struct {
 	// name of the object should be given in the form of
 	// **catalog_name.schema_name.model_name**.
 	EntityName types.String `tfsdk:"entity_name"`
-
+	// The version of the model in Unity Catalog to be served.
 	EntityVersion types.String `tfsdk:"entity_version"`
 	// The name of a served entity. It must be unique across an endpoint. A
 	// served entity name can consist of alphanumeric characters, dashes, and
@@ -8717,6 +8724,7 @@ func (m RateLimit) Type(ctx context.Context) attr.Type {
 }
 
 type Route struct {
+	// The name of the served entity this route configures traffic for.
 	ServedEntityName types.String `tfsdk:"served_entity_name"`
 	// The name of the served model this route configures traffic for.
 	ServedModelName types.String `tfsdk:"served_model_name"`
@@ -8786,7 +8794,8 @@ type ServedEntityInput struct {
 	// name of the object should be given in the form of
 	// **catalog_name.schema_name.model_name**.
 	EntityName types.String `tfsdk:"entity_name"`
-
+	// The version of the model in Databricks Model Registry or Unity Catalog to
+	// be served, or empty if the entity is a FEATURE_SPEC function.
 	EntityVersion types.String `tfsdk:"entity_version"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs used for serving this entity. Note: this is an
@@ -9023,9 +9032,10 @@ type ServedEntityOutput struct {
 	// spikes. When disabled, the endpoint maintains fixed capacity at
 	// provisioned_model_units.
 	BurstScalingEnabled types.Bool `tfsdk:"burst_scaling_enabled"`
-
+	// The timestamp when the served entity was created, in milliseconds since
+	// the Unix epoch.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
-
+	// The email of the user who created the served entity.
 	Creator types.String `tfsdk:"creator"`
 	// The name of the entity to be served. The entity may be a model in the
 	// Databricks Model Registry, a model in the Unity Catalog (UC), or a
@@ -9033,7 +9043,8 @@ type ServedEntityOutput struct {
 	// name of the object should be given in the form of
 	// **catalog_name.schema_name.model_name**.
 	EntityName types.String `tfsdk:"entity_name"`
-
+	// The version of the model in Databricks Model Registry or Unity Catalog to
+	// be served, or empty if the entity is a FEATURE_SPEC function.
 	EntityVersion types.String `tfsdk:"entity_version"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs used for serving this entity. Note: this is an
@@ -9051,7 +9062,8 @@ type ServedEntityOutput struct {
 	// external_model, users cannot update it to add external_model later. The
 	// task type of all external models within an endpoint must be the same.
 	ExternalModel types.Object `tfsdk:"external_model"`
-
+	// The foundation model that is served. Present for served entities that
+	// serve a Databricks-hosted foundation model.
 	FoundationModel types.Object `tfsdk:"foundation_model"`
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
@@ -9077,7 +9089,7 @@ type ServedEntityOutput struct {
 	// Whether the compute resources for the served entity should scale down to
 	// zero.
 	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
-
+	// Information corresponding to the state of the served entity.
 	State types.Object `tfsdk:"state"`
 	// The workload size of the served entity. The workload size corresponds to
 	// a range of provisioned concurrency that the compute autoscales between. A
@@ -9367,14 +9379,24 @@ func (m *ServedEntityOutput) SetState(ctx context.Context, v ServedModelState) {
 }
 
 type ServedEntitySpec struct {
+	// The name of the entity to be served. The entity may be a model in the
+	// Databricks Model Registry, a model in the Unity Catalog (UC), or a
+	// function of type FEATURE_SPEC in the UC. If it is a UC object, the full
+	// name of the object is given in the form of
+	// **catalog_name.schema_name.model_name**.
 	EntityName types.String `tfsdk:"entity_name"`
-
+	// The version of the model in Databricks Model Registry or Unity Catalog to
+	// be served, or empty if the entity is a FEATURE_SPEC function.
 	EntityVersion types.String `tfsdk:"entity_version"`
-
+	// The external model that is served. NOTE: Only one of external_model,
+	// foundation_model, and (entity_name, entity_version) is returned based on
+	// the endpoint type.
 	ExternalModel types.Object `tfsdk:"external_model"`
-
+	// The foundation model that is served. NOTE: Only one of foundation_model,
+	// external_model, and (entity_name, entity_version) is returned based on
+	// the endpoint type.
 	FoundationModel types.Object `tfsdk:"foundation_model"`
-
+	// The name of the served entity.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -9546,9 +9568,12 @@ type ServedModelInput struct {
 	MinProvisionedConcurrency types.Int64 `tfsdk:"min_provisioned_concurrency"`
 	// The minimum tokens per second that the endpoint can scale down to.
 	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput"`
-
+	// The name of the model in Databricks Model Registry to be served or, if
+	// the model resides in Unity Catalog, the full name of the model in the
+	// form of **catalog_name.schema_name.model_name**.
 	ModelName types.String `tfsdk:"model_name"`
-
+	// The version of the model in Databricks Model Registry or Unity Catalog to
+	// be served.
 	ModelVersion types.String `tfsdk:"model_version"`
 	// The name of a served entity. It must be unique across an endpoint. A
 	// served entity name can consist of alphanumeric characters, dashes, and
@@ -9710,9 +9735,10 @@ type ServedModelOutput struct {
 	// spikes. When disabled, the endpoint maintains fixed capacity at
 	// provisioned_model_units.
 	BurstScalingEnabled types.Bool `tfsdk:"burst_scaling_enabled"`
-
+	// The timestamp when the served entity was created, in milliseconds since
+	// the Unix epoch.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
-
+	// The email of the user who created the served entity.
 	Creator types.String `tfsdk:"creator"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs used for serving this entity. Note: this is an
@@ -9730,9 +9756,12 @@ type ServedModelOutput struct {
 	// The minimum provisioned concurrency that the endpoint can scale down to.
 	// Do not use if workload_size is specified.
 	MinProvisionedConcurrency types.Int64 `tfsdk:"min_provisioned_concurrency"`
-
+	// The name of the model in Databricks Model Registry to be served or, if
+	// the model resides in Unity Catalog, the full name of the model in the
+	// form of **catalog_name.schema_name.model_name**.
 	ModelName types.String `tfsdk:"model_name"`
-
+	// The version of the model in Databricks Model Registry or Unity Catalog to
+	// be served.
 	ModelVersion types.String `tfsdk:"model_version"`
 	// The name of a served entity. It must be unique across an endpoint. A
 	// served entity name can consist of alphanumeric characters, dashes, and
@@ -9745,7 +9774,7 @@ type ServedModelOutput struct {
 	// Whether the compute resources for the served entity should scale down to
 	// zero.
 	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
-
+	// Information corresponding to the state of the served entity.
 	State types.Object `tfsdk:"state"`
 	// The workload size of the served entity. The workload size corresponds to
 	// a range of provisioned concurrency that the compute autoscales between. A
@@ -9937,11 +9966,14 @@ func (m *ServedModelOutput) SetState(ctx context.Context, v ServedModelState) {
 }
 
 type ServedModelSpec struct {
-	// Only one of model_name and entity_name should be populated
+	// The name of the model in Databricks Model Registry to be served or, if
+	// the model resides in Unity Catalog, the full name of the model in the
+	// form of **catalog_name.schema_name.model_name**.
 	ModelName types.String `tfsdk:"model_name"`
-	// Only one of model_version and entity_version should be populated
+	// The version of the model in Databricks Model Registry or Unity Catalog to
+	// be served.
 	ModelVersion types.String `tfsdk:"model_version"`
-
+	// The name of the served entity.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -9995,8 +10027,20 @@ func (m ServedModelSpec) Type(ctx context.Context) attr.Type {
 }
 
 type ServedModelState struct {
+	// The state of the deployment of the served entity. DEPLOYMENT_CREATING
+	// indicates that the served entity is not ready yet because the deployment
+	// is still being created (for example, the container image is building or
+	// the model server is starting for the first time). DEPLOYMENT_RECOVERING
+	// indicates that the served entity was previously ready but no longer is
+	// and is attempting to recover. DEPLOYMENT_READY indicates that the served
+	// entity is ready to receive traffic. DEPLOYMENT_FAILED indicates that
+	// there was an error bringing up the served entity (for example, the
+	// container image build failed or the model server failed to start due to a
+	// model loading error). DEPLOYMENT_ABORTED indicates that the deployment
+	// was terminated, likely due to a failure in bringing up another served
+	// entity under the same endpoint and config version.
 	Deployment types.String `tfsdk:"deployment"`
-
+	// More information about the state of the served entity, if available.
 	DeploymentStateMessage types.String `tfsdk:"deployment_state_message"`
 }
 
@@ -10104,7 +10148,8 @@ type ServingEndpoint struct {
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// The config that is currently being served by the endpoint.
 	Config types.Object `tfsdk:"config"`
-	// The timestamp when the endpoint was created in Unix time.
+	// The timestamp when the endpoint was created, in milliseconds since the
+	// Unix epoch.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// The email of the user who created the serving endpoint.
 	Creator types.String `tfsdk:"creator"`
@@ -10113,7 +10158,8 @@ type ServingEndpoint struct {
 	// System-generated ID of the endpoint, included to be used by the
 	// Permissions API.
 	Id types.String `tfsdk:"id"`
-	// The timestamp when the endpoint was last updated by a user in Unix time.
+	// The timestamp when the endpoint was last updated by a user, in
+	// milliseconds since the Unix epoch.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// The name of the serving endpoint.
 	Name types.String `tfsdk:"name"`
@@ -10658,13 +10704,14 @@ type ServingEndpointDetailed struct {
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// The config that is currently being served by the endpoint.
 	Config types.Object `tfsdk:"config"`
-	// The timestamp when the endpoint was created in Unix time.
+	// The timestamp when the endpoint was created, in milliseconds since the
+	// Unix epoch.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// The email of the user who created the serving endpoint.
 	Creator types.String `tfsdk:"creator"`
 	// Information required to query DataPlane APIs.
 	DataPlaneInfo types.Object `tfsdk:"data_plane_info"`
-	// Description of the serving model
+	// Description of the serving endpoint.
 	Description types.String `tfsdk:"description"`
 	// Email notification settings.
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
@@ -10673,7 +10720,8 @@ type ServingEndpointDetailed struct {
 	// System-generated ID of the endpoint. This is used to refer to the
 	// endpoint in the Permissions API
 	Id types.String `tfsdk:"id"`
-	// The timestamp when the endpoint was last updated by a user in Unix time.
+	// The timestamp when the endpoint was last updated by a user, in
+	// milliseconds since the Unix epoch.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// The name of the serving endpoint.
 	Name types.String `tfsdk:"name"`
@@ -12087,8 +12135,10 @@ func (m *UpdateInferenceEndpointNotifications) SetEmailNotifications(ctx context
 }
 
 type UpdateInferenceEndpointNotificationsResponse struct {
+	// The email notification settings now in effect for the serving endpoint.
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
-
+	// The name of the serving endpoint whose notification settings were
+	// updated.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -12183,6 +12233,7 @@ func (m *UpdateInferenceEndpointNotificationsResponse) SetEmailNotifications(ctx
 }
 
 type UpdateProvisionedThroughputEndpointConfigRequest struct {
+	// The core config of the serving endpoint.
 	Config types.Object `tfsdk:"config"`
 	// The name of the pt endpoint to update. This field is required.
 	Name types.String `tfsdk:"-"`

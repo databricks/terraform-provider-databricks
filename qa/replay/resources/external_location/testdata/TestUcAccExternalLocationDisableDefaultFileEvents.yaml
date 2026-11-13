@@ -1,0 +1,144 @@
+# API responses are modeled on a real AWS workspace, not recorded.
+# The location is created without `enable_file_events`, and the server enables file events by
+# default: `enable_file_events` isn't returned, while `effective_enable_file_events` is true.
+# Setting `enable_file_events = false` must then plan an update that sends it (#5967).
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create_without_enable_file_events"
+    config: |
+      resource "databricks_external_location" "this" {
+        name            = "fe-replay"
+        url             = "s3://replay-bucket/fe"
+        credential_name = "cred-replay"
+        comment         = "Managed by TF"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/external-locations"
+          body:
+            json:
+              comment: "Managed by TF"
+              credential_name: "cred-replay"
+              name: "fe-replay"
+              url: "s3://replay-bucket/fe"
+        response: &enabled_by_default
+          status: 200
+          body:
+            json:
+              comment: "Managed by TF"
+              credential_name: "cred-replay"
+              effective_enable_file_events: true
+              effective_file_event_queue:
+                managed_sqs:
+                  managed_resource_id: "replay-queue-id"
+              isolation_mode: "ISOLATION_MODE_OPEN"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "fe-replay"
+              owner: "replay-admin"
+              url: "s3://replay-bucket/fe"
+      - &get_enabled
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/external-locations/fe-replay"
+          body: null
+        response: *enabled_by_default
+      - *get_enabled
+    state:
+      resources:
+        databricks_external_location.this:
+          attributes:
+            - path: [enable_file_events]
+              equals: false
+            - path: [effective_enable_file_events]
+              equals: true
+  - name: "disable_file_events"
+    config: |
+      resource "databricks_external_location" "this" {
+        name               = "fe-replay"
+        url                = "s3://replay-bucket/fe"
+        credential_name    = "cred-replay"
+        comment            = "Managed by TF"
+        enable_file_events = false
+      }
+    plan:
+      changes:
+        databricks_external_location.this:
+          actions: [update]
+          before:
+            - path: [effective_enable_file_events]
+              equals: true
+          after:
+            - path: [effective_enable_file_events]
+              unknown: true
+    calls:
+      - *get_enabled
+      - &get_assignment
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/current-metastore-assignment"
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              default_catalog_name: "main"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              workspace_id: 12345
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/external-locations/fe-replay"
+          body:
+            json:
+              comment: "Managed by TF"
+              credential_name: "cred-replay"
+              effective_enable_file_events: true
+              effective_file_event_queue:
+                managed_sqs:
+                  managed_resource_id: "replay-queue-id"
+              enable_file_events: false
+              isolation_mode: "ISOLATION_MODE_OPEN"
+              url: "s3://replay-bucket/fe"
+        response: &disabled
+          status: 200
+          body:
+            json:
+              comment: "Managed by TF"
+              credential_name: "cred-replay"
+              effective_enable_file_events: false
+              enable_file_events: false
+              isolation_mode: "ISOLATION_MODE_OPEN"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "fe-replay"
+              owner: "replay-admin"
+              url: "s3://replay-bucket/fe"
+      - &get_disabled
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/external-locations/fe-replay"
+          body: null
+        response: *disabled
+      - *get_disabled
+    state:
+      resources:
+        databricks_external_location.this:
+          attributes:
+            - path: [enable_file_events]
+              equals: false
+            - path: [effective_enable_file_events]
+              equals: false
+destroy:
+  calls:
+    - *get_disabled
+    - *get_assignment
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/external-locations/fe-replay"
+        body: null
+      response:
+        status: 200
+        body: null

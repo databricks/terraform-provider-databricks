@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-func TestAccDataSourceMwsCredentials(t *testing.T) {
+func TestMwsAccDataSourceMwsCredentials(t *testing.T) {
 	acceptance.AccountLevel(t, acceptance.Step{
 		Template: `
 		data "databricks_mws_credentials" "this" {

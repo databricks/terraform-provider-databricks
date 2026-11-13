@@ -2,11 +2,15 @@ package catalog
 
 import (
 	"context"
+	"slices"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/databricks/terraform-provider-databricks/catalog/bindings"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // This structure contains the fields of both catalog.UpdateExternalLocation and catalog.CreateExternalLocation
@@ -14,6 +18,34 @@ type ExternalLocationInfo struct {
 	catalog.ExternalLocationInfo
 	SkipValidation bool `json:"skip_validation,omitempty"`
 	common.Namespace
+}
+
+// fileEventsDisableRequested reports whether `enable_file_events = false` is set explicitly while
+// file events are effectively enabled. This happens when the server enabled file events by default
+// at creation: the API then doesn't return `enable_file_events`, so both state and configuration
+// hold false and the attribute itself has no diff.
+func fileEventsDisableRequested(d interface {
+	GetRawConfigAt(cty.Path) (cty.Value, diag.Diagnostics)
+	GetChange(string) (any, any)
+}) bool {
+	v, diags := d.GetRawConfigAt(cty.GetAttrPath("enable_file_events"))
+	if diags.HasError() || !v.Type().Equals(cty.Bool) || v.IsNull() || !v.IsKnown() || v.True() {
+		return false
+	}
+	effective, _ := d.GetChange("effective_enable_file_events")
+	enabled, _ := effective.(bool)
+	return enabled
+}
+
+func externalLocationCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+	// Plan an update to disable file events. effective_enable_file_events is computed, so marking it
+	// as unknown is allowed, and Update sends the explicit `enable_file_events = false`.
+	if d.Id() != "" && fileEventsDisableRequested(d) {
+		if err := d.SetNewComputed("effective_enable_file_events"); err != nil {
+			return err
+		}
+	}
+	return common.NamespaceCustomizeDiffNoForceNew(ctx, d, c)
 }
 
 func ResourceExternalLocation() common.Resource {
@@ -70,7 +102,7 @@ func ResourceExternalLocation() common.Resource {
 		})
 	return common.Resource{
 		Schema:        s,
-		CustomizeDiff: common.NamespaceCustomizeDiffNoForceNew,
+		CustomizeDiff: externalLocationCustomizeDiff,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
@@ -143,7 +175,10 @@ func ResourceExternalLocation() common.Resource {
 				}
 			}
 
-			if !d.HasChangeExcept("owner") {
+			// A requested disable is a change too: it's planned through the computed
+			// effective_enable_file_events, which HasChange doesn't report while it's unknown.
+			disableFileEvents := fileEventsDisableRequested(d)
+			if !d.HasChangeExcept("owner") && !disableFileEvents {
 				return nil
 			}
 			booleanFields := map[string]string{"read_only": "ReadOnly", "fallback": "Fallback", "enable_file_events": "EnableFileEvents"}
@@ -151,6 +186,9 @@ func ResourceExternalLocation() common.Resource {
 				if d.HasChange(key) {
 					updateExternalLocationRequest.ForceSendFields = append(updateExternalLocationRequest.ForceSendFields, value)
 				}
+			}
+			if disableFileEvents && !slices.Contains(updateExternalLocationRequest.ForceSendFields, "EnableFileEvents") {
+				updateExternalLocationRequest.ForceSendFields = append(updateExternalLocationRequest.ForceSendFields, "EnableFileEvents")
 			}
 			// ugly hack until API is fixed
 			if updateExternalLocationRequest.FileEventQueue != nil {

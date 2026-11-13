@@ -136,7 +136,7 @@ The following arguments are required:
 - `skip_validation` - (Optional) Suppress validation errors if any & force save the external location
 - `fallback` - (Optional) Indicates whether fallback mode is enabled for this external location. When fallback mode is enabled (disabled by default), the access to the location falls back to cluster credentials if UC credentials are not sufficient.
 - `read_only` - (Optional) Indicates whether the external location is read-only.
-- `enable_file_events` - (Optional) indicates if managed file events are enabled for this external location.  Requires `file_event_queue` block.
+- `enable_file_events` - (Optional) indicates if managed file events are enabled for this external location.  Requires `file_event_queue` block. When it isn't set, the workspace may enable file events by default (see `effective_enable_file_events`). Set it to `false` to disable them, including on a location where they were enabled by default; Databricks then removes the queue resources it created in your cloud account.
 - `force_destroy` - (Optional) Destroy external location regardless of its dependents.
 - `force_update` - (Optional) Update external location regardless of its dependents.
 - `access_point` - (Optional) The ARN of the s3 access point to use with the external location (AWS).
@@ -179,6 +179,7 @@ In addition to all arguments above, the following attributes are exported:
 - `created_at` - Time at which this external location was created, in epoch milliseconds.
 - `created_by` -  Username of external location creator.
 - `credential_id` - Unique ID of the location's storage credential.
+- `effective_enable_file_events` - Whether managed file events are actually enabled for this external location, including when the workspace enabled them by default.
 - `updated_at` - Time at which external location this was last modified, in epoch milliseconds.
 - `updated_by` - Username of user who last modified the external location.
 

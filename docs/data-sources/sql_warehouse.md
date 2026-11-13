@@ -45,7 +45,7 @@ This data source exports the following attributes:
 * `max_num_clusters` - Maximum number of clusters available when a SQL warehouse is running.
 * `max_dbu` - Configured maximum compute capacity in DBU per hour for a REALTIME warehouse. Returns `0` when the API omits the field.
 * `auto_stop_mins` - Time in minutes until an idle SQL warehouse terminates all clusters and stops.
-* `statement_timeout` - Statement timeout in seconds for a REALTIME warehouse; `0` means no warehouse override. Returns `0` if the API omits the field or for other warehouse types.
+* `statement_timeout` - Statement timeout in seconds for a warehouse; `0` means no warehouse override. Returns `0` if the API omits the field.
 * `customer_version_label` - REALTIME compute version label; empty if the API omits it.
 * `tags` - tags used for SQL warehouse resources.
 * `spot_instance_policy` - The spot policy to use for allocating instances to clusters: `COST_OPTIMIZED` or `RELIABILITY_OPTIMIZED`.

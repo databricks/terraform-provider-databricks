@@ -27,3 +27,12 @@ func TestSetUserAgentInDataSourceContext(t *testing.T) {
 	expectedContext = useragent.InContext(expectedContext, dataSourceKey, dataSourceName)
 	assert.Equal(t, expectedContext, actualContext)
 }
+
+func TestSetUserAgentInEphemeralResourceContext(t *testing.T) {
+	ctx := context.Background()
+	ephemeralResourceName := "test-ephemeral-resource"
+	actualContext := SetUserAgentInEphemeralResourceContext(ctx, ephemeralResourceName)
+	expectedContext := useragent.InContext(ctx, "sdk", "pluginframework")
+	expectedContext = useragent.InContext(expectedContext, "ephemeral", ephemeralResourceName)
+	assert.Equal(t, expectedContext, actualContext)
+}

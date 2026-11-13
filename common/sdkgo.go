@@ -40,7 +40,9 @@ func EnableSdkGo(r *schema.Resource) {
 	}
 }
 
-func withSdkGo[F ~func(context.Context, *schema.ResourceData, any) diag.Diagnostics](f F) F {
+type resourceOperation = func(context.Context, *schema.ResourceData, any) diag.Diagnostics
+
+func withSdkGo[F ~resourceOperation](f F) F {
 	if f == nil {
 		return nil
 	}
@@ -60,7 +62,8 @@ type SdkGoScim struct {
 
 // SdkGoScimClient builds a scim/v1 client for apiLevel. Call it on the client already
 // resolved for the resource, for example by DatabricksClientForDualResource.
-func (c *DatabricksClient) SdkGoScimClient(ctx context.Context, apiLevel string) (*SdkGoScim, error) {
+func (c *DatabricksClient) SdkGoScimClient(ctx context.Context,
+	apiLevel string) (*SdkGoScim, error) {
 	b, err := sdkGoBridgeFor(c.Config)
 	if err != nil {
 		return nil, err
@@ -107,7 +110,8 @@ func callSdkGo[T any](ctx context.Context, b *sdkGoBridge,
 	}
 	var zero T
 	// Like the classic client, a cancellation during backoff returns the last error.
-	if retrier.lastErr != nil && (err == context.Canceled || err == context.DeadlineExceeded) {
+	cancelled := err == context.Canceled || err == context.DeadlineExceeded
+	if retrier.lastErr != nil && cancelled {
 		return zero, retrier.lastErr
 	}
 	return zero, b.classicError(ctx, err, attempt.request)

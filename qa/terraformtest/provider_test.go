@@ -39,7 +39,7 @@ func TestProviderSelectionRejectsUnavailableImplementation(t *testing.T) {
 		{"databricks_group", pluginFrameworkImplementation},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			factories := providerFactories(fixtureConfig("http://127.0.0.1"), providerImplementations{tc.name: tc.implementation})
+			factories := providerFactories(fixtureConfig("http://127.0.0.1"), providerImplementations{tc.name: tc.implementation}, nil)
 			_, err := factories["databricks"]()
 			require.ErrorContains(t, err, "provider_implementations[\""+tc.name+"\"]")
 			require.ErrorContains(t, err, "implementation is not available")
@@ -54,7 +54,7 @@ func TestProviderSelectionSupportsMultipleResources(t *testing.T) {
 		"mixed implementations":   {"databricks_share": sdkv2Implementation, "databricks_quality_monitor": pluginFrameworkImplementation, "databricks_mws_ncc_private_endpoint_rule": pluginFrameworkImplementation},
 	} {
 		t.Run(name, func(t *testing.T) {
-			factories := providerFactories(fixtureConfig("http://127.0.0.1"), selections)
+			factories := providerFactories(fixtureConfig("http://127.0.0.1"), selections, nil)
 			server, err := factories["databricks"]()
 			require.NoError(t, err)
 			response, err := server.GetProviderSchema(context.Background(), &tfprotov6.GetProviderSchemaRequest{})

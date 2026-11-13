@@ -1,0 +1,185 @@
+# Pins that workspace-level calls on AWS do not retry HTTP 504: the create POST, the
+# refresh GET, the update GET and PUT, the disable PATCH and the DELETE each make one
+# attempt and fail with the response text. The classic SDK client retries 504 only
+# when its message matches a transient error. A failed refresh, update or delete keeps
+# the service principal in state. API responses are inferred from the SCIM API
+# contract and a gateway timeout, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_answered_504_fails
+    config: &disable_config |
+      resource "databricks_service_principal" "this" {
+        display_name             = "SPN 504"
+        disable_as_user_deletion = true
+      }
+    expect_error: 'Error: cannot create service principal: upstream request timeout'
+    calls:
+      - request: &create_request
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN 504", "active": true, "entitlements": [{}]}
+        response: &gateway_timeout
+          status: 504
+          body:
+            text: upstream request timeout
+  - name: create
+    config: *disable_config
+    calls:
+      - request: *create_request
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN 504", "active": true}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN 504", "active": true}
+      - *read_created
+  - name: refresh_answered_504_fails
+    config: *disable_config
+    expect_error: 'Error: cannot read service principal: upstream request timeout'
+    calls:
+      - request: *read_request
+        response: *gateway_timeout
+  - name: update_get_answered_504_fails
+    config: &renamed_config |
+      resource "databricks_service_principal" "this" {
+        display_name             = "SPN 504 renamed"
+        disable_as_user_deletion = true
+      }
+    expect_error: 'Error: cannot update service principal: upstream request timeout'
+    calls:
+      - *read_created
+      - request: &read_groups_and_roles_request
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["groups,roles"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response: *gateway_timeout
+  - name: update_put_answered_504_fails
+    config: *renamed_config
+    expect_error: 'Error: cannot update service principal: upstream request timeout'
+    calls:
+      - *read_created
+      - &read_groups_and_roles
+        request: *read_groups_and_roles_request
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201"}
+      - request:
+          method: PUT
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN 504 renamed", "active": true,
+                   "entitlements": [{}]}
+        response: *gateway_timeout
+  - name: disable_patch_answered_504_fails
+    config: &empty_config |
+      provider "databricks" {}
+    expect_error: 'Error: cannot delete service principal: upstream request timeout'
+    calls:
+      - *read_created
+      - request:
+          method: PATCH
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+                   "Operations": [{"op": "replace", "path": "active",
+                                   "value": [{"value": "false"}]}]}
+        response: *gateway_timeout
+  - name: stop_disabling_on_delete
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN 504"
+      }
+    calls:
+      - *read_created
+      - *read_groups_and_roles
+      - request:
+          method: PUT
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN 504", "active": true, "entitlements": [{}]}
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN 504", "active": true}
+      - *read_created
+      - *read_created
+  - name: delete_answered_504_fails
+    config: *empty_config
+    expect_error: 'Error: cannot delete service principal: upstream request timeout'
+    calls:
+      - *read_created
+      - request: &delete_request
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response: *gateway_timeout
+  - name: state_kept_after_failed_delete
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN 504"
+      }
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_service_principal.this:
+          attributes:
+            - path: [id]
+              equals: "201"
+    calls:
+      - *read_created
+destroy:
+  calls:
+    - *read_created
+    - request: *delete_request
+      response:
+        status: 204
+        body: null

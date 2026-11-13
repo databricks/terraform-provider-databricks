@@ -20,7 +20,8 @@ import (
 // classicError returns the error the classic client returns for the same failure. API
 // errors are parsed again from the response, so apierr.IsMissing, the retry rules and
 // the messages stay the same. req is the last request sent, if any.
-func (b *sdkGoBridge) classicError(ctx context.Context, err error, req *http.Request) error {
+func (b *sdkGoBridge) classicError(ctx context.Context, err error,
+	req *http.Request) error {
 	apiErr, ok := errors.AsType[*sdkapierr.APIError](err)
 	if !ok || apiErr.HTTPStatusCode() < 0 {
 		var syntaxErr *json.SyntaxError
@@ -51,7 +52,8 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error, req *http.Req
 	return mapped
 }
 
-// classicRetryableURLErrors mirrors the unexported list in httpclient.isRetriableUrlError.
+// classicRetryableURLErrors mirrors the unexported list in
+// httpclient.isRetriableUrlError.
 var classicRetryableURLErrors = []string{
 	"connection reset by peer",
 	"TLS handshake timeout",
@@ -92,7 +94,8 @@ type classicRetrier struct {
 	lastErr  error
 }
 
-func (b *sdkGoBridge) newRetrier(ctx context.Context, attempt *sdkGoAttempt) *classicRetrier {
+func (b *sdkGoBridge) newRetrier(ctx context.Context,
+	attempt *sdkGoAttempt) *classicRetrier {
 	r := &classicRetrier{ctx: ctx, bridge: b, attempt: attempt}
 	if timeout := b.retry.Timeout(); timeout > 0 {
 		r.deadline = time.Now().Add(timeout)

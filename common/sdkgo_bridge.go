@@ -59,7 +59,8 @@ func newSdkGoBridge(cfg *config.Config) (*sdkGoBridge, error) {
 	limit := rate.Limit(rateLimit)
 	base := classicTransport(httpConfig)
 	// httpclient.NewApiClient makes the same exception for test fixture transports.
-	if skippable, ok := base.(interface{ SkipRetryOnIO() bool }); ok && skippable.SkipRetryOnIO() {
+	skippable, ok := base.(interface{ SkipRetryOnIO() bool })
+	if ok && skippable.SkipRetryOnIO() {
 		limit = rate.Inf
 		retryTimeout = 0
 	}
@@ -190,7 +191,8 @@ func (t *sdkGoTransport) roundTripWithTimeout(r *http.Request) (*http.Response, 
 		timer.stop()
 		cancel()
 		if timer.expired() && r.Context().Err() == nil {
-			return nil, fmt.Errorf("request timed out after %s of inactivity", t.httpTimeout)
+			return nil, fmt.Errorf("request timed out after %s of inactivity",
+				t.httpTimeout)
 		}
 		return nil, err
 	}
@@ -204,7 +206,8 @@ type inactivityTimer struct {
 	fired   atomic.Bool
 }
 
-func newInactivityTimer(timeout time.Duration, cancel context.CancelFunc) *inactivityTimer {
+func newInactivityTimer(timeout time.Duration,
+	cancel context.CancelFunc) *inactivityTimer {
 	t := &inactivityTimer{timeout: timeout}
 	t.timer = time.AfterFunc(timeout, func() {
 		t.fired.Store(true)

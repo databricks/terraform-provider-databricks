@@ -364,6 +364,34 @@ Provider selection also works with initial checkpoints and local input files.
 These settings are passed to provider constructors without changing process-wide
 rollout environment variables.
 
+## SDK implementation selection
+
+Each step can also select, by Terraform resource type, whether a resource uses the provider's existing clients or the modular `github.com/databricks/sdk-go` clients, as `USE_SDK_GO_RESOURCES` does in production:
+
+```yaml
+steps:
+  - name: create_on_existing_path
+    sdk_implementations:
+      databricks_service_principal: classic
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name = "example"
+      }
+    # calls omitted
+  - name: refresh_with_sdk_go
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name = "example"
+      }
+    # calls omitted
+```
+
+Values are `classic` or `sdk_go`. Keys must name resource types that have an sdk-go implementation; other names and values fail before Terraform runs. Unlisted resource types use the existing clients. Replay ignores `USE_SDK_GO_RESOURCES`, so the process environment cannot change a transcript.
+
+Each step declares its own selection, and it combines with `provider_implementations`, initial checkpoints and local input files. Destroy uses the selection retained with its cleanup configuration, following the same rules as provider implementation selection. Native Go replays build the same providers with `ProviderFactoriesWithSdkGo`. The [service principal sdk-go journeys](../replay/resources/service_principal/sdk_go_testdata) use this selection, including switches in both directions.
+
 ## Expected errors
 
 An optional step-level `expect_error` is a nonempty Go regular expression

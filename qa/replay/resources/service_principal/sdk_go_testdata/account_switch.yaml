@@ -1,0 +1,172 @@
+# Switches databricks_service_principal between the existing SCIM client and sdk-go
+# scim/v1 at account level on AWS. It creates on the existing path, refreshes and plans
+# with sdk-go reads, then refreshes and plans on the existing path again, with no plan
+# changes and the same state throughout. sdk-go's AccountServicePrincipal has no
+# entitlements, so sdk-go reads leave the entitlements in state unchanged. The sdk-go
+# GETs carry no attributes query, Accept or Content-Type header, so the API returns the
+# full object. API responses are inferred from the SCIM API contract, not recorded. An
+# empty header expectation matches only requests without that header.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_on_existing_path
+    sdk_implementations:
+      databricks_service_principal: classic
+    config: &config |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name         = "SPN switch"
+        external_id          = "external-201"
+        allow_cluster_create = true
+        workspace_access     = true
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN switch", "active": true,
+                   "externalId": "external-201",
+                   "entitlements": [{"value": "allow-cluster-create"},
+                                    {"value": "workspace-access"}]}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN switch", "active": true,
+                   "externalId": "external-201",
+                   "entitlements": [{"value": "allow-cluster-create"},
+                                    {"value": "workspace-access"}]}
+      - &read_existing_path
+        request: &existing_path_read_request
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          headers:
+            Accept: application/json
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN switch", "active": true,
+                   "externalId": "external-201",
+                   "entitlements": [{"value": "allow-cluster-create"},
+                                    {"value": "workspace-access"}]}
+      - *read_existing_path
+    state: &expected_state
+      resources:
+        databricks_service_principal.this:
+          attributes:
+            - path: [id]
+              equals: "201"
+            - path: [application_id]
+              equals: 00000000-0000-4000-8000-000000000001
+            - path: [acl_principal_id]
+              equals: servicePrincipals/00000000-0000-4000-8000-000000000001
+            - path: [home]
+              equals: /Users/00000000-0000-4000-8000-000000000001
+            - path: [repos]
+              equals: /Repos/00000000-0000-4000-8000-000000000001
+            - path: [external_id]
+              equals: external-201
+            - path: [allow_cluster_create]
+              equals: true
+            - path: [workspace_access]
+              equals: true
+            - path: [databricks_sql_access]
+              equals: false
+  - name: refresh_with_sdk_go
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - &read_sdk_go
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          headers:
+            Accept: ""
+            Content-Type: ""
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN switch", "active": true,
+                   "externalId": "external-201",
+                   "entitlements": [{"value": "allow-cluster-create"},
+                                    {"value": "workspace-access"}],
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}],
+                   "roles": [{"type": "direct", "value": "account_admin"}]}
+      - *read_sdk_go
+    state: *expected_state
+  - name: plan_with_sdk_go
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_sdk_go
+  - name: refresh_on_existing_path
+    sdk_implementations:
+      databricks_service_principal: classic
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_existing_path
+      - *read_existing_path
+    state: *expected_state
+  - name: plan_on_existing_path
+    sdk_implementations:
+      databricks_service_principal: classic
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_existing_path
+destroy:
+  calls:
+    - *read_existing_path
+    - request:
+        method: PATCH
+        path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+        headers:
+          Content-Type: application/scim+json; charset=utf-8
+          X-Databricks-Workspace-Id: ""
+        body:
+          json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+                 "Operations": [{"op": "replace", "path": "active",
+                                 "value": [{"value": "false"}]}]}
+      response:
+        status: 200
+        body: null

@@ -17,21 +17,23 @@ func (a ServicePrincipalsAPI) readWithSdkGo(servicePrincipalID string) (User, er
 		return User{}, err
 	}
 	if sc.IsAccount {
-		sp, err := common.CallSdkGoScim(a.context, sc,
-			func(ctx context.Context, opts ...call.Option) (*sdkscim.AccountServicePrincipal, error) {
-				req := sdkscim.GetAccountServicePrincipalRequest{Id: &servicePrincipalID}
-				return sc.GetAccountServicePrincipal(ctx, req, opts...)
-			})
+		get := func(ctx context.Context,
+			opts ...call.Option) (*sdkscim.AccountServicePrincipal, error) {
+			req := sdkscim.GetAccountServicePrincipalRequest{Id: &servicePrincipalID}
+			return sc.GetAccountServicePrincipal(ctx, req, opts...)
+		}
+		sp, err := common.CallSdkGoScim(a.context, sc, get)
 		if err != nil {
 			return User{}, err
 		}
 		return userFromSdkGoAccountServicePrincipal(sp), nil
 	}
-	sp, err := common.CallSdkGoScim(a.context, sc,
-		func(ctx context.Context, opts ...call.Option) (*sdkscim.ServicePrincipal, error) {
-			req := sdkscim.GetServicePrincipalRequest{Id: &servicePrincipalID}
-			return sc.GetServicePrincipal(ctx, req, opts...)
-		})
+	get := func(ctx context.Context,
+		opts ...call.Option) (*sdkscim.ServicePrincipal, error) {
+		req := sdkscim.GetServicePrincipalRequest{Id: &servicePrincipalID}
+		return sc.GetServicePrincipal(ctx, req, opts...)
+	}
+	sp, err := common.CallSdkGoScim(a.context, sc, get)
 	if err != nil {
 		return User{}, err
 	}
@@ -69,7 +71,8 @@ func userFromSdkGoAccountServicePrincipal(sp *sdkscim.AccountServicePrincipal) U
 }
 
 // complexValuesFromSdkGo drops Primary, which ComplexValue doesn't model.
-func complexValuesFromSdkGo[V sdkscim.ComplexValue | sdkscim.AccountComplexValue](values []V) []ComplexValue {
+func complexValuesFromSdkGo[V sdkscim.ComplexValue | sdkscim.AccountComplexValue](
+	values []V) []ComplexValue {
 	if values == nil {
 		return nil
 	}

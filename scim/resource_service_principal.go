@@ -37,7 +37,11 @@ func (a ServicePrincipalsAPI) Create(rsp User) (sp User, err error) {
 	return sp, err
 }
 
+// Read reads a service principal. With sdk-go selected, attributes is not sent.
 func (a ServicePrincipalsAPI) Read(servicePrincipalID string, attributes string) (sp User, err error) {
+	if common.UsesSdkGo(a.context) {
+		return a.readWithSdkGo(servicePrincipalID)
+	}
 	attrs := ""
 	if attributes != "" {
 		attrs = "?attributes=" + attributes

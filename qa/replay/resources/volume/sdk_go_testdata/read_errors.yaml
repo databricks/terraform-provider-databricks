@@ -1,0 +1,190 @@
+# Runs read_errors with reads through sdk-go uc/volumes/v1. A 403 and a 500 with a
+# non-JSON body fail with the existing diagnostics and keep the volume in state; a 404
+# removes it, and the same apply recreates it. The GETs carry no Accept header, which the
+# existing client sends. Writes stay on the existing path. API responses are inferred from
+# the Unity Catalog API contract, not recorded. An empty header expectation matches only
+# requests without that header.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "read_errors_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - request: &create_request
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "read_errors_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "read_errors_volume",
+                            "full_name": "main.replay.read_errors_volume",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-03",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000003"}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.read_errors_volume
+          headers:
+            Accept: ""
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+  - name: plan_after_create_is_empty
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_created
+  - name: refresh_answered_403_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: User does not have READ VOLUME on Volume
+      ''main\.replay\.read_errors_volume''\.'
+    calls:
+      - request: *read_request
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "User does not have READ VOLUME on Volume
+                     'main.replay.read_errors_volume'."}
+  - name: state_kept_after_403
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.read_errors_volume
+    calls:
+      - *read_created
+  - name: refresh_answered_500_with_non_json_body_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: upstream connect error or disconnect/reset
+      before headers'
+    calls:
+      - request: *read_request
+        response:
+          status: 500
+          body:
+            text: upstream connect error or disconnect/reset before headers
+  - name: state_kept_after_500
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.read_errors_volume
+    calls:
+      - *read_created
+  - name: refresh_answered_404_removes_and_recreates
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "Volume 'main.replay.read_errors_volume' does not exist."}
+      - request: *create_request
+        response:
+          status: 200
+          body:
+            json: &recreated {"catalog_name": "main", "schema_name": "replay",
+                              "name": "read_errors_volume",
+                              "full_name": "main.replay.read_errors_volume",
+                              "volume_type": "MANAGED",
+                              "owner": "replay-admin@example.com",
+                              "storage_location": "s3://replay-metastore/volume-04",
+                              "metastore_id": "11111111-1111-1111-1111-111111111111",
+                              "volume_id": "00000000-0000-4000-8000-000000000004"}
+      - &read_recreated
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: *recreated
+      - *read_recreated
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.read_errors_volume
+            - path: [storage_location]
+              equals: s3://replay-metastore/volume-04
+  - name: plan_after_recreate_is_empty
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_recreated
+destroy:
+  calls:
+    - *read_recreated
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.read_errors_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -121,6 +121,11 @@ type resourceApp struct {
 
 func (a resourceApp) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
+	// State without provider_config can store an identity with an empty
+	// workspace_id that a later Read resolves, so the identity can change in
+	// place. MutableIdentity turns off the framework check that it never changes, see
+	// https://developer.hashicorp.com/terraform/plugin/framework/resources/identity#mutable-identities
+	resp.ResourceBehavior.MutableIdentity = true
 }
 
 func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

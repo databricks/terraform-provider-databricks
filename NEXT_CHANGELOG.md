@@ -18,6 +18,8 @@
 
   Terraform does not pass `provider_config` to the provider during import. Importing with only `id` through such a provider now fails with an error that shows the `identity` import block, instead of reading the resource from the account API.
 
+  On Terraform 1.12 and 1.13, state refreshed by this version cannot be read by older provider versions (`failed to decode identity`). To downgrade the provider, run `terraform apply -refresh-only` once with the older provider and Terraform 1.14 or later, or remove the resource from state and import it again with the older provider.
+
 ### Documentation
 
 ### Exporter

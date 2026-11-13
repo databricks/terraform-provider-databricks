@@ -98,3 +98,15 @@ func TestAppImportState(t *testing.T) {
 		})
 	}
 }
+
+// State without provider_config can store an identity with an empty
+// workspace_id that a later Read resolves, so the app identity must be mutable.
+func TestAppMetadataMutableIdentity(t *testing.T) {
+	var resp resource.MetadataResponse
+
+	resourceApp{}.Metadata(context.Background(), resource.MetadataRequest{}, &resp)
+
+	if !resp.ResourceBehavior.MutableIdentity {
+		t.Error("want MutableIdentity true, got false")
+	}
+}

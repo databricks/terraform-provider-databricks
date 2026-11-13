@@ -19,6 +19,7 @@
 * Add resource and data sources for `databricks_assume_group_restricted_sharing_group`.
 * Add `personal_access_token_wo` and `personal_access_token_wo_version` write-only attributes to `databricks_git_credential` resource ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 * Add `options_wo` and `options_wo_version` write-only attributes to `databricks_connection` resource ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
+* Support looking up an experiment by its short name, such as `my-experiment`, in the `databricks_mlflow_experiment` data source ([#6168](https://github.com/databricks/terraform-provider-databricks/issues/6168)).
 
 ### Bug Fixes
 * Keep the configured values of the `pem_key_passphrase`, `ssl_keystore_key`, `ssl_key_password` and `schema_registry_api_secret` options of `databricks_connection`, which the API doesn't return, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).

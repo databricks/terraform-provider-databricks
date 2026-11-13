@@ -3,7 +3,7 @@ subcategory: "MLflow"
 ---
 # databricks_mlflow_experiment Data Source
 
-Retrieves the settings of [databricks_mlflow_experiment](../resources/mlflow_experiment.md) by id or name.
+Retrieves the settings of [databricks_mlflow_experiment](../resources/mlflow_experiment.md) by id, full path, or short name.
 
 -> This data source can only be used with a workspace-level provider!
 
@@ -17,12 +17,16 @@ data "databricks_mlflow_experiment" "this" {
 data "databricks_mlflow_experiment" "this" {
   name = "/Users/databricks/my-experiment"
 }
+
+data "databricks_mlflow_experiment" "this" {
+  name = "my-experiment"
+}
 ```
 
 ## Argument Reference
 
 * `experiment_id` - (Required if `name` isn't specified) Unique identifier for the experiment.
-* `name` - (Required if `experiment_id` isn't specified) Path to experiment.
+* `name` - (Required if `experiment_id` isn't specified) Path to experiment. Either the full path, starting with `/` (for example, `/Users/databricks/my-experiment`), or the short name of the experiment (for example, `my-experiment`). A short name may also include parent folders (for example, `team/my-experiment`). The data source finds the active experiment whose path ends with the short name, and returns an error if no experiment or more than one experiment matches.
 * `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
   * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
@@ -36,5 +40,5 @@ This data source exports the following attributes:
 * `id` - Unique identifier for the experiment. (same as `experiment_id`)
 * `last_update_time` - Last update time in unix time stamp.
 * `lifecycle_stage` - Current life cycle stage of the experiment: `active` or `deleted`.
-* `name` - Path to experiment.
+* `name` - Full path to experiment.
 * `tags` - Additional metadata key-value pairs.

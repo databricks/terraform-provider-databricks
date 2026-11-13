@@ -1954,31 +1954,36 @@ func (m *AiParseDocumentResponseMetadata) SetFileMetadata(ctx context.Context, v
 	m.FileMetadata = vs
 }
 
-// An asynchronous run of one AI function over a file of requests.
+// The AI Functions Asynchronous API lets you process large volumes of requests
+// as a batch in a single call.
 type Batch struct {
-	// Output only. Time the batch was created.
+	// Output only. The time when the batch was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The AI function to run for every request, for example `ai_extract`.
+	// The AI function, for example `ai_parse_document`.
 	Endpoint types.String `tfsdk:"endpoint"`
-	// Path of the JSONL input file on a Unity Catalog volume. Each line is one
-	// request.
+	// Unity Catalog volume path of the JSONL input file. Each line is one
+	// request, in the form `{"custom_id": ..., "body": ...}`. The file can hold
+	// up to 50,000 requests and be up to 200 MiB.
 	InputRef types.String `tfsdk:"input_ref"`
-	// ID of the batch, in the form `batch_<id>`. The service assigns it.
+	// Output only. Identifier. Resource name of the batch, returned by create.
+	// Format: `batch_<id>`.
 	Name types.String `tfsdk:"name"`
-	// Path on a Unity Catalog volume to write the JSONL output to. When it is
-	// omitted, the output stays on Databricks-managed storage and a finished
-	// batch returns a short-lived download URL in this field instead.
+	// Unity Catalog volume path to write the JSONL output file to. If the path
+	// is a directory, the file is `<path>/<name>_output.jsonl`.
 	OutputRef types.String `tfsdk:"output_ref"`
-	// Function options applied to every request in the batch, for example the
-	// extraction schema.
+	// Parameters of the function other than its input, applied to every request
+	// in the batch, for example `schema` for `ai_extract`. Put function
+	// options, such as `version`, in a nested `options` object. For the
+	// parameters of each function, see [AI
+	// Functions](/large-language-models/ai-functions).
 	Params types.Map `tfsdk:"params"`
-	// Output only. Percentage of the requests that finished, from 0 to 100.
-	// Returned when one batch is read, not when batches are listed.
+	// Output only. The percentage of requests that are processed, from 0 to
+	// 100. Returned when you get a batch, not when you list batches.
 	PercentComplete types.Float64 `tfsdk:"percent_complete"`
-	// Output only. Request counts. Returned when one batch is read, not when
-	// batches are listed.
+	// Output only. The number of requests in the batch, by result. Returned
+	// when you get a batch, not when you list batches.
 	RequestCounts types.Object `tfsdk:"request_counts"`
-	// Output only. Status of the batch.
+	// Output only. The status of the batch.
 	Status types.String `tfsdk:"status"`
 }
 
@@ -2009,8 +2014,8 @@ func (m Batch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuil
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["endpoint"] = attrs["endpoint"].SetRequired()
 	attrs["input_ref"] = attrs["input_ref"].SetRequired()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["output_ref"] = attrs["output_ref"].SetOptional()
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["output_ref"] = attrs["output_ref"].SetRequired()
 	attrs["params"] = attrs["params"].SetOptional()
 	attrs["percent_complete"] = attrs["percent_complete"].SetComputed()
 	attrs["request_counts"] = attrs["request_counts"].SetComputed()
@@ -2124,11 +2129,12 @@ func (m *Batch) SetRequestCounts(ctx context.Context, v BatchRequestCounts) {
 
 // Counts of the requests in a batch.
 type BatchRequestCounts struct {
-	// Output only. Number of requests that failed and will not be retried.
+	// Output only. The number of requests that failed. The service does not
+	// retry them.
 	Failed types.Int64 `tfsdk:"failed"`
-	// Output only. Number of requests that finished successfully.
+	// Output only. The number of requests that were processed successfully.
 	Succeeded types.Int64 `tfsdk:"succeeded"`
-	// Output only. Number of requests in the input file.
+	// Output only. The number of requests in the batch.
 	Total types.Int64 `tfsdk:"total"`
 }
 
@@ -2182,7 +2188,7 @@ func (m BatchRequestCounts) Type(ctx context.Context) attr.Type {
 }
 
 type CancelBatchRequest struct {
-	// ID of the batch, in the form `batch_<id>`.
+	// Resource name of the batch. Format: `batch_<id>`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2363,7 +2369,7 @@ func (m *CreateBatchRequest) SetBatch(ctx context.Context, v Batch) {
 }
 
 type GetBatchRequest struct {
-	// ID of the batch, in the form `batch_<id>`.
+	// Resource name of the batch. Format: `batch_<id>`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2413,7 +2419,8 @@ func (m GetBatchRequest) Type(ctx context.Context) attr.Type {
 type ListBatchesRequest struct {
 	// Maximum number of batches to return in one page.
 	PageSize types.Int64 `tfsdk:"-"`
-	// Page token from an earlier response. Omit it to read the first page.
+	// A page token from a previous call to list batches. Omit it to get the
+	// first page.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -2466,7 +2473,7 @@ func (m ListBatchesRequest) Type(ctx context.Context) attr.Type {
 type ListBatchesResponse struct {
 	// The batches in this page.
 	Batches types.List `tfsdk:"batches"`
-	// Token that reads the next page. It is empty on the last page.
+	// A token to get the next page. It is empty on the last page.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 

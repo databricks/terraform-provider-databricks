@@ -95,7 +95,7 @@ resource "databricks_postgres_database" "inherited" {
 
 ### Database Owned by a Specific Role
 
-Assign ownership to a role you manage alongside the database. The Postgres database will be created with the specified role as its owner.
+`spec.role` is required when creating a database and must reference a role in the same branch.
 
 ```hcl
 resource "databricks_postgres_role" "app_owner" {
@@ -202,7 +202,7 @@ The following arguments are supported:
   
   To change the owner, pass valid existing Role name when updating the Database
   
-  A database always has an owner
+  Required when creating the Database
 * `postgres_database` (string, optional) - The name of the Postgres database.
   
   This expects a valid Postgres identifier as specified in the link below.

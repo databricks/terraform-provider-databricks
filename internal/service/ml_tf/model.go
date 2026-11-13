@@ -8537,19 +8537,17 @@ type DeltaTableSource struct {
 	DataframeSchema types.String `tfsdk:"dataframe_schema"`
 
 	EntityColumns types.List `tfsdk:"entity_columns"`
-	// Single WHERE clause to filter delta table before applying
-	// transformations. Will be row-wise evaluated, so should only include
-	// conditionals and projections.
+	// A single WHERE clause to filter the Delta table before applying
+	// transformations. The predicate is evaluated for each row.
 	FilterCondition types.String `tfsdk:"filter_condition"`
 	// The full three-part (catalog, schema, table) name of the Delta table.
 	FullName types.String `tfsdk:"full_name"`
 
 	TimeseriesColumn types.String `tfsdk:"timeseries_column"`
-	// A single SQL SELECT expression applied after filter_condition. Should
-	// contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c
-	// FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a +
-	// col_b AS col_c") If transformation_sql is not provided, all columns of
-	// the delta table are present in the DataSource dataframe.
+	// A single SQL SELECT expression applied after filter_condition. The
+	// expression must contain all required columns (e.g., "*, col_a + col_b AS
+	// col_c"). If transformation_sql is not provided, all columns of the delta
+	// table are present in the DataSource dataframe.
 	TransformationSql types.String `tfsdk:"transformation_sql"`
 }
 

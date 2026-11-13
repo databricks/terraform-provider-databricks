@@ -1,5 +1,6 @@
 # API responses are inferred from the scenarios and API models, not recorded.
 version: 1
+enforce_call_order: true
 host_metadata: # Dummy host metadata.
   host_type: "workspace"
   cloud: "AWS"
@@ -14,6 +15,9 @@ steps:
       - request:
           method: "POST"
           path: "/api/2.0/preview/scim/v2/ServicePrincipals"
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
           body:
             json:
               schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
@@ -34,6 +38,8 @@ steps:
       - request:
           method: "GET"
           path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
           query:
             attributes: ["userName,displayName,active,externalId,entitlements"]
           body: null
@@ -50,6 +56,36 @@ steps:
       - request:
           method: "GET"
           path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN initial"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+  - name: "plan_after_create_is_empty"
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN initial"
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
           query:
             attributes: ["userName,displayName,active,externalId,entitlements"]
           body: null
@@ -72,6 +108,8 @@ steps:
       - request:
           method: "GET"
           path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
           query:
             attributes: ["userName,displayName,active,externalId,entitlements"]
           body: null
@@ -88,6 +126,8 @@ steps:
       - request:
           method: "GET"
           path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
           query:
             attributes: ["groups,roles"]
           body: null
@@ -104,6 +144,9 @@ steps:
       - request:
           method: "PUT"
           path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
           body:
             json:
               schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
@@ -117,6 +160,8 @@ steps:
       - request:
           method: "GET"
           path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
           query:
             attributes: ["userName,displayName,active,externalId,entitlements"]
           body: null
@@ -133,6 +178,8 @@ steps:
       - request:
           method: "GET"
           path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
           query:
             attributes: ["userName,displayName,active,externalId,entitlements"]
           body: null
@@ -146,11 +193,42 @@ steps:
               active: true
               entitlements: []
               applicationId: "00000000-0000-4000-8000-000000000001"
+  - name: "plan_after_rename_is_empty"
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN Renamed updated"
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN Renamed updated"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+# Destroy pins the workspace-level DELETE answered 204.
 destroy:
   calls:
     - request:
         method: "GET"
         path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+        headers:
+          X-Databricks-Workspace-Id: "12345"
         query:
           attributes: ["userName,displayName,active,externalId,entitlements"]
         body: null
@@ -167,6 +245,8 @@ destroy:
     - request:
         method: "DELETE"
         path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+        headers:
+          X-Databricks-Workspace-Id: "12345"
         body: null
       response: # Inferred API response; not recorded.
         status: 204

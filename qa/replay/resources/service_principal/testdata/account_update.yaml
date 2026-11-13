@@ -1,0 +1,308 @@
+# Pins account-level updates on AWS: each PUT copies the groups and roles read just
+# before it, and the PUT body carries no applicationId. API responses are inferred from
+# the SCIM API contract, not recorded. An empty X-Databricks-Workspace-Id expectation
+# matches only requests without that header.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_with_entitlements
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name          = "SPN update"
+        allow_cluster_create  = true
+        databricks_sql_access = true
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN update", "active": true,
+                   "entitlements": [{"value": "allow-cluster-create"},
+                                    {"value": "databricks-sql-access"}]}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN update", "active": true,
+                   "entitlements": [{"value": "allow-cluster-create"},
+                                    {"value": "databricks-sql-access"}]}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          headers:
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN update", "active": true,
+                   "entitlements": [{"value": "allow-cluster-create"},
+                                    {"value": "databricks-sql-access"}]}
+      - *read_created
+  - name: plan_after_create_is_empty
+    plan_only: true
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name          = "SPN update"
+        allow_cluster_create  = true
+        databricks_sql_access = true
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_created
+  - name: rename_copies_groups_and_roles_into_put
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name          = "SPN renamed"
+        allow_cluster_create  = true
+        databricks_sql_access = true
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_service_principal.this:
+          actions: [update]
+    calls:
+      - *read_created
+      - &read_groups_and_roles
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["groups,roles"]
+          headers:
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201",
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}],
+                   "roles": [{"type": "direct",
+                              "value": "arn:aws:iam::123456789012:instance-profile/sp"}]}
+      - request:
+          method: PUT
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN renamed", "active": true,
+                   "entitlements": [{"value": "allow-cluster-create"},
+                                    {"value": "databricks-sql-access"}],
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}],
+                   "roles": [{"type": "direct",
+                              "value": "arn:aws:iam::123456789012:instance-profile/sp"}]}
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN renamed", "active": true,
+                   "entitlements": [{"value": "allow-cluster-create"},
+                                    {"value": "databricks-sql-access"}]}
+      - &read_renamed
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN renamed", "active": true,
+                   "entitlements": [{"value": "allow-cluster-create"},
+                                    {"value": "databricks-sql-access"}]}
+      - *read_renamed
+  - name: plan_after_rename_is_empty
+    plan_only: true
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name          = "SPN renamed"
+        allow_cluster_create  = true
+        databricks_sql_access = true
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_renamed
+  - name: turn_every_entitlement_off_sends_empty_entitlement
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN renamed"
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_service_principal.this:
+          actions: [update]
+    calls:
+      - *read_renamed
+      - *read_groups_and_roles
+      - request:
+          method: PUT
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN renamed", "active": true, "entitlements": [{}],
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}],
+                   "roles": [{"type": "direct",
+                              "value": "arn:aws:iam::123456789012:instance-profile/sp"}]}
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN renamed", "active": true}
+      - &read_without_entitlements
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN renamed", "active": true}
+      - *read_without_entitlements
+  - name: plan_after_entitlements_off_is_empty
+    plan_only: true
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN renamed"
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_without_entitlements
+  - name: deactivate_sends_active_false
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN renamed"
+        active       = false
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_service_principal.this:
+          actions: [update]
+          before:
+            - path: [active]
+              equals: true
+          after:
+            - path: [active]
+              equals: false
+    calls:
+      - *read_without_entitlements
+      - *read_groups_and_roles
+      - request:
+          method: PUT
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN renamed", "active": false, "entitlements": [{}],
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}],
+                   "roles": [{"type": "direct",
+                              "value": "arn:aws:iam::123456789012:instance-profile/sp"}]}
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN renamed", "active": false}
+      - &read_inactive
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN renamed", "active": false}
+      - *read_inactive
+  - name: plan_after_deactivate_is_empty
+    plan_only: true
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN renamed"
+        active       = false
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_inactive
+destroy:
+  calls:
+    - *read_inactive
+    - request:
+        method: PATCH
+        path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+        headers:
+          Content-Type: application/scim+json; charset=utf-8
+          X-Databricks-Workspace-Id: ""
+        body:
+          json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+                 "Operations": [{"op": "replace", "path": "active",
+                                 "value": [{"value": "false"}]}]}
+      response:
+        status: 200
+        body: null

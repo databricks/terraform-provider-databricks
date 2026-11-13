@@ -22,6 +22,10 @@ import (
 // the messages stay the same. req is the last request sent, if any.
 func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	req *http.Request) error {
+	// http.Client wraps transport failures in a url.Error the classic client never adds.
+	if visitorErr, ok := errors.AsType[*visitorError](err); ok {
+		return visitorErr
+	}
 	apiErr, ok := errors.AsType[*sdkapierr.APIError](err)
 	if !ok || apiErr.HTTPStatusCode() < 0 {
 		var syntaxErr *json.SyntaxError
@@ -52,6 +56,20 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	return mapped
 }
 
+// visitorError is a failure before a request is sent: in authentication or in a request
+// visitor. The classic client reports it with this message and never retries it.
+type visitorError struct {
+	err error
+}
+
+func (e *visitorError) Error() string {
+	return "failed during request visitor: " + e.err.Error()
+}
+
+func (e *visitorError) Unwrap() error {
+	return e.err
+}
+
 // classicRetryableURLErrors mirrors the unexported list in
 // httpclient.isRetriableUrlError.
 var classicRetryableURLErrors = []string{
@@ -64,6 +82,10 @@ var classicRetryableURLErrors = []string{
 
 // isRetriable mirrors httpclient.ApiClient.isRetriable for an error from classicError.
 func (b *sdkGoBridge) isRetriable(ctx context.Context, err error) bool {
+	// The classic client halts on these, whatever error they wrap.
+	if _, ok := errors.AsType[*visitorError](err); ok {
+		return false
+	}
 	if b.httpConfig.ErrorRetriable != nil && b.httpConfig.ErrorRetriable(ctx, err) {
 		return true
 	}

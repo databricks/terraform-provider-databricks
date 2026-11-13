@@ -145,7 +145,7 @@ func (c classicCredentials) AuthHeaders(ctx context.Context) ([]auth.Header, err
 	req, err := http.NewRequestWithContext(timeout.ctx, http.MethodGet, c.cfg.Host, nil)
 	if err == nil {
 		if authErr := c.cfg.Authenticate(req); authErr != nil {
-			err = fmt.Errorf("failed during request visitor: %w", authErr)
+			err = &visitorError{authErr}
 		}
 	}
 	attempt, ok := ctx.Value(sdkGoAttemptKey{}).(*sdkGoAttempt)
@@ -175,23 +175,28 @@ type sdkGoTransport struct {
 }
 
 func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	r := req.Clone(req.Context())
-	for _, visit := range t.visitors {
-		if err := visit(r); err != nil {
-			return nil, fmt.Errorf("failed during request visitor: %w", err)
-		}
-	}
-	traceparent.AddTraceparent(r)
-	r.Header.Set("User-Agent", sdkGoUserAgent(r.Context(), req.Header.Get("User-Agent")))
+	attempt, _ := req.Context().Value(sdkGoAttemptKey{}).(*sdkGoAttempt)
 	var timeout *attemptTimeout
-	if attempt, ok := r.Context().Value(sdkGoAttemptKey{}).(*sdkGoAttempt); ok {
-		attempt.request = r
+	if attempt != nil {
 		timeout = attempt.takeTimeout()
 	}
 	if timeout == nil {
 		timeout = startAttemptTimeout(req.Context(), t.httpTimeout)
 	}
-	return t.send(r, timeout)
+	// Like the classic client, the visitors already run under the attempt's timeout.
+	r := req.Clone(timeout.ctx)
+	for _, visit := range t.visitors {
+		if err := visit(r); err != nil {
+			timeout.end()
+			return nil, &visitorError{err}
+		}
+	}
+	traceparent.AddTraceparent(r)
+	r.Header.Set("User-Agent", sdkGoUserAgent(r.Context(), req.Header.Get("User-Agent")))
+	if attempt != nil {
+		attempt.request = r
+	}
+	return t.send(req.Context(), r, timeout)
 }
 
 // sdkGoUserAgent keeps the classic User-Agent, which usage analytics parse, and appends
@@ -206,18 +211,17 @@ func sdkGoUserAgent(ctx context.Context, sdkGoUserAgent string) string {
 	return strings.Join(segments, " ")
 }
 
-// send cancels the attempt after httpTimeout without progress, like the classic
-// client, and reports it with the classic client's message.
-func (t *sdkGoTransport) send(r *http.Request,
+// send sends r, whose context ends with timeout, and reports an attempt that timed out
+// with the classic client's message unless parent ended first.
+func (t *sdkGoTransport) send(parent context.Context, r *http.Request,
 	timeout *attemptTimeout) (*http.Response, error) {
-	attempt := r.WithContext(timeout.ctx)
-	if attempt.Body != nil && attempt.Body != http.NoBody {
-		attempt.Body = &inactivityBody{ReadCloser: attempt.Body, timer: timeout.timer}
+	if r.Body != nil && r.Body != http.NoBody {
+		r.Body = &inactivityBody{ReadCloser: r.Body, timer: timeout.timer}
 	}
-	resp, err := t.base.RoundTrip(attempt)
+	resp, err := t.base.RoundTrip(r)
 	if err != nil {
 		timeout.end()
-		if timeout.timer.expired() && r.Context().Err() == nil {
+		if timeout.timer.expired() && parent.Err() == nil {
 			return nil, fmt.Errorf("request timed out after %s of inactivity",
 				t.httpTimeout)
 		}

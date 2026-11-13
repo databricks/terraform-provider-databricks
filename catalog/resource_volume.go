@@ -3,6 +3,7 @@ package catalog
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -38,6 +39,13 @@ func getNameFromId(id string) (string, error) {
 		return "", fmt.Errorf("invalid id <%s>: id should be in the format catalog.schema.volume", id)
 	}
 	return split[2], nil
+}
+
+// volumeFullNameInPath escapes a volume full name for the path of a classic Volumes call,
+// which formats it into the URL unescaped. It sends the bytes sdk-go sends: characters
+// such as "#", "?" and "%" are escaped, and a name already valid in a path is kept.
+func volumeFullNameInPath(fullName string) string {
+	return (&url.URL{Path: fullName, RawPath: fullName}).EscapedPath()
 }
 
 func ResourceVolume() common.Resource {
@@ -85,7 +93,7 @@ func ResourceVolume() common.Resource {
 
 			var updateVolumeRequestContent catalog.UpdateVolumeRequestContent
 			common.DataToStructPointer(d, s, &updateVolumeRequestContent)
-			updateVolumeRequestContent.Name = d.Id()
+			updateVolumeRequestContent.Name = volumeFullNameInPath(d.Id())
 			_, err = w.Volumes.Update(ctx, updateVolumeRequestContent)
 			if err != nil {
 				return err
@@ -100,7 +108,7 @@ func ResourceVolume() common.Resource {
 			if common.UsesSdkGo(ctx) {
 				return readVolumeWithSdkGo(ctx, w, s, d)
 			}
-			v, err := w.Volumes.ReadByName(ctx, d.Id())
+			v, err := w.Volumes.ReadByName(ctx, volumeFullNameInPath(d.Id()))
 			if err != nil {
 				return err
 			}
@@ -117,7 +125,7 @@ func ResourceVolume() common.Resource {
 			}
 			var updateVolumeRequestContent catalog.UpdateVolumeRequestContent
 			common.DataToStructPointer(d, s, &updateVolumeRequestContent)
-			updateVolumeRequestContent.Name = d.Id()
+			updateVolumeRequestContent.Name = volumeFullNameInPath(d.Id())
 			userProvidedName := d.Get("name").(string)
 			storedName, err := getNameFromId(d.Id())
 			if err != nil {
@@ -173,7 +181,7 @@ func ResourceVolume() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.Volumes.DeleteByName(ctx, d.Id())
+			return w.Volumes.DeleteByName(ctx, volumeFullNameInPath(d.Id()))
 		},
 	}
 }

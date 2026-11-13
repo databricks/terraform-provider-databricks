@@ -1,11 +1,9 @@
-# Pins a volume name with "#", which Unity Catalog allows. sdk-go escapes it, so its GETs
-# read main.replay.raw%232 and plan no changes. The existing client puts the volume ID in
-# the URL unescaped, so "#2" becomes a fragment that is never sent: on the existing path,
-# the refresh GET reads main.replay.raw, whose 404 plans to create the volume again, and
-# the DELETE also goes to main.replay.raw. Destroy follows the sdk-go create step, so its
-# refresh reads through sdk-go and its DELETE, a write, through the existing client.
-# API responses are inferred from the Unity Catalog API contract, not recorded. An empty
-# header expectation matches only requests without that header.
+# Pins a volume name with "#", which Unity Catalog allows. sdk-go and the existing path
+# both escape it, so their GETs read main.replay.raw%232 and plan no changes. Destroy
+# follows the sdk-go create step, so its refresh reads through sdk-go and its DELETE, a
+# write, goes to main.replay.raw%232 through the existing client. API responses are
+# inferred from the Unity Catalog API contract, not recorded. An empty header
+# expectation matches only requests without that header.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -73,40 +71,36 @@ steps:
       changes: {}
     calls:
       - *read_sdk_go
-  - name: plan_on_existing_path_reads_the_name_before_the_hash
+  - name: plan_on_existing_path_is_empty
     sdk_implementations:
       databricks_volume: classic
     plan_only: true
     config: *config
     plan:
-      expect: non_empty
-      changes:
-        databricks_volume.this:
-          actions: [create]
+      expect: empty
+      changes: {}
     calls:
       - request:
           method: GET
-          path: /api/2.1/unity-catalog/volumes/main.replay.raw
+          path: /api/2.1/unity-catalog/volumes/main.replay.raw%232
           headers:
             Accept: application/json
             X-Databricks-Workspace-Id: "12345"
           body: null
         response:
-          status: 404
+          status: 200
           body:
-            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
-                   "message": "Volume 'main.replay.raw' does not exist."}
+            json: *volume
 destroy:
   calls:
     - *read_sdk_go
     - request:
         method: DELETE
-        path: /api/2.1/unity-catalog/volumes/main.replay.raw
+        path: /api/2.1/unity-catalog/volumes/main.replay.raw%232
         headers:
           X-Databricks-Workspace-Id: "12345"
         body: null
       response:
-        status: 404
+        status: 200
         body:
-          json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
-                 "message": "Volume 'main.replay.raw' does not exist."}
+          json: {}
